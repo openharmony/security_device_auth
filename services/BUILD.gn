@@ -158,7 +158,7 @@ if (os_level == "mini" || os_level == "small") {
     ]
 
     external_deps = [
-      "dsoftbus_standard:softbus_client",
+      "dsoftbus:softbus_client",
       "hiviewdfx_hilog_native:libhilog",
       "utils_base:utils",
     ]
