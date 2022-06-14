@@ -136,5 +136,5 @@ The device group management sub-module abstracts trust relationships established
 
 **Security subsystem**
 
-[security\_deviceauth](https://gitee.com/openharmony/security_deviceauth)
+[security\_device\_auth](https://gitee.com/openharmony/security_device_auth)
 
