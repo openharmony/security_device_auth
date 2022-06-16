@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//base/security/deviceauth/deviceauth_env.gni")
+import("//base/security/device_auth/deviceauth_env.gni")
 
 group_auth_path = "${services_path}/group_auth"
 authenticators_path = "${services_path}/authenticators"
@@ -279,12 +279,12 @@ if (enable_p2p_auth_standard_protocol == true) {
 }
 
 if (enable_group == true && enable_account == true) {
-  import("//base/security/deviceauth/services/deviceauth_account.gni")
+  import("//base/security/device_auth/services/deviceauth_account.gni")
   deviceauth_defines += account_related_defines
   inc_path += account_related_inc_path
   deviceauth_files += account_related_files + bind_peer_files
 } else if (enable_group == false && enable_account == true) {
-  import("//base/security/deviceauth/services/deviceauth_account.gni")
+  import("//base/security/device_auth/services/deviceauth_account.gni")
   deviceauth_defines += account_related_defines
   inc_path += account_related_inc_path
   deviceauth_files +=

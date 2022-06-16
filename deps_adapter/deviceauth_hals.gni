@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//base/security/deviceauth/deviceauth_env.gni")
+import("//base/security/device_auth/deviceauth_env.gni")
 
 declare_args() {
   deviceauth_storage_path = ""
