@@ -94,7 +94,7 @@ static int32_t AddSelfTypeToSelfData(const CJson *authParam, CJson *returnToSelf
         return HC_ERR_JSON_GET;
     }
     if (AddIntToJson(returnToSelf, FIELD_USER_TYPE, userType) != HC_SUCCESS) {
-        LOGE("Failed to add peer self userType for onFinish!");
+        LOGE("Failed to add self userType for onFinish!");
         return HC_ERR_JSON_FAIL;
     }
     return HC_SUCCESS;

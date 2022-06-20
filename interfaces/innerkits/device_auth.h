@@ -64,10 +64,8 @@
 #define FIELD_GROUP_VISIBILITY "groupVisibility"
 #define FIELD_EXPIRE_TIME "expireTime"
 #define FIELD_IS_DELETE_ALL "isDeleteAll"
-#define FIELD_BLE_CHALLENGE "bleChallenge"
 #define FIELD_OS_ACCOUNT_ID "osAccountId"
 #define FIELD_AUTH_CODE "authCode"
-#define FIELD_AUTH_CODE_ID "authCodeId"
 #define FIELD_DEVICE_LIST "deviceList"
 
 typedef enum {

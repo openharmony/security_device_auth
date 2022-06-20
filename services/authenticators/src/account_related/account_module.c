@@ -138,7 +138,12 @@ static int32_t ProcessAsyTokens(int32_t osAccountId, int32_t opCode, CJson *in, 
                 LOGE("Failed to get user id.");
                 return HC_ERR_JSON_GET;
             }
-            return GetAccountAuthTokenManager()->deleteToken(osAccountId, userId);
+            const char *deviceId = GetStringFromJson(in, FIELD_DEVICE_ID);
+            if (deviceId == NULL) {
+                LOGE("Failed to get deviceId from json!");
+                return HC_ERR_JSON_GET;
+            }
+            return GetAccountAuthTokenManager()->deleteToken(osAccountId, userId, deviceId);
         }
         case REQUEST_SIGNATURE:
             if (out == NULL) {
@@ -157,7 +162,7 @@ static int32_t ProcessSymTokens(int32_t osAccountId, int32_t opCode, CJson *in, 
     switch (opCode) {
         case IMPORT_SELF_CREDENTIAL:
         case IMPORT_TRUSTED_CREDENTIALS:
-            return GetSymTokenManager()->addToken(osAccountId, in);
+            return GetSymTokenManager()->addToken(osAccountId, in, opCode);
         case DELETE_SELF_CREDENTIAL:
         case DELETE_TRUSTED_CREDENTIALS: {
             const char *userId = GetStringFromJson(in, FIELD_USER_ID);

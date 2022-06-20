@@ -17,6 +17,7 @@
 #include "common_defs.h"
 #include "hc_log.h"
 #include "hc_types.h"
+#include "iso_auth_task_common.h"
 #include "pake_defs.h"
 #include "pake_protocol_dl_common.h"
 #include "pake_protocol_ec_common.h"
@@ -37,8 +38,14 @@ static bool IsAuthPakeV2EcP256Supported(void)
     return IsPakeV2AuthTaskSupported() && (GetPakeEcAlg() == PAKE_ALG_EC) && IS_SUPPORT_CURVE_256;
 }
 
+static bool IsAuthIsoSupported(void)
+{
+    return IsIsoAuthTaskSupported();
+}
+
 static AccountVersionInfo g_authVersionInfoAll[] = {
     { AUTH_PAKE_V2_EC_P256, PAKE_V2, PAKE_ALG_EC, CURVE_256, false, IsAuthPakeV2EcP256Supported, CreatePakeV2AuthTask},
+    { AUTH_ISO, ISO, PAKE_ALG_NONE, CURVE_NONE, false, IsAuthIsoSupported, CreateIsoAuthTask }
 };
 
 void InitVersionInfos(void)
@@ -59,8 +66,17 @@ void DestroyVersionInfos(void)
     DESTROY_HC_VECTOR(AccountVersionInfoVec, &g_authVersionInfoVec);
 }
 
-static const AccountVersionInfo *NegotiateForAuth(uint64_t versionNo)
+static const AccountVersionInfo *NegotiateForAuth(int32_t credentialType)
 {
+    uint64_t versionNo;
+    if (credentialType == SYMMETRIC_CRED) {
+        versionNo = AUTH_ISO;
+    } else if (credentialType == ASYMMETRIC_CRED) {
+        versionNo = AUTH_PAKE_V2_EC_P256;
+    } else {
+        LOGE("Invalid credential type for auth: %d.", credentialType);
+        return NULL;
+    }
     uint32_t index;
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_authVersionInfoVec, index, ptr) {
@@ -76,14 +92,14 @@ static const AccountVersionInfo *NegotiateForAuth(uint64_t versionNo)
     return NULL;
 }
 
-const AccountVersionInfo *GetNegotiatedVersionInfo(int32_t operationCode, uint64_t versionNo)
+const AccountVersionInfo *GetNegotiatedVersionInfo(int32_t operationCode, int32_t credentialType)
 {
     // Now, only support auth negotiate.
     if (operationCode != AUTHENTICATE) {
         LOGE("operationCode is not auth, not supported.");
         return NULL;
     }
-    return NegotiateForAuth(versionNo);
+    return NegotiateForAuth(credentialType);
 }
 
 uint64_t GetSupportedVersionNo(int32_t operationCode)

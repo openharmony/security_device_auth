@@ -651,9 +651,9 @@ static AccountToken *DeepCopyToken(const AccountToken *token)
     return returnToken;
 }
 
-static AccountToken **QueryTokenPtrIfMatch(const AccountTokenVec *vec, const char *userId)
+static AccountToken **QueryTokenPtrIfMatch(const AccountTokenVec *vec, const char *userId, const char *deviceId)
 {
-    if (userId == NULL) {
+    if (userId == NULL || deviceId == NULL) {
         LOGE("Invalid input param.");
         return NULL;
     }
@@ -663,14 +663,15 @@ static AccountToken **QueryTokenPtrIfMatch(const AccountTokenVec *vec, const cha
         if ((token == NULL) || (*token == NULL)) {
             continue;
         }
-        if (strcmp(userId, (const char *)((*token)->pkInfo.userId.val)) == 0) {
+        if ((strcmp(userId, (const char *)((*token)->pkInfo.userId.val)) == 0) &&
+            (strcmp(deviceId, (const char *)((*token)->pkInfo.deviceId.val)) == 0)) {
             return token;
         }
     }
     return NULL;
 }
 
-static AccountToken *GetAccountToken(int32_t osAccountId, const char *userId)
+static AccountToken *GetAccountToken(int32_t osAccountId, const char *userId, const char *deviceId)
 {
     g_accountDbMutex->lock(g_accountDbMutex);
     OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
@@ -679,7 +680,7 @@ static AccountToken *GetAccountToken(int32_t osAccountId, const char *userId)
         g_accountDbMutex->unlock(g_accountDbMutex);
         return NULL;
     }
-    AccountToken **token = QueryTokenPtrIfMatch(&info->tokens, userId);
+    AccountToken **token = QueryTokenPtrIfMatch(&info->tokens, userId, deviceId);
     if ((token == NULL) || (*token == NULL)) {
         LOGE("Query token failed");
         g_accountDbMutex->unlock(g_accountDbMutex);
@@ -689,7 +690,8 @@ static AccountToken *GetAccountToken(int32_t osAccountId, const char *userId)
     return *token;
 }
 
-static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, AccountTokenVec *deleteTokens)
+static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, const char *deviceId,
+    AccountTokenVec *deleteTokens)
 {
     LOGI("Start to delete tokens from database!");
     g_accountDbMutex->lock(g_accountDbMutex);
@@ -705,7 +707,8 @@ static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, Account
     while (index < HC_VECTOR_SIZE(&info->tokens)) {
         token = info->tokens.getp(&info->tokens, index);
         if ((token == NULL) || (*token == NULL) ||
-            strcmp(userId, (const char *)((*token)->pkInfo.userId.val)) != 0) {
+            (strcmp(userId, (const char *)((*token)->pkInfo.userId.val)) != 0) ||
+            (strcmp(deviceId, (const char *)((*token)->pkInfo.deviceId.val)) != 0)) {
             index++;
             continue;
         }
@@ -727,13 +730,13 @@ static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, Account
     return HC_SUCCESS;
 }
 
-static int32_t GetToken(int32_t osAccountId, AccountToken *token, const char *userId)
+static int32_t GetToken(int32_t osAccountId, AccountToken *token, const char *userId, const char *deviceId)
 {
-    if ((token == NULL) || (userId == NULL)) {
+    if ((token == NULL) || (userId == NULL) || (deviceId == NULL)) {
         LOGE("Invalid input params");
         return HC_ERR_NULL_PTR;
     }
-    AccountToken *existToken = GetAccountToken(osAccountId, userId);
+    AccountToken *existToken = GetAccountToken(osAccountId, userId, deviceId);
     if (existToken == NULL) {
         LOGE("Token not exist");
         return HC_ERROR;
@@ -775,7 +778,8 @@ static int32_t AddTokenInner(int32_t osAccountId, const AccountToken *token)
         g_accountDbMutex->unlock(g_accountDbMutex);
         return HC_ERR_MEMORY_COPY;
     }
-    AccountToken **oldTokenPtr = QueryTokenPtrIfMatch(&info->tokens, (const char *)(newToken->pkInfo.userId.val));
+    AccountToken **oldTokenPtr = QueryTokenPtrIfMatch(&info->tokens, (const char *)(newToken->pkInfo.userId.val),
+        (const char *)(newToken->pkInfo.deviceId.val));
     if (oldTokenPtr != NULL) {
         DestroyAccountToken(*oldTokenPtr);
         *oldTokenPtr = newToken;
@@ -1045,32 +1049,13 @@ ERR:
     return ret;
 }
 
-static int32_t GetServerPublicKey(int32_t osAccountId, const char *userId, Uint8Buff *serverPk)
-{
-    if ((userId == NULL) || (serverPk == NULL)) {
-        LOGE("Invalid input params");
-        return HC_ERR_NULL_PTR;
-    }
-    AccountToken *token = GetAccountToken(osAccountId, userId);
-    if (token == NULL) {
-        LOGE("Token not exist");
-        return HC_ERROR;
-    }
-    if (memcpy_s(serverPk->val, serverPk->length, token->serverPk.val, token->serverPk.length) != HC_SUCCESS) {
-        LOGE("Memcpy for serverPk failed");
-        return HC_ERR_MEMORY_COPY;
-    }
-    serverPk->length = token->serverPk.length;
-    return HC_SUCCESS;
-}
-
-static Algorithm GetAlgVersion(int32_t osAccountId, const char *userId)
+static Algorithm GetAlgVersion(int32_t osAccountId, const char *userId, const char *deviceId)
 {
     if (userId == NULL) {
         LOGE("Invalid input params, return default alg.");
         return P256;
     }
-    AccountToken *token = GetAccountToken(osAccountId, userId);
+    AccountToken *token = GetAccountToken(osAccountId, userId, deviceId);
     if (token == NULL) {
         LOGE("Token not exist, return default alg.");
         return P256;
@@ -1106,14 +1091,14 @@ static void DeleteKeyPair(AccountToken *token)
     g_accountDbMutex->unlock(g_accountDbMutex);
 }
 
-static int32_t DeleteToken(int32_t osAccountId, const char *userId)
+static int32_t DeleteToken(int32_t osAccountId, const char *userId, const char *deviceId)
 {
-    if (userId == NULL) {
-        LOGE("Invalid user id");
+    if ((userId == NULL) || (deviceId == NULL)) {
+        LOGE("Invalid input params!");
         return HC_ERR_NULL_PTR;
     }
     AccountTokenVec deleteTokens = CreateAccountTokenVec();
-    int32_t ret = DeleteTokenInner(osAccountId, userId, &deleteTokens);
+    int32_t ret = DeleteTokenInner(osAccountId, userId, deviceId, &deleteTokens);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to delete token inner, account id is: %d", osAccountId);
         DestroyAccountTokenVec(&deleteTokens);
@@ -1194,7 +1179,6 @@ void InitTokenManager(void)
     g_asyTokenManager.getToken = GetToken;
     g_asyTokenManager.deleteToken = DeleteToken;
     g_asyTokenManager.getRegisterProof = GetRegisterProof;
-    g_asyTokenManager.getServerPublicKey = GetServerPublicKey;
     g_asyTokenManager.generateKeyAlias = GenerateKeyAlias;
     g_asyTokenManager.getAlgVersion = GetAlgVersion;
     if (!g_isInitial) {

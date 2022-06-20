@@ -28,7 +28,6 @@ extern "C" {
 BaseGroupAuth *GetGroupAuth(int32_t groupAuthType);
 int32_t GetAuthModuleType(const CJson *in);
 int32_t GetInfoHash(const uint8_t *info, uint32_t infoLen, char *str, uint32_t strLen);
-bool IsBleAuthForAcrossAccount(const CJson *authParam);
 int32_t GroupTypeToAuthForm(int32_t groupType);
 int32_t AuthFormToGroupType(int32_t authForm);
 

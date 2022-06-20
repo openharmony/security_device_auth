@@ -81,7 +81,6 @@
 #define FIELD_OWNER_NAME "ownerName"
 #define FIELD_PERMISSION "Permission"
 #define FIELD_PAYLOAD "payload"
-#define FIELD_PEER_DEVICE_ID "peerDeviceId"
 #define FIELD_PIN_CODE "pinCode"
 #define FIELD_PUBLIC_KEY "publicKey"
 #define FIELD_PK_INFO "pkInfo"
@@ -114,11 +113,12 @@
 #define FIELD_PEER_ID_FROM_REQUEST "peerIdFromRequest"
 #define FIELD_STEP "step"
 #define FIELD_DATA "data"
-#define FIELD_SUPPORTED_VERSION "supportedVersion"
 #define FIELD_EPK "epk"
 #define FIELD_AUTH_KEY_ALG_ENCODE "authKeyAlgEncode"
 #define FIELD_AUTH_PK_INFO "authPkInfo"
 #define FIELD_AUTH_PK_INFO_SIGN "authPkInfoSign"
+#define FIELD_AUTH_RESULT_MAC "authResultMac"
+#define FIELD_LOCAL_DEVICE_TYPE "localDeviceType"
 
 #define INVALID_MODULE_TYPE (-1)
 #define GROUP_ERR_MSG 0x8080
@@ -137,7 +137,6 @@
 #define DEFAULT_EXPIRE_TIME 90
 #define GROUP_MANAGER_PACKAGE_NAME "com.huawei.devicegroupmanage"
 #define DEFAULT_RETURN_KEY_LENGTH 32
-#define ERR_AUTH_FORM 0
 #define MAX_BUFFER_LEN 1024
 #define MAX_DATA_BUFFER_SIZE 4096
 #define MAX_AUTH_ID_LEN 256
@@ -149,13 +148,9 @@ typedef enum {
 } ChannelType;
 
 typedef enum {
-    CREDENTIAL_TYPE_INVALID = 0,
-    CREDENTIAL_TYPE_AUTH_CODE = 0X0001,
-    CREDENTIAL_TYPE_ACCOUNT = 0X0002,
-    CREDENTIAL_TYPE_DEFAULT_CONTROLLER = 0X0003,
-    CREDENTIAL_TYPE_DEVICE_CLOUD = 0X0004,
-    CREDENTIAL_TYPE_TEMP = 0X0008,
-} CredentialType;
+    SELF_CREATED = 0,
+    IMPORTED_FROM_CLOUD = 1,
+} RelationShipSource;
 
 #define MAX_IN_PARAM_LEN 4096
 
@@ -234,5 +229,15 @@ typedef enum {
     REGISTER = 7,
     SECURE_CLONE = 8,
 } OperationCode;
+
+typedef enum {
+    IMPORT_SELF_CREDENTIAL = 0,
+    DELETE_SELF_CREDENTIAL = 1,
+    QUERY_SELF_CREDENTIAL_INFO = 2,
+    IMPORT_TRUSTED_CREDENTIALS = 3,
+    DELETE_TRUSTED_CREDENTIALS = 4,
+    QUERY_TRUSTED_CREDENTIALS = 5,
+    REQUEST_SIGNATURE = 6,
+} CredentialCode;
 
 #endif

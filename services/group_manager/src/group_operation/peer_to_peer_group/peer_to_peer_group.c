@@ -159,7 +159,8 @@ static int32_t GenerateDevParams(const CJson *jsonParams, const char *groupId, T
 {
     int32_t result;
     if (((result = AddSelfUdidToParams(devParams)) != HC_SUCCESS) ||
-        ((result = AddAuthIdToParamsOrDefault(jsonParams, devParams))) ||
+        ((result = AddAuthIdToParamsOrDefault(jsonParams, devParams)) != HC_SUCCESS) ||
+        ((result = AddSourceToParams(SELF_CREATED, devParams)) != HC_SUCCESS) ||
         ((result = AddUserTypeToParamsOrDefault(jsonParams, devParams)) != HC_SUCCESS) ||
         ((result = AddGroupIdToDevParams(groupId, devParams)) != HC_SUCCESS) ||
         ((result = AddServiceTypeToParams(groupId, devParams)) != HC_SUCCESS)) {

@@ -13,32 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef ACCOUNT_TASK_MAIN_H
-#define ACCOUNT_TASK_MAIN_H
+#ifndef ISO_AUTH_CLIENT_TASK_H
+#define ISO_AUTH_CLIENT_TASK_H
 
+#include "account_task_main.h"
+#include "account_version_util.h"
 #include "json_utils.h"
-#include "account_module_defines.h"
+#include "iso_auth_task_common.h"
 
-typedef struct TaskBaseT {
-    AccountTaskType (*getTaskType)(void);
-    void (*destroyTask)(struct TaskBaseT *);
-    int32_t (*process)(struct TaskBaseT *, const CJson *in, CJson *out, int32_t *status);
-    int32_t taskStatus;
-} TaskBase;
-
-typedef struct AccountTaskT {
-    int32_t taskId;
-    void (*destroyTask)(struct AccountTaskT *);
-    int32_t (*processTask)(struct AccountTaskT *, const CJson *in, CJson *out, int32_t *status);
-    int32_t versionStatus;
-    TaskBase *subTask;
-} AccountTask;
+typedef struct {
+    TaskBase taskBase;
+    IsoAuthParams params;
+} IsoAuthClientTask;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-AccountTask *CreateAccountTaskT(int32_t *taskId, const CJson *in, CJson *out);
+TaskBase *CreateIsoAuthClientTask(const CJson *in, CJson *out, const AccountVersionInfo *verInfo);
 
 #ifdef __cplusplus
 }

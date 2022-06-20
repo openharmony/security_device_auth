@@ -17,7 +17,6 @@
 
 #include "alg_loader.h"
 #include "string_util.h"
-#include "common_defs.h"
 #include "data_manager.h"
 #include "dev_auth_module_manager.h"
 #include "device_auth_defines.h"
@@ -743,6 +742,12 @@ int32_t AddAuthIdToParams(const CJson *jsonParams, TrustedDeviceEntry *devParams
         LOGE("Failed to copy authId!");
         return HC_ERR_MEMORY_COPY;
     }
+    return HC_SUCCESS;
+}
+
+int32_t AddSourceToParams(RelationShipSource source, TrustedDeviceEntry *devParams)
+{
+    devParams->source = source;
     return HC_SUCCESS;
 }
 

@@ -27,13 +27,13 @@ typedef struct {
     PakeBaseParams pakeParams;
     uint64_t versionNo;
     int32_t authForm;
+    int32_t credentialType;
     int32_t osAccountId;
     int32_t authKeyAlgEncode;
     Uint8Buff deviceIdSelf;
     Uint8Buff deviceIdPeer;
     Uint8Buff devIdSelf;
     Uint8Buff devIdPeer;
-    uint8_t pkCloud[SERVER_PK_SIZE];
     uint8_t userIdSelf[DEV_AUTH_USER_ID_SIZE];
     uint8_t userIdPeer[DEV_AUTH_USER_ID_SIZE];
     uint8_t pkSelf[PK_SIZE];
@@ -65,11 +65,7 @@ int32_t ExtractPakePeerId(PakeAuthParams *params, const CJson *in);
 
 int32_t ExtractPakeSelfId(PakeAuthParams *params);
 
-int32_t ExtractSelfDeviceId(PakeAuthParams *params, const CJson *in, bool useSelfPrefix);
-
 int32_t ExtractPeerDeviceId(PakeAuthParams *params, const CJson *in);
-
-int32_t ExtractSelfDevId(PakeAuthParams *params, const CJson *in);
 
 int32_t ExtractPeerDevId(PakeAuthParams *params, const CJson *in);
 

@@ -30,7 +30,7 @@ static int32_t AddRecvModuleDataToParams(CJson *jsonParams, CJson *moduleParams)
         LOGE("Failed to get message from in!");
         return HC_ERR_JSON_GET;
     }
-    int32_t authForm = ERR_AUTH_FORM;
+    int32_t authForm = AUTH_FORM_INVALID_TYPE;
     (void)GetIntFromJson(jsonParams, FIELD_AUTH_FORM, &authForm);
     CJson *payload = GetObjFromJson(jsonParams, FIELD_PAYLOAD);
     if (payload == NULL) {

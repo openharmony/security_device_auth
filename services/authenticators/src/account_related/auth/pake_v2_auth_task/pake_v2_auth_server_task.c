@@ -17,6 +17,7 @@
 
 #include "account_module.h"
 #include "asy_token_manager.h"
+#include "clib_error.h"
 #include "common_defs.h"
 #include "device_auth_defines.h"
 #include "hc_log.h"
@@ -51,12 +52,8 @@ static void DestroyAuthServerAuthTask(TaskBase *task)
 
 static int32_t DealAsyStepOneData(PakeV2AuthServerTask *task, const CJson *in)
 {
-    int32_t res = ExtractSelfDevId(&task->params, in);
+    int32_t res = VerifyPkSignPeer(&task->params);
     if (res != HC_SUCCESS) {
-        LOGE("ExtractSelfDevId failed for server.");
-        return res;
-    }
-    if (VerifyPkSignPeer(&task->params) != HC_SUCCESS) {
         LOGE("Step one: VerifyPkSignPeer failed for server.");
         return HC_ERR_ACCOUNT_VERIFY_PK_SIGN;
     }
@@ -76,28 +73,8 @@ static int32_t DealAsyStepOneData(PakeV2AuthServerTask *task, const CJson *in)
     return HC_SUCCESS;
 }
 
-static int32_t GetNegotiatedVersionForServer(const CJson *in, uint64_t *negotiatedVersionNo)
-{
-    uint64_t peerSupportedVersion = 0;
-    if (GetInt64FromJson(in, FIELD_SUPPORTED_VERSION, (int64_t *)&peerSupportedVersion) != HC_SUCCESS) {
-        LOGE("Get version from client failed.");
-        return HC_ERR_JSON_GET;
-    }
-    const AccountVersionInfo *verInfo = GetNegotiatedVersionInfo(AUTHENTICATE, peerSupportedVersion);
-    if (verInfo == NULL) {
-        LOGE("Get negotiated VersionInfo failed for server.");
-        return HC_ERR_UNSUPPORTED_VERSION;
-    }
-    *negotiatedVersionNo = verInfo->versionNo;
-    return HC_SUCCESS;
-}
-
 static int32_t PrepareAsyServerStepOneData(const PakeV2AuthServerTask *innerTask, const CJson *in, CJson *out)
 {
-    uint64_t negotiatedVersionNo = 0;
-    if (GetNegotiatedVersionForServer(in, &negotiatedVersionNo) != HC_SUCCESS) {
-        return HC_ERR_AUTH_INTERNAL;
-    }
     CJson *sendToPeer = CreateJson();
     if (sendToPeer == NULL) {
         LOGE("Create json NULL.");
@@ -110,13 +87,12 @@ static int32_t PrepareAsyServerStepOneData(const PakeV2AuthServerTask *innerTask
         return HC_ERR_JSON_CREATE;
     }
     int32_t ret = HC_SUCCESS;
-    GOTO_ERR_AND_SET_RET(AddInt64StringToJson(sendToPeer, FIELD_SUPPORTED_VERSION, negotiatedVersionNo), ret);
     GOTO_ERR_AND_SET_RET(AddStringToJson(sendToPeer, FIELD_USER_ID,
         (const char *)innerTask->params.userIdSelf), ret);
     GOTO_ERR_AND_SET_RET(AddIntToJson(sendToPeer, FIELD_STEP, RET_PAKE_AUTH_FOLLOWER_ONE), ret);
     GOTO_ERR_AND_SET_RET(AddStringToJson(sendToPeer, FIELD_DEVICE_ID,
         (const char *)innerTask->params.deviceIdSelf.val), ret);
-    GOTO_ERR_AND_SET_RET(AddIntToJson(sendToPeer, FIELD_AUTH_FORM, 1), ret);
+    GOTO_ERR_AND_SET_RET(AddIntToJson(sendToPeer, FIELD_AUTH_FORM, innerTask->params.authForm), ret);
     GOTO_ERR_AND_SET_RET(AddStringToJson(sendToPeer, FIELD_DEV_ID, (const char *)innerTask->params.devIdSelf.val), ret);
 
     GOTO_ERR_AND_SET_RET(AddIntToJson(data, FIELD_AUTH_KEY_ALG_ENCODE, innerTask->params.authKeyAlgEncode), ret);
@@ -151,9 +127,10 @@ static int32_t AsyAuthServerStepOne(TaskBase *task, const CJson *in, CJson *out,
         return HC_ERR_BAD_MESSAGE;
     }
     GOTO_IF_ERR(strcpy_s((char *)innerTask->params.userIdPeer, userIdPeerLen, userIdPeer));
-    GOTO_IF_ERR(ExtractSelfDeviceId(&innerTask->params, in, true));
     GOTO_IF_ERR(ExtractPeerDeviceId(&innerTask->params, in));
     GOTO_IF_ERR(ExtractPeerDevId(&innerTask->params, in));
+
+    GOTO_IF_ERR(GetIntFromJson(in, FIELD_CREDENTIAL_TYPE, &innerTask->params.credentialType));
     GOTO_IF_ERR(GetIntFromJson(in, FIELD_AUTH_KEY_ALG_ENCODE, &innerTask->params.authKeyAlgEncode));
     GOTO_IF_ERR(GetPkInfoPeer(&innerTask->params, in));
     GOTO_IF_ERR(GetByteFromJson(in, FIELD_AUTH_PK_INFO_SIGN, innerTask->params.pkInfoSignPeer.val,
@@ -209,8 +186,9 @@ static int32_t SendFinalToOut(PakeV2AuthServerTask *task, CJson *out)
         task->params.pakeParams.sessionKey.val, task->params.pakeParams.sessionKey.length));
     GOTO_IF_ERR(AddStringToJson(sendToSelf, FIELD_DEVICE_ID, (const char *)task->params.deviceIdSelf.val));
     GOTO_IF_ERR(AddStringToJson(sendToSelf, FIELD_DEV_ID, (const char *)task->params.devIdPeer.val));
+    GOTO_IF_ERR(AddIntToJson(sendToSelf, FIELD_CREDENTIAL_TYPE, ASYMMETRIC_CRED));
 
-    GOTO_IF_ERR(AddIntToJson(sendToPeer, FIELD_AUTH_FORM, 1));
+    GOTO_IF_ERR(AddIntToJson(sendToPeer, FIELD_AUTH_FORM, task->params.authForm));
     GOTO_IF_ERR(AddIntToJson(sendToPeer, FIELD_STEP, RET_PAKE_AUTH_FOLLOWER_TWO));
 
     GOTO_IF_ERR(AddByteToJson(sendToPeerData,

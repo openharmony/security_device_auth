@@ -147,23 +147,17 @@ static int32_t ProcessTaskT(AccountTask *task, const CJson *in, CJson *out, int3
 
 static int32_t NegotiateAndCreateSubTask(AccountTask *task, const CJson *in, CJson *out)
 {
-    bool isClient = false;
     int32_t operationCode = 0;
-    uint64_t versionNo = 0;
-    if (GetBoolFromJson(in, FIELD_IS_CLIENT, &isClient) != CLIB_SUCCESS) {
-        LOGI("There is no isClient in json.");
-    }
+    int32_t credentialType = INVALID_CRED;
     if (GetIntFromJson(in, FIELD_OPERATION_CODE, &operationCode) != CLIB_SUCCESS) {
         LOGE("Get operationCode from json failed.");
         return HC_ERR_JSON_GET;
     }
-    if (isClient) {
-        versionNo = GetSupportedVersionNo(operationCode);
-    } else if (GetInt64FromJson(in, FIELD_SUPPORTED_VERSION, (int64_t *)&versionNo) != CLIB_SUCCESS) {
-        LOGE("No peer supportedVersion for server.");
-        return HC_ERR_BAD_MESSAGE;
+    if (GetIntFromJson(in, FIELD_CREDENTIAL_TYPE, &credentialType) != CLIB_SUCCESS) {
+        LOGE("Failed to get credential type from input data.");
+        return HC_ERR_JSON_GET;
     }
-    const AccountVersionInfo *verInfo = GetNegotiatedVersionInfo(operationCode, versionNo);
+    const AccountVersionInfo *verInfo = GetNegotiatedVersionInfo(operationCode, credentialType);
     if (verInfo == NULL) {
         LOGE("Get Negotiated versionInfo failed.");
         return HC_ERR_UNSUPPORTED_VERSION;

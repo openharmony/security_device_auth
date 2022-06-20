@@ -16,6 +16,7 @@
 #ifndef GROUP_OPERATION_COMMON_H
 #define GROUP_OPERATION_COMMON_H
 
+#include "common_defs.h"
 #include "string_util.h"
 #include "data_manager.h"
 #include "json_utils.h"
@@ -61,6 +62,7 @@ int32_t AddUdidToParams(const CJson *jsonParams, TrustedDeviceEntry *devParams);
 int32_t AddAuthIdToParams(const CJson *jsonParams, TrustedDeviceEntry *devParams);
 int32_t AddAuthIdToParamsOrDefault(const CJson *jsonParams, TrustedDeviceEntry *devParams);
 int32_t AddUserTypeToParamsOrDefault(const CJson *jsonParams, TrustedDeviceEntry *devParams);
+int32_t AddSourceToParams(RelationShipSource source, TrustedDeviceEntry *devParams);
 int32_t AddCredTypeToParams(const CJson *jsonParams, TrustedDeviceEntry *devParams);
 int32_t AddServiceTypeToParams(const char *groupId, TrustedDeviceEntry *devParams);
 int32_t AddGroupIdToDevParams(const char *groupId, TrustedDeviceEntry *devParams);
