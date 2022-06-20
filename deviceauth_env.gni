@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-deviceauth_path = "//base/security/deviceauth"
+deviceauth_path = "//base/security/device_auth"
 common_lib_path = "${deviceauth_path}/common_lib"
 deps_adapter_path = "${deviceauth_path}/deps_adapter"
 key_management_adapter_path =
@@ -23,7 +23,7 @@ frameworks_path = "${deviceauth_path}/frameworks"
 services_path = "${deviceauth_path}/services"
 
 declare_args() {
-  deviceauth_feature_config = "//base/security/deviceauth/default_config"
+  deviceauth_feature_config = "//base/security/device_auth/default_config"
   enable_soft_bus_channel = true
 }
 

@@ -32,7 +32,7 @@ In the architecture:
 ## Directory Structure<a name="section161941989596"></a>
 
 ```
-/base/security/deviceauth
+/base/security/device_auth
 ├── frameworks                   # Device authentication framework code
 ├── hals                         # HAL code for the tool library
 │   ├── inc                      # Tool library header files

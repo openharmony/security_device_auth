@@ -32,7 +32,7 @@
 ## 目录<a name="section161941989596"></a>
 
 ```
-/base/security/deviceauth
+/base/security/device_auth
 ├── frameworks                   # 设备互信认证IPC代码
 ├── interfaces                   # 对外接口目录
 ├── test                         # 设备互信认证的接口测试用例
