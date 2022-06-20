@@ -84,7 +84,7 @@ int32_t VersionToString(const VersionStruct *version, char *verStr, uint32_t len
     CHECK_PTR_RETURN_ERROR_CODE(verStr, "verStr");
 
     char tmpStr[TMP_VERSION_STR_LEN] = { 0 };
-    if (sprintf_s(tmpStr, TMP_VERSION_STR_LEN, "%d.%d.%d", version->first, version->second, version->third) <= 0) {
+    if (sprintf_s(tmpStr, TMP_VERSION_STR_LEN, "%u.%u.%u", version->first, version->second, version->third) <= 0) {
         LOGE("Convert version struct to string failed.");
         return HC_ERR_CONVERT_FAILED;
     }
