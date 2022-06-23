@@ -84,29 +84,6 @@ static int32_t StartClientAuthTask(AuthSession *session)
     return res;
 }
 
-int32_t CheckClientGroupAuthMsg(AuthSession *session, const CJson *in)
-{
-    int32_t groupErrMsg = 0;
-    if (GetIntFromJson(in, FIELD_GROUP_ERROR_MSG, &groupErrMsg) != HC_SUCCESS) {
-        return HC_SUCCESS;
-    }
-    CJson *outData = CreateJson();
-    if (outData == NULL) {
-        LOGE("Failed to malloc for outData!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    if (AddIntToJson(outData, FIELD_GROUP_ERROR_MSG, groupErrMsg) != HC_SUCCESS) {
-        LOGE("Failed to add info to outData!");
-        FreeJson(outData);
-        return HC_ERR_JSON_FAIL;
-    }
-    if (InformAuthError(session, outData, HC_ERR_PEER_ERROR) != HC_SUCCESS) {
-        LOGE("Failed to inform auth error!");
-    }
-    FreeJson(outData);
-    return HC_ERR_PEER_ERROR;
-}
-
 static void PrintErrorInputInfo(const CJson *param)
 {
     const char *peerUdid = GetStringFromJson(param, FIELD_PEER_CONN_DEVICE_ID);
@@ -135,7 +112,7 @@ static int32_t ProcessClientAuthSession(Session *session, CJson *in)
         return HC_ERR_NULL_PTR;
     }
     ProcessDeviceLevel(in, paramInSession);
-    int32_t res = CheckClientGroupAuthMsg(realSession, in);
+    int32_t res = CheckAndInformPeerGroupErr(realSession, in);
     if (res != HC_SUCCESS) {
         LOGE("Peer device's group has error, so we stop client auth session!");
         return res;

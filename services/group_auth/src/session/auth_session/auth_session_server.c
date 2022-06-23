@@ -192,16 +192,6 @@ static int32_t StartServerAuthTask(AuthSession *session, const CJson *receivedDa
     return res;
 }
 
-static int32_t CheckServerGroupAuthMsg(const CJson *in, const CJson *paramInSession, const DeviceAuthCallback *callback)
-{
-    int32_t groupErrMsg = 0;
-    if (GetIntFromJson(in, FIELD_GROUP_ERROR_MSG, &groupErrMsg) != HC_SUCCESS) {
-        return HC_SUCCESS;
-    }
-    InformLocalAuthError(paramInSession, callback);
-    return HC_ERR_PEER_ERROR;
-}
-
 static int32_t ProcessServerAuthSession(Session *session, CJson *in)
 {
     LOGI("Begin process server authSession.");
@@ -215,7 +205,7 @@ static int32_t ProcessServerAuthSession(Session *session, CJson *in)
         LOGE("Failed to get param in session!");
         return HC_ERR_NULL_PTR;
     }
-    int32_t res = CheckServerGroupAuthMsg(in, paramInSession, realSession->base.callback);
+    int32_t res = CheckAndInformPeerGroupErr(realSession, in);
     if (res != HC_SUCCESS) {
         LOGE("Peer device's group has error, so we stop server auth session!");
         return res;
