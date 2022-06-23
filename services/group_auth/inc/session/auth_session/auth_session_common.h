@@ -36,6 +36,7 @@ void CreateAuthParamsVec(ParamsVec *vec);
 void DestroyAuthParamsVec(ParamsVec *vec);
 int32_t ReturnSessionKey(int64_t requestId, const CJson *authParam,
     const CJson *out, const DeviceAuthCallback *callback);
+int32_t CheckAndInformPeerGroupErr(AuthSession *session, const CJson *in);
 #ifdef __cplusplus
 }
 #endif

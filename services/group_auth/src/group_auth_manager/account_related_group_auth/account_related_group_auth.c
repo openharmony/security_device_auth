@@ -282,9 +282,13 @@ static int32_t AddSelfUserIdForServer(int32_t osAccountId, GroupEntryVec *accoun
     queryParams.groupType = groupType;
     queryParams.userId = peerUserId;
     int32_t res = QueryGroups(osAccountId, &queryParams, accountVec);
-    if ((res != HC_SUCCESS) || (accountVec->size(accountVec) == 0)) {
-        LOGE("Database don't have local device's account group info for server!");
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to query local device's account group info for server!");
         return res;
+    }
+    if (accountVec->size(accountVec) == 0) {
+        LOGE("Database don't have local device's account group info for server!");
+        return HC_ERR_NO_CANDIDATE_GROUP;
     }
     TrustedGroupEntry *groupEntry = accountVec->get(accountVec, 0);
     if (groupEntry == NULL) {
@@ -485,29 +489,6 @@ static int32_t PrepareTrustedDeviceInfo(int32_t osAccountId, const CJson *authPa
     return HC_SUCCESS;
 }
 
-static int32_t DeleteExistedDeviceInfoInDb(int32_t osAccountId, const CJson *authParam)
-{
-    const char *peerUdid = GetStringFromJson(authParam, FIELD_PEER_CONN_DEVICE_ID);
-    if (peerUdid == NULL) {
-        LOGE("Failed to get peer udid!");
-        return HC_ERR_JSON_GET;
-    }
-    const char *groupId = GetStringFromJson(authParam, FIELD_GROUP_ID);
-    if (groupId == NULL) {
-        LOGE("Failed to get groupId from auth params when deleting device info!");
-        return HC_ERR_JSON_GET;
-    }
-    QueryDeviceParams devParams = InitQueryDeviceParams();
-    devParams.groupId = groupId;
-    devParams.udid = peerUdid;
-    int32_t result = DelTrustedDevice(osAccountId, &devParams);
-    if (result != HC_SUCCESS) {
-        LOGE("Failed to delete peer device from database!");
-        return result;
-    }
-    return HC_SUCCESS;
-}
-
 static int32_t AddTrustedDeviceForAccount(const CJson *authParam, const CJson *out)
 {
     int32_t osAccountId = ANY_OS_ACCOUNT;
@@ -515,16 +496,12 @@ static int32_t AddTrustedDeviceForAccount(const CJson *authParam, const CJson *o
         LOGE("Failed to get osAccountId for account!");
         return HC_ERR_JSON_GET;
     }
-    int32_t res = DeleteExistedDeviceInfoInDb(osAccountId, authParam);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to delete the existed account device in db!");
-        return res;
-    }
     TrustedDeviceEntry *devEntry = CreateDeviceEntry();
     if (devEntry == NULL) {
         LOGE("Failed to allocate device entry memory!");
         return HC_ERR_ALLOC_MEMORY;
     }
+    int32_t res;
     do {
         res = PrepareTrustedDeviceInfo(osAccountId, authParam, out, devEntry);
         if (res != HC_SUCCESS) {
