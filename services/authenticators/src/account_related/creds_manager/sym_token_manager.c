@@ -99,7 +99,6 @@ static SymToken *CreateSymTokenByJson(const CJson *tokenJson)
         HcFree(token);
         return NULL;
     }
-    (void)GetIntFromJson(tokenJson, FIELD_AUTH_CODE_ID, &token->authCodeId);
     return token;
 }
 
@@ -234,10 +233,6 @@ static int32_t GenerateJsonFromToken(const SymToken *token, CJson *tokenJson)
         LOGE("Failed to add deviceId to json!");
         return HC_ERR_JSON_ADD;
     }
-    if (AddIntToJson(tokenJson, FIELD_AUTH_CODE_ID, token->authCodeId) != HC_SUCCESS) {
-        LOGE("Failed to add authCodeId to json!");
-        return HC_ERR_JSON_ADD;
-    }
     return HC_SUCCESS;
 }
 
@@ -362,13 +357,17 @@ static int32_t AddSymTokenToVec(int32_t osAccountId, SymToken *token)
     return HC_SUCCESS;
 }
 
-static int32_t GenerateAuthCodeKeyAlias(const SymToken *token, Uint8Buff *alias)
+static int32_t GenerateKeyAlias(const char *userId, const char *deviceId, Uint8Buff *keyAlias)
 {
+    if ((userId == NULL) || (deviceId == NULL) || (keyAlias == NULL)) {
+        LOGE("Invalid input params");
+        return HC_ERR_NULL_PTR;
+    }
     /* KeyAlias = sha256(userId + deviceId + tag). */
     const char *authCodeTag = "authCode";
     uint32_t authCodeTagLen = HcStrlen(authCodeTag);
-    uint32_t userIdLen = HcStrlen(token->userId);
-    uint32_t deviceIdLen = HcStrlen(token->deviceId);
+    uint32_t userIdLen = HcStrlen(userId);
+    uint32_t deviceIdLen = HcStrlen(deviceId);
     uint32_t aliasLen = authCodeTagLen + userIdLen + deviceIdLen;
     uint8_t *aliasVal = (uint8_t *)HcMalloc(aliasLen, 0);
     if (aliasVal == NULL) {
@@ -379,12 +378,12 @@ static int32_t GenerateAuthCodeKeyAlias(const SymToken *token, Uint8Buff *alias)
         aliasVal,
         aliasLen
     };
-    if (memcpy_s(oriAliasBuff.val, oriAliasBuff.length, token->userId, userIdLen) != EOK) {
+    if (memcpy_s(oriAliasBuff.val, oriAliasBuff.length, userId, userIdLen) != EOK) {
         LOGE("Failed to copy userId.");
         HcFree(aliasVal);
         return HC_ERR_MEMORY_COPY;
     }
-    if (memcpy_s(oriAliasBuff.val + userIdLen, oriAliasBuff.length - userIdLen, token->deviceId, deviceIdLen) != EOK) {
+    if (memcpy_s(oriAliasBuff.val + userIdLen, oriAliasBuff.length - userIdLen, deviceId, deviceIdLen) != EOK) {
         LOGE("Failed to copy deviceId.");
         HcFree(aliasVal);
         return HC_ERR_MEMORY_COPY;
@@ -395,7 +394,7 @@ static int32_t GenerateAuthCodeKeyAlias(const SymToken *token, Uint8Buff *alias)
         HcFree(aliasVal);
         return HC_ERR_MEMORY_COPY;
     }
-    int32_t res = GetLoaderInstance()->sha256(&oriAliasBuff, alias);
+    int32_t res = GetLoaderInstance()->sha256(&oriAliasBuff, keyAlias);
     HcFree(aliasVal);
     if (res != HAL_SUCCESS) {
         LOGE("Compute authCode alias hash failed");
@@ -403,7 +402,7 @@ static int32_t GenerateAuthCodeKeyAlias(const SymToken *token, Uint8Buff *alias)
     return res;
 }
 
-static int32_t ImportSymTokenToKeyManager(const SymToken *token, CJson *in)
+static int32_t ImportSymTokenToKeyManager(const SymToken *token, CJson *in, int32_t opCode)
 {
     uint8_t authCode[DEV_AUTH_AUTH_CODE_SIZE] = { 0 };
     if (GetByteFromJson(in, FIELD_AUTH_CODE, authCode, DEV_AUTH_AUTH_CODE_SIZE) != HC_SUCCESS) {
@@ -423,13 +422,17 @@ static int32_t ImportSymTokenToKeyManager(const SymToken *token, CJson *in)
         .val = authCode,
         .length = DEV_AUTH_AUTH_CODE_SIZE
     };
-    int32_t res = GenerateAuthCodeKeyAlias(token, &keyAlias);
+    int32_t res = GenerateKeyAlias(token->userId, token->deviceId, &keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate authCode key alias!");
         HcFree(keyAliasVal);
         return res;
     }
-    res = GetLoaderInstance()->importSymmetricKey(&keyAlias, &authCodeBuff, KEY_PURPOSE_MAC, NULL);
+    KeyPurpose purpose = KEY_PURPOSE_DERIVE;
+    if (opCode == IMPORT_TRUSTED_CREDENTIALS) {
+        purpose = KEY_PURPOSE_MAC;
+    }
+    res = GetLoaderInstance()->importSymmetricKey(&keyAlias, &authCodeBuff, purpose, NULL);
     HcFree(keyAliasVal);
     if (res != HC_SUCCESS) {
         LOGE("Failed to import sym token! res: %d", res);
@@ -442,7 +445,7 @@ static int32_t ImportSymTokenToKeyManager(const SymToken *token, CJson *in)
     return res;
 }
 
-static int32_t AddToken(int32_t osAccountId, CJson *in)
+static int32_t AddToken(int32_t osAccountId, CJson *in, int32_t opCode)
 {
     LOGI("[Token]: Add sym token starting ...");
     if (in == NULL) {
@@ -462,7 +465,7 @@ static int32_t AddToken(int32_t osAccountId, CJson *in)
         HcFree(symToken);
         return res;
     }
-    res = ImportSymTokenToKeyManager(symToken, in);
+    res = ImportSymTokenToKeyManager(symToken, in, opCode);
     if (res != HC_SUCCESS) {
         g_dataMutex->unlock(g_dataMutex);
         LOGE("Failed to import sym token!");
@@ -514,7 +517,7 @@ static int32_t DeleteSymTokenFromKeyManager(const SymToken *token)
         .val = keyAliasVal,
         .length = SHA256_LEN
     };
-    int32_t res = GenerateAuthCodeKeyAlias(token, &keyAlias);
+    int32_t res = GenerateKeyAlias(token->userId, token->deviceId, &keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate authCode key alias!");
         HcFree(keyAliasVal);
@@ -631,6 +634,7 @@ void InitSymTokenManager(void)
     (void)memset_s(&g_symTokenManager, sizeof(SymTokenManager), 0, sizeof(SymTokenManager));
     g_symTokenManager.addToken = AddToken;
     g_symTokenManager.deleteToken = DeleteToken;
+    g_symTokenManager.generateKeyAlias = GenerateKeyAlias;
     g_SymTokensDb = CREATE_HC_VECTOR(SymTokensDb);
     LoadTokenDb();
     g_dataMutex->unlock(g_dataMutex);

@@ -889,6 +889,7 @@ static int32_t GenerateDevAuthParams(const char *authId, const char *udid, const
     int userType, TrustedDeviceEntry *devAuthParams)
 {
     devAuthParams->devType = userType;
+    devAuthParams->source = SELF_CREATED;
     StringSetPointer(&(devAuthParams->authId), authId);
     StringSetPointer(&(devAuthParams->udid), udid);
     StringSetPointer(&(devAuthParams->groupId), groupId);

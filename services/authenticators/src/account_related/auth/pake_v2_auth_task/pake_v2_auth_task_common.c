@@ -21,7 +21,6 @@
 #include "common_defs.h"
 #include "device_auth_defines.h"
 #include "hc_dev_info.h"
-#include "hal_error.h"
 #include "hc_log.h"
 #include "hc_types.h"
 #include "pake_v2_protocol_common.h"
@@ -184,7 +183,7 @@ int32_t ExtractPakeSelfId(PakeAuthParams *params)
     return HC_SUCCESS;
 }
 
-int32_t ExtractSelfDeviceId(PakeAuthParams *params, const CJson *in, bool useSelfPrefix)
+static int32_t ExtractSelfDeviceId(PakeAuthParams *params, const CJson *in, bool useSelfPrefix)
 {
     if (params == NULL || in == NULL) {
         LOGE("Input params NULL.");
@@ -243,7 +242,7 @@ int32_t ExtractPeerDeviceId(PakeAuthParams *params, const CJson *in)
     return HC_SUCCESS;
 }
 
-int32_t ExtractSelfDevId(PakeAuthParams *params, const CJson *in)
+static int32_t ExtractSelfDevId(PakeAuthParams *params, const CJson *in)
 {
     if (params == NULL || in == NULL) {
         LOGE("Input params is invalid.");
@@ -343,7 +342,7 @@ static int32_t GetAsyPubKeyInfo(PakeAuthParams *params)
     int32_t res = HC_ERR_GET_PK_INFO;
     do {
         if (GetAccountAuthTokenManager()->getToken(params->osAccountId, token,
-            (const char *)params->userIdSelf) != HC_SUCCESS) {
+            (const char *)params->userIdSelf, (const char *)params->devIdSelf.val) != HC_SUCCESS) {
             LOGE("Get token from local error.");
             break;
         }
@@ -370,15 +369,6 @@ static int32_t GetAsyPubKeyInfo(PakeAuthParams *params)
             break;
         }
         params->pkInfoSignSelf.length = token->pkInfoSignature.length;
-        Uint8Buff serverPk = {
-            .val = params->pkCloud,
-            .length = sizeof(params->pkCloud)
-        };
-        if (GetAccountAuthTokenManager()->getServerPublicKey(params->osAccountId,
-            (const char *)params->userIdSelf, &serverPk) != HC_SUCCESS) {
-            LOGE("Get local server pk error.");
-            break;
-        }
         res = HC_SUCCESS;
     } while (0);
     DestroyAccountToken(token);
@@ -418,6 +408,8 @@ int32_t InitPakeAuthParams(const CJson *in, PakeAuthParams *params, const Accoun
     GOTO_IF_ERR(InitSingleParam(&params->pkInfoSignSelf, SIGNATURE_SIZE));
     GOTO_IF_ERR(InitSingleParam(&params->pkInfoSignPeer, SIGNATURE_SIZE));
     GOTO_IF_ERR(InitSingleParam(&params->pakeParams.idSelf, deviceIdLen + 1));
+    GOTO_IF_ERR(ExtractSelfDeviceId(params, in, true));
+    GOTO_IF_ERR(ExtractSelfDevId(params, in));
     (void)memcpy_s(params->pakeParams.idSelf.val, deviceIdLen, deviceId, deviceIdLen);
     params->pakeParams.idSelf.length = deviceIdLen;
     GOTO_IF_ERR(FillUserIdForAuth(in, params));
@@ -457,8 +449,6 @@ void DestroyPakeAuthParams(PakeAuthParams *params)
         LOGE("Pointer is NULL.");
         return;
     }
-
-    (void)memset_s(params->pkCloud, sizeof(params->pkCloud), 0, sizeof(params->pkCloud));
     (void)memset_s(params->userIdSelf, sizeof(params->userIdSelf), 0, sizeof(params->userIdSelf));
     (void)memset_s(params->userIdPeer, sizeof(params->userIdPeer), 0, sizeof(params->userIdPeer));
     (void)memset_s(params->pkSelf, sizeof(params->pkSelf), 0, sizeof(params->pkSelf));

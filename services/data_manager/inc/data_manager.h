@@ -50,6 +50,7 @@ typedef struct {
     HcParcel ext; /* for caching extern data, user data */
     uint8_t credential; /* 1 - asymmetrical, 2 - symmetrical */
     uint8_t devType; /* 0 - accessory, 1 - controller, 2 - proxy */
+    uint8_t source; /* the tursted relationship source. 0: self-created, 1: imported from the cloud */
     uint64_t lastTm; /* accessed time of the device of the auth information, absolute time */
 } TrustedDeviceEntry;
 DECLARE_HC_VECTOR(DeviceEntryVec, TrustedDeviceEntry*)

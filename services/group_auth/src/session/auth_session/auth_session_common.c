@@ -30,61 +30,6 @@
 #define MIN_PROTOCOL_VERSION "1.0.0"
 IMPLEMENT_HC_VECTOR(ParamsVec, void *, 1)
 
-static bool IsOldFormatParams(const CJson *param)
-{
-    int32_t authForm = AUTH_FORM_INVALID_TYPE;
-    (void)GetIntFromJson(param, FIELD_AUTH_FORM, &authForm);
-    int64_t uid = 0;
-    (void)GetByteFromJson(param, FIELD_USER_ID, (uint8_t *)&uid, sizeof(int64_t));
-    bool isOldFormat = ((GetStringFromJson(param, FIELD_SELF_AUTH_ID) != NULL) ||
-        (uid != 0L) || (authForm == AUTH_FORM_IDENTICAL_ACCOUNT));
-    return isOldFormat;
-}
-
-static int32_t UnifyOldFormatParams(const CJson *param, ParamsVec *paramsVec)
-{
-    LOGI("Unify old format parameters.");
-    CJson *oldFormatParams = DuplicateJson(param);
-    if (oldFormatParams == NULL) {
-        LOGE("Failed to create json for old form params!");
-        return HC_ERR_JSON_FAIL;
-    }
-    int64_t uid = 0;
-    uint32_t groupIdLen = SHA256_LEN * BYTE_TO_HEX_OPER_LENGTH + 1;
-    char *groupId = (char *)HcMalloc(groupIdLen, 0);
-    if (groupId == NULL) {
-        LOGE("Failed to allocate memory for groupId!");
-        FreeJson(oldFormatParams);
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    int32_t res = HC_SUCCESS;
-    do {
-        if (GetByteFromJson(param, FIELD_USER_ID, (uint8_t *)&uid, sizeof(int64_t)) != HC_SUCCESS) {
-            LOGI("No uid in auth param!");
-            res = HC_ERR_JSON_GET;
-            break;
-        }
-        if (GetInfoHash((const uint8_t *)&uid, sizeof(int64_t), groupId, groupIdLen) != HC_SUCCESS) {
-            LOGE("Failed to get hash for groupId!");
-            res = HC_ERR_HASH_FAIL;
-            break;
-        }
-        if (AddStringToJson(oldFormatParams, FIELD_GROUP_ID, groupId) != HC_SUCCESS) {
-            LOGE("Failed to add groupId to json params!");
-            res = HC_ERR_JSON_FAIL;
-            break;
-        }
-    } while (0);
-    HcFree(groupId);
-    groupId = NULL;
-    if (res != HC_SUCCESS) {
-        FreeJson(oldFormatParams);
-        return res;
-    }
-    paramsVec->pushBack(paramsVec, (const void **)&oldFormatParams);
-    return res;
-}
-
 static bool IsGroupAvailable(int32_t osAccountId, const char *groupId, const char *pkgName)
 {
     if (GaIsGroupAccessible(osAccountId, groupId, pkgName)) {
@@ -250,22 +195,6 @@ static void GetGroupInfoByGroupId(int32_t osAccountId, const char *groupId,
     }
 }
 
-static int32_t GetBleGroupInfoAndAuthParams(const CJson *param, ParamsVec *paramsVec)
-{
-    CJson *bleAuthParams = DuplicateJson(param);
-    if (bleAuthParams == NULL) {
-        LOGE("Failed to create json for ble auth params!");
-        return HC_ERR_JSON_FAIL;
-    }
-    if (AddIntToJson(bleAuthParams, FIELD_AUTH_FORM, AUTH_FORM_ACROSS_ACCOUNT) != HC_SUCCESS) {
-        LOGE("Failed to add ble authForm!");
-        FreeJson(bleAuthParams);
-        return HC_ERR_JSON_FAIL;
-    }
-    paramsVec->pushBack(paramsVec, (const void **)&bleAuthParams);
-    return HC_SUCCESS;
-}
-
 static int32_t GetCandidateAuthInfo(int32_t osAccountId, const char *groupId,
     const CJson *param, ParamsVec *authParamsVec)
 {
@@ -368,21 +297,11 @@ static int32_t ReturnTransmitData(const AuthSession *session, CJson *out)
 
 int32_t GetAuthParamsList(int32_t osAccountId, const CJson *param, ParamsVec *authParamsVec)
 {
-    int32_t ret;
     const char *groupId = GetStringFromJson(param, FIELD_GROUP_ID);
     if (groupId == NULL) {
         groupId = GetStringFromJson(param, FIELD_SERVICE_TYPE);
     }
-    if (IsOldFormatParams(param)) {
-        LOGI("The input params' type is in old format!");
-        ret = UnifyOldFormatParams(param, authParamsVec);
-    } else if (IsBleAuthForAcrossAccount(param)) {
-        LOGD("This is across-account auth for ble device.");
-        ret = GetBleGroupInfoAndAuthParams(param, authParamsVec);
-    } else {
-        ret = GetCandidateAuthInfo(osAccountId, groupId, param, authParamsVec);
-    }
-    return ret;
+    return GetCandidateAuthInfo(osAccountId, groupId, param, authParamsVec);
 }
 
 static void ReturnFinishData(const AuthSession *session, const CJson *out)

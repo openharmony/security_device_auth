@@ -16,7 +16,6 @@
 #include "pake_v2_auth_client_task.h"
 #include "common_defs.h"
 #include "device_auth_defines.h"
-#include "hal_error.h"
 #include "hc_types.h"
 #include "hc_log.h"
 #include "string_util.h"
@@ -38,15 +37,6 @@ static AccountTaskType GetPakeV2AuthClientType(void)
     return TASK_TYPE_PAKE_V2_AUTH_CLIENT;
 }
 
-static int32_t DealClientStepOne(PakeAuthParams *params, const CJson *in)
-{
-    int32_t res = ExtractSelfDevId(params, in);
-    if (res != HC_SUCCESS) {
-        LOGE("ExtractSelfDevId failed for client.");
-    }
-    return res;
-}
-
 static int32_t AsyAuthClientStepOne(TaskBase *task, const CJson *in, CJson *out, int32_t *status)
 {
     PakeV2AuthClientTask *innerTask = (PakeV2AuthClientTask *)task;
@@ -61,13 +51,10 @@ static int32_t AsyAuthClientStepOne(TaskBase *task, const CJson *in, CJson *out,
         FreeJson(sendToPeer);
         return HC_ERR_JSON_CREATE;
     }
-    uint64_t versionNo = GetSupportedVersionNo(AUTHENTICATE);
 
     GOTO_IF_ERR(GetIntFromJson(in, FIELD_AUTH_FORM, &innerTask->params.authForm));
-    GOTO_IF_ERR(ExtractSelfDeviceId(&innerTask->params, in, true));
-    GOTO_IF_ERR(DealClientStepOne(&innerTask->params, in));
+    GOTO_IF_ERR(GetIntFromJson(in, FIELD_CREDENTIAL_TYPE, &innerTask->params.credentialType));
 
-    GOTO_IF_ERR(AddInt64StringToJson(sendToPeer, FIELD_SUPPORTED_VERSION, versionNo));
     GOTO_IF_ERR(AddIntToJson(sendToPeer, FIELD_AUTH_FORM, innerTask->params.authForm));
     GOTO_IF_ERR(AddStringToJson(sendToPeer, FIELD_USER_ID, (const char *)innerTask->params.userIdSelf));
     GOTO_IF_ERR(AddIntToJson(sendToPeer, FIELD_STEP, CMD_PAKE_AUTH_MAIN_ONE));
@@ -75,6 +62,7 @@ static int32_t AsyAuthClientStepOne(TaskBase *task, const CJson *in, CJson *out,
     GOTO_IF_ERR(AddStringToJson(sendToPeer, FIELD_DEV_ID, (const char *)innerTask->params.devIdSelf.val));
 
     GOTO_IF_ERR(AddIntToJson(data, FIELD_AUTH_KEY_ALG_ENCODE, ALG_ECC));
+    GOTO_IF_ERR(AddIntToJson(data, FIELD_CREDENTIAL_TYPE, innerTask->params.credentialType));
     GOTO_IF_ERR(AddStringToJson(data, FIELD_AUTH_PK_INFO, (const char *)innerTask->params.pkInfoSelf.val));
     GOTO_IF_ERR(AddByteToJson(data, FIELD_AUTH_PK_INFO_SIGN, innerTask->params.pkInfoSignSelf.val,
         innerTask->params.pkInfoSignSelf.length));
@@ -207,6 +195,8 @@ static int32_t SendFinalToOut(PakeV2AuthClientTask *task, CJson *out)
         FIELD_SESSION_KEY, task->params.pakeParams.sessionKey.val, task->params.pakeParams.sessionKey.length));
     GOTO_IF_ERR(AddStringToJson(sendToSelf, FIELD_DEVICE_ID, (const char *)task->params.deviceIdSelf.val));
     GOTO_IF_ERR(AddStringToJson(sendToSelf, FIELD_DEV_ID, (const char *)task->params.devIdPeer.val));
+    GOTO_IF_ERR(AddIntToJson(sendToSelf, FIELD_CREDENTIAL_TYPE, ASYMMETRIC_CRED));
+
     GOTO_IF_ERR(AddObjToJson(out, FIELD_SEND_TO_SELF, sendToSelf));
     FreeJson(sendToSelf);
     FreeAndCleanKey(&task->params.pakeParams.sessionKey);

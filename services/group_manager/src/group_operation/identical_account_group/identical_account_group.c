@@ -33,6 +33,7 @@ static int32_t GenerateDevParams(const CJson *jsonParams, const char *groupId, T
         ((result = AddCredTypeToParams(jsonParams, devParams)) != HC_SUCCESS) ||
         ((result = AddUserIdToDevParams(jsonParams, devParams)) != HC_SUCCESS) ||
         ((result = AddAuthIdToParamsOrDefault(jsonParams, devParams)) != HC_SUCCESS) ||
+        ((result = AddSourceToParams(SELF_CREATED, devParams)) != HC_SUCCESS) ||
         ((result = AddUserTypeToParamsOrDefault(jsonParams, devParams)) != HC_SUCCESS) ||
         ((result = AddGroupIdToDevParams(groupId, devParams)) != HC_SUCCESS) ||
         ((result = AddServiceTypeToParams(groupId, devParams)) != HC_SUCCESS)) {
@@ -344,6 +345,7 @@ static int32_t GenerateTrustedDevParams(const CJson *jsonParams, const char *gro
         ((result = AddAuthIdToParams(jsonParams, devParams)) != HC_SUCCESS) ||
         ((result = AddCredTypeToParams(jsonParams, devParams)) != HC_SUCCESS) ||
         ((result = AddUserIdToDevParams(jsonParams, devParams)) != HC_SUCCESS) ||
+        ((result = AddSourceToParams(IMPORTED_FROM_CLOUD, devParams)) != HC_SUCCESS) ||
         ((result = AddUserTypeToParamsOrDefault(jsonParams, devParams)) != HC_SUCCESS) ||
         ((result = AddGroupIdToDevParams(groupId, devParams)) != HC_SUCCESS) ||
         ((result = AddServiceTypeToParams(groupId, devParams)) != HC_SUCCESS)) {

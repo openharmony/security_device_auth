@@ -61,17 +61,6 @@ int32_t GetAuthModuleType(const CJson *in)
     return AuthFormToModuleType(authForm);
 }
 
-bool IsBleAuthForAcrossAccount(const CJson *authParam)
-{
-    int32_t credentialType = CREDENTIAL_TYPE_DEFAULT_CONTROLLER;
-    if (GetIntFromJson(authParam, FIELD_CREDENTIAL_TYPE, &credentialType) != HC_SUCCESS) {
-        return false;
-    }
-    bool isBle = ((uint32_t)credentialType & CREDENTIAL_TYPE_TEMP);
-    return isBle;
-}
-
-
 int32_t GetInfoHash(const uint8_t *info, uint32_t infoLen, char *str, uint32_t strLen)
 {
     Uint8Buff infoHash = {NULL, SHA256_LEN};

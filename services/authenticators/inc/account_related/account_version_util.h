@@ -53,9 +53,17 @@ typedef struct _AccountVersionInfo {
     TaskBase *(*createTask)(const CJson *, CJson *, const struct _AccountVersionInfo *);
 } AccountVersionInfo;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void InitVersionInfos(void);
 void DestroyVersionInfos(void);
 uint64_t GetSupportedVersionNo(int32_t operationCode);
-const AccountVersionInfo *GetNegotiatedVersionInfo(int32_t operationCode, uint64_t versionNo);
+const AccountVersionInfo *GetNegotiatedVersionInfo(int32_t operationCode, int32_t credentialType);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

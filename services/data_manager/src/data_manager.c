@@ -45,6 +45,7 @@ DECLARE_TLV_VECTOR(TlvGroupVec, TlvGroupElement)
 typedef struct {
     uint8_t credential;
     uint8_t devType;
+    uint8_t source;
     int64_t userId;
     uint64_t lastTm;
 } DevAuthFixedLenInfo;
@@ -279,6 +280,7 @@ bool GenerateDeviceEntryFromEntry(const TrustedDeviceEntry *entry, TrustedDevice
     }
     returnEntry->credential = entry->credential;
     returnEntry->devType = entry->devType;
+    returnEntry->source = entry->source;
     returnEntry->lastTm = entry->lastTm;
     return true;
 }
@@ -344,6 +346,7 @@ static bool GenerateDeviceEntryFromTlv(TlvDeviceElement *device, TrustedDeviceEn
     }
     deviceEntry->credential = device->info.data.credential;
     deviceEntry->devType = device->info.data.devType;
+    deviceEntry->source = device->info.data.source;
     deviceEntry->lastTm = device->info.data.lastTm;
     return true;
 }
@@ -570,6 +573,7 @@ static bool SetDeviceElement(TlvDeviceElement *element, TrustedDeviceEntry *entr
     }
     element->info.data.credential = entry->credential;
     element->info.data.devType = entry->devType;
+    element->info.data.source = entry->source;
     element->info.data.lastTm = entry->lastTm;
     return true;
 }
