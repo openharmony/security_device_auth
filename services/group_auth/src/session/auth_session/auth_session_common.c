@@ -333,24 +333,26 @@ static int32_t ReturnErrorToLocalBySession(const AuthSession *session, int error
     ParamsVec list = session->paramsList;
     CJson *authParam = list.get(&list, session->currentIndex);
     int64_t requestId = 0;
-    int32_t authForm = 0;
+    int32_t authForm = AUTH_FORM_INVALID_TYPE;
     if (authParam == NULL) {
         LOGE("The json data in session is null!");
         return HC_ERR_NULL_PTR;
     }
     if (GetByteFromJson(authParam, FIELD_REQUEST_ID, (uint8_t *)&requestId, sizeof(int64_t)) != HC_SUCCESS) {
-        LOGE("Failed to add request id!");
+        LOGE("Failed to get request id!");
         return HC_ERR_JSON_GET;
     }
     if (GetIntFromJson(authParam, FIELD_AUTH_FORM, &authForm) != HC_SUCCESS) {
-        LOGE("Failed to add auth form!");
-        return HC_ERR_JSON_GET;
+        LOGD("Failed to get auth form, user default authForm!");
     }
 
     BaseGroupAuth *groupAuth = GetGroupAuth(GetGroupAuthType(authForm));
     if (groupAuth != NULL) {
         LOGE("Invoke ReturnErrorToLocalBySession for authForm:%d!", authForm);
         groupAuth->onError(requestId, session, errorCode);
+    } else if ((session->base.callback != NULL) && (session->base.callback->onError != NULL)) {
+        LOGE("Invoke onError to local device.");
+        session->base.callback->onError(requestId, authForm, errorCode, NULL);
     }
     return HC_SUCCESS;
 }
