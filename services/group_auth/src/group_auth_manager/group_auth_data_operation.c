@@ -50,6 +50,7 @@ static bool GaDeepCopyDeviceEntry(const TrustedDeviceEntry *entry, TrustedDevice
     returnEntry->credential = entry->credential;
     returnEntry->devType = entry->devType;
     returnEntry->lastTm = entry->lastTm;
+    returnEntry->source = entry->source;
     return true;
 }
 

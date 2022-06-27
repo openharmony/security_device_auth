@@ -247,6 +247,27 @@ static int32_t FillAccountAuthInfo(int32_t osAccountId, const TrustedGroupEntry 
     return FillAccountCredentialInfo(osAccountId, peerUdid, groupId, localAuthInfo, paramsData);
 }
 
+static bool IsDeviceImportedByCloud(int32_t osAccountId,  const char *peerUdid, const char *groupId)
+{
+    TrustedDeviceEntry *peerDeviceInfo = CreateDeviceEntry();
+    if (peerDeviceInfo == NULL) {
+        LOGE("Failed to alloc memory for peerDeviceInfo!");
+        return true;
+    }
+    if (GaGetTrustedDeviceEntryById(osAccountId, peerUdid, true, groupId, peerDeviceInfo) != HC_SUCCESS) {
+        LOGI("Peer trusted device is not in database.");
+        DestroyDeviceEntry(peerDeviceInfo);
+        return false;
+    }
+    uint8_t source = peerDeviceInfo->source;
+    DestroyDeviceEntry(peerDeviceInfo);
+    if (source == IMPORTED_FROM_CLOUD) {
+        LOGI("Peer trusted device is imported by cloud.");
+        return true;
+    }
+    return false;
+}
+
 static int32_t DeleteExistedDeviceInfoInDb(int32_t osAccountId, const CJson *authParam)
 {
     const char *peerUdid = GetStringFromJson(authParam, FIELD_PEER_CONN_DEVICE_ID);
@@ -258,6 +279,10 @@ static int32_t DeleteExistedDeviceInfoInDb(int32_t osAccountId, const CJson *aut
     if (groupId == NULL) {
         LOGE("Failed to get groupId from auth params when deleting device info!");
         return HC_ERR_JSON_GET;
+    }
+    if (IsDeviceImportedByCloud(osAccountId, peerUdid, groupId)) {
+        LOGI("Peer trusted device is imported by cloud, we don't delete peer device's trusted relationship.");
+        return HC_SUCCESS;
     }
     QueryDeviceParams devParams = InitQueryDeviceParams();
     devParams.groupId = groupId;
