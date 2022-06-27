@@ -84,7 +84,7 @@ static int32_t StartClientAuthTask(AuthSession *session)
     return res;
 }
 
-int32_t CheckClientGroupAuthMsg(AuthSession *session, const CJson *in)
+static int32_t CheckClientGroupAuthMsg(AuthSession *session, const CJson *in)
 {
     int32_t groupErrMsg = 0;
     if (GetIntFromJson(in, FIELD_GROUP_ERROR_MSG, &groupErrMsg) != HC_SUCCESS) {
@@ -100,11 +100,12 @@ int32_t CheckClientGroupAuthMsg(AuthSession *session, const CJson *in)
         FreeJson(outData);
         return HC_ERR_JSON_FAIL;
     }
-    if (InformAuthError(session, outData, HC_ERR_PEER_ERROR) != HC_SUCCESS) {
+    int32_t res = InformAuthError(session, outData, HC_ERR_PEER_ERROR);
+    if (res != HC_SUCCESS) {
         LOGE("Failed to inform auth error!");
     }
     FreeJson(outData);
-    return HC_ERR_PEER_ERROR;
+    return res;
 }
 
 static void PrintErrorInputInfo(const CJson *param)
@@ -164,8 +165,8 @@ static Session *CreateClientAuthSessionInner(int32_t osAccountId, CJson *param, 
     if ((res != HC_SUCCESS) || (authParamsVec.size(&authParamsVec) == 0)) {
         LOGE("Failed to get auth param list, candidate group = %u!", authParamsVec.size(&authParamsVec));
         DestroyAuthParamsVec(&authParamsVec);
-        InformLocalAuthError(param, callback);
         PrintErrorInputInfo(param);
+        InformLocalAuthError(param, callback);
         return NULL;
     }
 
