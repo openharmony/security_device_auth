@@ -13,6 +13,7 @@
 
 import("//base/security/device_auth/deps_adapter/deviceauth_hals.gni")
 import("//base/security/device_auth/services/deviceauth.gni")
+import("//base/security/device_auth/services/key_agree_sdk/key_agree_sdk.gni")
 import("//build/test.gni")
 
 module_output_path = "device_auth/deviceauth_test"
@@ -78,4 +79,34 @@ ohos_unittest("deviceauth_llt") {
   if (support_jsapi) {
     external_deps += [ "os_account:os_account_innerkits" ]
   }
+}
+
+ohos_unittest("key_agree_sdk_llt") {
+  module_out_path = module_output_path
+
+  include_dirs = hals_inc_path + key_agree_inc_path
+  include_dirs += [ "./include" ]
+
+  sources = key_agree_sdk_file
+  sources += key_agree_deviceauth_common_files
+  sources += key_agree_hal_common_files
+  sources += [ "source/key_agree_sdk_test.cpp" ]
+
+  cflags = [ "-DHILOG_ENABLE" ]
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+
+  deps = [
+    "${deps_adapter_path}:${hal_module_name}",
+    "//third_party/cJSON:cjson_static",
+    "//third_party/bounds_checking_function:libsec_shared",
+  ]
+
+  defines = [ "HILOG_ENABLE" ]
+  defines += key_agree_defines
+
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog"
+  ]
 }
