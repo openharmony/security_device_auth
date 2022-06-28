@@ -674,6 +674,9 @@ static bool CompareQueryGroupParams(const QueryGroupParams *params, const Truste
     if ((params->userId != NULL) && (strcmp(params->userId, StringGet(&entry->userId)) != 0)) {
         return false;
     }
+    if ((params->sharedUserId != NULL) && (strcmp(params->sharedUserId, StringGet(&entry->sharedUserId)) != 0)) {
+        return false;
+    }
     if ((params->groupType != ALL_GROUP) && (params->groupType != entry->type)) {
         return false;
     }
@@ -698,6 +701,9 @@ static bool CompareQueryDeviceParams(const QueryDeviceParams *params, const Trus
         return false;
     }
     if ((params->authId != NULL) && (strcmp(params->authId, StringGet(&entry->authId)) != 0)) {
+        return false;
+    }
+    if ((params->userId != NULL) && (strcmp(params->userId, StringGet(&entry->userId)) != 0)) {
         return false;
     }
     return true;
@@ -794,7 +800,8 @@ QueryDeviceParams InitQueryDeviceParams(void)
     QueryDeviceParams params = {
         .groupId = NULL,
         .udid = NULL,
-        .authId = NULL
+        .authId = NULL,
+        .userId = NULL
     };
     return params;
 }

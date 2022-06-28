@@ -60,6 +60,7 @@ typedef struct {
     const char *groupName;
     const char *ownerName;
     const char *userId;
+    const char *sharedUserId;
     int32_t groupType;
     int32_t groupVisibility;
 } QueryGroupParams;
@@ -68,6 +69,7 @@ typedef struct {
     const char *groupId;
     const char *udid;
     const char *authId;
+    const char *userId;
 } QueryDeviceParams;
 
 #ifdef __cplusplus
