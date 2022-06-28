@@ -60,3 +60,10 @@ group("deviceauth_test_build") {
     ]
   }
 }
+
+group("key_agree_sdk_test_build") {
+  if (os_level == "standard") {
+    testonly = true
+    deps = [ "test/unittest/deviceauth:key_agree_sdk_llt" ]
+  }
+}

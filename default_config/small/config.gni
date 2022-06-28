@@ -22,4 +22,9 @@ declare_args() {
 
   enable_p2p_pake_dl_prime_len_384 = true
   enable_p2p_pake_dl_prime_len_256 = false
+
+  enable_key_agree_dl_prime_len_384 = true
+  enable_key_agree_dl_prime_len_256 = true
+  enable_key_agree_pake_ec_prime_p256 = true
+  enable_key_agree_pake_ec_prime_x25519 = true
 }
