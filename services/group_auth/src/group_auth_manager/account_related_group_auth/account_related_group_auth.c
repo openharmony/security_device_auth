@@ -196,8 +196,8 @@ static int32_t FillAccountCredentialInfo(int32_t osAccountId, const char *peerUd
     int32_t localDevType = DEVICE_TYPE_CONTROLLER;
     int32_t authCredential = localAuthInfo->credential;
     int32_t res = GaGetTrustedDeviceEntryById(osAccountId, peerUdid, true, groupId, peerDevInfo);
-    if (res != HC_SUCCESS) {
-        LOGI("No peer trusted device in db, pass local device info to account authenticator.");
+    if ((res != HC_SUCCESS) || (peerDevInfo->source == SELF_CREATED)) {
+        LOGI("Peer device's query result = %d, pass local device info to account authenticator.", res);
         localDevType = DEVICE_TYPE_ACCESSORY; /* Controller has peer device info, which is added by caller. */
     }
     if ((res == HC_SUCCESS) && (peerDevInfo->credential == SYMMETRIC_CRED) &&
@@ -282,18 +282,20 @@ static int32_t DeleteExistedDeviceInfoInDb(int32_t osAccountId, const CJson *aut
         return HC_ERR_JSON_GET;
     }
     if (IsDeviceImportedByCloud(osAccountId, peerUdid, groupId)) {
-        LOGI("Peer trusted device is imported by cloud, we don't delete peer device's trusted relationship.");
+        LOGD("Peer trusted device is imported by cloud, we don't delete peer device's trusted relationship.");
         return HC_SUCCESS;
     }
     QueryDeviceParams devParams = InitQueryDeviceParams();
     devParams.groupId = groupId;
     devParams.udid = peerUdid;
-    int32_t result = DelTrustedDevice(osAccountId, &devParams);
-    if (result != HC_SUCCESS) {
+    if (DelTrustedDevice(osAccountId, &devParams) != HC_SUCCESS) {
         LOGE("Failed to delete peer device from database!");
-        return result;
+        return HC_ERR_DB;
     }
-    LOGI("Success to delete peer account-related device in database.");
+    if (SaveOsAccountDb(osAccountId) != HC_SUCCESS) {
+        return HC_ERR_DB;
+    }
+    LOGD("Success to delete peer account-related device in database.");
     return HC_SUCCESS;
 }
 
@@ -570,8 +572,8 @@ static int32_t AccountOnFinishToPeer(int64_t requestId, const CJson *out, const 
     return res;
 }
 
-static int32_t PrepareTrustedDeviceInfo(int32_t osAccountId, const CJson *authParam,
-    const CJson *out, TrustedDeviceEntry *devEntry)
+static int32_t PrepareTrustedDeviceInfo(const char *peerUdid, const char *groupId,
+    const CJson *authParam, const CJson *out, TrustedDeviceEntry *devEntry)
 {
     devEntry->source = SELF_CREATED;
     const CJson *sendToSelf = GetObjFromJson(out, FIELD_SEND_TO_SELF);
@@ -585,19 +587,9 @@ static int32_t PrepareTrustedDeviceInfo(int32_t osAccountId, const CJson *authPa
         return HC_ERR_JSON_GET;
     }
     devEntry->credential = credentialType;
-    const char *peerUdid = GetStringFromJson(authParam, FIELD_PEER_CONN_DEVICE_ID);
-    if (peerUdid == NULL) {
-        LOGE("Failed to get peer udid for account!");
-        return HC_ERR_JSON_GET;
-    }
     const char *peerAuthId = GetStringFromJson(sendToSelf, FIELD_DEV_ID);
     if (peerAuthId == NULL) {
         LOGE("Failed to get peer authId for account!");
-        return HC_ERR_JSON_GET;
-    }
-    const char *groupId = GetStringFromJson(authParam, FIELD_GROUP_ID);
-    if (groupId == NULL) {
-        LOGE("Failed to get groupId from auth params when adding device info!");
         return HC_ERR_JSON_GET;
     }
     const char *peerUserId = GetStringFromJson(sendToSelf, FIELD_USER_ID);
@@ -623,6 +615,20 @@ static int32_t AddTrustedDeviceForAccount(const CJson *authParam, const CJson *o
         LOGE("Failed to get osAccountId for account!");
         return HC_ERR_JSON_GET;
     }
+    const char *peerUdid = GetStringFromJson(authParam, FIELD_PEER_CONN_DEVICE_ID);
+    if (peerUdid == NULL) {
+        LOGE("Failed to get peer udid when adding peer trusted device!");
+        return HC_ERR_JSON_GET;
+    }
+    const char *groupId = GetStringFromJson(authParam, FIELD_GROUP_ID);
+    if (groupId == NULL) {
+        LOGE("Failed to get groupId when adding peer trusted device!");
+        return HC_ERR_JSON_GET;
+    }
+    if (IsDeviceImportedByCloud(osAccountId, peerUdid, groupId)) {
+        LOGD("Peer trusted device is imported by cloud, we don't update peer device's trusted relationship.");
+        return HC_SUCCESS;
+    }
     TrustedDeviceEntry *devEntry = CreateDeviceEntry();
     if (devEntry == NULL) {
         LOGE("Failed to allocate device entry memory!");
@@ -630,7 +636,7 @@ static int32_t AddTrustedDeviceForAccount(const CJson *authParam, const CJson *o
     }
     int32_t res;
     do {
-        res = PrepareTrustedDeviceInfo(osAccountId, authParam, out, devEntry);
+        res = PrepareTrustedDeviceInfo(peerUdid, groupId, authParam, out, devEntry);
         if (res != HC_SUCCESS) {
             LOGE("Failed to prepare trust device params!");
             break;
@@ -640,6 +646,7 @@ static int32_t AddTrustedDeviceForAccount(const CJson *authParam, const CJson *o
             LOGE("Failed to add trusted devices for account to database!");
             break;
         }
+        res = SaveOsAccountDb(osAccountId);
     } while (0);
     DestroyDeviceEntry(devEntry);
     return res;
