@@ -25,12 +25,12 @@
 using namespace std;
 using namespace testing::ext;
 
-#define TEST_SESSION_ID_CLIENT 1001
-#define TEST_SESSION_ID_SERVER 1002
-#define TEST_MESSAGE_LENGTH 2048
-#define TEST_SHARED_SECRET_LENGTH 7
-#define TEST_DEVICE_ID_LENGTH 17
-#define TEST_SESSION_KEY_LENGTH 64
+static const int32_t g_sessionIdClient = 1001;
+static const int32_t g_sessionIdServer = 1002;
+static const int32_t g_messageLength = 2048;
+static const int32_t g_sharedSecretLength = 7;
+static const int32_t g_deviceIdLength = 17;
+static const int32_t g_sessionKeyLength = 64;
 #define TEST_APP_ID "TestAppId"
 
 static KeyAgreeSession *g_session;
@@ -73,49 +73,49 @@ void KeyAgreeInitSessionTest::TearDown()
 
 HWTEST_F(KeyAgreeInitSessionTest, KeyAgreeInitSessionTest001, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_ANY, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 }
 
 HWTEST_F(KeyAgreeInitSessionTest, KeyAgreeInitSessionTest002, TestSize.Level0)
 {
-    g_session_s->sessionId = TEST_SESSION_ID_SERVER;
+    g_session_s->sessionId = g_sessionIdServer;
     KeyAgreeResult res = KeyAgreeInitSession(g_session_s, KEYAGREE_PROTOCOL_ANY, KEYAGREE_TYPE_SERVER);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 }
 
 HWTEST_F(KeyAgreeInitSessionTest, KeyAgreeInitSessionTest003, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_DL_SPEKE_256, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 }
 
 HWTEST_F(KeyAgreeInitSessionTest, KeyAgreeInitSessionTest004, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_DL_SPEKE_384, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 }
 
 HWTEST_F(KeyAgreeInitSessionTest, KeyAgreeInitSessionTest005, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_EC_SPEKE_P256, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 }
 
 HWTEST_F(KeyAgreeInitSessionTest, KeyAgreeInitSessionTest006, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_EC_SPEKE_X25519, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 }
 
 HWTEST_F(KeyAgreeInitSessionTest, KeyAgreeInitSessionTest007, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(NULL, KEYAGREE_PROTOCOL_EC_SPEKE_X25519, KEYAGREE_TYPE_CLIENT);
     EXPECT_NE(res, KEYAGREE_SUCCESS);
 }
@@ -133,17 +133,17 @@ void KeyAgreeStartSessionTest::SetUpTestCase()
     g_session = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
     g_session_s = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
 
-    g_sharedSecret.length = TEST_SHARED_SECRET_LENGTH;
+    g_sharedSecret.length = g_sharedSecretLength;
     g_sharedSecret.data = (uint8_t *)HcMalloc(g_sharedSecret.length, 0);
-    (void)memcpy_s(g_sharedSecret.data, g_sharedSecret.length, (uint8_t *)"123456", TEST_SHARED_SECRET_LENGTH);
+    (void)memcpy_s(g_sharedSecret.data, g_sharedSecret.length, (uint8_t *)"123456", g_sharedSecretLength);
 
-    g_deviceId.length = TEST_DEVICE_ID_LENGTH;
+    g_deviceId.length = g_deviceIdLength;
     g_deviceId.data = (uint8_t *)HcMalloc(g_deviceId.length, 0);
-    (void)memcpy_s(g_deviceId.data, g_deviceId.length, (uint8_t *)"clientclientabcd", TEST_DEVICE_ID_LENGTH);
+    (void)memcpy_s(g_deviceId.data, g_deviceId.length, (uint8_t *)"clientclientabcd", g_deviceIdLength);
 
-    g_deviceId_s.length = TEST_DEVICE_ID_LENGTH;
+    g_deviceId_s.length = g_deviceIdLength;
     g_deviceId_s.data = (uint8_t *)HcMalloc(g_deviceId_s.length, 0);
-    (void)memcpy_s(g_deviceId_s.data, g_deviceId_s.length, (uint8_t *)"serverserverabcd", TEST_DEVICE_ID_LENGTH);
+    (void)memcpy_s(g_deviceId_s.data, g_deviceId_s.length, (uint8_t *)"serverserverabcd", g_deviceIdLength);
 }
 
 void KeyAgreeStartSessionTest::TearDownTestCase()
@@ -163,7 +163,7 @@ void KeyAgreeStartSessionTest::TearDown()
 
 HWTEST_F(KeyAgreeStartSessionTest, KeyAgreeStartSessionTest001, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_ANY, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
@@ -173,7 +173,7 @@ HWTEST_F(KeyAgreeStartSessionTest, KeyAgreeStartSessionTest001, TestSize.Level0)
 
 HWTEST_F(KeyAgreeStartSessionTest, KeyAgreeStartSessionTest002, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_ANY, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
@@ -183,7 +183,7 @@ HWTEST_F(KeyAgreeStartSessionTest, KeyAgreeStartSessionTest002, TestSize.Level0)
 
 HWTEST_F(KeyAgreeStartSessionTest, KeyAgreeStartSessionTest003, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_ANY, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
@@ -193,7 +193,7 @@ HWTEST_F(KeyAgreeStartSessionTest, KeyAgreeStartSessionTest003, TestSize.Level0)
 
 HWTEST_F(KeyAgreeStartSessionTest, KeyAgreeStartSessionTest004, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_ANY, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
@@ -214,17 +214,17 @@ void KeyAgreeGenerateNextMessageTest::SetUpTestCase()
     g_session = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
     g_session_s = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
 
-    g_sharedSecret.length = 6;
-    g_sharedSecret.data = (uint8_t *)HcMalloc(g_sharedSecret.length, 0);
-    (void)memcpy_s(g_sharedSecret.data, g_sharedSecret.length, (uint8_t *)"123456", 6);
+    g_sharedSecret.length = g_sharedSecretLength;
+    g_sharedSecret.data = (uint8_t *)HcMalloc(g_sharedSecret.length, g_sharedSecretLength);
+    (void)memcpy_s(g_sharedSecret.data, g_sharedSecret.length, (uint8_t *)"123456", g_sharedSecretLength);
 
-    g_deviceId.length = 16;
+    g_deviceId.length = g_deviceIdLength;
     g_deviceId.data = (uint8_t *)HcMalloc(g_deviceId.length, 0);
-    (void)memcpy_s(g_deviceId.data, g_deviceId.length, (uint8_t *)"clientclientabcd", 16);
+    (void)memcpy_s(g_deviceId.data, g_deviceId.length, (uint8_t *)"clientclientabcd", g_deviceIdLength);
 
-    g_deviceId_s.length = 16;
+    g_deviceId_s.length = g_deviceIdLength;
     g_deviceId_s.data = (uint8_t *)HcMalloc(g_deviceId_s.length, 0);
-    (void)memcpy_s(g_deviceId_s.data, g_deviceId_s.length, (uint8_t *)"serverserverabcd", 16);
+    (void)memcpy_s(g_deviceId_s.data, g_deviceId_s.length, (uint8_t *)"serverserverabcd", g_deviceIdLength);
 }
 void KeyAgreeGenerateNextMessageTest::TearDownTestCase()
 {
@@ -236,25 +236,25 @@ void KeyAgreeGenerateNextMessageTest::TearDownTestCase()
 }
 void KeyAgreeGenerateNextMessageTest::SetUp()
 {
-    g_messageToTransmit1.length = TEST_MESSAGE_LENGTH;
+    g_messageToTransmit1.length = g_messageLength;
     g_messageToTransmit1.data = (uint8_t *)HcMalloc(g_messageToTransmit1.length, 0);
 
-    g_messageToTransmit2.length = TEST_MESSAGE_LENGTH;
+    g_messageToTransmit2.length = g_messageLength;
     g_messageToTransmit2.data = (uint8_t *)HcMalloc(g_messageToTransmit2.length, 0);
 
-    g_messageToTransmit3.length = TEST_MESSAGE_LENGTH;
+    g_messageToTransmit3.length = g_messageLength;
     g_messageToTransmit3.data = (uint8_t *)HcMalloc(g_messageToTransmit3.length, 0);
 
-    g_messageToTransmit4.length = TEST_MESSAGE_LENGTH;
+    g_messageToTransmit4.length = g_messageLength;
     g_messageToTransmit4.data = (uint8_t *)HcMalloc(g_messageToTransmit4.length, 0);
 
-    g_messageToTransmit5.length = TEST_MESSAGE_LENGTH;
+    g_messageToTransmit5.length = g_messageLength;
     g_messageToTransmit5.data = (uint8_t *)HcMalloc(g_messageToTransmit5.length, 0);
 
-    g_sessionKey_s.length = TEST_SESSION_KEY_LENGTH;
+    g_sessionKey_s.length = g_sessionKeyLength;
     g_sessionKey_s.data = (uint8_t *)HcMalloc(g_sessionKey_s.length, 0);
 
-    g_sessionKey.length = TEST_SESSION_KEY_LENGTH;
+    g_sessionKey.length = g_sessionKeyLength;
     g_sessionKey.data = (uint8_t *)HcMalloc(g_sessionKey.length, 0);
 }
 void KeyAgreeGenerateNextMessageTest::TearDown()
@@ -272,11 +272,11 @@ void KeyAgreeGenerateNextMessageTest::TearDown()
 
 HWTEST_F(KeyAgreeGenerateNextMessageTest, KeyAgreeGenerateNextMessageTest001, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_ANY, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
-    g_session_s->sessionId = TEST_SESSION_ID_SERVER;
+    g_session_s->sessionId = g_sessionIdServer;
     res = KeyAgreeInitSession(g_session_s, KEYAGREE_PROTOCOL_ANY, KEYAGREE_TYPE_SERVER);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
@@ -327,11 +327,11 @@ HWTEST_F(KeyAgreeGenerateNextMessageTest, KeyAgreeGenerateNextMessageTest001, Te
 
 HWTEST_F(KeyAgreeGenerateNextMessageTest, KeyAgreeGenerateNextMessageTest002, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_DL_SPEKE_256, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
-    g_session_s->sessionId = TEST_SESSION_ID_SERVER;
+    g_session_s->sessionId = g_sessionIdServer;
     res = KeyAgreeInitSession(g_session_s, KEYAGREE_PROTOCOL_DL_SPEKE_256, KEYAGREE_TYPE_SERVER);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
@@ -376,11 +376,11 @@ HWTEST_F(KeyAgreeGenerateNextMessageTest, KeyAgreeGenerateNextMessageTest002, Te
 
 HWTEST_F(KeyAgreeGenerateNextMessageTest, KeyAgreeGenerateNextMessageTest003, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_DL_SPEKE_384, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
-    g_session_s->sessionId = TEST_SESSION_ID_SERVER;
+    g_session_s->sessionId = g_sessionIdServer;
     res = KeyAgreeInitSession(g_session_s, KEYAGREE_PROTOCOL_DL_SPEKE_384, KEYAGREE_TYPE_SERVER);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
@@ -425,11 +425,11 @@ HWTEST_F(KeyAgreeGenerateNextMessageTest, KeyAgreeGenerateNextMessageTest003, Te
 
 HWTEST_F(KeyAgreeGenerateNextMessageTest, KeyAgreeGenerateNextMessageTest004, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_EC_SPEKE_P256, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
-    g_session_s->sessionId = TEST_SESSION_ID_SERVER;
+    g_session_s->sessionId = g_sessionIdServer;
     res = KeyAgreeInitSession(g_session_s, KEYAGREE_PROTOCOL_EC_SPEKE_P256, KEYAGREE_TYPE_SERVER);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
@@ -474,11 +474,11 @@ HWTEST_F(KeyAgreeGenerateNextMessageTest, KeyAgreeGenerateNextMessageTest004, Te
 
 HWTEST_F(KeyAgreeGenerateNextMessageTest, KeyAgreeGenerateNextMessageTest005, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_EC_SPEKE_X25519, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
-    g_session_s->sessionId = TEST_SESSION_ID_SERVER;
+    g_session_s->sessionId = g_sessionIdServer;
     res = KeyAgreeInitSession(g_session_s, KEYAGREE_PROTOCOL_EC_SPEKE_X25519, KEYAGREE_TYPE_SERVER);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
@@ -523,11 +523,11 @@ HWTEST_F(KeyAgreeGenerateNextMessageTest, KeyAgreeGenerateNextMessageTest005, Te
 
 HWTEST_F(KeyAgreeGenerateNextMessageTest, KeyAgreeGenerateNextMessageTest006, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_EC_SPEKE_X25519, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
-    g_session_s->sessionId = TEST_SESSION_ID_SERVER;
+    g_session_s->sessionId = g_sessionIdServer;
     res = KeyAgreeInitSession(g_session_s, KEYAGREE_PROTOCOL_EC_SPEKE_P256, KEYAGREE_TYPE_SERVER);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
@@ -583,7 +583,7 @@ void KeyAgreeIsFinishTest::TearDown()
 
 HWTEST_F(KeyAgreeIsFinishTest, KeyAgreeIsFinishTest001, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_ANY, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
@@ -593,7 +593,7 @@ HWTEST_F(KeyAgreeIsFinishTest, KeyAgreeIsFinishTest001, TestSize.Level0)
 
 HWTEST_F(KeyAgreeIsFinishTest, KeyAgreeIsFinishTest002, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_ANY, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
@@ -614,10 +614,10 @@ void KeyAgreeGetResultTest::SetUpTestCase()
     g_session = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
     g_session_s = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
 
-    g_sessionKey_s.length = TEST_SESSION_KEY_LENGTH;
+    g_sessionKey_s.length = g_sessionKeyLength;
     g_sessionKey_s.data = (uint8_t *)HcMalloc(g_sessionKey_s.length, 0);
 
-    g_sessionKey.length = TEST_SESSION_KEY_LENGTH;
+    g_sessionKey.length = g_sessionKeyLength;
     g_sessionKey.data = (uint8_t *)HcMalloc(g_sessionKey.length, 0);
 }
 void KeyAgreeGetResultTest::TearDownTestCase()
@@ -636,7 +636,7 @@ void KeyAgreeGetResultTest::TearDown()
 
 HWTEST_F(KeyAgreeGetResultTest, KeyAgreeGetResultTest001, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_ANY, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
@@ -646,7 +646,7 @@ HWTEST_F(KeyAgreeGetResultTest, KeyAgreeGetResultTest001, TestSize.Level0)
 
 HWTEST_F(KeyAgreeGetResultTest, KeyAgreeGetResultTest002, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_ANY, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
@@ -667,37 +667,37 @@ void KeyAgreeFreeSessionTest::SetUpTestCase()
     g_session = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
     g_session_s = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
 
-    g_sharedSecret.length = 6;
+    g_sharedSecret.length = g_sharedSecretLength;
     g_sharedSecret.data = (uint8_t *)HcMalloc(g_sharedSecret.length, 0);
-    (void)memcpy_s(g_sharedSecret.data, g_sharedSecret.length, (uint8_t *)"123456", 6);
+    (void)memcpy_s(g_sharedSecret.data, g_sharedSecret.length, (uint8_t *)"123456", g_sharedSecretLength);
 
-    g_deviceId.length = 16;
+    g_deviceId.length = g_deviceIdLength;
     g_deviceId.data = (uint8_t *)HcMalloc(g_deviceId.length, 0);
-    (void)memcpy_s(g_deviceId.data, g_deviceId.length, (uint8_t *)"clientclientabcd", 16);
+    (void)memcpy_s(g_deviceId.data, g_deviceId.length, (uint8_t *)"clientclientabcd", g_deviceIdLength);
 
-    g_deviceId_s.length = 16;
+    g_deviceId_s.length = g_deviceIdLength;
     g_deviceId_s.data = (uint8_t *)HcMalloc(g_deviceId_s.length, 0);
-    (void)memcpy_s(g_deviceId_s.data, g_deviceId_s.length, (uint8_t *)"serverserverabcd", 16);
+    (void)memcpy_s(g_deviceId_s.data, g_deviceId_s.length, (uint8_t *)"serverserverabcd", g_deviceIdLength);
 
-    g_messageToTransmit1.length = TEST_MESSAGE_LENGTH;
+    g_messageToTransmit1.length = g_messageLength;
     g_messageToTransmit1.data = (uint8_t *)HcMalloc(g_messageToTransmit1.length, 0);
 
-    g_messageToTransmit2.length = TEST_MESSAGE_LENGTH;
+    g_messageToTransmit2.length = g_messageLength;
     g_messageToTransmit2.data = (uint8_t *)HcMalloc(g_messageToTransmit2.length, 0);
 
-    g_messageToTransmit3.length = TEST_MESSAGE_LENGTH;
+    g_messageToTransmit3.length = g_messageLength;
     g_messageToTransmit3.data = (uint8_t *)HcMalloc(g_messageToTransmit3.length, 0);
 
-    g_messageToTransmit4.length = TEST_MESSAGE_LENGTH;
+    g_messageToTransmit4.length = g_messageLength;
     g_messageToTransmit4.data = (uint8_t *)HcMalloc(g_messageToTransmit4.length, 0);
 
-    g_messageToTransmit5.length = TEST_MESSAGE_LENGTH;
+    g_messageToTransmit5.length = g_messageLength;
     g_messageToTransmit5.data = (uint8_t *)HcMalloc(g_messageToTransmit5.length, 0);
 
-    g_sessionKey_s.length = TEST_SESSION_KEY_LENGTH;
+    g_sessionKey_s.length = g_sessionKeyLength;
     g_sessionKey_s.data = (uint8_t *)HcMalloc(g_sessionKey_s.length, 0);
 
-    g_sessionKey.length = TEST_SESSION_KEY_LENGTH;
+    g_sessionKey.length = g_sessionKeyLength;
     g_sessionKey.data = (uint8_t *)HcMalloc(g_sessionKey.length, 0);
 }
 void KeyAgreeFreeSessionTest::TearDownTestCase()
@@ -724,11 +724,11 @@ void KeyAgreeFreeSessionTest::TearDown()
 
 HWTEST_F(KeyAgreeFreeSessionTest, KeyAgreeFreeSessionTest001, TestSize.Level0)
 {
-    g_session->sessionId = TEST_SESSION_ID_CLIENT;
+    g_session->sessionId = g_sessionIdClient;
     KeyAgreeResult res = KeyAgreeInitSession(g_session, KEYAGREE_PROTOCOL_ANY, KEYAGREE_TYPE_CLIENT);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
-    g_session_s->sessionId = TEST_SESSION_ID_SERVER;
+    g_session_s->sessionId = g_sessionIdServer;
     res = KeyAgreeInitSession(g_session_s, KEYAGREE_PROTOCOL_ANY, KEYAGREE_TYPE_SERVER);
     EXPECT_EQ(res, KEYAGREE_SUCCESS);
 
