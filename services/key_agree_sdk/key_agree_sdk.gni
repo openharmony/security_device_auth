@@ -14,19 +14,19 @@
 import("//base/security/device_auth/deviceauth_env.gni")
 
 protocol_path = "${services_path}/protocol"
-key_agree_sdk_path = "${services_path}/key_agree_sdk" 
+key_agree_sdk_path = "${services_path}/key_agree_sdk"
 dev_frameworks_path = "${services_path}/frameworks"
 
 key_agree_inc_path = [
-    "${innerkits_path}",
-    "${common_lib_path}/interfaces",
-    "${dev_frameworks_path}/inc/", 
-    "${key_agree_sdk_path}/inc",
-    "${protocol_path}/inc",
-    "${protocol_path}/inc/pake_protocol",
-    "${protocol_path}/inc/pake_protocol/pake_v2_protocol",
-    "${protocol_path}/inc/pake_protocol/pake_protocol_dl_common",
-    "${protocol_path}/inc/pake_protocol/pake_protocol_ec_common",
+  "${innerkits_path}",
+  "${common_lib_path}/interfaces",
+  "${dev_frameworks_path}/inc/",
+  "${key_agree_sdk_path}/inc",
+  "${protocol_path}/inc",
+  "${protocol_path}/inc/pake_protocol",
+  "${protocol_path}/inc/pake_protocol/pake_v2_protocol",
+  "${protocol_path}/inc/pake_protocol/pake_protocol_dl_common",
+  "${protocol_path}/inc/pake_protocol/pake_protocol_ec_common",
 ]
 
 key_agree_deviceauth_common_files = [
