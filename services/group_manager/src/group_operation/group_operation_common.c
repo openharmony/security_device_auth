@@ -391,6 +391,40 @@ static int32_t AddGroupVisibilityToReturn(const TrustedGroupEntry *groupInfo, CJ
     return HC_SUCCESS;
 }
 
+static int32_t AddUserIdToReturnIfAccountGroup(const TrustedGroupEntry *groupInfo, CJson *json)
+{
+    if ((groupInfo->type != ACROSS_ACCOUNT_AUTHORIZE_GROUP) && (groupInfo->type != IDENTICAL_ACCOUNT_GROUP)) {
+        return HC_SUCCESS;
+    }
+    const char *userId = StringGet(&groupInfo->userId);
+    if (userId == NULL) {
+        LOGE("Failed to get userId from groupInfo!");
+        return HC_ERR_NULL_PTR;
+    }
+    if (AddStringToJson(json, FIELD_USER_ID, userId) != HC_SUCCESS) {
+        LOGE("Failed to add userId to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t AddSharedUserIdToReturnIfAcrossAccountGroup(const TrustedGroupEntry *groupInfo, CJson *json)
+{
+    if (groupInfo->type != ACROSS_ACCOUNT_AUTHORIZE_GROUP) {
+        return HC_SUCCESS;
+    }
+    const char *sharedUserId = StringGet(&groupInfo->sharedUserId);
+    if (sharedUserId == NULL) {
+        LOGE("Failed to get sharedUserId from groupInfo!");
+        return HC_ERR_NULL_PTR;
+    }
+    if (AddStringToJson(json, FIELD_SHARED_USER_ID, sharedUserId) != HC_SUCCESS) {
+        LOGE("Failed to add sharedUserId to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t AddAuthIdToReturn(const TrustedDeviceEntry *deviceInfo, CJson *json)
 {
     const char *authId = StringGet(&deviceInfo->authId);
@@ -437,7 +471,9 @@ int32_t GenerateReturnGroupInfo(const TrustedGroupEntry *groupEntry, CJson *retu
         ((result = AddGroupIdToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
         ((result = AddGroupOwnerToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
         ((result = AddGroupTypeToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddGroupVisibilityToReturn(groupEntry, returnJson)) != HC_SUCCESS)) {
+        ((result = AddGroupVisibilityToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
+        ((result = AddUserIdToReturnIfAccountGroup(groupEntry, returnJson)) != HC_SUCCESS) ||
+        ((result = AddSharedUserIdToReturnIfAcrossAccountGroup(groupEntry, returnJson)) != HC_SUCCESS)) {
         return result;
     }
     return HC_SUCCESS;
