@@ -23,6 +23,7 @@
 #include "device_auth_defines.h"
 #include "dev_auth_module_manager.h"
 #include "group_operation_common.h"
+#include "hc_dev_info.h"
 #include "hc_log.h"
 #include "string_util.h"
 
@@ -85,11 +86,49 @@ static int32_t GenerateGroupId(const char *userId, const char *sharedUserId, cha
     return HC_SUCCESS;
 }
 
+static int32_t AddCredTypeToParamsFromIdenticalGroup(int32_t osAccountId, CJson *jsonParams)
+{
+    char *userId = NULL;
+    int32_t result = GetUserIdFromJson(jsonParams, &userId);
+    if (result != HC_SUCCESS) {
+        return result;
+    }
+    char localUdid[INPUT_UDID_LEN] = { 0 };
+    int32_t res = HcGetUdid((uint8_t *)localUdid, INPUT_UDID_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get local udid!");
+        HcFree(userId);
+        return res;
+    }
+    DeviceEntryVec deviceEntryVec = CREATE_HC_VECTOR(DeviceEntryVec);
+    QueryDeviceParams params = InitQueryDeviceParams();
+    params.userId = userId;
+    params.udid = localUdid;
+    if ((QueryDevices(osAccountId, &params, &deviceEntryVec) != HC_SUCCESS) ||
+        (deviceEntryVec.size(&deviceEntryVec) <= 0)) {
+        LOGE("query trusted devices failed!");
+        HcFree(userId);
+        ClearDeviceEntryVec(&deviceEntryVec);
+        return HC_ERR_DEVICE_NOT_EXIST;
+    }
+    TrustedDeviceEntry *deviceEntry = deviceEntryVec.get(&deviceEntryVec, 0);
+    if (AddIntToJson(jsonParams, FIELD_CREDENTIAL_TYPE, deviceEntry->credential) != HC_SUCCESS) {
+        LOGE("Failed to add credentialType to jsonParams!");
+        HcFree(userId);
+        ClearDeviceEntryVec(&deviceEntryVec);
+        return HC_ERR_JSON_ADD;
+    }
+    HcFree(userId);
+    ClearDeviceEntryVec(&deviceEntryVec);
+    return HC_SUCCESS;
+}
+
 static int32_t GenerateDevParams(const CJson *jsonParams, const char *groupId, TrustedDeviceEntry *devParams)
 {
     int32_t result;
     if (((result = AddSelfUdidToParams(devParams)) != HC_SUCCESS) ||
         ((result = AddAuthIdToParamsOrDefault(jsonParams, devParams)) != HC_SUCCESS) ||
+        ((result = AddCredTypeToParams(jsonParams, devParams)) != HC_SUCCESS) ||
         ((result = AddUserIdToDevParams(jsonParams, devParams)) != HC_SUCCESS) ||
         ((result = AddSourceToParams(SELF_CREATED, devParams)) != HC_SUCCESS) ||
         ((result = AddUserTypeToParamsOrDefault(jsonParams, devParams)) != HC_SUCCESS) ||
@@ -424,6 +463,7 @@ static int32_t CreateGroup(int32_t osAccountId, CJson *jsonParams, char **return
     if (((result = CheckCreateParams(osAccountId, jsonParams)) != HC_SUCCESS) ||
         ((result = GenerateAcrossAccountGroupId(jsonParams, &groupId)) != HC_SUCCESS) ||
         ((result = AssertSameGroupNotExist(osAccountId, groupId)) != HC_SUCCESS) ||
+        ((result = AddCredTypeToParamsFromIdenticalGroup(osAccountId, jsonParams)) != HC_SUCCESS) ||
         ((result = AddGroupAndLocalDev(osAccountId, jsonParams, groupId)) != HC_SUCCESS) ||
         ((result = ConvertGroupIdToJsonStr(groupId, returnJsonStr)) != HC_SUCCESS)) {
         HcFree(groupId);
@@ -480,6 +520,11 @@ static int32_t AddMultiMembersToGroup(int32_t osAccountId, const char *appId, CJ
             addedCount++;
         }
     }
+    res = SaveOsAccountDb(osAccountId);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to save database!");
+        return res;
+    }
     LOGI("[End]: Add multiple members to a across account group successfully! [ListNum]: %d, [AddedNum]: %d",
         deviceNum, addedCount);
     return HC_SUCCESS;
@@ -512,6 +557,11 @@ static int32_t DelMultiMembersFromGroup(int32_t osAccountId, const char *appId, 
         if (DelPeerDeviceAndToken(osAccountId, jsonParams, deviceInfo) == HC_SUCCESS) {
             deletedCount++;
         }
+    }
+    res = SaveOsAccountDb(osAccountId);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to save database!");
+        return res;
     }
     LOGI("[End]: Delete multiple members from a across account group successfully! [ListNum]: %d, [DeletedNum]: %d",
         deviceNum, deletedCount);

@@ -89,14 +89,15 @@ static int32_t GetUserIdForAccount(const CJson *sendToSelf, CJson *returnToSelf)
     return HC_SUCCESS;
 }
 
-static bool IsPeerInAccountRelatedGroup(const TrustedGroupEntry *groupEntry, const char *peerUserId)
+static bool IsPeerInAccountRelatedGroup(const TrustedGroupEntry *groupEntry, const char *peerUserId, GroupType type)
 {
-    const char *peerUserIdInDb = StringGet(&groupEntry->userId);
-    if (peerUserIdInDb == NULL) {
+    const char *userIdInDb =
+        ((type == IDENTICAL_ACCOUNT_GROUP) ? StringGet(&(groupEntry->userId)) : StringGet(&(groupEntry->sharedUserId)));
+    if (userIdInDb == NULL) {
         LOGD("Failed to get peer userId from db!");
         return false;
     }
-    if (IsUserIdEqual(peerUserIdInDb, peerUserId)) {
+    if (IsUserIdEqual(userIdInDb, peerUserId)) {
         LOGI("[Account auth]: the input peer-userId is in one across group, add across-group auth!");
         return true;
     }
@@ -122,7 +123,7 @@ static bool IsPeerInIdenticalGroup(int32_t osAccountId, const char *peerUserId)
                 index++;
                 continue;
             }
-            if (IsPeerInAccountRelatedGroup(*ptr, peerUserId)) {
+            if (IsPeerInAccountRelatedGroup(*ptr, peerUserId, IDENTICAL_ACCOUNT_GROUP)) {
                 isGroupExist = true;
                 break;
             }
@@ -151,7 +152,7 @@ static void GaGetAccountGroup(int32_t osAccountId, GroupType type, const char *p
             index++;
             continue;
         }
-        if ((peerUserId == NULL) || IsPeerInAccountRelatedGroup(*ptr, peerUserId)) {
+        if ((peerUserId == NULL) || IsPeerInAccountRelatedGroup(*ptr, peerUserId, type)) {
             index++;
             continue;
         }
@@ -392,7 +393,11 @@ static int32_t QueryAuthGroupForServer(int32_t osAccountId, GroupEntryVec *accou
     }
     QueryGroupParams queryParams = InitQueryGroupParams();
     queryParams.groupType = groupType;
-    queryParams.userId = peerUserId;
+    if (groupType == IDENTICAL_ACCOUNT_GROUP) {
+        queryParams.userId = peerUserId;
+    } else {
+        queryParams.sharedUserId = peerUserId;
+    }
     int32_t res = QueryGroups(osAccountId, &queryParams, accountVec);
     if (res != HC_SUCCESS) {
         LOGE("Failed to query local device's account group info for server!");

@@ -533,6 +533,11 @@ static int32_t AddMultiMembersToGroup(int32_t osAccountId, const char *appId, CJ
             addedCount++;
         }
     }
+    res = SaveOsAccountDb(osAccountId);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to save database!");
+        return res;
+    }
     LOGI("[End]: Add multiple members to a identical account group successfully! [ListNum]: %d, [AddedNum]: %d",
         deviceNum, addedCount);
     return HC_SUCCESS;
@@ -565,6 +570,11 @@ static int32_t DelMultiMembersFromGroup(int32_t osAccountId, const char *appId, 
         if (DelPeerDeviceAndToken(osAccountId, jsonParams, deviceInfo) == HC_SUCCESS) {
             deletedCount++;
         }
+    }
+    res = SaveOsAccountDb(osAccountId);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to save database!");
+        return res;
     }
     LOGI("[End]: Delete multiple members from a identical account group successfully! [ListNum]: %d, [DeletedNum]: %d",
         deviceNum, deletedCount);
