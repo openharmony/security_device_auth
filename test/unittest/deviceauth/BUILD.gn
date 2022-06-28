@@ -99,14 +99,12 @@ ohos_unittest("key_agree_sdk_llt") {
 
   deps = [
     "${deps_adapter_path}:${hal_module_name}",
-    "//third_party/cJSON:cjson_static",
     "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/cJSON:cjson_static",
   ]
 
   defines = [ "HILOG_ENABLE" ]
   defines += key_agree_defines
 
-  external_deps = [
-    "hiviewdfx_hilog_native:libhilog"
-  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 }
