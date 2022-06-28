@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "hc_log.h"
 #include "key_agree_sdk.h"
+
+#include "hc_log.h"
 #include "key_agree_session.h"
 #include "key_agree_session_manager.h"
 #include "protocol_common.h"
@@ -59,7 +60,7 @@ static void BuildErrorMessage(KeyAgreeResult errorCode, KeyAgreeBlob *out)
 {
     CJson *outJson = CreateJson();
     if (outJson == NULL) {
-        LOGE("Create json failed!"); 
+        LOGE("Create json failed!");
         return;
     }
     int32_t res = AddIntToJson(outJson, FIELD_SDK_ERROR_CODE, errorCode);
@@ -71,7 +72,7 @@ static void BuildErrorMessage(KeyAgreeResult errorCode, KeyAgreeBlob *out)
     char *returnStr = PackJsonToString(outJson);
     FreeJson(outJson);
     if (returnStr == NULL) {
-        LOGE("Pack json to string failed!"); 
+        LOGE("Pack json to string failed!");
         return;
     }
     uint32_t returnStrLen = HcStrlen(returnStr);
@@ -87,7 +88,7 @@ static bool IsErrorMessage(const KeyAgreeBlob *in)
     int32_t errorCode;
     CJson *inJson = CreateJsonFromString((const char *)(in->data));
     if (inJson == NULL) {
-        LOGE("Create json failed!"); 
+        LOGE("Create json failed!");
         return true;
     }
     if (GetIntFromJson(inJson, FIELD_SDK_ERROR_CODE, &errorCode) != HC_SUCCESS) {
@@ -153,7 +154,7 @@ KeyAgreeResult KeyAgreeInitSession(KeyAgreeSession *session, KeyAgreeProtocol pr
     SpekeSession *spekeSession = CreateSpekeSession();
     if (spekeSession == NULL) {
         LOGE("Init spekeSession fail!");
-        return KEYAGREE_INIT_CREATE_SESSION_FAIL; 
+        return KEYAGREE_INIT_CREATE_SESSION_FAIL;
     }
     if (spekeSession->checkAndInitProcotol(spekeSession, protocol) != HC_SUCCESS) {
         LOGE("This protocol is not supported!");

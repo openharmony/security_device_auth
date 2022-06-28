@@ -27,6 +27,10 @@ using namespace testing::ext;
 
 #define TEST_SESSION_ID_CLIENT 1001
 #define TEST_SESSION_ID_SERVER 1002
+#define TEST_MESSAGE_LENGTH 2048
+#define TEST_SHARED_SECRET_LENGTH 7
+#define TEST_DEVICE_ID_LENGTH 17
+#define TEST_SESSION_KEY_LENGTH 64
 #define TEST_APP_ID "TestAppId"
 
 static KeyAgreeSession *g_session;
@@ -50,16 +54,19 @@ public:
     void TearDown();
 };
 
-void KeyAgreeInitSessionTest::SetUpTestCase() {
+void KeyAgreeInitSessionTest::SetUpTestCase()
+{
     g_session = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
     g_session_s = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
 }
-void KeyAgreeInitSessionTest::TearDownTestCase() {
+void KeyAgreeInitSessionTest::TearDownTestCase()
+{
     HcFree(g_session);
     HcFree(g_session_s);
 }
 void KeyAgreeInitSessionTest::SetUp() {}
-void KeyAgreeInitSessionTest::TearDown() {
+void KeyAgreeInitSessionTest::TearDown()
+{
     KeyAgreeFreeSession(g_session);
     KeyAgreeFreeSession(g_session_s);
 }
@@ -121,24 +128,26 @@ public:
     void TearDown();
 };
 
-void KeyAgreeStartSessionTest::SetUpTestCase() {
+void KeyAgreeStartSessionTest::SetUpTestCase()
+{
     g_session = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
     g_session_s = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
 
-    g_sharedSecret.length = 7;
+    g_sharedSecret.length = TEST_SHARED_SECRET_LENGTH;
     g_sharedSecret.data = (uint8_t *)HcMalloc(g_sharedSecret.length, 0);
-    (void)memcpy_s(g_sharedSecret.data, g_sharedSecret.length, (uint8_t *)"123456", 6);
+    (void)memcpy_s(g_sharedSecret.data, g_sharedSecret.length, (uint8_t *)"123456", TEST_SHARED_SECRET_LENGTH);
 
-    g_deviceId.length = 17;
+    g_deviceId.length = TEST_DEVICE_ID_LENGTH;
     g_deviceId.data = (uint8_t *)HcMalloc(g_deviceId.length, 0);
-    (void)memcpy_s(g_deviceId.data, g_deviceId.length, (uint8_t *)"clientclientabcd", 16);
+    (void)memcpy_s(g_deviceId.data, g_deviceId.length, (uint8_t *)"clientclientabcd", TEST_DEVICE_ID_LENGTH);
 
-    g_deviceId_s.length = 17;
+    g_deviceId_s.length = TEST_DEVICE_ID_LENGTH;
     g_deviceId_s.data = (uint8_t *)HcMalloc(g_deviceId_s.length, 0);
-    (void)memcpy_s(g_deviceId_s.data, g_deviceId_s.length, (uint8_t *)"serverserverabcd", 16);
+    (void)memcpy_s(g_deviceId_s.data, g_deviceId_s.length, (uint8_t *)"serverserverabcd", TEST_DEVICE_ID_LENGTH);
 }
 
-void KeyAgreeStartSessionTest::TearDownTestCase() {
+void KeyAgreeStartSessionTest::TearDownTestCase()
+{
     HcFree(g_session);
     HcFree(g_session_s);
     HcFree(g_sharedSecret.data);
@@ -146,7 +155,8 @@ void KeyAgreeStartSessionTest::TearDownTestCase() {
     HcFree(g_deviceId_s.data);
 }
 void KeyAgreeStartSessionTest::SetUp() {}
-void KeyAgreeStartSessionTest::TearDown() {
+void KeyAgreeStartSessionTest::TearDown()
+{
     KeyAgreeFreeSession(g_session);
     KeyAgreeFreeSession(g_session_s);
 }
@@ -199,7 +209,8 @@ public:
     void TearDown();
 };
 
-void KeyAgreeGenerateNextMessageTest::SetUpTestCase() {
+void KeyAgreeGenerateNextMessageTest::SetUpTestCase()
+{
     g_session = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
     g_session_s = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
 
@@ -215,36 +226,39 @@ void KeyAgreeGenerateNextMessageTest::SetUpTestCase() {
     g_deviceId_s.data = (uint8_t *)HcMalloc(g_deviceId_s.length, 0);
     (void)memcpy_s(g_deviceId_s.data, g_deviceId_s.length, (uint8_t *)"serverserverabcd", 16);
 }
-void KeyAgreeGenerateNextMessageTest::TearDownTestCase() {
+void KeyAgreeGenerateNextMessageTest::TearDownTestCase()
+{
     HcFree(g_session);
     HcFree(g_session_s);
     HcFree(g_sharedSecret.data);
     HcFree(g_deviceId.data);
     HcFree(g_deviceId_s.data);
 }
-void KeyAgreeGenerateNextMessageTest::SetUp() {
-    g_messageToTransmit1.length = 2048;
+void KeyAgreeGenerateNextMessageTest::SetUp()
+{
+    g_messageToTransmit1.length = TEST_MESSAGE_LENGTH;
     g_messageToTransmit1.data = (uint8_t *)HcMalloc(g_messageToTransmit1.length, 0);
 
-    g_messageToTransmit2.length = 2048;
+    g_messageToTransmit2.length = TEST_MESSAGE_LENGTH;
     g_messageToTransmit2.data = (uint8_t *)HcMalloc(g_messageToTransmit2.length, 0);
 
-    g_messageToTransmit3.length = 2048;
+    g_messageToTransmit3.length = TEST_MESSAGE_LENGTH;
     g_messageToTransmit3.data = (uint8_t *)HcMalloc(g_messageToTransmit3.length, 0);
 
-    g_messageToTransmit4.length = 2048;
+    g_messageToTransmit4.length = TEST_MESSAGE_LENGTH;
     g_messageToTransmit4.data = (uint8_t *)HcMalloc(g_messageToTransmit4.length, 0);
 
-    g_messageToTransmit5.length = 2048;
+    g_messageToTransmit5.length = TEST_MESSAGE_LENGTH;
     g_messageToTransmit5.data = (uint8_t *)HcMalloc(g_messageToTransmit5.length, 0);
 
-    g_sessionKey_s.length = 64;
+    g_sessionKey_s.length = TEST_SESSION_KEY_LENGTH;
     g_sessionKey_s.data = (uint8_t *)HcMalloc(g_sessionKey_s.length, 0);
 
-    g_sessionKey.length = 64;
+    g_sessionKey.length = TEST_SESSION_KEY_LENGTH;
     g_sessionKey.data = (uint8_t *)HcMalloc(g_sessionKey.length, 0);
 }
-void KeyAgreeGenerateNextMessageTest::TearDown() {
+void KeyAgreeGenerateNextMessageTest::TearDown()
+{
     HcFree(g_messageToTransmit1.data);
     HcFree(g_messageToTransmit2.data);
     HcFree(g_messageToTransmit3.data);
@@ -550,16 +564,19 @@ public:
     void TearDown();
 };
 
-void KeyAgreeIsFinishTest::SetUpTestCase() {
+void KeyAgreeIsFinishTest::SetUpTestCase()
+{
     g_session = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
     g_session_s = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
 }
-void KeyAgreeIsFinishTest::TearDownTestCase() {
+void KeyAgreeIsFinishTest::TearDownTestCase()
+{
     HcFree(g_session);
     HcFree(g_session_s);
 }
 void KeyAgreeIsFinishTest::SetUp() {}
-void KeyAgreeIsFinishTest::TearDown() {
+void KeyAgreeIsFinishTest::TearDown()
+{
     KeyAgreeFreeSession(g_session);
     KeyAgreeFreeSession(g_session_s);
 }
@@ -592,24 +609,27 @@ public:
     void TearDown();
 };
 
-void KeyAgreeGetResultTest::SetUpTestCase() {
+void KeyAgreeGetResultTest::SetUpTestCase()
+{
     g_session = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
     g_session_s = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
 
-    g_sessionKey_s.length = 64;
+    g_sessionKey_s.length = TEST_SESSION_KEY_LENGTH;
     g_sessionKey_s.data = (uint8_t *)HcMalloc(g_sessionKey_s.length, 0);
 
-    g_sessionKey.length = 64;
+    g_sessionKey.length = TEST_SESSION_KEY_LENGTH;
     g_sessionKey.data = (uint8_t *)HcMalloc(g_sessionKey.length, 0);
 }
-void KeyAgreeGetResultTest::TearDownTestCase() {
+void KeyAgreeGetResultTest::TearDownTestCase()
+{
     HcFree(g_session);
     HcFree(g_session_s);
     HcFree(g_sessionKey_s.data);
     HcFree(g_sessionKey.data);
 }
 void KeyAgreeGetResultTest::SetUp() {}
-void KeyAgreeGetResultTest::TearDown() {
+void KeyAgreeGetResultTest::TearDown()
+{
     KeyAgreeFreeSession(g_session);
     KeyAgreeFreeSession(g_session_s);
 }
@@ -642,7 +662,8 @@ public:
     void TearDown();
 };
 
-void KeyAgreeFreeSessionTest::SetUpTestCase() {
+void KeyAgreeFreeSessionTest::SetUpTestCase()
+{
     g_session = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
     g_session_s = (KeyAgreeSession *)HcMalloc(sizeof(KeyAgreeSession), 0);
 
@@ -658,28 +679,29 @@ void KeyAgreeFreeSessionTest::SetUpTestCase() {
     g_deviceId_s.data = (uint8_t *)HcMalloc(g_deviceId_s.length, 0);
     (void)memcpy_s(g_deviceId_s.data, g_deviceId_s.length, (uint8_t *)"serverserverabcd", 16);
 
-    g_messageToTransmit1.length = 2048;
+    g_messageToTransmit1.length = TEST_MESSAGE_LENGTH;
     g_messageToTransmit1.data = (uint8_t *)HcMalloc(g_messageToTransmit1.length, 0);
 
-    g_messageToTransmit2.length = 2048;
+    g_messageToTransmit2.length = TEST_MESSAGE_LENGTH;
     g_messageToTransmit2.data = (uint8_t *)HcMalloc(g_messageToTransmit2.length, 0);
 
-    g_messageToTransmit3.length = 2048;
+    g_messageToTransmit3.length = TEST_MESSAGE_LENGTH;
     g_messageToTransmit3.data = (uint8_t *)HcMalloc(g_messageToTransmit3.length, 0);
 
-    g_messageToTransmit4.length = 2048;
+    g_messageToTransmit4.length = TEST_MESSAGE_LENGTH;
     g_messageToTransmit4.data = (uint8_t *)HcMalloc(g_messageToTransmit4.length, 0);
 
-    g_messageToTransmit5.length = 2048;
+    g_messageToTransmit5.length = TEST_MESSAGE_LENGTH;
     g_messageToTransmit5.data = (uint8_t *)HcMalloc(g_messageToTransmit5.length, 0);
 
-    g_sessionKey_s.length = 64;
+    g_sessionKey_s.length = TEST_SESSION_KEY_LENGTH;
     g_sessionKey_s.data = (uint8_t *)HcMalloc(g_sessionKey_s.length, 0);
 
-    g_sessionKey.length = 64;
+    g_sessionKey.length = TEST_SESSION_KEY_LENGTH;
     g_sessionKey.data = (uint8_t *)HcMalloc(g_sessionKey.length, 0);
 }
-void KeyAgreeFreeSessionTest::TearDownTestCase() {
+void KeyAgreeFreeSessionTest::TearDownTestCase()
+{
     HcFree(g_session);
     HcFree(g_session_s);
     HcFree(g_sharedSecret.data);
@@ -694,7 +716,8 @@ void KeyAgreeFreeSessionTest::TearDownTestCase() {
     HcFree(g_sessionKey.data);
 }
 void KeyAgreeFreeSessionTest::SetUp() {}
-void KeyAgreeFreeSessionTest::TearDown() {
+void KeyAgreeFreeSessionTest::TearDown()
+{
     KeyAgreeFreeSession(g_session);
     KeyAgreeFreeSession(g_session_s);
 }

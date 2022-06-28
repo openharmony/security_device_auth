@@ -87,7 +87,7 @@ typedef enum {
 
 typedef struct {
     uint8_t *data;
-    uint32_t length;// This length is the requested memory length
+    uint32_t length; // This length is the requested memory length
 } KeyAgreeBlob;
 
 #ifdef __cplusplus

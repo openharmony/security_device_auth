@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
+#include "key_agree_session.h"
+
 #include "hc_log.h"
 #include "key_agree_sdk.h"
-#include "key_agree_session.h"
 #include "pake_v2_protocol_common.h"
 #include "protocol_common.h"
 
@@ -551,7 +552,7 @@ static int32_t BuildAndPutOutMessage(SpekeSession *spekeSession, KeyAgreeBlob *o
     return HC_SUCCESS;
 }
 
-static int32_t PakeResponse(SpekeSession *spekeSession, KeyAgreeBlob *out) 
+static int32_t PakeResponse(SpekeSession *spekeSession, KeyAgreeBlob *out)
 {
     spekeSession->baseParam.isClient = false;
     int32_t res = FillPskAndDeviceId(spekeSession);
@@ -588,9 +589,9 @@ static int32_t CheckPeerProtocolVersion(SpekeSession *spekeSession, CJson *inPar
     return HC_SUCCESS;
 }
 
-static int32_t PakeConfirm(SpekeSession *spekeSession, CJson *inParams, KeyAgreeBlob *out) 
+static int32_t PakeConfirm(SpekeSession *spekeSession, CJson *inParams, KeyAgreeBlob *out)
 {
-    int32_t res =CheckPeerProtocolVersion(spekeSession, inParams);
+    int32_t res = CheckPeerProtocolVersion(spekeSession, inParams);
     if (res != HC_SUCCESS) {
         LOGE("Peer protocol is not supported!");
         return res;
@@ -674,25 +675,25 @@ static int32_t ProcessStep(ProtocolStep step, SpekeSession *spekeSession, CJson 
     LOGI("In key agree step: %d.", step);
     switch (step) {
         case STEP_ONE:
-            if(PakeResponse(spekeSession, out) != HC_SUCCESS) {
+            if (PakeResponse(spekeSession, out) != HC_SUCCESS) {
                 LOGE("PakeResponse fail!");
                 res = HC_ERROR;
             }
             break;
         case STEP_TWO:
-            if(PakeConfirm(spekeSession, inParams, out) != HC_SUCCESS) {
+            if (PakeConfirm(spekeSession, inParams, out) != HC_SUCCESS) {
                 LOGE("PakeConfirm fail!");
                 res = HC_ERROR;
             }
             break;
         case STEP_THREE:
-            if(PakeServerConfirm(spekeSession, inParams, out) != HC_SUCCESS) {
+            if (PakeServerConfirm(spekeSession, inParams, out) != HC_SUCCESS) {
                 LOGE("PakeServerConfirm fail!");
                 res = HC_ERROR;
             }
             break;
         case STEP_FOUR:
-            if(PakeClientVerifyConfirm(spekeSession, inParams, out) != HC_SUCCESS) {
+            if (PakeClientVerifyConfirm(spekeSession, inParams, out) != HC_SUCCESS) {
                 LOGE("PakeClientVerifyConfirm fail!");
                 res = HC_ERROR;
             }
@@ -728,7 +729,7 @@ static int32_t ProcessSpekeSession(SpekeSession *spekeSession, const KeyAgreeBlo
             return HC_ERROR;
         }
         if (GetIntFromJson(inParams, FIELD_SDK_STEP, &step) != HC_SUCCESS) {
-            LOGI("There is no field named step, it is first protocol!"); 
+            LOGI("There is no field named step, it is first protocol!");
             spekeSession->step = STEP_ONE;
         } else {
             spekeSession->step = step + 1;
@@ -907,7 +908,8 @@ void DestroySpekeSession(SpekeSession *spekeSession)
     HcFree(spekeSession);
 }
 
-SpekeSession *CreateSpekeSession(void) {
+SpekeSession *CreateSpekeSession(void)
+{
     SpekeSession *spekeSession = (SpekeSession *)HcMalloc(sizeof(SpekeSession), 0);
     if (spekeSession == NULL) {
         LOGE("Failed to allocate session memory!");

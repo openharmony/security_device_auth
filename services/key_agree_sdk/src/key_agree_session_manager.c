@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
+#include "key_agree_session_manager.h"
+
 #include "hc_log.h"
 #include "hc_mutex.h"
 #include "hc_vector.h"
-#include "key_agree_session_manager.h"
 #include "key_agree_sdk.h"
 #include "key_agree_session.h"
 
@@ -105,8 +106,7 @@ static uint32_t DeleteSessionInner(KeyAgreeSession *session)
     uint32_t index;
     SessionNode *sessionNode = NULL;
     FOR_EACH_HC_VECTOR(g_SessionNodeVec, index, sessionNode) {
-        if ((sessionNode != NULL) &&
-            (sessionNode->session != NULL) &&
+        if ((sessionNode != NULL) && (sessionNode->session != NULL) &&
             (sessionNode->session->sessionId == session->sessionId)) {
             SessionNode tempSessionNode;
             HC_VECTOR_POPELEMENT(&g_SessionNodeVec, &tempSessionNode, index);
@@ -130,9 +130,8 @@ static SpekeSession *GetSessionInner(KeyAgreeSession *session)
     uint32_t index;
     SessionNode *sessionNode = NULL;
     FOR_EACH_HC_VECTOR(g_SessionNodeVec, index, sessionNode) {
-        if ((sessionNode != NULL) &&
-        (sessionNode->session != NULL) &&
-        (sessionNode->session->sessionId == session->sessionId)) {
+        if ((sessionNode != NULL) && (sessionNode->session != NULL) &&
+            (sessionNode->session->sessionId == session->sessionId)) {
             return sessionNode->spekeSession;
         }
     }
