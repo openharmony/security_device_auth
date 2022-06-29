@@ -25,14 +25,16 @@
       "ram": "500KB",
       "deps": {
         "components": [
-          "libhilog",
-          "ipc_core",
-          "system_ability_fwk",
-          "samgr_proxy",
+          "dsoftbus",
+          "safwk",
+          "os_account",
+          "access_token",
+          "security",
+          "common",
           "utils_base",
-          "softbus_client",
-          "libhukssdk",
-          "libsyspara"
+          "hiviewdfx_hilog_native",
+          "samgr_standard",
+          "ipc"
         ],
         "third_party": [
           "cJSON",
