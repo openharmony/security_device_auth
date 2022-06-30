@@ -869,6 +869,25 @@ int32_t AssertSameGroupNotExist(int32_t osAccountId, const char *groupId)
     return HC_SUCCESS;
 }
 
+int32_t AssertPeerDeviceNotSelf(const char *peerUdid)
+{
+    if (peerUdid == NULL) {
+        LOGE("The input peerUdid is NULL!");
+        return HC_ERR_NULL_PTR;
+    }
+    char udid[INPUT_UDID_LEN] = { 0 };
+    int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get local udid! res: %d", res);
+        return HC_ERR_DB;
+    }
+    if (strcmp(peerUdid, udid) == 0) {
+        LOGE("You are not allowed to delete yourself!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    return HC_SUCCESS;
+}
+
 int32_t CheckGroupExist(int32_t osAccountId, const char *groupId)
 {
     if (groupId == NULL) {

@@ -360,25 +360,6 @@ static int32_t HandleLocalUnbind(int64_t requestId, const CJson *jsonParams,
     return HC_SUCCESS;
 }
 
-static int32_t IsPeerDeviceNotSelf(const char *peerUdid)
-{
-    if (peerUdid == NULL) {
-        LOGE("The input peerUdid is NULL!");
-        return HC_ERR_NULL_PTR;
-    }
-    char udid[INPUT_UDID_LEN] = { 0 };
-    int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
-        return HC_ERR_DB;
-    }
-    if (strcmp(peerUdid, udid) == 0) {
-        LOGE("You are not allowed to delete yourself!");
-        return HC_ERR_INVALID_PARAMS;
-    }
-    return HC_SUCCESS;
-}
-
 static int32_t CheckPeerDeviceStatus(int32_t osAccountId, const char *groupId, const CJson *jsonParams)
 {
     const char *peerAuthId = GetStringFromJson(jsonParams, FIELD_DELETE_ID);
@@ -397,7 +378,7 @@ static int32_t CheckPeerDeviceStatus(int32_t osAccountId, const char *groupId, c
         DestroyDeviceEntry(deviceInfo);
         return result;
     }
-    result = IsPeerDeviceNotSelf(StringGet(&deviceInfo->udid));
+    result = AssertPeerDeviceNotSelf(StringGet(&deviceInfo->udid));
     DestroyDeviceEntry(deviceInfo);
     return result;
 }

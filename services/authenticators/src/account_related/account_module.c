@@ -131,8 +131,10 @@ static int32_t ProcessAsyTokens(int32_t osAccountId, int32_t opCode, CJson *in, 
 {
     switch (opCode) {
         case IMPORT_SELF_CREDENTIAL:
+        case IMPORT_TRUSTED_CREDENTIALS:
             return GetAccountAuthTokenManager()->addToken(osAccountId, in, out);
-        case DELETE_SELF_CREDENTIAL: {
+        case DELETE_SELF_CREDENTIAL:
+        case DELETE_TRUSTED_CREDENTIALS: {
             const char *userId = GetStringFromJson(in, FIELD_USER_ID);
             if (userId == NULL) {
                 LOGE("Failed to get user id.");

@@ -354,8 +354,23 @@ static int32_t GenerateTrustedDevParams(const CJson *jsonParams, const char *gro
     return HC_SUCCESS;
 }
 
+static int32_t CheckPeerDeviceNotSelf(const CJson *jsonParams)
+{
+    const char *udid = GetStringFromJson(jsonParams, FIELD_UDID);
+    if (udid == NULL) {
+        LOGE("Failed to get udid from json!");
+        return HC_ERR_JSON_GET;
+    }
+    return AssertPeerDeviceNotSelf(udid);
+}
+
 static int32_t AddDeviceAndToken(int32_t osAccountId, CJson *jsonParams, CJson *deviceInfo)
 {
+    int32_t res = CheckPeerDeviceNotSelf(jsonParams);
+    if (res != HC_SUCCESS) {
+        LOGE("The peer device udid is equals to the local udid!");
+        return res;
+    }
     const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
     if (groupId == NULL) {
         LOGE("Failed to get groupId from json!");
@@ -366,7 +381,7 @@ static int32_t AddDeviceAndToken(int32_t osAccountId, CJson *jsonParams, CJson *
         LOGE("Failed to get credential from json!");
         return HC_ERR_JSON_GET;
     }
-    int32_t res = GenerateAddTokenParams(deviceInfo, credential);
+    res = GenerateAddTokenParams(deviceInfo, credential);
     if (res != HC_SUCCESS) {
         return res;
     }
