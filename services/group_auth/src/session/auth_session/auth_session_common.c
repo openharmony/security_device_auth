@@ -432,31 +432,32 @@ static void ReturnFinishData(const AuthSession *session, const CJson *out)
     }
 }
 
-static int32_t ReturnErrorToLocalBySession(const AuthSession *session, int errorCode)
+static void ReturnErrorToLocalBySession(const AuthSession *session, int errorCode)
 {
     ParamsVec list = session->paramsList;
     CJson *authParam = list.get(&list, session->currentIndex);
     int64_t requestId = 0;
-    int32_t authForm = 0;
+    int32_t authForm = AUTH_FORM_INVALID_TYPE;
     if (authParam == NULL) {
         LOGE("The json data in session is null!");
-        return HC_ERR_NULL_PTR;
+        return;
     }
     if (GetByteFromJson(authParam, FIELD_REQUEST_ID, (uint8_t *)&requestId, sizeof(int64_t)) != HC_SUCCESS) {
-        LOGE("Failed to add request id!");
-        return HC_ERR_JSON_GET;
+        LOGE("Failed to get request id!");
+        return;
     }
     if (GetIntFromJson(authParam, FIELD_AUTH_FORM, &authForm) != HC_SUCCESS) {
-        LOGE("Failed to add auth form!");
-        return HC_ERR_JSON_GET;
+        LOGD("Failed to get auth form, user default authForm!");
     }
 
     BaseGroupAuth *groupAuth = GetGroupAuth(GetGroupAuthType(authForm));
     if (groupAuth != NULL) {
         LOGE("Invoke ReturnErrorToLocalBySession for authForm:%d!", authForm);
         groupAuth->onError(requestId, session, errorCode);
+    } else if ((session->base.callback != NULL) && (session->base.callback->onError != NULL)) {
+        LOGE("Invoke onError to local device.");
+        session->base.callback->onError(requestId, authForm, errorCode, NULL);
     }
-    return HC_SUCCESS;
 }
 
 static int32_t AddVersionMsgToPeer(CJson *errorToPeer)
@@ -697,31 +698,29 @@ int32_t InformAuthError(AuthSession *session, const CJson *out, int errorCode)
         LOGE("The json data in session is null!");
         return HC_ERR_NULL_PTR;
     }
-    int32_t res;
     if (out == NULL) {
-        res = ReturnErrorToPeerBySession(paramInSession, session->base.callback);
+        (void)ReturnErrorToPeerBySession(paramInSession, session->base.callback);
         LOGI("Out data is null, so assemble error msg to peer by auth session.");
-        return res;
+        return HC_ERR_INFORM_ERR;
     }
     const CJson *sendToPeer = GetObjFromJson(out, FIELD_SEND_TO_PEER);
     if (sendToPeer != NULL) {
-        res = ReturnErrorToPeerByTask(sendToPeer, paramInSession, session->base.callback);
-        if (res != HC_SUCCESS) {
+        if (ReturnErrorToPeerByTask(sendToPeer, paramInSession, session->base.callback) != HC_SUCCESS) {
             LOGE("Failed to return task's error msg to peer!");
-            return res;
+            return HC_ERR_INFORM_ERR;
         }
     }
 
-    res = ProcessNextGroupIfPossible(session);
-    if (res == HC_SUCCESS) {
+    if (ProcessNextGroupIfPossible(session) == HC_SUCCESS) {
+        LOGI("Start to process next candidate group.");
         return HC_SUCCESS;
     }
 
     const char *altGroup = GetStringFromJson(paramInSession, FIELD_ALTERNATIVE);
     if (altGroup == NULL) {
-        res = ReturnErrorToLocalBySession(session, errorCode);
+        ReturnErrorToLocalBySession(session, errorCode);
     }
-    return res;
+    return HC_ERR_INFORM_ERR;
 }
 
 void ProcessDeviceLevel(const CJson *receiveData, CJson *authParam)
