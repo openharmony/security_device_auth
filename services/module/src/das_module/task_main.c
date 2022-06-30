@@ -149,7 +149,7 @@ static void DestroyTask(Task *task)
 
 static int ProcessMultiTask(Task *task, const CJson *in, CJson *out, int *status)
 {
-    int res;
+    int res = HC_SUCCESS;
     uint32_t index;
     void **ptr = NULL;
     CJson *tmpOut = NULL;

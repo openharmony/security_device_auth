@@ -106,27 +106,33 @@ static int32_t StartClientAuthTask(AuthSession *session)
     return res;
 }
 
-int32_t CheckClientGroupAuthMsg(AuthSession *session, const CJson *in)
+static bool IsPeerGroupAuthError(const CJson *in)
 {
-    int32_t GroupErrMsg = 0;
-    if (GetIntFromJson(in, FIELD_GROUP_ERROR_MSG, (int *)&GroupErrMsg) != HC_SUCCESS) {
-        return HC_SUCCESS;
+    int32_t groupErrMsg = 0;
+    if (GetIntFromJson(in, FIELD_GROUP_ERROR_MSG, &groupErrMsg) != HC_SUCCESS) {
+        return false;
     }
+    return true;
+}
+
+static int32_t DealPeerGroupAuthError(AuthSession *session)
+{
     CJson *outData = CreateJson();
     if (outData == NULL) {
         LOGE("Failed to malloc for outData!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    if (AddIntToJson(outData, FIELD_GROUP_ERROR_MSG, GroupErrMsg) != HC_SUCCESS) {
-        LOGE("Failed to add info to outData!");
+    if (AddIntToJson(outData, FIELD_GROUP_ERROR_MSG, GROUP_ERR_MSG) != HC_SUCCESS) {
+        LOGE("Failed to add err msg to outData!");
         FreeJson(outData);
         return HC_ERR_JSON_FAIL;
     }
-    if (InformAuthError(session, outData, HC_ERR_PEER_ERROR) != HC_SUCCESS) {
+    int32_t res = InformAuthError(session, outData, HC_ERR_PEER_ERROR);
+    FreeJson(outData);
+    if (res != HC_SUCCESS) {
         LOGE("Failed to inform auth error!");
     }
-    FreeJson(outData);
-    return HC_ERR_PEER_ERROR;
+    return res;
 }
 
 static int32_t ProcessClientAuthSession(Session *session, CJson *in)
@@ -143,10 +149,9 @@ static int32_t ProcessClientAuthSession(Session *session, CJson *in)
         return HC_ERR_NULL_PTR;
     }
     ProcessDeviceLevel(in, paramInSession);
-    int32_t res = CheckClientGroupAuthMsg(realSession, in);
-    if (res != HC_SUCCESS) {
-        LOGE("Peer device's group has error, so we stop client auth session!");
-        return res;
+
+    if (IsPeerGroupAuthError(in)) {
+        return DealPeerGroupAuthError(realSession);
     }
     CJson *out = CreateJson();
     if (out == NULL) {
@@ -155,7 +160,7 @@ static int32_t ProcessClientAuthSession(Session *session, CJson *in)
         InformLocalAuthError(paramInSession, realSession->base.callback);
         return HC_ERR_ALLOC_MEMORY;
     }
-    res = ProcessClientAuthTask(realSession, GetAuthModuleType(paramInSession), in, out);
+    int32_t res = ProcessClientAuthTask(realSession, GetAuthModuleType(paramInSession), in, out);
     ClearSensitiveStringInJson(out, FIELD_SESSION_KEY);
     FreeJson(out);
     if (res == FINISH) {
