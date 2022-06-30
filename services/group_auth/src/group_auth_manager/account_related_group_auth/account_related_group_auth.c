@@ -126,6 +126,7 @@ static bool IsPeerInIdenticalGroup(int32_t osAccountId, const char *peerUserId)
                 isGroupExist = true;
                 break;
             }
+            index++;
         }
     } while (0);
     ClearGroupEntryVec(&accountVec);

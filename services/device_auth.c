@@ -87,7 +87,7 @@ static bool InitProcessDataTask(AuthDeviceTask *task, int64_t authReqId,
 static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *authParams,
     const DeviceAuthCallback *gaCallback)
 {
-    LOGI("Begin AuthDevice.");
+    LOGI("Begin AuthDevice. [requestId]:%" PRId64, authReqId);
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((authParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("The input auth params is invalid!");
@@ -122,7 +122,7 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
 static int32_t ProcessData(int64_t authReqId, const uint8_t *data, uint32_t dataLen,
     const DeviceAuthCallback *gaCallback)
 {
-    LOGI("Begin ProcessData.");
+    LOGI("[GA] Begin ProcessData. [requestId]:%" PRId64, authReqId);
     if ((data == NULL) || (dataLen > MAX_DATA_BUFFER_SIZE)) {
         LOGE("Invalid input for ProcessData!");
         return HC_ERR_INVALID_PARAMS;
