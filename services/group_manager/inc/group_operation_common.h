@@ -40,6 +40,7 @@ int32_t AssertUserIdExist(const CJson *jsonParams);
 int32_t AssertSharedUserIdExist(const CJson *jsonParams);
 int32_t AssertGroupTypeMatch(int32_t inputType, int32_t targetType);
 int32_t AssertSameGroupNotExist(int32_t osAccountId, const char *groupId);
+int32_t AssertPeerDeviceNotSelf(const char *peerUdid);
 int32_t CheckGroupExist(int32_t osAccountId, const char *groupId);
 int32_t CheckGroupNumLimit(int32_t osAccountId, int32_t groupType, const char *appId);
 int32_t CheckDeviceNumLimit(int32_t osAccountId, const char *groupId, const char *peerUdid);
