@@ -218,6 +218,25 @@ static int32_t AssertIdenticalGroupExist(int32_t osAccountId, const CJson *jsonP
     return HC_SUCCESS;
 }
 
+static int32_t AssertSharedUserIdValid(const CJson *jsonParams)
+{
+    const char *userId = GetStringFromJson(jsonParams, FIELD_USER_ID);
+    if (userId == NULL) {
+        LOGE("Failed to get userId from jsonParams!");
+        return HC_ERR_JSON_GET;
+    }
+    const char *sharedUserId = GetStringFromJson(jsonParams, FIELD_PEER_USER_ID);
+    if (sharedUserId == NULL) {
+        LOGE("Failed to get sharedUserId from jsonParams!");
+        return HC_ERR_JSON_GET;
+    }
+    if (strcmp(sharedUserId, userId) == 0) {
+        LOGE("The input peerUserId is the same as the local userId!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t CheckCreateParams(int32_t osAccountId, const CJson *jsonParams)
 {
     const char *appId = GetStringFromJson(jsonParams, FIELD_APP_ID);
@@ -230,7 +249,7 @@ static int32_t CheckCreateParams(int32_t osAccountId, const CJson *jsonParams)
         ((result = CheckGroupVisibilityIfExist(jsonParams)) != HC_SUCCESS) ||
         ((result = CheckExpireTimeIfExist(jsonParams)) != HC_SUCCESS) ||
         ((result = AssertUserIdExist(jsonParams)) != HC_SUCCESS) ||
-        ((result = AssertSharedUserIdExist(jsonParams)) != HC_SUCCESS) ||
+        ((result = AssertSharedUserIdValid(jsonParams)) != HC_SUCCESS) ||
         ((result = AssertIdenticalGroupExist(osAccountId, jsonParams)) != HC_SUCCESS)) {
         return result;
     }

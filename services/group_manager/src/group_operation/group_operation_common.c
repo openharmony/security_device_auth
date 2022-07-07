@@ -850,16 +850,6 @@ int32_t AssertUserIdExist(const CJson *jsonParams)
     return HC_SUCCESS;
 }
 
-int32_t AssertSharedUserIdExist(const CJson *jsonParams)
-{
-    const char *sharedUserId = GetStringFromJson(jsonParams, FIELD_PEER_USER_ID);
-    if (sharedUserId == NULL) {
-        LOGE("Failed to get sharedUserId from jsonParams!");
-        return HC_ERR_JSON_GET;
-    }
-    return HC_SUCCESS;
-}
-
 int32_t AssertSameGroupNotExist(int32_t osAccountId, const char *groupId)
 {
     if (IsGroupExistByGroupId(osAccountId, groupId)) {

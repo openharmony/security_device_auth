@@ -37,7 +37,6 @@ int32_t ProcessKeyPair(int action, const CJson *jsonParams, const char *groupId)
 int32_t GetHashMessage(const Uint8Buff *first, const Uint8Buff *second, uint8_t **hashMessage, uint32_t *messageSize);
 
 int32_t AssertUserIdExist(const CJson *jsonParams);
-int32_t AssertSharedUserIdExist(const CJson *jsonParams);
 int32_t AssertGroupTypeMatch(int32_t inputType, int32_t targetType);
 int32_t AssertSameGroupNotExist(int32_t osAccountId, const char *groupId);
 int32_t AssertPeerDeviceNotSelf(const char *peerUdid);
