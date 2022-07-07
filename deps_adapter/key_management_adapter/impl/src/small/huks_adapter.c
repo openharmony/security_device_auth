@@ -1130,13 +1130,30 @@ static bool CheckDlPublicKey(const Uint8Buff *key, const char *primeHex)
     return true;
 }
 
+static int32_t ImportSymmetricKey(const Uint8Buff *keyAlias, const Uint8Buff *authToken, KeyPurpose purpose,
+    const ExtraInfo *exInfo)
+{
+    (void)keyAlias;
+    (void)authToken;
+    (void)purpose;
+    (void)exInfo;
+    return HAL_ERR_NOT_SUPPORTED;
+}
+
+static bool CheckEcPublicKey(const Uint8Buff *pubKey, Algorithm algo)
+{
+    (void)pubKey;
+    (void)algo;
+    return true;
+}
+
 static const AlgLoader g_huksLoader = {
     .initAlg = InitHks,
     .sha256 = Sha256,
     .generateRandom = GenerateRandom,
     .computeHmac = ComputeHmac,
     .computeHkdf = ComputeHkdf,
-    .importSymmetricKey = NULL,
+    .importSymmetricKey = ImportSymmetricKey,
     .checkKeyExist = CheckKeyExist,
     .deleteKey = DeleteKey,
     .aesGcmEncrypt = AesGcmEncrypt,
@@ -1152,7 +1169,7 @@ static const AlgLoader g_huksLoader = {
     .verify = Verify,
     .importPublicKey = ImportPublicKey,
     .checkDlPublicKey = CheckDlPublicKey,
-    .checkEcPublicKey = NULL,
+    .checkEcPublicKey = CheckEcPublicKey,
     .bigNumCompare = BigNumCompare
 };
 
