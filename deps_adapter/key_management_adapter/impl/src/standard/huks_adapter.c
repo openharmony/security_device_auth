@@ -1258,7 +1258,7 @@ static bool CheckDlPublicKey(const Uint8Buff *key, const char *primeHex)
     return true;
 }
 
-static bool CheckEcPublicKeyFuncFake(const Uint8Buff *pubKey, Algorithm algo)
+static bool CheckEcPublicKey(const Uint8Buff *pubKey, Algorithm algo)
 {
     (void)pubKey;
     (void)algo;
@@ -1380,7 +1380,7 @@ static const AlgLoader g_huksLoader = {
     .verify = Verify,
     .importPublicKey = ImportPublicKey,
     .checkDlPublicKey = CheckDlPublicKey,
-    .checkEcPublicKey = CheckEcPublicKeyFuncFake,
+    .checkEcPublicKey = CheckEcPublicKey,
     .bigNumCompare = BigNumCompare
 };
 

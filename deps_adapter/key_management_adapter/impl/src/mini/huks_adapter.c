@@ -682,6 +682,99 @@ static bool CheckDlPublicKey(const Uint8Buff *key, const char *primeHex)
     return true;
 }
 
+static int32_t HashToPoint(const Uint8Buff *hash, Algorithm algo, Uint8Buff *outEcPoint)
+{
+    (void)hash;
+    (void)algo;
+    (void)outEcPoint;
+    return HAL_ERR_NOT_SUPPORTED;
+}
+
+static int32_t AgreeSharedSecretWithStorage(const KeyBuff *priKey, const KeyBuff *pubKey, Algorithm algo,
+    uint32_t sharedKeyLen, const Uint8Buff *sharedKeyAlias)
+{
+    (void)priKey;
+    (void)pubKey;
+    (void)algo;
+    (void)sharedKeyLen;
+    (void)sharedKeyAlias;
+    return HAL_ERR_NOT_SUPPORTED;
+}
+
+static int32_t AgreeSharedSecret(const KeyBuff *priKey, const KeyBuff *pubKey, Algorithm algo, Uint8Buff *sharedKey)
+{
+    (void)priKey;
+    (void)pubKey;
+    (void)algo;
+    (void)sharedKey;
+    return HAL_ERR_NOT_SUPPORTED;
+}
+
+static int32_t GenerateKeyPairWithStorage(const Uint8Buff *keyAlias, uint32_t keyLen, Algorithm algo,
+    KeyPurpose purpose, const ExtraInfo *exInfo)
+{
+    (void)keyAlias;
+    (void)keyLen;
+    (void)algo;
+    (void)purpose;
+    (void)exInfo;
+    return HAL_ERR_NOT_SUPPORTED;
+}
+
+static int32_t GenerateKeyPair(Algorithm algo, Uint8Buff *outPriKey, Uint8Buff *outPubKey)
+{
+    (void)algo;
+    (void)outPriKey;
+    (void)outPubKey;
+    return HAL_ERR_NOT_SUPPORTED;
+}
+
+static int32_t ExportPublicKey(const Uint8Buff *keyAlias, Uint8Buff *outPubKey)
+{
+    (void)keyAlias;
+    (void)outPubKey;
+    return HAL_ERR_NOT_SUPPORTED;
+}
+
+static int32_t Sign(const Uint8Buff *keyAlias, const Uint8Buff *message, Algorithm algo,
+    Uint8Buff *outSignature, bool isAlias)
+{
+    (void)keyAlias;
+    (void)message;
+    (void)algo;
+    (void)outSignature;
+    (void)isAlias;
+    return HAL_ERR_NOT_SUPPORTED;
+}
+
+static int32_t Verify(const Uint8Buff *key, const Uint8Buff *message, Algorithm algo,
+    const Uint8Buff *signature, bool isAlias)
+{
+    (void)key;
+    (void)message;
+    (void)algo;
+    (void)signature;
+    (void)isAlias;
+    return HAL_ERR_NOT_SUPPORTED;
+}
+
+static int32_t ImportPublicKey(const Uint8Buff *keyAlias, const Uint8Buff *pubKey, Algorithm algo,
+    const ExtraInfo *exInfo)
+{
+    (void)keyAlias;
+    (void)pubKey;
+    (void)algo;
+    (void)exInfo;
+    return HAL_ERR_NOT_SUPPORTED;
+}
+
+static bool CheckEcPublicKey(const Uint8Buff *pubKey, Algorithm algo)
+{
+    (void)pubKey;
+    (void)algo;
+    return true;
+}
+
 static const AlgLoader g_huksLoader = {
     .initAlg = InitHks,
     .sha256 = Sha256,
@@ -693,18 +786,18 @@ static const AlgLoader g_huksLoader = {
     .deleteKey = DeleteKey,
     .aesGcmEncrypt = AesGcmEncrypt,
     .aesGcmDecrypt = AesGcmDecrypt,
-    .hashToPoint = NULL,
-    .agreeSharedSecretWithStorage = NULL,
-    .agreeSharedSecret = NULL,
+    .hashToPoint = HashToPoint,
+    .agreeSharedSecretWithStorage = AgreeSharedSecretWithStorage,
+    .agreeSharedSecret = AgreeSharedSecret,
     .bigNumExpMod = BigNumExpMod,
-    .generateKeyPairWithStorage = NULL,
-    .generateKeyPair = NULL,
-    .exportPublicKey = NULL,
-    .sign = NULL,
-    .verify = NULL,
-    .importPublicKey = NULL,
+    .generateKeyPairWithStorage = GenerateKeyPairWithStorage,
+    .generateKeyPair = GenerateKeyPair,
+    .exportPublicKey = ExportPublicKey,
+    .sign = Sign,
+    .verify = Verify,
+    .importPublicKey = ImportPublicKey,
     .checkDlPublicKey = CheckDlPublicKey,
-    .checkEcPublicKey = NULL,
+    .checkEcPublicKey = CheckEcPublicKey,
     .bigNumCompare = BigNumCompare
 };
 
