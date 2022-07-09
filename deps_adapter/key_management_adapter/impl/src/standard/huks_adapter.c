@@ -528,7 +528,7 @@ static int32_t AgreeSharedSecretWithStorageP256(const KeyBuff *priKeyAlias, cons
     uint8_t outDataFinish[ECDH_COMMON_SIZE_P256] = { 0 };
     struct HksBlob outDataFinishBlob = { ECDH_COMMON_SIZE_P256, outDataFinish };
     do {
-        ret = HksInit(&priKeyAliasBlob, initParamSet, &handleBlob);
+        ret = HksInit(&priKeyAliasBlob, initParamSet, &handleBlob, NULL);
         if (ret != HKS_SUCCESS) {
             LOGE("Huks agree P256 key: HksInit failed, ret = %d", ret);
             ret = HAL_ERR_HUKS;
