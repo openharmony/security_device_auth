@@ -256,14 +256,14 @@ static int32_t CheckCreateParams(int32_t osAccountId, const CJson *jsonParams)
     return HC_SUCCESS;
 }
 
-static int32_t GenerateAddTokenParams(const CJson *jsonParams, CJson *addParams)
+static int32_t GenerateAddTokenParams(const CJson *deviceInfo, CJson *addParams)
 {
-    const char *userId = GetStringFromJson(jsonParams, FIELD_USER_ID);
+    const char *userId = GetStringFromJson(deviceInfo, FIELD_USER_ID);
     if (userId == NULL) {
         LOGE("Failed to get userId from json!");
         return HC_ERR_JSON_GET;
     }
-    const char *deviceId = GetStringFromJson(jsonParams, FIELD_DEVICE_ID);
+    const char *deviceId = GetStringFromJson(deviceInfo, FIELD_DEVICE_ID);
     if (deviceId == NULL) {
         LOGE("Failed to get deviceId from json!");
         return HC_ERR_JSON_GET;
@@ -385,9 +385,9 @@ static int32_t GenerateTrustedDevParams(const CJson *jsonParams, const char *gro
     return HC_SUCCESS;
 }
 
-static int32_t CheckPeerDeviceNotSelf(const CJson *jsonParams)
+static int32_t CheckPeerDeviceNotSelf(const CJson *deviceInfo)
 {
-    const char *udid = GetStringFromJson(jsonParams, FIELD_UDID);
+    const char *udid = GetStringFromJson(deviceInfo, FIELD_UDID);
     if (udid == NULL) {
         LOGE("Failed to get udid from json!");
         return HC_ERR_JSON_GET;
@@ -395,13 +395,8 @@ static int32_t CheckPeerDeviceNotSelf(const CJson *jsonParams)
     return AssertPeerDeviceNotSelf(udid);
 }
 
-static int32_t AddDeviceAndToken(int32_t osAccountId, CJson *jsonParams, CJson *deviceInfo)
+static int32_t AddDeviceAndToken(int32_t osAccountId, const CJson *jsonParams, CJson *deviceInfo)
 {
-    int32_t res = CheckPeerDeviceNotSelf(jsonParams);
-    if (res != HC_SUCCESS) {
-        LOGE("The peer device udid is equals to the local udid!");
-        return res;
-    }
     const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
     if (groupId == NULL) {
         LOGE("Failed to get groupId from json!");
@@ -412,7 +407,7 @@ static int32_t AddDeviceAndToken(int32_t osAccountId, CJson *jsonParams, CJson *
         LOGE("Failed to get credential from json!");
         return HC_ERR_JSON_GET;
     }
-    res = GenerateAddTokenParams(deviceInfo, credential);
+    int32_t res = GenerateAddTokenParams(deviceInfo, credential);
     if (res != HC_SUCCESS) {
         return res;
     }
@@ -485,6 +480,51 @@ static int32_t AddGroupAndLocalDev(int32_t osAccountId, CJson *jsonParams, const
     return res;
 }
 
+static int32_t CheckUserIdValid(int32_t osAccountId, const CJson *jsonParams, const CJson *deviceInfo)
+{
+    const char *userId = GetStringFromJson(deviceInfo, FIELD_USER_ID);
+    if (userId == NULL) {
+        LOGE("Failed to get userId from json!");
+        return HC_ERR_JSON_GET;
+    }
+    const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
+    if (groupId == NULL) {
+        LOGE("Failed to get groupId from json!");
+        return HC_ERR_JSON_GET;
+    }
+    uint32_t index;
+    TrustedGroupEntry **entry = NULL;
+    GroupEntryVec groupEntryVec = CreateGroupEntryVec();
+    QueryGroupParams params = InitQueryGroupParams();
+    params.groupId = groupId;
+    params.groupType = ACROSS_ACCOUNT_AUTHORIZE_GROUP;
+    if (QueryGroups(osAccountId, &params, &groupEntryVec) != HC_SUCCESS) {
+        LOGE("Failed to query groups!");
+        ClearGroupEntryVec(&groupEntryVec);
+        return HC_ERR_DB;
+    }
+    FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
+        if ((entry != NULL) && (*entry != NULL) && (strcmp(userId, StringGet(&(*entry)->sharedUserId)) == 0)) {
+            ClearGroupEntryVec(&groupEntryVec);
+            return HC_SUCCESS;
+        }
+    }
+    LOGE("The input userId is inconsistent with the sharedUserId!");
+    ClearGroupEntryVec(&groupEntryVec);
+    return HC_ERR_INVALID_PARAMS;
+}
+
+static int32_t CheckDeviceInfoValid(int32_t osAccountId, const CJson *jsonParams, const CJson *deviceInfo)
+{
+    int32_t res = CheckPeerDeviceNotSelf(deviceInfo);
+    if (res != HC_SUCCESS) {
+        LOGE("The peer device udid is equals to the local udid!");
+        return res;
+    }
+    /* Across account group: input userId must be consistent with the sharedUserId. */
+    return CheckUserIdValid(osAccountId, jsonParams, deviceInfo);
+}
+
 static int32_t CreateGroup(int32_t osAccountId, CJson *jsonParams, char **returnJsonStr)
 {
     LOGI("[Start]: Start to create a across account group!");
@@ -548,6 +588,9 @@ static int32_t AddMultiMembersToGroup(int32_t osAccountId, const char *appId, CJ
         CJson *deviceInfo = GetItemFromArray(deviceList, i);
         if (deviceInfo == NULL) {
             LOGE("The deviceInfo is NULL!");
+            continue;
+        }
+        if (CheckDeviceInfoValid(osAccountId, jsonParams, deviceInfo) != HC_SUCCESS) {
             continue;
         }
         if (AddDeviceAndToken(osAccountId, jsonParams, deviceInfo) == HC_SUCCESS) {
