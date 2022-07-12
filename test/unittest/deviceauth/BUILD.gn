@@ -33,7 +33,6 @@ ohos_unittest("deviceauth_llt") {
     "//foundation/communication/dsoftbus/interfaces/kits/common",
     "//foundation/communication/dsoftbus/interfaces/kits/transport",
     "//foundation/communication/dsoftbus/interfaces/inner_kits/transport",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
   ]
 
   sources = [
@@ -63,7 +62,6 @@ ohos_unittest("deviceauth_llt") {
 
   deps = [
     "//base/security/huks/interfaces/innerkits/huks_standard/main:libhukssdk",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
     "//third_party/cJSON:cjson_static",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -75,6 +73,7 @@ ohos_unittest("deviceauth_llt") {
   external_deps = [
     "dsoftbus:softbus_client",
     "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
   ]
   if (support_jsapi) {
     external_deps += [ "os_account:os_account_innerkits" ]
