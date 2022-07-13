@@ -60,6 +60,9 @@ void DestroyPakeV1BaseParams(PakeBaseParams *params)
 
     HcFree(params->idPeer.val);
     params->idPeer.val = NULL;
+
+    HcFree(params->extraData.val);
+    params->extraData.val = NULL;
 }
 
 static int32_t AllocDefaultParams(PakeBaseParams *params)
@@ -133,6 +136,8 @@ static void FillDefaultValue(PakeBaseParams *params)
     params->idSelf.length = 0;
     params->idPeer.val = NULL;
     params->idPeer.length = 0;
+    params->extraData.val = NULL;
+    params->extraData.length = 0;
     params->supportedDlPrimeMod = DL_PRIME_MOD_NONE;
     params->largePrimeNumHex = NULL;
     params->innerKeyLen = 0;

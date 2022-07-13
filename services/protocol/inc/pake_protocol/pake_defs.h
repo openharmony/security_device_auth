@@ -62,6 +62,7 @@ typedef struct PakeBaseParamsT {
     Uint8Buff hmacKey;
     Uint8Buff kcfData;
     Uint8Buff kcfDataPeer;
+    Uint8Buff extraData;
     uint32_t innerKeyLen;
     const char *largePrimeNumHex;
     PakeDlPrimeMod supportedDlPrimeMod; // default: DL_PRIME_MOD_NONE

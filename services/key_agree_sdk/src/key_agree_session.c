@@ -360,6 +360,39 @@ static int32_t ParsePakeResponseMessage(PakeBaseParams *baseParams, const CJson 
     return res;
 }
 
+static int32_t FillExtraData(SpekeSession *spekeSession, const CJson *jsonMessage)
+{
+    const CJson *version = GetObjFromJson(jsonMessage, FIELD_SDK_VERSION);
+    if (version == NULL) {
+        LOGE("Get version from json failed.");
+        return HC_ERR_JSON_GET;
+    }
+    char *versionStr = PackJsonToString(version);
+    if (versionStr == NULL) {
+        LOGE("Pack json to versionStr failed.");
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+    uint32_t versionStrLength = HcStrlen(versionStr) + 1;
+    int32_t res = HC_SUCCESS;
+    do {
+        res = InitSingleParam(&(spekeSession->baseParam.extraData), versionStrLength);
+        if (res != HC_SUCCESS) {
+            LOGE("InitSingleParam for extraData failed, res: %d.", res);
+            break;
+        }
+        res = memcpy_s(spekeSession->baseParam.extraData.val, spekeSession->baseParam.extraData.length,
+            versionStr, versionStrLength);
+        if (res != HC_SUCCESS) {
+            LOGE("Memcpy for extraData failed.");
+            HcFree(spekeSession->baseParam.extraData.val);
+            spekeSession->baseParam.extraData.val = NULL;
+            break;
+        }
+    } while (0);
+    FreeJsonString(versionStr);
+    return res;
+}
+
 static int32_t FillPskAndDeviceId(SpekeSession *spekeSession)
 {
     if (spekeSession->sharedSecret.length < MIN_SHAREDSECRET_LEN ||
@@ -392,43 +425,6 @@ static int32_t FillPskAndDeviceId(SpekeSession *spekeSession)
         FreeAndCleanKey(&spekeSession->baseParam.psk);
         FreeAndCleanKey(&spekeSession->baseParam.idSelf);
         return HC_ERR_MEMORY_COPY;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t InitSpekeSessionParams(SpekeSession *spekeSession, KeyAgreeProtocol protocol)
-{
-    if (InitPakeV2BaseParams(&(spekeSession->baseParam)) != HC_SUCCESS) {
-        LOGE("InitPakeV1BaseParams failed!");
-        return HC_ERROR;
-    }
-    switch (protocol) {
-        case KEYAGREE_PROTOCOL_DL_SPEKE_256:
-            LOGI("Init protocol of dl speke 256");
-            spekeSession->baseParam.supportedPakeAlg = PAKE_ALG_DL;
-            spekeSession->baseParam.supportedDlPrimeMod =
-                spekeSession->baseParam.supportedDlPrimeMod | DL_PRIME_MOD_256;
-            break;
-        case KEYAGREE_PROTOCOL_DL_SPEKE_384:
-            LOGI("Init protocol of dl speke 384");
-            spekeSession->baseParam.supportedPakeAlg = PAKE_ALG_DL;
-            spekeSession->baseParam.supportedDlPrimeMod =
-                spekeSession->baseParam.supportedDlPrimeMod | DL_PRIME_MOD_384;
-            break;
-        case KEYAGREE_PROTOCOL_EC_SPEKE_P256:
-            LOGI("Init protocol of ec speke p256");
-            spekeSession->baseParam.supportedPakeAlg = PAKE_ALG_EC;
-            spekeSession->baseParam.curveType = CURVE_256;
-            break;
-        case KEYAGREE_PROTOCOL_EC_SPEKE_X25519:
-            LOGI("Init protocol of ec speke X25519");
-            spekeSession->baseParam.supportedPakeAlg = PAKE_ALG_EC;
-            spekeSession->baseParam.curveType = CURVE_25519;
-            break;
-        default:
-            LOGE("Invalid protocol type!");
-            return HC_ERROR;
-            break;
     }
     return HC_SUCCESS;
 }
@@ -538,8 +534,8 @@ static int32_t BuildAndPutOutMessage(SpekeSession *spekeSession, KeyAgreeBlob *o
     char *returnStr = PackJsonToString(outJson);
     FreeJson(outJson);
     if (returnStr == NULL) {
-        LOGE("Pack json to string failed, res: %d.", res);
-        return HC_ERROR;
+        LOGE("Pack json to string failed.");
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     uint32_t returnStrLen = HcStrlen(returnStr);
     if (memcpy_s(out->data, out->length, returnStr, returnStrLen + 1) != EOK) {
@@ -740,11 +736,35 @@ static int32_t ProcessSpekeSession(SpekeSession *spekeSession, const KeyAgreeBlo
 
 static int32_t InitSpekeSession(SpekeSession *spekeSession, KeyAgreeProtocol protocol)
 {
-    int32_t res = InitSpekeSessionParams(spekeSession, protocol);
-    if (res != HC_SUCCESS) {
-        LOGE("InitSpekeSession failed, res: %d.", res);
+    switch (protocol) {
+        case KEYAGREE_PROTOCOL_DL_SPEKE_256:
+            LOGI("Init protocol of dl speke 256");
+            spekeSession->baseParam.supportedPakeAlg = PAKE_ALG_DL;
+            spekeSession->baseParam.supportedDlPrimeMod =
+                spekeSession->baseParam.supportedDlPrimeMod | DL_PRIME_MOD_256;
+            break;
+        case KEYAGREE_PROTOCOL_DL_SPEKE_384:
+            LOGI("Init protocol of dl speke 384");
+            spekeSession->baseParam.supportedPakeAlg = PAKE_ALG_DL;
+            spekeSession->baseParam.supportedDlPrimeMod =
+                spekeSession->baseParam.supportedDlPrimeMod | DL_PRIME_MOD_384;
+            break;
+        case KEYAGREE_PROTOCOL_EC_SPEKE_P256:
+            LOGI("Init protocol of ec speke p256");
+            spekeSession->baseParam.supportedPakeAlg = PAKE_ALG_EC;
+            spekeSession->baseParam.curveType = CURVE_256;
+            break;
+        case KEYAGREE_PROTOCOL_EC_SPEKE_X25519:
+            LOGI("Init protocol of ec speke X25519");
+            spekeSession->baseParam.supportedPakeAlg = PAKE_ALG_EC;
+            spekeSession->baseParam.curveType = CURVE_25519;
+            break;
+        default:
+            LOGE("Invalid protocol type!");
+            return HC_ERROR;
+            break;
     }
-    return res;
+    return HC_SUCCESS;
 }
 
 static KeyAgreeProtocol GetKegAgreeProtocolType(VersionStruct *curVersion)
@@ -778,6 +798,12 @@ static int32_t ProcessProtocolInitial(SpekeSession *spekeSession, KeyAgreeBlob *
         FreeJson(outJsonMessage);
         return res;
     }
+    res = FillExtraData(spekeSession, outJsonMessage);
+    if (res != HC_SUCCESS) {
+        LOGE("Fill extra data failed, res: %d.", res);
+        FreeJson(outJsonMessage);
+        return res;
+    }
     char *returnStr = PackJsonToString(outJsonMessage);
     FreeJson(outJsonMessage);
     if (returnStr == NULL) {
@@ -799,17 +825,26 @@ static int32_t ProcessProtocolInitial(SpekeSession *spekeSession, KeyAgreeBlob *
 
 static int32_t ProcessProtocolConfirm(SpekeSession *spekeSession, const KeyAgreeBlob *in, KeyAgreeBlob *out)
 {
-    if (in == NULL || in->data == NULL || out == NULL) {
+    if (spekeSession == NULL || in == NULL || in->data == NULL || out == NULL) {
         LOGE("Invalid params!");
         return HC_ERR_INVALID_PARAMS;
     }
     CJson *inJsonMessage = CreateJsonFromString((const char *)(in->data));
     if (inJsonMessage == NULL) {
-        LOGE("create json failed!");
+        LOGE("Create json failed!");
         return HC_ERR_JSON_CREATE;
     }
+    int32_t res;
+    if (spekeSession->keyAgreeType == KEYAGREE_TYPE_SERVER) {
+        res = FillExtraData(spekeSession, inJsonMessage);
+        if (res != HC_SUCCESS) {
+            LOGE("Fill extra data failed!");
+            FreeJson(inJsonMessage);
+            return res;
+        }
+    }
     VersionStruct curVersionPeer = { 0, 0, 0 };
-    int32_t res = GetVersionFromJson(inJsonMessage, &curVersionPeer);
+    res = GetVersionFromJson(inJsonMessage, &curVersionPeer);
     FreeJson(inJsonMessage);
     if (res != HC_SUCCESS) {
         LOGE("Get peer version info failed, res: %d.", res);
@@ -828,12 +863,12 @@ static int32_t ProcessProtocolConfirm(SpekeSession *spekeSession, const KeyAgree
     res = InitSpekeSession(spekeSession, protocolType);
     if (res != HC_SUCCESS) {
         LOGE("Init protocol session fail!");
-        return HC_ERROR;
+        return res;
     }
     res = spekeSession->processSession(spekeSession, in, out);
     if (res != HC_SUCCESS) {
         LOGE("ProcessProtocolAgree:protocol agree fail!");
-        return HC_ERROR;
+        return res;
     }
     spekeSession->versionInfo.versionStatus = VERSION_DECIDED;
     return HC_SUCCESS;
@@ -856,7 +891,7 @@ static int32_t ProcessProtocolAgree(SpekeSession *spekeSession, const KeyAgreeBl
     return res;
 }
 
-static int32_t CheckAndInitProcotol(SpekeSession *spekeSession, KeyAgreeProtocol protocol)
+static int32_t CheckAndInitProtocol(SpekeSession *spekeSession, KeyAgreeProtocol protocol)
 {
     int32_t res = HC_ERR_NOT_SUPPORT;
     uint64_t algInProtocol = SPEKE_MOD_NONE;
@@ -915,10 +950,15 @@ SpekeSession *CreateSpekeSession(void)
         LOGE("Failed to allocate session memory!");
         return spekeSession;
     }
+    if (InitPakeV2BaseParams(&(spekeSession->baseParam)) != HC_SUCCESS) {
+        LOGE("InitPakeV2BaseParams failed!");
+        HcFree(spekeSession);
+        return NULL;
+    }
     spekeSession->processProtocolAgree = ProcessProtocolAgree;
     spekeSession->processSession = ProcessSpekeSession;
     spekeSession->initSpekeSession = InitSpekeSession;
-    spekeSession->checkAndInitProcotol = CheckAndInitProcotol;
+    spekeSession->checkAndInitProtocol = CheckAndInitProtocol;
     spekeSession->sharedSecret.val = NULL;
     spekeSession->sharedSecret.length = 0;
     spekeSession->deviceId.val = NULL;
