@@ -906,7 +906,7 @@ static int32_t CheckUserId(const char *userId, const CJson *in)
     return HC_ERROR;
 }
 
-static int32_t CheckCredValidity(const CJson *in)
+static int32_t CheckCredValidity(int32_t opCode, const CJson *in)
 {
     const char *userId = GetStringFromJson(in, FIELD_USER_ID);
     if (userId == NULL) {
@@ -917,6 +917,9 @@ static int32_t CheckCredValidity(const CJson *in)
     if (ret != HC_SUCCESS) {
         LOGE("Verify server credential failed!");
         return ret;
+    }
+    if (opCode == IMPORT_TRUSTED_CREDENTIALS) {
+        return HC_SUCCESS;
     }
     ret = CheckDevicePk(in);
     if (ret != HC_SUCCESS) {
@@ -930,14 +933,13 @@ static int32_t CheckCredValidity(const CJson *in)
     return ret;
 }
 
-static int32_t AddToken(int32_t osAccountId, const CJson *in, CJson *out)
+static int32_t AddToken(int32_t osAccountId, int32_t opCode, const CJson *in)
 {
-    (void)out;
     if (in == NULL) {
         LOGE("Input param is null!");
         return HC_ERR_NULL_PTR;
     }
-    int32_t ret = CheckCredValidity(in);
+    int32_t ret = CheckCredValidity(opCode, in);
     if (ret != HC_SUCCESS) {
         LOGE("Invalid credential");
         return ret;
