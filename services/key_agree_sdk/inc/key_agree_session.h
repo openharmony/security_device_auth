@@ -25,8 +25,8 @@
 #define FIELD_SDK_STEP "_st"
 #define FIELD_SDK_PAYLOAD "_pd"
 #define FIELD_SDK_SEND_TO_PEER "_d"
-#define FIELD_SDK_VERSION "_v"
-#define FIELD_SDK_CURRENT_VERSION "_cv"
+#define FIELD_SDK_VERSION "v"
+#define FIELD_SDK_CURRENT_VERSION "cv"
 #define FIELD_PEER_AUTH_ID "peerAuthId"
 #define FIELD_KCF_DATA "kcfData"
 #define FIELD_EPK "epk"
@@ -87,7 +87,7 @@ typedef struct SpekeSessionT {
     int32_t (*processProtocolAgree)(struct SpekeSessionT *spekeSession, const KeyAgreeBlob *in, KeyAgreeBlob *out);
     int32_t (*processSession)(struct SpekeSessionT *spekeSession, const KeyAgreeBlob *in, KeyAgreeBlob *out);
     int32_t (*initSpekeSession)(struct SpekeSessionT *spekeSession, KeyAgreeProtocol protocol);
-    int32_t (*checkAndInitProcotol)(struct SpekeSessionT *spekeSession, KeyAgreeProtocol protocol);
+    int32_t (*checkAndInitProtocol)(struct SpekeSessionT *spekeSession, KeyAgreeProtocol protocol);
 } SpekeSession;
 
 SpekeSession *CreateSpekeSession(void);

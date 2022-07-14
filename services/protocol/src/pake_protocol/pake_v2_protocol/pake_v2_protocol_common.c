@@ -64,6 +64,9 @@ void DestroyPakeV2BaseParams(PakeBaseParams *params)
 
     HcFree(params->kcfDataPeer.val);
     params->kcfDataPeer.val = NULL;
+
+    HcFree(params->extraData.val);
+    params->extraData.val = NULL;
 }
 
 static int32_t AllocDefaultParams(PakeBaseParams *params)
@@ -127,6 +130,8 @@ static void FillDefaultValue(PakeBaseParams *params)
     params->idPeer.length = 0;
     params->hmacKey.val = NULL;
     params->hmacKey.length = 0;
+    params->extraData.val = NULL;
+    params->extraData.length = 0;
     params->supportedDlPrimeMod = DL_PRIME_MOD_NONE;
     params->largePrimeNumHex = NULL;
     params->innerKeyLen = 0;
@@ -477,7 +482,13 @@ static int32_t CombineProofMsg(const PakeBaseParams *params, Uint8Buff *proofMsg
         LOGE("Memcpy for base failed.");
         return HC_ERR_MEMORY_COPY;
     }
-    return res;
+    usedLen += params->innerKeyLen;
+    if ((params->extraData.val != NULL) && (memcpy_s(proofMsg->val + usedLen, proofMsg->length - usedLen,
+        params->extraData.val, params->extraData.length) != EOK)) {
+        LOGE("Memcpy for extraData failed.");
+        return HC_ERR_MEMORY_COPY;
+    }
+    return HC_SUCCESS;
 }
 
 /*
@@ -489,7 +500,7 @@ static int32_t GenerateProof(PakeBaseParams *params)
     int res;
     Uint8Buff proofMsg = { NULL, 0 };
     proofMsg.length = KCF_CODE_LEN + params->innerKeyLen + params->innerKeyLen +
-        params->sharedSecret.length + params->innerKeyLen;
+        params->sharedSecret.length + params->innerKeyLen + params->extraData.length;
     proofMsg.val = (uint8_t *)HcMalloc(proofMsg.length, 0);
     if (proofMsg.val == NULL) {
         LOGE("Malloc for proofMsg failed.");
@@ -519,7 +530,7 @@ static int32_t VerifyProof(PakeBaseParams *params)
     int res;
     Uint8Buff proofMsg = { NULL, 0 };
     proofMsg.length = KCF_CODE_LEN + params->innerKeyLen + params->innerKeyLen +
-        params->sharedSecret.length + params->innerKeyLen;
+        params->sharedSecret.length + params->innerKeyLen + params->extraData.length;
     proofMsg.val = (uint8_t *)HcMalloc(proofMsg.length, 0);
     if (proofMsg.val == NULL) {
         LOGE("Malloc for proofMsg failed.");
