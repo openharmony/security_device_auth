@@ -49,22 +49,6 @@ int32_t g_callMapElemNum = 0;
 
 #define IPC_IO_BUFF_SZ 1024
 
-static int32_t BinderLiteProcess(SvcIdentity svc, int32_t procType)
-{
-    switch (procType) {
-        case BINDER_TYPE_ACQUIRE:
-            break;
-        case BINDER_TYPE_ACQUIRE_AND_FREE:
-            break;
-        case BINDER_TYPE_RELEASE:
-            (void)ReleaseSvc(svc);
-            break;
-        default:
-            LOGW("internal error: unknown processing type");
-    }
-    return HC_SUCCESS;
-}
-
 void ResetCallMap(void)
 {
     g_maxCallMapSz = MAX_CALLMAP_SIZE;
@@ -143,11 +127,9 @@ static void WithObject(int32_t methodId, IpcIo *data, IpcDataInfo *ipcData, int3
         ShowIpcSvcInfo(&tmp);
         ipcData->idx = SetRemoteObject(&tmp);
         if (ipcData->idx >= 0) {
-            if (BinderLiteProcess(tmp, BINDER_TYPE_ACQUIRE_AND_FREE) == HC_SUCCESS) {
-                ipcData->val = (uint8_t *)(&(ipcData->idx));
-                LOGI("object trans success, set id %d", ipcData->idx);
-                (*cnt)++;
-            }
+            ipcData->val = (uint8_t *)(&(ipcData->idx));
+            LOGI("object trans success, set id %d", ipcData->idx);
+            (*cnt)++;
         }
     }
     return;
@@ -351,8 +333,6 @@ void ResetRemoteObject(int32_t idx)
             return;
         }
         RemoveDeathRecipient(g_cbStub[idx].cbStub, g_cbStub[idx].cbDieId);
-        SvcIdentity tmpStub = g_cbStub[idx].cbStub;
-        (void)BinderLiteProcess(tmpStub, BINDER_TYPE_RELEASE);
         (void)memset_s(&(g_cbStub[idx].cbStub), sizeof(g_cbStub[idx].cbStub), 0, sizeof(g_cbStub[idx].cbStub));
         g_cbStub[idx].inUse = false;
         UnLockCbStubTable();
