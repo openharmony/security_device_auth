@@ -73,7 +73,7 @@ if (os_level == "mini" || os_level == "small") {
         "//base/hiviewdfx/hilog_lite/interfaces/native/innerkits/hilog",
         "//third_party/bounds_checking_function/include",
         "${frameworks_path}/inc/lite",
-        "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
+        "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/samgr",
       ]
 
       sources = deviceauth_ipc_files
@@ -94,7 +94,7 @@ if (os_level == "mini" || os_level == "small") {
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
         "//build/lite/config/component/cJSON:cjson_shared",
         "//foundation/communication/ipc/interfaces/innerkits/c/ipc:ipc_single",
-        "//foundation/distributedschedule/samgr_lite/samgr:samgr",
+        "//foundation/systemabilitymgr/samgr_lite/samgr:samgr",
         "//third_party/bounds_checking_function:libsec_shared",
         "//utils/native/lite:utils",
       ]
@@ -109,7 +109,7 @@ if (os_level == "mini" || os_level == "small") {
         "//third_party/bounds_checking_function/include",
         "${frameworks_path}/inc/lite",
         "//foundation/communication/ipc/interfaces/innerkits/c/ipc/include",
-        "//foundation/distributedschedule/samgr_lite/interfaces/kits/samgr",
+        "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/samgr",
       ]
 
       sources = deviceauth_ipc_files
@@ -126,7 +126,7 @@ if (os_level == "mini" || os_level == "small") {
         "${deps_adapter_path}:${hal_module_name}",
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
         "//foundation/communication/ipc/interfaces/innerkits/c/ipc:ipc_single",
-        "//foundation/distributedschedule/samgr_lite/samgr:samgr",
+        "//foundation/systemabilitymgr/samgr_lite/samgr:samgr",
         "//third_party/bounds_checking_function:libsec_shared",
         "//utils/native/lite:utils",
       ]
@@ -210,7 +210,7 @@ if (os_level == "mini" || os_level == "small") {
       "hiviewdfx_hilog_native:libhilog",
       "ipc:ipc_core",
       "safwk:system_ability_fwk",
-      "samgr_standard:samgr_proxy",
+      "samgr:samgr_proxy",
       "utils_base:utils",
     ]
   }
@@ -249,7 +249,7 @@ if (os_level == "mini" || os_level == "small") {
       "access_token:libaccesstoken_sdk",
       "hiviewdfx_hilog_native:libhilog",
       "ipc:ipc_core",
-      "samgr_standard:samgr_proxy",
+      "samgr:samgr_proxy",
       "utils_base:utils",
     ]
   }

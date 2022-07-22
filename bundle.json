@@ -33,7 +33,7 @@
           "common",
           "utils_base",
           "hiviewdfx_hilog_native",
-          "samgr_standard",
+          "samgr",
           "ipc"
         ],
         "third_party": [
