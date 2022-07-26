@@ -28,7 +28,7 @@ typedef struct {
 DECLARE_HC_VECTOR(SymTokenVec, SymToken*)
 
 typedef struct {
-    int32_t (*addToken)(int32_t osAccountId, CJson *in, int32_t opCode);
+    int32_t (*addToken)(int32_t osAccountId, int32_t opCode, CJson *in);
     int32_t (*deleteToken)(int32_t osAccountId, const char *userId, const char *deviceId);
     int32_t (*generateKeyAlias)(const char *userId, const char *deviceId, Uint8Buff *keyAlias);
 } SymTokenManager;

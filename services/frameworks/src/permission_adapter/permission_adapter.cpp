@@ -34,11 +34,11 @@ int32_t CheckPermission(void)
             LOGE("GetNativeTokenInfo failed!");
             return HC_ERROR;
         }
-        if (findInfo.apl == APL_SYSTEM_CORE) {
-            LOGI("Check permission(APL3=SYSTEM_CORE) success!");
+        if ((findInfo.apl == APL_SYSTEM_CORE) || (findInfo.apl == APL_SYSTEM_BASIC)) {
+            LOGI("Check permission(APL3=SYSTEM_CORE or APL2=SYSTEM_BASIC) success!");
             return HC_SUCCESS;
         } else {
-            LOGE("Check permission(APL3=SYSTEM_CORE) failed! APL: %d", findInfo.apl);
+            LOGE("Check permission(APL3=SYSTEM_CORE or APL2=SYSTEM_BASIC) failed! APL: %d", findInfo.apl);
             return HC_ERROR;
         }
     } else {

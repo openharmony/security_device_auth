@@ -445,7 +445,7 @@ static int32_t ImportSymTokenToKeyManager(const SymToken *token, CJson *in, int3
     return res;
 }
 
-static int32_t AddToken(int32_t osAccountId, CJson *in, int32_t opCode)
+static int32_t AddToken(int32_t osAccountId, int32_t opCode, CJson *in)
 {
     LOGI("[Token]: Add sym token starting ...");
     if (in == NULL) {

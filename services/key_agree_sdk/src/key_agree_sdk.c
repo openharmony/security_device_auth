@@ -128,7 +128,7 @@ static int32_t InitKeyAgreeStartSessionParams(SpekeSession *spekeSession, const 
         if (memcpy_s(spekeSession->deviceId.val, spekeSession->deviceId.length,
             deviceId->data, deviceId->length) != HC_SUCCESS) {
             LOGE("Memcpy for deviceId failed.");
-            res =  KEYAGREE_START_MEMORY_COPY_DEVID_FAIL;
+            res = KEYAGREE_START_MEMORY_COPY_DEVID_FAIL;
             break;
         }
         if (extras != NULL) {
@@ -156,7 +156,7 @@ KeyAgreeResult KeyAgreeInitSession(KeyAgreeSession *session, KeyAgreeProtocol pr
         LOGE("Init spekeSession fail!");
         return KEYAGREE_INIT_CREATE_SESSION_FAIL;
     }
-    if (spekeSession->checkAndInitProcotol(spekeSession, protocol) != HC_SUCCESS) {
+    if (spekeSession->checkAndInitProtocol(spekeSession, protocol) != HC_SUCCESS) {
         LOGE("This protocol is not supported!");
         DestroySpekeSession(spekeSession);
         return KEYAGREE_INIT_NOT_SUPPORTED;

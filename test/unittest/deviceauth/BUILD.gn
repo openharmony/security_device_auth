@@ -29,7 +29,7 @@ ohos_unittest("deviceauth_llt") {
     "//third_party/json/include",
     "//third_party/mbedtls/include",
     "//third_party/mbedtls/include/mbedtls",
-    "//utils/native/base/include",
+    "//commonlibrary/c_utils/base/include",
     "//foundation/communication/dsoftbus/interfaces/kits/common",
     "//foundation/communication/dsoftbus/interfaces/kits/transport",
     "//foundation/communication/dsoftbus/interfaces/inner_kits/transport",
@@ -67,10 +67,10 @@ ohos_unittest("deviceauth_llt") {
     "//third_party/googletest:gtest_main",
     "//third_party/mbedtls:mbedtls_shared",
     "//third_party/openssl:libcrypto_static",
-    "//utils/native/base:utils",
   ]
 
   external_deps = [
+    "c_utils:utils",
     "dsoftbus:softbus_client",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",

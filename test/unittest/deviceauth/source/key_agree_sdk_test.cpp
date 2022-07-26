@@ -14,12 +14,9 @@
  */
 
 #include "key_agree_sdk_test.h"
+
 #include <gtest/gtest.h>
-#include "common_defs.h"
 #include "key_agree_sdk.h"
-#include "device_auth_defines.h"
-#include "json_utils.h"
-#include "securec.h"
 #include "hc_types.h"
 
 using namespace std;
@@ -31,7 +28,6 @@ static const int32_t g_messageLength = 2048;
 static const int32_t g_sharedSecretLength = 7;
 static const int32_t g_deviceIdLength = 17;
 static const int32_t g_sessionKeyLength = 64;
-#define TEST_APP_ID "TestAppId"
 
 static KeyAgreeSession *g_session;
 static KeyAgreeSession *g_session_s;
