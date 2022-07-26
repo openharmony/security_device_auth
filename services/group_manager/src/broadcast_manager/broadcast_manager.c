@@ -309,7 +309,7 @@ void DestroyBroadcastManager(void)
     }
 }
 
-Broadcaster *GetBroadcaster(void)
+const Broadcaster *GetBroadcaster(void)
 {
     return &g_broadcaster;
 }
