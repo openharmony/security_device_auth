@@ -158,9 +158,9 @@ if (os_level == "mini" || os_level == "small") {
     ]
 
     external_deps = [
+      "c_utils:utils",
       "dsoftbus:softbus_client",
       "hiviewdfx_hilog_native:libhilog",
-      "utils_base:utils",
     ]
     if (support_jsapi) {
       external_deps += [ "os_account:os_account_innerkits" ]
@@ -207,11 +207,11 @@ if (os_level == "mini" || os_level == "small") {
 
     external_deps = [
       "access_token:libaccesstoken_sdk",
+      "c_utils:utils",
       "hiviewdfx_hilog_native:libhilog",
       "ipc:ipc_core",
       "safwk:system_ability_fwk",
       "samgr_standard:samgr_proxy",
-      "utils_base:utils",
     ]
   }
 
@@ -247,10 +247,10 @@ if (os_level == "mini" || os_level == "small") {
 
     external_deps = [
       "access_token:libaccesstoken_sdk",
+      "c_utils:utils",
       "hiviewdfx_hilog_native:libhilog",
       "ipc:ipc_core",
       "samgr_standard:samgr_proxy",
-      "utils_base:utils",
     ]
   }
 }
