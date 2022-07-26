@@ -36,7 +36,7 @@ typedef struct {
 bool IsBroadcastSupported(void);
 int32_t InitBroadcastManager(void);
 void DestroyBroadcastManager(void);
-Broadcaster *GetBroadcaster(void);
+const Broadcaster *GetBroadcaster(void);
 int32_t AddListener(const char *appId, const DataChangeListener *listener);
 int32_t RemoveListener(const char *appId);
 
