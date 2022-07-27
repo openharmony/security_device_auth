@@ -149,8 +149,8 @@ HWTEST_F(GmRegCallbackTest, GmRegCallbackTest001, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     EXPECT_NE(gm, nullptr);
     DeviceAuthCallback callback;
-    int32_t ret = gm->regCallback(TEST_APP_ID, &callback);
-    EXPECT_EQ(ret, HC_SUCCESS);
+    int32_t ret = gm->regCallback(NULL, &callback);
+    EXPECT_NE(ret, HC_SUCCESS);
 }
 
 class GmUnRegCallbackTest : public testing::Test {
@@ -179,10 +179,7 @@ HWTEST_F(GmUnRegCallbackTest, GmUnRegCallbackTest001, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     EXPECT_NE(gm, nullptr);
-    DeviceAuthCallback callback;
-    int32_t ret = gm->regCallback(TEST_APP_ID, &callback);
-    EXPECT_EQ(ret, HC_SUCCESS);
-    ret = gm->unRegCallback(TEST_APP_ID);
+    int32_t ret = gm->unRegCallback(TEST_APP_ID);
     EXPECT_EQ(ret, HC_SUCCESS);
 }
 
