@@ -101,7 +101,6 @@ if (defined(ohos_lite)) {
       "//commonlibrary/c_utils/base/include",
       "//third_party/openssl/include/",
       "//base/security/huks/interfaces/innerkits/huks_standard/main/include",
-      "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
       "//third_party/mbedtls/include",
       "//third_party/mbedtls/include/mbedtls",
     ]
@@ -121,7 +120,6 @@ if (defined(ohos_lite)) {
     cflags = [ "-DHILOG_ENABLE" ]
     deps = [
       "//base/security/huks/interfaces/innerkits/huks_standard/main:libhukssdk",
-      "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
       "//third_party/cJSON:cjson_static",
       "//third_party/mbedtls:mbedtls_shared",
       "//third_party/openssl:libcrypto_shared",
@@ -129,6 +127,7 @@ if (defined(ohos_lite)) {
     external_deps = [
       "c_utils:utils",
       "hiviewdfx_hilog_native:libhilog",
+      "init:libbegetutil",
     ]
   }
 }
