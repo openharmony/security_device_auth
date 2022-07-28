@@ -28,7 +28,7 @@ if (defined(ohos_lite)) {
         "//utils/native/lite/include",
         "//base/hiviewdfx/hilog_lite/interfaces/native/kits/hilog_lite",
         "//utils/native/lite/memory/include",
-        "//base/startup/syspara_lite/interfaces/kits/",
+        "//base/startup/init/interfaces/innerkits/include/syspara",
       ]
 
       sources = hal_common_files
@@ -47,7 +47,7 @@ if (defined(ohos_lite)) {
       deps = [
         "//base/hiviewdfx/hilog_lite/frameworks/mini:hilog_lite",
         "//base/security/huks/interfaces/innerkits/huks_lite:huks_3.0_sdk",
-        "//base/startup/syspara_lite/frameworks/parameter/src:sysparam",
+        "//base/startup/init/interfaces/innerkits:libbegetutil",
         "//build/lite/config/component/cJSON:cjson_shared",
         "//utils/native/lite:utils",
       ]
@@ -62,7 +62,7 @@ if (defined(ohos_lite)) {
         "//base/security/huks/interfaces/innerkits/huks_standard/main/include",
         "//base/hiviewdfx/hilog_lite/interfaces/native/innerkits/hilog",
         "//third_party/bounds_checking_function/include",
-        "//base/startup/syspara_lite/interfaces/kits/",
+        "//base/startup/init/interfaces/innerkits/include/syspara",
         "//third_party/mbedtls/include",
       ]
 
@@ -83,7 +83,7 @@ if (defined(ohos_lite)) {
       deps = [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
         "//base/security/huks/interfaces/innerkits/huks_lite:huks_3.0_sdk",
-        "//base/startup/syspara_lite/frameworks/parameter/src:sysparam",
+        "//base/startup/init/interfaces/innerkits:libbegetutil",
         "//build/lite/config/component/cJSON:cjson_shared",
         "//build/lite/config/component/openssl:openssl_shared",
         "//third_party/bounds_checking_function:libsec_shared",
