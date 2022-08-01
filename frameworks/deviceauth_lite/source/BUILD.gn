@@ -90,6 +90,12 @@ if (ohos_kernel_type == "liteos_m") {
     public_configs = [ ":hichain_config" ]
     deps =
         [ "//base/security/huks/interfaces/innerkits/huks_lite:huks_3.0_sdk" ]
+    if (board_toolchain_type == "iccarm") {
+      cflags = [
+        "--diag_suppress",
+        "Pe1097,Pe546,Pe188,Pe111",
+      ]
+    }
   }
 } else {
   shared_library("hichainsdk") {
