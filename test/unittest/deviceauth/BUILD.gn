@@ -33,6 +33,7 @@ ohos_unittest("deviceauth_llt") {
     "//foundation/communication/dsoftbus/interfaces/kits/common",
     "//foundation/communication/dsoftbus/interfaces/kits/transport",
     "//foundation/communication/dsoftbus/interfaces/inner_kits/transport",
+    "${dev_frameworks_path}/inc/hiview_adapter",
   ]
 
   sources = [
@@ -58,6 +59,7 @@ ohos_unittest("deviceauth_llt") {
     "${os_adapter_path}/impl/src/linux/hc_types.c",
   ]
   sources += deviceauth_files
+  sources += hiview_adapter_mock_files
   sources += [ "source/deviceauth_standard_test.cpp" ]
 
   deps = [

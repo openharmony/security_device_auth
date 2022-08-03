@@ -32,6 +32,7 @@ class ServiceDevAuth : public IRemoteStub<IMethodsIpcCall> {
 public:
     ServiceDevAuth();
     ~ServiceDevAuth();
+    int32_t Dump(int32_t fd, const std::vector<std::u16string>& args) override;
     virtual int32_t OnRemoteRequest(uint32_t code, MessageParcel &data,
         MessageParcel &reply, MessageOption &option) override;
     void ResetCallMap(void);
