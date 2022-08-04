@@ -16,6 +16,9 @@
       "subsystem": "security",
       "syscap": [ "SystemCapability.Security.DeviceAuth" ],
       "features": [],
+      "hisysevent_config": [
+          "//base/security/device_auth/hisysevent.yaml"
+      ],
       "adapted_system_type": [
           "standard",
           "small",
@@ -33,6 +36,7 @@
           "common",
           "utils_base",
           "hiviewdfx_hilog_native",
+          "hisysevent_native",
           "samgr",
           "ipc"
         ],

@@ -23,6 +23,7 @@
 #include "permission_adapter.h"
 #include "securec.h"
 #include "system_ability_definition.h"
+#include "hidump_adapter.h"
 
 using namespace std;
 namespace OHOS {
@@ -46,6 +47,13 @@ ServiceDevAuth::~ServiceDevAuth()
         callMapTable = nullptr;
     }
     callMapElemNum = 0;
+}
+
+int32_t ServiceDevAuth::Dump(int32_t fd, const std::vector<std::u16string>& args)
+{
+    DevAuthDump(fd);
+    (void)args;
+    return 0;
 }
 
 IpcServiceCall ServiceDevAuth::GetCallMethodByMethodId(int32_t methodId)

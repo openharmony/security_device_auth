@@ -21,6 +21,7 @@
 #include "hc_vector.h"
 #include "account_module.h"
 #include "version_util.h"
+#include "hitrace_adapter.h"
 
 DECLARE_HC_VECTOR(AuthModuleVec, void *);
 IMPLEMENT_HC_VECTOR(AuthModuleVec, void *, 1)
@@ -185,7 +186,9 @@ int32_t ProcessTask(int taskId, const CJson *in, CJson *out, int32_t *status, in
         LOGE("Unsupported method in the module, moduleType: %d.", moduleType);
         return HC_ERR_UNSUPPORTED_METHOD;
     }
+    DevAuthStartTrace(TRACE_TAG_AUTH_PROCESS);
     int32_t res = module->processTask(taskId, in, out, status);
+    DevAuthFinishTrace();
     if (res != HC_SUCCESS) {
         LOGE("Process task failed, taskId: %d, moduleType: %d, res: %d.", taskId, moduleType, res);
         return res;

@@ -29,7 +29,7 @@ int32_t InitBroadcastManager(void)
 
 void DestroyBroadcastManager(void) {}
 
-Broadcaster *GetBroadcaster(void)
+const Broadcaster *GetBroadcaster(void)
 {
     return NULL;
 }

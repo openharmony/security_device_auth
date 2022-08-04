@@ -29,8 +29,10 @@ if (os_level == "mini" || os_level == "small") {
       "//foundation/communication/dsoftbus/interfaces/kits/common",
       "//foundation/communication/dsoftbus/interfaces/kits/transport",
       "//foundation/communication/dsoftbus/interfaces/inner_kits/transport",
+      "${dev_frameworks_path}/inc/hiview_adapter",
     ]
     sources = deviceauth_files
+    sources += hiview_adapter_mock_files
     deps = [
       "${deps_adapter_path}:${hal_module_name}",
       "//build/lite/config/component/cJSON:cjson_shared",
@@ -40,9 +42,17 @@ if (os_level == "mini" || os_level == "small") {
 
     defines = [ "HILOG_ENABLE" ]
     defines += deviceauth_defines
-    cflags = build_flags
+    defines += [ "DISABLE_HIVIEW" ]
+    if (board_toolchain_type == "iccarm") {
+      cflags = [
+        "--diag_suppress",
+        "Pe546,Pe223,Pe111,Pe188",
+      ]
+    } else {
+      cflags = build_flags
+    }
     cflags += [
-      "-DHICHAIN_THREAD_STACK_SIZE = ${deviceauth_hichain_thread_stack_size}",
+      "-DHICHAIN_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",
     ]
     if (ohos_kernel_type == "linux" || ohos_kernel_type == "liteos_a") {
       include_dirs +=
@@ -74,9 +84,11 @@ if (os_level == "mini" || os_level == "small") {
         "//third_party/bounds_checking_function/include",
         "${frameworks_path}/inc/lite",
         "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/samgr",
+        "${dev_frameworks_path}/inc/hiview_adapter",
       ]
 
       sources = deviceauth_ipc_files
+      sources += hiview_adapter_mock_files
       sources += [
         "${frameworks_path}/src/ipc_service.c",
         "${frameworks_path}/src/lite/ipc_service_init.c",
@@ -110,6 +122,7 @@ if (os_level == "mini" || os_level == "small") {
         "${frameworks_path}/inc/lite",
         "//foundation/communication/ipc/interfaces/innerkits/c/ipc/include",
         "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/samgr",
+        "${dev_frameworks_path}/inc/hiview_adapter",
       ]
 
       sources = deviceauth_ipc_files
@@ -139,9 +152,11 @@ if (os_level == "mini" || os_level == "small") {
     include_dirs += [
       "//third_party/cJSON",
       "${frameworks_path}/inc/standard",
+      "${dev_frameworks_path}/inc/hiview_adapter",
     ]
 
     sources = deviceauth_files
+    sources += hiview_adapter_files
     cflags = [ "-DHILOG_ENABLE" ]
     defines = deviceauth_defines
     cflags += build_flags
@@ -160,6 +175,8 @@ if (os_level == "mini" || os_level == "small") {
     external_deps = [
       "c_utils:utils",
       "dsoftbus:softbus_client",
+      "hisysevent_native:libhisysevent",
+      "hitrace_native:hitrace_meter",
       "hiviewdfx_hilog_native:libhilog",
     ]
     if (support_jsapi) {
@@ -187,6 +204,7 @@ if (os_level == "mini" || os_level == "small") {
       "//third_party/cJSON",
       "${frameworks_path}/inc/standard",
       "${dev_frameworks_path}/inc/permission_adapter",
+      "${dev_frameworks_path}/inc/hiview_adapter",
     ]
 
     sources = deviceauth_ipc_files
@@ -208,6 +226,8 @@ if (os_level == "mini" || os_level == "small") {
     external_deps = [
       "access_token:libaccesstoken_sdk",
       "c_utils:utils",
+      "hisysevent_native:libhisysevent",
+      "hitrace_native:hitrace_meter",
       "hiviewdfx_hilog_native:libhilog",
       "ipc:ipc_core",
       "safwk:system_ability_fwk",
@@ -224,10 +244,12 @@ if (os_level == "mini" || os_level == "small") {
       "//third_party/cJSON",
       "${frameworks_path}/inc/standard",
       "${dev_frameworks_path}/inc/permission_adapter",
+      "${dev_frameworks_path}/inc/hiview_adapter",
     ]
 
     sources = deviceauth_ipc_files
     sources += permission_adapter_files
+    sources += hiview_adapter_files
     sources += [ "${frameworks_path}/src/ipc_sdk.c" ]
 
     defines = [
@@ -248,6 +270,8 @@ if (os_level == "mini" || os_level == "small") {
     external_deps = [
       "access_token:libaccesstoken_sdk",
       "c_utils:utils",
+      "hisysevent_native:libhisysevent",
+      "hitrace_native:hitrace_meter",
       "hiviewdfx_hilog_native:libhilog",
       "ipc:ipc_core",
       "samgr:samgr_proxy",

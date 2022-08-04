@@ -26,6 +26,7 @@
 #include "hc_string_vector.h"
 #include "hc_types.h"
 #include "securec.h"
+#include "hidump_adapter.h"
 
 typedef struct {
     DECLARE_TLV_STRUCT(9)
@@ -1146,6 +1147,51 @@ int32_t SaveOsAccountDb(int32_t osAccountId)
     return HC_SUCCESS;
 }
 
+#ifndef DISABLE_HIVIEW
+static void DumpGroups(int fd, GroupEntryVec *vec)
+{
+    dprintf(fd, "---- GROUP INFO ----\n");
+    uint32_t index;
+    TrustedGroupEntry **entry;
+    FOR_EACH_HC_VECTOR(*vec, index, entry) {
+        dprintf(fd, "GROUP NAME: %s", (*entry)->name);
+        dprintf(fd, "GROUP ID: %s", (*entry)->id);
+        dprintf(fd, "GROUP TYPE: %s", (*entry)->type);
+        dprintf(fd, "GROUP VISIBILITY: %s", (*entry)->visibility);
+        dprintf(fd, "GROUP OWNER: %s", (*entry)->managers);
+    }
+}
+
+static void DumpDevices(int fd, DeviceEntryVec *vec)
+{
+    dprintf(fd, "---- DEVICE INFO ----\n");
+    uint32_t index;
+    TrustedDeviceEntry **entry;
+    FOR_EACH_HC_VECTOR(*vec, index, entry) {
+        dprintf(fd, "DEVICES ID: %s", (*entry)->udid);
+        dprintf(fd, "GROUP ID: %s", (*entry)->groupId);
+    }
+}
+
+static void DevAuthDataBaseDump(int fd)
+{
+    if (g_databaseMutex == NULL) {
+        LOGE("[DB]: Init mutex failed");
+        return;
+    }
+    g_databaseMutex->lock(g_databaseMutex);
+
+    uint32_t index;
+    OsAccountTrustedInfo *info;
+    FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {
+        dprintf(fd, "OS ACCOUNT ID: %s\n;", info->osAccountId);
+        DumpGroups(fd, &info->groups);
+        DumpDevices(fd, &info->devices);
+    }
+
+    g_databaseMutex->unlock(g_databaseMutex);
+}
+#endif
 int32_t InitDatabase(void)
 {
     if (g_databaseMutex == NULL) {
@@ -1163,6 +1209,9 @@ int32_t InitDatabase(void)
     }
     g_deviceauthDb = CREATE_HC_VECTOR(DeviceAuthDb);
     LoadDeviceAuthDb();
+#ifndef DISABLE_HIVIEW
+    RegisterDumpFunc(DevAuthDataBaseDump);
+#endif
     return HC_SUCCESS;
 }
 
