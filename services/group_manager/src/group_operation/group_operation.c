@@ -33,7 +33,8 @@
 #include "across_account_group.h"
 #include "identical_account_group.h"
 #include "peer_to_peer_group.h"
-
+#include "dev_auth_hievent.h"
+#include "hisysevent_adapter.h"
 
 static bool IsGroupTypeSupported(int groupType)
 {
@@ -559,6 +560,9 @@ static void DoCreateGroup(HcTaskBase *baseTask)
     LOGI("[Start]: DoCreateGroup! [ReqId]: %" PRId64, task->reqId);
     char *returnJsonStr = NULL;
     int32_t result = CreateGroup(task->osAccountId, task->params, &returnJsonStr);
+
+    ReportHiEventCoreFuncInvoke(EVENT_ID_CREATE_GROUP, task->osAccountId, task->params, result);
+
     if (result != HC_SUCCESS) {
         ProcessErrorCallback(task->reqId, GROUP_CREATE, result, NULL, task->cb);
     } else {
@@ -577,6 +581,9 @@ static void DoDeleteGroup(HcTaskBase *baseTask)
     LOGI("[Start]: DoDeleteGroup! [ReqId]: %" PRId64, task->reqId);
     char *returnJsonStr = NULL;
     int32_t result = DeleteGroup(task->osAccountId, task->params, &returnJsonStr);
+
+    ReportHiEventCoreFuncInvoke(EVENT_ID_DELETE_GROUP, task->osAccountId, task->params, result);
+
     if (result != HC_SUCCESS) {
         ProcessErrorCallback(task->reqId, GROUP_DISBAND, result, NULL, task->cb);
     } else {
@@ -594,6 +601,9 @@ static void DoAddMember(HcTaskBase *baseTask)
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
     LOGI("[Start]: DoAddMember! [ReqId]: %" PRId64, task->reqId);
     (void)AddMemberToPeerToPeerGroup(task->osAccountId, task->reqId, task->params, task->cb);
+
+    // 0 means success
+    ReportHiEventCoreFuncInvoke(EVENT_ID_ADD_MEMBER, task->osAccountId, task->params, 0);
 }
 
 static void DoDeleteMember(HcTaskBase *baseTask)
@@ -605,6 +615,9 @@ static void DoDeleteMember(HcTaskBase *baseTask)
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
     LOGI("[Start]: DoDeleteMember! [ReqId]: %" PRId64, task->reqId);
     (void)DeleteMemberFromPeerToPeerGroup(task->osAccountId, task->reqId, task->params, task->cb);
+
+    // 0 means success
+    ReportHiEventCoreFuncInvoke(EVENT_ID_DELETE_MEMBER, task->osAccountId, task->params, 0);
 }
 
 static void DoProcessBindData(HcTaskBase *baseTask)
@@ -781,6 +794,8 @@ static int32_t RequestAddMultiMembersToGroup(int32_t osAccountId, const char *ap
         res = HC_ERR_INVALID_PARAMS;
     }
     FreeJson(params);
+
+    ReportHiEventCoreFuncInvoke(EVENT_ID_ADD_MULTI_MEMBERS, osAccountId, params, res);
     LOGI("[End]: RequestAddMultiMembersToGroup!");
     return res;
 }
@@ -820,6 +835,7 @@ static int32_t RequestDelMultiMembersFromGroup(int32_t osAccountId, const char *
         res = HC_ERR_INVALID_PARAMS;
     }
     FreeJson(params);
+    ReportHiEventCoreFuncInvoke(EVENT_ID_DELETE_MULTI_MEMBERS, osAccountId, params, res);
     LOGI("[End]: RequestDelMultiMembersFromGroup!");
     return res;
 }
