@@ -37,7 +37,7 @@
           "utils_base",
           "hiviewdfx_hilog_native",
           "hisysevent_native",
-          "samgr_standard",
+          "samgr",
           "ipc"
         ],
         "third_party": [
