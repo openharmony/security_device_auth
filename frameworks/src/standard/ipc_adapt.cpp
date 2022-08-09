@@ -26,6 +26,7 @@
 #include "iservice_registry.h"
 #include "securec.h"
 #include "system_ability_definition.h"
+#include "parameter.h"
 
 using namespace std;
 using namespace OHOS;
@@ -1330,6 +1331,9 @@ int32_t AddDevAuthServiceToManager(uintptr_t *serviceCtx)
 {
     int32_t ret = ERR_OK;
     ServiceDevAuth *sPtr = nullptr;
+
+    // Wait samgr ready for up to 1 second to ensure adding service to samgr.
+    WaitParameter("bootevent.samgr.ready", "true", 1);
 
     sptr<ISystemAbilityManager> sysMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sysMgr == nullptr) {
