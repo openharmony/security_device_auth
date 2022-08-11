@@ -43,7 +43,7 @@ if (os_level == "mini" || os_level == "small") {
     defines = [ "HILOG_ENABLE" ]
     defines += deviceauth_defines
     defines += [ "DISABLE_HIVIEW" ]
-    if (board_toolchain_type == "iccarm") {
+    if (board_toolchain_type == "iccarm" && os_level == "mini") {
       cflags = [
         "--diag_suppress",
         "Pe546,Pe223,Pe111,Pe188",
