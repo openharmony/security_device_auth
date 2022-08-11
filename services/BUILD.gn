@@ -40,9 +40,16 @@ if (os_level == "mini" || os_level == "small") {
 
     defines = [ "HILOG_ENABLE" ]
     defines += deviceauth_defines
-    cflags = build_flags
+    if (board_toolchain_type == "iccarm" && os_level == "mini") {
+      cflags = [
+        "--diag_suppress",
+        "Pe546,Pe223,Pe111,Pe188",
+      ]
+    } else {
+      cflags = build_flags
+    }
     cflags += [
-      "-DHICHAIN_THREAD_STACK_SIZE = ${deviceauth_hichain_thread_stack_size}",
+      "-DHICHAIN_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",
     ]
     if (ohos_kernel_type == "linux" || ohos_kernel_type == "liteos_a") {
       include_dirs +=
