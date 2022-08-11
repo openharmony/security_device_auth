@@ -43,7 +43,13 @@ if (defined(ohos_lite)) {
       ]
 
       cflags = [ "-DHILOG_ENABLE" ]
-      cflags += [ "-DAUTH_STORAGE_PATH = \"${deviceauth_storage_path}\"" ]
+      cflags += [ "-DAUTH_STORAGE_PATH=\"${deviceauth_storage_path}\"" ]
+      if (board_toolchain_type == "iccarm") {
+        cflags += [
+          "--diag_suppress",
+          "Pe223,Pe226",
+        ]
+      }
       deps = [
         "//base/hiviewdfx/hilog_lite/frameworks/mini:hilog_lite",
         "//base/security/huks/interfaces/innerkits/huks_lite:huks_3.0_sdk",
