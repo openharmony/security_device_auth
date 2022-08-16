@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,15 +39,19 @@ void DevAuthLogPrint(DevAuthLogLevel level, const char *funName, const char *fmt
 
 #include "hilog/log.h"
 
+#ifndef DEV_AUTH_LOG_DOMAIN
+#define DEV_AUTH_LOG_DOMAIN 0xD002F00 /* Security subsystem's domain id */
+#endif
+
 #define LOGD(fmt, ...) (DevAuthLogPrint(DEV_AUTH_LOG_LEVEL_DEBUG, __FUNCTION__, fmt, ##__VA_ARGS__))
 #define LOGI(fmt, ...) (DevAuthLogPrint(DEV_AUTH_LOG_LEVEL_INFO, __FUNCTION__, fmt, ##__VA_ARGS__))
 #define LOGW(fmt, ...) (DevAuthLogPrint(DEV_AUTH_LOG_LEVEL_WARN, __FUNCTION__, fmt, ##__VA_ARGS__))
 #define LOGE(fmt, ...) (DevAuthLogPrint(DEV_AUTH_LOG_LEVEL_ERROR, __FUNCTION__, fmt, ##__VA_ARGS__))
 
-#define DEV_AUTH_LOG_DEBUG(buf) HiLogPrint(LOG_CORE, LOG_DEBUG, LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
-#define DEV_AUTH_LOG_INFO(buf) HiLogPrint(LOG_CORE, LOG_INFO, LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
-#define DEV_AUTH_LOG_WARN(buf) HiLogPrint(LOG_CORE, LOG_WARN, LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
-#define DEV_AUTH_LOG_ERROR(buf) HiLogPrint(LOG_CORE, LOG_ERROR, LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
+#define DEV_AUTH_LOG_DEBUG(buf) HiLogPrint(LOG_CORE, LOG_DEBUG, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
+#define DEV_AUTH_LOG_INFO(buf) HiLogPrint(LOG_CORE, LOG_INFO, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
+#define DEV_AUTH_LOG_WARN(buf) HiLogPrint(LOG_CORE, LOG_WARN, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
+#define DEV_AUTH_LOG_ERROR(buf) HiLogPrint(LOG_CORE, LOG_ERROR, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
 
 #else
 
