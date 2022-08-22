@@ -25,9 +25,9 @@ if (defined(ohos_lite)) {
       include_dirs += [
         "//base/security/device_auth/interfaces/innerkits",
         "//third_party/cJSON",
-        "//utils/native/lite/include",
+        "//commonlibrary/utils_lite/include",
         "//base/hiviewdfx/hilog_lite/interfaces/native/kits/hilog_lite",
-        "//utils/native/lite/memory/include",
+        "//commonlibrary/utils_lite/memory/include",
         "//base/startup/init/interfaces/innerkits/include/syspara",
       ]
 
@@ -55,7 +55,7 @@ if (defined(ohos_lite)) {
         "//base/security/huks/interfaces/innerkits/huks_lite:huks_3.0_sdk",
         "//base/startup/init/interfaces/innerkits:libbegetutil",
         "//build/lite/config/component/cJSON:cjson_shared",
-        "//utils/native/lite:utils",
+        "//commonlibrary/utils_lite:utils",
       ]
     }
   } else {
@@ -64,7 +64,7 @@ if (defined(ohos_lite)) {
       include_dirs += [
         "//base/security/device_auth/interfaces/innerkits",
         "//third_party/cJSON",
-        "//utils/native/lite/include",
+        "//commonlibrary/utils_lite/include",
         "//base/security/huks/interfaces/innerkits/huks_standard/main/include",
         "//base/hiviewdfx/hilog_lite/interfaces/native/innerkits/hilog",
         "//third_party/bounds_checking_function/include",
@@ -92,9 +92,9 @@ if (defined(ohos_lite)) {
         "//base/startup/init/interfaces/innerkits:libbegetutil",
         "//build/lite/config/component/cJSON:cjson_shared",
         "//build/lite/config/component/openssl:openssl_shared",
+        "//commonlibrary/utils_lite:utils",
         "//third_party/bounds_checking_function:libsec_shared",
         "//third_party/mbedtls:mbedtls_shared",
-        "//utils/native/lite:utils",
       ]
     }
   }
