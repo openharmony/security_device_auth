@@ -24,7 +24,7 @@ if (os_level == "mini" || os_level == "small") {
     public_configs = [ ":deviceauth_config" ]
     include_dirs += [
       "//third_party/cJSON",
-      "//utils/native/lite/include",
+      "//commonlibrary/utils_lite/include",
       "//third_party/bounds_checking_function/include",
       "//foundation/communication/dsoftbus/interfaces/kits/common",
       "//foundation/communication/dsoftbus/interfaces/kits/transport",
@@ -36,8 +36,8 @@ if (os_level == "mini" || os_level == "small") {
     deps = [
       "${deps_adapter_path}:${hal_module_name}",
       "//build/lite/config/component/cJSON:cjson_shared",
+      "//commonlibrary/utils_lite:utils",
       "//foundation/communication/dsoftbus/sdk:softbus_client",
-      "//utils/native/lite:utils",
     ]
 
     defines = [ "HILOG_ENABLE" ]
@@ -79,7 +79,7 @@ if (os_level == "mini" || os_level == "small") {
     executable("deviceauth_service") {
       include_dirs += [
         "//third_party/cJSON",
-        "//utils/native/lite/include",
+        "//commonlibrary/utils_lite/include",
         "//base/hiviewdfx/hilog_lite/interfaces/native/innerkits/hilog",
         "//third_party/bounds_checking_function/include",
         "${frameworks_path}/inc/lite",
@@ -105,10 +105,10 @@ if (os_level == "mini" || os_level == "small") {
         "${deps_adapter_path}:${hal_module_name}",
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
         "//build/lite/config/component/cJSON:cjson_shared",
+        "//commonlibrary/utils_lite:utils",
         "//foundation/communication/ipc/interfaces/innerkits/c/ipc:ipc_single",
         "//foundation/systemabilitymgr/samgr_lite/samgr:samgr",
         "//third_party/bounds_checking_function:libsec_shared",
-        "//utils/native/lite:utils",
       ]
     }
 
@@ -116,7 +116,7 @@ if (os_level == "mini" || os_level == "small") {
       public_configs = [ ":deviceauth_config" ]
       include_dirs += [
         "//third_party/cJSON",
-        "//utils/native/lite/include",
+        "//commonlibrary/utils_lite/include",
         "//base/hiviewdfx/hilog_lite/interfaces/native/innerkits/hilog",
         "//third_party/bounds_checking_function/include",
         "${frameworks_path}/inc/lite",
@@ -138,10 +138,10 @@ if (os_level == "mini" || os_level == "small") {
       deps = [
         "${deps_adapter_path}:${hal_module_name}",
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
+        "//commonlibrary/utils_lite:utils",
         "//foundation/communication/ipc/interfaces/innerkits/c/ipc:ipc_single",
         "//foundation/systemabilitymgr/samgr_lite/samgr:samgr",
         "//third_party/bounds_checking_function:libsec_shared",
-        "//utils/native/lite:utils",
       ]
     }
   }
