@@ -25,11 +25,11 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
-        if (size <= sizeof(int64_t)) {
+        if (size < sizeof(int64_t)) {
             return false;
         }
         const int64_t *authReqId = reinterpret_cast<const int64_t *>(data);
-        gmInstance->processData(*authReqId, data + sizeof(int64_t), (uint32_t)(size - sizeof(int64_t)));
+        gmInstance->processData(*authReqId, data, (uint32_t)size);
         return true;
     }
 }

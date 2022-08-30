@@ -22,9 +22,12 @@ namespace OHOS {
         if (gmInstance == nullptr) {
             return false;
         }
-        const char *reqJsonStr = reinterpret_cast<const char *>(data);
+        if (data == nullptr) {
+            return false;
+        }
+        std::string reqJsonStr(reinterpret_cast<const char *>(data), size);
         char *returnRegisterInfo = nullptr;
-        gmInstance->getRegisterInfo(reqJsonStr, &returnRegisterInfo);
+        gmInstance->getRegisterInfo(reqJsonStr.c_str(), &returnRegisterInfo);
         return true;
     }
 }

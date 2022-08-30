@@ -41,7 +41,7 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
-        if (size <= sizeof(int64_t)) {
+        if (size < sizeof(int64_t)) {
             return false;
         }
         const int64_t *authReqId = reinterpret_cast<const int64_t *>(data);
@@ -51,7 +51,7 @@ namespace OHOS {
         gaCallback.onSessionKeyReturned = OnSessionKeyReturned;
         gaCallback.onTransmit = onTransmit;
         gaCallback.onRequest = onRequest;
-        gaInstance->processData(*authReqId, data + sizeof(int64_t), (uint32_t)(size - sizeof(int64_t)), &gaCallback);
+        gaInstance->processData(*authReqId, data, (uint32_t)size, &gaCallback);
         return true;
     }
 }

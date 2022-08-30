@@ -25,15 +25,15 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
-        if (size <= sizeof(int32_t)) {
+        if (size < sizeof(int32_t)) {
             return false;
         }
         const int32_t *osAccountId = reinterpret_cast<const int32_t *>(data);
-        const char *appId = reinterpret_cast<const char *>(data + sizeof(int32_t));
-        const char *peerDeviceId = reinterpret_cast<const char *>(data + sizeof(int32_t));
+        std::string appId(reinterpret_cast<const char *>(data), size);
+        std::string peerDeviceId(reinterpret_cast<const char *>(data), size);
         char *outGroups = nullptr;
         uint32_t groupNum = 0;
-        gmInstance->getRelatedGroups(*osAccountId, appId, peerDeviceId, &outGroups, &groupNum);
+        gmInstance->getRelatedGroups(*osAccountId, appId.c_str(), peerDeviceId.c_str(), &outGroups, &groupNum);
         return true;
     }
 }

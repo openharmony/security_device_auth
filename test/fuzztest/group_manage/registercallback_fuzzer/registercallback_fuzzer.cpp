@@ -41,14 +41,14 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
-        const char *appId = reinterpret_cast<const char *>(data);
+        std::string appId(reinterpret_cast<const char *>(data), size);
         DeviceAuthCallback callback;
         callback.onError = OnError;
         callback.onFinish = OnFinish;
         callback.onSessionKeyReturned = OnSessionKeyReturned;
         callback.onTransmit = onTransmit;
         callback.onRequest = onRequest;
-        gmInstance->regCallback(appId, &callback);
+        gmInstance->regCallback(appId.c_str(), &callback);
         return true;
     }
 }

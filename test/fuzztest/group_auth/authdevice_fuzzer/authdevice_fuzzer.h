@@ -20,6 +20,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <string>
 
 #define FUZZ_PROJECT_NAME "authdevice_fuzzer"
 #endif

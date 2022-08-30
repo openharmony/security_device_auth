@@ -41,19 +41,19 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
-        if (size <= sizeof(int32_t) + sizeof(int64_t)) {
+        if (size < sizeof(int64_t)) {
             return false;
         }
         const int32_t *osAccountId = reinterpret_cast<const int32_t *>(data);
-        const int64_t *authReqId = reinterpret_cast<const int64_t *>(data + sizeof(int32_t));
-        const char *authParams = reinterpret_cast<const char *>(data + sizeof(int32_t) + sizeof(int64_t));
+        const int64_t *authReqId = reinterpret_cast<const int64_t *>(data);
+        std::string authParams(reinterpret_cast<const char *>(data), size);
         DeviceAuthCallback gaCallback;
         gaCallback.onError = OnError;
         gaCallback.onFinish = OnFinish;
         gaCallback.onSessionKeyReturned = OnSessionKeyReturned;
         gaCallback.onTransmit = onTransmit;
         gaCallback.onRequest = onRequest;
-        gaInstance->authDevice(*osAccountId, *authReqId, authParams, &gaCallback);
+        gaInstance->authDevice(*osAccountId, *authReqId, authParams.c_str(), &gaCallback);
         return true;
     }
 }

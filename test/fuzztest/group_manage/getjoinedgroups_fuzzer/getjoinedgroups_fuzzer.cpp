@@ -25,15 +25,15 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
-        if (size <= sizeof(int32_t) + sizeof(int)) {
+        if ((size < sizeof(int32_t)) || (size < sizeof(int))) {
             return false;
         }
         const int32_t *osAccountId = reinterpret_cast<const int32_t *>(data);
-        const int *groupType = reinterpret_cast<const int *>(data + sizeof(int32_t));
-        const char *appId = reinterpret_cast<const char *>(data + sizeof(int32_t) + sizeof(int));
+        const int *groupType = reinterpret_cast<const int *>(data);
+        std::string appId(reinterpret_cast<const char *>(data), size);
         char *outGroups = nullptr;
         uint32_t groupNum = 0;
-        gmInstance->getJoinedGroups(*osAccountId, appId, *groupType, &outGroups, &groupNum);
+        gmInstance->getJoinedGroups(*osAccountId, appId.c_str(), *groupType, &outGroups, &groupNum);
         return true;
     }
 }
