@@ -39,7 +39,7 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
-        const char *appId = reinterpret_cast<const char *>(data);
+        std::string appId(reinterpret_cast<const char *>(data), size);
         DataChangeListener listener;
         listener.onGroupCreated = onGroupCreated;
         listener.onGroupDeleted = onGroupDeleted;
@@ -48,7 +48,7 @@ namespace OHOS {
         listener.onDeviceNotTrusted = onDeviceNotTrusted;
         listener.onLastGroupDeleted = onLastGroupDeleted;
         listener.onTrustedDeviceNumChanged = onTrustedDeviceNumChanged;
-        gmInstance->regDataChangeListener(appId, &listener);
+        gmInstance->regDataChangeListener(appId.c_str(), &listener);
         return true;
     }
 }

@@ -20,6 +20,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <string>
 
 #define FUZZ_PROJECT_NAME "getgroupinfo_fuzzer"
 #endif

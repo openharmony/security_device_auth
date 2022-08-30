@@ -25,14 +25,14 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
-        if (size <= sizeof(int32_t) + sizeof(int64_t)) {
+        if (size < sizeof(int64_t)) {
             return false;
         }
         const int32_t *osAccountId = reinterpret_cast<const int32_t *>(data);
-        const int64_t *requestId = reinterpret_cast<const int64_t *>(data + sizeof(int32_t));
-        const char *appId = reinterpret_cast<const char *>(data + sizeof(int32_t) + sizeof(int64_t));
-        const char *deleteParams = reinterpret_cast<const char *>(data + sizeof(int32_t) + sizeof(int64_t));
-        gmInstance->deleteMemberFromGroup(*osAccountId, *requestId, appId, deleteParams);
+        const int64_t *requestId = reinterpret_cast<const int64_t *>(data);
+        std::string appId(reinterpret_cast<const char *>(data), size);
+        std::string deleteParams(reinterpret_cast<const char *>(data), size);
+        gmInstance->deleteMemberFromGroup(*osAccountId, *requestId, appId.c_str(), deleteParams.c_str());
         return true;
     }
 }

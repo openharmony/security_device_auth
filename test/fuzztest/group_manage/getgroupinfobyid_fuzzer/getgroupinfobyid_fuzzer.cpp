@@ -25,14 +25,14 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
-        if (size <= sizeof(int32_t)) {
+        if (size < sizeof(int32_t)) {
             return false;
         }
         const int32_t *osAccountId = reinterpret_cast<const int32_t *>(data);
-        const char *appId = reinterpret_cast<const char *>(data + sizeof(int32_t));
-        const char *groupId = reinterpret_cast<const char *>(data + sizeof(int32_t));
+        std::string appId(reinterpret_cast<const char *>(data), size);
+        std::string groupId(reinterpret_cast<const char *>(data), size);
         char *groupInfo = nullptr;
-        gmInstance->getGroupInfoById(*osAccountId, appId, groupId, &groupInfo);
+        gmInstance->getGroupInfoById(*osAccountId, appId.c_str(), groupId.c_str(), &groupInfo);
         return true;
     }
 }

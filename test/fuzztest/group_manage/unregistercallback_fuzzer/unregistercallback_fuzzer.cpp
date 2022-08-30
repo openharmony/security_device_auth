@@ -25,8 +25,8 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
-        const char *appId = reinterpret_cast<const char *>(data);
-        gmInstance->unRegCallback(appId);
+        std::string appId(reinterpret_cast<const char *>(data), size);
+        gmInstance->unRegCallback(appId.c_str());
         return true;
     }
 }
