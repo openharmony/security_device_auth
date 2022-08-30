@@ -67,7 +67,7 @@ int32_t StubDevAuthCb::OnRemoteRequest(uint32_t code,
             break;
         default:
             LOGE("Invoke call back cmd id error, %u", code);
-            break;
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     LOGI("Invoke callback done");
     return 0;

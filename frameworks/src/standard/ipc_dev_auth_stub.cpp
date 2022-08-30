@@ -193,7 +193,7 @@ int32_t ServiceDevAuth::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
             ret = serviceCall(reqParams, reqParamNum, reinterpret_cast<uintptr_t>(&replyCache));
             break;
         default:
-            break;
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     reply.WriteInt32(ret);
     dataLen = replyCache.GetDataSize();
