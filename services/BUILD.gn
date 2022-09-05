@@ -231,7 +231,6 @@ if (os_level == "mini" || os_level == "small") {
       "hiviewdfx_hilog_native:libhilog",
       "init:libbegetutil",
       "ipc:ipc_core",
-      "safwk:system_ability_fwk",
       "samgr:samgr_proxy",
     ]
   }
