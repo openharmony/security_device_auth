@@ -210,24 +210,26 @@ static int32_t QueryRelatedGroupsForGetPk(int32_t osAccountId, const char *udid,
         if ((entry == NULL) || (*entry == NULL)) {
             continue;
         }
+        /* In order to improve availability, even if there is an error, it does not terminate. */
         TrustedGroupEntry *groupEntry = GetGroupEntryById(osAccountId, StringGet(&(*entry)->groupId));
         if (groupEntry == NULL) {
-            LOGE("Failed to get group entry by id!");
-            ClearDeviceEntryVec(&deviceEntryVec);
-            return HC_ERR_GROUP_NOT_EXIST;
+            LOGW("An exception occurred! Device found, but group not found. There may be dirty data.");
+            continue;
         }
-        if ((groupEntry->type != PEER_TO_PEER_GROUP) || (groupEntry->visibility != GROUP_VISIBILITY_PUBLIC)) {
+        if (groupEntry->visibility != GROUP_VISIBILITY_PUBLIC) {
             DestroyGroupEntry(groupEntry);
             continue;
         }
         if (returnGroupEntryVec->pushBackT(returnGroupEntryVec, groupEntry) == NULL) {
-            LOGE("Failed to push groupEntry to returnGroupEntryVec!");
+            LOGW("An exception occurred! Failed to push groupEntry to returnGroupEntryVec!");
             DestroyGroupEntry(groupEntry);
-            ClearDeviceEntryVec(&deviceEntryVec);
-            return HC_ERR_MEMORY_COPY;
         }
     }
     ClearDeviceEntryVec(&deviceEntryVec);
+    if (returnGroupEntryVec->size(returnGroupEntryVec) == 0) {
+        LOGE("No groups available.");
+        return HC_ERR_NO_CANDIDATE_GROUP;
+    }
     return HC_SUCCESS;
 }
 
@@ -310,6 +312,10 @@ static void AddAllPkInfoToList(int32_t osAccountId, const char *queryUdid, const
         if ((entry == NULL) || (*entry == NULL)) {
             continue;
         }
+        /* Account related group cannot export public key. */
+        if (IsAccountRelatedGroup((*entry)->type)) {
+            continue;
+        }
         const char *groupId = StringGet(&((*entry)->id));
         if (groupId == NULL) {
             LOGE("Failed to get groupId from groupInfo!");
@@ -332,7 +338,22 @@ static void AddAllPkInfoToList(int32_t osAccountId, const char *queryUdid, const
     }
 }
 
-static int32_t GeneratePkInfoList(int32_t osAccountId, const char *appId, const CJson *params, CJson *pkInfoList)
+static bool IsOnlyAccountRelatedGroups(const GroupEntryVec *groupEntryVec)
+{
+    uint32_t index;
+    TrustedGroupEntry **entry = NULL;
+    FOR_EACH_HC_VECTOR(*groupEntryVec, index, entry) {
+        if ((entry == NULL) || (*entry == NULL)) {
+            continue;
+        }
+        if (!IsAccountRelatedGroup((*entry)->type)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static int32_t GeneratePkInfoList(int32_t osAccountId, const CJson *params, CJson *pkInfoList)
 {
     const char *udid = GetStringFromJson(params, FIELD_UDID);
     if (udid == NULL) {
@@ -350,7 +371,16 @@ static int32_t GeneratePkInfoList(int32_t osAccountId, const char *appId, const 
         ClearGroupEntryVec(&groupEntryVec);
         return res;
     }
-    RemoveNoPermissionGroup(osAccountId, &groupEntryVec, appId);
+    /**
+     * Specification requirements:
+     * when there are only account related groups in the group list of public key information to be queried,
+     * a special error code needs to be returned.
+     */
+    if (IsOnlyAccountRelatedGroups(&groupEntryVec)) {
+        LOGE("There are only account related groups in the group list.");
+        ClearGroupEntryVec(&groupEntryVec);
+        return HC_ERR_ONLY_ACCOUNT_RELATED;
+    }
     const char *queryUdid = NULL;
     char selfUdid[INPUT_UDID_LEN] = { 0 };
     if (isSelfPk) {
@@ -1184,7 +1214,7 @@ static int32_t GetPkInfoList(int32_t osAccountId, const char *appId, const char 
         FreeJson(params);
         return HC_ERR_JSON_CREATE;
     }
-    int32_t res = GeneratePkInfoList(osAccountId, appId, params, pkInfoList);
+    int32_t res = GeneratePkInfoList(osAccountId, params, pkInfoList);
     FreeJson(params);
     if (res != HC_SUCCESS) {
         FreeJson(pkInfoList);
@@ -1199,7 +1229,7 @@ static int32_t GetPkInfoList(int32_t osAccountId, const char *appId, const char 
     }
     *returnInfoList = pkInfoListStr;
     *returnInfoNum = pkInfoNum;
-    LOGI("[End]: Get pk list successfully!");
+    LOGI("[End]: Get pk list successfully! [PkInfoNum]: %" PRId32, pkInfoNum);
     return HC_SUCCESS;
 }
 
