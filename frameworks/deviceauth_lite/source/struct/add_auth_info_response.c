@@ -56,8 +56,9 @@ void *parse_add_auth_info_response(const char *payload, enum json_object_data_ty
     }
     (void)memset_s(add_auth_info_response->cipher.val, add_auth_info_response->cipher.size,
                    0, add_auth_info_response->cipher.size);
-    if (hex_string_to_byte(add_return, len_add_return, add_auth_info_response->cipher.val) != HC_OK)
+    if (hex_string_to_byte(add_return, len_add_return, add_auth_info_response->cipher.val) != HC_OK) {
         goto error;
+    }
     free_payload(obj, data_type);
     return (void *)add_auth_info_response;
 error:
