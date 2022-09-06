@@ -119,28 +119,16 @@ void HcFileRemove(const char *path)
 
 void HcFileGetSubFileName(const char *path, StringVector *nameVec)
 {
-    DIR *dir = NULL;
-    struct dirent *entry = NULL;
-    if ((dir = opendir(path)) == NULL) {
-        LOGI("opendir failed!");
+    /* Since the liteOS device does not support retrieving files in the directory, the default file is used. */
+    (void)path;
+    HcString subFileName = CreateString();
+    if (!StringSetPointer(&subFileName, "hcgroup.dat")) {
+        LOGE("Failed to copy subFileName!");
+        DeleteString(&subFileName);
         return;
     }
-    while ((entry = readdir(dir)) != NULL) {
-        if ((strcmp(entry->d_name, ".") == 0) || (strcmp(entry->d_name, "..") == 0)) {
-            continue;
-        }
-        HcString subFileName = CreateString();
-        if (!StringSetPointer(&subFileName, entry->d_name)) {
-            LOGE("Failed to copy subFileName!");
-            DeleteString(&subFileName);
-            continue;
-        }
-        if (nameVec->pushBackT(nameVec, subFileName) == NULL) {
-            LOGE("Failed to push name!");
-            DeleteString(&subFileName);
-        }
-    }
-    if (closedir(dir) < 0) {
-        LOGE("Failed to close file");
+    if (nameVec->pushBackT(nameVec, subFileName) == NULL) {
+        LOGE("Failed to push name!");
+        DeleteString(&subFileName);
     }
 }
