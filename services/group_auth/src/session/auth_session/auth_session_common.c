@@ -104,7 +104,10 @@ static int32_t FillAuthParams(int32_t osAccountId, const CJson *param,
     const GroupEntryVec *vec, ParamsVec *paramsVec)
 {
     const char *peerUdid = GetStringFromJson(param, FIELD_PEER_CONN_DEVICE_ID);
-    const char *peerAuthId = GetStringFromJson(param, FIELD_PEER_AUTH_ID);
+    const char *peerAuthId = GetStringFromJson(param, FIELD_PEER_ID_FROM_REQUEST);
+    if (peerAuthId == NULL) {
+        peerAuthId = GetStringFromJson(param, FIELD_PEER_AUTH_ID);
+    }
     const char *pkgName = GetStringFromJson(param, FIELD_SERVICE_PKG_NAME);
     if (pkgName == NULL) {
         LOGE("Pkg name is null, can't extract params from db!");

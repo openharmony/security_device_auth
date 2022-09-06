@@ -278,11 +278,11 @@ static int32_t AddNonAccountAuthInfo(const TrustedDeviceEntry *localAuthInfo, co
     }
     const char *peerAuthId = GetStringFromJson(paramsData, FIELD_PEER_ID_FROM_REQUEST);
     if (peerAuthId == NULL) {
-        if (AddStringToJson(paramsData, FIELD_PEER_AUTH_ID, StringGet(&peerAuthInfo->authId))
-            != HC_SUCCESS) {
-            LOGE("Failed to add peer authId to paramsData!");
-            return HC_ERR_JSON_FAIL;
-        }
+        peerAuthId = StringGet(&peerAuthInfo->authId);
+    }
+    if (AddStringToJson(paramsData, FIELD_PEER_AUTH_ID, peerAuthId) != HC_SUCCESS) {
+        LOGE("Failed to add peer authId to paramsData!");
+        return HC_ERR_JSON_FAIL;
     }
     if (AddIntToJson(paramsData, FIELD_PEER_USER_TYPE, peerAuthInfo->devType) != HC_SUCCESS) {
         LOGE("Failed to add peer devType to paramsData from db!");
@@ -349,11 +349,14 @@ static int32_t FillNonAccountAuthInfo(int32_t osAccountId, const TrustedGroupEnt
         return HC_ERR_ALLOC_MEMORY;
     }
     const char *peerUdid = GetStringFromJson(paramsData, FIELD_PEER_CONN_DEVICE_ID);
-    const char *peeAuthId = GetStringFromJson(paramsData, FIELD_PEER_AUTH_ID);
+    const char *peerAuthId = GetStringFromJson(paramsData, FIELD_PEER_ID_FROM_REQUEST);
+    if (peerAuthId == NULL) {
+        peerAuthId = GetStringFromJson(paramsData, FIELD_PEER_AUTH_ID);
+    }
     if (peerUdid != NULL) {
         res = GaGetTrustedDeviceEntryById(osAccountId, peerUdid, true, groupId, peerAuthInfo);
-    } else if (peeAuthId != NULL) {
-        res = GaGetTrustedDeviceEntryById(osAccountId, peeAuthId, false, groupId, peerAuthInfo);
+    } else if (peerAuthId != NULL) {
+        res = GaGetTrustedDeviceEntryById(osAccountId, peerAuthId, false, groupId, peerAuthInfo);
     } else {
         LOGE("Invalid input, both peer udid and peer authId are null!");
         res = HC_ERR_NULL_PTR;
