@@ -156,7 +156,7 @@ static void InitCbStubTable()
 int32_t ServiceDevAuth::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     if (data.ReadInterfaceToken() != GetDescriptor()) {
-        LOGE("The client interface token is invalid!");
+        LOGE("[IPC][C->S]: The proxy interface token is invalid!");
         return -1;
     }
     if (CheckPermission() != HC_SUCCESS) {
