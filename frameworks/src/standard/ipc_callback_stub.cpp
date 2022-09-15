@@ -55,6 +55,10 @@ void StubDevAuthCb::DoCallBack(int32_t callbackId, uintptr_t cbHook,
 int32_t StubDevAuthCb::OnRemoteRequest(uint32_t code,
     MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
+    if (data.ReadInterfaceToken() != GetDescriptor()) {
+        LOGE("[IPC][S->C]: The client interface token is invalid!");
+        return -1;
+    }
     int32_t callbackId;
     uintptr_t cbHook = 0x0;
 
