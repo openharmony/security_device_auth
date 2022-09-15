@@ -226,10 +226,6 @@ static int32_t QueryRelatedGroupsForGetPk(int32_t osAccountId, const char *udid,
         }
     }
     ClearDeviceEntryVec(&deviceEntryVec);
-    if (returnGroupEntryVec->size(returnGroupEntryVec) == 0) {
-        LOGE("No groups available.");
-        return HC_ERR_NO_CANDIDATE_GROUP;
-    }
     return HC_SUCCESS;
 }
 
@@ -340,6 +336,10 @@ static void AddAllPkInfoToList(int32_t osAccountId, const char *queryUdid, const
 
 static bool IsOnlyAccountRelatedGroups(const GroupEntryVec *groupEntryVec)
 {
+    if (groupEntryVec->size(groupEntryVec) == 0) {
+        LOGW("No groups available.");
+        return false;
+    }
     uint32_t index;
     TrustedGroupEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(*groupEntryVec, index, entry) {
