@@ -133,9 +133,9 @@ static int32_t ReadBigNums(mbedtls_mpi *x, mbedtls_mpi *y, const Blob *blob)
 
 static int32_t ReadEcPublicKey(mbedtls_ecp_point *point, const Blob *publicKey)
 {
-    int32_t ret = ReadBigNums(&point->X, &point->Y, publicKey);
+    int32_t ret = ReadBigNums(&point->MBEDTLS_PRIVATE(X), &point->MBEDTLS_PRIVATE(Y), publicKey);
     LOG_AND_RETURN_IF_MBED_FAIL(ret, "Read coordinate of public key failed.");
-    ret = mbedtls_mpi_lset(&point->Z, 1);
+    ret = mbedtls_mpi_lset(&point->MBEDTLS_PRIVATE(Z), 1);
     LOG_AND_RETURN_IF_MBED_FAIL(ret, "Lset point z failed.");
     return HAL_SUCCESS;
 }
@@ -154,7 +154,7 @@ static int32_t WriteOutBigNums(const mbedtls_mpi *x, const mbedtls_mpi *y, Blob 
 
 static int32_t WriteOutEcPublicKey(const mbedtls_ecp_point *point, Blob *publicKey)
 {
-    return WriteOutBigNums(&point->X, &point->Y, publicKey);
+    return WriteOutBigNums(&point->MBEDTLS_PRIVATE(X), &point->MBEDTLS_PRIVATE(Y), publicKey);
 }
 
 static int32_t EcKeyAgreement(const Blob *privateKey, const Blob *publicKey, Blob *secretKey)
@@ -182,18 +182,18 @@ static int32_t EcKeyAgreement(const Blob *privateKey, const Blob *publicKey, Blo
     mbedtls_ctr_drbg_init(ctrDrbg);
     mbedtls_ecp_point P;
     mbedtls_ecp_point_init(&P);
-    int32_t ret = ReadEcPublicKey(&keyPair->Q, publicKey);
+    int32_t ret = ReadEcPublicKey(&keyPair->MBEDTLS_PRIVATE(Q), publicKey);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Read the public key failed.\n");
-    ret = mbedtls_ecp_group_load(&keyPair->grp, MBEDTLS_ECP_DP_SECP256R1);
+    ret = mbedtls_ecp_group_load(&keyPair->MBEDTLS_PRIVATE(grp), MBEDTLS_ECP_DP_SECP256R1);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Load the ecp group failed.\n");
-    ret = mbedtls_mpi_read_binary(&keyPair->d, privateKey->data, privateKey->dataSize);
+    ret = mbedtls_mpi_read_binary(&keyPair->MBEDTLS_PRIVATE(d), privateKey->data, privateKey->dataSize);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Read the private key failed.\n");
     ret = mbedtls_ctr_drbg_seed(ctrDrbg, mbedtls_entropy_func, entropy,
         g_randomSeedCustom, sizeof(g_randomSeedCustom));
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Set custom string failed.\n");
-    LOG_AND_GOTO_CLEANUP_IF_FAIL(mbedtls_ecp_mul_restartable(&keyPair->grp, &P, &keyPair->d, &keyPair->Q,
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(mbedtls_ecp_mul_restartable(&keyPair->MBEDTLS_PRIVATE(grp), &P, &keyPair->MBEDTLS_PRIVATE(d), &keyPair->MBEDTLS_PRIVATE(Q),
         mbedtls_ctr_drbg_random, ctrDrbg, NULL), "Compute secret key failed.\n");
-    LOG_AND_GOTO_CLEANUP_IF_FAIL(mbedtls_mpi_copy(secret, &P.X), "Copy secret failed.\n");
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(mbedtls_mpi_copy(secret, &P.MBEDTLS_PRIVATE(X)), "Copy secret failed.\n");
     LOG_AND_GOTO_CLEANUP_IF_FAIL(WriteOutEcPublicKey(&P, secretKey), "Write out ec public key failed.\n");
 CLEAN_UP:
     mbedtls_mpi_free(secret);
