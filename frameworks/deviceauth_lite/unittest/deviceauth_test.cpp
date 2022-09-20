@@ -53,7 +53,6 @@ static void Transmit(const struct session_identity *identity, const void *data, 
 {
     LOG("--------Transmit--------");
     LOG("identity session_id[%d] package_name[%s]", identity->session_id, identity->package_name.name);
-    LOG("data[%s]", (char *)data);
     LOG("length[%u]", length);
     LOG("--------Transmit--------");
 }
