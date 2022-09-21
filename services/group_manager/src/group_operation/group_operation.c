@@ -824,8 +824,6 @@ static int32_t RequestAddMultiMembersToGroup(int32_t osAccountId, const char *ap
         res = HC_ERR_INVALID_PARAMS;
     }
     FreeJson(params);
-
-    ReportHiEventCoreFuncInvoke(EVENT_ID_ADD_MULTI_MEMBERS, osAccountId, params, res);
     LOGI("[End]: RequestAddMultiMembersToGroup!");
     return res;
 }
@@ -865,7 +863,6 @@ static int32_t RequestDelMultiMembersFromGroup(int32_t osAccountId, const char *
         res = HC_ERR_INVALID_PARAMS;
     }
     FreeJson(params);
-    ReportHiEventCoreFuncInvoke(EVENT_ID_DELETE_MULTI_MEMBERS, osAccountId, params, res);
     LOGI("[End]: RequestDelMultiMembersFromGroup!");
     return res;
 }
