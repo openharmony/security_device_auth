@@ -115,24 +115,24 @@ static int32_t GetMethodId(IpcIo *data, int32_t *methodId)
 
 static void WithObject(int32_t methodId, IpcIo *data, IpcDataInfo *ipcData, int32_t *cnt)
 {
-    if (IsCallbackMethod(methodId)) {
-        ReadInt32(data, &(ipcData->type));
-        ipcData->valSz = 0;
-        SvcIdentity tmp;
-        bool ret = ReadRemoteObject(data, &tmp);
-        if (!ret || (ipcData->type != PARAM_TYPE_CB_OBJECT)) {
-            LOGE("should with remote object, but failed, param type %d", ipcData->type);
-            return;
-        }
-        ShowIpcSvcInfo(&tmp);
-        ipcData->idx = SetRemoteObject(&tmp);
-        if (ipcData->idx >= 0) {
-            ipcData->val = (uint8_t *)(&(ipcData->idx));
-            LOGI("object trans success, set id %d", ipcData->idx);
-            (*cnt)++;
-        }
+    if (!IsCallbackMethod(methodId)) {
+        return;
     }
-    return;
+    ReadInt32(data, &(ipcData->type));
+    ipcData->valSz = 0;
+    SvcIdentity tmp;
+    bool ret = ReadRemoteObject(data, &tmp);
+    if (!ret || (ipcData->type != PARAM_TYPE_CB_OBJECT)) {
+        LOGE("should with remote object, but failed, param type %d", ipcData->type);
+        return;
+    }
+    ShowIpcSvcInfo(&tmp);
+    ipcData->idx = SetRemoteObject(&tmp);
+    if (ipcData->idx >= 0) {
+        ipcData->val = (uint8_t *)(&(ipcData->idx));
+        LOGI("object trans success, set id %d", ipcData->idx);
+        (*cnt)++;
+    }
 }
 
 void InitCbStubTable()
@@ -219,8 +219,7 @@ int32_t OnRemoteInvoke(IServerProxy *iProxy, int32_t reqId, void *origin, IpcIo 
         n = GetIpcIoDataLength(&replyTmp);
         if (n > 0) {
             WriteUint32(reply, n);
-            bool ret = WriteBuffer(reply, (const void *)(replyTmp.bufferBase + IpcIoBufferOffset()), n);
-            if (!ret) {
+            if (!WriteBuffer(reply, (const void *)(replyTmp.bufferBase + IpcIoBufferOffset()), n)) {
                 LOGI("WriteBuffer faild");
                 return HC_ERROR;
             }

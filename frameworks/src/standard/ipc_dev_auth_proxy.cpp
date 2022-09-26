@@ -92,7 +92,7 @@ int32_t ProxyDevAuthData::FinalCallRequest(int32_t methodId)
         return HC_ERR_IPC_GET_PROXY;
     }
     if (!dataParcel.WriteInterfaceToken(proxy->GetDescriptor())) {
-        LOGE("Failed to write interface token!");
+        LOGE("[IPC][C->S]: Failed to write interface token!");
         return HC_ERROR;
     }
     LOGI("method id %d, param num %d, data length %d", methodId, paramCnt, dataLen);

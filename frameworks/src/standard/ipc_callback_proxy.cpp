@@ -36,6 +36,10 @@ void ProxyDevAuthCb::DoCallBack(int32_t callbackId, uintptr_t cbHook,
         LOGE("Proxy DoCallBack Remote() is null");
         return;
     }
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("[IPC][S->C]: Failed to write interface token!");
+        return;
+    }
     (void)data.WriteInt32(callbackId);
     (void)data.WritePointer(cbHook);
     if (dataParcel.GetDataSize() > 0) {

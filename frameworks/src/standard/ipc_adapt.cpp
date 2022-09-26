@@ -1383,11 +1383,17 @@ int32_t DecodeIpcData(uintptr_t data, int32_t *type, uint8_t **val, int32_t *val
         return HC_SUCCESS;
     }
     if (sizeof(int32_t) > dataPtr->GetReadableBytes()) {
+        LOGE("Insufficient data available in IPC container. [Data]: type");
         return HC_ERR_IPC_BAD_MESSAGE_LENGTH;
     }
     *type = dataPtr->ReadInt32();
+    if (sizeof(int32_t) > dataPtr->GetReadableBytes()) {
+        LOGE("Insufficient data available in IPC container. [Data]: valSz");
+        return HC_ERR_IPC_BAD_MESSAGE_LENGTH;
+    }
     *valSz = dataPtr->ReadInt32();
     if (*valSz > static_cast<int32_t>(dataPtr->GetReadableBytes())) {
+        LOGE("Insufficient data available in IPC container. [Data]: val");
         return HC_ERR_IPC_BAD_VAL_LENGTH;
     }
     *val = const_cast<uint8_t *>(dataPtr->ReadUnpadBuffer(*valSz));
@@ -1402,6 +1408,10 @@ void DecodeCallReply(uintptr_t callCtx, IpcDataInfo *replyCache, int32_t cacheNu
 
     ProxyDevAuthData *dataCache = reinterpret_cast<ProxyDevAuthData *>(callCtx);
     MessageParcel *tmpParcel = dataCache->GetReplyParcel();
+    if (sizeof(int32_t) > tmpParcel->GetReadableBytes()) {
+        LOGE("Insufficient data available in IPC container. [Data]: dataLen");
+        return;
+    }
     dataLen = tmpParcel->ReadInt32();
     if ((dataLen <= 0) || (dataLen != static_cast<int32_t>(tmpParcel->GetReadableBytes()))) {
         LOGE("decode failed, data length %d", dataLen);

@@ -55,12 +55,20 @@ void StubDevAuthCb::DoCallBack(int32_t callbackId, uintptr_t cbHook,
 int32_t StubDevAuthCb::OnRemoteRequest(uint32_t code,
     MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
+    if (data.ReadInterfaceToken() != GetDescriptor()) {
+        LOGE("[IPC][S->C]: The client interface token is invalid!");
+        return -1;
+    }
     int32_t callbackId;
     uintptr_t cbHook = 0x0;
 
     LOGI("enter invoking callback...");
     switch (code) {
         case DEV_AUTH_CALLBACK_REQUEST:
+            if (sizeof(int32_t) > data.GetReadableBytes()) {
+                LOGE("Insufficient data available in IPC container. [Data]: callbackId");
+                return -1;
+            }
             callbackId = data.ReadInt32();
             cbHook = data.ReadPointer();
             StubDevAuthCb::DoCallBack(callbackId, cbHook, data, reply, option);

@@ -82,11 +82,20 @@ static int32_t DecodeCallRequest(MessageParcel &data, IpcDataInfo *paramsCache, 
         return HC_SUCCESS;
     }
 
+    if (sizeof(int32_t) > data.GetReadableBytes()) {
+        LOGE("Insufficient data available in IPC container. [Data]: dataLen");
+        return HC_ERR_IPC_BAD_MESSAGE_LENGTH;
+    }
     data.ReadInt32(dataLen);
     if (dataLen > static_cast<int32_t>(data.GetReadableBytes())) {
+        LOGE("Insufficient data available in IPC container. [Data]: data");
         return HC_ERR_IPC_BAD_MESSAGE_LENGTH;
     }
 
+    if (sizeof(int32_t) > data.GetReadableBytes()) {
+        LOGE("Insufficient data available in IPC container. [Data]: inParamNum");
+        return HC_ERR_IPC_BAD_MESSAGE_LENGTH;
+    }
     data.ReadInt32(inParamNum);
     if ((inParamNum < 0) || (inParamNum > cacheNum)) {
         LOGE("param number invalid, inParamNum - %d", inParamNum);
@@ -109,6 +118,7 @@ static int32_t DecodeCallRequest(MessageParcel &data, IpcDataInfo *paramsCache, 
 static int32_t GetMethodId(MessageParcel &data, int32_t &methodId)
 {
     if (data.GetDataSize() < sizeof(int32_t)) {
+        LOGE("Insufficient data available in IPC container. [Data]: methodId");
         return HC_ERR_IPC_CALL_DATA_LENGTH;
     }
     methodId = data.ReadInt32();
@@ -118,22 +128,26 @@ static int32_t GetMethodId(MessageParcel &data, int32_t &methodId)
 
 static void WithObject(int32_t methodId, MessageParcel &data, IpcDataInfo &ipcData, int32_t &cnt)
 {
-    if (IsCallbackMethod(methodId)) {
-        ipcData.type = data.ReadInt32();
-        ipcData.valSz = sizeof(StubDevAuthCb);
-        sptr<IRemoteObject> tmp = data.ReadRemoteObject();
-        if (!tmp) {
-            LOGE("should with remote object, but read failed");
-            return;
-        }
-        ipcData.idx = ServiceDevAuth::SetRemoteObject(tmp);
-        if (ipcData.idx >= 0) {
-            ipcData.val = reinterpret_cast<uint8_t *>(&(ipcData.idx));
-            LOGI("object trans success, set id %d", ipcData.idx);
-            cnt++;
-        }
+    if (!IsCallbackMethod(methodId)) {
+        return;
     }
-    return;
+    if (sizeof(int32_t) > data.GetReadableBytes()) {
+        LOGE("Insufficient data available in IPC container. [Data]: type");
+        return;
+    }
+    ipcData.type = data.ReadInt32();
+    ipcData.valSz = sizeof(StubDevAuthCb);
+    sptr<IRemoteObject> tmp = data.ReadRemoteObject();
+    if (!tmp) {
+        LOGE("should with remote object, but read failed");
+        return;
+    }
+    ipcData.idx = ServiceDevAuth::SetRemoteObject(tmp);
+    if (ipcData.idx >= 0) {
+        ipcData.val = reinterpret_cast<uint8_t *>(&(ipcData.idx));
+        LOGI("object trans success, set id %d", ipcData.idx);
+        cnt++;
+    }
 }
 
 static void InitCbStubTable()
@@ -156,7 +170,7 @@ static void InitCbStubTable()
 int32_t ServiceDevAuth::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     if (data.ReadInterfaceToken() != GetDescriptor()) {
-        LOGE("The client interface token is invalid!");
+        LOGE("[IPC][C->S]: The proxy interface token is invalid!");
         return -1;
     }
     if (CheckPermission() != HC_SUCCESS) {
