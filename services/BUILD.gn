@@ -37,9 +37,10 @@ if (os_level == "mini" || os_level == "small") {
       "${deps_adapter_path}:${hal_module_name}",
       "//build/lite/config/component/cJSON:cjson_shared",
       "//commonlibrary/utils_lite:utils",
-      "//foundation/communication/dsoftbus/sdk:softbus_client",
     ]
-
+    if (enable_soft_bus_channel) {
+      deps += [ "//foundation/communication/dsoftbus/sdk:softbus_client" ]
+    }
     defines = [ "HILOG_ENABLE" ]
     defines += deviceauth_defines
     defines += [ "DISABLE_HIVIEW" ]
