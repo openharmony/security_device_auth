@@ -1151,26 +1151,13 @@ int32_t SaveOsAccountDb(int32_t osAccountId)
 static void DumpGroups(int fd, GroupEntryVec *vec)
 {
     dprintf(fd, "---- GROUP INFO ----\n");
-    uint32_t index;
-    TrustedGroupEntry **entry;
-    FOR_EACH_HC_VECTOR(*vec, index, entry) {
-        dprintf(fd, "GROUP NAME: %s", (*entry)->name);
-        dprintf(fd, "GROUP ID: %s", (*entry)->id);
-        dprintf(fd, "GROUP TYPE: %s", (*entry)->type);
-        dprintf(fd, "GROUP VISIBILITY: %s", (*entry)->visibility);
-        dprintf(fd, "GROUP OWNER: %s", (*entry)->managers);
-    }
+    (void)vec;
 }
 
 static void DumpDevices(int fd, DeviceEntryVec *vec)
 {
     dprintf(fd, "---- DEVICE INFO ----\n");
-    uint32_t index;
-    TrustedDeviceEntry **entry;
-    FOR_EACH_HC_VECTOR(*vec, index, entry) {
-        dprintf(fd, "DEVICES ID: %s", (*entry)->udid);
-        dprintf(fd, "GROUP ID: %s", (*entry)->groupId);
-    }
+    (void)vec;
 }
 
 static void DevAuthDataBaseDump(int fd)
