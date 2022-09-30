@@ -1171,7 +1171,6 @@ static void DevAuthDataBaseDump(int fd)
     uint32_t index;
     OsAccountTrustedInfo *info;
     FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {
-        dprintf(fd, "OS ACCOUNT ID: %s\n;", info->osAccountId);
         DumpGroups(fd, &info->groups);
         DumpDevices(fd, &info->devices);
     }
