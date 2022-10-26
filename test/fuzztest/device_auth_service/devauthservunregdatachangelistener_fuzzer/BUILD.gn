@@ -11,20 +11,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//base/security/device_auth/deps_adapter/deviceauth_hals.gni")
 import("//base/security/device_auth/services/deviceauth.gni")
 
 #####################hydra-fuzz###################
 import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
-module_output_path = "device_auth/group_manage"
+module_output_path = "device_auth/device_auth_service"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("GetPkInfoListFuzzTest") {
+ohos_fuzztest("DevAuthServUnregDataChangeListenerFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/security/device_auth/test/fuzztest/group_manage/getpkinfolist_fuzzer"
-  include_dirs = inc_path
-  sources = [ "getpkinfolist_fuzzer.cpp" ]
+  fuzz_config_file = "//base/security/device_auth/test/fuzztest/device_auth_service/devauthservunregdatachangelistener_fuzzer"
+  include_dirs = inc_path + hals_inc_path
+  include_dirs += [
+    "//third_party/cJSON",
+    "${frameworks_path}/inc/standard",
+  ]
+  sources = [ "devauthservunregdatachangelistener_fuzzer.cpp" ]
   cflags = [
     "-g",
     "-O0",
@@ -35,8 +40,12 @@ ohos_fuzztest("GetPkInfoListFuzzTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-
-  deps = [ "//base/security/device_auth/services:deviceauth_sdk" ]
+  deps = [
+    "${deps_adapter_path}:${hal_module_name}",
+    "//base/security/device_auth/services:deviceauth",
+    "//third_party/cJSON:cjson_static",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 }
 
 ###############################################################################
@@ -45,7 +54,7 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    ":GetPkInfoListFuzzTest",
+    ":DevAuthServUnregDataChangeListenerFuzzTest",
   ]
 }
 ###############################################################################
