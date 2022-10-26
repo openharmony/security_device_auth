@@ -13,27 +13,23 @@
  * limitations under the License.
  */
 
-#include "getpkinfolist_fuzzer.h"
+#include "devauthservunregdatachangelistener_fuzzer.h"
+#include "device_auth.h"
+#include "device_auth_defines.h"
+#include "hc_dev_info.h"
+#include "hc_log.h"
 
 namespace OHOS {
-    bool FuzzDoGetPkInfoList(const uint8_t* data, size_t size)
+    bool FuzzDoUnregDataChangeListener(const uint8_t* data, size_t size)
     {
-        const DeviceGroupManager *gmInstance = GetGmInstance();
-        if (gmInstance == nullptr) {
-            return false;
-        }
         if (data == nullptr) {
             return false;
         }
-        if (size < sizeof(int32_t)) {
-            return false;
-        }
-        const int32_t *osAccountId = reinterpret_cast<const int32_t *>(data);
+        InitDeviceAuthService();
         std::string appId(reinterpret_cast<const char *>(data), size);
-        std::string queryParams(reinterpret_cast<const char *>(data), size);
-        char *returnInfoList = nullptr;
-        uint32_t returnInfoNum = 0;
-        gmInstance->getPkInfoList(*osAccountId, appId.c_str(), queryParams.c_str(), &returnInfoList, &returnInfoNum);
+        const DeviceGroupManager *gmInstance = GetGmInstance();
+        gmInstance->unRegDataChangeListener(appId.c_str());
+        DestroyDeviceAuthService();
         return true;
     }
 }
@@ -42,7 +38,7 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzDoGetPkInfoList(data, size);
+    OHOS::FuzzDoUnregDataChangeListener(data, size);
     return 0;
 }
 
