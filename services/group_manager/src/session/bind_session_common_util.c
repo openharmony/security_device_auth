@@ -95,10 +95,8 @@ BindSession *CreateBaseBindSession(int32_t sessionType, int32_t opCode, const CJ
     session->reqId = reqId;
     session->channelType = NO_CHANNEL;
     session->channelId = DEFAULT_CHANNEL_ID;
-    session->isWaiting = false;
     session->params = NULL;
     session->onChannelOpened = NULL;
-    session->onConfirmed = NULL;
     return session;
 }
 

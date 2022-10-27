@@ -357,10 +357,6 @@ static int32_t CheckServerStatusIfNotInvite(int32_t osAccountId, int operationCo
 
 static int32_t PrepareServer(BindSession *session, CJson *returnData, bool *isNeedInform)
 {
-    if ((session->isWaiting) && (!IsAcceptRequest(returnData))) {
-        LOGE("The service rejects the request!");
-        return HC_ERR_REQ_REJECTED;
-    }
     CJson *jsonParams = DetachItemFromJson(session->params, FIELD_RECEIVED_DATA);
     if (jsonParams == NULL) {
         LOGE("Received data before request confirmation are lost!");
@@ -382,7 +378,6 @@ static int32_t PrepareServer(BindSession *session, CJson *returnData, bool *isNe
     result = CombineInputData(session->opCode, returnData, jsonParams);
     /* Release the memory in advance to reduce the memory usage. */
     DeleteAllItem(returnData);
-    session->isWaiting = false;
     if (result != HC_SUCCESS) {
         FreeJson(jsonParams);
         return result;
@@ -414,24 +409,6 @@ static int32_t PrepareServer(BindSession *session, CJson *returnData, bool *isNe
     return result;
 }
 
-static void OnBindConfirmationReceived(Session *session, CJson *returnData)
-{
-    if ((session == NULL) || (returnData == NULL)) {
-        LOGE("The input session or returnData is NULL!");
-        return;
-    }
-    BindSession *realSession = (BindSession *)session;
-
-    bool isNeedInform = true;
-    int32_t result = PrepareServer(realSession, returnData, &isNeedInform);
-    if (result != HC_SUCCESS) {
-        InformPeerGroupErrorIfNeed(isNeedInform, result, realSession);
-        ProcessErrorCallback(realSession->reqId, realSession->opCode, result, NULL, realSession->base.callback);
-        CloseChannel(realSession->channelType, realSession->channelId);
-        DestroySession(realSession->reqId);
-    }
-}
-
 static int32_t BindSaveReceivedData(BindSession *session, const CJson *jsonParams)
 {
     if (session->params == NULL) {
@@ -457,11 +434,6 @@ static int32_t JudgeConfirmation(CJson *returnData, CJson *jsonParams, BindSessi
     }
     int32_t result;
     switch (confirmation) {
-        case REQUEST_WAITING:
-            LOGI("The service wants us to wait for its signal!");
-            result = BindSaveReceivedData(session, jsonParams);
-            session->isWaiting = true;
-            return result;
         case REQUEST_ACCEPTED:
             LOGI("The service accepts the request!");
             result = BindSaveReceivedData(session, jsonParams);
@@ -514,7 +486,6 @@ Session *CreateServerBindSession(CJson *jsonParams, const DeviceAuthCallback *ca
     }
     InitServerChannel(jsonParams, session);
     /* The server may receive the confirm request message. */
-    session->onConfirmed = OnBindConfirmationReceived;
 
     bool isNeedInform = true;
     int32_t result = HandleRequest(jsonParams, session, &isNeedInform);
