@@ -130,7 +130,6 @@ typedef enum {
 typedef enum {
     REQUEST_REJECTED = 0x80000005,
     REQUEST_ACCEPTED = 0x80000006,
-    REQUEST_WAITING = 0x80000007
 } RequestResponse;
 
 typedef struct {

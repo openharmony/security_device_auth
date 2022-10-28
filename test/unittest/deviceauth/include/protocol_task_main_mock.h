@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,13 +13,20 @@
  * limitations under the License.
  */
 
-#include "bind_session_client_lite.h"
-#include "hc_log.h"
+#ifndef PROTOCOL_TASK_MAIN_MOCK_H
+#define PROTOCOL_TASK_MAIN_MOCK_H
 
-Session *CreateLiteClientBindSession(CJson *jsonParams, const DeviceAuthCallback *callback)
-{
-    LOGE("Lite bind session is not supported!");
-    (void)jsonParams;
-    (void)callback;
-    return NULL;
+#include "base_sub_task.h"
+#include "json_utils.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void SetIsoSupported(bool isSupported);
+void SetPakeV1Supported(bool isSupported);
+
+#ifdef __cplusplus
 }
+#endif
+#endif

@@ -15,13 +15,9 @@
 
 #include "session_manager.h"
 #include "auth_session_client.h"
-#include "auth_session_client_lite.h"
 #include "auth_session_server.h"
-#include "auth_session_server_lite.h"
 #include "bind_session_client.h"
-#include "bind_session_client_lite.h"
 #include "bind_session_server.h"
-#include "bind_session_server_lite.h"
 #include "common_defs.h"
 #include "device_auth.h"
 #include "device_auth_defines.h"
@@ -29,8 +25,6 @@
 #include "hc_log.h"
 #include "hc_time.h"
 #include "hc_vector.h"
-#include "key_agree_session_client.h"
-#include "key_agree_session_server.h"
 
 typedef struct {
     int64_t requestId;
@@ -60,12 +54,6 @@ static const SessionManagerInfo SESSION_MANAGER_INFO[] = {
     { TYPE_SERVER_BIND_SESSION, BIND_TYPE, CreateServerBindSession },
     { TYPE_CLIENT_AUTH_SESSION, AUTH_TYPE, CreateClientAuthSession },
     { TYPE_SERVER_AUTH_SESSION, AUTH_TYPE, CreateServerAuthSession },
-    { TYPE_CLIENT_BIND_SESSION_LITE, BIND_TYPE, CreateLiteClientBindSession },
-    { TYPE_SERVER_BIND_SESSION_LITE, BIND_TYPE, CreateLiteServerBindSession },
-    { TYPE_CLIENT_AUTH_SESSION_LITE, AUTH_TYPE, CreateClientAuthSessionLite },
-    { TYPE_SERVER_AUTH_SESSION_LITE, AUTH_TYPE, CreateServerAuthSessionLite },
-    { TYPE_CLIENT_KEY_AGREE_SESSION, BIND_TYPE, CreateClientKeyAgreeSession },
-    { TYPE_SERVER_KEY_AGREE_SESSION, BIND_TYPE, CreateServerKeyAgreeSession }
 };
 
 static int32_t GetSessionId(int64_t requestId, int64_t *sessionId)
@@ -291,41 +279,9 @@ void OnChannelOpened(int64_t requestId, int64_t channelId)
             continue;
         }
         int sessionType = ((Session *)(*session))->type;
-        if ((sessionType == TYPE_CLIENT_BIND_SESSION) ||
-            (sessionType == TYPE_CLIENT_BIND_SESSION_LITE) ||
-            (sessionType == TYPE_CLIENT_KEY_AGREE_SESSION)) {
+        if (sessionType == TYPE_CLIENT_BIND_SESSION) {
             BindSession *realSession = (BindSession *)(*session);
             realSession->onChannelOpened(*session, channelId, requestId);
-            return;
-        }
-        LOGE("The type of the found session is not as expected!");
-        return;
-    }
-}
-
-void OnConfirmed(int64_t requestId, CJson *returnData)
-{
-    int64_t sessionId = 0;
-    if (GetSessionIdByType(requestId, BIND_TYPE, &sessionId) != HC_SUCCESS) {
-        LOGE("The corresponding session is not found!");
-        return;
-    }
-    uint32_t index;
-    void **session = NULL;
-    FOR_EACH_HC_VECTOR(g_sessionManagerVec, index, session) {
-        if ((session == NULL) || (*session == NULL) || (((Session *)(*session))->sessionId != sessionId)) {
-            continue;
-        }
-        int sessionType = ((Session *)(*session))->type;
-        if ((sessionType == TYPE_SERVER_BIND_SESSION) ||
-            (sessionType == TYPE_SERVER_BIND_SESSION_LITE) ||
-            (sessionType == TYPE_SERVER_KEY_AGREE_SESSION)) {
-            BindSession *realSession = (BindSession *)(*session);
-            if (!realSession->isWaiting) {
-                LOGE("The found session is not in the waiting state!");
-                return;
-            }
-            realSession->onConfirmed(*session, returnData);
             return;
         }
         LOGE("The type of the found session is not as expected!");
