@@ -476,6 +476,7 @@ static void AddDemoMember(void)
             ret = gm->processData(TEST_REQ_ID2, g_transmitData, g_transmitDataLen);
         }
         (void)memset_s(g_transmitData, g_transmitDataMaxLen, 0, g_transmitDataMaxLen);
+        g_transmitDataLen = 0;
         ASSERT_EQ(ret, HC_SUCCESS);
         while (g_asyncStatus == ASYNC_STATUS_WAITING) {
             usleep(TEST_DEV_AUTH_SLEEP_TIME);
@@ -483,7 +484,7 @@ static void AddDemoMember(void)
         if (g_asyncStatus == ASYNC_STATUS_ERROR) {
             break;
         }
-        if (*g_transmitData != NULL) {
+        if (g_transmitDataLen > 0) {
             g_asyncStatus = ASYNC_STATUS_TRANSMIT;
         }
     }
@@ -513,6 +514,7 @@ static void DeleteDemoMember(void)
             ret = gm->processData(TEST_REQ_ID2, g_transmitData, g_transmitDataLen);
         }
         (void)memset_s(g_transmitData, g_transmitDataMaxLen, 0, g_transmitDataMaxLen);
+        g_transmitDataLen = 0;
         ASSERT_EQ(ret, HC_SUCCESS);
         while (g_asyncStatus == ASYNC_STATUS_WAITING) {
             usleep(TEST_DEV_AUTH_SLEEP_TIME);
@@ -520,7 +522,7 @@ static void DeleteDemoMember(void)
         if (g_asyncStatus == ASYNC_STATUS_ERROR) {
             break;
         }
-        if (*g_transmitData != NULL) {
+        if (g_transmitDataLen > 0) {
             g_asyncStatus = ASYNC_STATUS_TRANSMIT;
         }
     }
@@ -557,6 +559,7 @@ static void AuthDemoMember(void)
             ret = ga->processData(TEST_REQ_ID2, g_transmitData, g_transmitDataLen, &g_gaCallback);
         }
         (void)memset_s(g_transmitData, g_transmitDataMaxLen, 0, g_transmitDataMaxLen);
+        g_transmitDataLen = 0;
         ASSERT_EQ(ret, HC_SUCCESS);
         while (g_asyncStatus == ASYNC_STATUS_WAITING) {
             usleep(TEST_DEV_AUTH_SLEEP_TIME);
@@ -564,7 +567,7 @@ static void AuthDemoMember(void)
         if (g_asyncStatus == ASYNC_STATUS_ERROR) {
             break;
         }
-        if (*g_transmitData != NULL) {
+        if (g_transmitDataLen > 0) {
             g_asyncStatus = ASYNC_STATUS_TRANSMIT;
         }
     }
