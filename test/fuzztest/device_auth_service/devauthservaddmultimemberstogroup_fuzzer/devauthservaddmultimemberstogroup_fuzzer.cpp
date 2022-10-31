@@ -85,7 +85,7 @@ namespace OHOS {
         CJson *createJson = CreateJson();
         AddStringToJson(createJson, FIELD_GROUP_NAME, appId.c_str());
         char localUdid[INPUT_UDID_LEN] = { 0 };
-        HcGetUdid((uint8_t *)localUdid, INPUT_UDID_LEN);
+        HcGetUdid(reinterpret_cast<uint8_t *>(localUdid), INPUT_UDID_LEN);
         AddStringToJson(createJson, FIELD_DEVICE_ID, localUdid);
         AddIntToJson(createJson, FIELD_GROUP_TYPE, PEER_TO_PEER_GROUP);
         char *createParams = PackJsonToString(createJson);
