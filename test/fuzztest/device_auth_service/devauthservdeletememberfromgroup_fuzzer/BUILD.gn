@@ -28,8 +28,16 @@ ohos_fuzztest("DevAuthServDeleteMemberFromGroupFuzzTest") {
   include_dirs += [
     "//third_party/cJSON",
     "${frameworks_path}/inc/standard",
+    "${dev_frameworks_path}/inc/hiview_adapter",
   ]
   sources = [ "devauthservdeletememberfromgroup_fuzzer.cpp" ]
+  sources += deviceauth_files
+  sources += hiview_adapter_files
+  if (enable_soft_bus_channel == true) {
+    sources -= soft_bus_channel_files
+    sources += soft_bus_channel_mock_files
+  }
+  defines = deviceauth_defines
   cflags = [
     "-g",
     "-O0",
@@ -37,15 +45,27 @@ ohos_fuzztest("DevAuthServDeleteMemberFromGroupFuzzTest") {
     "-fno-omit-frame-pointer",
     "-DHILOG_ENABLE",
   ]
+  cflags += build_flags
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
+  if (support_jsapi) {
+    defines += [ "SUPPORT_OS_ACCOUNT" ]
+  }
   deps = [
     "${deps_adapter_path}:${hal_module_name}",
-    "//base/security/device_auth/services:deviceauth",
     "//third_party/cJSON:cjson_static",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "c_utils:utils",
+    "dsoftbus:softbus_client",
+    "hisysevent_native:libhisysevent",
+    "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
+  ]
+  if (support_jsapi) {
+    external_deps += [ "os_account:os_account_innerkits" ]
+  }
 }
 
 ###############################################################################
