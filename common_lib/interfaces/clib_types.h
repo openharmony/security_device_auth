@@ -27,8 +27,6 @@ typedef uint32_t HcBool;
 #define NULL 0
 #endif
 
-#define CLIB_MAX_MALLOC_SIZE 4096 /* 4K */
-
 #ifdef __cplusplus
 extern "C" {
 #endif
