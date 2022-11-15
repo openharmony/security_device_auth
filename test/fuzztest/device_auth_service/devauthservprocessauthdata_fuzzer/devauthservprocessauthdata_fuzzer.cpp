@@ -18,6 +18,7 @@
 #include "device_auth_defines.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
+#include "hc_types.h"
 #include "json_utils.h"
 #include "securec.h"
 #include <unistd.h>
@@ -61,7 +62,18 @@ namespace OHOS {
         InitDeviceAuthService();
         const GroupAuthManager *gaInstance = GetGaInstance();
         int64_t reqId = 123;
-        gaInstance->processData(reqId, data, size, &g_gaCallback);
+        uint8_t *authData = reinterpret_cast<uint8_t *>(HcMalloc(size + 1, 0));
+        if (authData == nullptr) {
+            DestroyDeviceAuthService();
+            return false;
+        }
+        if (memcpy_s(authData, size, data, size) != EOK) {
+            HcFree(authData);
+            DestroyDeviceAuthService();
+            return false;
+        }
+        gaInstance->processData(reqId, authData, size, &g_gaCallback);
+        HcFree(authData);
         sleep(1);
         DestroyDeviceAuthService();
         return true;
