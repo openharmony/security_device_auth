@@ -18,6 +18,7 @@
 #include "device_auth_defines.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
+#include "hc_types.h"
 #include "json_utils.h"
 #include "securec.h"
 #include <unistd.h>
@@ -63,7 +64,18 @@ namespace OHOS {
         const DeviceGroupManager *gmInstance = GetGmInstance();
         gmInstance->regCallback(appId.c_str(), &g_gmCallback);
         int64_t reqId = 123;
-        gmInstance->processData(reqId, data, size);
+        uint8_t *bindData = reinterpret_cast<uint8_t *>(HcMalloc(size + 1, 0));
+        if (bindData == nullptr) {
+            DestroyDeviceAuthService();
+            return false;
+        }
+        if (memcpy_s(bindData, size, data, size) != EOK) {
+            HcFree(bindData);
+            DestroyDeviceAuthService();
+            return false;
+        }
+        gmInstance->processData(reqId, bindData, size);
+        HcFree(bindData);
         sleep(1);
         DestroyDeviceAuthService();
         return true;
