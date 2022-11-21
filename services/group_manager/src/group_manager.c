@@ -15,11 +15,9 @@
 
 #include "group_manager.h"
 
-#include "bind_peer.h"
 #include "common_defs.h"
 #include "data_manager.h"
 #include "group_operation.h"
-#include "key_agree.h"
 
 int32_t CreateGroupImpl(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams)
 {
@@ -60,50 +58,6 @@ int32_t DelMultiMembersFromGroupImpl(int32_t osAccountId, const char *appId, con
 int32_t ProcessBindDataImpl(int64_t requestId, const uint8_t *data, uint32_t dataLen)
 {
     return IsGroupSupport() ? GetGroupImplInstance()->processBindData(requestId, data, dataLen) : HC_ERR_NOT_SUPPORT;
-}
-
-int32_t ConfirmRequestImpl(int32_t osAccountId, int64_t requestId, const char *appId, const char *confirmParams)
-{
-    return IsGroupSupport() ? GetGroupImplInstance()->confirmRequest(osAccountId, requestId, appId,
-        confirmParams) : HC_ERR_NOT_SUPPORT;
-}
-
-int32_t AddGroupManagerImpl(int32_t osAccountId, const char *appId, const char *groupId, const char *managerAppId)
-{
-    return IsGroupSupport() ? GetGroupImplInstance()->addGroupRole(osAccountId, true, appId, groupId,
-        managerAppId) : HC_ERR_NOT_SUPPORT;
-}
-
-int32_t AddGroupFriendImpl(int32_t osAccountId, const char *appId, const char *groupId, const char *friendAppId)
-{
-    return IsGroupSupport() ? GetGroupImplInstance()->addGroupRole(osAccountId, false, appId, groupId,
-        friendAppId) : HC_ERR_NOT_SUPPORT;
-}
-
-int32_t DeleteGroupManagerImpl(int32_t osAccountId, const char *appId, const char *groupId, const char *managerAppId)
-{
-    return IsGroupSupport() ? GetGroupImplInstance()->deleteGroupRole(osAccountId, true, appId, groupId,
-        managerAppId) : HC_ERR_NOT_SUPPORT;
-}
-
-int32_t DeleteGroupFriendImpl(int32_t osAccountId, const char *appId, const char *groupId, const char *friendAppId)
-{
-    return IsGroupSupport() ? GetGroupImplInstance()->deleteGroupRole(osAccountId, false, appId, groupId,
-        friendAppId) : HC_ERR_NOT_SUPPORT;
-}
-
-int32_t GetGroupManagersImpl(int32_t osAccuntId, const char *appId, const char *groupId,
-    char **returnManagers, uint32_t *returnSize)
-{
-    return IsGroupSupport() ? GetGroupImplInstance()->getGroupRoles(osAccuntId, true, appId, groupId,
-        returnManagers, returnSize) : HC_ERR_NOT_SUPPORT;
-}
-
-int32_t GetGroupFriendsImpl(int32_t osAccuntId, const char *appId, const char *groupId,
-    char **returnFriends, uint32_t *returnSize)
-{
-    return IsGroupSupport() ? GetGroupImplInstance()->getGroupRoles(osAccuntId, false, appId, groupId,
-        returnFriends, returnSize) : HC_ERR_NOT_SUPPORT;
 }
 
 int32_t RegListenerImpl(const char *appId, const DataChangeListener *listener)
@@ -181,31 +135,6 @@ void DestroyInfoImpl(char **returnInfo)
     if (IsGroupSupport()) {
         GetGroupImplInstance()->destroyInfo(returnInfo);
     }
-}
-
-int32_t BindPeerImpl(int64_t requestId, const char *appId, const char *bindParams)
-{
-    return RequestBindPeer(requestId, appId, bindParams);
-}
-
-int32_t UnbindPeerImpl(int64_t requestId, const char *appId, const char *unbindParams)
-{
-    return RequestUnbindPeer(requestId, appId, unbindParams);
-}
-
-int32_t ProcessLiteDataImpl(int64_t requestId, const char *appId, const uint8_t *data, uint32_t dataLen)
-{
-    return RequestProcessLiteData(requestId, appId, data, dataLen);
-}
-
-int32_t AuthKeyAgreeImpl(int64_t requestId, const char *appId, const char *agreeParams)
-{
-    return RequestAuthKeyAgree(requestId, appId, agreeParams);
-}
-
-int32_t ProcessKeyAgreeDataImpl(int64_t requestId, const char *appId, const uint8_t *data, uint32_t dataLen)
-{
-    return RequestProcessKeyAgreeData(requestId, appId, data, dataLen);
 }
 
 int32_t InitGroupManager(void)

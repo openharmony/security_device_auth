@@ -19,16 +19,13 @@
 #include "base_session.h"
 
 typedef void (*OnChannelOpenedFunc)(Session *, int64_t, int64_t);
-typedef void (*OnConfirmedFunc)(Session *, CJson *);
 typedef int32_t (*ProcessSessionFunc)(Session *, CJson *);
 
 typedef struct {
     Session base;
-    bool isWaiting;
     char *appId;
     CJson *params;
     OnChannelOpenedFunc onChannelOpened;
-    OnConfirmedFunc onConfirmed;
     int32_t curTaskId;
     int32_t opCode;
     int32_t channelType;

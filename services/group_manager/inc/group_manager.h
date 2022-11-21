@@ -33,15 +33,6 @@ int32_t DeleteMemberFromGroupImpl(int32_t osAccountId, int64_t requestId, const 
 int32_t AddMultiMembersToGroupImpl(int32_t osAccountId, const char *appId, const char *addParams);
 int32_t DelMultiMembersFromGroupImpl(int32_t osAccountId, const char *appId, const char *deleteParams);
 int32_t ProcessBindDataImpl(int64_t requestId, const uint8_t *data, uint32_t dataLen);
-int32_t ConfirmRequestImpl(int32_t osAccountId, int64_t requestId, const char *appId, const char *confirmParams);
-int32_t AddGroupManagerImpl(int32_t osAccountId, const char *appId, const char *groupId, const char *managerAppId);
-int32_t AddGroupFriendImpl(int32_t osAccountId, const char *appId, const char *groupId, const char *friendAppId);
-int32_t DeleteGroupManagerImpl(int32_t osAccountId, const char *appId, const char *groupId, const char *managerAppId);
-int32_t DeleteGroupFriendImpl(int32_t osAccountId, const char *appId, const char *groupId, const char *friendAppId);
-int32_t GetGroupManagersImpl(int32_t osAccountId, const char *appId, const char *groupId,
-    char **returnManagers, uint32_t *returnSize);
-int32_t GetGroupFriendsImpl(int32_t osAccountId, const char *appId, const char *groupId,
-    char **returnFriends, uint32_t *returnSize);
 
 int32_t RegListenerImpl(const char *appId, const DataChangeListener *listener);
 int32_t UnRegListenerImpl(const char *appId);
@@ -62,13 +53,6 @@ bool IsDeviceInGroupImpl(int32_t osAccountId, const char *appId, const char *gro
 int32_t GetPkInfoListImpl(int32_t osAccountId, const char *appId, const char *queryParams,
     char **returnInfoList, uint32_t *returnInfoNum);
 void DestroyInfoImpl(char **returnInfo);
-
-int32_t BindPeerImpl(int64_t requestId, const char *appId, const char *bindParams);
-int32_t UnbindPeerImpl(int64_t requestId, const char *appId, const char *unbindParams);
-int32_t ProcessLiteDataImpl(int64_t requestId, const char *appId, const uint8_t *data, uint32_t dataLen);
-
-int32_t AuthKeyAgreeImpl(int64_t requestId, const char *appId, const char *agreeParams);
-int32_t ProcessKeyAgreeDataImpl(int64_t requestId, const char *appId, const uint8_t *data, uint32_t dataLen);
 
 #ifdef __cplusplus
 }

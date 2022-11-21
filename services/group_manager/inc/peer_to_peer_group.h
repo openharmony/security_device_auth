@@ -30,12 +30,6 @@ typedef struct {
         const DeviceAuthCallback *callback);
     int32_t (*processData)(int64_t requestId, CJson *jsonParams,
         const DeviceAuthCallback *callback);
-    int32_t (*addGroupRole)(int32_t osAccountId, bool isManager, const char *appId, const char *groupId,
-        const char *roleAppId);
-    int32_t (*deleteGroupRole)(int32_t osAccountId, bool isManager, const char *appId, const char *groupId,
-        const char *roleAppId);
-    int32_t (*getGroupRoles)(int32_t osAccountId, bool isManager, const char *appId, const char *groupId,
-        char **returnJsonStr, uint32_t *returnSize);
 } PeerToPeerGroup;
 
 BaseGroup *GetPeerToPeerGroupInstance(void);

@@ -18,7 +18,7 @@
 
 void *ClibMalloc(uint32_t size, char val)
 {
-    if (size == 0 || size > CLIB_MAX_MALLOC_SIZE) {
+    if (size == 0) {
         return NULL;
     }
     void *addr = malloc(size);

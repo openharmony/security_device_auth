@@ -31,13 +31,6 @@ typedef struct {
     int32_t (*addMultiMembers)(int32_t osAccountId, const char *appId, const char *addParams);
     int32_t (*delMultiMembers)(int32_t osAccountId, const char *appId, const char *deleteParams);
     int32_t (*processBindData)(int64_t requestId, const uint8_t *data, uint32_t dataLen);
-    int32_t (*confirmRequest)(int32_t osAccountId, int64_t requestId, const char *appId, const char *confirmParams);
-    int32_t (*addGroupRole)(int32_t osAccountId, bool isManager, const char *appId, const char *groupId,
-        const char *roleAppId);
-    int32_t (*deleteGroupRole)(int32_t osAccountId, bool isManager, const char *appId, const char *groupId,
-        const char *roleAppId);
-    int32_t (*getGroupRoles)(int32_t osAccuntId, bool isManager, const char *appId, const char *groupId,
-        char **returnJsonStr, uint32_t *returnSize);
     int32_t (*regListener)(const char *appId, const DataChangeListener *listener);
     int32_t (*unRegListener)(const char *appId);
     int32_t (*checkAccessToGroup)(int32_t osAccountId, const char *appId, const char *groupId);
