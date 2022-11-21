@@ -515,63 +515,6 @@ static int32_t ProcessBindData(int64_t requestId, CJson *jsonParams, const Devic
     return instance->processData(requestId, jsonParams, callback);
 }
 
-static int32_t AddGroupRoleWithCheck(int32_t osAccuntId, bool isManager, const char *appId, const char *groupId,
-    const char *roleAppId)
-{
-    if ((appId == NULL) || (groupId == NULL) || (roleAppId == NULL)) {
-        LOGE("The input parameters contains NULL value!");
-        return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsPeerToPeerGroupSupported()) {
-        LOGE("Peer to peer group is not supported!");
-        return HC_ERR_NOT_SUPPORT;
-    }
-    PeerToPeerGroup *instance = (PeerToPeerGroup *)GetPeerToPeerGroupInstance();
-    if ((instance == NULL) || (instance->addGroupRole == NULL)) {
-        LOGE("The group instance is NULL or its function ptr is NULL!");
-        return HC_ERR_NULL_PTR;
-    }
-    return instance->addGroupRole(osAccuntId, isManager, appId, groupId, roleAppId);
-}
-
-static int32_t DeleteGroupRoleWithCheck(int32_t osAccuntId, bool isManager, const char *appId, const char *groupId,
-    const char *roleAppId)
-{
-    if ((appId == NULL) || (groupId == NULL) || (roleAppId == NULL)) {
-        LOGE("The input parameters contains NULL value!");
-        return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsPeerToPeerGroupSupported()) {
-        LOGE("Peer to peer group is not supported!");
-        return HC_ERR_NOT_SUPPORT;
-    }
-    PeerToPeerGroup *instance = (PeerToPeerGroup *)GetPeerToPeerGroupInstance();
-    if ((instance == NULL) || (instance->deleteGroupRole == NULL)) {
-        LOGE("The group instance is NULL or its function ptr is NULL!");
-        return HC_ERR_NULL_PTR;
-    }
-    return instance->deleteGroupRole(osAccuntId, isManager, appId, groupId, roleAppId);
-}
-
-static int32_t GetGroupRolesWithCheck(int32_t osAccuntId, bool isManager, const char *appId, const char *groupId,
-    char **returnJsonStr, uint32_t *returnSize)
-{
-    if ((appId == NULL) || (groupId == NULL) || (returnJsonStr == NULL) || (returnSize == NULL)) {
-        LOGE("The input parameters contains NULL value!");
-        return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsPeerToPeerGroupSupported()) {
-        LOGE("Peer to peer group is not supported!");
-        return HC_ERR_NOT_SUPPORT;
-    }
-    PeerToPeerGroup *instance = (PeerToPeerGroup *)GetPeerToPeerGroupInstance();
-    if ((instance == NULL) || (instance->getGroupRoles == NULL)) {
-        LOGE("The group instance is NULL or its function ptr is NULL!");
-        return HC_ERR_NULL_PTR;
-    }
-    return instance->getGroupRoles(osAccuntId, isManager, appId, groupId, returnJsonStr, returnSize);
-}
-
 static int32_t GetOpCodeWhenAdd(const CJson *jsonParams)
 {
     bool isAdmin = true;
@@ -670,17 +613,6 @@ static void DoProcessBindData(HcTaskBase *baseTask)
         return;
     }
     (void)ProcessBindData(task->reqId, task->params, task->cb);
-}
-
-static void DoConfirmRequest(HcTaskBase *baseTask)
-{
-    if (baseTask == NULL) {
-        LOGE("The input task is NULL!");
-        return;
-    }
-    GroupManagerTask *task = (GroupManagerTask *)baseTask;
-    LOGI("[Start]: DoConfirmRequest! [ReqId]: %" PRId64, task->reqId);
-    OnConfirmed(task->reqId, task->params);
 }
 
 static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams)
@@ -879,49 +811,11 @@ static int32_t RequestProcessBindData(int64_t requestId, const uint8_t *data, ui
         LOGE("Failed to create json from string!");
         return HC_ERR_JSON_FAIL;
     }
-    int64_t tempRequestId = DEFAULT_REQUEST_ID;
-    if (GetInt64FromJson(params, FIELD_REQUEST_ID, &tempRequestId) != HC_SUCCESS) {
-        LOGE("Failed to get requestId from json!");
-        FreeJson(params);
-        return HC_ERR_JSON_GET;
-    }
-    if (tempRequestId != requestId) {
-        LOGE("The requestId is invalid! [ServiceReqId]: %" PRId64 ", [ReqId]: %" PRId64, requestId, tempRequestId);
-        FreeJson(params);
-        return HC_ERR_INVALID_PARAMS;
-    }
     if (InitAndPushGMTask(INVALID_OS_ACCOUNT, CODE_NULL, requestId, params, DoProcessBindData) != HC_SUCCESS) {
         FreeJson(params);
         return HC_ERR_INIT_TASK_FAIL;
     }
     LOGI("[End]: RequestProcessBindData!");
-    return HC_SUCCESS;
-}
-
-static int32_t RequestConfirmRequest(int32_t osAccountId, int64_t requestId, const char *appId,
-    const char *confirmParams)
-{
-    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    if ((appId == NULL) || (confirmParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
-        LOGE("Invalid input parameters!");
-        return HC_ERR_INVALID_PARAMS;
-    }
-    LOGI("[Start]: RequestConfirmRequest! [AppId]: %s, [RequestId]: %" PRId64, appId, requestId);
-    CJson *params = CreateJsonFromString(confirmParams);
-    if (params == NULL) {
-        LOGE("Failed to create json from string!");
-        return HC_ERR_JSON_FAIL;
-    }
-    if (AddStringToJson(params, FIELD_APP_ID, appId) != HC_SUCCESS) {
-        LOGE("Failed to add appId to json!");
-        FreeJson(params);
-        return HC_ERR_JSON_FAIL;
-    }
-    if (InitAndPushGMTask(osAccountId, CODE_NULL, requestId, params, DoConfirmRequest) != HC_SUCCESS) {
-        FreeJson(params);
-        return HC_ERR_INIT_TASK_FAIL;
-    }
-    LOGI("[End]: RequestConfirmRequest!");
     return HC_SUCCESS;
 }
 
@@ -1247,10 +1141,6 @@ static const GroupImpl g_groupImplInstance = {
     .addMultiMembers = RequestAddMultiMembersToGroup,
     .delMultiMembers = RequestDelMultiMembersFromGroup,
     .processBindData = RequestProcessBindData,
-    .confirmRequest = RequestConfirmRequest,
-    .addGroupRole = AddGroupRoleWithCheck,
-    .deleteGroupRole = DeleteGroupRoleWithCheck,
-    .getGroupRoles = GetGroupRolesWithCheck,
     .regListener = RegListener,
     .unRegListener = UnRegListener,
     .checkAccessToGroup = CheckAccessToGroup,

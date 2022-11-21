@@ -33,6 +33,5 @@ int32_t CreateSession(int64_t requestId, SessionTypeValue sessionType, CJson *pa
 int32_t ProcessSession(int64_t requestId, int32_t type, CJson *in);
 void DestroySession(int64_t requestId);
 void OnChannelOpened(int64_t requestId, int64_t channelId);
-void OnConfirmed(int64_t requestId, CJson *returnData);
 
 #endif

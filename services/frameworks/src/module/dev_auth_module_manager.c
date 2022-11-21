@@ -316,7 +316,7 @@ int32_t GetRegisterInfo(const char *reqJsonStr, char **returnRegisterInfo)
 {
     if ((reqJsonStr == NULL) || (returnRegisterInfo == NULL)) {
         LOGE("The input param is NULL!");
-        return HC_ERR_NULL_PTR;
+        return HC_ERR_INVALID_PARAMS;
     }
     CJson *requestJson = CreateJsonFromString(reqJsonStr);
     if (requestJson == NULL) {
