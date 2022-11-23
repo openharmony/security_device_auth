@@ -239,7 +239,7 @@ OUT_FUNC:
     return res;
 }
 
-SymBaseCurTask *CreateProtocolServerTask()
+SymBaseCurTask *CreateProtocolServerTask(void)
 {
     IsoProtocolServerTask *task = (IsoProtocolServerTask *)HcMalloc(sizeof(IsoProtocolServerTask), 0);
     if (task == NULL) {

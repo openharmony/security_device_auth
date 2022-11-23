@@ -16,7 +16,6 @@
 #ifndef IPC_ADAPT_H
 #define IPC_ADAPT_H
 
-#include <stdbool.h>
 #include <stdint.h>
 #include "device_auth.h"
 

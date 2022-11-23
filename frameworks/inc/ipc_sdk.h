@@ -22,9 +22,6 @@
 extern "C" {
 #endif
 
-#define IPC_RESULT_NUM_1 1
-#define IPC_RESULT_NUM_2 2
-
 #define IPC_CALL_BACK_STUB_AUTH_ID 0
 #define IPC_CALL_BACK_STUB_BIND_ID 1
 

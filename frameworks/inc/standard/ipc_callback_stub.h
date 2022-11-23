@@ -24,9 +24,9 @@ class StubDevAuthCb : public IRemoteStub<ICommIpcCallback> {
 public:
     StubDevAuthCb();
     ~StubDevAuthCb();
-    virtual int32_t OnRemoteRequest(uint32_t code, MessageParcel &data,
+    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data,
         MessageParcel &reply, MessageOption &option) override;
-    virtual void DoCallBack(int32_t callbackId, uintptr_t cbHook,
+    void DoCallBack(int32_t callbackId, uintptr_t cbHook,
         MessageParcel &dataParcel, MessageParcel &reply, MessageOption &option) override;
 };
 }

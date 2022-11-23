@@ -26,7 +26,7 @@ int32_t GenerateKeyAlias(const Uint8Buff *pkgName, const Uint8Buff *serviceType,
 int32_t GetIdPeer(const CJson *in, const char *peerIdKey, const Uint8Buff *authIdSelf, Uint8Buff *authIdPeer);
 int32_t GetAndCheckAuthIdPeer(const CJson *in, const Uint8Buff *authIdSelf, const Uint8Buff *authIdPeer);
 int32_t GetAuthIdPeerFromPayload(const CJson *in, const Uint8Buff *authIdSelf, Uint8Buff *authIdPeer);
-int32_t GetAndCheckKeyLenOnServer(const CJson *in, uint32_t *returnKeyLen);
+int32_t GetAndCheckKeyLenOnServer(const CJson *in, uint32_t *keyLen);
 
 void DasSendErrMsgToSelf(CJson *out, int errCode);
 void DasSendErrorToOut(CJson *out, int errCode); // send error to self and peer

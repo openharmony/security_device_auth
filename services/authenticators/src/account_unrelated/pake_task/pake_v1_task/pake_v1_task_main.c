@@ -20,7 +20,7 @@
 #include "pake_v1_client_task.h"
 #include "pake_v1_server_task.h"
 
-bool IsSupportPakeV1()
+bool IsSupportPakeV1(void)
 {
     return true;
 }

@@ -31,14 +31,14 @@ const int32_t MAX_CBSTUB_SIZE = 64;
 class ServiceDevAuth : public IRemoteStub<IMethodsIpcCall> {
 public:
     ServiceDevAuth();
-    ~ServiceDevAuth();
+    ~ServiceDevAuth() override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string>& args) override;
-    virtual int32_t OnRemoteRequest(uint32_t code, MessageParcel &data,
+    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data,
         MessageParcel &reply, MessageOption &option) override;
     void ResetCallMap(void);
     int32_t SetCallMap(IpcServiceCall method, int32_t methodId);
     static int32_t SetRemoteObject(sptr<IRemoteObject> &object);
-    static void SetCbDeathRecipient(int32_t cbStubIdx, int32_t cbDataIdx);
+    static void AddCbDeathRecipient(int32_t cbStubIdx, int32_t cbDataIdx);
     static void ResetRemoteObject(int32_t idx);
     static void ActCallback(int32_t objIdx, int32_t callbackId, bool sync,
         uintptr_t cbHook, MessageParcel &dataParcel, MessageParcel &reply);
@@ -55,7 +55,7 @@ public:
     DevAuthDeathRecipient() {}
     explicit DevAuthDeathRecipient(int32_t cbIdx);
     ~DevAuthDeathRecipient() {}
-    virtual void OnRemoteDied(const wptr<IRemoteObject>& remoteObject) override;
+    void OnRemoteDied(const wptr<IRemoteObject>& remoteObject) override;
 private:
     int32_t callbackIdx;
 };

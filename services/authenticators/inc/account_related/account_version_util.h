@@ -43,14 +43,14 @@ typedef enum {
     VERSION_CONFIRMED = 2,
 } AccountVersionStatus;
 
-typedef struct _AccountVersionInfo {
+typedef struct AccountVersionInfoT {
     uint64_t versionNo;
     ProtocolType protocolType;
     PakeAlgType pakeAlgType;
     CurveType curveType;
     bool withExtraOperation;
     bool (*isTaskSupported)(void);
-    TaskBase *(*createTask)(const CJson *, CJson *, const struct _AccountVersionInfo *);
+    TaskBase *(*createTask)(const CJson *, CJson *, const struct AccountVersionInfoT *);
 } AccountVersionInfo;
 
 #ifdef __cplusplus

@@ -26,8 +26,8 @@ extern "C" {
 #endif
 
 bool IsAccountRelatedGroup(int groupType);
-int32_t GenerateReturnGroupInfo(const TrustedGroupEntry *groupInfo, CJson *returnJson);
-int32_t GenerateReturnDevInfo(const TrustedDeviceEntry *devInfo, CJson *returnJson);
+int32_t GenerateReturnGroupInfo(const TrustedGroupEntry *groupEntry, CJson *returnJson);
+int32_t GenerateReturnDevInfo(const TrustedDeviceEntry *deviceEntry, CJson *returnJson);
 
 bool IsUserTypeValid(int userType);
 bool IsExpireTimeValid(int expireTime);
@@ -93,12 +93,13 @@ bool IsTrustedDeviceInGroup(int32_t osAccountId, const char *groupId, const char
 int32_t CheckGroupAccessible(int32_t osAccountId, const char *groupId, const char *appId);
 int32_t CheckGroupEditAllowed(int32_t osAccountId, const char *groupId, const char *appId);
 int32_t GetGroupInfo(int32_t osAccountId, int groupType, const char *groupId, const char *groupName,
-    const char *groupOwner, GroupEntryVec *groupEntryVec);
-int32_t GetJoinedGroups(int32_t osAccountId, int groupType, GroupEntryVec *groupEntryVec);
+    const char *groupOwner, GroupEntryVec *returnGroupEntryVec);
+int32_t GetJoinedGroups(int32_t osAccountId, int groupType, GroupEntryVec *returnGroupEntryVec);
+int32_t GetRelatedGroups(int32_t osAccountId, const char *peerDeviceId, bool isUdid,
+    GroupEntryVec *returnGroupEntryVec);
 int32_t GetTrustedDevInfoById(int32_t osAccountId, const char *deviceId, bool isUdid, const char *groupId,
-    TrustedDeviceEntry *deviceEntry);
-int32_t GetTrustedDevices(int32_t osAccountId, const char *groupId, DeviceEntryVec *deviceEntryVec);
-int32_t GetRelatedGroups(int32_t osAccountId, const char *peerDeviceId, bool isUdid, GroupEntryVec *groupEntryVec);
+    TrustedDeviceEntry *returnDeviceEntry);
+int32_t GetTrustedDevices(int32_t osAccountId, const char *groupId, DeviceEntryVec *returnDeviceEntryVec);
 
 TrustedGroupEntry *GetGroupEntryById(int32_t osAccountId, const char *groupId);
 TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *deviceId, bool isUdid,

@@ -88,7 +88,7 @@ HcBool ParcelWriteInt64Revert(HcParcel *parcel, int64_t src);
 void DataRevert(void *data, uint32_t length);
 HcBool ParcelPopBack(HcParcel *parcel, uint32_t size);
 HcBool ParcelPopFront(HcParcel *parcel, uint32_t size);
-HcBool ParcelEraseBlock(HcParcel *parcel, uint32_t start, uint32_t data_size, void *dst);
+HcBool ParcelEraseBlock(HcParcel *parcel, uint32_t start, uint32_t dataSize, void *dst);
 
 #ifdef __cplusplus
 }

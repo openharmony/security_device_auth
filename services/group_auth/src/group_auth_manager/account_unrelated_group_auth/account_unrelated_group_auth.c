@@ -470,7 +470,7 @@ static void OnDasFinish(int64_t requestId, const CJson *authParam, const CJson *
     LOGI("Call onFinish for non-account auth successfully.");
 }
 
-BaseGroupAuth *GetAccountUnrelatedGroupAuth()
+BaseGroupAuth *GetAccountUnrelatedGroupAuth(void)
 {
     return (BaseGroupAuth *)&g_nonAccountGroupAuth;
 }

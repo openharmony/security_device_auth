@@ -98,7 +98,7 @@ QueryDeviceParams InitQueryDeviceParams(void);
 TrustedGroupEntry *CreateGroupEntry(void);
 TrustedDeviceEntry *CreateDeviceEntry(void);
 void DestroyGroupEntry(TrustedGroupEntry *groupEntry);
-void DestroyDeviceEntry(TrustedDeviceEntry *groupEntry);
+void DestroyDeviceEntry(TrustedDeviceEntry *deviceEntry);
 GroupEntryVec CreateGroupEntryVec(void);
 DeviceEntryVec CreateDeviceEntryVec(void);
 void ClearGroupEntryVec(GroupEntryVec *vec);

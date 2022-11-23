@@ -1384,7 +1384,7 @@ static const AlgLoader g_huksLoader = {
     .bigNumCompare = BigNumCompare
 };
 
-const AlgLoader *GetRealLoaderInstance()
+const AlgLoader *GetRealLoaderInstance(void)
 {
     return &g_huksLoader;
 }

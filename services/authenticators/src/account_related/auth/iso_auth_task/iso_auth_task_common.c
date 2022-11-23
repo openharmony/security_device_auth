@@ -39,7 +39,7 @@ TaskBase *CreateIsoAuthTask(const CJson *in, CJson *out, const AccountVersionInf
     if (GetBoolFromJson(in, FIELD_IS_CLIENT, &isClient) != CLIB_SUCCESS) {
         LOGD("Get isClient from json failed."); /* default: server. */
     }
-    return isClient? CreateIsoAuthClientTask(in, out, verInfo) :
+    return isClient ? CreateIsoAuthClientTask(in, out, verInfo) :
         CreateIsoAuthServerTask(in, out, verInfo);
 }
 
