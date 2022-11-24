@@ -32,7 +32,7 @@ void ReportCoreFuncInvokeEvent(const InvokeEvent *event)
     if (event == nullptr) {
         return;
     }
-    OHOS::HiviewDFX::HiSysEvent::Write(
+    HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::DEVICE_AUTH,
         STR_EVENT_CORE_FUNCTION,
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
