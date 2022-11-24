@@ -246,7 +246,7 @@ OUT:
     return res;
 }
 
-AsyBaseCurTask *CreatePakeV1ProtocolClientTask()
+AsyBaseCurTask *CreatePakeV1ProtocolClientTask(void)
 {
     PakeV1ProtocolClientTask *task = (PakeV1ProtocolClientTask *)HcMalloc(sizeof(PakeV1ProtocolClientTask), 0);
     if (task == NULL) {

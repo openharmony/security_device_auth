@@ -210,7 +210,7 @@ OUT:
     return res;
 }
 
-AsyBaseCurTask *CreatePakeV1ProtocolServerTask()
+AsyBaseCurTask *CreatePakeV1ProtocolServerTask(void)
 {
     PakeV1ProtocolServerTask *task = (PakeV1ProtocolServerTask *)HcMalloc(sizeof(PakeV1ProtocolServerTask), 0);
     if (task == NULL) {

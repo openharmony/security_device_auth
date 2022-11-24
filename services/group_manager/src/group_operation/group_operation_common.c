@@ -479,12 +479,12 @@ int32_t GenerateReturnGroupInfo(const TrustedGroupEntry *groupEntry, CJson *retu
     return HC_SUCCESS;
 }
 
-int32_t GenerateReturnDevInfo(const TrustedDeviceEntry *devInfo, CJson *returnJson)
+int32_t GenerateReturnDevInfo(const TrustedDeviceEntry *deviceEntry, CJson *returnJson)
 {
     int32_t result;
-    if (((result = AddAuthIdToReturn(devInfo, returnJson)) != HC_SUCCESS) ||
-        ((result = AddCredentialTypeToReturn(devInfo, returnJson)) != HC_SUCCESS) ||
-        ((result = AddUserTypeToReturn(devInfo, returnJson)) != HC_SUCCESS)) {
+    if (((result = AddAuthIdToReturn(deviceEntry, returnJson)) != HC_SUCCESS) ||
+        ((result = AddCredentialTypeToReturn(deviceEntry, returnJson)) != HC_SUCCESS) ||
+        ((result = AddUserTypeToReturn(deviceEntry, returnJson)) != HC_SUCCESS)) {
         return result;
     }
     return HC_SUCCESS;

@@ -78,7 +78,6 @@ ERR:
 
 static int ExchangeConfirm(AsyBaseCurTask *task, PakeParams *params, const CJson *in, int *status)
 {
-    int res;
     if (task->taskStatus < TASK_STATUS_CLIENT_BIND_EXCHANGE_REQUEST) {
         LOGE("Invalid taskStatus: %d", task->taskStatus);
         return HC_ERR_BAD_MESSAGE;
@@ -93,8 +92,12 @@ static int ExchangeConfirm(AsyBaseCurTask *task, PakeParams *params, const CJson
 
     // parse message
     (void)GetIntFromJson(in, FIELD_PEER_USER_TYPE, &(params->userTypePeer));
-    RETURN_IF_ERR(ParseNonceAndCipherFromJson(&(realTask->params.nonce),
-        &(realTask->params.exInfoCipher), in, FIELD_EX_AUTH_INFO));
+    int res = ParseNonceAndCipherFromJson(&(realTask->params.nonce),
+        &(realTask->params.exInfoCipher), in, FIELD_EX_AUTH_INFO);
+    if (res != HC_SUCCESS) {
+        LOGE("ParseNonceAndCipherFromJson failed");
+        return res;
+    }
 
     // execute
     res = ClientConfirmStandardBindExchange(params, &(realTask->params));

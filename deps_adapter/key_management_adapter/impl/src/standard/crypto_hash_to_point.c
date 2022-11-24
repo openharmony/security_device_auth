@@ -322,11 +322,13 @@ ERR:
 
 static int32_t EndianSwap(struct HksBlob *data)
 {
-    if (data->data == NULL)
+    if (data->data == NULL) {
         return HAL_ERR_NULL_PTR;
+    }
 
-    if (data->size == 0)
+    if (data->size == 0) {
         return HAL_ERR_NULL_PTR;
+    }
 
     int32_t end = data->size - 1;
     const int32_t start = 0;

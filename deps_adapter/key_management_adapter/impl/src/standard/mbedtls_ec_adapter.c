@@ -52,14 +52,14 @@ typedef struct Blob {
     uint8_t *data;
 } Blob;
 
-static const uint8_t g_pointA[] = {
+static const uint8_t POINT_A[] = {
     0x04, 0x53, 0xf9, 0xe4, 0xf4, 0xbc, 0x3a, 0xb5, 0x9d, 0x44, 0x78, 0x45, 0x21, 0x13, 0x8b, 0x49,
     0xba, 0xa3, 0x1c, 0xe2, 0xa8, 0xdb, 0xbd, 0xb8, 0xd6, 0x73, 0x31, 0x46, 0x3a, 0x69, 0x53, 0xf1,
     0xed, 0xef, 0x96, 0x1e, 0xdb, 0x42, 0xbe, 0x3a, 0x24, 0x43, 0xc4, 0x08, 0x23, 0xfb, 0x58, 0xee,
     0x61, 0x24, 0x8b, 0x59, 0x64, 0x65, 0x2d, 0xbc, 0x6b, 0xa5, 0x1d, 0x6e, 0x04, 0x22, 0x53, 0xae,
     0x27
 };
-static const uint8_t g_pointB[] = {
+static const uint8_t POINT_B[] = {
     0x04, 0x03, 0x4d, 0x11, 0x11, 0xa6, 0x3f, 0x5f, 0x72, 0x43, 0x59, 0x73, 0x8b, 0x46, 0xc3, 0xfd,
     0x70, 0x58, 0xb0, 0xb6, 0x11, 0xd3, 0x4f, 0xf3, 0x49, 0xa0, 0xd2, 0x86, 0xd7, 0x35, 0x33, 0xc5,
     0x36, 0xe4, 0x99, 0xcc, 0x13, 0x47, 0xe4, 0xab, 0xde, 0x8f, 0x3a, 0xd6, 0x65, 0x1a, 0x77, 0x0b,
@@ -67,7 +67,7 @@ static const uint8_t g_pointB[] = {
     0xba
 };
 
-static const uint8_t g_randomSeedCustom[] = { 0x4C, 0x54, 0x4B, 0x53 }; // LTKS means LiteKeystore
+static const uint8_t RANDOM_SEED_CUSTOM[] = { 0x4C, 0x54, 0x4B, 0x53 }; // LTKS means LiteKeystore
 
 static bool IsInvalidBlob(const Blob *blob)
 {
@@ -157,9 +157,9 @@ static int32_t WriteOutEcPublicKey(const mbedtls_ecp_point *point, Blob *publicK
     return WriteOutBigNums(&point->MBEDTLS_PRIVATE(X), &point->MBEDTLS_PRIVATE(Y), publicKey);
 }
 
-static int EcKeyAgreementLog(mbedtls_ecp_keypair *keyPair, mbedtls_ecp_point *P, mbedtls_ctr_drbg_context *ctrDrbg)
+static int EcKeyAgreementLog(mbedtls_ecp_keypair *keyPair, mbedtls_ecp_point *p, mbedtls_ctr_drbg_context *ctrDrbg)
 {
-    return mbedtls_ecp_mul_restartable(&keyPair->MBEDTLS_PRIVATE(grp), P, &keyPair->MBEDTLS_PRIVATE(d),
+    return mbedtls_ecp_mul_restartable(&keyPair->MBEDTLS_PRIVATE(grp), p, &keyPair->MBEDTLS_PRIVATE(d),
         &keyPair->MBEDTLS_PRIVATE(Q), mbedtls_ctr_drbg_random, ctrDrbg, NULL);
 }
 
@@ -186,8 +186,8 @@ static int32_t EcKeyAgreement(const Blob *privateKey, const Blob *publicKey, Blo
     mbedtls_ecp_keypair_init(keyPair);
     mbedtls_entropy_init(entropy);
     mbedtls_ctr_drbg_init(ctrDrbg);
-    mbedtls_ecp_point P;
-    mbedtls_ecp_point_init(&P);
+    mbedtls_ecp_point p;
+    mbedtls_ecp_point_init(&p);
     int32_t ret = ReadEcPublicKey(&keyPair->MBEDTLS_PRIVATE(Q), publicKey);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Read the public key failed.\n");
     ret = mbedtls_ecp_group_load(&keyPair->MBEDTLS_PRIVATE(grp), MBEDTLS_ECP_DP_SECP256R1);
@@ -195,17 +195,17 @@ static int32_t EcKeyAgreement(const Blob *privateKey, const Blob *publicKey, Blo
     ret = mbedtls_mpi_read_binary(&keyPair->MBEDTLS_PRIVATE(d), privateKey->data, privateKey->dataSize);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Read the private key failed.\n");
     ret = mbedtls_ctr_drbg_seed(ctrDrbg, mbedtls_entropy_func, entropy,
-        g_randomSeedCustom, sizeof(g_randomSeedCustom));
+        RANDOM_SEED_CUSTOM, sizeof(RANDOM_SEED_CUSTOM));
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Set custom string failed.\n");
-    LOG_AND_GOTO_CLEANUP_IF_FAIL(EcKeyAgreementLog(keyPair, &P, ctrDrbg), "Compute secret key failed.\n");
-    LOG_AND_GOTO_CLEANUP_IF_FAIL(mbedtls_mpi_copy(secret, &P.MBEDTLS_PRIVATE(X)), "Copy secret failed.\n");
-    LOG_AND_GOTO_CLEANUP_IF_FAIL(WriteOutEcPublicKey(&P, secretKey), "Write out ec public key failed.\n");
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(EcKeyAgreementLog(keyPair, &p, ctrDrbg), "Compute secret key failed.\n");
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(mbedtls_mpi_copy(secret, &p.MBEDTLS_PRIVATE(X)), "Copy secret failed.\n");
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(WriteOutEcPublicKey(&p, secretKey), "Write out ec public key failed.\n");
 CLEAN_UP:
     mbedtls_mpi_free(secret);
     mbedtls_ecp_keypair_free(keyPair);
     mbedtls_entropy_free(entropy);
     mbedtls_ctr_drbg_free(ctrDrbg);
-    mbedtls_ecp_point_free(&P);
+    mbedtls_ecp_point_free(&p);
     HcFree(secret);
     HcFree(keyPair);
     HcFree(entropy);
@@ -238,9 +238,9 @@ static int32_t EcHashToPoint(const Blob *hash, Blob *point)
 
     int32_t ret = mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Load ecp group failed.\n");
-    ret = mbedtls_ecp_point_read_binary(&grp, &pointA, g_pointA, sizeof(g_pointA));
+    ret = mbedtls_ecp_point_read_binary(&grp, &pointA, POINT_A, sizeof(POINT_A));
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Read point A failed.\n");
-    ret = mbedtls_ecp_point_read_binary(&grp, &pointB, g_pointB, sizeof(g_pointB));
+    ret = mbedtls_ecp_point_read_binary(&grp, &pointB, POINT_B, sizeof(POINT_B));
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Read point B failed.\n");
     ret = Sha256(hash, &digestBlob);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Compute message digest failed.\n");

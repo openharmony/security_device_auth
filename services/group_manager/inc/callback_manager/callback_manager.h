@@ -22,15 +22,14 @@
 extern "C" {
 #endif
 
-bool ProcessTransmitCallback(int64_t requestId, const uint8_t *data, uint32_t dataLen,
+bool ProcessTransmitCallback(int64_t reqId, const uint8_t *data, uint32_t dataLen, const DeviceAuthCallback *callback);
+char *ProcessRequestCallback(int64_t reqId, int operationCode, const char *reqParams,
     const DeviceAuthCallback *callback);
-char *ProcessRequestCallback(int64_t requestId, int operationCode, const char *reqParams,
+void ProcessFinishCallback(int64_t reqId, int operationCode, const char *returnData,
     const DeviceAuthCallback *callback);
-void ProcessFinishCallback(int64_t requestId, int operationCode, const char *returnData,
+void ProcessSessionKeyCallback(int64_t reqId, const uint8_t *sessionKey, uint32_t sessionKeyLen,
     const DeviceAuthCallback *callback);
-void ProcessSessionKeyCallback(int64_t requestId, const uint8_t *sessionKey, uint32_t sessionKeyLen,
-    const DeviceAuthCallback *callback);
-void ProcessErrorCallback(int64_t requestId, int operationCode, int errorCode, const char *errorReturn,
+void ProcessErrorCallback(int64_t reqId, int operationCode, int errorCode, const char *errorReturn,
     const DeviceAuthCallback *callback);
 
 int32_t InitCallbackManager(void);

@@ -42,7 +42,7 @@ IMPLEMENT_HC_VECTOR(SymTokensDb, OsSymTokensInfo, 1)
 
 SymTokenManager g_symTokenManager;
 
-static SymTokensDb g_SymTokensDb;
+static SymTokensDb g_symTokensDb;
 static HcMutex *g_dataMutex;
 
 static bool IsTokenMatch(const SymToken *token, const char *userId, const char *deviceId)
@@ -289,7 +289,7 @@ static OsSymTokensInfo *GetTokensInfoByOsAccountId(int32_t osAccountId)
 {
     uint32_t index = 0;
     OsSymTokensInfo *info = NULL;
-    FOR_EACH_HC_VECTOR(g_SymTokensDb, index, info) {
+    FOR_EACH_HC_VECTOR(g_symTokensDb, index, info) {
         if ((info != NULL) && (info->osAccountId == osAccountId)) {
             return info;
         }
@@ -298,7 +298,7 @@ static OsSymTokensInfo *GetTokensInfoByOsAccountId(int32_t osAccountId)
     OsSymTokensInfo newInfo;
     newInfo.osAccountId = osAccountId;
     newInfo.tokens = CreateSymTokenVec();
-    OsSymTokensInfo *returnInfo = g_SymTokensDb.pushBackT(&g_SymTokensDb, newInfo);
+    OsSymTokensInfo *returnInfo = g_symTokensDb.pushBackT(&g_symTokensDb, newInfo);
     if (returnInfo == NULL) {
         LOGE("Failed to push OsSymTokensInfo to database!");
         DestroySymTokenVec(&newInfo.tokens);
@@ -572,7 +572,7 @@ static void LoadOsSymTokensDb(int32_t osAccountId)
         DestroySymTokenVec(&info.tokens);
         return;
     }
-    if (g_SymTokensDb.pushBackT(&g_SymTokensDb, info) == NULL) {
+    if (g_symTokensDb.pushBackT(&g_symTokensDb, info) == NULL) {
         LOGE("Failed to push osAccountInfo to database!");
         ClearSymTokenVec(&info.tokens);
     }
@@ -635,7 +635,7 @@ void InitSymTokenManager(void)
     g_symTokenManager.addToken = AddToken;
     g_symTokenManager.deleteToken = DeleteToken;
     g_symTokenManager.generateKeyAlias = GenerateKeyAlias;
-    g_SymTokensDb = CREATE_HC_VECTOR(SymTokensDb);
+    g_symTokensDb = CREATE_HC_VECTOR(SymTokensDb);
     LoadTokenDb();
     g_dataMutex->unlock(g_dataMutex);
 }
@@ -646,10 +646,10 @@ void DestroySymTokenManager(void)
     (void)memset_s(&g_symTokenManager, sizeof(SymTokenManager), 0, sizeof(SymTokenManager));
     uint32_t index;
     OsSymTokensInfo *info = NULL;
-    FOR_EACH_HC_VECTOR(g_SymTokensDb, index, info) {
+    FOR_EACH_HC_VECTOR(g_symTokensDb, index, info) {
         ClearSymTokenVec(&info->tokens);
     }
-    DESTROY_HC_VECTOR(SymTokensDb, &g_SymTokensDb);
+    DESTROY_HC_VECTOR(SymTokensDb, &g_symTokensDb);
     g_dataMutex->unlock(g_dataMutex);
     DestroyHcMutex(g_dataMutex);
     HcFree(g_dataMutex);

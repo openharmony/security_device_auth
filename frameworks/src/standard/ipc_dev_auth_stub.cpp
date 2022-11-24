@@ -82,7 +82,7 @@ static int32_t DecodeCallRequest(MessageParcel &data, IpcDataInfo *paramsCache, 
         return HC_SUCCESS;
     }
 
-    if (sizeof(int32_t) > data.GetReadableBytes()) {
+    if (data.GetReadableBytes() < sizeof(int32_t)) {
         LOGE("Insufficient data available in IPC container. [Data]: dataLen");
         return HC_ERR_IPC_BAD_MESSAGE_LENGTH;
     }
@@ -92,7 +92,7 @@ static int32_t DecodeCallRequest(MessageParcel &data, IpcDataInfo *paramsCache, 
         return HC_ERR_IPC_BAD_MESSAGE_LENGTH;
     }
 
-    if (sizeof(int32_t) > data.GetReadableBytes()) {
+    if (data.GetReadableBytes() < sizeof(int32_t)) {
         LOGE("Insufficient data available in IPC container. [Data]: inParamNum");
         return HC_ERR_IPC_BAD_MESSAGE_LENGTH;
     }
@@ -131,7 +131,7 @@ static void WithObject(int32_t methodId, MessageParcel &data, IpcDataInfo &ipcDa
     if (!IsCallbackMethod(methodId)) {
         return;
     }
-    if (sizeof(int32_t) > data.GetReadableBytes()) {
+    if (data.GetReadableBytes() < sizeof(int32_t)) {
         LOGE("Insufficient data available in IPC container. [Data]: type");
         return;
     }
@@ -278,7 +278,7 @@ int32_t ServiceDevAuth::SetRemoteObject(sptr<IRemoteObject> &object)
     return idx;
 }
 
-void ServiceDevAuth::SetCbDeathRecipient(int32_t objIdx, int32_t cbDataIdx)
+void ServiceDevAuth::AddCbDeathRecipient(int32_t objIdx, int32_t cbDataIdx)
 {
     bool bRet = false;
     if ((objIdx < 0) || (objIdx >= MAX_CBSTUB_SIZE) || (!g_cbStub[objIdx].inUse)) {
