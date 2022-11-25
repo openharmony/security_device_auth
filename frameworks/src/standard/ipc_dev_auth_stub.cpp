@@ -278,16 +278,16 @@ int32_t ServiceDevAuth::SetRemoteObject(sptr<IRemoteObject> &object)
     return idx;
 }
 
-void ServiceDevAuth::AddCbDeathRecipient(int32_t objIdx, int32_t cbDataIdx)
+void ServiceDevAuth::AddCbDeathRecipient(int32_t cbStubIdx, int32_t cbDataIdx)
 {
     bool bRet = false;
-    if ((objIdx < 0) || (objIdx >= MAX_CBSTUB_SIZE) || (!g_cbStub[objIdx].inUse)) {
+    if ((cbStubIdx < 0) || (cbStubIdx >= MAX_CBSTUB_SIZE) || (!g_cbStub[cbStubIdx].inUse)) {
         return;
     }
 
     std::lock_guard<std::mutex> autoLock(g_cBMutex);
-    bRet = g_cbStub[objIdx].cbStub->AddDeathRecipient(new(std::nothrow) DevAuthDeathRecipient(cbDataIdx));
-    LOGI("AddDeathRecipient %s, callback stub idx %d", bRet ? "success" : "failed", objIdx);
+    bRet = g_cbStub[cbStubIdx].cbStub->AddDeathRecipient(new(std::nothrow) DevAuthDeathRecipient(cbDataIdx));
+    LOGI("AddDeathRecipient %s, callback stub idx %d", bRet ? "success" : "failed", cbStubIdx);
     return;
 }
 
