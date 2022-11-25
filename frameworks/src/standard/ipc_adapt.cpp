@@ -422,7 +422,7 @@ static void OnTransmitStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int
     (void)GetIpcRequestParamByType(cbDataCache, cacheNum, PARAM_TYPE_REQID,
         reinterpret_cast<uint8_t *>(&requestId), &inOutLen);
     (void)GetIpcRequestParamByType(cbDataCache, cacheNum,
-        PARAM_TYPE_COMM_DATA, (uint8_t *)&data, reinterpret_cast<int32_t *>(&dataLen));
+        PARAM_TYPE_COMM_DATA, reinterpret_cast<uint8_t *>(&data), reinterpret_cast<int32_t *>(&dataLen));
     bRet = onTransmitHook(requestId, data, dataLen);
     (bRet == true) ? reply.WriteInt32(HC_SUCCESS) : reply.WriteInt32(HC_ERROR);
     return;
@@ -1476,7 +1476,7 @@ int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
         }
         ret = HC_SUCCESS;
         if (IsTypeForSettingPtr(type)) {
-            *(uint8_t **)paramCache = ipcParams[i].val;
+            *(reinterpret_cast<uint8_t **>(paramCache)) = ipcParams[i].val;
             if (cacheLen != nullptr) {
                 *cacheLen = ipcParams[i].valSz;
             }
