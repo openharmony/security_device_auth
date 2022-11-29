@@ -1133,7 +1133,7 @@ static void DestroyInfo(char **returnInfo)
     *returnInfo = NULL;
 }
 
-static const GroupImpl g_groupImplInstance = {
+static const GroupImpl GROUP_IMPL_INSTANCE = {
     .createGroup = RequestCreateGroup,
     .deleteGroup = RequestDeleteGroup,
     .addMember = RequestAddMemberToGroup,
@@ -1173,7 +1173,7 @@ void DestroyGroupRelatedModule(void)
 
 const GroupImpl *GetGroupImplInstance(void)
 {
-    return &g_groupImplInstance;
+    return &GROUP_IMPL_INSTANCE;
 }
 
 bool IsGroupSupport(void)

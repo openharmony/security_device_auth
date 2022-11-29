@@ -27,8 +27,8 @@
 #define KCF_CODE_LEN 1
 #define PAKE_SESSION_KEY_LEN 32
 
-static const uint8_t g_kcfCodeClient[KCF_CODE_LEN] = { 0x04 };
-static const uint8_t g_kcfCodeServer[KCF_CODE_LEN] = { 0x03 };
+static const uint8_t KCF_CODE_CLIENT[KCF_CODE_LEN] = { 0x04 };
+static const uint8_t KCF_CODE_SERVER[KCF_CODE_LEN] = { 0x03 };
 
 void DestroyPakeV2BaseParams(PakeBaseParams *params)
 {
@@ -453,9 +453,9 @@ static int32_t CombineProofMsg(const PakeBaseParams *params, Uint8Buff *proofMsg
     const uint8_t *kcfCode = NULL;
 
     if ((params->isClient && !isVerify) || (!params->isClient && isVerify)) {
-        kcfCode = g_kcfCodeClient;
+        kcfCode = KCF_CODE_CLIENT;
     } else {
-        kcfCode = g_kcfCodeServer;
+        kcfCode = KCF_CODE_SERVER;
     }
     if (memcpy_s(proofMsg->val, proofMsg->length, kcfCode, KCF_CODE_LEN) != HC_SUCCESS) {
         LOGE("Memcpy for g_kcfCode failed.");

@@ -16,7 +16,7 @@
 #ifndef PERMISSION_ADAPTER_H
 #define PERMISSION_ADAPTER_H
 
-#include <stdint.h>
+#include <cstdint>
 
 #ifdef __cplusplus
 extern "C" {

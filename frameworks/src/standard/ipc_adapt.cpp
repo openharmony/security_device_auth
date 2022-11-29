@@ -169,7 +169,7 @@ static IpcCallBackNode *GetFreeIpcCallBackNode(void)
 static void SetCbDeathRecipient(int32_t type, int32_t objIdx, int32_t cbDataIdx)
 {
     if ((type == CB_TYPE_DEV_AUTH) || (type == CB_TYPE_LISTENER)) {
-        ServiceDevAuth::SetCbDeathRecipient(objIdx, cbDataIdx);
+        ServiceDevAuth::AddCbDeathRecipient(objIdx, cbDataIdx);
     }
     return;
 }
@@ -301,7 +301,7 @@ int32_t AddReqIdByAppId(const char *appId, int64_t reqId)
     }
     node->requestId = reqId;
     node->delOnFni = 0;
-    LOGI("success, appid: %s, requestId: %lld", appId, (long long)reqId);
+    LOGI("success, appid: %s, requestId: %lld", appId, static_cast<long long>(reqId));
     return HC_SUCCESS;
 }
 
@@ -324,7 +324,7 @@ void AddIpcCbObjByReqId(int64_t reqId, int32_t objIdx, int32_t type)
     if (node != nullptr) {
         node->proxyId = objIdx;
         LOGI("ipc object add success, request id %lld, type %d, proxy id %d",
-            (long long)reqId, type, node->proxyId);
+            static_cast<long long>(reqId), type, node->proxyId);
     }
     return;
 }
@@ -356,11 +356,11 @@ int32_t AddIpcCallBackByReqId(int64_t reqId, const uint8_t *cbPtr, int32_t cbSz,
             ServiceDevAuth::ResetRemoteObject(node->proxyId);
             node->proxyId = -1;
         }
-        LOGI("callback replaced success, request id %lld, type %d", (long long)reqId, type);
+        LOGI("callback replaced success, request id %lld, type %d", static_cast<long long>(reqId), type);
         return HC_SUCCESS;
     }
 
-    LOGI("new callback to add, request id %lld, type %d", (long long)reqId, type);
+    LOGI("new callback to add, request id %lld, type %d", static_cast<long long>(reqId), type);
     node = GetFreeIpcCallBackNode();
     if (node == nullptr) {
         LOGE("get free node failed");
@@ -377,7 +377,7 @@ int32_t AddIpcCallBackByReqId(int64_t reqId, const uint8_t *cbPtr, int32_t cbSz,
     node->delOnFni = 1;
     node->proxyId = -1;
     g_ipcCallBackList.nodeCnt++;
-    LOGI("callback added success, request id %lld, type %d", (long long)reqId, type);
+    LOGI("callback added success, request id %lld, type %d", static_cast<long long>(reqId), type);
     return HC_SUCCESS;
 }
 
@@ -422,7 +422,7 @@ static void OnTransmitStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int
     (void)GetIpcRequestParamByType(cbDataCache, cacheNum, PARAM_TYPE_REQID,
         reinterpret_cast<uint8_t *>(&requestId), &inOutLen);
     (void)GetIpcRequestParamByType(cbDataCache, cacheNum,
-        PARAM_TYPE_COMM_DATA, (uint8_t *)&data, reinterpret_cast<int32_t *>(&dataLen));
+        PARAM_TYPE_COMM_DATA, reinterpret_cast<uint8_t *>(&data), reinterpret_cast<int32_t *>(&dataLen));
     bRet = onTransmitHook(requestId, data, dataLen);
     (bRet == true) ? reply.WriteInt32(HC_SUCCESS) : reply.WriteInt32(HC_ERROR);
     return;
@@ -676,11 +676,11 @@ static bool GaCbOnTransmitWithType(int64_t requestId, const uint8_t *data, uint3
     MessageParcel reply;
     IpcCallBackNode *node = nullptr;
 
-    LOGI("starting ... request id: %lld, type %d", (long long)requestId, type);
+    LOGI("starting ... request id: %lld, type %d", static_cast<long long>(requestId), type);
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     node = GetIpcCallBackByReqId(requestId, type);
     if (node == nullptr) {
-        LOGE("onTransmit hook is null, request id %lld", (long long)requestId);
+        LOGE("onTransmit hook is null, request id %lld", static_cast<long long>(requestId));
         return false;
     }
     uRet = EncodeCallData(dataParcel, PARAM_TYPE_REQID,
@@ -692,7 +692,7 @@ static bool GaCbOnTransmitWithType(int64_t requestId, const uint8_t *data, uint3
     }
     ServiceDevAuth::ActCallback(node->proxyId, CB_ID_ON_TRANS, true,
         reinterpret_cast<uintptr_t>(node->cbCtx.devAuth.onTransmit), dataParcel, reply);
-    LOGI("process done, request id: %lld", (long long)requestId);
+    LOGI("process done, request id: %lld", static_cast<long long>(requestId));
     if (reply.ReadInt32(ret) && (ret == HC_SUCCESS)) {
         return true;
     }
@@ -716,11 +716,11 @@ static void GaCbOnSessionKeyRetWithType(int64_t requestId, const uint8_t *sessKe
     MessageParcel reply;
     IpcCallBackNode *node = nullptr;
 
-    LOGI("starting ... request id: %lld, type %d", (long long)requestId, type);
+    LOGI("starting ... request id: %lld, type %d", static_cast<long long>(requestId), type);
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     node = GetIpcCallBackByReqId(requestId, type);
     if (node == nullptr) {
-        LOGE("onSessionKeyReturned hook is null, request id %lld", (long long)requestId);
+        LOGE("onSessionKeyReturned hook is null, request id %lld", static_cast<long long>(requestId));
         return;
     }
 
@@ -732,7 +732,7 @@ static void GaCbOnSessionKeyRetWithType(int64_t requestId, const uint8_t *sessKe
     }
     ServiceDevAuth::ActCallback(node->proxyId, CB_ID_SESS_KEY_DONE, false,
         reinterpret_cast<uintptr_t>(node->cbCtx.devAuth.onSessionKeyReturned), dataParcel, reply);
-    LOGI("process done, request id: %lld", (long long)requestId);
+    LOGI("process done, request id: %lld", static_cast<long long>(requestId));
     return;
 }
 
@@ -755,11 +755,11 @@ static void GaCbOnFinishWithType(int64_t requestId, int32_t operationCode, const
     MessageParcel reply;
     IpcCallBackNode *node = nullptr;
 
-    LOGI("starting ... request id: %lld, type %d", (long long)requestId, type);
+    LOGI("starting ... request id: %lld, type %d", static_cast<long long>(requestId), type);
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     node = GetIpcCallBackByReqId(requestId, type);
     if (node == nullptr) {
-        LOGE("onFinish hook is null, request id %lld", (long long)requestId);
+        LOGE("onFinish hook is null, request id %lld", static_cast<long long>(requestId));
         return;
     }
     ret = EncodeCallData(dataParcel, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&requestId), sizeof(requestId));
@@ -775,7 +775,7 @@ static void GaCbOnFinishWithType(int64_t requestId, int32_t operationCode, const
         reinterpret_cast<uintptr_t>(node->cbCtx.devAuth.onFinish), dataParcel, reply);
     /* delete request id */
     DelIpcCallBackByReqId(requestId, type, false);
-    LOGI("process done, request id: %lld", (long long)requestId);
+    LOGI("process done, request id: %lld", static_cast<long long>(requestId));
     return;
 }
 
@@ -799,11 +799,11 @@ static void GaCbOnErrorWithType(int64_t requestId, int32_t operationCode,
     MessageParcel reply;
     IpcCallBackNode *node = nullptr;
 
-    LOGI("starting ... request id: %lld, type %d", (long long)requestId, type);
+    LOGI("starting ... request id: %lld, type %d", static_cast<long long>(requestId), type);
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     node = GetIpcCallBackByReqId(requestId, type);
     if (node == nullptr) {
-        LOGE("onError hook is null, request id %lld", (long long)requestId);
+        LOGE("onError hook is null, request id %lld", static_cast<long long>(requestId));
         return;
     }
     ret = EncodeCallData(dataParcel, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&requestId), sizeof(requestId));
@@ -822,7 +822,7 @@ static void GaCbOnErrorWithType(int64_t requestId, int32_t operationCode,
         reinterpret_cast<uintptr_t>(node->cbCtx.devAuth.onError), dataParcel, reply);
     /* delete request id */
     DelIpcCallBackByReqId(requestId, type, false);
-    LOGI("process done, request id: %lld", (long long)requestId);
+    LOGI("process done, request id: %lld", static_cast<long long>(requestId));
     return;
 }
 
@@ -847,11 +847,11 @@ static char *GaCbOnRequestWithType(int64_t requestId, int32_t operationCode, con
     const char *dPtr = nullptr;
     IpcCallBackNode *node = nullptr;
 
-    LOGI("starting ... request id: %lld, type %d", (long long)requestId, type);
+    LOGI("starting ... request id: %lld, type %d", static_cast<long long>(requestId), type);
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     node = GetIpcCallBackByReqId(requestId, type);
     if (node == nullptr) {
-        LOGE("onRequest hook is null, request id %lld", (long long)requestId);
+        LOGE("onRequest hook is null, request id %lld", static_cast<long long>(requestId));
         return nullptr;
     }
 
@@ -876,7 +876,7 @@ static char *GaCbOnRequestWithType(int64_t requestId, int32_t operationCode, con
         }
         dPtr = reply.ReadCString();
         LOGI("process done, request id: %lld, %s string",
-             (long long)requestId, (dPtr != nullptr) ? "valid" : "invalid");
+             static_cast<long long>(requestId), (dPtr != nullptr) ? "valid" : "invalid");
         return (dPtr != nullptr) ? strdup(dPtr) : nullptr;
     }
     return nullptr;
@@ -886,27 +886,27 @@ static bool CanFindCbByReqId(int64_t requestId)
 {
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     IpcCallBackNode *node = GetIpcCallBackByReqId(requestId, CB_TYPE_DEV_AUTH);
-    return (node != NULL) ? true : false;
+    return (node != nullptr) ? true : false;
 }
 
 static char *IpcGaCbOnRequest(int64_t requestId, int32_t operationCode, const char *reqParams)
 {
     if (!CanFindCbByReqId(requestId)) {
         CJson *reqParamsJson = CreateJsonFromString(reqParams);
-        if (reqParamsJson == NULL) {
+        if (reqParamsJson == nullptr) {
             LOGE("failed to create json from string!");
-            return NULL;
+            return nullptr;
         }
         const char *callerAppId = GetStringFromJson(reqParamsJson, FIELD_APP_ID);
-        if (callerAppId == NULL) {
+        if (callerAppId == nullptr) {
             LOGE("failed to get appId from json object!");
             FreeJson(reqParamsJson);
-            return NULL;
+            return nullptr;
         }
         int32_t ret = AddReqIdByAppId(callerAppId, requestId);
         FreeJson(reqParamsJson);
         if (ret != HC_SUCCESS) {
-            return NULL;
+            return nullptr;
         }
     }
     return GaCbOnRequestWithType(requestId, operationCode, reqParams, CB_TYPE_DEV_AUTH);
@@ -1382,12 +1382,12 @@ int32_t DecodeIpcData(uintptr_t data, int32_t *type, uint8_t **val, int32_t *val
     if (dataPtr->GetReadableBytes() == 0) {
         return HC_SUCCESS;
     }
-    if (sizeof(int32_t) > dataPtr->GetReadableBytes()) {
+    if (dataPtr->GetReadableBytes() < sizeof(int32_t)) {
         LOGE("Insufficient data available in IPC container. [Data]: type");
         return HC_ERR_IPC_BAD_MESSAGE_LENGTH;
     }
     *type = dataPtr->ReadInt32();
-    if (sizeof(int32_t) > dataPtr->GetReadableBytes()) {
+    if (dataPtr->GetReadableBytes() < sizeof(int32_t)) {
         LOGE("Insufficient data available in IPC container. [Data]: valSz");
         return HC_ERR_IPC_BAD_MESSAGE_LENGTH;
     }
@@ -1408,7 +1408,7 @@ void DecodeCallReply(uintptr_t callCtx, IpcDataInfo *replyCache, int32_t cacheNu
 
     ProxyDevAuthData *dataCache = reinterpret_cast<ProxyDevAuthData *>(callCtx);
     MessageParcel *tmpParcel = dataCache->GetReplyParcel();
-    if (sizeof(int32_t) > tmpParcel->GetReadableBytes()) {
+    if (tmpParcel->GetReadableBytes() < sizeof(int32_t)) {
         LOGE("Insufficient data available in IPC container. [Data]: dataLen");
         return;
     }
@@ -1476,8 +1476,8 @@ int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
         }
         ret = HC_SUCCESS;
         if (IsTypeForSettingPtr(type)) {
-            *(uint8_t **)paramCache = ipcParams[i].val;
-            if (cacheLen != NULL) {
+            *(reinterpret_cast<uint8_t **>(paramCache)) = ipcParams[i].val;
+            if (cacheLen != nullptr) {
                 *cacheLen = ipcParams[i].valSz;
             }
             break;
@@ -1494,8 +1494,8 @@ int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
             *cacheLen = ipcParams[i].valSz;
             break;
         }
-        if ((type == PARAM_TYPE_CB_OBJECT) && (*(uint32_t *)cacheLen >= sizeof(ipcParams[i].idx))) {
-            *(int32_t *)paramCache = ipcParams[i].idx;
+        if ((type == PARAM_TYPE_CB_OBJECT) && (static_cast<uint32_t>(*cacheLen) >= sizeof(ipcParams[i].idx))) {
+            *(reinterpret_cast<int32_t *>(paramCache)) = ipcParams[i].idx;
         }
         break;
     }

@@ -46,8 +46,8 @@ typedef struct VersionInfoT {
     VersionStruct curVersion;
 } VersionInfo;
 
-int32_t GetVersionFromJson(const CJson *jsonObj, VersionStruct *min, VersionStruct *max);
-int32_t AddVersionToJson(CJson *jsonObj, const VersionStruct *min, const VersionStruct *max);
+int32_t GetVersionFromJson(const CJson *jsonObj, VersionStruct *minVer, VersionStruct *maxVer);
+int32_t AddVersionToJson(CJson *jsonObj, const VersionStruct *minVer, const VersionStruct *maxVer);
 
 bool IsVersionEqual(VersionStruct *src, VersionStruct *des);
 int32_t NegotiateVersion(VersionStruct *minVersionPeer, VersionStruct *curVersionPeer,

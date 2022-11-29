@@ -81,7 +81,6 @@ ERR:
 
 static int ExchangeConfirm(AsyBaseCurTask *task, PakeParams *params, const CJson *in, int *status)
 {
-    int res;
     if (task->taskStatus < TASK_STATUS_CLIENT_UNBIND_EXCHANGE_REQUEST) {
         LOGE("task status failed");
         return HC_ERR_BAD_MESSAGE;
@@ -96,8 +95,12 @@ static int ExchangeConfirm(AsyBaseCurTask *task, PakeParams *params, const CJson
     StandardUnbindExchangeClientTask *realTask = (StandardUnbindExchangeClientTask *)task;
 
     // parse message
-    RETURN_IF_ERR(ParseNonceAndCipherFromJson(&(realTask->params.nonce), &(realTask->params.resultCipher),
-        in, FIELD_RMV_RETURN));
+    int res = ParseNonceAndCipherFromJson(&(realTask->params.nonce), &(realTask->params.resultCipher),
+        in, FIELD_RMV_RETURN);
+    if (res != HC_SUCCESS) {
+        LOGE("ParseNonceAndCipherFromJson failed");
+        return res;
+    }
 
     // execute
     res = ClientConfirmStandardUnbindExchange(params, &(realTask->params));
@@ -156,7 +159,7 @@ static void DestroyStandardUnbindExchangeClientTask(struct AsyBaseCurTaskT *task
     HcFree(innerTask);
 }
 
-AsyBaseCurTask *CreateStandardUnbindExchangeClientTask()
+AsyBaseCurTask *CreateStandardUnbindExchangeClientTask(void)
 {
     StandardUnbindExchangeClientTask *task =
         (StandardUnbindExchangeClientTask *)HcMalloc(sizeof(StandardUnbindExchangeClientTask), 0);
