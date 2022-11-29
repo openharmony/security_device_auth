@@ -234,7 +234,7 @@ static bool GenerateTempKeyPair(Uint8Buff *keyAlias)
     if (ret != HC_SUCCESS) {
         printf("Key pair not exist, start to generate\n");
         int32_t authId = 0;
-        Uint8Buff authIdBuff = { (uint8_t *)&authId, sizeof(int32_t)};
+        Uint8Buff authIdBuff = { reinterpret_cast<uint8_t *>(&authId), sizeof(int32_t)};
         ExtraInfo extInfo = {authIdBuff, -1, -1};
         ret = GetLoaderInstance()->generateKeyPairWithStorage(keyAlias, TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN, P256,
             KEY_PURPOSE_SIGN_VERIFY, &extInfo);
@@ -251,17 +251,18 @@ static bool GenerateTempKeyPair(Uint8Buff *keyAlias)
     return true;
 }
 
-static CJson *GetAsyCredentialJson(const char *registerInfoStr)
+static CJson *GetAsyCredentialJson(string registerInfo)
 {
-    const char *keyAliasValue = "TestServerKeyPair";
+    uint8_t keyAliasValue[] = "TestServerKeyPair";
+    int32_t keyAliasLen = 18;
     Uint8Buff keyAlias = {
-        .val = (uint8_t *)keyAliasValue,
-        .length = strlen(keyAliasValue) + 1
+        .val = keyAliasValue,
+        .length = keyAliasLen
     };
     if (!GenerateTempKeyPair(&keyAlias)) {
         return nullptr;
     }
-    uint8_t *serverPkVal = (uint8_t *)HcMalloc(SERVER_PK_SIZE, 0);
+    uint8_t *serverPkVal = reinterpret_cast<uint8_t *>(HcMalloc(SERVER_PK_SIZE, 0));
     Uint8Buff serverPk = {
         .val = serverPkVal,
         .length = SERVER_PK_SIZE
@@ -275,10 +276,10 @@ static CJson *GetAsyCredentialJson(const char *registerInfoStr)
     }
 
     Uint8Buff messageBuff = {
-        .val = (uint8_t *)registerInfoStr,
-        .length = strlen(registerInfoStr) + 1
+        .val = reinterpret_cast<uint8_t *>(const_cast<char *>(registerInfo.c_str())),
+        .length = registerInfo.length()
     };
-    uint8_t *signatureValue = (uint8_t *)HcMalloc(SIGNATURE_SIZE, 0);
+    uint8_t *signatureValue = reinterpret_cast<uint8_t *>(HcMalloc(SIGNATURE_SIZE, 0));
     Uint8Buff signature = {
         .val = signatureValue,
         .length = SIGNATURE_SIZE
@@ -291,7 +292,7 @@ static CJson *GetAsyCredentialJson(const char *registerInfoStr)
         return nullptr;
     }
 
-    CJson *pkInfoJson = CreateJsonFromString(registerInfoStr);
+    CJson *pkInfoJson = CreateJsonFromString(registerInfo.c_str());
     CJson *credentialJson = CreateJson();
     (void)AddIntToJson(credentialJson, FIELD_CREDENTIAL_TYPE, ASYMMETRIC_CRED);
     (void)AddByteToJson(credentialJson, FIELD_SERVER_PK, serverPkVal, serverPk.length);
@@ -323,19 +324,22 @@ static void CreateDemoIdenticalAccountGroup(void)
     int32_t ret = gm->getRegisterInfo(g_getRegisterInfoParams, &returnData);
     ASSERT_EQ(ret, HC_SUCCESS);
     ASSERT_NE(returnData, nullptr);
+    string registerInfo(returnData);
+    gm->destroyInfo(&returnData);
 
-    CJson *credJson = GetAsyCredentialJson(returnData);
+    CJson *credJson = GetAsyCredentialJson(registerInfo);
     ASSERT_NE(credJson, nullptr);
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_GROUP_TYPE, IDENTICAL_ACCOUNT_GROUP);
     AddStringToJson(json, FIELD_USER_ID, TEST_USER_ID);
     AddObjToJson(json, FIELD_CREDENTIAL, credJson);
     char *jsonStr = PackJsonToString(json);
-    cout << "jsonstr: " << jsonStr << endl;
-
-    gm->destroyInfo(&returnData);
     FreeJson(credJson);
     FreeJson(json);
+    if (jsonStr == nullptr) {
+        return;
+    }
+    cout << "jsonstr: " << jsonStr << endl;
 
     ret = gm->createGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, jsonStr);
     FreeJsonString(jsonStr);
@@ -360,11 +364,12 @@ static void CreateDemoSymClientIdenticalAccountGroup(void)
     AddStringToJson(json, FIELD_USER_ID, TEST_USER_ID_AUTH);
     AddObjToJson(json, FIELD_CREDENTIAL, credJson);
     char *jsonStr = PackJsonToString(json);
-    cout << "jsonstr: " << jsonStr << endl;
-
     FreeJson(credJson);
     FreeJson(json);
-
+    if (jsonStr == nullptr) {
+        return;
+    }
+    cout << "jsonstr: " << jsonStr << endl;
     int32_t ret = gm->createGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, jsonStr);
     FreeJsonString(jsonStr);
     ASSERT_EQ(ret, HC_SUCCESS);
@@ -388,10 +393,12 @@ static void CreateDemoSymServerIdenticalAccountGroup(void)
     AddStringToJson(json, FIELD_USER_ID, TEST_USER_ID_AUTH);
     AddObjToJson(json, FIELD_CREDENTIAL, credJson);
     char *jsonStr = PackJsonToString(json);
-    cout << "jsonstr: " << jsonStr << endl;
-
     FreeJson(credJson);
     FreeJson(json);
+    if (jsonStr == nullptr) {
+        return;
+    }
+    cout << "jsonstr: " << jsonStr << endl;
 
     int32_t ret = gm->createGroup(TEST_AUTH_OS_ACCOUNT_ID, TEST_REQ_ID, TEST_APP_ID, jsonStr);
     FreeJsonString(jsonStr);
@@ -541,8 +548,11 @@ static void AuthDemoMember(void)
     AddStringToJson(authParam, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
     AddBoolToJson(authParam, FIELD_IS_CLIENT, isClient);
     char *authParamStr = PackJsonToString(authParam);
-    printf("jsonStr: %s\n", authParamStr);
     FreeJson(authParam);
+    if (authParamStr == nullptr) {
+        return;
+    }
+    printf("jsonStr: %s\n", authParamStr);
     int32_t ret = ga->authDevice(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, authParamStr, &g_gaCallback);
     FreeJsonString(authParamStr);
     ASSERT_EQ(ret, HC_SUCCESS);
@@ -1050,7 +1060,7 @@ HWTEST_F(GmGetPkInfoListTest, GmGetPkInfoListTest005, TestSize.Level0)
     char *returnData = nullptr;
     uint32_t returnNum = 0;
     char selfUdid[INPUT_UDID_LEN] = { 0 };
-    (void)HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
+    (void)HcGetUdid(reinterpret_cast<uint8_t *>(selfUdid), INPUT_UDID_LEN);
     CJson *json = CreateJson();
     AddStringToJson(json, FIELD_UDID, selfUdid);
     AddBoolToJson(json, FIELD_IS_SELF_PK, true);
