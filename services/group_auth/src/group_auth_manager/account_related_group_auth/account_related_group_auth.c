@@ -458,7 +458,7 @@ static int32_t AddSelfDevInfoForServer(int32_t osAccountId, const TrustedGroupEn
         res = GaGetLocalDeviceInfo(osAccountId, groupId, localDevInfo);
         const char *selfDevId = StringGet(&(localDevInfo->authId));
         const char *selfUdid = StringGet(&(localDevInfo->udid));
-        if ((selfDevId == NULL) || (selfUdid == NULL)) {
+        if ((res != HC_SUCCESS) || (selfDevId == NULL) || (selfUdid == NULL)) {
             LOGE("Failed to get self id info from db!");
             res = HC_ERR_DB;
             break;

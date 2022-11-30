@@ -164,7 +164,6 @@ static void RemoveOverTimeSession(void)
             ptr->destroy(ptr);
             g_sessionManagerVec.eraseElement(&(g_sessionManagerVec), session, index);
         }
-        session = g_sessionManagerVec.getp(&(g_sessionManagerVec), index);
     }
 }
 
