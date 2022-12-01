@@ -24,7 +24,7 @@ class ProxyDevAuthCb : public IRemoteProxy<ICommIpcCallback> {
 public:
     explicit ProxyDevAuthCb(const sptr<IRemoteObject> &impl);
     ~ProxyDevAuthCb();
-    virtual void DoCallBack(int32_t callbackId, uintptr_t cbHook,
+    void DoCallBack(int32_t callbackId, uintptr_t cbHook,
         MessageParcel &dataParcel, MessageParcel &reply, MessageOption &option) override;
 private:
     static inline BrokerDelegator<ProxyDevAuthCb> delegator_;

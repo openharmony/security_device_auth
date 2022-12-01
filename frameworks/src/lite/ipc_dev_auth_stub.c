@@ -300,25 +300,25 @@ static void ClientDeathCallback(void *arg)
     ResetIpcCallBackNodeByNodeId(callbackIdx);
 }
 
-void AddCbDeathRecipient(int32_t objIdx, int32_t cbDataIdx)
+void AddCbDeathRecipient(int32_t cbStubIdx, int32_t cbDataIdx)
 {
     int32_t ret;
     uint32_t cbId = 0;
-    if ((objIdx < 0) || (objIdx >= MAX_CBSTUB_SIZE)) {
+    if ((cbStubIdx < 0) || (cbStubIdx >= MAX_CBSTUB_SIZE)) {
         return;
     }
 
     LockCbStubTable();
-    if (!g_cbStub[objIdx].inUse) {
+    if (!g_cbStub[cbStubIdx].inUse) {
         UnLockCbStubTable();
         return;
     }
-    ret = AddDeathRecipient(g_cbStub[objIdx].cbStub, ClientDeathCallback, (void *)cbDataIdx, &cbId);
+    ret = AddDeathRecipient(g_cbStub[cbStubIdx].cbStub, ClientDeathCallback, (void *)cbDataIdx, &cbId);
     if (ret == 0) {
-        g_cbStub[objIdx].cbDieId = cbId;
+        g_cbStub[cbStubIdx].cbDieId = cbId;
     }
     UnLockCbStubTable();
-    LOGI("done, ret %d, callback stub idx %d", ret, objIdx);
+    LOGI("done, ret %d, callback stub idx %d", ret, cbStubIdx);
     return;
 }
 

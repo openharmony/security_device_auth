@@ -50,8 +50,11 @@ static int ExchangeStart(AsyBaseCurTask *task, PakeParams *params, CJson *out, i
             LOGE("Get payload failed.");
             return HC_ERR_JSON_GET;
         }
-        RETURN_IF_ERR(AddByteToJson(payload, FIELD_CHALLENGE,
-            params->baseParams.challengeSelf.val, params->baseParams.challengeSelf.length));
+        if (AddByteToJson(payload, FIELD_CHALLENGE,
+            params->baseParams.challengeSelf.val, params->baseParams.challengeSelf.length) != HC_SUCCESS) {
+            LOGE("Failed to add self challenge to payload.");
+            return HC_ERR_JSON_ADD;
+        }
     }
 
     task->taskStatus = TASK_STATUS_SERVER_UNBIND_EXCHANGE_START;
@@ -163,7 +166,7 @@ static void DestroyStandardUnbindExchangeServerTask(struct AsyBaseCurTaskT *task
     HcFree(innerTask);
 }
 
-AsyBaseCurTask *CreateStandardUnbindExchangeServerTask()
+AsyBaseCurTask *CreateStandardUnbindExchangeServerTask(void)
 {
     StandardUnbindExchangeServerTask *task =
         (StandardUnbindExchangeServerTask *)HcMalloc(sizeof(StandardUnbindExchangeServerTask), 0);

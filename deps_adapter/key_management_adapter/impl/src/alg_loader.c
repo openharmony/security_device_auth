@@ -16,7 +16,7 @@
 #include "alg_loader.h"
 #include "huks_adapter.h"
 
-const AlgLoader *GetLoaderInstance()
+const AlgLoader *GetLoaderInstance(void)
 {
     return GetRealLoaderInstance();
 }

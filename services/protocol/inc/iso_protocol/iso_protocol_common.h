@@ -39,7 +39,7 @@ int32_t InitIsoBaseParams(IsoBaseParams *params);
 void DestroyIsoBaseParams(IsoBaseParams *params);
 
 int IsoClientGenRandom(IsoBaseParams *params);
-int IsoClientCheckAndGenToken(IsoBaseParams *params, const Uint8Buff *perrToken, Uint8Buff *selfToken);
+int IsoClientCheckAndGenToken(IsoBaseParams *params, const Uint8Buff *peerToken, Uint8Buff *selfToken);
 int IsoClientGenSessionKey(IsoBaseParams *params, int returnResult, const uint8_t *hmac, uint32_t hmacLen);
 
 int IsoServerGenRandomAndToken(IsoBaseParams *params, Uint8Buff *selfTokenBuf);

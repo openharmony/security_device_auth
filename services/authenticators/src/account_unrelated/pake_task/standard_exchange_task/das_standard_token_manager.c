@@ -205,7 +205,7 @@ TokenManager g_asyTokenManagerInstance = {
     .getPublicKey = GetPublicKey,
 };
 
-const TokenManager *GetStandardTokenManagerInstance()
+const TokenManager *GetStandardTokenManagerInstance(void)
 {
     return &g_asyTokenManagerInstance;
 }

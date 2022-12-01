@@ -55,7 +55,7 @@ Element* VPushBack##ClassName(ClassName* obj, const Element *e) { \
       \
     if (ParcelWrite(&obj->parcel, e, sizeof(Element))) { \
         uint32_t size = obj->size(obj); \
-        return obj->getp(obj, size-1); \
+        return obj->getp(obj, size - 1); \
     } else { \
         return NULL; \
     } \
@@ -67,7 +67,7 @@ Element* VPushBackT##ClassName(ClassName* obj, Element e) { \
       \
     if (ParcelWrite(&obj->parcel, &e, sizeof(Element))) { \
         uint32_t size = obj->size(obj); \
-        return obj->getp(obj, size-1); \
+        return obj->getp(obj, size - 1); \
     } else { \
         return NULL; \
     } \
@@ -87,7 +87,7 @@ HcBool VErase##ClassName(ClassName* obj, Element* e, uint32_t index) { \
             return HC_FALSE; \
         } \
         if (obj->size(obj) > 0) { \
-            return ParcelEraseBlock(&obj->parcel, index*sizeof(Element), sizeof(Element), e); \
+            return ParcelEraseBlock(&obj->parcel, index * sizeof(Element), sizeof(Element), e); \
         } else { \
             return HC_FALSE; \
         } \

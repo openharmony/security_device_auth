@@ -22,8 +22,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-void InformLocalAuthError(const CJson *param, const DeviceAuthCallback *callback);
-void InformPeerAuthError(const CJson *param, const DeviceAuthCallback *callback);
+void InformLocalAuthError(const CJson *authParam, const DeviceAuthCallback *callback);
+void InformPeerAuthError(const CJson *authParam, const DeviceAuthCallback *callback);
 int32_t InformAuthError(AuthSession *session, const CJson *out, int errorCode);
 int32_t GetAuthParamsList(int32_t osAccountId, const CJson *param, ParamsVec *authParamsVec);
 int32_t ProcessTaskStatusForAuth(const AuthSession *session, const CJson *param, CJson *out, int32_t status);

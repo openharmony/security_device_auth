@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-int64_t HcGetCurTime()
+int64_t HcGetCurTime(void)
 {
     struct timespec start;
     int res = clock_gettime(CLOCK_MONOTONIC, &start);

@@ -29,8 +29,8 @@
 extern "C" {
 #endif
 
-static const int32_t g_ipcResultNum1 = IPC_RESULT_NUM_1;
-static const int32_t g_ipcResultNum2 = IPC_RESULT_NUM_2;
+static const int32_t IPC_RESULT_NUM_1 = 1;
+static const int32_t IPC_RESULT_NUM_2 = 2;
 static const char *g_serviceAppId = "deviceauth_service";
 static DeviceGroupManager g_devGroupMgrMethod = {NULL};
 static GroupAuthManager g_groupAuthMgrMethod = {NULL};
@@ -484,7 +484,7 @@ static int32_t IpcServiceGmApplyRegisterInfo(const IpcDataInfo *ipcParams, int32
     callRet = g_devGroupMgrMethod.getRegisterInfo(reqJsonStr, &registerInfo);
     ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT_NUM,
-                               (const uint8_t *)&g_ipcResultNum1, sizeof(int32_t));
+                               (const uint8_t *)&IPC_RESULT_NUM_1, sizeof(int32_t));
     if (registerInfo != NULL) {
         ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_REG_INFO,
             (const uint8_t *)registerInfo, strlen(registerInfo) + 1);
@@ -561,7 +561,7 @@ static int32_t IpcServiceGmGetPkInfoList(const IpcDataInfo *ipcParams, int32_t p
     callRet = g_devGroupMgrMethod.getPkInfoList(osAccountId, appId, queryParams, &returnInfoList, &returnInfoNum);
     ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT_NUM,
-                               (const uint8_t *)&g_ipcResultNum2, sizeof(int32_t));
+                               (const uint8_t *)&IPC_RESULT_NUM_2, sizeof(int32_t));
     if (returnInfoList != NULL) {
         ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_RETURN_DATA, (const uint8_t *)returnInfoList,
                                    strlen(returnInfoList) + 1);
@@ -605,7 +605,7 @@ static int32_t IpcServiceGmGetGroupInfoById(const IpcDataInfo *ipcParams, int32_
     callRet = g_devGroupMgrMethod.getGroupInfoById(osAccountId, appId, groupId, &groupInfo);
     ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT_NUM,
-                               (const uint8_t *)&g_ipcResultNum1, sizeof(int32_t));
+                               (const uint8_t *)&IPC_RESULT_NUM_1, sizeof(int32_t));
     if (groupInfo != NULL) {
         ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_GROUP_INFO, (const uint8_t *)groupInfo, strlen(groupInfo) + 1);
         g_devGroupMgrMethod.destroyInfo(&groupInfo);
@@ -648,7 +648,7 @@ static int32_t IpcServiceGmGetGroupInfo(const IpcDataInfo *ipcParams, int32_t pa
     callRet = g_devGroupMgrMethod.getGroupInfo(osAccountId, appId, queryParams, &outGroups, &groupNum);
     ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT_NUM,
-                               (const uint8_t *)&g_ipcResultNum2, sizeof(int32_t));
+                               (const uint8_t *)&IPC_RESULT_NUM_2, sizeof(int32_t));
     if (outGroups != NULL) {
         ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_GROUP_INFO, (const uint8_t *)outGroups, strlen(outGroups) + 1);
     } else {
@@ -693,7 +693,7 @@ static int32_t IpcServiceGmGetJoinedGroups(const IpcDataInfo *ipcParams, int32_t
     callRet = g_devGroupMgrMethod.getJoinedGroups(osAccountId, appId, groupType, &outGroups, &groupNum);
     ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT_NUM,
-                               (const uint8_t *)&g_ipcResultNum2, sizeof(int32_t));
+                               (const uint8_t *)&IPC_RESULT_NUM_2, sizeof(int32_t));
     if (outGroups != NULL) {
         ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_GROUP_INFO, (const uint8_t *)outGroups, strlen(outGroups) + 1);
         g_devGroupMgrMethod.destroyInfo(&outGroups);
@@ -737,7 +737,7 @@ static int32_t IpcServiceGmGetRelatedGroups(const IpcDataInfo *ipcParams, int32_
     callRet = g_devGroupMgrMethod.getRelatedGroups(osAccountId, appId, peerUdid, &outGroups, &groupNum);
     ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT_NUM,
-                               (const uint8_t *)&g_ipcResultNum2, sizeof(int32_t));
+                               (const uint8_t *)&IPC_RESULT_NUM_2, sizeof(int32_t));
     if (outGroups != NULL) {
         ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_GROUP_INFO, (const uint8_t *)outGroups, strlen(outGroups) + 1);
     } else {
@@ -786,7 +786,7 @@ static int32_t IpcServiceGmGetDeviceInfoById(const IpcDataInfo *ipcParams, int32
     callRet = g_devGroupMgrMethod.getDeviceInfoById(osAccountId, appId, peerUdid, groupId, &outDevInfo);
     ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT_NUM,
-                               (const uint8_t *)&g_ipcResultNum1, sizeof(int32_t));
+                               (const uint8_t *)&IPC_RESULT_NUM_1, sizeof(int32_t));
     if (outDevInfo != NULL) {
         ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_DEVICE_INFO,
             (const uint8_t *)outDevInfo, strlen(outDevInfo) + 1);
@@ -830,7 +830,7 @@ static int32_t IpcServiceGmGetTrustedDevices(const IpcDataInfo *ipcParams, int32
     callRet = g_devGroupMgrMethod.getTrustedDevices(osAccountId, appId, groupId, &outDevInfo, &outDevNum);
     ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT_NUM,
-                               (const uint8_t *)&g_ipcResultNum2, sizeof(int32_t));
+                               (const uint8_t *)&IPC_RESULT_NUM_2, sizeof(int32_t));
     if (outDevInfo != NULL) {
         ret += IpcEncodeCallReplay(outCache, PARAM_TYPE_DEVICE_INFO,
             (const uint8_t *)outDevInfo, strlen(outDevInfo) + 1);

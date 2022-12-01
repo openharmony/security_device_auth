@@ -36,6 +36,9 @@ extern "C" {
 #define IS_STRING_VALID(str) (((str) != NULL) && ((str)[0] != 0))
 #define IS_COMM_DATA_VALID(dPtr, dLen) (((dPtr) != NULL) && ((dLen) > 0) && ((dLen) <= 4096))
 
+static const int32_t IPC_RESULT_NUM_1 = 1;
+static const int32_t IPC_RESULT_NUM_2 = 2;
+
 typedef struct {
     uintptr_t inst;
     char appId[IPC_APPID_LEN];
