@@ -261,6 +261,7 @@ static AuthSession *CreateServerAuthSessionInner(CJson *param, const DeviceAuthC
     session->base.process = ProcessServerAuthSession;
     session->base.destroy = DestroyAuthSession;
     session->base.callback = callback;
+    session->base.appId = GetDuplicateServicePkgName(param);
     session->currentIndex = 0;
     session->paramsList = authVec;
     res = GenerateSessionOrTaskId(&session->base.sessionId);

@@ -130,6 +130,13 @@ int32_t GetPkInfoListImpl(int32_t osAccountId, const char *appId, const char *qu
         returnInfoList, returnInfoNum) : HC_ERR_NOT_SUPPORT;
 }
 
+void CancelRequestImpl(int64_t requestId, const char *appId)
+{
+    if (IsGroupSupport()) {
+        GetGroupImplInstance()->cancelGroupRequest(requestId, appId);
+    }
+}
+
 void DestroyInfoImpl(char **returnInfo)
 {
     if (IsGroupSupport()) {

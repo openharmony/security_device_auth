@@ -155,6 +155,7 @@ typedef struct {
         const DeviceAuthCallback *gaCallback);
     int32_t (*authDevice)(int32_t osAccountId, int64_t authReqId, const char *authParams,
         const DeviceAuthCallback *gaCallback);
+    void (*cancelRequest)(int64_t requestId, const char *appId);
 } GroupAuthManager;
 
 typedef struct {
@@ -186,6 +187,7 @@ typedef struct {
     int32_t (*getTrustedDevices)(int32_t osAccountId, const char *appId, const char *groupId,
         char **returnDevInfoVec, uint32_t *deviceNum);
     bool (*isDeviceInGroup)(int32_t osAccountId, const char *appId, const char *groupId, const char *deviceId);
+    void (*cancelRequest)(int64_t requestId, const char *appId);
     void (*destroyInfo)(char **returnInfo);
 } DeviceGroupManager;
 

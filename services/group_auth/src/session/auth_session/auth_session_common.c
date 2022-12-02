@@ -721,6 +721,7 @@ void DestroyAuthSession(Session *session)
         return;
     }
     AuthSession *realSession = (AuthSession *)session;
+    HcFree(realSession->base.appId);
     CJson *paramInSession = (realSession->paramsList).get(&(realSession->paramsList), realSession->currentIndex);
     if (paramInSession == NULL) {
         LOGE("The json data in session is null!");

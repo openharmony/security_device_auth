@@ -1460,6 +1460,13 @@ static void IpcGmDestroyInfo(char **returnInfo)
     *returnInfo = NULL;
 }
 
+static void IpcGmCancelRequest(int64_t requestId, const char *appId)
+{
+    (void)requestId;
+    (void)appId;
+    LOGW("not supported!");
+}
+
 static void InitIpcGmMethods(DeviceGroupManager *gmMethodObj)
 {
     LOGI("starting ...");
@@ -1484,6 +1491,7 @@ static void InitIpcGmMethods(DeviceGroupManager *gmMethodObj)
     gmMethodObj->getDeviceInfoById = IpcGmGetDeviceInfoById;
     gmMethodObj->getTrustedDevices = IpcGmGetTrustedDevices;
     gmMethodObj->isDeviceInGroup = IpcGmIsDeviceInGroup;
+    gmMethodObj->cancelRequest = IpcGmCancelRequest;
     gmMethodObj->destroyInfo = IpcGmDestroyInfo;
     LOGI("process done");
     return;
@@ -1609,11 +1617,19 @@ static int32_t IpcGaAuthDevice(int32_t osAccountId, int64_t authReqId, const cha
     return ret;
 }
 
+static void IpcGaCancelRequest(int64_t requestId, const char *appId)
+{
+    (void)requestId;
+    (void)appId;
+    LOGW("not supported!");
+}
+
 static void InitIpcGaMethods(GroupAuthManager *gaMethodObj)
 {
     LOGI("entering...");
     gaMethodObj->processData = IpcGaProcessData;
     gaMethodObj->authDevice = IpcGaAuthDevice;
+    gaMethodObj->cancelRequest = IpcGaCancelRequest;
     LOGI("process done");
     return;
 }

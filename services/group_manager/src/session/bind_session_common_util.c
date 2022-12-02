@@ -26,7 +26,7 @@ static int32_t GenerateGroupErrorMsg(int32_t errorCode, const BindSession *sessi
         LOGE("Failed to add errorCode to errorData!");
         return HC_ERR_JSON_ADD;
     }
-    if (AddStringToJson(errorData, FIELD_APP_ID, session->appId) != HC_SUCCESS) {
+    if (AddStringToJson(errorData, FIELD_APP_ID, session->base.appId) != HC_SUCCESS) {
         LOGE("Failed to add appId to errorData!");
         return HC_ERR_JSON_ADD;
     }
@@ -77,8 +77,8 @@ BindSession *CreateBaseBindSession(int32_t sessionType, int32_t opCode, const CJ
         HcFree(session);
         return NULL;
     }
-    session->appId = GetDuplicateAppId(params);
-    if (session->appId == NULL) {
+    session->base.appId = GetDuplicateAppId(params);
+    if (session->base.appId == NULL) {
         HcFree(session);
         return NULL;
     }
@@ -107,8 +107,8 @@ void DestroyBindSession(Session *session)
     }
     BindSession *realSession = (BindSession *)session;
     DestroyTask(realSession->curTaskId, realSession->moduleType);
-    HcFree(realSession->appId);
-    realSession->appId = NULL;
+    HcFree(realSession->base.appId);
+    realSession->base.appId = NULL;
     FreeJson(realSession->params);
     realSession->params = NULL;
     HcFree(realSession);
@@ -228,7 +228,7 @@ void InformPeerModuleError(CJson *out, const BindSession *session)
     if (errorData == NULL) {
         return;
     }
-    if (AddStringToJson(errorData, FIELD_APP_ID, session->appId) != HC_SUCCESS) {
+    if (AddStringToJson(errorData, FIELD_APP_ID, session->base.appId) != HC_SUCCESS) {
         LOGE("Failed to add appId to errorData!");
         return;
     }
