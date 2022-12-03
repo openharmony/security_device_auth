@@ -277,7 +277,7 @@ static CJson *GetAsyCredentialJson(string registerInfo)
 
     Uint8Buff messageBuff = {
         .val = reinterpret_cast<uint8_t *>(const_cast<char *>(registerInfo.c_str())),
-        .length = registerInfo.length()
+        .length = registerInfo.length() + 1
     };
     uint8_t *signatureValue = reinterpret_cast<uint8_t *>(HcMalloc(SIGNATURE_SIZE, 0));
     Uint8Buff signature = {
