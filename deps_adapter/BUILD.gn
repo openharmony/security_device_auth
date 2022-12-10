@@ -131,7 +131,7 @@ if (defined(ohos_lite)) {
     cflags = [ "-DHILOG_ENABLE" ]
     deps = [
       "//base/security/huks/interfaces/innerkits/huks_standard/main:libhukssdk",
-      "//third_party/cJSON:cjson_static",
+      "//third_party/cJSON:cjson",
       "//third_party/mbedtls:mbedtls_shared",
       "//third_party/openssl:libcrypto_shared",
     ]
