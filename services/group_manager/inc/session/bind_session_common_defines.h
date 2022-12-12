@@ -23,7 +23,6 @@ typedef int32_t (*ProcessSessionFunc)(Session *, CJson *);
 
 typedef struct {
     Session base;
-    char *appId;
     CJson *params;
     OnChannelOpenedFunc onChannelOpened;
     int32_t curTaskId;

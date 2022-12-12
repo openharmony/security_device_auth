@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,11 +23,8 @@
 #include "hc_types.h"
 #include "securec.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define MAX_FOLDER_NAME_SIZE 128
+#define DEFAULT_FILE_PERMISSION 0600
 
 static int32_t CreateDirectory(const char *filePath)
 {
@@ -50,10 +47,15 @@ static int32_t CreateDirectory(const char *filePath)
         }
         dirCache[len] = 0;
         if (access(dirCache, F_OK) != 0) {
-            ret = mkdir(dirCache, S_IRWXU);
-            if (ret != 0) {
-                LOGE("make dir failed, err code %d", ret);
-                return -1;
+            DIR *dir = opendir(dirCache);
+            if (dir == NULL) {
+                ret = mkdir(dirCache, DEFAULT_FILE_PERMISSION);
+                if (ret != 0) {
+                    LOGE("make dir failed, err code %d, errno = %d", ret, errno);
+                    return -1;
+                }
+            } else {
+                closedir(dir);
             }
         }
         chPtr++;
@@ -61,20 +63,20 @@ static int32_t CreateDirectory(const char *filePath)
     return 0;
 }
 
-static FILE *HcFileOpenRead(const char *path)
+static int HcFileOpenRead(const char *path)
 {
-    return fopen(path, "rb");
+    return open(path, O_RDONLY);
 }
 
-static FILE *HcFileOpenWrite(const char *path)
+static int HcFileOpenWrite(const char *path)
 {
     if (access(path, F_OK) != 0) {
         int32_t ret = CreateDirectory(path);
         if (ret != 0) {
-            return NULL;
+            return -1;
         }
     }
-    return fopen(path, "w+");
+    return open(path, O_RDWR | O_CREAT | O_TRUNC);
 }
 
 int HcFileOpen(const char *path, int mode, FileHandle *file)
@@ -83,11 +85,12 @@ int HcFileOpen(const char *path, int mode, FileHandle *file)
         return -1;
     }
     if (mode == MODE_FILE_READ) {
-        file->pfd = HcFileOpenRead(path);
+        file->fileHandle.fd = HcFileOpenRead(path);
     } else {
-        file->pfd = HcFileOpenWrite(path);
+        file->fileHandle.fd = HcFileOpenWrite(path);
     }
-    if (file->pfd == NULL) {
+    if (file->fileHandle.fd == -1) {
+        LOGE("[OS]: file open failed, errno = %d", errno);
         return -1;
     } else {
         return 0;
@@ -96,36 +99,29 @@ int HcFileOpen(const char *path, int mode, FileHandle *file)
 
 int HcFileSize(FileHandle file)
 {
-    FILE *fp = (FILE *)file.pfd;
-    if (fp != NULL) {
-        if (fseek(fp, 0L, SEEK_END) != 0) {
-            return -1;
-        }
-        int size = ftell(fp);
-        if (fseek(fp, 0L, SEEK_SET) != 0) {
-            return -1;
-        }
-        return size;
-    } else {
-        return -1;
-    }
+    int fp = file.fileHandle.fd;
+    int size = lseek(fp, 0, SEEK_END);
+    (void)lseek(fp, 0, SEEK_SET);
+    return size;
 }
 
 int HcFileRead(FileHandle file, void *dst, int dstSize)
 {
-    FILE *fp = (FILE *)file.pfd;
-    if (fp == NULL || dstSize < 0 || dst == NULL) {
+    int fp = file.fileHandle.fd;
+    if (fp == -1 || dstSize < 0 || dst == NULL) {
         return -1;
     }
 
     char *dstBuffer = (char *)dst;
     int total = 0;
     while (total < dstSize) {
-        int readCount = fread(dstBuffer + total, 1, dstSize - total, fp);
-        if (ferror(fp) != 0) {
-            LOGE("read file error!");
+        int readCount = read(fp, dstBuffer + total, dstSize - total);
+        if (readCount < 0 || readCount > (dstSize - total)) {
+            LOGE("read size error, errno = %d", errno);
+            return -1;
         }
         if (readCount == 0) {
+            LOGE("read size = 0, errno = %d", errno);
             return total;
         }
         total += readCount;
@@ -136,17 +132,18 @@ int HcFileRead(FileHandle file, void *dst, int dstSize)
 
 int HcFileWrite(FileHandle file, const void *src, int srcSize)
 {
-    FILE *fp = (FILE *)file.pfd;
-    if (fp == NULL || srcSize < 0 || src == NULL) {
+    int fp = file.fileHandle.fd;
+    if (fp == -1 || srcSize < 0 || src == NULL) {
         return -1;
     }
 
     const char *srcBuffer = (const char *)src;
     int total = 0;
     while (total < srcSize) {
-        int writeCount = fwrite(srcBuffer + total, 1, srcSize - total, fp);
-        if (ferror(fp) != 0) {
-            LOGE("write file error!");
+        int writeCount = write(fp, srcBuffer + total, srcSize - total);
+        if (writeCount < 0 || writeCount > (srcSize - total)) {
+            LOGE("write size error, errno = %d", errno);
+            return -1;
         }
         total += writeCount;
     }
@@ -155,12 +152,15 @@ int HcFileWrite(FileHandle file, const void *src, int srcSize)
 
 void HcFileClose(FileHandle file)
 {
-    FILE *fp = (FILE *)file.pfd;
-    if (fp == NULL) {
+    int fp = file.fileHandle.fd;
+    if (fp == 0) {
         return;
     }
 
-    (void)fclose(fp);
+    int res = close(fp);
+    if (res != 0) {
+        LOGW("close file failed, res = %d", res);
+    }
 }
 
 void HcFileRemove(const char *path)
@@ -169,7 +169,10 @@ void HcFileRemove(const char *path)
         LOGE("Invalid file path");
         return;
     }
-    (void)remove(path);
+    int res = unlink(path);
+    if (res != 0) {
+        LOGW("delete file failed, res = %d", res);
+    }
 }
 
 void HcFileGetSubFileName(const char *path, StringVector *nameVec)
@@ -199,7 +202,3 @@ void HcFileGetSubFileName(const char *path, StringVector *nameVec)
         LOGE("Failed to close file");
     }
 }
-
-#ifdef __cplusplus
-}
-#endif

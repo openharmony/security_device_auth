@@ -30,6 +30,12 @@ typedef struct {
 } GroupManagerTask;
 
 typedef struct {
+    HcTaskBase base;
+    int64_t reqId;
+    char *appId;
+} GroupCancelTask;
+
+typedef struct {
     int64_t reqId;
     int32_t osAccountId;
     int32_t opCode;

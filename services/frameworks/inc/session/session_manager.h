@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,6 +32,7 @@ int32_t CreateSession(int64_t requestId, SessionTypeValue sessionType, CJson *pa
     const DeviceAuthCallback *callback);
 int32_t ProcessSession(int64_t requestId, int32_t type, CJson *in);
 void DestroySession(int64_t requestId);
+void DestroySessionByType(int64_t requestId, const char *appId, int cancelType);
 void OnChannelOpened(int64_t requestId, int64_t channelId);
 
 #endif

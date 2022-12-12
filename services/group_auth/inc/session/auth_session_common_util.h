@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,7 @@ char *GetServerConfirmation(const CJson *paramsFromClient, const CJson *reqParam
     const DeviceAuthCallback *callback);
 int32_t GetGeneralReqParams(const CJson *receiveData, CJson *reqParam);
 bool IsUserIdEqual(const char *userIdInDb, const char *peerUserIdInDb);
+char *GetDuplicateServicePkgName(const CJson *params);
 #ifdef __cplusplus
 }
 #endif

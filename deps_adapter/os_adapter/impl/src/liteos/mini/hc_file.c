@@ -24,12 +24,6 @@
 #include "securec.h"
 #include "utils_file.h"
 
-#define MAX_FOLDER_NAME_SIZE 128
-#define GET_FOLDER_OK 0
-#define GET_FOLDER_FAILED (-1)
-#define GET_FILE_OK 1
-#define DEFAULT_FILE_PERMISSION 0666
-
 static int HcFileOpenRead(const char *path)
 {
     int ret = UtilsFileOpen(path, O_RDONLY, 0);
