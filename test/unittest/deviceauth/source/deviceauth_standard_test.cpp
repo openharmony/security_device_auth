@@ -2084,3 +2084,53 @@ HWTEST_F(GaProcessDataTest, GaProcessDataTest002, TestSize.Level0)
     int32_t ret = ga->processData(TEST_REQ_ID, nullptr, 0, nullptr);
     EXPECT_NE(ret, HC_SUCCESS);
 }
+
+class GmCancelRequestTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+void GmCancelRequestTest::SetUpTestCase() {}
+void GmCancelRequestTest::TearDownTestCase() {}
+
+void GmCancelRequestTest::SetUp() {}
+
+void GmCancelRequestTest::TearDown() {}
+
+HWTEST_F(GmCancelRequestTest, GmCancelRequestTest001, TestSize.Level0)
+{
+    int32_t ret = InitDeviceAuthService();
+    EXPECT_EQ(ret, HC_SUCCESS);
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    gm->cancelRequest(TEST_REQ_ID, TEST_APP_ID);
+    DestroyDeviceAuthService();
+}
+
+class GaCancelRequestTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+void GaCancelRequestTest::SetUpTestCase() {}
+void GaCancelRequestTest::TearDownTestCase() {}
+
+void GaCancelRequestTest::SetUp() {}
+
+void GaCancelRequestTest::TearDown() {}
+
+HWTEST_F(GaCancelRequestTest, GaCancelRequestTest001, TestSize.Level0)
+{
+    int32_t ret = InitDeviceAuthService();
+    EXPECT_EQ(ret, HC_SUCCESS);
+    const GroupAuthManager *ga = GetGaInstance();
+    ASSERT_NE(ga, nullptr);
+    ga->cancelRequest(TEST_REQ_ID, TEST_APP_ID);
+    DestroyDeviceAuthService();
+}
