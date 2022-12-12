@@ -949,22 +949,11 @@ static int32_t AddGroupAndLocalDevIfNotExist(const char *groupId, const BindSess
 static int32_t AddPeerDevToGroup(const char *peerAuthId, const char *peerUdid,
     const char *groupId, const BindSession *session)
 {
-    if (IsTrustedDeviceInGroup(session->osAccountId, groupId, peerUdid, true)) {
-        LOGI("The peer device already exists in the group! RequestId: %" PRId64, session->reqId);
-        QueryDeviceParams params = InitQueryDeviceParams();
-        params.groupId = groupId;
-        params.udid = peerUdid;
-        if (DelTrustedDevice(session->osAccountId, &params) != HC_SUCCESS) {
-            LOGE("Failed to delete the original data! RequestId: %" PRId64, session->reqId);
-            return HC_ERR_DB;
-        }
-        LOGI("Delete the original data successfully! RequestId: %" PRId64, session->reqId);
-    }
     int32_t peerUserType = DEVICE_TYPE_ACCESSORY;
     (void)GetIntFromJson(session->params, FIELD_PEER_USER_TYPE, &peerUserType);
     int32_t result = AddTrustDevToDatabase(session->osAccountId, peerAuthId, peerUdid, groupId, peerUserType);
     if (result != HC_SUCCESS) {
-        LOGE("Failed to update the peer trusted device information! RequestId: %" PRId64, session->reqId);
+        LOGE("Failed to add the peer trusted device information! RequestId: %" PRId64, session->reqId);
         return result;
     }
     LOGI("The peer trusted device is added to the database successfully! RequestId: %" PRId64, session->reqId);
