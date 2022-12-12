@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -240,6 +240,64 @@ int32_t CreateSession(int64_t requestId, SessionTypeValue sessionType, CJson *pa
         LOGE("Failed to get cur time.");
     }
     return HC_SUCCESS;
+}
+
+static bool CheckCancelPermission(int64_t requestId, const char *appId, int cancelType, Session *session)
+{
+    int sessionType = session->type;
+    if ((sessionType == TYPE_CLIENT_BIND_SESSION) || (sessionType == TYPE_SERVER_BIND_SESSION)) {
+        if (cancelType != TYPE_CANCEL_BIND) {
+            LOGE("invalid cancel type, requestId: %" PRId64 ", appId: %s, cancelType: %d, sessionType: %d",
+                requestId, appId, cancelType, sessionType);
+            return false;
+        }
+        if ((session->appId == NULL) || (strcmp(appId, session->appId) != 0)) {
+            LOGE("invalid caller, requestId: %" PRId64 ", appId: %s, session appId: %s",
+                requestId, appId, session->appId);
+            return false;
+        }
+    } else if ((sessionType == TYPE_CLIENT_AUTH_SESSION) || (sessionType == TYPE_SERVER_AUTH_SESSION)) {
+        if (cancelType != TYPE_CANCEL_AUTH) {
+            LOGE("invalid cancel type, requestId: %" PRId64 ", appId: %s, cancelType: %d, sessionType: %d",
+                requestId, appId, cancelType, sessionType);
+            return false;
+        }
+        if ((session->appId == NULL) || (strcmp(appId, session->appId) != 0)) {
+            LOGE("invalid caller, requestId: %" PRId64 ", appId: %s, session appId: %s",
+                requestId, appId, session->appId);
+            return false;
+        }
+    } else {
+        LOGE("invalid session type: %d", sessionType);
+        return false;
+    }
+    return true;
+}
+
+void DestroySessionByType(int64_t requestId, const char *appId, int cancelType)
+{
+    LOGI("requestId: %" PRId64 ", appId: %s, cancelType: %d", requestId, appId, cancelType);
+    int64_t sessionId = 0;
+    if (GetSessionId(requestId, &sessionId) != HC_SUCCESS) {
+        LOGE("session not found, requestId: %" PRId64, requestId);
+        return;
+    }
+    uint32_t index;
+    void **session = NULL;
+    FOR_EACH_HC_VECTOR(g_sessionManagerVec, index, session) {
+        if ((session != NULL) && (*session != NULL) && (((Session *)(*session))->sessionId == sessionId)) {
+            if (!CheckCancelPermission(requestId, appId, cancelType, (Session *)(*session))) {
+                LOGE("destroy session failed, requestId: %" PRId64 ", appId: %s", requestId, appId);
+                return;
+            }
+            ((Session *)(*session))->destroy((Session *)(*session));
+            *session = NULL;
+            HC_VECTOR_POPELEMENT(&g_sessionManagerVec, session, index);
+            break;
+        }
+    }
+    LOGI("destroy session succeeded, requestId: %" PRId64 ", appId: %s", requestId, appId);
+    DestroyRequest(requestId);
 }
 
 void DestroySession(int64_t requestId)

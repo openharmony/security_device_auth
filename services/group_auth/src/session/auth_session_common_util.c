@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -170,4 +170,21 @@ bool IsUserIdEqual(const char *userIdInDb, const char *peerUserIdInDb)
     HcFree(peerUidToUpper);
     peerUidToUpper = NULL;
     return false;
+}
+
+char *GetDuplicateServicePkgName(const CJson *params)
+{
+    const char *pkgName = GetStringFromJson(params, FIELD_SERVICE_PKG_NAME);
+    if (pkgName == NULL) {
+        LOGE("Failed to get pkgName from json!");
+        return NULL;
+    }
+    int32_t pkgNameLen = HcStrlen(pkgName);
+    char *copyPkgName = (char *)HcMalloc(pkgNameLen + 1, 0);
+    if (copyPkgName == NULL) {
+        LOGE("Failed to allocate copyPkgName memory!");
+        return NULL;
+    }
+    (void)memcpy_s(copyPkgName, pkgNameLen + 1, pkgName, pkgNameLen + 1);
+    return copyPkgName;
 }

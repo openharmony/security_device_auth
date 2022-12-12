@@ -81,7 +81,7 @@ static int32_t AddDevInfoToSendData(const BindSession *session, CJson *data)
 
 static int32_t AddRequestInfoToSendData(const BindSession *session, CJson *data)
 {
-    if (AddStringToJson(data, FIELD_APP_ID, session->appId) != HC_SUCCESS) {
+    if (AddStringToJson(data, FIELD_APP_ID, session->base.appId) != HC_SUCCESS) {
         LOGE("Failed to add appId to data!");
         return HC_ERR_JSON_FAIL;
     }
@@ -854,7 +854,7 @@ static int32_t GenerateGroupParams(const BindSession *session, TrustedGroupEntry
     int32_t result;
     if (((result = SetGroupId(session->params, groupParams)) != HC_SUCCESS) ||
         ((result = SetGroupName(session->params, groupParams)) != HC_SUCCESS) ||
-        ((result = SetGroupOwner(session->appId, groupParams)) != HC_SUCCESS) ||
+        ((result = SetGroupOwner(session->base.appId, groupParams)) != HC_SUCCESS) ||
         ((result = SetGroupType(session->params, groupParams)) != HC_SUCCESS) ||
         ((result = SetGroupVisibility(session->params, groupParams)) != HC_SUCCESS) ||
         ((result = SetGroupExpireTime(session->params, groupParams)) != HC_SUCCESS)) {

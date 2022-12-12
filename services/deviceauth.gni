@@ -22,7 +22,7 @@ group_manager_path = "${services_path}/group_manager"
 
 enable_broadcast = true
 declare_args() {
-  deviceauth_hichain_thread_stack_size = 4096
+  deviceauth_hichain_thread_stack_size = 8192
 }
 deviceauth_defines = []
 
