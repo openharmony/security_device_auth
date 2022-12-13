@@ -27,7 +27,6 @@
 extern "C" {
 #endif
 
-#define MAX_FILE_PATH_SIZE 256
 #define MAX_FOLDER_NAME_SIZE 128
 
 static int32_t CreateDirectory(const char *filePath)

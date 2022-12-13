@@ -23,7 +23,6 @@
 #include "hc_types.h"
 #include "securec.h"
 
-#define MAX_FILE_PATH_SIZE 256
 #define MAX_FOLDER_NAME_SIZE 128
 #define DEFAULT_FILE_PERMISSION 0600
 
