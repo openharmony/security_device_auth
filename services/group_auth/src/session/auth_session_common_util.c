@@ -179,12 +179,12 @@ char *GetDuplicateServicePkgName(const CJson *params)
         LOGE("Failed to get pkgName from json!");
         return NULL;
     }
-    int32_t pkgNameLen = HcStrlen(pkgName);
-    char *copyPkgName = (char *)HcMalloc(pkgNameLen + 1, 0);
+    uint32_t pkgNameLen = HcStrlen(pkgName) + 1;
+    char *copyPkgName = (char *)HcMalloc(pkgNameLen, 0);
     if (copyPkgName == NULL) {
         LOGE("Failed to allocate copyPkgName memory!");
         return NULL;
     }
-    (void)memcpy_s(copyPkgName, pkgNameLen + 1, pkgName, pkgNameLen + 1);
+    (void)memcpy_s(copyPkgName, pkgNameLen, pkgName, pkgNameLen);
     return copyPkgName;
 }
