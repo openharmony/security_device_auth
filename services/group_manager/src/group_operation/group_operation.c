@@ -1124,6 +1124,59 @@ static int32_t GetPkInfoList(int32_t osAccountId, const char *appId, const char 
     return HC_SUCCESS;
 }
 
+static void DoCancelGroupRequest(HcTaskBase *task)
+{
+    if (task == NULL) {
+        LOGE("The input task is null!");
+        return;
+    }
+    GroupCancelTask *realTask = (GroupCancelTask *)task;
+    DestroySessionByType(realTask->reqId, realTask->appId, TYPE_CANCEL_BIND);
+}
+
+static void DestroyGroupCancelTask(HcTaskBase *task)
+{
+    if (task == NULL) {
+        LOGE("The input task is null!");
+        return;
+    }
+    GroupCancelTask *realTask = (GroupCancelTask *)task;
+    HcFree(realTask->appId);
+}
+
+static void CancelGroupRequest(int64_t requestId, const char *appId)
+{
+    if (appId == NULL) {
+        LOGE("Invalid app id!");
+        return;
+    }
+    uint32_t appIdLen = HcStrlen(appId) + 1;
+    char *copyAppId = (char *)HcMalloc(appIdLen, 0);
+    if (copyAppId == NULL) {
+        LOGE("Failed to allocate copyAppId memory!");
+        return;
+    }
+    if (strcpy_s(copyAppId, appIdLen, appId) != EOK) {
+        LOGE("Failed to copy appId!");
+        HcFree(copyAppId);
+        return;
+    }
+    GroupCancelTask *task = (GroupCancelTask *)HcMalloc(sizeof(GroupCancelTask), 0);
+    if (task == NULL) {
+        LOGE("Failed to allocate group cancel task memory!");
+        HcFree(copyAppId);
+        return;
+    }
+    task->base.doAction = DoCancelGroupRequest;
+    task->base.destroy = DestroyGroupCancelTask;
+    task->reqId = requestId;
+    task->appId = copyAppId;
+    if (PushTask((HcTaskBase *)task) != HC_SUCCESS) {
+        HcFree(copyAppId);
+        HcFree(task);
+    }
+}
+
 static void DestroyInfo(char **returnInfo)
 {
     if ((returnInfo == NULL) || (*returnInfo == NULL)) {
@@ -1152,6 +1205,7 @@ static const GroupImpl GROUP_IMPL_INSTANCE = {
     .getAccessibleTrustedDevices = GetAccessibleTrustedDevices,
     .isDeviceInAccessibleGroup = IsDeviceInAccessibleGroup,
     .getPkInfoList = GetPkInfoList,
+    .cancelGroupRequest = CancelGroupRequest,
     .destroyInfo = DestroyInfo
 };
 

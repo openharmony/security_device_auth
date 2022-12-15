@@ -15,6 +15,7 @@
 
 #include "auth_session_client.h"
 #include "auth_session_common.h"
+#include "auth_session_common_util.h"
 #include "auth_session_util.h"
 #include "dev_auth_module_manager.h"
 #include "hc_log.h"
@@ -184,6 +185,7 @@ static Session *CreateClientAuthSessionInner(int32_t osAccountId, CJson *param, 
     session->base.process = ProcessClientAuthSession;
     session->base.destroy = DestroyAuthSession;
     session->base.callback = callback;
+    session->base.appId = GetDuplicateServicePkgName(param);
     session->currentIndex = 0;
     session->paramsList = authParamsVec;
     res = GenerateSessionOrTaskId(&session->base.sessionId);

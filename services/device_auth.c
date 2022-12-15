@@ -153,6 +153,59 @@ static int32_t ProcessData(int64_t authReqId, const uint8_t *data, uint32_t data
     return HC_SUCCESS;
 }
 
+static void DoCancelAuthRequest(HcTaskBase *task)
+{
+    if (task == NULL) {
+        LOGE("The input task is null!");
+        return;
+    }
+    AuthCancelTask *realTask = (AuthCancelTask *)task;
+    DestroySessionByType(realTask->reqId, realTask->appId, TYPE_CANCEL_AUTH);
+}
+
+static void DestroyAuthCancelTask(HcTaskBase *task)
+{
+    if (task == NULL) {
+        LOGE("The input task is null!");
+        return;
+    }
+    AuthCancelTask *realTask = (AuthCancelTask *)task;
+    HcFree(realTask->appId);
+}
+
+static void CancelAuthRequest(int64_t requestId, const char *appId)
+{
+    if (appId == NULL) {
+        LOGE("Invalid app id!");
+        return;
+    }
+    uint32_t appIdLen = HcStrlen(appId) + 1;
+    char *copyAppId = (char *)HcMalloc(appIdLen, 0);
+    if (copyAppId == NULL) {
+        LOGE("Failed to allocate copyAppId memory!");
+        return;
+    }
+    if (strcpy_s(copyAppId, appIdLen, appId) != EOK) {
+        LOGE("Failed to copy appId!");
+        HcFree(copyAppId);
+        return;
+    }
+    AuthCancelTask *task = (AuthCancelTask *)HcMalloc(sizeof(AuthCancelTask), 0);
+    if (task == NULL) {
+        LOGE("Failed to allocate auth cancel task memory!");
+        HcFree(copyAppId);
+        return;
+    }
+    task->base.doAction = DoCancelAuthRequest;
+    task->base.destroy = DestroyAuthCancelTask;
+    task->reqId = requestId;
+    task->appId = copyAppId;
+    if (PushTask((HcTaskBase *)task) != HC_SUCCESS) {
+        HcFree(copyAppId);
+        HcFree(task);
+    }
+}
+
 static int32_t AllocGmAndGa(void)
 {
     if (g_groupManagerInstance == NULL) {
@@ -291,6 +344,7 @@ DEVICE_AUTH_API_PUBLIC const DeviceGroupManager *GetGmInstance(void)
     g_groupManagerInstance->getDeviceInfoById = GetDeviceInfoByIdImpl;
     g_groupManagerInstance->getTrustedDevices = GetTrustedDevicesImpl;
     g_groupManagerInstance->isDeviceInGroup = IsDeviceInGroupImpl;
+    g_groupManagerInstance->cancelRequest = CancelRequestImpl;
     g_groupManagerInstance->destroyInfo = DestroyInfoImpl;
     return g_groupManagerInstance;
 }
@@ -304,5 +358,6 @@ DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
 
     g_groupAuthManager->processData = ProcessData;
     g_groupAuthManager->authDevice = AuthDevice;
+    g_groupAuthManager->cancelRequest = CancelAuthRequest;
     return g_groupAuthManager;
 }
