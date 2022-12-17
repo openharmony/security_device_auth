@@ -369,8 +369,6 @@ static void CreateDemoSymClientIdenticalAccountGroup(void)
         return;
     }
     cout << "jsonstr: " << jsonStr << endl;
-
-
     int32_t ret = gm->createGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, jsonStr);
     FreeJsonString(jsonStr);
     ASSERT_EQ(ret, HC_SUCCESS);
