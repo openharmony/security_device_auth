@@ -79,7 +79,9 @@ ohos_unittest("deviceauth_llt") {
   ]
 
   sources += [
+    "source/common_lib_test.cpp",
     "source/deviceauth_standard_test.cpp",
+    "source/key_management_test.cpp",
     "source/os_account_adapter_mock.c",
     "source/protocol_task_main_mock.c",
   ]
