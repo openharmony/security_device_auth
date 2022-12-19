@@ -46,17 +46,19 @@ static int32_t CreateDirectory(const char *filePath)
             return -1;
         }
         dirCache[len] = 0;
-        if (access(dirCache, F_OK) != 0) {
-            DIR *dir = opendir(dirCache);
-            if (dir == NULL) {
-                ret = mkdir(dirCache, DEFAULT_FILE_PERMISSION);
-                if (ret != 0) {
-                    LOGE("make dir failed, err code %d, errno = %d", ret, errno);
-                    return -1;
-                }
-            } else {
-                closedir(dir);
+        if (access(dirCache, F_OK) == 0) {
+            chPtr++;
+            continue;
+        }
+        DIR *dir = opendir(dirCache);
+        if (dir == NULL) {
+            ret = mkdir(dirCache, DEFAULT_FILE_PERMISSION);
+            if (ret != 0) {
+                LOGE("make dir failed, err code %d, errno = %d", ret, errno);
+                return -1;
             }
+        } else {
+            closedir(dir);
         }
         chPtr++;
     }
