@@ -26,6 +26,7 @@ ohos_unittest("deviceauth_llt") {
 
   include_dirs += [
     "./include",
+    "./unit_test/include",
     "${dev_frameworks_path}/inc/hiview_adapter",
   ]
 
@@ -39,6 +40,7 @@ ohos_unittest("deviceauth_llt") {
   ]
 
   sources = hal_common_files
+  sources -= [ "${common_lib_path}/impl/src/json_utils.c" ]
   sources += [
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter.c",
@@ -49,6 +51,7 @@ ohos_unittest("deviceauth_llt") {
     "${os_adapter_path}/impl/src/linux/hc_thread.c",
     "${os_adapter_path}/impl/src/linux/hc_types.c",
     "source/hc_dev_info_mock.c",
+    "source/json_utils_mock.c",
   ]
 
   sources += dev_frameworks_files
@@ -82,16 +85,14 @@ ohos_unittest("deviceauth_llt") {
     "source/deviceauth_standard_test.cpp",
     "source/os_account_adapter_mock.c",
     "source/protocol_task_main_mock.c",
+    "unit_test/source/pake_v2_auth_task_test.cpp",
   ]
   defines = [
     "P2P_PAKE_DL_PRIME_LEN_384",
     "P2P_PAKE_EC_TYPE",
   ]
 
-  cflags = [
-    "-DHILOG_ENABLE",
-    "-DDEV_AUTH_DEBUG_PRINTF",
-  ]
+  cflags = [ "-DHILOG_ENABLE" ]
 
   deps = [
     "//base/security/huks/interfaces/innerkits/huks_standard/main:libhukssdk",
