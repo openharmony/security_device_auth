@@ -258,6 +258,7 @@ static AuthSession *CreateServerAuthSessionInner(CJson *param, const DeviceAuthC
         InformLocalAuthError(param, callback);
         return NULL;
     }
+    session->base.type = TYPE_SERVER_AUTH_SESSION;
     session->base.process = ProcessServerAuthSession;
     session->base.destroy = DestroyAuthSession;
     session->base.callback = callback;
