@@ -182,6 +182,7 @@ static Session *CreateClientAuthSessionInner(int32_t osAccountId, CJson *param, 
         InformLocalAuthError(param, callback);
         return NULL;
     }
+    session->base.type = TYPE_CLIENT_AUTH_SESSION;
     session->base.process = ProcessClientAuthSession;
     session->base.destroy = DestroyAuthSession;
     session->base.callback = callback;
