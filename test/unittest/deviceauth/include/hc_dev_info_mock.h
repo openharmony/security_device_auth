@@ -41,6 +41,7 @@ const char *GetStorageDirPath(void);
 const char *GetAccountStoragePath(void);
 
 void SetDeviceStatus(bool isClient);
+void SetAccountStorageTest(bool isAccountStorageTest);
 
 #ifdef __cplusplus
 }
