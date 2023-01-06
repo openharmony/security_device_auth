@@ -26,9 +26,16 @@ static bool g_isClient = true;
 static char *g_clientDevUdid = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
 static char *g_serverDevUdid = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
 
+static bool g_isAccountStorageTest = false;
+
 void SetDeviceStatus(bool isClient)
 {
     g_isClient = isClient;
+}
+
+void SetAccountStorageTest(bool isAccountStorageTest)
+{
+    g_isAccountStorageTest = isAccountStorageTest;
 }
 
 int32_t HcGetUdid(uint8_t *udid, int32_t udidLen)
@@ -75,6 +82,9 @@ const char *GetStorageDirPath(void)
 
 const char *GetAccountStoragePath(void)
 {
+    if (g_isAccountStorageTest) {
+        return NULL;
+    }
 #ifndef LITE_DEVICE
     const char *storageFile = "/data/service/el1/public/deviceauth/account";
 #else
