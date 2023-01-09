@@ -170,7 +170,7 @@ if (os_level == "mini" || os_level == "small") {
 
     deps = [
       "${deps_adapter_path}:${hal_module_name}",
-      "//third_party/cJSON:cjson_static",
+      "//third_party/cJSON:cjson",
     ]
 
     external_deps = [
@@ -221,7 +221,7 @@ if (os_level == "mini" || os_level == "small") {
       ":auth_service.rc",
       ":deviceauth",
       "${deps_adapter_path}:${hal_module_name}",
-      "//third_party/cJSON:cjson_static",
+      "//third_party/cJSON:cjson",
     ]
 
     external_deps = [
@@ -265,7 +265,7 @@ if (os_level == "mini" || os_level == "small") {
 
     deps = [
       "${deps_adapter_path}:${hal_module_name}",
-      "//third_party/cJSON:cjson_static",
+      "//third_party/cJSON:cjson",
     ]
 
     external_deps = [
