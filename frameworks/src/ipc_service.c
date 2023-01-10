@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -884,6 +884,30 @@ static int32_t IpcServiceGmIsDeviceInGroup(const IpcDataInfo *ipcParams, int32_t
     return ret;
 }
 
+static int32_t IpcServiceGmCancelRequest(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t ret;
+    int64_t requestId = 0;
+    const char *appId = NULL;
+
+    LOGI("starting ...");
+    int32_t inOutLen = sizeof(int64_t);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&requestId, &inOutLen);
+    if ((inOutLen != sizeof(requestId)) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_REQID);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    if ((appId == NULL) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_APPID);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+
+    g_devGroupMgrMethod.cancelRequest(requestId, appId);
+    LOGI("process done, ipc ret %d", ret);
+    return ret;
+}
+
 static int32_t IpcServiceGaProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
 {
     int32_t callRet;
@@ -997,6 +1021,30 @@ static int32_t IpcServiceGaAuthDevice(const IpcDataInfo *ipcParams, int32_t para
     return ret;
 }
 
+static int32_t IpcServiceGaCancelRequest(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t ret;
+    int64_t requestId = 0;
+    const char *appId = NULL;
+
+    LOGI("starting ...");
+    int32_t inOutLen = sizeof(int64_t);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&requestId, &inOutLen);
+    if ((inOutLen != sizeof(requestId)) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_REQID);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    if ((appId == NULL) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_APPID);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+
+    g_groupAuthMgrMethod.cancelRequest(requestId, appId);
+    LOGI("process done, ipc ret %d", ret);
+    return ret;
+}
+
 static int32_t AddMethodMap(uintptr_t ipcInstance)
 {
     uint32_t ret;
@@ -1023,10 +1071,12 @@ static int32_t AddMethodMap(uintptr_t ipcInstance)
     ret &= SetIpcCallMap(ipcInstance, IpcServiceGmGetDeviceInfoById, IPC_CALL_ID_GET_DEV_INFO_BY_ID);
     ret &= SetIpcCallMap(ipcInstance, IpcServiceGmGetTrustedDevices, IPC_CALL_ID_GET_TRUST_DEVICES);
     ret &= SetIpcCallMap(ipcInstance, IpcServiceGmIsDeviceInGroup, IPC_CALL_ID_IS_DEV_IN_GROUP);
+    ret &= SetIpcCallMap(ipcInstance, IpcServiceGmCancelRequest, IPC_CALL_GM_CANCEL_REQUEST);
 
     // Group Auth Interfaces
     ret &= SetIpcCallMap(ipcInstance, IpcServiceGaProcessData, IPC_CALL_ID_GA_PROC_DATA);
     ret &= SetIpcCallMap(ipcInstance, IpcServiceGaAuthDevice, IPC_CALL_ID_AUTH_DEVICE);
+    ret &= SetIpcCallMap(ipcInstance, IpcServiceGaCancelRequest, IPC_CALL_GA_CANCEL_REQUEST);
     LOGI("process done, ret %u", ret);
     return ret;
 }

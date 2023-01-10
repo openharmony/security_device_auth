@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -85,6 +85,8 @@ enum {
     IPC_CALL_ID_AUTH_DEVICE,
     IPC_CALL_ID_ADD_MULTI_GROUP_MEMBERS,
     IPC_CALL_ID_DEL_MULTI_GROUP_MEMBERS,
+    IPC_CALL_GM_CANCEL_REQUEST,
+    IPC_CALL_GA_CANCEL_REQUEST,
 };
 
 #ifdef __cplusplus

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1462,9 +1462,42 @@ static void IpcGmDestroyInfo(char **returnInfo)
 
 static void IpcGmCancelRequest(int64_t requestId, const char *appId)
 {
-    (void)requestId;
-    (void)appId;
-    LOGW("not supported!");
+    uintptr_t callCtx = 0x0;
+    int32_t ret;
+
+    LOGI("starting ...");
+    if (!IS_STRING_VALID(appId)) {
+        LOGE("invalid appId!");
+        return;
+    }
+    if (!IsServiceRunning()) {
+        LOGE("service is not active!");
+        return;
+    }
+    ret = CreateCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("CreateCallCtx failed, ret %d", ret);
+        return;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)(&requestId), sizeof(requestId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_REQID);
+        DestroyCallCtx(&callCtx, NULL);
+        return;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_APPID, (const uint8_t *)appId, strlen(appId) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_APPID);
+        DestroyCallCtx(&callCtx, NULL);
+        return;
+    }
+    ret = DoBinderCall(callCtx, IPC_CALL_GM_CANCEL_REQUEST, true);
+    DestroyCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("ipc call failed");
+    } else {
+        LOGI("process done, ret %d", ret);
+    }
 }
 
 static void InitIpcGmMethods(DeviceGroupManager *gmMethodObj)
@@ -1619,9 +1652,42 @@ static int32_t IpcGaAuthDevice(int32_t osAccountId, int64_t authReqId, const cha
 
 static void IpcGaCancelRequest(int64_t requestId, const char *appId)
 {
-    (void)requestId;
-    (void)appId;
-    LOGW("not supported!");
+    uintptr_t callCtx = 0x0;
+    int32_t ret;
+
+    LOGI("starting ...");
+    if (!IS_STRING_VALID(appId)) {
+        LOGE("invalid appId!");
+        return;
+    }
+    if (!IsServiceRunning()) {
+        LOGE("service is not active!");
+        return;
+    }
+    ret = CreateCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("CreateCallCtx failed, ret %d", ret);
+        return;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)(&requestId), sizeof(requestId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_REQID);
+        DestroyCallCtx(&callCtx, NULL);
+        return;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_APPID, (const uint8_t *)appId, strlen(appId) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_APPID);
+        DestroyCallCtx(&callCtx, NULL);
+        return;
+    }
+    ret = DoBinderCall(callCtx, IPC_CALL_GA_CANCEL_REQUEST, true);
+    DestroyCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("ipc call failed");
+    } else {
+        LOGI("process done, ret %d", ret);
+    }
 }
 
 static void InitIpcGaMethods(GroupAuthManager *gaMethodObj)
