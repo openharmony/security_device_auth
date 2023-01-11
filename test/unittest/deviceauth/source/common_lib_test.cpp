@@ -491,9 +491,6 @@ HWTEST_F(CommonLibTest, HcClearJsonTest001, TestSize.Level0)
     ClearSensitiveStringInJson(nullptr, "name");
     ClearSensitiveStringInJson(jsonObj, "gender");
     ClearSensitiveStringInJson(jsonObj, "name");
-    char jsonStr[] = "{\"name\":\"test_name\", \"age\":18}";
-    ClearAndFreeJsonString(nullptr);
-    ClearAndFreeJsonString(jsonStr);
     FreeJson(jsonObj);
 }
 
