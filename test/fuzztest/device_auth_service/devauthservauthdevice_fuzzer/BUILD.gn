@@ -54,7 +54,7 @@ ohos_fuzztest("DevAuthServAuthDeviceFuzzTest") {
   }
   deps = [
     "${deps_adapter_path}:${hal_module_name}",
-    "//third_party/cJSON:cjson_static",
+    "//third_party/cJSON:cjson",
   ]
   external_deps = [
     "c_utils:utils",
