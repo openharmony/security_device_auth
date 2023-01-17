@@ -123,26 +123,33 @@ HWTEST_F(IsoAuthTaskTest, IsoAuthTaskTest002, TestSize.Level0)
     int32_t ret = InitDeviceAuthService();
     ASSERT_EQ(ret, HC_SUCCESS);
 
-    IsoAuthParams params;
-    params.localDevType = DEVICE_TYPE_CONTROLLER;
-    ret = AccountAuthGeneratePsk(&params);
+    IsoAuthParams *params = static_cast<IsoAuthParams *>(HcMalloc(sizeof(IsoAuthParams), 0));
+    EXPECT_NE(params, nullptr);
+    params->localDevType = DEVICE_TYPE_CONTROLLER;
+    ret = AccountAuthGeneratePsk(params);
     EXPECT_NE(ret, HC_SUCCESS);
 
-    params.userIdPeer = const_cast<char *>(TEST_USER_ID.c_str());
+    const char *userId = TEST_USER_ID.c_str();
+    uint32_t userIdLen = HcStrlen(userId) + 1;
+    params->userIdPeer = static_cast<char *>(HcMalloc(userIdLen, 0));
+    EXPECT_NE(params->userIdPeer, nullptr);
+    (void)memcpy_s(params->userIdPeer, userIdLen, userId, userIdLen);
 
-    uint32_t udidLen = HcStrlen(TEST_UDID.c_str()) + 1;
-    uint8_t *udidVal = static_cast<uint8_t *>(HcMalloc(udidLen, 0));
-    EXPECT_NE(udidVal, nullptr);
-    (void)memcpy_s(udidVal, udidLen, TEST_UDID.c_str(), udidLen);
+    const char *udid = TEST_UDID.c_str();
+    uint32_t udidLen = HcStrlen(udid) + 1;
+    params->devIdPeer.val = static_cast<uint8_t *>(HcMalloc(udidLen, 0));
+    EXPECT_NE(params->devIdPeer.val, nullptr);
+    (void)memcpy_s(params->devIdPeer.val, udidLen, udid, udidLen);
+    params->devIdPeer.length = udidLen;
 
-    params.devIdPeer.val = udidVal;
-    params.devIdPeer.length = udidLen;
-    params.isoBaseParams.loader = GetLoaderInstance();
+    params->isoBaseParams.loader = GetLoaderInstance();
 
-    ret = AccountAuthGeneratePsk(&params);
+    ret = AccountAuthGeneratePsk(params);
     EXPECT_NE(ret, HC_SUCCESS);
 
-    HcFree(udidVal);
+    HcFree(params->devIdPeer.val);
+    HcFree(params->userIdPeer);
+    HcFree(params);
     DestroyDeviceAuthService();
 }
 
