@@ -56,7 +56,6 @@ if (defined(ohos_lite)) {
         ]
       }
       deps = [
-        "//base/hiviewdfx/hilog_lite/frameworks/mini:hilog_lite",
         "//base/security/huks/interfaces/innerkits/huks_lite:huks_3.0_sdk",
         "//base/startup/init/interfaces/innerkits:libbegetutil",
         "//build/lite/config/component/cJSON:cjson_shared",

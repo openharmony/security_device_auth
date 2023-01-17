@@ -155,7 +155,7 @@ int HcFileWrite(FileHandle file, const void *src, int srcSize)
 void HcFileClose(FileHandle file)
 {
     int fp = file.fileHandle.fd;
-    if (fp == 0) {
+    if (fp == -1) {
         return;
     }
 
