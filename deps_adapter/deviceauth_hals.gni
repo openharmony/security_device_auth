@@ -48,7 +48,6 @@ hal_common_files = [
   "${common_lib_path}/impl/src/string_util.c",
   "${key_management_adapter_path}/impl/src/alg_loader.c",
 
-  "${os_adapter_path}/impl/src/hc_log.c",
   "${os_adapter_path}/impl/src/hc_mutex.c",
   "${os_adapter_path}/impl/src/hc_task_thread.c",
   "${os_adapter_path}/impl/src/hc_time.c",
