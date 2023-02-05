@@ -204,7 +204,7 @@ static int32_t AssertIdenticalGroupExist(int32_t osAccountId, const CJson *jsonP
     uint32_t index;
     TrustedGroupEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
-        if ((entry != NULL) && (*entry != NULL) && (strcmp(userId, StringGet(&((*entry)->userId))) == 0)) {
+        if (strcmp(userId, StringGet(&((*entry)->userId))) == 0) {
             isExist = true;
             break;
         }
@@ -319,7 +319,7 @@ static void DelAllPeerTokens(int32_t osAccountId, const DeviceEntryVec *vec)
     uint32_t index;
     TrustedDeviceEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(*vec, index, entry) {
-        if ((entry == NULL) || (*entry == NULL) || (IsLocalDevice(StringGet(&(*entry)->udid)))) {
+        if (IsLocalDevice(StringGet(&(*entry)->udid))) {
             continue;
         }
         res = DelPeerDeviceToken(osAccountId, *entry);
@@ -504,7 +504,7 @@ static int32_t CheckUserIdValid(int32_t osAccountId, const CJson *jsonParams, co
         return HC_ERR_DB;
     }
     FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
-        if ((entry != NULL) && (*entry != NULL) && (strcmp(userId, StringGet(&(*entry)->sharedUserId)) == 0)) {
+        if (strcmp(userId, StringGet(&(*entry)->sharedUserId)) == 0) {
             ClearGroupEntryVec(&groupEntryVec);
             return HC_SUCCESS;
         }

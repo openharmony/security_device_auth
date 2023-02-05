@@ -48,7 +48,7 @@ static int32_t GetReqIdByChannelId(int64_t channelId, int64_t *returnReqId)
     ChannelEntry *entry = NULL;
     g_channelMutex->lock(g_channelMutex);
     FOR_EACH_HC_VECTOR(g_channelVec, index, entry) {
-        if ((entry != NULL) && (channelId == entry->channelId)) {
+        if (channelId == entry->channelId) {
             *returnReqId = entry->requestId;
             g_channelMutex->unlock(g_channelMutex);
             return HC_SUCCESS;
@@ -81,7 +81,7 @@ static void RemoveChannelEntry(int64_t channelId)
     ChannelEntry *entry = NULL;
     g_channelMutex->lock(g_channelMutex);
     FOR_EACH_HC_VECTOR(g_channelVec, index, entry) {
-        if ((entry != NULL) && (channelId == entry->channelId)) {
+        if (channelId == entry->channelId) {
             ChannelEntry tmpEntry;
             HC_VECTOR_POPELEMENT(&g_channelVec, &tmpEntry, index);
             g_channelMutex->unlock(g_channelMutex);

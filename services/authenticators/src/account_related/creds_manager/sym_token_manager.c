@@ -290,7 +290,7 @@ static OsSymTokensInfo *GetTokensInfoByOsAccountId(int32_t osAccountId)
     uint32_t index = 0;
     OsSymTokensInfo *info = NULL;
     FOR_EACH_HC_VECTOR(g_symTokensDb, index, info) {
-        if ((info != NULL) && (info->osAccountId == osAccountId)) {
+        if (info->osAccountId == osAccountId) {
             return info;
         }
     }
@@ -327,7 +327,7 @@ static SymToken **QueryTokenPtrIfMatch(const SymTokenVec *vec, const char *userI
     uint32_t index;
     SymToken **token;
     FOR_EACH_HC_VECTOR(*vec, index, token) {
-        if ((token != NULL) && (*token != NULL) && (IsTokenMatch(*token, userId, deviceId))) {
+        if (IsTokenMatch(*token, userId, deviceId)) {
             return token;
         }
     }

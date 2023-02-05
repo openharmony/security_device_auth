@@ -61,10 +61,8 @@ static void GetMaxVersion(VersionStruct *version)
     uint32_t index;
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_protocolEntityVec, index, ptr) {
-        if (ptr != NULL && *ptr != NULL) {
-            DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
-            version->third = (version->third) | temp->algInProtocol;
-        }
+        DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
+        version->third = (version->third) | temp->algInProtocol;
     }
 }
 
@@ -119,9 +117,7 @@ static void DestroyTaskT(Task *task)
     uint32_t index;
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(task->vec, index, ptr) {
-        if (ptr != NULL && *ptr != NULL) {
-            ((SubTaskBase *)(*ptr))->destroyTask((SubTaskBase *)(*ptr));
-        }
+        ((SubTaskBase *)(*ptr))->destroyTask((SubTaskBase *)(*ptr));
     }
     DESTROY_HC_VECTOR(SubTaskVec, &(task->vec));
     HcFree(task);
@@ -139,10 +135,6 @@ static int ProcessMultiTask(Task *task, const CJson *in, CJson *out, int32_t *st
         return HC_ERR_JSON_CREATE;
     }
     FOR_EACH_HC_VECTOR(task->vec, index, ptr) {
-        if ((ptr == NULL) || (*ptr == NULL)) {
-            LOGD("Null ptr in subTask vector.");
-            continue;
-        }
         tmpOut = CreateJson();
         if (tmpOut == NULL) {
             LOGE("Create tmpOut failed.");
@@ -297,16 +289,14 @@ static int CreateMultiSubTask(Task *task, const CJson *in)
     uint32_t index;
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_protocolEntityVec, index, ptr) {
-        if (ptr != NULL && (*ptr) != NULL) {
-            DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
-            SubTaskBase *subTask = temp->createSubTask(in);
-            if (subTask == NULL) {
-                LOGE("Create subTask failed, protocolType: %d.", temp->type);
-                return HC_ERR_ALLOC_MEMORY;
-            }
-            subTask->curVersion = task->versionInfo.curVersion;
-            task->vec.pushBackT(&(task->vec), (void *)subTask);
+        DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
+        SubTaskBase *subTask = temp->createSubTask(in);
+        if (subTask == NULL) {
+            LOGE("Create subTask failed, protocolType: %d.", temp->type);
+            return HC_ERR_ALLOC_MEMORY;
         }
+        subTask->curVersion = task->versionInfo.curVersion;
+        task->vec.pushBackT(&(task->vec), (void *)subTask);
     }
     return HC_SUCCESS;
 }
@@ -334,7 +324,7 @@ static int CreateSingleSubTask(Task *task, const CJson *in)
     uint32_t index;
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_protocolEntityVec, index, ptr) {
-        if (ptr != NULL && (*ptr) != NULL && (((DasProtocolEntity *)(*ptr))->type == protocolType)) {
+        if (((DasProtocolEntity *)(*ptr))->type == protocolType) {
             DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
             SubTaskBase *subTask = temp->createSubTask(in);
             if (subTask == NULL) {
@@ -409,17 +399,15 @@ int32_t RegisterLocalIdentityInTask(const char *pkgName, const char *serviceType
     uint32_t index;
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_protocolEntityVec, index, ptr) {
-        if (ptr != NULL && (*ptr) != NULL) {
-            DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
-            if ((temp->tokenManagerInstance == NULL) || (temp->tokenManagerInstance->registerLocalIdentity == NULL)) {
-                LOGD("Protocol type: %d, unsupported method!", temp->type);
-                continue;
-            }
-            res = temp->tokenManagerInstance->registerLocalIdentity(pkgName, serviceType, authId, userType);
-            if (res != HC_SUCCESS) {
-                LOGE("Protocol type: %d, registerLocalIdentity failed, res: %d!", temp->type, res);
-                return HC_ERR_GENERATE_KEY_FAILED;
-            }
+        DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
+        if ((temp->tokenManagerInstance == NULL) || (temp->tokenManagerInstance->registerLocalIdentity == NULL)) {
+            LOGD("Protocol type: %d, unsupported method!", temp->type);
+            continue;
+        }
+        res = temp->tokenManagerInstance->registerLocalIdentity(pkgName, serviceType, authId, userType);
+        if (res != HC_SUCCESS) {
+            LOGE("Protocol type: %d, registerLocalIdentity failed, res: %d!", temp->type, res);
+            return HC_ERR_GENERATE_KEY_FAILED;
         }
     }
     return res;
@@ -431,17 +419,15 @@ int32_t UnregisterLocalIdentityInTask(const char *pkgName, const char *serviceTy
     uint32_t index;
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_protocolEntityVec, index, ptr) {
-        if (ptr != NULL && (*ptr) != NULL) {
-            DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
-            if ((temp->tokenManagerInstance == NULL) || (temp->tokenManagerInstance->unregisterLocalIdentity == NULL)) {
-                LOGD("Protocol type: %d, unsupported method!", temp->type);
-                continue;
-            }
-            res = temp->tokenManagerInstance->unregisterLocalIdentity(pkgName, serviceType, authId, userType);
-            if (res != HC_SUCCESS) {
-                LOGE("Protocol type: %d, unregisterLocalIdentity failed, res: %d!", temp->type, res);
-                return res;
-            }
+        DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
+        if ((temp->tokenManagerInstance == NULL) || (temp->tokenManagerInstance->unregisterLocalIdentity == NULL)) {
+            LOGD("Protocol type: %d, unsupported method!", temp->type);
+            continue;
+        }
+        res = temp->tokenManagerInstance->unregisterLocalIdentity(pkgName, serviceType, authId, userType);
+        if (res != HC_SUCCESS) {
+            LOGE("Protocol type: %d, unregisterLocalIdentity failed, res: %d!", temp->type, res);
+            return res;
         }
     }
     return res;
@@ -453,17 +439,15 @@ int32_t DeletePeerAuthInfoInTask(const char *pkgName, const char *serviceType, U
     uint32_t index;
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_protocolEntityVec, index, ptr) {
-        if (ptr != NULL && (*ptr) != NULL) {
-            DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
-            if ((temp->tokenManagerInstance == NULL) || (temp->tokenManagerInstance->deletePeerAuthInfo == NULL)) {
-                LOGD("Protocol type: %d, unsupported method!", temp->type);
-                continue;
-            }
-            res = temp->tokenManagerInstance->deletePeerAuthInfo(pkgName, serviceType, authIdPeer, userTypePeer);
-            if (res != HC_SUCCESS) {
-                LOGE("Protocol type: %d, deletePeerAuthInfo failed, res: %d!", temp->type, res);
-                return res;
-            }
+        DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
+        if ((temp->tokenManagerInstance == NULL) || (temp->tokenManagerInstance->deletePeerAuthInfo == NULL)) {
+            LOGD("Protocol type: %d, unsupported method!", temp->type);
+            continue;
+        }
+        res = temp->tokenManagerInstance->deletePeerAuthInfo(pkgName, serviceType, authIdPeer, userTypePeer);
+        if (res != HC_SUCCESS) {
+            LOGE("Protocol type: %d, deletePeerAuthInfo failed, res: %d!", temp->type, res);
+            return res;
         }
     }
     return res;
@@ -475,14 +459,12 @@ int32_t GetPublicKeyInTask(const char *pkgName, const char *serviceType, Uint8Bu
     uint32_t index;
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_protocolEntityVec, index, ptr) {
-        if (ptr != NULL && (*ptr) != NULL) {
-            DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
-            if ((temp->tokenManagerInstance == NULL) || (temp->tokenManagerInstance->getPublicKey == NULL)) {
-                LOGD("Protocol type: %d, unsupported method!", temp->type);
-                continue;
-            }
-            return temp->tokenManagerInstance->getPublicKey(pkgName, serviceType, authIdPeer, userTypePeer, returnPk);
+        DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
+        if ((temp->tokenManagerInstance == NULL) || (temp->tokenManagerInstance->getPublicKey == NULL)) {
+            LOGD("Protocol type: %d, unsupported method!", temp->type);
+            continue;
         }
+        return temp->tokenManagerInstance->getPublicKey(pkgName, serviceType, authIdPeer, userTypePeer, returnPk);
     }
     LOGE("Failed to find valid protocol!");
     return HC_ERR_NOT_SUPPORT;
@@ -552,10 +534,8 @@ void DestroyDasProtocolEntities(void)
     uint32_t index;
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_protocolEntityVec, index, ptr) {
-        if (ptr != NULL && *ptr != NULL) {
-            HcFree((DasProtocolEntity *)(*ptr));
-            *ptr = NULL;
-        }
+        HcFree((DasProtocolEntity *)(*ptr));
+        *ptr = NULL;
     }
     DESTROY_HC_VECTOR(DasProtocolEntityVec, &g_protocolEntityVec);
 }

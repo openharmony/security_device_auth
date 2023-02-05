@@ -38,7 +38,7 @@ static int32_t UpdateCallbackIfExist(const char *appId, const DeviceAuthCallback
     CallbackEntry *entry = NULL;
     g_callbackMutex->lock(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
-        if ((entry != NULL) && (strcmp(entry->appId, appId) == 0)) {
+        if (strcmp(entry->appId, appId) == 0) {
             if (memcpy_s(entry->callback, sizeof(DeviceAuthCallback),
                 callback, sizeof(DeviceAuthCallback)) != EOK) {
                 g_callbackMutex->unlock(g_callbackMutex);
@@ -235,10 +235,8 @@ void DestroyCallbackManager(void)
     CallbackEntry *entry = NULL;
     g_callbackMutex->lock(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
-        if (entry != NULL) {
-            HcFree(entry->appId);
-            HcFree(entry->callback);
-        }
+        HcFree(entry->appId);
+        HcFree(entry->callback);
     }
     DESTROY_HC_VECTOR(GMCallbackEntryVec, &g_callbackVec);
     g_callbackMutex->unlock(g_callbackMutex);

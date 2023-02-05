@@ -95,7 +95,6 @@ void AddIpcCbObjByAppId(const char *appId, int32_t objIdx, int32_t type);
 void AddIpcCbObjByReqId(int64_t reqId, int32_t objIdx, int32_t type);
 
 bool IsCallbackMethod(int32_t methodId);
-bool IsServiceRunning(void);
 void ResetIpcCallBackNodeByNodeId(int32_t nodeIdx);
 IpcIo *InitIpcDataCache(uint32_t buffSz);
 int32_t GetIpcIoDataLength(const IpcIo *io);

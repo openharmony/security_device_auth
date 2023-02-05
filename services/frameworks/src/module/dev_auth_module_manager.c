@@ -52,10 +52,8 @@ static AuthModuleBase *GetModule(int moduleType)
     uint32_t index;
     void **module = NULL;
     FOR_EACH_HC_VECTOR(g_authModuleVec, index, module) {
-        if ((module != NULL) && (*module != NULL)) {
-            if (moduleType == ((AuthModuleBase *)(*module))->moduleType) {
-                return *module;
-            }
+        if (moduleType == ((AuthModuleBase *)(*module))->moduleType) {
+            return *module;
         }
     }
     LOGE("There is no matched module, moduleType: %d.", moduleType);
@@ -304,9 +302,7 @@ void DestroyModules(void)
     uint32_t index;
     void **module = NULL;
     FOR_EACH_HC_VECTOR(g_authModuleVec, index, module) {
-        if ((module != NULL) && (*module != NULL)) {
-            ((AuthModuleBase *)(*module))->destroyModule((AuthModuleBase *)*module);
-        }
+        ((AuthModuleBase *)(*module))->destroyModule((AuthModuleBase *)*module);
     }
     DESTROY_HC_VECTOR(AuthModuleVec, &g_authModuleVec);
     (void)memset_s(&g_version, sizeof(VersionStruct), 0, sizeof(VersionStruct));

@@ -544,7 +544,7 @@ static OsAccountTokenInfo *GetTokenInfoByOsAccountId(int32_t osAccountId)
     uint32_t index = 0;
     OsAccountTokenInfo *info = NULL;
     FOR_EACH_HC_VECTOR(g_accountTokenDb, index, info) {
-        if ((info != NULL) && (info->osAccountId == osAccountId)) {
+        if (info->osAccountId == osAccountId) {
             return info;
         }
     }
@@ -660,9 +660,6 @@ static AccountToken **QueryTokenPtrIfMatch(const AccountTokenVec *vec, const cha
     uint32_t index;
     AccountToken **token;
     FOR_EACH_HC_VECTOR(*vec, index, token) {
-        if ((token == NULL) || (*token == NULL)) {
-            continue;
-        }
         if ((strcmp(userId, (const char *)((*token)->pkInfo.userId.val)) == 0) &&
             (strcmp(deviceId, (const char *)((*token)->pkInfo.deviceId.val)) == 0)) {
             return token;
@@ -1115,9 +1112,7 @@ static int32_t DeleteToken(int32_t osAccountId, const char *userId, const char *
     uint32_t index;
     AccountToken **token;
     FOR_EACH_HC_VECTOR(deleteTokens, index, token) {
-        if ((token != NULL) && (*token != NULL)) {
-            DeleteKeyPair(*token);
-        }
+        DeleteKeyPair(*token);
     }
     ClearAccountTokenVec(&deleteTokens);
     return HC_SUCCESS;

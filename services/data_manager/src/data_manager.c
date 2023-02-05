@@ -178,7 +178,7 @@ static OsAccountTrustedInfo *GetTrustedInfoByOsAccountId(int32_t osAccountId)
     uint32_t index = 0;
     OsAccountTrustedInfo *info = NULL;
     FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {
-        if ((info != NULL) && (info->osAccountId == osAccountId)) {
+        if (info->osAccountId == osAccountId) {
             return info;
         }
     }
@@ -715,7 +715,7 @@ static TrustedGroupEntry **QueryGroupEntryPtrIfMatch(const GroupEntryVec *vec, c
     uint32_t index;
     TrustedGroupEntry **entry;
     FOR_EACH_HC_VECTOR(*vec, index, entry) {
-        if ((entry != NULL) && (*entry != NULL) && (CompareQueryGroupParams(params, *entry))) {
+        if (CompareQueryGroupParams(params, *entry)) {
             return entry;
         }
     }
@@ -727,7 +727,7 @@ static TrustedDeviceEntry **QueryDeviceEntryPtrIfMatch(const DeviceEntryVec *vec
     uint32_t index;
     TrustedDeviceEntry **entry;
     FOR_EACH_HC_VECTOR(*vec, index, entry) {
-        if ((entry != NULL) && (*entry != NULL) && (CompareQueryDeviceParams(params, *entry))) {
+        if (CompareQueryDeviceParams(params, *entry)) {
             return entry;
         }
     }
@@ -1073,7 +1073,7 @@ int32_t QueryGroups(int32_t osAccountId, const QueryGroupParams *params, GroupEn
     uint32_t index;
     TrustedGroupEntry **entry;
     FOR_EACH_HC_VECTOR(info->groups, index, entry) {
-        if ((entry == NULL) || (*entry == NULL) || (!CompareQueryGroupParams(params, *entry))) {
+        if (!CompareQueryGroupParams(params, *entry)) {
             continue;
         }
         TrustedGroupEntry *newEntry = DeepCopyGroupEntry(*entry);
@@ -1105,7 +1105,7 @@ int32_t QueryDevices(int32_t osAccountId, const QueryDeviceParams *params, Devic
     uint32_t index;
     TrustedDeviceEntry **entry;
     FOR_EACH_HC_VECTOR(info->devices, index, entry) {
-        if ((entry == NULL) || (*entry == NULL) || (!CompareQueryDeviceParams(params, *entry))) {
+        if (!CompareQueryDeviceParams(params, *entry)) {
             continue;
         }
         TrustedDeviceEntry *newEntry = DeepCopyDeviceEntry(*entry);

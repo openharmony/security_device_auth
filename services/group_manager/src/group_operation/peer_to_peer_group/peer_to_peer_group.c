@@ -247,9 +247,6 @@ static int32_t DelAllPeerDevAndKeyInfo(int32_t osAccountId, const char *groupId)
     uint32_t index;
     TrustedDeviceEntry **entryPtr = NULL;
     FOR_EACH_HC_VECTOR(deviceEntryVec, index, entryPtr) {
-        if ((entryPtr == NULL) || (*entryPtr == NULL)) {
-            continue;
-        }
         TrustedDeviceEntry *entry = (TrustedDeviceEntry *)(*entryPtr);
         if (IsLocalDevice(StringGet(&entry->udid))) {
             continue;
