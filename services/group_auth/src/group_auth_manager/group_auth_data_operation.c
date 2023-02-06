@@ -135,14 +135,12 @@ static int32_t GetGroupEntryById(int32_t osAccountId, const char *groupId, Trust
         return HC_ERR_GROUP_NOT_EXIST;
     }
     FOR_EACH_HC_VECTOR(groupEntryVec, groupIndex, entry) {
-        if ((entry != NULL) && (*entry != NULL)) {
-            if (!GaDeepCopyGroupEntry(*entry, returnEntry)) {
-                ClearGroupEntryVec(&groupEntryVec);
-                return HC_ERR_GROUP_NOT_EXIST;
-            }
+        if (!GaDeepCopyGroupEntry(*entry, returnEntry)) {
             ClearGroupEntryVec(&groupEntryVec);
-            return HC_SUCCESS;
+            return HC_ERR_GROUP_NOT_EXIST;
         }
+        ClearGroupEntryVec(&groupEntryVec);
+        return HC_SUCCESS;
     }
     ClearGroupEntryVec(&groupEntryVec);
     return HC_ERR_GROUP_NOT_EXIST;
@@ -198,14 +196,12 @@ int32_t GaGetTrustedDeviceEntryById(int32_t osAccountId, const char *deviceId,
         return HC_ERR_DEVICE_NOT_EXIST;
     }
     FOR_EACH_HC_VECTOR(deviceEntryVec, index, deviceEntry) {
-        if ((deviceEntry != NULL) && (*deviceEntry != NULL)) {
-            if (!GaDeepCopyDeviceEntry(*deviceEntry, returnDeviceEntry)) {
-                ClearDeviceEntryVec(&deviceEntryVec);
-                return HC_ERR_GROUP_NOT_EXIST;
-            }
+        if (!GaDeepCopyDeviceEntry(*deviceEntry, returnDeviceEntry)) {
             ClearDeviceEntryVec(&deviceEntryVec);
-            return HC_SUCCESS;
+            return HC_ERR_GROUP_NOT_EXIST;
         }
+        ClearDeviceEntryVec(&deviceEntryVec);
+        return HC_SUCCESS;
     }
     ClearDeviceEntryVec(&deviceEntryVec);
     return HC_ERR_DEVICE_NOT_EXIST;

@@ -61,7 +61,7 @@ static int32_t GetSessionId(int64_t requestId, int64_t *sessionId)
     uint32_t index;
     RequestInfo *requestInfo = NULL;
     FOR_EACH_HC_VECTOR(g_requestVec, index, requestInfo) {
-        if ((requestInfo != NULL) && (requestInfo->requestId == requestId)) {
+        if (requestInfo->requestId == requestId) {
             *sessionId = requestInfo->sessionId;
             return HC_SUCCESS;
         }
@@ -74,7 +74,7 @@ static int32_t GetSessionIdByType(int64_t requestId, int32_t type, int64_t *sess
     uint32_t index;
     RequestInfo *requestInfo = NULL;
     FOR_EACH_HC_VECTOR(g_requestVec, index, requestInfo) {
-        if ((requestInfo != NULL) && (requestInfo->requestId == requestId)) {
+        if (requestInfo->requestId == requestId) {
             if (requestInfo->type != type) {
                 LOGE("RequestId is match but type not match");
                 return HC_ERR_REQUEST_NOT_FOUND;
@@ -91,7 +91,7 @@ static void DestroyRequest(int64_t requestId)
     uint32_t index;
     RequestInfo *request = NULL;
     FOR_EACH_HC_VECTOR(g_requestVec, index, request) {
-        if ((request != NULL) && (request->requestId == requestId)) {
+        if (request->requestId == requestId) {
             RequestInfo tempRequest;
             HC_VECTOR_POPELEMENT(&g_requestVec, &tempRequest, index);
             return;
@@ -110,10 +110,8 @@ void DestroySessionManager(void)
     uint32_t index;
     void **session = NULL;
     FOR_EACH_HC_VECTOR(g_sessionManagerVec, index, session) {
-        if (session != NULL && (*session != NULL)) {
-            Session *temp = (Session *)(*session);
-            temp->destroy(temp);
-        }
+        Session *temp = (Session *)(*session);
+        temp->destroy(temp);
     }
     DESTROY_HC_VECTOR(SessionManagerVec, &g_sessionManagerVec);
     DESTROY_HC_VECTOR(RequestInfoVec, &g_requestVec);
@@ -135,7 +133,7 @@ static void InformTimeOutAndDestroyRequest(const DeviceAuthCallback *callback, i
     uint32_t index;
     RequestInfo *requestInfo = NULL;
     FOR_EACH_HC_VECTOR(g_requestVec, index, requestInfo) {
-        if ((requestInfo != NULL) && (requestInfo->sessionId == sessionId)) {
+        if (requestInfo->sessionId == sessionId) {
             requestId = requestInfo->requestId;
             RequestInfo tempRequest;
             HC_VECTOR_POPELEMENT(&g_requestVec, &tempRequest, index);
@@ -179,11 +177,9 @@ int32_t ProcessSession(int64_t requestId, int32_t type, CJson *in)
     uint32_t index;
     void **session = NULL;
     FOR_EACH_HC_VECTOR(g_sessionManagerVec, index, session) {
-        if (session != NULL && (*session != NULL)) {
-            Session *ptr = (Session *)(*session);
-            if (ptr->sessionId == sessionId) {
-                return ptr->process(ptr, in);
-            }
+        Session *ptr = (Session *)(*session);
+        if (ptr->sessionId == sessionId) {
+            return ptr->process(ptr, in);
         }
     }
     return HC_ERR_SESSION_NOT_EXIST;
@@ -285,7 +281,7 @@ void DestroySessionByType(int64_t requestId, const char *appId, int cancelType)
     uint32_t index;
     void **session = NULL;
     FOR_EACH_HC_VECTOR(g_sessionManagerVec, index, session) {
-        if ((session != NULL) && (*session != NULL) && (((Session *)(*session))->sessionId == sessionId)) {
+        if (((Session *)(*session))->sessionId == sessionId) {
             if (!CheckCancelPermission(requestId, appId, cancelType, (Session *)(*session))) {
                 LOGE("destroy session failed, requestId: %" PRId64 ", appId: %s", requestId, appId);
                 return;
@@ -310,13 +306,11 @@ void DestroySession(int64_t requestId)
     uint32_t index;
     void **session = NULL;
     FOR_EACH_HC_VECTOR(g_sessionManagerVec, index, session) {
-        if (session != NULL && (*session != NULL)) {
-            if (((Session *)(*session))->sessionId == sessionId) {
-                ((Session *)(*session))->destroy(((Session *)(*session)));
-                *session = NULL;
-                HC_VECTOR_POPELEMENT(&g_sessionManagerVec, session, index);
-                break;
-            }
+        if (((Session *)(*session))->sessionId == sessionId) {
+            ((Session *)(*session))->destroy(((Session *)(*session)));
+            *session = NULL;
+            HC_VECTOR_POPELEMENT(&g_sessionManagerVec, session, index);
+            break;
         }
     }
     DestroyRequest(requestId);
@@ -332,7 +326,7 @@ void OnChannelOpened(int64_t requestId, int64_t channelId)
     uint32_t index;
     void **session = NULL;
     FOR_EACH_HC_VECTOR(g_sessionManagerVec, index, session) {
-        if (session == NULL || (*session == NULL) || (((Session *)(*session))->sessionId != sessionId)) {
+        if (((Session *)(*session))->sessionId != sessionId) {
             continue;
         }
         int sessionType = ((Session *)(*session))->type;

@@ -1592,12 +1592,6 @@ bool IsCallbackMethod(int32_t methodId)
     return false;
 }
 
-bool IsServiceRunning(void)
-{
-    LOGI("service activity check");
-    return g_proxyInstance != NULL ? true : false;
-}
-
 IpcIo *InitIpcDataCache(uint32_t buffSz)
 {
     IpcIo *ioPtr = NULL;

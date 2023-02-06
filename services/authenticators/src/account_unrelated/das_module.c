@@ -89,9 +89,7 @@ static void DestroyDasModule(AuthModuleBase *module)
     uint32_t index;
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_taskInModuleVec, index, ptr) {
-        if ((ptr != NULL) && (*ptr != NULL)) {
-            ((Task *)(*ptr))->destroyTask((Task *)(*ptr));
-        }
+        ((Task *)(*ptr))->destroyTask((Task *)(*ptr));
     }
     DESTROY_HC_VECTOR(TaskInModuleVec, &g_taskInModuleVec);
     DestroyDasProtocolEntities();
@@ -109,11 +107,9 @@ static int ProcessDasTask(int32_t taskId, const CJson* in, CJson* out, int32_t *
     uint32_t index;
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_taskInModuleVec, index, ptr) {
-        if ((ptr != NULL) && (*ptr != NULL)) {
-            Task *temp = (Task *)*ptr;
-            if (taskId == temp->taskId) {
-                return temp->processTask(temp, in, out, status);
-            }
+        Task *temp = (Task *)*ptr;
+        if (taskId == temp->taskId) {
+            return temp->processTask(temp, in, out, status);
         }
     }
 
@@ -126,14 +122,12 @@ static void DestroyDasTask(int taskId)
     uint32_t index;
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_taskInModuleVec, index, ptr) {
-        if ((ptr != NULL) && (*ptr != NULL)) {
-            Task *temp = (Task *)(*ptr);
-            if (taskId == temp->taskId) {
-                temp->destroyTask(temp);
-                void *tempPtr = NULL;
-                HC_VECTOR_POPELEMENT(&g_taskInModuleVec, &tempPtr, index);
-                return;
-            }
+        Task *temp = (Task *)(*ptr);
+        if (taskId == temp->taskId) {
+            temp->destroyTask(temp);
+            void *tempPtr = NULL;
+            HC_VECTOR_POPELEMENT(&g_taskInModuleVec, &tempPtr, index);
+            return;
         }
     }
 }

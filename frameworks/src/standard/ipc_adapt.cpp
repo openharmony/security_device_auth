@@ -1512,12 +1512,6 @@ bool IsCallbackMethod(int32_t methodId)
     return false;
 }
 
-bool IsServiceRunning(void)
-{
-    LOGI("service activity check");
-    return ProxyDevAuth::ServiceRunning();
-}
-
 void UnInitProxyAdapt(void)
 {
     g_sdkCbStub[IPC_CALL_BACK_STUB_AUTH_ID] = nullptr;

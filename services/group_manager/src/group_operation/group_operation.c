@@ -101,28 +101,26 @@ static int32_t GenerateReturnGroupVec(GroupEntryVec *groupInfoVec, char **return
     uint32_t index;
     TrustedGroupEntry **groupInfoPtr = NULL;
     FOR_EACH_HC_VECTOR(*groupInfoVec, index, groupInfoPtr) {
-        if (groupInfoPtr != NULL) {
-            TrustedGroupEntry *groupInfo = *groupInfoPtr;
-            CJson *groupInfoJson = CreateJson();
-            if (groupInfoJson == NULL) {
-                LOGE("Failed to allocate groupInfoJson memory!");
-                FreeJson(json);
-                return HC_ERR_ALLOC_MEMORY;
-            }
-            int32_t result = GenerateReturnGroupInfo(groupInfo, groupInfoJson);
-            if (result != HC_SUCCESS) {
-                FreeJson(groupInfoJson);
-                FreeJson(json);
-                return result;
-            }
-            if (AddObjToArray(json, groupInfoJson) != HC_SUCCESS) {
-                LOGE("Failed to add groupInfoStr to returnGroupVec!");
-                FreeJson(groupInfoJson);
-                FreeJson(json);
-                return HC_ERR_JSON_FAIL;
-            }
-            ++groupCount;
+        TrustedGroupEntry *groupInfo = *groupInfoPtr;
+        CJson *groupInfoJson = CreateJson();
+        if (groupInfoJson == NULL) {
+            LOGE("Failed to allocate groupInfoJson memory!");
+            FreeJson(json);
+            return HC_ERR_ALLOC_MEMORY;
         }
+        int32_t result = GenerateReturnGroupInfo(groupInfo, groupInfoJson);
+        if (result != HC_SUCCESS) {
+            FreeJson(groupInfoJson);
+            FreeJson(json);
+            return result;
+        }
+        if (AddObjToArray(json, groupInfoJson) != HC_SUCCESS) {
+            LOGE("Failed to add groupInfoStr to returnGroupVec!");
+            FreeJson(groupInfoJson);
+            FreeJson(json);
+            return HC_ERR_JSON_FAIL;
+        }
+        ++groupCount;
     }
     *returnGroupVec = PackJsonToString(json);
     FreeJson(json);
@@ -151,28 +149,26 @@ static int32_t GenerateReturnDeviceVec(DeviceEntryVec *devInfoVec, char **return
     uint32_t index;
     TrustedDeviceEntry **devInfoPtr = NULL;
     FOR_EACH_HC_VECTOR(*devInfoVec, index, devInfoPtr) {
-        if ((devInfoPtr != NULL) && ((*devInfoPtr) != NULL)) {
-            TrustedDeviceEntry *devInfo = (TrustedDeviceEntry*)(*devInfoPtr);
-            CJson *devInfoJson = CreateJson();
-            if (devInfoJson == NULL) {
-                LOGE("Failed to allocate devInfoJson memory!");
-                FreeJson(json);
-                return HC_ERR_ALLOC_MEMORY;
-            }
-            int32_t result = GenerateReturnDevInfo(devInfo, devInfoJson);
-            if (result != HC_SUCCESS) {
-                FreeJson(devInfoJson);
-                FreeJson(json);
-                return result;
-            }
-            if (AddObjToArray(json, devInfoJson) != HC_SUCCESS) {
-                LOGE("Failed to add devInfoStr to returnGroupVec!");
-                FreeJson(devInfoJson);
-                FreeJson(json);
-                return HC_ERR_JSON_FAIL;
-            }
-            ++devCount;
+        TrustedDeviceEntry *devInfo = (TrustedDeviceEntry*)(*devInfoPtr);
+        CJson *devInfoJson = CreateJson();
+        if (devInfoJson == NULL) {
+            LOGE("Failed to allocate devInfoJson memory!");
+            FreeJson(json);
+            return HC_ERR_ALLOC_MEMORY;
         }
+        int32_t result = GenerateReturnDevInfo(devInfo, devInfoJson);
+        if (result != HC_SUCCESS) {
+            FreeJson(devInfoJson);
+            FreeJson(json);
+            return result;
+        }
+        if (AddObjToArray(json, devInfoJson) != HC_SUCCESS) {
+            LOGE("Failed to add devInfoStr to returnGroupVec!");
+            FreeJson(devInfoJson);
+            FreeJson(json);
+            return HC_ERR_JSON_FAIL;
+        }
+        ++devCount;
     }
     *returnDevInfoVec = PackJsonToString(json);
     FreeJson(json);
@@ -207,9 +203,6 @@ static int32_t QueryRelatedGroupsForGetPk(int32_t osAccountId, const char *udid,
     uint32_t index;
     TrustedDeviceEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(deviceEntryVec, index, entry) {
-        if ((entry == NULL) || (*entry == NULL)) {
-            continue;
-        }
         /* In order to improve availability, even if there is an error, it does not terminate. */
         TrustedGroupEntry *groupEntry = GetGroupEntryById(osAccountId, StringGet(&(*entry)->groupId));
         if (groupEntry == NULL) {
@@ -305,9 +298,6 @@ static void AddAllPkInfoToList(int32_t osAccountId, const char *queryUdid, const
     uint32_t index;
     TrustedGroupEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(*groupEntryVec, index, entry) {
-        if ((entry == NULL) || (*entry == NULL)) {
-            continue;
-        }
         /* Account related group cannot export public key. */
         if (IsAccountRelatedGroup((*entry)->type)) {
             continue;
@@ -343,9 +333,6 @@ static bool IsOnlyAccountRelatedGroups(const GroupEntryVec *groupEntryVec)
     uint32_t index;
     TrustedGroupEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(*groupEntryVec, index, entry) {
-        if ((entry == NULL) || (*entry == NULL)) {
-            continue;
-        }
         if (!IsAccountRelatedGroup((*entry)->type)) {
             return false;
         }

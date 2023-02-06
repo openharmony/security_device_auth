@@ -116,9 +116,6 @@ static int32_t FillAuthParams(int32_t osAccountId, const CJson *param,
     uint32_t index;
     TrustedGroupEntry **ptr = NULL;
     FOR_EACH_HC_VECTOR(*vec, index, ptr) {
-        if ((ptr == NULL) || (*ptr == NULL)) {
-            continue;
-        }
         const TrustedGroupEntry *groupInfo = (TrustedGroupEntry *)(*ptr);
         const char *groupId = StringGet(&(groupInfo->id));
         if (groupId == NULL) {
@@ -733,9 +730,7 @@ void DestroyAuthSession(Session *session)
     uint32_t index;
     void **paramsData = NULL;
     FOR_EACH_HC_VECTOR(realSession->paramsList, index, paramsData) {
-        if (paramsData != NULL) {
-            FreeJson((CJson *)*paramsData);
-        }
+        FreeJson((CJson *)*paramsData);
     }
     DESTROY_HC_VECTOR(ParamsVec, &(realSession->paramsList));
     HcFree(realSession);

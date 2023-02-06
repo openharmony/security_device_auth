@@ -249,9 +249,6 @@ static void DelAllTokens(int32_t osAccountId, const DeviceEntryVec *vec)
     uint32_t index;
     TrustedDeviceEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(*vec, index, entry) {
-        if ((entry == NULL) || (*entry == NULL)) {
-            continue;
-        }
         if (IsLocalDevice(StringGet(&(*entry)->udid))) {
             res = DelDeviceToken(osAccountId, *entry, true);
         } else {
@@ -269,7 +266,7 @@ static void DelAllPeerTokens(int32_t osAccountId, const DeviceEntryVec *vec)
     uint32_t index;
     TrustedDeviceEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(*vec, index, entry) {
-        if ((entry == NULL) || (*entry == NULL) || (IsLocalDevice(StringGet(&(*entry)->udid)))) {
+        if (IsLocalDevice(StringGet(&(*entry)->udid))) {
             continue;
         }
         res = DelDeviceToken(osAccountId, *entry, false);
@@ -312,10 +309,8 @@ static int32_t DelRelatedAcrossAccountGroups(int32_t osAccountId, const char *gr
     uint32_t index;
     TrustedGroupEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
-        if ((entry != NULL) && (*entry != NULL)) {
-            if (DelAcrossAccountGroupAndTokens(osAccountId, StringGet(&(*entry)->id)) != HC_SUCCESS) {
-                res = HC_ERR_DEL_GROUP;
-            }
+        if (DelAcrossAccountGroupAndTokens(osAccountId, StringGet(&(*entry)->id)) != HC_SUCCESS) {
+            res = HC_ERR_DEL_GROUP;
         }
     }
     ClearGroupEntryVec(&groupEntryVec);
@@ -499,7 +494,7 @@ static int32_t CheckUserIdValid(int32_t osAccountId, const CJson *jsonParams, co
         return HC_ERR_DB;
     }
     FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
-        if ((entry != NULL) && (*entry != NULL) && (strcmp(userId, StringGet(&(*entry)->userId)) == 0)) {
+        if (strcmp(userId, StringGet(&(*entry)->userId)) == 0) {
             ClearGroupEntryVec(&groupEntryVec);
             return HC_SUCCESS;
         }

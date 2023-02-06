@@ -33,7 +33,6 @@ extern "C" {
 #define REPLAY_CACHE_NUM(caches) (sizeof(caches) / sizeof(IpcDataInfo))
 #define IPC_APPID_LEN 128
 
-#define IS_STRING_VALID(str) (((str) != NULL) && ((str)[0] != 0))
 #define IS_COMM_DATA_VALID(dPtr, dLen) (((dPtr) != NULL) && ((dLen) > 0) && ((dLen) <= 4096))
 
 static const int32_t IPC_RESULT_NUM_1 = 1;
@@ -46,6 +45,11 @@ typedef struct {
 static IpcProxyCbInfo g_ipcProxyCbList = { 0 };
 static IpcProxyCbInfo g_ipcListenerCbList = { 0 };
 static HcMutex g_ipcMutex;
+
+static bool IsStrInValid(const char *str)
+{
+    return (str == NULL || str[0] == 0);
+}
 
 static void DelIpcCliCallbackCtx(const char *appId, IpcProxyCbInfo *cbCache)
 {
@@ -133,13 +137,9 @@ static int32_t IpcGmRegCallback(const char *appId, const DeviceAuthCallback *cal
     int32_t ret;
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId)) {
+    if (IsStrInValid(appId)) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -175,12 +175,8 @@ static int32_t IpcGmUnRegCallback(const char *appId)
     int32_t ret;
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId)) {
+    if (IsStrInValid(appId)) {
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -209,13 +205,9 @@ static int32_t IpcGmRegDataChangeListener(const char *appId, const DataChangeLis
     int32_t ret;
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId) || (listener == NULL)) {
+    if (IsStrInValid(appId) || (listener == NULL)) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -251,12 +243,8 @@ static int32_t IpcGmUnRegDataChangeListener(const char *appId)
     int32_t ret;
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId)) {
+    if (IsStrInValid(appId)) {
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -287,12 +275,8 @@ static int32_t IpcGmCreateGroup(int32_t osAccountId, int64_t requestId, const ch
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(createParams) || !IS_STRING_VALID(appid)) {
+    if (IsStrInValid(createParams) || IsStrInValid(appid)) {
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -348,12 +332,8 @@ static int32_t IpcGmDelGroup(int32_t osAccountId, int64_t requestId, const char 
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(delParams) || !IS_STRING_VALID(appId)) {
+    if (IsStrInValid(delParams) || IsStrInValid(appId)) {
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -409,12 +389,8 @@ static int32_t IpcGmAddMemberToGroup(int32_t osAccountId, int64_t requestId, con
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId) || !IS_STRING_VALID(addParams)) {
+    if (IsStrInValid(appId) || IsStrInValid(addParams)) {
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -469,12 +445,8 @@ static int32_t IpcGmDelMemberFromGroup(int32_t osAccountId, int64_t requestId, c
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId) || !IS_STRING_VALID(delParams)) {
+    if (IsStrInValid(appId) || IsStrInValid(delParams)) {
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -524,13 +496,9 @@ static int32_t IpcGmDelMemberFromGroup(int32_t osAccountId, int64_t requestId, c
 static int32_t IpcGmAddMultiMembersToGroup(int32_t osAccountId, const char *appId, const char *addParams)
 {
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId) || !IS_STRING_VALID(addParams)) {
+    if (IsStrInValid(appId) || IsStrInValid(addParams)) {
         LOGE("Invalid params");
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERR_IPC_SERVICE_DIED;
     }
     uintptr_t callCtx = 0x0;
     int32_t ret = CreateCallCtx(&callCtx, NULL);
@@ -576,13 +544,9 @@ static int32_t IpcGmAddMultiMembersToGroup(int32_t osAccountId, const char *appI
 static int32_t IpcGmDelMultiMembersFromGroup(int32_t osAccountId, const char *appId, const char *delParams)
 {
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId) || !IS_STRING_VALID(delParams)) {
+    if (IsStrInValid(appId) || IsStrInValid(delParams)) {
         LOGE("Invalid params");
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERR_IPC_SERVICE_DIED;
     }
     uintptr_t callCtx = 0x0;
     int32_t ret = CreateCallCtx(&callCtx, NULL);
@@ -636,10 +600,6 @@ static int32_t IpcGmProcessData(int64_t requestId, const uint8_t *data, uint32_t
     if (!IS_COMM_DATA_VALID(data, dataLen)) {
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
-    }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %d", ret);
@@ -684,10 +644,6 @@ static int32_t IpcGmGetRegisterInfo(const char *reqJsonStr, char **registerInfo)
     if ((reqJsonStr == NULL) || (registerInfo == NULL)) {
         LOGE("Invalid params.");
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -740,12 +696,8 @@ static int32_t IpcGmCheckAccessToGroup(int32_t osAccountId, const char *appId, c
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId) || !IS_STRING_VALID(groupId)) {
+    if (IsStrInValid(appId) || IsStrInValid(groupId)) {
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -818,13 +770,9 @@ static int32_t IpcGmGetPkInfoList(int32_t osAccountId, const char *appId, const 
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId) || !IS_STRING_VALID(queryParams) ||
+    if (IsStrInValid(appId) || IsStrInValid(queryParams) ||
         (returnInfoList == NULL) || (returnInfoNum == NULL)) {
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -901,12 +849,8 @@ static int32_t IpcGmGetGroupInfoById(int32_t osAccountId, const char *appId, con
     IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(groupId) || !IS_STRING_VALID(appId) || (outGroupInfo == NULL)) {
+    if (IsStrInValid(groupId) || IsStrInValid(appId) || (outGroupInfo == NULL)) {
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -986,12 +930,8 @@ static int32_t IpcGmGetGroupInfo(int32_t osAccountId, const char *appId, const c
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(queryParams) || !IS_STRING_VALID(appId) || (outGroupVec == NULL) || (groupNum == NULL)) {
+    if (IsStrInValid(queryParams) || IsStrInValid(appId) || (outGroupVec == NULL) || (groupNum == NULL)) {
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -1072,12 +1012,8 @@ static int32_t IpcGmGetJoinedGroups(int32_t osAccountId, const char *appId, int3
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId) || (outGroupVec == NULL) || (groupNum == NULL)) {
+    if (IsStrInValid(appId) || (outGroupVec == NULL) || (groupNum == NULL)) {
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -1157,12 +1093,8 @@ static int32_t IpcGmGetRelatedGroups(int32_t osAccountId, const char *appId, con
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId) || !IS_STRING_VALID(peerUdid) || (outGroupVec == NULL) || (groupNum == NULL)) {
+    if (IsStrInValid(appId) || IsStrInValid(peerUdid) || (outGroupVec == NULL) || (groupNum == NULL)) {
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -1268,12 +1200,8 @@ static int32_t IpcGmGetDeviceInfoById(int32_t osAccountId, const char *appId, co
     IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId) || !IS_STRING_VALID(peerUdid) || !IS_STRING_VALID(groupId) || (outDevInfo == NULL)) {
+    if (IsStrInValid(appId) || IsStrInValid(peerUdid) || IsStrInValid(groupId) || (outDevInfo == NULL)) {
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -1338,13 +1266,9 @@ static int32_t IpcGmGetTrustedDevices(int32_t osAccountId, const char *appId,
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId) || !IS_STRING_VALID(groupId) ||
+    if (IsStrInValid(appId) || IsStrInValid(groupId) ||
         (outDevInfoVec == NULL) || (deviceNum == NULL)) {
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -1399,11 +1323,7 @@ static bool IpcGmIsDeviceInGroup(int32_t osAccountId, const char *appId, const c
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId) || !IS_STRING_VALID(groupId) || !IS_STRING_VALID(udid)) {
-        return false;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
+    if (IsStrInValid(appId) || IsStrInValid(groupId) || IsStrInValid(udid)) {
         return false;
     }
     ret = CreateCallCtx(&callCtx, NULL);
@@ -1466,12 +1386,8 @@ static void IpcGmCancelRequest(int64_t requestId, const char *appId)
     int32_t ret;
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId)) {
+    if (IsStrInValid(appId)) {
         LOGE("invalid appId!");
-        return;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not active!");
         return;
     }
     ret = CreateCallCtx(&callCtx, NULL);
@@ -1543,10 +1459,6 @@ static int32_t IpcGaProcessData(int64_t authReqId,
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
-    }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %d", ret);
@@ -1596,13 +1508,9 @@ static int32_t IpcGaAuthDevice(int32_t osAccountId, int64_t authReqId, const cha
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(authParams) || (callback == NULL)) {
+    if (IsStrInValid(authParams) || (callback == NULL)) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not activity");
-        return HC_ERROR;
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
@@ -1656,12 +1564,8 @@ static void IpcGaCancelRequest(int64_t requestId, const char *appId)
     int32_t ret;
 
     LOGI("starting ...");
-    if (!IS_STRING_VALID(appId)) {
+    if (IsStrInValid(appId)) {
         LOGE("invalid appId!");
-        return;
-    }
-    if (!IsServiceRunning()) {
-        LOGE("service is not active!");
         return;
     }
     ret = CreateCallCtx(&callCtx, NULL);

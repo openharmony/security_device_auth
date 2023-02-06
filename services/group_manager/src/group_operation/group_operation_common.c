@@ -89,11 +89,9 @@ TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *d
         return NULL;
     }
     FOR_EACH_HC_VECTOR(deviceEntryVec, index, deviceEntry) {
-        if ((deviceEntry != NULL) && (*deviceEntry != NULL)) {
-            TrustedDeviceEntry *returnEntry = DeepCopyDeviceEntry(*deviceEntry);
-            ClearDeviceEntryVec(&deviceEntryVec);
-            return returnEntry;
-        }
+        TrustedDeviceEntry *returnEntry = DeepCopyDeviceEntry(*deviceEntry);
+        ClearDeviceEntryVec(&deviceEntryVec);
+        return returnEntry;
     }
     ClearDeviceEntryVec(&deviceEntryVec);
     return NULL;
@@ -116,11 +114,9 @@ TrustedGroupEntry *GetGroupEntryById(int32_t osAccountId, const char *groupId)
         return NULL;
     }
     FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
-        if ((entry != NULL) && (*entry != NULL)) {
-            TrustedGroupEntry *returnEntry = DeepCopyGroupEntry(*entry);
-            ClearGroupEntryVec(&groupEntryVec);
-            return returnEntry;
-        }
+        TrustedGroupEntry *returnEntry = DeepCopyGroupEntry(*entry);
+        ClearGroupEntryVec(&groupEntryVec);
+        return returnEntry;
     }
     ClearGroupEntryVec(&groupEntryVec);
     return NULL;
@@ -284,9 +280,6 @@ int32_t GetRelatedGroups(int32_t osAccountId, const char *peerDeviceId, bool isU
         return result;
     }
     FOR_EACH_HC_VECTOR(deviceEntryVec, index, entry) {
-        if ((entry == NULL) || (*entry == NULL)) {
-            continue;
-        }
         TrustedGroupEntry *groupEntry = GetGroupEntryById(osAccountId, StringGet(&(*entry)->groupId));
         if (groupEntry == NULL) {
             LOGE("Failed to get group entry by id!");

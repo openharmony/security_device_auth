@@ -80,9 +80,6 @@ static const AccountVersionInfo *NegotiateForAuth(int32_t credentialType)
     uint32_t index;
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_authVersionInfoVec, index, ptr) {
-        if (ptr == NULL || *ptr == NULL) {
-            continue;
-        }
         AccountVersionInfo *temp = (AccountVersionInfo *)(*ptr);
         if ((temp->versionNo & versionNo) == versionNo) {
             return temp;
