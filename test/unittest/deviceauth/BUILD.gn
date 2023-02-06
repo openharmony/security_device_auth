@@ -91,6 +91,8 @@ ohos_unittest("deviceauth_llt") {
     "source/os_account_adapter_mock.c",
     "source/protocol_task_main_mock.c",
     "source/standard_exchange_task_test.cpp",
+    "unit_test/source/account_related_group_auth_dir_test.cpp",
+    "unit_test/source/auth_session_dir_test.cpp",
     "unit_test/source/pake_v2_auth_task_test.cpp",
   ]
   defines = [
