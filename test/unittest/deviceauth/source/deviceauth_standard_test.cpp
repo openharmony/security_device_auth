@@ -229,7 +229,7 @@ static void RemoveHuks(void)
 
 static void DeleteDatabase()
 {
-    const char *groupPath = "/data/service/el1/public/deviceauth";
+    const char *groupPath = "/data/service/el1/public/deviceauthMock";
     RemoveDir(groupPath);
     RemoveHuks();
     return;
@@ -2933,7 +2933,10 @@ public:
 };
 
 void DevAuthTest::SetUpTestCase() {}
-void DevAuthTest::TearDownTestCase() {}
+void DevAuthTest::TearDownTestCase()
+{
+    DeleteDatabase();
+}
 
 void DevAuthTest::SetUp()
 {
