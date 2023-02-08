@@ -116,3 +116,31 @@ ohos_unittest("deviceauth_llt") {
     "hiviewdfx_hilog_native:libhilog",
   ]
 }
+
+ohos_unittest("device_auth_ipc_test") {
+  module_out_path = module_output_path
+
+  include_dirs = hals_inc_path
+  include_dirs += [
+    "//base/security/device_auth/interfaces/innerkits",
+    "//base/security/access_token/interfaces/innerkits/nativetoken/include",
+    "//base/security/access_token/interfaces/innerkits/token_setproc/include",
+  ]
+
+  sources = [ "source/device_auth_ipc_test.cpp" ]
+
+  deps = [
+    "${deps_adapter_path}:${hal_module_name}",
+    "//base/security/access_token/interfaces/innerkits/nativetoken:libnativetoken",
+    "//base/security/access_token/interfaces/innerkits/token_setproc:libtoken_setproc",
+    "//third_party/cJSON:cjson",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "device_auth:deviceauth_sdk",
+    "hiviewdfx_hilog_native:libhilog",
+  ]
+}

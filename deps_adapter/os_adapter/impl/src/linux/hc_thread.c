@@ -30,6 +30,8 @@ void* StaticThreadFunc(void* args)
         return NULL;
     }
 
+    (void)pthread_setname_np(pthread_self(), StringGet(&thread->name));
+
     if (thread->threadFunc) {
         thread->threadFunc(args);
     }
