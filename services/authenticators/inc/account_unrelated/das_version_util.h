@@ -46,6 +46,10 @@ typedef struct VersionInfoT {
     VersionStruct curVersion;
 } VersionInfo;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int32_t GetVersionFromJson(const CJson *jsonObj, VersionStruct *minVer, VersionStruct *maxVer);
 int32_t AddVersionToJson(CJson *jsonObj, const VersionStruct *minVer, const VersionStruct *maxVer);
 
@@ -57,4 +61,7 @@ ProtocolType GetPrototolType(VersionStruct *curVersion, OperationCode opCode);
 PakeAlgType GetSupportedPakeAlg(VersionStruct *curVersion, ProtocolType protocolType);
 bool IsSupportedPsk(VersionStruct *curVersion);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -20,10 +20,17 @@
 #include "json_utils.h"
 #include "pake_base_cur_task.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int32_t PackageNonceAndCipherToJson(const Uint8Buff *nonce, const Uint8Buff *cipher, CJson *data, const char *key);
 int32_t ParseNonceAndCipherFromJson(Uint8Buff *nonce, Uint8Buff *cipher, const CJson *in, const char *key);
 
 int32_t GenerateSelfChallenge(PakeParams *params);
 int32_t GetPeerChallenge(PakeParams *params, const CJson *in);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

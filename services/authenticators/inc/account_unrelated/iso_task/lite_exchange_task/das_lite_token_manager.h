@@ -18,6 +18,13 @@
 
 #include "das_token_manager.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 const TokenManager *GetLiteTokenManagerInstance(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

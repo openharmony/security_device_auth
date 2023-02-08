@@ -19,5 +19,13 @@
 #include <stdint.h>
 #include "json_utils.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int GenerateSessionOrTaskId(int64_t *id);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

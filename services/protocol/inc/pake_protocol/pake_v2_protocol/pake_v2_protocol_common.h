@@ -19,6 +19,10 @@
 #include "hc_types.h"
 #include "pake_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int32_t InitPakeV2BaseParams(PakeBaseParams *params);
 void DestroyPakeV2BaseParams(PakeBaseParams *params);
 
@@ -28,4 +32,7 @@ int32_t ClientVerifyConfirmPakeV2Protocol(PakeBaseParams *params);
 int32_t ServerResponsePakeV2Protocol(PakeBaseParams *params);
 int32_t ServerConfirmPakeV2Protocol(PakeBaseParams *params);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

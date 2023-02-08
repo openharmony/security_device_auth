@@ -23,6 +23,13 @@ typedef struct {
     uint8_t challenge[CHALLENGE_SIZE];
 } IsoClientBindExchangeTask;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 SymBaseCurTask *CreateClientBindExchangeTask(IsoParams *params, const CJson *in, CJson *out, int32_t *status);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -19,8 +19,15 @@
 #include "pake_base_cur_task.h"
 #include "json_utils.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int32_t InitDasPakeV1Params(PakeParams *params, const CJson *in);
 void DestroyDasPakeV1Params(PakeParams *params);
 int32_t FillPskWithDerivedKeyHex(PakeParams *params);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

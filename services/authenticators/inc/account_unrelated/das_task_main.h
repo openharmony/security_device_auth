@@ -31,6 +31,10 @@ typedef struct TaskT {
     SubTaskVec vec;
 } Task;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 Task *CreateTaskT(int32_t *taskId, const CJson *in, CJson *out);
 
 int32_t InitDasProtocolEntities(void);
@@ -42,4 +46,7 @@ int32_t DeletePeerAuthInfoInTask(const char *pkgName, const char *serviceType, U
 int32_t GetPublicKeyInTask(const char *pkgName, const char *serviceType, Uint8Buff *authIdPeer, int userTypePeer,
                            Uint8Buff *returnPk);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

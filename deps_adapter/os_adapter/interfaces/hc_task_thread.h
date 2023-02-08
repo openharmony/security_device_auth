@@ -41,6 +41,14 @@ typedef struct HcTaskThreadT {
     HcBool quit;
 } HcTaskThread;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int32_t InitHcTaskThread(HcTaskThread* thread, size_t stackSize, const char* threadName);
 void DestroyHcTaskThread(HcTaskThread* thread);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

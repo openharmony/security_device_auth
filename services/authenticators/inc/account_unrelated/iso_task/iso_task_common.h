@@ -19,6 +19,10 @@
 #include "json_utils.h"
 #include "iso_base_cur_task.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void DestroyIsoParams(IsoParams *params);
 int InitIsoParams(IsoParams *params, const CJson *in);
 
@@ -33,4 +37,7 @@ int SendResultToFinalSelf(IsoParams *params, CJson *out, bool isNeedReturnKey);
 int CheckEncResult(IsoParams *params, const CJson *in, const char *aad);
 void DeleteAuthCode(const IsoParams *params);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

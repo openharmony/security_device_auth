@@ -21,6 +21,10 @@
 #include "json_utils.h"
 #include "string_util.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int32_t GenerateKeyAlias(const Uint8Buff *pkgName, const Uint8Buff *serviceType, const KeyAliasType keyType,
     const Uint8Buff *authId, Uint8Buff *outKeyAlias);
 int32_t GetIdPeer(const CJson *in, const char *peerIdKey, const Uint8Buff *authIdSelf, Uint8Buff *authIdPeer);
@@ -35,4 +39,7 @@ uint32_t ProtocolMessageIn(const CJson *in);
 int ClientProtocolMessageOut(CJson *out, int opCode, uint32_t step);
 int ServerProtocolMessageOut(CJson *out, int opCode, uint32_t step);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

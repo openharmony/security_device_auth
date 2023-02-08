@@ -90,7 +90,14 @@ typedef struct SpekeSessionT {
     int32_t (*checkAndInitProtocol)(struct SpekeSessionT *spekeSession, KeyAgreeProtocol protocol);
 } SpekeSession;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 SpekeSession *CreateSpekeSession(void);
 void DestroySpekeSession(SpekeSession *spekeSession);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

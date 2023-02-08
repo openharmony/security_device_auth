@@ -22,6 +22,13 @@ typedef struct {
     SymBaseCurTask taskBase;
 } IsoProtocolClientTask;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 SymBaseCurTask *CreateProtocolClientTask(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -492,7 +492,7 @@ Session *CreateServerBindSession(CJson *jsonParams, const DeviceAuthCallback *ca
     if (result != HC_SUCCESS) {
         InformPeerGroupErrorIfNeed(isNeedInform, result, session);
         ProcessErrorCallback(session->reqId, session->opCode, result, NULL, session->base.callback);
-        CloseChannel(session->channelType, session->channelId);
+        CloseChannel((ChannelType)session->channelType, session->channelId);
         DestroyBindSession((Session *)session);
         return NULL;
     }

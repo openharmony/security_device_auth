@@ -1047,8 +1047,8 @@ static int32_t OnSessionFinish(const BindSession *session, CJson *jsonParams, CJ
         return result;
     }
     LOGI("The session completed successfully! [ReqId]: %" PRId64, session->reqId);
-    NotifyBindResult(session->channelType, session->channelId);
-    CloseChannel(session->channelType, session->channelId);
+    NotifyBindResult((ChannelType)session->channelType, session->channelId);
+    CloseChannel((ChannelType)session->channelType, session->channelId);
     return HC_SUCCESS;
 }
 
@@ -1111,7 +1111,7 @@ int32_t ProcessBindSession(Session *session, CJson *jsonParams)
             ProcessErrorCallback(realSession->reqId, realSession->opCode, result, NULL,
                 realSession->base.callback);
         }
-        CloseChannel(realSession->channelType, realSession->channelId);
+        CloseChannel((ChannelType)realSession->channelType, realSession->channelId);
         return result;
     }
     LOGI("Process bind session successfully! [ReqId]: %" PRId64, realSession->reqId);

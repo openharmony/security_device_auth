@@ -20,7 +20,14 @@
 #include "json_utils.h"
 #include "das_module_defines.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 bool IsSupportPakeV1(void);
 SubTaskBase *CreatePakeV1SubTask(const CJson *in);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

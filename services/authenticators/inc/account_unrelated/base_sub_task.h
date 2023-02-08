@@ -27,6 +27,13 @@ typedef struct SubTaskBaseT {
     VersionStruct curVersion;
 } SubTaskBase;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef SubTaskBase *(*CreateSubTaskFunc)(CJson *, CJson *);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
