@@ -18,6 +18,10 @@
 
 #include "bind_session_common_defines.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 BindSession *CreateBaseBindSession(int32_t sessionType, int32_t opCode, const CJson *params,
     const DeviceAuthCallback *callback, ProcessSessionFunc func);
 void DestroyBindSession(Session *session);
@@ -31,4 +35,8 @@ int32_t CreateAndProcessModule(BindSession *session, const CJson *in, CJson *out
 int32_t ProcessModule(const BindSession *session, const CJson *in, CJson *out, int32_t *status);
 void InformPeerGroupErrorIfNeed(bool isNeedInform, int32_t errorCode, const BindSession *session);
 void InformPeerModuleError(CJson *out, const BindSession *session);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

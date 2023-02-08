@@ -27,4 +27,11 @@ typedef struct TokenManagerT {
     int32_t (*getPublicKey)(const char *, const char *, Uint8Buff *, int, Uint8Buff *);
 } TokenManager;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 #endif

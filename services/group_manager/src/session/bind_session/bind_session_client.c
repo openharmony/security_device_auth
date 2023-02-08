@@ -129,7 +129,7 @@ static void OnBindChannelOpened(Session *session, int64_t channelId, int64_t req
         if ((!NeedForceDelete(realSession)) || (ForceUnbindDevice(realSession) != HC_SUCCESS)) {
             ProcessErrorCallback(requestId, realSession->opCode, result, NULL, realSession->base.callback);
         }
-        CloseChannel(realSession->channelType, realSession->channelId);
+        CloseChannel((ChannelType)realSession->channelType, realSession->channelId);
         DestroySession(requestId);
     }
 }
@@ -140,7 +140,7 @@ static int32_t PrepareClient(const CJson *jsonParams, BindSession *session)
     if (result != HC_SUCCESS) {
         return result;
     }
-    return OpenChannel(session->channelType, jsonParams, session->reqId, &session->channelId);
+    return OpenChannel((ChannelType)session->channelType, jsonParams, session->reqId, &session->channelId);
 }
 
 Session *CreateClientBindSession(CJson *jsonParams, const DeviceAuthCallback *callback)

@@ -22,6 +22,13 @@ typedef struct {
     AsyBaseCurTask taskBase;
 } PakeV1ProtocolClientTask;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 AsyBaseCurTask *CreatePakeV1ProtocolClientTask(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

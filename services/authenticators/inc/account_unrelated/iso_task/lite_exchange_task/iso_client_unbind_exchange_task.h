@@ -22,6 +22,13 @@ typedef struct {
     SymBaseCurTask taskBase;
 } IsoClientUnbindExchangeTask;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 SymBaseCurTask *CreateClientUnbindExchangeTask(IsoParams *params, const CJson *in, CJson *out, int32_t *status);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

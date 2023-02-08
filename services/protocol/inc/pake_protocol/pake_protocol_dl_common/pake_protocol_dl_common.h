@@ -20,8 +20,15 @@
 #include "pake_defs.h"
 #include "string_util.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 uint32_t GetPakeDlAlg(void);
 int32_t GenerateDlPakeParams(PakeBaseParams *params, const Uint8Buff *secret);
 int32_t AgreeDlSharedSecret(PakeBaseParams *params, Uint8Buff *sharedSecret);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

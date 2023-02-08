@@ -26,7 +26,14 @@ typedef enum {
     STS,
 } ProtocolType;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void FreeAndCleanKey(Uint8Buff *key);
 int32_t InitSingleParam(Uint8Buff *param, uint32_t len);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

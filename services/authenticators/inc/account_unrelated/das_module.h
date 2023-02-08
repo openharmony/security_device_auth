@@ -28,8 +28,15 @@ typedef struct DasAuthModuleT {
     int32_t (*getPublicKey)(const char *, const char *, Uint8Buff *, int, Uint8Buff *);
 } DasAuthModule;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 bool IsDasSupported(void);
 bool IsDasMsgNeedIgnore(const CJson *in);
 AuthModuleBase *CreateDasModule(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

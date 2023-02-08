@@ -25,6 +25,13 @@ typedef struct {
     SpekeSession *(*getSession)(KeyAgreeSession *sessionId);
 } KeyAgreeSessionManager;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 KeyAgreeSessionManager *GetManagerInstance(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

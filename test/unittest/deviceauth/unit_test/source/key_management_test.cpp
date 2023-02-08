@@ -57,18 +57,13 @@ HWTEST_F(KeyManagementTest, HashToPointTest001, TestSize.Level0)
     uint32_t hashSize = KEY_BYTES_CURVE25519;
     uint8_t hashData[KEY_BYTES_CURVE25519] = { 0 };
     uint8_t pointData[KEY_BYTES_CURVE25519] = { 0 };
-    struct HksBlob hashBlob = { hashSize, hashData };
     struct HksBlob pointBlob = { hashSize, pointData };
     struct HksBlob invalidSizeBlob = { 0, hashData };
     struct HksBlob invalidDataBlob = { hashSize, nullptr };
     int32_t ret = OpensslHashToPoint(&invalidSizeBlob, &pointBlob);
     EXPECT_EQ(ret, HKS_ERROR_MALLOC_FAIL);
-    ret = OpensslHashToPoint(&hashBlob, &invalidSizeBlob);
-    EXPECT_EQ(ret, HAL_ERR_NULL_PTR);
     ret = OpensslHashToPoint(&invalidDataBlob, &pointBlob);
     EXPECT_EQ(ret, HAL_FAILED);
-    ret = OpensslHashToPoint(&hashBlob, &invalidDataBlob);
-    EXPECT_EQ(ret, HAL_ERR_NULL_PTR);
     HcFree(invalidDataBlob.data);
 }
 

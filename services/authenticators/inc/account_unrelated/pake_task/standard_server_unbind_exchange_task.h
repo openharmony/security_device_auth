@@ -24,6 +24,13 @@ typedef struct {
     StandardUnbindExchangeParams params;
 } StandardUnbindExchangeServerTask;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 AsyBaseCurTask *CreateStandardUnbindExchangeServerTask(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

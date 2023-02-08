@@ -24,6 +24,13 @@ typedef struct {
     StandardBindExchangeParams params;
 } StandardBindExchangeServerTask;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 AsyBaseCurTask *CreateStandardBindExchangeServerTask(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

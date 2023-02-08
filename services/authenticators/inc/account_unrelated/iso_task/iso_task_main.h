@@ -19,7 +19,14 @@
 #include "base_sub_task.h"
 #include "json_utils.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 bool IsIsoSupported(void);
 SubTaskBase *CreateIsoSubTask(const CJson *in);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

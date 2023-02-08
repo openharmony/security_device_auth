@@ -18,6 +18,13 @@
 
 #include "key_agree_session_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 Session *CreateClientKeyAgreeSession(CJson *jsonParams, const DeviceAuthCallback *callback);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

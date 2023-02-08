@@ -266,15 +266,6 @@ static int32_t CurveSetConstPara(struct CurveConstPara *para)
 
 static int32_t CurveHashToPoint(const struct HksBlob *hash, struct HksBlob *point)
 {
-    if ((hash == NULL) || (hash->data == NULL) ||
-        (hash->size != KEY_BYTES_CURVE25519)) {
-            return HAL_ERR_NULL_PTR;
-        }
-    if ((point == NULL) || (point->data == NULL) ||
-        (point->size != KEY_BYTES_CURVE25519)) {
-            return HAL_ERR_NULL_PTR;
-        }
-
     BIGNUM *a = BN_new();
     BIGNUM *b = BN_new();
     BIGNUM *c = BN_new();
@@ -322,14 +313,6 @@ ERR:
 
 static int32_t EndianSwap(struct HksBlob *data)
 {
-    if (data->data == NULL) {
-        return HAL_ERR_NULL_PTR;
-    }
-
-    if (data->size == 0) {
-        return HAL_ERR_NULL_PTR;
-    }
-
     int32_t end = data->size - 1;
     const int32_t start = 0;
 
@@ -361,23 +344,13 @@ int32_t OpensslHashToPoint(const struct HksBlob *hash, struct HksBlob *point)
         }
 
         hashCopy.data[hashCopy.size - 1] &= 0x3f; /* RFC 8032 */
-        ret = EndianSwap(&hashCopy);
-        if (ret != HAL_SUCCESS) {
-            LOGE("swap endian before convert failed");
-            break;
-        }
-
+        (void)EndianSwap(&hashCopy);
         ret = CurveHashToPoint(&hashCopy, point);
         if (ret != HAL_SUCCESS) {
             LOGE("curve hash to point failed");
             break;
         }
-
-        ret = EndianSwap(point);
-        if (ret != HAL_SUCCESS) {
-            LOGE("swap endian after convert failed");
-            break;
-        }
+        (void)EndianSwap(point);
     } while (0);
     HcFree(hashCopy.data);
     return ret;

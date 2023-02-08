@@ -18,7 +18,15 @@
 
 #include "bind_session_common_defines.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int32_t ProcessKeyAgreeSession(Session *session, CJson *jsonParams);
 int32_t SaveReceivedKeyAgreeData(BindSession *session, const CJson *jsonParams);
 int32_t PrepareAndSendKeyAgreeData(BindSession *session, bool *isNeedInform);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

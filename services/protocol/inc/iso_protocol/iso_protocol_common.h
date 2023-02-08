@@ -35,6 +35,10 @@ typedef struct IsoBaseParamsT {
     const AlgLoader *loader;
 } IsoBaseParams;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int32_t InitIsoBaseParams(IsoBaseParams *params);
 void DestroyIsoBaseParams(IsoBaseParams *params);
 
@@ -45,4 +49,7 @@ int IsoClientGenSessionKey(IsoBaseParams *params, int returnResult, const uint8_
 int IsoServerGenRandomAndToken(IsoBaseParams *params, Uint8Buff *selfTokenBuf);
 int IsoServerGenSessionKeyAndCalToken(IsoBaseParams *params, const Uint8Buff *tokenFromPeer, Uint8Buff *tokenToPeer);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -20,6 +20,10 @@
 #include <hc_vector.h>
 #include <hc_string.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define USE_DEFAULT_TAG 0xFFFF
 #define TLV_FAIL (-1)
 #define NO_REVERT 0
@@ -310,4 +314,8 @@ void Init##TlvVecName(TlvVecName *tlv, unsigned short checkTag) \
     tlv->base.checkTag = checkTag; \
     tlv->data = CREATE_HC_VECTOR(Vec##TlvVecName); \
 }
+
+#ifdef __cplusplus
+}
+#endif
 #endif

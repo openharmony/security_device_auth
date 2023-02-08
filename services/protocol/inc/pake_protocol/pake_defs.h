@@ -73,6 +73,13 @@ typedef struct PakeBaseParamsT {
     const AlgLoader *loader;
 } PakeBaseParams;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void CleanPakeSensitiveKeys(PakeBaseParams *params);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

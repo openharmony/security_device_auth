@@ -216,14 +216,6 @@ CLEAN_UP:
 
 static int32_t EcHashToPoint(const Blob *hash, Blob *point)
 {
-    if (IsInvalidBlob(hash) || IsInvalidBlob(point)) {
-        return HAL_ERR_INVALID_PARAM;
-    }
-
-    if (point->dataSize < P256_PUBLIC_SIZE) {
-        return HAL_ERR_SHORT_BUFFER;
-    }
-
     mbedtls_mpi scalarA;
     mbedtls_mpi scalarB;
     mbedtls_ecp_point pointA;

@@ -32,6 +32,10 @@ typedef struct StandardBindExchangeParamsT {
     Uint8Buff nonce;
 } StandardBindExchangeParams;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int32_t InitStandardBindExchangeParams(StandardBindExchangeParams *params);
 void DestroyStandardBindExchangeParams(StandardBindExchangeParams *params);
 
@@ -39,4 +43,7 @@ int32_t ClientRequestStandardBindExchange(const PakeParams *pakeParams, Standard
 int32_t ServerResponseStandardBindExchange(PakeParams *pakeParams, StandardBindExchangeParams *exchangeParams);
 int32_t ClientConfirmStandardBindExchange(PakeParams *pakeParams, StandardBindExchangeParams *exchangeParams);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

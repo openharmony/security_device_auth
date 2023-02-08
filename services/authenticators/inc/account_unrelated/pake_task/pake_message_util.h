@@ -19,6 +19,10 @@
 #include "json_utils.h"
 #include "pake_base_cur_task.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int32_t PackagePakeRequestData(const PakeParams *params, CJson *payload);
 int32_t ParsePakeRequestMessage(PakeParams *params, const CJson *in);
 int32_t PackagePakeResponseData(const PakeParams *params, CJson *payload);
@@ -28,4 +32,7 @@ int32_t ParsePakeClientConfirmMessage(PakeParams *params, const CJson *in);
 int32_t PackagePakeServerConfirmData(const PakeParams *params, CJson *payload);
 int32_t ParsePakeServerConfirmMessage(PakeParams *params, const CJson *in);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -23,6 +23,10 @@
 #define BIND_TYPE 0
 #define AUTH_TYPE 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void InitSessionManager(void);
 void DestroySessionManager(void);
 
@@ -35,4 +39,7 @@ void DestroySession(int64_t requestId);
 void DestroySessionByType(int64_t requestId, const char *appId, int cancelType);
 void OnChannelOpened(int64_t requestId, int64_t channelId);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -16,6 +16,10 @@
 #ifndef HC_INIT_PROTECTION_H
 #define HC_INIT_PROTECTION_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum InitStatusEnum {
     CONTINUE_INIT = 0,
     FINISH_INIT,
@@ -28,4 +32,7 @@ int CheckDestroy(void);
 void SetInitStatus(void);
 void SetDeInitStatus(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

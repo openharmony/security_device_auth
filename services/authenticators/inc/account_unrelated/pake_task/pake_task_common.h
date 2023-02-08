@@ -19,8 +19,15 @@
 #include "pake_base_cur_task.h"
 #include "json_utils.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int32_t FillDasPakeParams(PakeParams *params, const CJson *in);
 int32_t ConstructOutJson(const PakeParams *params, CJson *out);
 int32_t SendResultToSelf(PakeParams *params, CJson *out);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -26,6 +26,13 @@ typedef struct {
     AsyBaseCurTask *curTask;
 } PakeV1ServerTask;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 SubTaskBase *CreatePakeV1ServerTask(const CJson *in);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
