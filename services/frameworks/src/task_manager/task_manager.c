@@ -44,7 +44,7 @@ int32_t InitTaskManager(void)
     if (g_taskThread == NULL) {
         return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t res = InitHcTaskThread(g_taskThread, HICHAIN_THREAD_STACK_SIZE, "HichainThread");
+    int32_t res = InitHcTaskThread(g_taskThread, HICHAIN_THREAD_STACK_SIZE, "DevAuthWork");
     if (res != HC_SUCCESS) {
         LOGE("Failed to init task thread! res: %d", res);
         HcFree(g_taskThread);

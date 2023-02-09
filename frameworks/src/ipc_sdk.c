@@ -46,7 +46,7 @@ static IpcProxyCbInfo g_ipcProxyCbList = { 0 };
 static IpcProxyCbInfo g_ipcListenerCbList = { 0 };
 static HcMutex g_ipcMutex;
 
-static bool IsStrInValid(const char *str)
+static bool IsStrInvalid(const char *str)
 {
     return (str == NULL || str[0] == 0);
 }
@@ -137,7 +137,7 @@ static int32_t IpcGmRegCallback(const char *appId, const DeviceAuthCallback *cal
     int32_t ret;
 
     LOGI("starting ...");
-    if (IsStrInValid(appId) || callback == NULL) {
+    if (IsStrInvalid(appId) || callback == NULL) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -175,7 +175,7 @@ static int32_t IpcGmUnRegCallback(const char *appId)
     int32_t ret;
 
     LOGI("starting ...");
-    if (IsStrInValid(appId)) {
+    if (IsStrInvalid(appId)) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -206,7 +206,7 @@ static int32_t IpcGmRegDataChangeListener(const char *appId, const DataChangeLis
     int32_t ret;
 
     LOGI("starting ...");
-    if (IsStrInValid(appId) || (listener == NULL)) {
+    if (IsStrInvalid(appId) || (listener == NULL)) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -244,7 +244,7 @@ static int32_t IpcGmUnRegDataChangeListener(const char *appId)
     int32_t ret;
 
     LOGI("starting ...");
-    if (IsStrInValid(appId)) {
+    if (IsStrInvalid(appId)) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -277,7 +277,7 @@ static int32_t IpcGmCreateGroup(int32_t osAccountId, int64_t requestId, const ch
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (IsStrInValid(createParams) || IsStrInValid(appid)) {
+    if (IsStrInvalid(createParams) || IsStrInvalid(appid)) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -335,7 +335,7 @@ static int32_t IpcGmDelGroup(int32_t osAccountId, int64_t requestId, const char 
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (IsStrInValid(delParams) || IsStrInValid(appId)) {
+    if (IsStrInvalid(delParams) || IsStrInvalid(appId)) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -393,7 +393,7 @@ static int32_t IpcGmAddMemberToGroup(int32_t osAccountId, int64_t requestId, con
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (IsStrInValid(appId) || IsStrInValid(addParams)) {
+    if (IsStrInvalid(appId) || IsStrInvalid(addParams)) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -450,7 +450,7 @@ static int32_t IpcGmDelMemberFromGroup(int32_t osAccountId, int64_t requestId, c
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (IsStrInValid(appId) || IsStrInValid(delParams)) {
+    if (IsStrInvalid(appId) || IsStrInvalid(delParams)) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -502,7 +502,7 @@ static int32_t IpcGmDelMemberFromGroup(int32_t osAccountId, int64_t requestId, c
 static int32_t IpcGmAddMultiMembersToGroup(int32_t osAccountId, const char *appId, const char *addParams)
 {
     LOGI("starting ...");
-    if (IsStrInValid(appId) || IsStrInValid(addParams)) {
+    if (IsStrInvalid(appId) || IsStrInvalid(addParams)) {
         LOGE("Invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -550,7 +550,7 @@ static int32_t IpcGmAddMultiMembersToGroup(int32_t osAccountId, const char *appI
 static int32_t IpcGmDelMultiMembersFromGroup(int32_t osAccountId, const char *appId, const char *delParams)
 {
     LOGI("starting ...");
-    if (IsStrInValid(appId) || IsStrInValid(delParams)) {
+    if (IsStrInvalid(appId) || IsStrInvalid(delParams)) {
         LOGE("Invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -648,7 +648,7 @@ static int32_t IpcGmGetRegisterInfo(const char *reqJsonStr, char **registerInfo)
     char *outInfo = NULL;
 
     LOGI("starting ...");
-    if (IsStrInValid(reqJsonStr) || (registerInfo == NULL)) {
+    if (IsStrInvalid(reqJsonStr) || (registerInfo == NULL)) {
         LOGE("Invalid params.");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -703,7 +703,7 @@ static int32_t IpcGmCheckAccessToGroup(int32_t osAccountId, const char *appId, c
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (IsStrInValid(appId) || IsStrInValid(groupId)) {
+    if (IsStrInvalid(appId) || IsStrInvalid(groupId)) {
         LOGE("Invalid params.");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -778,7 +778,7 @@ static int32_t IpcGmGetPkInfoList(int32_t osAccountId, const char *appId, const 
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
 
     LOGI("starting ...");
-    if (IsStrInValid(appId) || IsStrInValid(queryParams) ||
+    if (IsStrInvalid(appId) || IsStrInvalid(queryParams) ||
         (returnInfoList == NULL) || (returnInfoNum == NULL)) {
         LOGE("Invalid params.");
         return HC_ERR_INVALID_PARAMS;
@@ -858,7 +858,7 @@ static int32_t IpcGmGetGroupInfoById(int32_t osAccountId, const char *appId, con
     IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
 
     LOGI("starting ...");
-    if (IsStrInValid(groupId) || IsStrInValid(appId) || (outGroupInfo == NULL)) {
+    if (IsStrInvalid(groupId) || IsStrInvalid(appId) || (outGroupInfo == NULL)) {
         LOGE("Invalid params.");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -940,7 +940,7 @@ static int32_t IpcGmGetGroupInfo(int32_t osAccountId, const char *appId, const c
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
 
     LOGI("starting ...");
-    if (IsStrInValid(queryParams) || IsStrInValid(appId) || (outGroupVec == NULL) || (groupNum == NULL)) {
+    if (IsStrInvalid(queryParams) || IsStrInvalid(appId) || (outGroupVec == NULL) || (groupNum == NULL)) {
         LOGE("Invalid params.");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -1023,7 +1023,7 @@ static int32_t IpcGmGetJoinedGroups(int32_t osAccountId, const char *appId, int3
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
 
     LOGI("starting ...");
-    if (IsStrInValid(appId) || (outGroupVec == NULL) || (groupNum == NULL)) {
+    if (IsStrInvalid(appId) || (outGroupVec == NULL) || (groupNum == NULL)) {
         LOGE("Invalid params.");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -1105,7 +1105,7 @@ static int32_t IpcGmGetRelatedGroups(int32_t osAccountId, const char *appId, con
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
 
     LOGI("starting ...");
-    if (IsStrInValid(appId) || IsStrInValid(peerUdid) || (outGroupVec == NULL) || (groupNum == NULL)) {
+    if (IsStrInvalid(appId) || IsStrInvalid(peerUdid) || (outGroupVec == NULL) || (groupNum == NULL)) {
         LOGE("Invalid params.");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -1213,7 +1213,7 @@ static int32_t IpcGmGetDeviceInfoById(int32_t osAccountId, const char *appId, co
     IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
 
     LOGI("starting ...");
-    if (IsStrInValid(appId) || IsStrInValid(peerUdid) || IsStrInValid(groupId) || (outDevInfo == NULL)) {
+    if (IsStrInvalid(appId) || IsStrInvalid(peerUdid) || IsStrInvalid(groupId) || (outDevInfo == NULL)) {
         LOGE("Invalid params.");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -1280,7 +1280,7 @@ static int32_t IpcGmGetTrustedDevices(int32_t osAccountId, const char *appId,
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
 
     LOGI("starting ...");
-    if (IsStrInValid(appId) || IsStrInValid(groupId) ||
+    if (IsStrInvalid(appId) || IsStrInvalid(groupId) ||
         (outDevInfoVec == NULL) || (deviceNum == NULL)) {
         LOGE("Invalid params.");
         return HC_ERR_INVALID_PARAMS;
@@ -1338,7 +1338,7 @@ static bool IpcGmIsDeviceInGroup(int32_t osAccountId, const char *appId, const c
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (IsStrInValid(appId) || IsStrInValid(groupId) || IsStrInValid(udid)) {
+    if (IsStrInvalid(appId) || IsStrInvalid(groupId) || IsStrInvalid(udid)) {
         LOGE("Invalid params.");
         return false;
     }
@@ -1402,7 +1402,7 @@ static void IpcGmCancelRequest(int64_t requestId, const char *appId)
     int32_t ret;
 
     LOGI("starting ...");
-    if (IsStrInValid(appId)) {
+    if (IsStrInvalid(appId)) {
         LOGE("Invalid params.");
         return;
     }
@@ -1524,7 +1524,7 @@ static int32_t IpcGaAuthDevice(int32_t osAccountId, int64_t authReqId, const cha
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (IsStrInValid(authParams) || (callback == NULL)) {
+    if (IsStrInvalid(authParams) || (callback == NULL)) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -1580,7 +1580,7 @@ static void IpcGaCancelRequest(int64_t requestId, const char *appId)
     int32_t ret;
 
     LOGI("starting ...");
-    if (IsStrInValid(appId)) {
+    if (IsStrInvalid(appId)) {
         LOGE("Invalid params.");
         return;
     }
