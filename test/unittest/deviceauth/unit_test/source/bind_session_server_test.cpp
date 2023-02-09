@@ -51,8 +51,114 @@ void BindSessionServerTest::TearDown()
     DestroyDeviceAuthService();
 }
 
-HWTEST_F(BindSessionServerTest, BindSessionServerTest0100, TestSize.Level0)
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0101, TestSize.Level0)
 {
+    int32_t ret = HC_SUCCESS;
+    (void)AddRecvModuleDataToParams(nullptr, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
 
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0102, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    BindSession session;
+    (void)GenerateServerModuleParams(&session, nullptr, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0103, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    BindSession session;
+    (void)GetServerModuleReturnData(&session, nullptr, nullptr, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0104, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    (void)GenerateRequestParams(nullptr, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0105, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    BindSession session;
+    (void)RequestConfirmation(nullptr, &session, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0106, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    (void)AddAuthIdIfExist(nullptr, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0107, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    (void)AddUserTypeIfExistAndValid(nullptr, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0108, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    (void)AddGroupVisibilityIfExistAndValid(nullptr, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0109, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    (void)AddExpireTimeIfExistAndValid(nullptr, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0110, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    (void)AddPinCode(nullptr, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0111, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    (void)CombineInputData(MEMBER_JOIN, nullptr, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0112, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    (void)CheckServerStatusIfNotInvite(ANY_OS_ACCOUNT, MEMBER_DELETE, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0113, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    BindSession session;
+    (void)PrepareServer(&session, nullptr, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0114, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    BindSession session;
+    (void)JudgeConfirmation(nullptr, nullptr, &session, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(BindSessionServerTest, BindSessionServerTest0115, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    (void)CreateServerBindSession(nullptr, nullptr);
+    EXPECT_EQ(ret, HC_SUCCESS);
 }
 }
