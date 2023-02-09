@@ -169,14 +169,9 @@ bool IsGroupOwner(int32_t osAccountId, const char *groupId, const char *appId)
         LOGE("The group cannot be found!");
         return false;
     }
-    if (HC_VECTOR_SIZE(&entry->managers) <= 0) {
-        LOGE("The group does not have manager and owner!");
-        DestroyGroupEntry(entry);
-        return false;
-    }
     HcString entryManager = HC_VECTOR_GET(&entry->managers, 0);
     const char *groupOwner = StringGet(&entryManager);
-    if ((groupOwner != NULL) && strcmp(groupOwner, appId) == 0) {
+    if (strcmp(groupOwner, appId) == 0) {
         DestroyGroupEntry(entry);
         return true;
     }

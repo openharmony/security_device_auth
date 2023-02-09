@@ -53,10 +53,6 @@ static void RemoveNoPermissionGroup(int32_t osAccountId, GroupEntryVec *groupEnt
     TrustedGroupEntry **groupEntryPtr = NULL;
     while (index < groupEntryVec->size(groupEntryVec)) {
         groupEntryPtr = groupEntryVec->getp(groupEntryVec, index);
-        if ((groupEntryPtr == NULL) || (*groupEntryPtr == NULL)) {
-            index++;
-            continue;
-        }
         if (CheckGroupAccessible(osAccountId, StringGet(&(*groupEntryPtr)->id), appId) == HC_SUCCESS) {
             index++;
             continue;
@@ -134,12 +130,6 @@ static int32_t GenerateReturnGroupVec(GroupEntryVec *groupInfoVec, char **return
 
 static int32_t GenerateReturnDeviceVec(DeviceEntryVec *devInfoVec, char **returnDevInfoVec, uint32_t *deviceNum)
 {
-    if (HC_VECTOR_SIZE(devInfoVec) == 0) {
-        LOGI("No device is found based on the query parameters!");
-        *deviceNum = 0;
-        return GenerateReturnEmptyArrayStr(returnDevInfoVec);
-    }
-
     CJson *json = CreateJsonArray();
     if (json == NULL) {
         LOGE("Failed to allocate json memory!");
@@ -229,10 +219,6 @@ static int32_t GetPkByParams(const char *groupId, const TrustedDeviceEntry *devi
     const char *appId = GROUP_MANAGER_PACKAGE_NAME;
     int userType = deviceEntry->devType;
     const char *authId = StringGet(&deviceEntry->authId);
-    if (authId == NULL) {
-        LOGE("Failed to get authId from deviceEntry!");
-        return HC_ERR_DB;
-    }
     Uint8Buff authIdBuff = { 0, 0 };
     authIdBuff.length = HcStrlen(authId);
     authIdBuff.val = (uint8_t *)HcMalloc(authIdBuff.length, 0);
@@ -303,10 +289,6 @@ static void AddAllPkInfoToList(int32_t osAccountId, const char *queryUdid, const
             continue;
         }
         const char *groupId = StringGet(&((*entry)->id));
-        if (groupId == NULL) {
-            LOGE("Failed to get groupId from groupInfo!");
-            continue;
-        }
         CJson *pkInfo = CreateJson();
         if (pkInfo == NULL) {
             LOGE("Failed to create json!");
@@ -404,17 +386,13 @@ static BaseGroup *GetGroupInstance(int32_t groupType)
 
 static int32_t CreateGroup(int32_t osAccountId, CJson *jsonParams, char **returnJsonStr)
 {
-    if ((jsonParams == NULL) || (returnJsonStr == NULL)) {
-        LOGE("The input parameters contains NULL value!");
-        return HC_ERR_INVALID_PARAMS;
-    }
     int32_t groupType = PEER_TO_PEER_GROUP;
     if (GetIntFromJson(jsonParams, FIELD_GROUP_TYPE, &groupType) != HC_SUCCESS) {
         LOGE("Failed to get groupType from jsonParams!");
         return HC_ERR_JSON_GET;
     }
     BaseGroup *instance = GetGroupInstance(groupType);
-    if ((instance == NULL) || (instance->createGroup == NULL)) {
+    if (instance == NULL) {
         LOGE("The group instance is NULL or its function ptr is NULL!");
         return HC_ERR_NULL_PTR;
     }
@@ -423,10 +401,6 @@ static int32_t CreateGroup(int32_t osAccountId, CJson *jsonParams, char **return
 
 static int32_t DeleteGroup(int32_t osAccountId, CJson *jsonParams, char **returnJsonStr)
 {
-    if ((jsonParams == NULL) || (returnJsonStr == NULL)) {
-        LOGE("The input parameters contains NULL value!");
-        return HC_ERR_INVALID_PARAMS;
-    }
     int32_t result;
     const char *groupId = NULL;
     const char *appId = NULL;
@@ -439,66 +413,38 @@ static int32_t DeleteGroup(int32_t osAccountId, CJson *jsonParams, char **return
         return result;
     }
     BaseGroup *instance = GetGroupInstance(groupType);
-    if ((instance == NULL) || (instance->deleteGroup == NULL)) {
-        LOGE("The group instance is NULL or its function ptr is NULL!");
-        return HC_ERR_NULL_PTR;
-    }
     return instance->deleteGroup(osAccountId, jsonParams, returnJsonStr);
 }
 
 static int32_t AddMemberToPeerToPeerGroup(int32_t osAccountId, int64_t requestId, CJson *jsonParams,
     const DeviceAuthCallback *callback)
 {
-    if ((jsonParams == NULL) || (callback == NULL)) {
-        LOGE("The input parameters contains NULL value!");
-        return HC_ERR_INVALID_PARAMS;
-    }
     if (!IsPeerToPeerGroupSupported()) {
         LOGE("Peer to peer group is not supported!");
         return HC_ERR_NOT_SUPPORT;
     }
     PeerToPeerGroup *instance = (PeerToPeerGroup *)GetPeerToPeerGroupInstance();
-    if ((instance == NULL) || (instance->addMember == NULL)) {
-        LOGE("The group instance is NULL or its function ptr is NULL!");
-        return HC_ERR_NULL_PTR;
-    }
     return instance->addMember(osAccountId, requestId, jsonParams, callback);
 }
 
 static int32_t DeleteMemberFromPeerToPeerGroup(int32_t osAccountId, int64_t requestId, CJson *jsonParams,
     const DeviceAuthCallback *callback)
 {
-    if ((jsonParams == NULL) || (callback == NULL)) {
-        LOGE("The input parameters contains NULL value!");
-        return HC_ERR_INVALID_PARAMS;
-    }
     if (!IsPeerToPeerGroupSupported()) {
         LOGE("Peer to peer group is not supported!");
         return HC_ERR_NOT_SUPPORT;
     }
     PeerToPeerGroup *instance = (PeerToPeerGroup *)GetPeerToPeerGroupInstance();
-    if ((instance == NULL) || (instance->deleteMember == NULL)) {
-        LOGE("The group instance is NULL or its function ptr is NULL!");
-        return HC_ERR_NULL_PTR;
-    }
     return instance->deleteMember(osAccountId, requestId, jsonParams, callback);
 }
 
 static int32_t ProcessBindData(int64_t requestId, CJson *jsonParams, const DeviceAuthCallback *callback)
 {
-    if ((jsonParams == NULL) || (callback == NULL)) {
-        LOGE("The input parameters contains NULL value!");
-        return HC_ERR_INVALID_PARAMS;
-    }
     if (!IsPeerToPeerGroupSupported()) {
         LOGE("Peer to peer group is not supported!");
         return HC_ERR_NOT_SUPPORT;
     }
     PeerToPeerGroup *instance = (PeerToPeerGroup *)GetPeerToPeerGroupInstance();
-    if ((instance == NULL) || (instance->processData == NULL)) {
-        LOGE("The group instance is NULL or its function ptr is NULL!");
-        return HC_ERR_NULL_PTR;
-    }
     return instance->processData(requestId, jsonParams, callback);
 }
 
@@ -512,10 +458,6 @@ static int32_t GetOpCodeWhenAdd(const CJson *jsonParams)
 
 static void DoCreateGroup(HcTaskBase *baseTask)
 {
-    if (baseTask == NULL) {
-        LOGE("The input task is NULL!");
-        return;
-    }
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
     LOGI("[Start]: DoCreateGroup! [ReqId]: %" PRId64, task->reqId);
     char *returnJsonStr = NULL;
@@ -533,10 +475,6 @@ static void DoCreateGroup(HcTaskBase *baseTask)
 
 static void DoDeleteGroup(HcTaskBase *baseTask)
 {
-    if (baseTask == NULL) {
-        LOGE("The input task is NULL!");
-        return;
-    }
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
     LOGI("[Start]: DoDeleteGroup! [ReqId]: %" PRId64, task->reqId);
     char *returnJsonStr = NULL;
@@ -554,10 +492,6 @@ static void DoDeleteGroup(HcTaskBase *baseTask)
 
 static void DoAddMember(HcTaskBase *baseTask)
 {
-    if (baseTask == NULL) {
-        LOGE("The input task is NULL!");
-        return;
-    }
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
     LOGI("[Start]: DoAddMember! [ReqId]: %" PRId64, task->reqId);
     (void)AddMemberToPeerToPeerGroup(task->osAccountId, task->reqId, task->params, task->cb);
@@ -568,10 +502,6 @@ static void DoAddMember(HcTaskBase *baseTask)
 
 static void DoDeleteMember(HcTaskBase *baseTask)
 {
-    if (baseTask == NULL) {
-        LOGE("The input task is NULL!");
-        return;
-    }
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
     LOGI("[Start]: DoDeleteMember! [ReqId]: %" PRId64, task->reqId);
     (void)DeleteMemberFromPeerToPeerGroup(task->osAccountId, task->reqId, task->params, task->cb);
@@ -582,10 +512,6 @@ static void DoDeleteMember(HcTaskBase *baseTask)
 
 static void DoProcessBindData(HcTaskBase *baseTask)
 {
-    if (baseTask == NULL) {
-        LOGE("The input task is NULL!");
-        return;
-    }
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
     LOGI("[Start]: DoProcessBindData! [ReqId]: %" PRId64, task->reqId);
     if (IsRequestExist(task->reqId)) {
@@ -1113,10 +1039,6 @@ static int32_t GetPkInfoList(int32_t osAccountId, const char *appId, const char 
 
 static void DoCancelGroupRequest(HcTaskBase *task)
 {
-    if (task == NULL) {
-        LOGE("The input task is null!");
-        return;
-    }
     GroupCancelTask *realTask = (GroupCancelTask *)task;
     DestroySessionByType(realTask->reqId, realTask->appId, TYPE_CANCEL_BIND);
 }
