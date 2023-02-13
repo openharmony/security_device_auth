@@ -34,7 +34,6 @@ ohos_unittest("deviceauth_llt") {
     "//third_party/cJSON",
     "//commonlibrary/c_utils/base/include",
     "//third_party/openssl/include/",
-    "//base/security/huks/interfaces/innerkits/huks_standard/main/include",
     "//third_party/mbedtls/include",
     "//third_party/mbedtls/include/mbedtls",
   ]
@@ -102,7 +101,6 @@ ohos_unittest("deviceauth_llt") {
   cflags = [ "-DHILOG_ENABLE" ]
 
   deps = [
-    "//base/security/huks/interfaces/innerkits/huks_standard/main:libhukssdk",
     "//third_party/cJSON:cjson",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -113,6 +111,7 @@ ohos_unittest("deviceauth_llt") {
   external_deps = [
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
+    "huks:libhukssdk",
   ]
 }
 
@@ -132,7 +131,6 @@ ohos_unittest("deviceauth_unit_test") {
     "//third_party/cJSON",
     "//commonlibrary/c_utils/base/include",
     "//third_party/openssl/include/",
-    "//base/security/huks/interfaces/innerkits/huks_standard/main/include",
     "//third_party/mbedtls/include",
     "//third_party/mbedtls/include/mbedtls",
   ]
@@ -204,7 +202,6 @@ ohos_unittest("deviceauth_unit_test") {
   cflags = [ "-DHILOG_ENABLE" ]
 
   deps = [
-    "//base/security/huks/interfaces/innerkits/huks_standard/main:libhukssdk",
     "//third_party/cJSON:cjson",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -215,6 +212,7 @@ ohos_unittest("deviceauth_unit_test") {
   external_deps = [
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
+	"huks:libhukssdk",
   ]
 }
 

@@ -89,7 +89,7 @@ if (ohos_kernel_type == "liteos_m") {
     sources = hichian_sources
     public_configs = [ ":hichain_config" ]
     deps =
-        [ "//base/security/huks/interfaces/innerkits/huks_lite:huks_3.0_sdk" ]
+        [ "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk" ]
     if (board_toolchain_type == "iccarm") {
       cflags = [
         "--diag_suppress",
@@ -102,7 +102,7 @@ if (ohos_kernel_type == "liteos_m") {
     sources = hichian_sources
     public_configs = [ ":hichain_config" ]
     deps = [
-      "//base/security/huks/interfaces/innerkits/huks_lite:huks_3.0_sdk",
+      "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk",
       "//build/lite/config/component/cJSON:cjson_shared",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
