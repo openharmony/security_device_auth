@@ -34,7 +34,6 @@ void CloseChannel(ChannelType channelType, int64_t channelId);
 int32_t HcSendMsg(ChannelType channelType, int64_t requestId, int64_t channelId,
     const DeviceAuthCallback *callback, const char *data);
 void NotifyBindResult(ChannelType channelType, int64_t channelId);
-int32_t GetLocalConnectInfo(char *jsonAddrInfo, int32_t bufLen);
 
 #ifdef __cplusplus
 }
