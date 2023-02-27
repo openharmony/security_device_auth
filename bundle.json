@@ -54,15 +54,15 @@
           "//base/security/device_auth:deviceauth_build",
           "//base/security/device_auth/frameworks/deviceauth_lite:hichainsdk"
         ],
-        "inner_kits": [
+        "inner_api": [
           {
             "name": "//base/security/device_auth/services:deviceauth_sdk",
             "header": {
+              "header_base": "//base/security/device_auth/interfaces/inner_api",
               "header_files": [
                 "device_auth_defines.h",
                 "device_auth.h"
-              ],
-              "header_base": "//base/security/device_auth/interfaces/innerkits"
+              ]
             }
           }
         ],

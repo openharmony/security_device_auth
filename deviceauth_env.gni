@@ -18,7 +18,7 @@ key_management_adapter_path =
     "${deviceauth_path}/deps_adapter/key_management_adapter"
 os_adapter_path = "${deviceauth_path}/deps_adapter/os_adapter"
 
-innerkits_path = "${deviceauth_path}/interfaces/innerkits"
+inner_api_path = "${deviceauth_path}/interfaces/inner_api"
 frameworks_path = "${deviceauth_path}/frameworks"
 services_path = "${deviceauth_path}/services"
 

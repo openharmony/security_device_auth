@@ -18,7 +18,7 @@ key_agree_sdk_path = "${services_path}/key_agree_sdk"
 dev_frameworks_path = "${services_path}/frameworks"
 
 key_agree_inc_path = [
-  "${innerkits_path}",
+  "${inner_api_path}",
   "${common_lib_path}/interfaces",
   "${dev_frameworks_path}/inc/",
   "${key_agree_sdk_path}/inc",

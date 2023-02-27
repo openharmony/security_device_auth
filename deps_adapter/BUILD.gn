@@ -23,7 +23,7 @@ if (defined(ohos_lite)) {
     static_library("deviceauth_hal_liteos") {
       include_dirs = hals_inc_path
       include_dirs += [
-        "//base/security/device_auth/interfaces/innerkits",
+        "//base/security/device_auth/interfaces/inner_api",
         "//third_party/cJSON",
         "//commonlibrary/utils_lite/include",
         "//base/hiviewdfx/hilog_lite/interfaces/native/kits/hilog_lite",
@@ -66,7 +66,7 @@ if (defined(ohos_lite)) {
     static_library("deviceauth_hal_linux") {
       include_dirs = hals_inc_path
       include_dirs += [
-        "//base/security/device_auth/interfaces/innerkits",
+        "//base/security/device_auth/interfaces/inner_api",
         "//third_party/cJSON",
         "//commonlibrary/utils_lite/include",
         "//base/hiviewdfx/hilog_lite/interfaces/native/innerkits/hilog",

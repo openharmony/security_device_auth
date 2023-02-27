@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -16,7 +16,7 @@ import("//build/ohos.gni")
 import("deviceauth.gni")
 
 config("deviceauth_config") {
-  include_dirs = [ "//base/security/device_auth/interfaces/innerkits" ]
+  include_dirs = [ "//base/security/device_auth/interfaces/inner_api" ]
 }
 include_dirs = inc_path + hals_inc_path
 if (os_level == "mini" || os_level == "small") {
@@ -239,6 +239,8 @@ if (os_level == "mini" || os_level == "small") {
   ohos_shared_library("deviceauth_sdk") {
     subsystem_name = "security"
     part_name = "device_auth"
+    innerapi_tags = [ "platformsdk" ]
+    version_script = "device_auth.map"
     public_configs = [ ":deviceauth_config" ]
 
     include_dirs += [
@@ -275,7 +277,7 @@ if (os_level == "mini" || os_level == "small") {
       "hitrace_native:hitrace_meter",
       "hiviewdfx_hilog_native:libhilog",
       "init:libbegetutil",
-      "ipc:ipc_core",
+      "ipc:ipc_single",
       "samgr:samgr_proxy",
     ]
   }

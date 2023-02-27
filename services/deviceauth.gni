@@ -27,7 +27,7 @@ declare_args() {
 deviceauth_defines = []
 
 inc_path = [
-  "${innerkits_path}",
+  "${inner_api_path}",
   "${frameworks_path}/inc",
   "${data_manager_path}/inc",
   "${group_auth_path}/inc",
