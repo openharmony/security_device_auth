@@ -16,6 +16,7 @@
 #include "os_account_adapter.h"
 
 #include <vector>
+#include "common_defs.h"
 #include "device_auth.h"
 #include "hc_log.h"
 #ifdef SUPPORT_OS_ACCOUNT

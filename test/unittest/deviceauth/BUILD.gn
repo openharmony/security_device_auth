@@ -227,7 +227,7 @@ ohos_unittest("device_auth_ipc_test") {
 
   include_dirs = hals_inc_path
   include_dirs += [
-    "//base/security/device_auth/interfaces/innerkits",
+    "//base/security/device_auth/interfaces/inner_api",
     "//base/security/access_token/interfaces/innerkits/nativetoken/include",
     "//base/security/access_token/interfaces/innerkits/token_setproc/include",
   ]
