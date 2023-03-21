@@ -240,9 +240,7 @@ void DestroyCallbackManager(void)
     }
     DESTROY_HC_VECTOR(GMCallbackEntryVec, &g_callbackVec);
     g_callbackMutex->unlock(g_callbackMutex);
-    if (g_callbackMutex != NULL) {
-        DestroyHcMutex(g_callbackMutex);
-        HcFree(g_callbackMutex);
-        g_callbackMutex = NULL;
-    }
+    DestroyHcMutex(g_callbackMutex);
+    HcFree(g_callbackMutex);
+    g_callbackMutex = NULL;
 }

@@ -106,9 +106,6 @@ static void GetIpcReplyByType(const IpcDataInfo *ipcData,
             case PARAM_TYPE_GROUP_INFO:
             case PARAM_TYPE_RETURN_DATA:
                 *(uint8_t **)outCache = ipcData[i].val;
-                if (cacheLen != NULL) {
-                    *cacheLen = ipcData[i].valSz;
-                }
                 break;
             case PARAM_TYPE_IPC_RESULT:
             case PARAM_TYPE_IPC_RESULT_NUM:

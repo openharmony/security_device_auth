@@ -1294,9 +1294,7 @@ void DestroyTokenManager(void)
     DESTROY_HC_VECTOR(AccountTokenDb, &g_accountTokenDb);
     g_isInitial = false;
     g_accountDbMutex->unlock(g_accountDbMutex);
-    if (g_accountDbMutex != NULL) {
-        DestroyHcMutex(g_accountDbMutex);
-        HcFree(g_accountDbMutex);
-        g_accountDbMutex = NULL;
-    }
+    DestroyHcMutex(g_accountDbMutex);
+    HcFree(g_accountDbMutex);
+    g_accountDbMutex = NULL;
 }

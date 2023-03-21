@@ -300,11 +300,9 @@ void DestroyBroadcastManager(void)
     }
     DESTROY_HC_VECTOR(ListenerEntryVec, &g_listenerEntryVec);
     g_broadcastMutex->unlock(g_broadcastMutex);
-    if (g_broadcastMutex != NULL) {
-        DestroyHcMutex(g_broadcastMutex);
-        HcFree(g_broadcastMutex);
-        g_broadcastMutex = NULL;
-    }
+    DestroyHcMutex(g_broadcastMutex);
+    HcFree(g_broadcastMutex);
+    g_broadcastMutex = NULL;
 }
 
 const Broadcaster *GetBroadcaster(void)
