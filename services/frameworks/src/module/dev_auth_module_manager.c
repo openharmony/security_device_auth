@@ -41,7 +41,7 @@ int32_t CheckMsgRepeatability(const CJson *in, int moduleType)
         case ACCOUNT_MODULE:
             return CheckAccountMsgRepeatability(in);
         default:
-            LOGE("Unsupported module type: %d.", moduleType);
+            LOGE("Unsupported module type: %d", moduleType);
             return HC_ERR_MODULE_NOT_FOUNT;
     }
     return HC_ERROR;
@@ -56,7 +56,7 @@ static AuthModuleBase *GetModule(int moduleType)
             return *module;
         }
     }
-    LOGE("There is no matched module, moduleType: %d.", moduleType);
+    LOGE("There is no matched module, moduleType: %d", moduleType);
     return NULL;
 }
 
@@ -64,7 +64,7 @@ static bool IsParamsForDasTokenManagerValid(const char *pkgName, const char *ser
     int userType, int moduleType)
 {
     if (moduleType != DAS_MODULE) {
-        LOGE("Unsupported method in the module, moduleType: %d.", moduleType);
+        LOGE("Unsupported method in the module, moduleType: %d", moduleType);
         return false;
     }
     if (pkgName == NULL || serviceType == NULL || authId == NULL || authId->val == NULL) {
@@ -77,7 +77,7 @@ static bool IsParamsForDasTokenManagerValid(const char *pkgName, const char *ser
         return false;
     }
     if (userType < DEVICE_TYPE_ACCESSORY || userType > DEVICE_TYPE_PROXY) {
-        LOGE("Invalid userType, userType: %d.", userType);
+        LOGE("Invalid userType, userType: %d", userType);
         return false;
     }
     return true;
@@ -98,7 +98,7 @@ int32_t RegisterLocalIdentity(const char *pkgName, const char *serviceType, Uint
     DasAuthModule *dasModule = (DasAuthModule *)module;
     int32_t res = dasModule->registerLocalIdentity(pkgName, serviceType, authId, userType);
     if (res != HC_SUCCESS) {
-        LOGE("Register local identity failed, res: %x.", res);
+        LOGE("Register local identity failed, res: %x", res);
         return res;
     }
     return HC_SUCCESS;
@@ -119,7 +119,7 @@ int32_t UnregisterLocalIdentity(const char *pkgName, const char *serviceType, Ui
     DasAuthModule *dasModule = (DasAuthModule *)module;
     int32_t res = dasModule->unregisterLocalIdentity(pkgName, serviceType, authId, userType);
     if (res != HC_SUCCESS) {
-        LOGE("Unregister local identity failed, res: %x.", res);
+        LOGE("Unregister local identity failed, res: %x", res);
         return res;
     }
     return HC_SUCCESS;
@@ -140,7 +140,7 @@ int32_t DeletePeerAuthInfo(const char *pkgName, const char *serviceType, Uint8Bu
     DasAuthModule *dasModule = (DasAuthModule *)module;
     int32_t res = dasModule->deletePeerAuthInfo(pkgName, serviceType, authId, userType);
     if (res != HC_SUCCESS) {
-        LOGE("Delete peer authInfo failed, res: %x.", res);
+        LOGE("Delete peer authInfo failed, res: %x", res);
         return res;
     }
     return HC_SUCCESS;
@@ -175,28 +175,29 @@ int32_t ProcessTask(int taskId, const CJson *in, CJson *out, int32_t *status, in
         LOGE("Params is null.");
         return HC_ERR_NULL_PTR;
     }
+    LOGI("Start to process task, taskId: %d, moduleType: %d.", taskId, moduleType);
     AuthModuleBase *module = GetModule(moduleType);
     if (module == NULL) {
         LOGE("Failed to get module!");
         return HC_ERR_MODULE_NOT_FOUNT;
     }
     if (module->processTask == NULL) {
-        LOGE("Unsupported method in the module, moduleType: %d.", moduleType);
+        LOGE("Unsupported method in the module, moduleType: %d", moduleType);
         return HC_ERR_UNSUPPORTED_METHOD;
     }
     DevAuthStartTrace(TRACE_TAG_AUTH_PROCESS);
     int32_t res = module->processTask(taskId, in, out, status);
     DevAuthFinishTrace();
     if (res != HC_SUCCESS) {
-        LOGE("Process task failed, taskId: %d, moduleType: %d, res: %d.", taskId, moduleType, res);
+        LOGE("Process task failed, taskId: %d, moduleType: %d, res: %d", taskId, moduleType, res);
         return res;
     }
     res = AddSingleVersionToJson(out, &g_version);
     if (res != HC_SUCCESS) {
-        LOGE("AddSingleVersionToJson failed, res: %x.", res);
+        LOGE("AddSingleVersionToJson failed, res: %x", res);
         return res;
     }
-    LOGI("Process task success, taskId: %d, moduleType: %d.", taskId, moduleType);
+    LOGI("Process task success, taskId: %d, moduleType: %d", taskId, moduleType);
     return res;
 }
 
@@ -206,21 +207,22 @@ int32_t CreateTask(int32_t *taskId, const CJson *in, CJson *out, int moduleType)
         LOGE("Params is null.");
         return HC_ERR_NULL_PTR;
     }
+    LOGI("Start to create task, moduleType: %d", moduleType);
     AuthModuleBase *module = GetModule(moduleType);
     if (module == NULL) {
         LOGE("Failed to get module!");
         return HC_ERR_MODULE_NOT_FOUNT;
     }
     if (module->createTask == NULL) {
-        LOGE("Unsupported method in the module, moduleType: %d.", moduleType);
+        LOGE("Unsupported method in the module, moduleType: %d", moduleType);
         return HC_ERR_UNSUPPORTED_METHOD;
     }
     int32_t res = module->createTask(taskId, in, out);
     if (res != HC_SUCCESS) {
-        LOGE("Create task failed, taskId: %d, moduleType: %d, res: %d.", *taskId, moduleType, res);
+        LOGE("Create task failed, taskId: %d, moduleType: %d, res: %d", *taskId, moduleType, res);
         return res;
     }
-    LOGI("Create task success, taskId: %d, moduleType: %d.", *taskId, moduleType);
+    LOGI("Create task success, taskId: %d, moduleType: %d", *taskId, moduleType);
     return HC_SUCCESS;
 }
 
@@ -231,7 +233,7 @@ void DestroyTask(int taskId, int moduleType)
         return;
     }
     if (module->destroyTask == NULL) {
-        LOGE("Unsupported method in the module, moduleType: %d.", moduleType);
+        LOGE("Unsupported method in the module, moduleType: %d", moduleType);
         return;
     }
     module->destroyTask(taskId);
@@ -263,7 +265,7 @@ static int32_t ProcessCredentials(int32_t osAccountId, int32_t credentialOpCode,
     CJson *in, CJson *out, int moduleType)
 {
     if (moduleType != ACCOUNT_MODULE) {
-        LOGE("Unsupported method in the module, moduleType: %d.", moduleType);
+        LOGE("Unsupported method in the module, moduleType: %d", moduleType);
         return HC_ERR_NOT_SUPPORT;
     }
 
@@ -278,7 +280,7 @@ int32_t InitModules(void)
     if (IsDasSupported()) {
         res = InitDasModule();
         if (res != HC_SUCCESS) {
-            LOGE("Init das module failed, res: %x.", res);
+            LOGE("Init das module failed, res: %x", res);
             DestroyModules();
             return res;
         }
@@ -287,7 +289,7 @@ int32_t InitModules(void)
     if (IsAccountSupported()) {
         res = InitAccountModule();
         if (res != HC_SUCCESS) {
-            LOGE("Init account module failed, res: %x.", res);
+            LOGE("Init account module failed, res: %x", res);
             DestroyModules();
             return res;
         }

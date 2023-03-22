@@ -28,8 +28,7 @@
 
 static int32_t CreateDirectory(const char *filePath)
 {
-    int32_t ret;
-    errno_t eno;
+    int32_t res;
     char *chPtr = NULL;
     char dirCache[MAX_FOLDER_NAME_SIZE];
 
@@ -40,8 +39,7 @@ static int32_t CreateDirectory(const char *filePath)
             chPtr++;
             continue;
         }
-        eno = memcpy_s(dirCache, sizeof(dirCache), filePath, len);
-        if (eno != EOK) {
+        if (memcpy_s(dirCache, sizeof(dirCache), filePath, len) != EOK) {
             LOGE("memory copy failed");
             return -1;
         }
@@ -52,9 +50,9 @@ static int32_t CreateDirectory(const char *filePath)
         }
         DIR *dir = opendir(dirCache);
         if (dir == NULL) {
-            ret = mkdir(dirCache, DEFAULT_FILE_PERMISSION);
-            if (ret != 0) {
-                LOGE("make dir failed, err code %d, errno = %d", ret, errno);
+            res = mkdir(dirCache, DEFAULT_FILE_PERMISSION);
+            if (res != 0) {
+                LOGE("[OS]: mkdir fail. [Res]: %d, [errno]: %d", res, errno);
                 return -1;
             }
         } else {
@@ -67,18 +65,29 @@ static int32_t CreateDirectory(const char *filePath)
 
 static int HcFileOpenRead(const char *path)
 {
-    return open(path, O_RDONLY);
+    LOGI("[OS]: file open enter.");
+    int res = open(path, O_RDONLY);
+    LOGI("[OS]: file open quit.");
+    if (res == -1) {
+        LOGE("[OS]: file open fail. [Errno]: %d", errno);
+    }
+    return res;
 }
 
 static int HcFileOpenWrite(const char *path)
 {
     if (access(path, F_OK) != 0) {
-        int32_t ret = CreateDirectory(path);
-        if (ret != 0) {
+        if (CreateDirectory(path) != 0) {
             return -1;
         }
     }
-    return open(path, O_RDWR | O_CREAT | O_TRUNC);
+    LOGI("[OS]: file open enter.");
+    int res = open(path, O_RDWR | O_CREAT | O_TRUNC);
+    LOGI("[OS]: file open quit.");
+    if (res == -1) {
+        LOGE("[OS]: file open fail. [Errno]: %d", errno);
+    }
+    return res;
 }
 
 int HcFileOpen(const char *path, int mode, FileHandle *file)
@@ -92,7 +101,6 @@ int HcFileOpen(const char *path, int mode, FileHandle *file)
         file->fileHandle.fd = HcFileOpenWrite(path);
     }
     if (file->fileHandle.fd == -1) {
-        LOGE("[OS]: file open failed, errno = %d", errno);
         return -1;
     } else {
         return 0;
@@ -116,10 +124,11 @@ int HcFileRead(FileHandle file, void *dst, int dstSize)
 
     char *dstBuffer = (char *)dst;
     int total = 0;
+    LOGI("[OS]: file read enter. [OriSize]: %d", dstSize);
     while (total < dstSize) {
         int readCount = read(fp, dstBuffer + total, dstSize - total);
         if (readCount < 0 || readCount > (dstSize - total)) {
-            LOGE("read size error, errno = %d", errno);
+            LOGE("[OS]: read size error. [Errno]: %d", errno);
             return -1;
         }
         if (readCount == 0) {
@@ -128,7 +137,7 @@ int HcFileRead(FileHandle file, void *dst, int dstSize)
         }
         total += readCount;
     }
-
+    LOGI("[OS]: file read quit. [ReadSize]: %d", total);
     return total;
 }
 
@@ -141,14 +150,16 @@ int HcFileWrite(FileHandle file, const void *src, int srcSize)
 
     const char *srcBuffer = (const char *)src;
     int total = 0;
+    LOGI("[OS]: file write enter. [OriSize]: %d", srcSize);
     while (total < srcSize) {
         int writeCount = write(fp, srcBuffer + total, srcSize - total);
         if (writeCount < 0 || writeCount > (srcSize - total)) {
-            LOGE("write size error, errno = %d", errno);
+            LOGE("[OS]: write size error. [Errno]: %d", errno);
             return -1;
         }
         total += writeCount;
     }
+    LOGI("[OS]: file write quit. [WriteSize]: %d", total);
     return total;
 }
 
@@ -173,7 +184,7 @@ void HcFileRemove(const char *path)
     }
     int res = unlink(path);
     if (res != 0) {
-        LOGW("delete file failed, res = %d", res);
+        LOGW("[OS]: delete file fail. [Res]: %d", res);
     }
 }
 

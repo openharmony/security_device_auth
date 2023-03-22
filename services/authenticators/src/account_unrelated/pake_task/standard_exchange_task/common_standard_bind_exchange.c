@@ -368,7 +368,8 @@ static int32_t SaveAuthInfo(const PakeParams *pakeParams, const StandardBindExch
         LOGE("generateKeyAlias failed");
         return res;
     }
-    LOGI("PubKey alias: %x%x%x%x****.", keyAliasPeerVal[0], keyAliasPeerVal[1], keyAliasPeerVal[2], keyAliasPeerVal[3]);
+    LOGI("PubKey alias(HEX): %x%x%x%x****.", keyAliasPeerVal[0], keyAliasPeerVal[1],
+        keyAliasPeerVal[2], keyAliasPeerVal[3]);
     Algorithm alg = (pakeParams->baseParams.curveType == CURVE_256) ? P256 : ED25519;
     ExtraInfo exInfo = { pakeParams->baseParams.idPeer, pakeParams->userType, PAIR_TYPE_BIND };
     res = pakeParams->baseParams.loader->importPublicKey(&keyAliasPeer, &(exchangeParams->pubKeyPeer), alg, &exInfo);

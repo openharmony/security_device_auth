@@ -31,8 +31,7 @@ extern "C" {
 
 static int32_t CreateDirectory(const char *filePath)
 {
-    int32_t ret;
-    errno_t eno;
+    int32_t res;
     char *chPtr = NULL;
     char dirCache[MAX_FOLDER_NAME_SIZE];
 
@@ -43,16 +42,15 @@ static int32_t CreateDirectory(const char *filePath)
             chPtr++;
             continue;
         }
-        eno = memcpy_s(dirCache, sizeof(dirCache), filePath, len);
-        if (eno != EOK) {
+        if (memcpy_s(dirCache, sizeof(dirCache), filePath, len) != EOK) {
             LOGE("memory copy failed");
             return -1;
         }
         dirCache[len] = 0;
         if (access(dirCache, F_OK) != 0) {
-            ret = mkdir(dirCache, S_IRWXU);
-            if (ret != 0) {
-                LOGE("make dir failed, err code %d", ret);
+            res = mkdir(dirCache, S_IRWXU);
+            if (res != 0) {
+                LOGE("[OS]: mkdir fail. [Res]: %d, [errno]: %d", res, errno);
                 return -1;
             }
         }
@@ -120,6 +118,7 @@ int HcFileRead(FileHandle file, void *dst, int dstSize)
 
     char *dstBuffer = (char *)dst;
     int total = 0;
+    LOGI("[OS]: file read enter. [OriSize]: %d", dstSize);
     while (total < dstSize) {
         int readCount = fread(dstBuffer + total, 1, dstSize - total, fp);
         if (ferror(fp) != 0) {
@@ -130,7 +129,7 @@ int HcFileRead(FileHandle file, void *dst, int dstSize)
         }
         total += readCount;
     }
-
+    LOGI("[OS]: file read quit. [ReadSize]: %d", total);
     return total;
 }
 
@@ -143,6 +142,7 @@ int HcFileWrite(FileHandle file, const void *src, int srcSize)
 
     const char *srcBuffer = (const char *)src;
     int total = 0;
+    LOGI("[OS]: file write enter. [OriSize]: %d", srcSize);
     while (total < srcSize) {
         int writeCount = fwrite(srcBuffer + total, 1, srcSize - total, fp);
         if (ferror(fp) != 0) {
@@ -150,6 +150,7 @@ int HcFileWrite(FileHandle file, const void *src, int srcSize)
         }
         total += writeCount;
     }
+    LOGI("[OS]: file write quit. [WriteSize]: %d", total);
     return total;
 }
 

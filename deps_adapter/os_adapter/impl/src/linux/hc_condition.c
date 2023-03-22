@@ -15,6 +15,8 @@
 
 #include "hc_condition.h"
 
+#include "hc_log.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,7 +26,11 @@ int Wait(pthread_cond_t* cond, HcMutex* mutex)
     if (cond == NULL || mutex == NULL) {
         return -1;
     }
-    return -pthread_cond_wait(cond, &mutex->mutex);
+    int res = pthread_cond_wait(cond, &mutex->mutex);
+    if (res != 0) {
+        LOGE("[OS]: pthread_cond_wait fail. [Res]: %d", res);
+    }
+    return res;
 }
 
 void Notify(pthread_cond_t* cond)
@@ -32,7 +38,10 @@ void Notify(pthread_cond_t* cond)
     if (cond == NULL) {
         return;
     }
-    pthread_cond_signal(cond);
+    int res = pthread_cond_signal(cond);
+    if (res != 0) {
+        LOGW("[OS]: pthread_cond_wait fail. [Res]: %d", res);
+    }
 }
 
 int HcCondWaitWithoutLock(struct HcConditionT* hcCond)
@@ -123,8 +132,14 @@ int32_t InitHcCond(HcCondition* hcCond, HcMutex* mutex)
 
     pthread_condattr_t attr;
     pthread_condattr_init(&attr);
-    pthread_cond_init(&hcCond->cond, &attr);
+    LOGI("[OS]: pthread_cond_init enter.");
+    int res = pthread_cond_init(&hcCond->cond, &attr);
+    LOGI("[OS]: pthread_cond_init quit. [Res]: %d", res);
     pthread_condattr_destroy(&attr);
+    if (res != 0) {
+        LOGE("[OS]: pthread_cond_init fail. [Res]: %d", res);
+        return -1;
+    }
 
     if (mutex != NULL) {
         hcCond->mutex = mutex;
@@ -132,7 +147,7 @@ int32_t InitHcCond(HcCondition* hcCond, HcMutex* mutex)
     } else {
         hcCond->mutex = (HcMutex*)HcMalloc(sizeof(HcMutex), 0);
         if (hcCond->mutex != NULL) {
-            int32_t res = InitHcMutex(hcCond->mutex);
+            res = InitHcMutex(hcCond->mutex);
             if (res != 0) {
                 HcFree(hcCond->mutex);
                 hcCond->mutex = NULL;
@@ -157,7 +172,10 @@ void DestroyHcCond(HcCondition* hcCond)
         HcFree(hcCond->mutex);
         hcCond->mutex = NULL;
     }
-    pthread_cond_destroy(&hcCond->cond);
+    int res = pthread_cond_destroy(&hcCond->cond);
+    if (res != 0) {
+        LOGW("[OS]: pthread_cond_destroy fail. [Res]: %d", res);
+    }
 }
 
 #ifdef __cplusplus

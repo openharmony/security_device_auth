@@ -46,22 +46,22 @@ static int32_t ConstructParamSet(struct HksParamSet **out, const struct HksParam
     const uint32_t inParamNum)
 {
     struct HksParamSet *paramSet = NULL;
-    int32_t ret = HksInitParamSet(&paramSet);
-    if (ret != HKS_SUCCESS) {
-        LOGE("init param set failed, ret = %d", ret);
+    int32_t res = HksInitParamSet(&paramSet);
+    if (res != HKS_SUCCESS) {
+        LOGE("init param set failed, res = %d", res);
         return HAL_ERR_INIT_PARAM_SET_FAILED;
     }
 
-    ret = HksAddParams(paramSet, inParam, inParamNum);
-    if (ret != HKS_SUCCESS) {
-        LOGE("add param failed, ret = %d", ret);
+    res = HksAddParams(paramSet, inParam, inParamNum);
+    if (res != HKS_SUCCESS) {
+        LOGE("add param failed, res = %d", res);
         HksFreeParamSet(&paramSet);
         return HAL_ERR_ADD_PARAM_FAILED;
     }
 
-    ret = HksBuildParamSet(&paramSet);
-    if (ret != HKS_SUCCESS) {
-        LOGE("build param set failed, ret = %d", ret);
+    res = HksBuildParamSet(&paramSet);
+    if (res != HKS_SUCCESS) {
+        LOGE("build param set failed, res = %d", res);
         HksFreeParamSet(&paramSet);
         return HAL_ERR_BUILD_PARAM_SET_FAILED;
     }
@@ -72,29 +72,34 @@ static int32_t ConstructParamSet(struct HksParamSet **out, const struct HksParam
 
 static int32_t InitHks(void)
 {
+    LOGI("[HUKS]: HksInitialize enter.");
     int32_t res = HksInitialize();
+    LOGI("[HUKS]: HksInitialize quit. [Res]: %d", res);
     if (res == HKS_SUCCESS) {
         return HAL_SUCCESS;
     }
 
     if ((res != HKS_ERROR_INVALID_KEY_FILE) && (res != HKS_ERROR_CRYPTO_ENGINE_ERROR) &&
         (res != HKS_ERROR_UPDATE_ROOT_KEY_MATERIAL_FAIL)) {
-        LOGE("Hks: Init hks failed, res: %d.", res);
+        LOGE("[HUKS]: HksInitialize fail. [Res]: %d", res);
         return HAL_ERR_INIT_FAILED;
     }
 
-    LOGD("Hks: The local hks file needs to be refreshed!");
     LOGI("Start to delete local database file!");
     HcFileRemove(GetStoragePath());
     LOGI("Delete local database file successfully!");
+    LOGI("[HUKS]: HksRefreshKeyInfo enter.");
     res = HksRefreshKeyInfo();
+    LOGI("[HUKS]: HksRefreshKeyInfo quit. [Res]: %d", res);
     if (res != HKS_SUCCESS) {
-        LOGE("Hks: HksRefreshKeyInfo failed, res: %d.", res);
+        LOGE("[HUKS]: HksRefreshKeyInfo failed, res: %d", res);
         return HAL_ERR_INIT_FAILED;
     }
+    LOGI("[HUKS]: HksInitialize enter.");
     res = HksInitialize();
+    LOGI("[HUKS]: HksInitialize quit. [Res]: %d", res);
     if (res != HKS_SUCCESS) {
-        LOGE("Hks: Init hks failed, res: %d.", res);
+        LOGE("[HUKS]: HksInitialize fail. [Res]: %d", res);
         return HAL_ERR_INIT_FAILED;
     }
 
@@ -120,14 +125,15 @@ static int32_t Sha256(const Uint8Buff *message, Uint8Buff *hash)
             .uint32Param = HKS_DIGEST_SHA256
         }
     };
-    int32_t ret = ConstructParamSet(&paramSet, digestParam, CAL_ARRAY_SIZE(digestParam));
-    if (ret != HAL_SUCCESS) {
-        LOGE("construct param set failed, ret = %d", ret);
-        return ret;
+    int32_t res = ConstructParamSet(&paramSet, digestParam, CAL_ARRAY_SIZE(digestParam));
+    if (res != HAL_SUCCESS) {
+        LOGE("construct param set failed, res = %d", res);
+        return res;
     }
 
-    ret = HksHash(paramSet, &srcBlob, &hashBlob);
-    if (ret != HKS_SUCCESS || hashBlob.size != SHA256_LEN) {
+    res = HksHash(paramSet, &srcBlob, &hashBlob);
+    if (res != HKS_SUCCESS || hashBlob.size != SHA256_LEN) {
+        LOGE("[HUKS]: HksHash fail. [Res]: %d", res);
         HksFreeParamSet(&paramSet);
         return HAL_FAILED;
     }
@@ -143,9 +149,9 @@ static int32_t GenerateRandom(Uint8Buff *rand)
     CHECK_LEN_ZERO_RETURN_ERROR_CODE(rand->length, "rand->length");
 
     struct HksBlob randBlob = { rand->length, rand->val };
-    int32_t ret = HksGenerateRandom(NULL, &randBlob);
-    if (ret != HKS_SUCCESS) {
-        LOGE("Generate random failed, ret: %d", ret);
+    int32_t res = HksGenerateRandom(NULL, &randBlob);
+    if (res != HKS_SUCCESS) {
+        LOGE("[HUKS]: HksGenerateRandom fail. [Res]: %d", res);
         return HAL_FAILED;
     }
 
@@ -159,9 +165,9 @@ static int32_t CheckKeyExist(const Uint8Buff *keyAlias)
     CHECK_LEN_ZERO_RETURN_ERROR_CODE(keyAlias->length, "keyAlias->length");
 
     struct HksBlob keyAliasBlob = { keyAlias->length, keyAlias->val };
-    int32_t ret = HksKeyExist(&keyAliasBlob, NULL);
-    if (ret != HKS_SUCCESS) {
-        LOGE("Check key exist failed, ret = %d", ret);
+    int32_t res = HksKeyExist(&keyAliasBlob, NULL);
+    if (res != HKS_SUCCESS) {
+        LOGI("[HUKS]: HksKeyExist fail. [Res]: %d", res);
         return HAL_FAILED;
     }
 
@@ -175,13 +181,15 @@ static int32_t DeleteKey(const Uint8Buff *keyAlias)
     CHECK_LEN_ZERO_RETURN_ERROR_CODE(keyAlias->length, "keyAlias->length");
 
     struct HksBlob keyAliasBlob = { keyAlias->length, keyAlias->val };
-    int32_t ret = HksDeleteKey(&keyAliasBlob, NULL);
-    if (ret == HKS_ERROR_NOT_EXIST) {
+    LOGI("[HUKS]: HksDeleteKey enter.");
+    int32_t res = HksDeleteKey(&keyAliasBlob, NULL);
+    LOGI("[HUKS]: HksDeleteKey quit. [Res]: %d", res);
+    if (res == HKS_ERROR_NOT_EXIST) {
         LOGI("Key not exists.");
         return HAL_SUCCESS;
     }
-    if (ret != HKS_SUCCESS) {
-        LOGE("Delete key failed, ret = %d", ret);
+    if (res != HKS_SUCCESS) {
+        LOGE("[HUKS]: HksDeleteKey fail. [Res]: %d", res);
         return HAL_FAILED;
     }
 
@@ -192,9 +200,9 @@ static int32_t ComputeHmac(const Uint8Buff *key, const Uint8Buff *message, Uint8
 {
     const Uint8Buff *inParams[] = { key, message, outHmac };
     const char *paramTags[] = {"key", "message", "outHmac"};
-    int32_t ret = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
-    if (ret != HAL_SUCCESS) {
-        return ret;
+    int32_t res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+    if (res != HAL_SUCCESS) {
+        return res;
     }
     CHECK_LEN_EQUAL_RETURN(outHmac->length, HMAC_LEN, "outHmac->length");
 
@@ -214,15 +222,17 @@ static int32_t ComputeHmac(const Uint8Buff *key, const Uint8Buff *message, Uint8
             .boolParam = isAlias
         }
     };
-    ret = ConstructParamSet(&paramSet, hmacParam, CAL_ARRAY_SIZE(hmacParam));
-    if (ret != HAL_SUCCESS) {
-        LOGE("construct param set failed, ret = %d", ret);
-        return ret;
+    res = ConstructParamSet(&paramSet, hmacParam, CAL_ARRAY_SIZE(hmacParam));
+    if (res != HAL_SUCCESS) {
+        LOGE("construct param set failed, res = %d", res);
+        return res;
     }
 
-    ret = HksMac(&keyBlob, paramSet, &srcBlob, &hmacBlob);
-    if (ret != HKS_SUCCESS  || hmacBlob.size != HMAC_LEN) {
-        LOGE("Hmac failed, ret: %d", ret);
+    LOGI("[HUKS]: HksMac enter.");
+    res = HksMac(&keyBlob, paramSet, &srcBlob, &hmacBlob);
+    LOGI("[HUKS]: HksMac quit. [Res]: %d", res);
+    if (res != HKS_SUCCESS  || hmacBlob.size != HMAC_LEN) {
+        LOGE("[HUKS]: HksMac fail. [Res]: %d", res);
         HksFreeParamSet(&paramSet);
         return HAL_FAILED;
     }
@@ -236,9 +246,9 @@ static int32_t ComputeHkdf(const Uint8Buff *baseKey, const Uint8Buff *salt, cons
 {
     const Uint8Buff *inParams[] = { baseKey, salt, outHkdf };
     const char *paramTags[] = { "baseKey", "salt", "outHkdf" };
-    int32_t ret = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
-    if (ret != HAL_SUCCESS) {
-        return ret;
+    int32_t res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+    if (res != HAL_SUCCESS) {
+        return res;
     }
 
     struct HksBlob srcKeyBlob = { baseKey->length, baseKey->val };
@@ -252,35 +262,24 @@ static int32_t ComputeHkdf(const Uint8Buff *baseKey, const Uint8Buff *salt, cons
 
     struct HksParamSet *paramSet = NULL;
     struct HksParam hkdfParam[] = {
-        {
-            .tag = HKS_TAG_PURPOSE,
-            .uint32Param = HKS_KEY_PURPOSE_DERIVE
-        }, {
-            .tag = HKS_TAG_ALGORITHM,
-            .uint32Param = HKS_ALG_HKDF
-        }, {
-            .tag = HKS_TAG_DIGEST,
-            .uint32Param = HKS_DIGEST_SHA256
-        }, {
-            .tag = HKS_TAG_SALT,
-            .blob = saltBlob
-        }, {
-            .tag = HKS_TAG_INFO,
-            .blob = keyInfoBlob
-        }, {
-            .tag = HKS_TAG_IS_KEY_ALIAS,
-            .boolParam = isAlias
-        }
+        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_DERIVE },
+        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_HKDF },
+        { .tag = HKS_TAG_DIGEST, .uint32Param = HKS_DIGEST_SHA256 },
+        { .tag = HKS_TAG_SALT, .blob = saltBlob },
+        { .tag = HKS_TAG_INFO, .blob = keyInfoBlob },
+        { .tag = HKS_TAG_IS_KEY_ALIAS, .boolParam = isAlias }
     };
 
-    ret = ConstructParamSet(&paramSet, hkdfParam, CAL_ARRAY_SIZE(hkdfParam));
-    if (ret != HAL_SUCCESS) {
-        return ret;
+    res = ConstructParamSet(&paramSet, hkdfParam, CAL_ARRAY_SIZE(hkdfParam));
+    if (res != HAL_SUCCESS) {
+        return res;
     }
 
-    ret = HksDeriveKey(paramSet, &srcKeyBlob, &derivedKeyBlob);
-    if (ret != HKS_SUCCESS) {
-        LOGE("Key derivation failed, ret: %d", ret);
+    LOGI("[HUKS]: HksDeriveKey enter.");
+    res = HksDeriveKey(paramSet, &srcKeyBlob, &derivedKeyBlob);
+    LOGI("[HUKS]: HksDeriveKey quit. [Res]: %d", res);
+    if (res != HKS_SUCCESS) {
+        LOGE("[HUKS]: HksDeriveKey fail. [Res]: %d", res);
         HksFreeParamSet(&paramSet);
         return HAL_FAILED;
     }
@@ -294,9 +293,9 @@ static int32_t CheckAesGcmEncryptParam(const Uint8Buff *key, const Uint8Buff *pl
 {
     const Uint8Buff *inParams[] = { key, plain, outCipher };
     const char* paramTags[] = { "key", "plain", "outCipher" };
-    int32_t ret = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
-    if (ret != HAL_SUCCESS) {
-        return ret;
+    int32_t res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+    if (res != HAL_SUCCESS) {
+        return res;
     }
 
     CHECK_PTR_RETURN_HAL_ERROR_CODE(encryptInfo, "encryptInfo");
@@ -312,9 +311,9 @@ static int32_t CheckAesGcmEncryptParam(const Uint8Buff *key, const Uint8Buff *pl
 static int32_t AesGcmEncrypt(const Uint8Buff *key, const Uint8Buff *plain,
     const GcmParam *encryptInfo, bool isAlias, Uint8Buff *outCipher)
 {
-    int32_t ret = CheckAesGcmEncryptParam(key, plain, encryptInfo, outCipher);
-    if (ret != HAL_SUCCESS) {
-        return ret;
+    int32_t res = CheckAesGcmEncryptParam(key, plain, encryptInfo, outCipher);
+    if (res != HAL_SUCCESS) {
+        return res;
     }
 
     struct HksBlob keyBlob = { key->length, key->val };
@@ -347,15 +346,17 @@ static int32_t AesGcmEncrypt(const Uint8Buff *key, const Uint8Buff *plain,
         }
     };
 
-    ret = ConstructParamSet(&paramSet, encryptParam, CAL_ARRAY_SIZE(encryptParam));
-    if (ret != HAL_SUCCESS) {
-        LOGE("construct param set failed, ret = %d", ret);
-        return ret;
+    res = ConstructParamSet(&paramSet, encryptParam, CAL_ARRAY_SIZE(encryptParam));
+    if (res != HAL_SUCCESS) {
+        LOGE("construct param set failed, res = %d", res);
+        return res;
     }
 
-    ret = HksEncrypt(&keyBlob, paramSet, &plainBlob, &cipherBlob);
-    if (ret != HKS_SUCCESS) {
-        LOGE("Aes-gcm encrypt failed, ret: %d", ret);
+    LOGI("[HUKS]: HksEncrypt enter.");
+    res = HksEncrypt(&keyBlob, paramSet, &plainBlob, &cipherBlob);
+    LOGI("[HUKS]: HksEncrypt quit. [Res]: %d", res);
+    if (res != HKS_SUCCESS) {
+        LOGE("[HUKS]: HksEncrypt fail. [Res]: %d", res);
         HksFreeParamSet(&paramSet);
         return HAL_FAILED;
     }
@@ -369,9 +370,9 @@ static int32_t CheckAesGcmDecryptParam(const Uint8Buff *key, const Uint8Buff *ci
 {
     const Uint8Buff *inParams[] = { key, cipher, outPlain };
     const char *paramTags[] = { "key", "cipher", "outPlain" };
-    int32_t ret = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
-    if (ret != HAL_SUCCESS) {
-        return ret;
+    int32_t res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+    if (res != HAL_SUCCESS) {
+        return res;
     }
 
     CHECK_PTR_RETURN_HAL_ERROR_CODE(decryptInfo, "decryptInfo");
@@ -387,9 +388,9 @@ static int32_t CheckAesGcmDecryptParam(const Uint8Buff *key, const Uint8Buff *ci
 static int32_t AesGcmDecrypt(const Uint8Buff *key, const Uint8Buff *cipher,
     const GcmParam *decryptInfo, bool isAlias, Uint8Buff *outPlain)
 {
-    int32_t ret = CheckAesGcmDecryptParam(key, cipher, decryptInfo, outPlain);
-    if (ret != HAL_SUCCESS) {
-        return ret;
+    int32_t res = CheckAesGcmDecryptParam(key, cipher, decryptInfo, outPlain);
+    if (res != HAL_SUCCESS) {
+        return res;
     }
 
     struct HksBlob keyBlob = { key->length, key->val };
@@ -422,15 +423,17 @@ static int32_t AesGcmDecrypt(const Uint8Buff *key, const Uint8Buff *cipher,
         }
     };
 
-    ret = ConstructParamSet(&paramSet, decryptParam, CAL_ARRAY_SIZE(decryptParam));
-    if (ret != HAL_SUCCESS) {
-        LOGE("construct param set failed, ret = %d", ret);
-        return ret;
+    res = ConstructParamSet(&paramSet, decryptParam, CAL_ARRAY_SIZE(decryptParam));
+    if (res != HAL_SUCCESS) {
+        LOGE("construct param set failed, res = %d", res);
+        return res;
     }
 
-    ret = HksDecrypt(&keyBlob, paramSet, &cipherBlob, &plainBlob);
-    if (ret != HKS_SUCCESS) {
-        LOGE("Aes-gcm decrypt failed, ret: %d", ret);
+    LOGI("[HUKS]: HksDecrypt enter.");
+    res = HksDecrypt(&keyBlob, paramSet, &cipherBlob, &plainBlob);
+    LOGI("[HUKS]: HksDecrypt quit. [Res]: %d", res);
+    if (res != HKS_SUCCESS) {
+        LOGE("[HUKS]: HksDecrypt fail. [Res]: %d", res);
         HksFreeParamSet(&paramSet);
         return HAL_FAILED;
     }
@@ -495,37 +498,39 @@ static int32_t ConstructImportSymmetricKeyParam(struct HksParamSet **paramSet, u
     importParam[idx].tag = HKS_TAG_DIGEST;
     importParam[idx++].uint32Param = HKS_DIGEST_SHA256;
 
-    int ret = ConstructParamSet(paramSet, importParam, idx);
-    if (ret != HAL_SUCCESS) {
-        LOGE("Construct decrypt param set failed, ret = %d.", ret);
+    int res = ConstructParamSet(paramSet, importParam, idx);
+    if (res != HAL_SUCCESS) {
+        LOGE("Construct decrypt param set failed, res = %d.", res);
     }
 
     HcFree(importParam);
-    return ret;
+    return res;
 }
 
 static int32_t ImportSymmetricKey(const Uint8Buff *keyAlias, const Uint8Buff *authToken, KeyPurpose purpose,
     const ExtraInfo *exInfo)
 {
-    int32_t ret = CheckImportSymmetricKeyParam(keyAlias, authToken);
-    if (ret != HAL_SUCCESS) {
-        return ret;
+    int32_t res = CheckImportSymmetricKeyParam(keyAlias, authToken);
+    if (res != HAL_SUCCESS) {
+        return res;
     }
 
     struct HksBlob keyAliasBlob = { keyAlias->length, keyAlias->val };
     struct HksBlob symKeyBlob = { authToken->length, authToken->val };
     struct HksParamSet *paramSet = NULL;
-    ret = ConstructImportSymmetricKeyParam(&paramSet, authToken->length, purpose, exInfo);
-    if (ret != HAL_SUCCESS) {
-        LOGE("construct param set failed, ret = %d", ret);
-        return ret;
+    res = ConstructImportSymmetricKeyParam(&paramSet, authToken->length, purpose, exInfo);
+    if (res != HAL_SUCCESS) {
+        LOGE("construct param set failed, res = %d", res);
+        return res;
     }
 
-    ret = HksImportKey(&keyAliasBlob, paramSet, &symKeyBlob);
-    if (ret != HKS_SUCCESS) {
-        LOGE("HksImportKey failed, ret: %d", ret);
+    LOGI("[HUKS]: HksImportKey enter.");
+    res = HksImportKey(&keyAliasBlob, paramSet, &symKeyBlob);
+    LOGI("[HUKS]: HksImportKey quit. [Res]: %d", res);
+    if (res != HKS_SUCCESS) {
+        LOGE("[HUKS]: HksImportKey fail. [Res]: %d", res);
         HksFreeParamSet(&paramSet);
-        return ret;
+        return res;
     }
 
     HksFreeParamSet(&paramSet);
@@ -536,9 +541,9 @@ static int32_t BigNumExpMod(const Uint8Buff *base, const Uint8Buff *exp, const c
 {
     const Uint8Buff *inParams[] = { base, exp, outNum };
     const char *paramTags[] = { "base", "exp", "outNum" };
-    int32_t ret = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
-    if (ret != HAL_SUCCESS) {
-        return ret;
+    int32_t res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+    if (res != HAL_SUCCESS) {
+        return res;
     }
 
     CHECK_PTR_RETURN_HAL_ERROR_CODE(bigNumHex, "bigNumHex");
@@ -559,16 +564,18 @@ static int32_t BigNumExpMod(const Uint8Buff *base, const Uint8Buff *exp, const c
         LOGE("malloc bigNumBlob.data failed.");
         return HAL_ERR_BAD_ALLOC;
     }
-    ret = HexStringToByte(bigNumHex, bigNumBlob.data, bigNumBlob.size);
-    if (ret != HAL_SUCCESS) {
+    res = HexStringToByte(bigNumHex, bigNumBlob.data, bigNumBlob.size);
+    if (res != HAL_SUCCESS) {
         LOGE("HexStringToByte for bigNumHex failed.");
         HcFree(bigNumBlob.data);
-        return ret;
+        return res;
     }
 
-    ret = HksBnExpMod(&outNumBlob, &baseBlob, &expBlob, &bigNumBlob);
-    if (ret != HKS_SUCCESS) {
-        LOGE("Huks calculate big number exp mod failed, ret = %d", ret);
+    LOGI("[HUKS]: HksBnExpMod enter.");
+    res = HksBnExpMod(&outNumBlob, &baseBlob, &expBlob, &bigNumBlob);
+    LOGI("[HUKS]: HksBnExpMod quit. [Res]: %d", res);
+    if (res != HKS_SUCCESS) {
+        LOGE("[HUKS]: HksBnExpMod fail. [Res]: %d", res);
         HcFree(bigNumBlob.data);
         return HAL_FAILED;
     }

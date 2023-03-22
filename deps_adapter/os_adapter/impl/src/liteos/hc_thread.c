@@ -14,6 +14,8 @@
  */
 
 #include "hc_thread.h"
+#include "hal_error.h"
+#include "hc_log.h"
 
 #define MAX_THREAD_STACK_SIZE (8 * 1024 * 1024)
 
@@ -24,7 +26,10 @@ void *StaticThreadFunc(void *args)
         return NULL;
     }
 
-    (void)pthread_setname_np(pthread_self(), StringGet(&thread->name));
+    int res = pthread_setname_np(pthread_self(), StringGet(&thread->name));
+    if (res != 0) {
+        LOGW("[OS]: pthread_setname_np fail. [Res]: %d", res);
+    }
 
     if (thread->threadFunc) {
         thread->threadFunc(args);
@@ -39,7 +44,7 @@ void *StaticThreadFunc(void *args)
 int Start(struct HcThreadT *thread)
 {
     if (thread == NULL) {
-        return -1;
+        return HAL_ERR_NULL_PTR;
     }
     thread->threadLock.lock(&thread->threadLock);
     if (thread->running) {
@@ -56,13 +61,16 @@ int Start(struct HcThreadT *thread)
         pthread_attr_setstacksize(&attr, thread->stackSize);
     }
 
-    int result = pthread_create(&thread->thread, &attr, StaticThreadFunc, thread);
+    LOGI("[OS]: pthread_create enter.");
+    int res = pthread_create(&thread->thread, &attr, StaticThreadFunc, thread);
+    LOGI("[OS]: pthread_create quit. [Res]: %d", res);
     pthread_attr_destroy(&attr);
-    if (result != 0) {
+    if (res != 0) {
+        LOGE("[OS]: pthread_create fail. [Res]: %d", res);
         thread->running = HC_FALSE;
     }
     thread->threadLock.unlock(&thread->threadLock);
-    return result;
+    return res;
 }
 
 void Join(struct HcThreadT *thread)
@@ -75,7 +83,12 @@ void Join(struct HcThreadT *thread)
         thread->threadWaitObj.waitWithoutLock(&thread->threadWaitObj);
     }
     void *status = NULL;
-    pthread_join(thread->thread, &status);
+    LOGI("[OS]: pthread_join enter.");
+    int res = pthread_join(thread->thread, &status);
+    LOGI("[OS]: pthread_join quit. [Res]: %d");
+    if (res != 0) {
+        LOGE("[OS]: pthread_join fail. [Res]: %d", res);
+    }
 }
 
 void BizWait(struct HcThreadT *thread)

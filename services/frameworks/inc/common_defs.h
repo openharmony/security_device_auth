@@ -120,6 +120,11 @@
 #define FIELD_AUTH_RESULT_MAC "authResultMac"
 #define FIELD_LOCAL_DEVICE_TYPE "localDeviceType"
 
+#define DEV_AUTH_ZERO 0
+#define DEV_AUTH_ONE 1
+#define DEV_AUTH_TWO 2
+#define DEV_AUTH_THREE 3
+
 #define INVALID_MODULE_TYPE (-1)
 #define GROUP_ERR_MSG 0x8080
 
@@ -147,6 +152,7 @@
 #define ALL_GROUP_VISIBILITY (-2)
 #define INVALID_CRED 0
 #define PUBLIC_KEY_MAX_LENGTH 128
+#define DESENSITIZATION_LEN 12
 
 typedef enum {
     NO_CHANNEL = 1,

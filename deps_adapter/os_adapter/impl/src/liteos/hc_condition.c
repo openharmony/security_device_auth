@@ -15,13 +15,19 @@
 
 #include "hc_condition.h"
 
+#include "hc_log.h"
+
 int HcCondWait(struct HcConditionT* hcCond)
 {
     if (hcCond == NULL) {
         return -1;
     }
 
-    return sem_wait(&hcCond->sem);
+    int res = sem_wait(&hcCond->sem);
+    if (res != 0) {
+        LOGE("[OS]: sem_wait fail. [Res]: %d", res);
+    }
+    return res;
 }
 
 void HcCondNotify(struct HcConditionT* hcCond)
@@ -30,7 +36,10 @@ void HcCondNotify(struct HcConditionT* hcCond)
         return;
     }
 
-    sem_post(&hcCond->sem);
+    int res = sem_post(&hcCond->sem);
+    if (res != 0) {
+        LOGW("[OS]: sem_post fail. [Res]: %d", res);
+    }
 }
 
 int32_t InitHcCond(HcCondition* hcCond, HcMutex* mutex)
@@ -45,7 +54,13 @@ int32_t InitHcCond(HcCondition* hcCond, HcMutex* mutex)
     hcCond->notifyWithoutLock = HcCondNotify;
 
     // init the signal value to zero
-    return sem_init(&hcCond->sem, 0, 0);
+    LOGI("[OS]: sem_init enter.");
+    int res = sem_init(&hcCond->sem, 0, 0);
+    LOGI("[OS]: sem_init quit. [Res]: %d", res);
+    if (res != 0) {
+        LOGE("[OS]: sem_init fail. [Res]: %d", res);
+    }
+    return res;
 }
 
 void DestroyHcCond(HcCondition* hcCond)
@@ -54,5 +69,8 @@ void DestroyHcCond(HcCondition* hcCond)
         return;
     }
 
-    sem_destroy(&hcCond->sem);
+    int res = sem_destroy(&hcCond->sem);
+    if (res != 0) {
+        LOGW("[OS]: sem_destroy fail. [Res]: %d", res);
+    }
 }

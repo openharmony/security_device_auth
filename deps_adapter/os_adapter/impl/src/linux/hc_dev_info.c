@@ -28,9 +28,11 @@ int32_t HcGetUdid(uint8_t *udid, int32_t udidLen)
     if (udid == NULL || udidLen < INPUT_UDID_LEN || udidLen > MAX_INPUT_UDID_LEN) {
         return HAL_ERR_INVALID_PARAM;
     }
+    LOGI("[UDID]: GetDevUdid enter.");
     int32_t res = GetDevUdid((char *)udid, udidLen);
+    LOGI("[UDID]: GetDevUdid quit. [Res]: %d", res);
     if (res != 0) {
-        LOGE("[OS]: GetDevUdid fail! res: %d", res);
+        LOGE("[UDID]: GetDevUdid fail. [Res]: %d", res);
         return HAL_FAILED;
     }
     return HAL_SUCCESS;
@@ -43,7 +45,6 @@ const char *GetStoragePath(void)
 #else
     const char *storageFile = "/storage/deviceauth/hcgroup.dat";
 #endif
-    LOGI("[OS]: storageFile: %s", storageFile);
     return storageFile;
 }
 
@@ -54,7 +55,6 @@ const char *GetStorageDirPath(void)
 #else
     const char *storageFile = "/storage/deviceauth";
 #endif
-    LOGI("[OS]: storageDirFile: %s", storageFile);
     return storageFile;
 }
 
@@ -65,7 +65,6 @@ const char *GetAccountStoragePath(void)
 #else
     const char *storageFile = "/storage/deviceauth/account";
 #endif
-    LOGI("[OS]: Account storage dir: %s", storageFile);
     return storageFile;
 }
 

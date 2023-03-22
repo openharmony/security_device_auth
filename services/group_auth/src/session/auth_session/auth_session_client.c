@@ -117,15 +117,19 @@ static int32_t DealPeerGroupAuthError(AuthSession *session)
 static void PrintErrorInputInfo(const CJson *param)
 {
     const char *peerUdid = GetStringFromJson(param, FIELD_PEER_CONN_DEVICE_ID);
+    if ((peerUdid != NULL) && (HcStrlen(peerUdid) >= DESENSITIZATION_LEN)) {
+        LOGE("Auth failed! [PeerUdid]: %c%c%c%c****", peerUdid[DEV_AUTH_ZERO], peerUdid[DEV_AUTH_ONE],
+            peerUdid[DEV_AUTH_TWO], peerUdid[DEV_AUTH_THREE]);
+    } else {
+        LOGE("Auth failed! [peerUdid]: Unknown");
+    }
     const char *peerAuthId = GetStringFromJson(param, FIELD_PEER_AUTH_ID);
-    char *anonyPeerUdid = NULL;
-    char *anonyPeerAuthId = NULL;
-    ConvertToAnonymousStr(peerUdid, &anonyPeerUdid);
-    ConvertToAnonymousStr(peerAuthId, &anonyPeerAuthId);
-    LOGE("[PrintErrorInputInfo] [peerUdid]: %s", ((anonyPeerUdid == NULL) ? "NULL" : anonyPeerUdid));
-    LOGE("[PrintErrorInputInfo] [peerAuthId]: %s", ((anonyPeerAuthId == NULL) ? "NULL" : anonyPeerAuthId));
-    HcFree(anonyPeerUdid);
-    HcFree(anonyPeerAuthId);
+    if ((peerAuthId != NULL) && (HcStrlen(peerAuthId) >= DESENSITIZATION_LEN)) {
+        LOGE("Auth failed! [peerAuthId]: %c%c%c%c****", peerAuthId[DEV_AUTH_ZERO], peerAuthId[DEV_AUTH_ONE],
+            peerAuthId[DEV_AUTH_TWO], peerAuthId[DEV_AUTH_THREE]);
+    } else {
+        LOGE("Auth failed! [peerAuthId]: Unknown");
+    }
 }
 
 static int32_t ProcessClientAuthSession(Session *session, CJson *in)

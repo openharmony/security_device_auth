@@ -65,7 +65,7 @@ static int DecAndImportInner(IsoClientBindExchangeTask *realTask, const IsoParam
         goto ERR;
     }
 
-    LOGI("AuthCode alias: %x%x%x%x****.", keyAlias[0], keyAlias[1], keyAlias[2], keyAlias[3]);
+    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias[0], keyAlias[1], keyAlias[2], keyAlias[3]);
     ExtraInfo exInfo = { { params->baseParams.authIdPeer.val, params->baseParams.authIdPeer.length },
         params->peerUserType, PAIR_TYPE_BIND };
     res = params->baseParams.loader->importSymmetricKey(&keyAliasBuf, authCodeBuf, KEY_PURPOSE_MAC, &exInfo);

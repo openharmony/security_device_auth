@@ -298,7 +298,6 @@ int32_t GetTrustedDevInfoById(int32_t osAccountId, const char *deviceId, bool is
         LOGE("The input parameters contain NULL value!");
         return HC_ERR_INVALID_PARAMS;
     }
-    LOGI("Start to get device information of a specified group!");
     TrustedDeviceEntry *deviceEntry = GetTrustedDeviceEntryById(osAccountId, deviceId, isUdid, groupId);
     if (deviceEntry == NULL) {
         LOGE("The trusted device is not found!");
@@ -987,15 +986,14 @@ int32_t GenerateBindSuccessData(const char *peerAuthId, const char *groupId, cha
         LOGE("The input params contains NULL value!");
         return HC_ERR_NULL_PTR;
     }
-    char *tempGroupId = NULL;
-    char *tempAuthId = NULL;
-    ConvertToAnonymousStr(groupId, &tempGroupId);
-    ConvertToAnonymousStr(peerAuthId, &tempAuthId);
-    LOGI("Bind successfully! [GroupId]: %s, [AddId]: %s",
-        tempGroupId == NULL ? "NULL" : tempGroupId,
-        tempAuthId == NULL ? "NULL" : tempAuthId);
-    HcFree(tempGroupId);
-    HcFree(tempAuthId);
+    LOGI("Bind successfully! [GroupId]: %c%c%c%c****", groupId[DEV_AUTH_ZERO], groupId[DEV_AUTH_ONE],
+        groupId[DEV_AUTH_TWO], groupId[DEV_AUTH_THREE]);
+    if (HcStrlen(peerAuthId) >= DESENSITIZATION_LEN) {
+        LOGI("Bind successfully! [PeerAuthId]: %c%c%c%c****", peerAuthId[DEV_AUTH_ZERO], peerAuthId[DEV_AUTH_ONE],
+            peerAuthId[DEV_AUTH_TWO], peerAuthId[DEV_AUTH_THREE]);
+    } else {
+        LOGI("Bind successfully! [PeerAuthId]: too short");
+    }
     CJson *jsonData = CreateJson();
     if (jsonData == NULL) {
         LOGE("Failed to allocate jsonData memory!");
@@ -1027,15 +1025,14 @@ int32_t GenerateUnbindSuccessData(const char *peerAuthId, const char *groupId, c
         LOGE("The input params contains NULL value!");
         return HC_ERR_NULL_PTR;
     }
-    char *tempGroupId = NULL;
-    char *tempAuthId = NULL;
-    ConvertToAnonymousStr(groupId, &tempGroupId);
-    ConvertToAnonymousStr(peerAuthId, &tempAuthId);
-    LOGI("Unbind successfully! [GroupId]: %s, [DeleteId]: %s",
-        tempGroupId == NULL ? "NULL" : tempGroupId,
-        tempAuthId == NULL ? "NULL" : tempAuthId);
-    HcFree(tempGroupId);
-    HcFree(tempAuthId);
+    LOGI("Unbind successfully! [GroupId]: %c%c%c%c****", groupId[DEV_AUTH_ZERO], groupId[DEV_AUTH_ONE],
+        groupId[DEV_AUTH_TWO], groupId[DEV_AUTH_THREE]);
+    if (HcStrlen(peerAuthId) >= DESENSITIZATION_LEN) {
+        LOGI("Unbind successfully! [PeerAuthId]: %c%c%c%c****", peerAuthId[DEV_AUTH_ZERO], peerAuthId[DEV_AUTH_ONE],
+            peerAuthId[DEV_AUTH_TWO], peerAuthId[DEV_AUTH_THREE]);
+    } else {
+        LOGI("Unbind successfully! [PeerAuthId]: too short");
+    }
     CJson *jsonData = CreateJson();
     if (jsonData == NULL) {
         LOGE("Failed to allocate jsonData memory!");

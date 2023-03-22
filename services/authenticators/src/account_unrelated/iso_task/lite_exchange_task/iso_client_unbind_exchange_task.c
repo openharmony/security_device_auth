@@ -68,7 +68,7 @@ static int Process(struct SymBaseCurTaskT *task, IsoParams *params, const CJson 
         LOGE("GenerateKeyAliasInIso failed, res:%d", res);
         goto ERR;
     }
-    LOGI("AuthCode alias: %x%x%x%x****.", keyAlias[0], keyAlias[1], keyAlias[2], keyAlias[3]);
+    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias[0], keyAlias[1], keyAlias[2], keyAlias[3]);
     Uint8Buff outKeyAlias = { (uint8_t *)keyAlias, ISO_KEY_ALIAS_LEN };
     res = params->baseParams.loader->deleteKey(&outKeyAlias);
     if (res != 0) {

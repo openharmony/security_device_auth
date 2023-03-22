@@ -253,7 +253,7 @@ void DeleteAuthCode(const IsoParams *params)
         LOGE("GenerateKeyAliasInIso failed, res:%d", res);
         goto ERR;
     }
-    LOGI("AuthCode alias: %x%x%x%x****.", keyAlias[0], keyAlias[1], keyAlias[2], keyAlias[3]);
+    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias[0], keyAlias[1], keyAlias[2], keyAlias[3]);
     Uint8Buff outKeyAlias = { keyAlias, ISO_KEY_ALIAS_LEN };
     params->baseParams.loader->deleteKey(&outKeyAlias);
 ERR:
@@ -508,7 +508,7 @@ static int AuthGeneratePsk(const Uint8Buff *seed, IsoParams *params)
         return res;
     }
 
-    LOGI("AuthCode alias: %x%x%x%x****.", keyAlias[0], keyAlias[1], keyAlias[2], keyAlias[3]);
+    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias[0], keyAlias[1], keyAlias[2], keyAlias[3]);
     Uint8Buff keyAliasBuf = { keyAlias, sizeof(keyAlias) };
     Uint8Buff pskBuf = { params->baseParams.psk, sizeof(params->baseParams.psk) };
     return params->baseParams.loader->computeHmac(&keyAliasBuf, seed, &pskBuf, true);

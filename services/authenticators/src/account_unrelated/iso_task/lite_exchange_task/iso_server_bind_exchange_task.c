@@ -152,7 +152,7 @@ static int GenAndEncAuthCode(const IsoParams *params, Uint8Buff *nonceBuf, const
         goto ERR;
     }
 
-    LOGI("AuthCode alias: %x%x%x%x****.", keyAlias[0], keyAlias[1], keyAlias[2], keyAlias[3]);
+    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias[0], keyAlias[1], keyAlias[2], keyAlias[3]);
     Uint8Buff keyAliasBuf = { keyAlias, ISO_KEY_ALIAS_LEN };
     ExtraInfo exInfo = { { params->baseParams.authIdPeer.val, params->baseParams.authIdPeer.length },
         params->peerUserType, PAIR_TYPE_BIND };

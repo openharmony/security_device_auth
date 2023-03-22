@@ -15,6 +15,8 @@
 
 #include "hc_mutex.h"
 
+#include "hc_log.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,7 +26,11 @@ static int HcMutexLock(HcMutex *mutex)
     if (mutex == NULL) {
         return -1;
     }
-    return -pthread_mutex_lock(&mutex->mutex);
+    int res = pthread_mutex_lock(&mutex->mutex);
+    if (res != 0) {
+        LOGW("[OS]: pthread_mutex_lock fail. [Res]: %d");
+    }
+    return res;
 }
 
 static void HcMutexUnlock(HcMutex *mutex)
@@ -32,7 +38,10 @@ static void HcMutexUnlock(HcMutex *mutex)
     if (mutex == NULL) {
         return;
     }
-    pthread_mutex_unlock(&mutex->mutex);
+    int res = pthread_mutex_unlock(&mutex->mutex);
+    if (res != 0) {
+        LOGW("[OS]: pthread_mutex_unlock fail. [Res]: %d");
+    }
 }
 
 int32_t InitHcMutex(struct HcMutexT *mutex)
@@ -40,8 +49,11 @@ int32_t InitHcMutex(struct HcMutexT *mutex)
     if (mutex == NULL) {
         return -1;
     }
+    LOGI("[OS]: pthread_mutex_init enter.");
     int res = pthread_mutex_init(&mutex->mutex, NULL);
+    LOGI("[OS]: pthread_mutex_init quit. [Res]: %d");
     if (res != 0) {
+        LOGE("[OS]: pthread_mutex_init fail. [Res]: %d", res);
         return res;
     }
     mutex->lock = HcMutexLock;
@@ -54,7 +66,12 @@ void DestroyHcMutex(struct HcMutexT *mutex)
     if (mutex == NULL) {
         return;
     }
-    pthread_mutex_destroy(&mutex->mutex);
+    LOGI("[OS]: pthread_mutex_destroy enter.");
+    int res = pthread_mutex_destroy(&mutex->mutex);
+    LOGI("[OS]: pthread_mutex_destroy quit. [Res]: %d", res);
+    if (res != 0) {
+        LOGW("[OS]: pthread_mutex_destroy fail. [Res]: %d", res);
+    }
 }
 
 #ifdef __cplusplus

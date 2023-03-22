@@ -23,14 +23,17 @@ extern "C" {
 
 #define MAX_THREAD_STACK_SIZE (8 * 1024 * 1024)
 
-void* StaticThreadFunc(void* args)
+void *StaticThreadFunc(void *args)
 {
     HcThread* thread = (HcThread*)args;
     if (thread == NULL) {
         return NULL;
     }
 
-    (void)pthread_setname_np(pthread_self(), StringGet(&thread->name));
+    int res = pthread_setname_np(pthread_self(), StringGet(&thread->name));
+    if (res != 0) {
+        LOGW("[OS]: pthread_setname_np fail. [Res]: %d", res);
+    }
 
     if (thread->threadFunc) {
         thread->threadFunc(args);
@@ -39,10 +42,10 @@ void* StaticThreadFunc(void* args)
     thread->running = HC_FALSE;
     thread->threadWaitObj.notifyWithoutLock(&thread->threadWaitObj);
     thread->threadLock.unlock(&thread->threadLock);
-    return 0;
+    return NULL;
 }
 
-int Start(struct HcThreadT* thread)
+int Start(struct HcThreadT *thread)
 {
     if (thread == NULL) {
         return HAL_ERR_NULL_PTR;
@@ -62,18 +65,19 @@ int Start(struct HcThreadT* thread)
         pthread_attr_setstacksize(&attr, thread->stackSize);
     }
 
-    int result = pthread_create(&thread->thread, &attr, StaticThreadFunc, thread);
+    LOGI("[OS]: pthread_create enter.");
+    int res = pthread_create(&thread->thread, &attr, StaticThreadFunc, thread);
+    LOGI("[OS]: pthread_create quit. [Res]: %d", res);
     pthread_attr_destroy(&attr);
-
-    if (result != 0) {
-        LOGE("pthread_create failed.");
+    if (res != 0) {
+        LOGE("[OS]: pthread_create fail. [Res]: %d", res);
         thread->running = HC_FALSE;
     }
     thread->threadLock.unlock(&thread->threadLock);
-    return result;
+    return res;
 }
 
-void Join(struct HcThreadT* thread)
+void Join(struct HcThreadT *thread)
 {
     if (thread == NULL) {
         return;
@@ -85,7 +89,7 @@ void Join(struct HcThreadT* thread)
     thread->threadLock.unlock(&thread->threadLock);
 }
 
-void BizWait(struct HcThreadT* thread)
+void BizWait(struct HcThreadT *thread)
 {
     if (thread == NULL) {
         return;
@@ -93,7 +97,7 @@ void BizWait(struct HcThreadT* thread)
     thread->bizWaitObj.wait(&thread->bizWaitObj);
 }
 
-void BizNotify(struct HcThreadT* thread)
+void BizNotify(struct HcThreadT *thread)
 {
     if (thread == NULL) {
         return;
@@ -101,7 +105,7 @@ void BizNotify(struct HcThreadT* thread)
     thread->bizWaitObj.notify(&thread->bizWaitObj);
 }
 
-int32_t InitThread(HcThread* thread, ThreadFunc func, size_t stackSize, const char* threadName)
+int32_t InitThread(HcThread *thread, ThreadFunc func, size_t stackSize, const char *threadName)
 {
     if (thread == NULL) {
         return -1;
@@ -139,7 +143,7 @@ int32_t InitThread(HcThread* thread, ThreadFunc func, size_t stackSize, const ch
     return res;
 }
 
-void DestroyThread(HcThread* thread)
+void DestroyThread(HcThread *thread)
 {
     if (thread == NULL) {
         return;

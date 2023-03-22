@@ -144,7 +144,7 @@ int32_t FillPskWithDerivedKeyHex(PakeParams *params)
         return res;
     }
 
-    LOGI("Psk alias: %x%x%x%x****.", pskKeyAliasVal[0], pskKeyAliasVal[1], pskKeyAliasVal[2], pskKeyAliasVal[3]);
+    LOGI("Psk alias(HEX): %x%x%x%x****.", pskKeyAliasVal[0], pskKeyAliasVal[1], pskKeyAliasVal[2], pskKeyAliasVal[3]);
     if (params->baseParams.loader->checkKeyExist(&pskKeyAlias) != HC_SUCCESS) {
         res = GetStandardTokenManagerInstance()->computeAndSavePsk(params);
         if (res != HC_SUCCESS) {

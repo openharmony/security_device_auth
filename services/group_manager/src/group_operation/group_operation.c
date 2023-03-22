@@ -536,6 +536,7 @@ static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const 
         return HC_ERR_INVALID_PARAMS;
     }
     LOGI("[Start]: RequestCreateGroup! [AppId]: %s, [RequestId]: %" PRId64, appId, requestId);
+    DEV_AUTH_REPORT_CALL_EVENT(CREATE_GROUP_EVENT, osAccountId, requestId, appId);
     CJson *params = CreateJsonFromString(createParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -562,6 +563,7 @@ static int32_t RequestDeleteGroup(int32_t osAccountId, int64_t requestId, const 
         return HC_ERR_INVALID_PARAMS;
     }
     LOGI("[Start]: RequestDeleteGroup! [AppId]: %s, [RequestId]: %" PRId64, appId, requestId);
+    DEV_AUTH_REPORT_CALL_EVENT(DELETE_GROUP_EVENT, osAccountId, requestId, appId);
     CJson *params = CreateJsonFromString(disbandParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -588,6 +590,7 @@ static int32_t RequestAddMemberToGroup(int32_t osAccountId, int64_t requestId, c
         return HC_ERR_INVALID_PARAMS;
     }
     LOGI("[Start]: RequestAddMemberToGroup! [AppId]: %s, [RequestId]: %" PRId64, appId, requestId);
+    DEV_AUTH_REPORT_CALL_EVENT(ADD_MEMBER_EVENT, osAccountId, requestId, appId);
     CJson *params = CreateJsonFromString(addParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -616,6 +619,7 @@ static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t request
         return HC_ERR_INVALID_PARAMS;
     }
     LOGI("[Start]: RequestDeleteMemberFromGroup! [AppId]: %s, [RequestId]: %" PRId64, appId, requestId);
+    DEV_AUTH_REPORT_CALL_EVENT(DEL_MEMBER_EVENT, osAccountId, requestId, appId);
     CJson *params = CreateJsonFromString(deleteParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -718,7 +722,7 @@ static int32_t RequestProcessBindData(int64_t requestId, const uint8_t *data, ui
         LOGE("The input data is invalid!");
         return HC_ERR_INVALID_PARAMS;
     }
-    LOGI("[Start]: RequestProcessBindData! [RequestId]: %" PRId64, requestId);
+    LOGI("[Start]: RequestProcessBindData! [ReqId]: %" PRId64, requestId);
     CJson *params = CreateJsonFromString((const char *)data);
     if (params == NULL) {
         LOGE("Failed to create json from string!");

@@ -1086,7 +1086,6 @@ int32_t QueryGroups(int32_t osAccountId, const QueryGroupParams *params, GroupEn
         }
     }
     g_databaseMutex->unlock(g_databaseMutex);
-    LOGI("[DB]: Number of groups queried: %d", vec->size(vec));
     return HC_SUCCESS;
 }
 
@@ -1118,7 +1117,6 @@ int32_t QueryDevices(int32_t osAccountId, const QueryDeviceParams *params, Devic
         }
     }
     g_databaseMutex->unlock(g_databaseMutex);
-    LOGI("[DB]: Number of trusted devices queried: %d", vec->size(vec));
     return HC_SUCCESS;
 }
 

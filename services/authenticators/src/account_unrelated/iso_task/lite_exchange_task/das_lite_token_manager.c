@@ -33,7 +33,8 @@ static int32_t UnregisterLocalIdentity(const char *pkgName, const char *serviceT
         LOGE("Failed to generate authtoken alias!");
         return res;
     }
-    LOGI("AuthCode alias: %x%x%x%x****.", isoKeyAliasVal[0], isoKeyAliasVal[1], isoKeyAliasVal[2], isoKeyAliasVal[3]);
+    LOGI("AuthCode alias(HEX): %x%x%x%x****.", isoKeyAliasVal[0], isoKeyAliasVal[1],
+        isoKeyAliasVal[2], isoKeyAliasVal[3]);
     res = loader->deleteKey(&isoKeyAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete authtoken!");
@@ -58,7 +59,8 @@ static int32_t DeletePeerAuthInfo(const char *pkgName, const char *serviceType, 
         LOGE("Failed to generate authtoken alias!");
         return res;
     }
-    LOGI("AuthCode alias: %x%x%x%x****.", isoKeyAliasVal[0], isoKeyAliasVal[1], isoKeyAliasVal[2], isoKeyAliasVal[3]);
+    LOGI("AuthCode alias(HEX): %x%x%x%x****.", isoKeyAliasVal[0], isoKeyAliasVal[1],
+        isoKeyAliasVal[2], isoKeyAliasVal[3]);
     res = loader->deleteKey(&isoKeyAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete authtoken!");
