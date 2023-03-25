@@ -208,7 +208,6 @@ int32_t AccountAuthGeneratePsk(IsoAuthParams *params)
     FreeAndCleanKey(&authToken);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHmac for psk failed, res: %d.", res);
-        FreeAndCleanKey(&pskBuf);
     }
     return res;
 }
