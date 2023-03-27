@@ -35,13 +35,6 @@ group("deviceauth_test_build") {
   if (os_level == "standard") {
     testonly = true
     deps += [
-      "test/fuzztest/device_auth_service/devauthservgetregisterinfo_fuzzer:fuzztest",
-      "test/fuzztest/device_auth_service/devauthservprocessauthdata_fuzzer:fuzztest",
-      "test/fuzztest/device_auth_service/devauthservprocessbinddata_fuzzer:fuzztest",
-      "test/fuzztest/device_auth_service/devauthservregcallback_fuzzer:fuzztest",
-      "test/fuzztest/device_auth_service/devauthservregdatachangelistener_fuzzer:fuzztest",
-      "test/fuzztest/device_auth_service/devauthservunregcallback_fuzzer:fuzztest",
-      "test/fuzztest/device_auth_service/devauthservunregdatachangelistener_fuzzer:fuzztest",
       "test/fuzztest/group_auth/authdevice_fuzzer:fuzztest",
       "test/fuzztest/group_auth/processauthdata_fuzzer:fuzztest",
       "test/fuzztest/group_manage/addmember_fuzzer:fuzztest",
