@@ -30,6 +30,8 @@ using namespace std;
 using namespace testing::ext;
 
 namespace {
+#define TEST_HKS_DATA_PATH DEVICE_AUTH_TEST_HKS_DATA_PATH "/maindata"
+
 static const std::string TEST_SYM_USER_ID = "1234ABCD";
 static const std::string TEST_SYM_DEVICE_ID = "TestAuthId";
 static const std::string TEST_SYM_AUTH_CODE = "37364761534f454d33567a73424e794f33573330507069434b31676f7254706b";
@@ -66,7 +68,7 @@ static void RemoveDir(const char *path)
 
 static void RemoveHuks(void)
 {
-    RemoveDir("/data/service/el1/public/huks_service/maindata");
+    RemoveDir(TEST_HKS_DATA_PATH);
 }
 
 static void DeleteDatabase()
