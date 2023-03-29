@@ -14,6 +14,7 @@
 import("//base/security/device_auth/deps_adapter/deviceauth_hals.gni")
 import("//base/security/device_auth/services/deviceauth.gni")
 import("//base/security/device_auth/services/key_agree_sdk/key_agree_sdk.gni")
+import("//base/security/huks/build/config.gni")
 import("//build/test.gni")
 
 module_output_path = "device_auth/deviceauth_test"
@@ -99,6 +100,9 @@ ohos_unittest("deviceauth_llt") {
   ]
 
   cflags = [ "-DHILOG_ENABLE" ]
+
+  cflags +=
+      [ "-DDEVICE_AUTH_TEST_HKS_DATA_PATH=\"${huks_key_store_standard_path}\"" ]
 
   deps = [
     "//third_party/cJSON:cjson",
