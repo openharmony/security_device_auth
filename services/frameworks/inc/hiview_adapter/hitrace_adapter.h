@@ -16,9 +16,37 @@
 #ifndef HITRACE_ADAPTER_H
 #define HITRACE_ADAPTER_H
 
+#ifndef HIVIEW_ENABLE
+
+#define DEV_AUTH_START_TRACE(tag)
+#define DEV_AUTH_FINISH_TRACE()
+
+#else
+
 #include <stdint.h>
 
-#define TRACE_TAG_AUTH_PROCESS "auth_process"
+#define DEV_AUTH_START_TRACE(tag) DevAuthStartTrace(tag)
+#define DEV_AUTH_FINISH_TRACE() DevAuthFinishTrace();
+
+#define TRACE_TAG_CALL_ADD_MEMBER "CallAddMember"
+#define TRACE_TAG_CALL_AUTH_DEVICE "CallAuthDevice"
+#define TRACE_TAG_CALL_PROCESS_BIND_DATA "CallProcessBindData"
+#define TRACE_TAG_CALL_PROCESS_AUTH_DATA "CallProcessAuthData"
+#define TRACE_TAG_PROC_ADD_MEMBER_WORK_TASK "ProcAddMemberWorkTask"
+#define TRACE_TAG_PROC_BIND_DATA_WORK_TASK "ProcBindDataWorkTask"
+#define TRACE_TAG_PROC_AUTH_DEVICE_WORK_TASK "ProcAuthDeviceWorkTask"
+#define TRACE_TAG_PROC_AUTH_DATA_WORK_TASK "ProcAuthDataWorkTask"
+#define TRACE_TAG_CREATE_SESSION "CreateSession"
+#define TRACE_TAG_PROCESS_SESSION "ProcessSession"
+#define TRACE_TAG_ON_SESSION_FINISH "OnSessionFinish"
+#define TRACE_TAG_CREATE_KEY_PAIR "CreateKeyPair"
+#define TRACE_TAG_OPEN_CHANNEL "OpenChannel"
+#define TRACE_TAG_CHANNEL_OPENED "ChannelOpened"
+#define TRACE_TAG_SEND_DATA "SendData"
+#define TRACE_TAG_CREATE_AUTH_TASK "CreateAuthTask"
+#define TRACE_TAG_PROCESS_AUTH_TASK "ProcessAuthTask"
+#define TRACE_TAG_ON_REQUEST "OnRequest"
+#define TRACE_TAG_ADD_TRUSTED_DEVICE "AddTrustedDevice"
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,4 +60,6 @@ void DevAuthFinishTrace(void);
 }
 #endif
 
-#endif // HITRACE_ADAPTER_H
+#endif
+
+#endif

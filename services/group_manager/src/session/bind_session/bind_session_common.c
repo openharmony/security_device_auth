@@ -23,6 +23,8 @@
 #include "hc_dev_info.h"
 #include "hc_log.h"
 #include "hc_types.h"
+#include "hisysevent_adapter.h"
+#include "hitrace_adapter.h"
 #include "session_common.h"
 
 static int32_t AddGroupInfoToSendData(const BindSession *session, CJson *data)
@@ -718,12 +720,13 @@ static int32_t AddGroupAndDevInfo(int32_t osAccountId, int isClient, const CJson
 
 static int32_t InteractWithPeer(const BindSession *session, CJson *sendData)
 {
-    int32_t result = AddInfoToSendData(false, session, sendData);
-    if (result != HC_SUCCESS) {
+    int32_t res = AddInfoToSendData(false, session, sendData);
+    if (res != HC_SUCCESS) {
         LOGE("Failed to generate sendData!");
-        return result;
+        return res;
     }
-    return SendBindSessionData(session, sendData);
+    res = SendBindSessionData(session, sendData);
+    return res;
 }
 
 static int32_t InformSelfBindSuccess(const char *peerAuthId, const char *groupId, const BindSession *session,
@@ -977,7 +980,9 @@ static int32_t AddGroupAndDev(const char *peerAuthId, const char *peerUdid,
 static int32_t HandleBindSuccess(const char *peerAuthId, const char *peerUdid,
     const char *groupId, const BindSession *session, CJson *out)
 {
+    DEV_AUTH_START_TRACE(TRACE_TAG_ADD_TRUSTED_DEVICE);
     int32_t result = AddGroupAndDev(peerAuthId, peerUdid, groupId, session);
+    DEV_AUTH_FINISH_TRACE();
     if (result != HC_SUCCESS) {
         return result;
     }
@@ -1087,7 +1092,9 @@ static int32_t ProcessBindSessionInner(BindSession *session, CJson *jsonParams, 
         FreeJson(sendData);
         return result;
     }
+    DEV_AUTH_START_TRACE(TRACE_TAG_ON_SESSION_FINISH);
     result = OnSessionFinish(session, jsonParams, out);
+    DEV_AUTH_FINISH_TRACE();
     FreeJson(out);
     return result;
 }

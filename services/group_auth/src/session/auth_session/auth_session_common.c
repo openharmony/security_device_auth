@@ -23,6 +23,7 @@
 #include "data_manager.h"
 #include "dev_auth_module_manager.h"
 #include "group_auth_data_operation.h"
+#include "hitrace_adapter.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
 #include "json_utils.h"
@@ -281,10 +282,12 @@ static int32_t ReturnTransmitData(const AuthSession *session, CJson *out)
             break;
         }
         LOGI("Start to transmit data to peer for auth!");
+        DEV_AUTH_START_TRACE(TRACE_TAG_SEND_DATA);
         if (!callback->onTransmit(requestId, (uint8_t *)outStr, HcStrlen(outStr) + 1)) {
             LOGE("Failed to transmit data to peer!");
             ret = HC_ERR_TRANSMIT_FAIL;
         }
+        DEV_AUTH_FINISH_TRACE();
         LOGI("End transmit data to peer for auth!");
     } while (0);
     FreeJsonString(outStr);
@@ -320,7 +323,9 @@ static void ReturnFinishData(const AuthSession *session, const CJson *out)
     }
     BaseGroupAuth *groupAuth = GetGroupAuth(GetGroupAuthType(authForm));
     if (groupAuth != NULL) {
+        DEV_AUTH_START_TRACE(TRACE_TAG_ON_SESSION_FINISH);
         groupAuth->onFinish(requestId, authParam, out, session->base.callback);
+        DEV_AUTH_FINISH_TRACE();
     }
 }
 
@@ -670,12 +675,16 @@ int32_t CreateAndProcessTask(AuthSession *session, CJson *paramInSession, CJson 
         }
     }
     session->curTaskId = 0;
+    DEV_AUTH_START_TRACE(TRACE_TAG_CREATE_AUTH_TASK);
     int32_t res = CreateTask(&(session->curTaskId), paramInSession, out, moduleType);
+    DEV_AUTH_FINISH_TRACE();
     if (res != HC_SUCCESS) {
         LOGE("Failed to create task for auth!");
         return res;
     }
+    DEV_AUTH_START_TRACE(TRACE_TAG_PROCESS_AUTH_TASK);
     res = ProcessTask(session->curTaskId, paramInSession, out, status, moduleType);
+    DEV_AUTH_FINISH_TRACE();
     DeleteCachedData(paramInSession);
     if (res != HC_SUCCESS) {
         DestroyTask(session->curTaskId, GetAuthModuleType(paramInSession));

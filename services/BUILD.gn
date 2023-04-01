@@ -32,7 +32,6 @@ if (os_level == "mini" || os_level == "small") {
       "${dev_frameworks_path}/inc/hiview_adapter",
     ]
     sources = deviceauth_files
-    sources += hiview_adapter_mock_files
     deps = [
       "${deps_adapter_path}:${hal_module_name}",
       "//build/lite/config/component/cJSON:cjson_shared",
@@ -43,7 +42,6 @@ if (os_level == "mini" || os_level == "small") {
     }
     defines = [ "HILOG_ENABLE" ]
     defines += deviceauth_defines
-    defines += [ "DISABLE_HIVIEW" ]
     if (board_toolchain_type == "iccarm" && os_level == "mini") {
       cflags = [
         "--diag_suppress",
@@ -89,7 +87,6 @@ if (os_level == "mini" || os_level == "small") {
       ]
 
       sources = deviceauth_ipc_files
-      sources += hiview_adapter_mock_files
       sources += [
         "${frameworks_path}/src/ipc_service.c",
         "${frameworks_path}/src/lite/ipc_service_init.c",
@@ -158,9 +155,10 @@ if (os_level == "mini" || os_level == "small") {
 
     sources = deviceauth_files
     sources += hiview_adapter_files
-    cflags = [ "-DHILOG_ENABLE" ]
     defines = deviceauth_defines
-    cflags += build_flags
+    defines += [ "HILOG_ENABLE" ]
+    defines += [ "HIVIEW_ENABLE" ]
+    cflags = build_flags
     if (target_cpu == "arm") {
       cflags += [ "-DBINDER_IPC_32BIT" ]
     }
@@ -212,7 +210,9 @@ if (os_level == "mini" || os_level == "small") {
     sources += permission_adapter_files
     sources += [ "${frameworks_path}/src/ipc_service.c" ]
 
-    cflags = [ "-DHILOG_ENABLE" ]
+    defines = [ "HILOG_ENABLE" ]
+    defines += [ "HIVIEW_ENABLE" ]
+    cflags = build_flags
     if (target_cpu == "arm") {
       cflags += [ "-DBINDER_IPC_32BIT" ]
     }
@@ -252,15 +252,14 @@ if (os_level == "mini" || os_level == "small") {
 
     sources = deviceauth_ipc_files
     sources += permission_adapter_files
-    sources += hiview_adapter_files
     sources += [ "${frameworks_path}/src/ipc_sdk.c" ]
 
     defines = [
       "__LINUX__",
       "HILOG_ENABLE",
     ]
-    cflags = [ "-fPIC" ]
-    cflags += build_flags
+    cflags = build_flags
+    cflags += [ "-fPIC" ]
     if (target_cpu == "arm") {
       cflags += [ "-DBINDER_IPC_32BIT" ]
     }

@@ -27,12 +27,12 @@ void DevAuthStartTrace(const char *value)
         return;
     }
 
-    StartTrace(HITRACE_TAG_APP, value);
+    StartTrace(HITRACE_TAG_DEV_AUTH, value);
 }
 
 void DevAuthFinishTrace(void)
 {
-    FinishTrace(HITRACE_TAG_APP);
+    FinishTrace(HITRACE_TAG_DEV_AUTH);
 }
 
 #ifdef __cplusplus

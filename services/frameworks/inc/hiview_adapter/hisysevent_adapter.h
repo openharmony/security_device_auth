@@ -16,39 +16,37 @@
 #ifndef HISYSEVENT_ADAPTER_H
 #define HISYSEVENT_ADAPTER_H
 
+#ifndef HIVIEW_ENABLE
+
+#define DEV_AUTH_REPORT_CALL_EVENT(a, b, c, d)
+#define DEV_AUTH_REPORT_CORE_EVENT(a, b, c)
+
+#else
+
 #include <stdint.h>
 
-#define EVENT_APPID_LEN 128
+#define CREATE_GROUP_EVENT "CreateGroup"
+#define DELETE_GROUP_EVENT "DeleteGroup"
+#define ADD_MEMBER_EVENT "AddMember"
+#define DEL_MEMBER_EVENT "DelMember"
+#define ADD_MULTI_MEMBER_EVENT "AddMultiMember"
+#define DEL_MULTI_MEMBER_EVENT "DelMultiMember"
+#define AUTH_DEV_EVENT "AuthDevice"
 
-
-enum InvokeEventId {
-    EVENT_ID_CREATE_GROUP = 0,
-    EVENT_ID_DELETE_GROUP = 1,
-    EVENT_ID_ADD_MEMBER = 2,
-    EVENT_ID_DELETE_MEMBER = 3,
-    EVENT_ID_GET_REGISTER_INFO = 4,
-    EVENT_ID_ADD_MULTI_MEMBERS = 5,
-    EVENT_ID_DELETE_MULTI_MEMBERS = 6,
-    EVENT_ID_AUTH_DEVICE = 7,
-};
-
-typedef struct InvokeEvent {
-    int32_t eventId;
-    char appId[EVENT_APPID_LEN];
-    int32_t type;
-    int32_t batchNumber;
-    int32_t result;
-    int32_t osAccountId;
-} InvokeEvent;
+#define DEV_AUTH_REPORT_CALL_EVENT(a, b, c, d) DevAuthReportCallEvent(a, b, c, d)
+#define DEV_AUTH_REPORT_CORE_EVENT(a, b, c) DevAuthReportCoreEvent(a, b, c)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void ReportCoreFuncInvokeEvent(const InvokeEvent *event);
+void DevAuthReportCallEvent(const char *funcName, int32_t osAccountId, int64_t reqId, const char *appId);
+void DevAuthReportCoreEvent(const char *funcName, int64_t reqId, const char *info);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // SERVICE_DSLM_BIGDATA_H
+#endif
+
+#endif

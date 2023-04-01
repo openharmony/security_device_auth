@@ -16,6 +16,7 @@
 #include "bind_session_common_util.h"
 #include "channel_manager.h"
 #include "dev_auth_module_manager.h"
+#include "hitrace_adapter.h"
 #include "hc_log.h"
 #include "hc_types.h"
 #include "session_common.h"
@@ -159,8 +160,10 @@ int32_t SendBindSessionData(const BindSession *session, const CJson *sendData)
         LOGE("An error occurred when converting json to string!");
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
+    DEV_AUTH_START_TRACE(TRACE_TAG_SEND_DATA);
     int32_t res = HcSendMsg(session->channelType, session->reqId, session->channelId,
         session->base.callback, sendDataStr);
+    DEV_AUTH_FINISH_TRACE();
     FreeJsonString(sendDataStr);
     if (res != HC_SUCCESS) {
         LOGE("Failed to send msg to peer device! res: %d", res);
@@ -173,12 +176,16 @@ int32_t CreateAndProcessModule(BindSession *session, const CJson *in, CJson *out
 {
     int32_t status = 0;
     LOGI("Start to create and process module task! [ModuleType]: %d", session->moduleType);
+    DEV_AUTH_START_TRACE(TRACE_TAG_CREATE_AUTH_TASK);
     int32_t res = CreateTask(&(session->curTaskId), in, out, session->moduleType);
+    DEV_AUTH_FINISH_TRACE();
     if (res != HC_SUCCESS) {
         LOGE("Failed to create module task! res: %d", res);
         return res;
     }
+    DEV_AUTH_START_TRACE(TRACE_TAG_PROCESS_AUTH_TASK);
     res = ProcessTask(session->curTaskId, in, out, &status, session->moduleType);
+    DEV_AUTH_FINISH_TRACE();
     if (res != HC_SUCCESS) {
         LOGE("Failed to process module task! res: %d", res);
         return res;
@@ -190,7 +197,9 @@ int32_t CreateAndProcessModule(BindSession *session, const CJson *in, CJson *out
 int32_t ProcessModule(const BindSession *session, const CJson *in, CJson *out, int32_t *status)
 {
     LOGI("Start to process module task! [ModuleType]: %d", session->moduleType);
+    DEV_AUTH_START_TRACE(TRACE_TAG_PROCESS_AUTH_TASK);
     int32_t res = ProcessTask(session->curTaskId, in, out, status, session->moduleType);
+    DEV_AUTH_FINISH_TRACE();
     if (res != HC_SUCCESS) {
         LOGE("Failed to process module task! res: %d", res);
         return res;

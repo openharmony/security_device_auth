@@ -18,6 +18,7 @@
 #include "callback_manager.h"
 #include "channel_manager.h"
 #include "group_operation_common.h"
+#include "hitrace_adapter.h"
 #include "hc_log.h"
 #include "session_manager.h"
 
@@ -140,7 +141,10 @@ static int32_t PrepareClient(const CJson *jsonParams, BindSession *session)
     if (result != HC_SUCCESS) {
         return result;
     }
-    return OpenChannel((ChannelType)session->channelType, jsonParams, session->reqId, &session->channelId);
+    DEV_AUTH_START_TRACE(TRACE_TAG_OPEN_CHANNEL);
+    result = OpenChannel((ChannelType)session->channelType, jsonParams, session->reqId, &session->channelId);
+    DEV_AUTH_FINISH_TRACE();
+    return result;
 }
 
 Session *CreateClientBindSession(CJson *jsonParams, const DeviceAuthCallback *callback)
@@ -161,7 +165,9 @@ Session *CreateClientBindSession(CJson *jsonParams, const DeviceAuthCallback *ca
             LOGE("Failed to get groupId from jsonParams!");
             return NULL;
         }
+        DEV_AUTH_START_TRACE(TRACE_TAG_CREATE_KEY_PAIR);
         result = ProcessKeyPair(CREATE_KEY_PAIR, jsonParams, groupId);
+        DEV_AUTH_FINISH_TRACE();
         if (result != HC_SUCCESS) {
             return NULL;
         }

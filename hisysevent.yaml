@@ -13,11 +13,9 @@
 
 domain: DEVICE_AUTH
 
-CORE_FUNCTION:
+CALL_EVENT:
   __BASE: {type: STATISTIC, level: MINOR, desc: the frequency of function calling}
-  EVENT: {type: INT32, desc: event id}
-  APP_ID: {type: STRING, desc: app id}
-  TYPE: {type: INT32, desc: the type of group or auth}
-  BATCH_NUMBER: {type: INT32, desc: the number of batch operation}
-  RESULT: {type: INT32, desc: ret of call}
   OS_ACCOUNT_ID: {type: INT32, desc: os account id}
+  FUNC_NAME: {type: STRING, desc: function name}
+  REQ_ID: {type: INT64, desc: request id}
+  APP_ID: {type: STRING, desc: app id}

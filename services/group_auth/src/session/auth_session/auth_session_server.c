@@ -21,6 +21,7 @@
 #include "common_defs.h"
 #include "dev_auth_module_manager.h"
 #include "device_auth_defines.h"
+#include "hitrace_adapter.h"
 #include "hc_log.h"
 #include "hc_types.h"
 #include "os_account_adapter.h"
@@ -149,7 +150,9 @@ static int32_t ProcessServerAuthTask(AuthSession *session, int32_t moduleType, C
         LOGE("The json data in session is null!");
         return HC_ERR_NULL_PTR;
     }
+    DEV_AUTH_START_TRACE(TRACE_TAG_PROCESS_AUTH_TASK);
     int32_t res = ProcessTask(session->curTaskId, in, out, &status, moduleType);
+    DEV_AUTH_FINISH_TRACE();
     DeleteItemFromJson(in, FIELD_PAYLOAD);
     if (res != HC_SUCCESS) {
         LOGE("Failed to process task, res = %d!", res);

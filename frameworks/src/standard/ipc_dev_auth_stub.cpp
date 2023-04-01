@@ -51,7 +51,7 @@ ServiceDevAuth::~ServiceDevAuth()
 
 int32_t ServiceDevAuth::Dump(int32_t fd, const std::vector<std::u16string>& args)
 {
-    DevAuthDump(fd);
+    DEV_AUTH_DUMP(fd);
     (void)args;
     return 0;
 }

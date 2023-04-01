@@ -19,6 +19,7 @@
 #include "channel_manager.h"
 #include "das_module_defines.h"
 #include "group_operation_common.h"
+#include "hitrace_adapter.h"
 #include "hc_log.h"
 #include "os_account_adapter.h"
 #include "session_manager.h"
@@ -203,8 +204,10 @@ static int32_t RequestConfirmation(const CJson *jsonParams, const BindSession *s
         LOGE("An error occurred when converting JSON data to String data.!");
         return HC_ERR_JSON_FAIL;
     }
+    DEV_AUTH_START_TRACE(TRACE_TAG_ON_REQUEST);
     char *returnDataStr = ProcessRequestCallback(session->reqId, session->opCode,
         requestParamsStr, session->base.callback);
+    DEV_AUTH_FINISH_TRACE();
     FreeJsonString(requestParamsStr);
     if (returnDataStr == NULL) {
         LOGE("The OnRequest callback is fail!");
@@ -398,7 +401,9 @@ static int32_t PrepareServer(BindSession *session, CJson *returnData, bool *isNe
             FreeJson(jsonParams);
             return HC_ERR_JSON_GET;
         }
+        DEV_AUTH_START_TRACE(TRACE_TAG_CREATE_KEY_PAIR);
         result = ProcessKeyPair(CREATE_KEY_PAIR, jsonParams, groupId);
+        DEV_AUTH_FINISH_TRACE();
         if (result != HC_SUCCESS) {
             FreeJson(jsonParams);
             return result;

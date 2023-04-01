@@ -16,7 +16,17 @@
 #ifndef HIDUMP_ADAPTER_H
 #define HIDUMP_ADAPTER_H
 
+#ifndef HIVIEW_ENABLE
+
+#define DEV_AUTH_DUMP(fd)
+#define DEV_AUTH_REG_DUMP_FUNC(func)
+
+#else
+
 #include <stdio.h>
+
+#define DEV_AUTH_DUMP(fd) DevAuthDump(fd)
+#define DEV_AUTH_REG_DUMP_FUNC(func) RegisterDumpFunc(func)
 
 typedef void (*DumpCallBack)(int);
 
@@ -30,6 +40,8 @@ void RegisterDumpFunc(DumpCallBack func);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

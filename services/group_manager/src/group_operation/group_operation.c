@@ -26,6 +26,8 @@
 #include "group_operation_common.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
+#include "hisysevent_adapter.h"
+#include "hitrace_adapter.h"
 #include "os_account_adapter.h"
 #include "session_manager.h"
 #include "task_manager.h"
@@ -33,8 +35,6 @@
 #include "across_account_group.h"
 #include "identical_account_group.h"
 #include "peer_to_peer_group.h"
-#include "dev_auth_hievent.h"
-#include "hisysevent_adapter.h"
 
 static bool IsGroupTypeSupported(int groupType)
 {
@@ -462,9 +462,6 @@ static void DoCreateGroup(HcTaskBase *baseTask)
     LOGI("[Start]: DoCreateGroup! [ReqId]: %" PRId64, task->reqId);
     char *returnJsonStr = NULL;
     int32_t result = CreateGroup(task->osAccountId, task->params, &returnJsonStr);
-
-    ReportHiEventCoreFuncInvoke(EVENT_ID_CREATE_GROUP, task->osAccountId, task->params, result);
-
     if (result != HC_SUCCESS) {
         ProcessErrorCallback(task->reqId, GROUP_CREATE, result, NULL, task->cb);
     } else {
@@ -479,9 +476,6 @@ static void DoDeleteGroup(HcTaskBase *baseTask)
     LOGI("[Start]: DoDeleteGroup! [ReqId]: %" PRId64, task->reqId);
     char *returnJsonStr = NULL;
     int32_t result = DeleteGroup(task->osAccountId, task->params, &returnJsonStr);
-
-    ReportHiEventCoreFuncInvoke(EVENT_ID_DELETE_GROUP, task->osAccountId, task->params, result);
-
     if (result != HC_SUCCESS) {
         ProcessErrorCallback(task->reqId, GROUP_DISBAND, result, NULL, task->cb);
     } else {
@@ -492,12 +486,11 @@ static void DoDeleteGroup(HcTaskBase *baseTask)
 
 static void DoAddMember(HcTaskBase *baseTask)
 {
+    DEV_AUTH_START_TRACE(TRACE_TAG_PROC_ADD_MEMBER_WORK_TASK);
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
     LOGI("[Start]: DoAddMember! [ReqId]: %" PRId64, task->reqId);
     (void)AddMemberToPeerToPeerGroup(task->osAccountId, task->reqId, task->params, task->cb);
-
-    // 0 means success
-    ReportHiEventCoreFuncInvoke(EVENT_ID_ADD_MEMBER, task->osAccountId, task->params, 0);
+    DEV_AUTH_FINISH_TRACE();
 }
 
 static void DoDeleteMember(HcTaskBase *baseTask)
@@ -505,27 +498,30 @@ static void DoDeleteMember(HcTaskBase *baseTask)
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
     LOGI("[Start]: DoDeleteMember! [ReqId]: %" PRId64, task->reqId);
     (void)DeleteMemberFromPeerToPeerGroup(task->osAccountId, task->reqId, task->params, task->cb);
-
-    // 0 means success
-    ReportHiEventCoreFuncInvoke(EVENT_ID_DELETE_MEMBER, task->osAccountId, task->params, 0);
 }
 
 static void DoProcessBindData(HcTaskBase *baseTask)
 {
+    DEV_AUTH_START_TRACE(TRACE_TAG_PROC_BIND_DATA_WORK_TASK);
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
     LOGI("[Start]: DoProcessBindData! [ReqId]: %" PRId64, task->reqId);
     if (IsRequestExist(task->reqId)) {
+        DEV_AUTH_START_TRACE(TRACE_TAG_PROCESS_SESSION);
         int ret = ProcessSession(task->reqId, BIND_TYPE, task->params);
+        DEV_AUTH_FINISH_TRACE();
         if (ret != CONTINUE) {
             DestroySession(task->reqId);
         }
+        DEV_AUTH_FINISH_TRACE();
         return;
     }
     if ((BindCallbackToTask(task, task->params) != HC_SUCCESS) ||
         (CheckMsgRepeatability(task->params, DAS_MODULE) != HC_SUCCESS)) {
+        DEV_AUTH_FINISH_TRACE();
         return;
     }
     (void)ProcessBindData(task->reqId, task->params, task->cb);
+    DEV_AUTH_FINISH_TRACE();
 }
 
 static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams)
@@ -536,6 +532,7 @@ static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const 
         return HC_ERR_INVALID_PARAMS;
     }
     LOGI("[Start]: RequestCreateGroup! [AppId]: %s, [RequestId]: %" PRId64, appId, requestId);
+    DEV_AUTH_REPORT_CALL_EVENT(CREATE_GROUP_EVENT, osAccountId, requestId, appId);
     CJson *params = CreateJsonFromString(createParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -562,6 +559,7 @@ static int32_t RequestDeleteGroup(int32_t osAccountId, int64_t requestId, const 
         return HC_ERR_INVALID_PARAMS;
     }
     LOGI("[Start]: RequestDeleteGroup! [AppId]: %s, [RequestId]: %" PRId64, appId, requestId);
+    DEV_AUTH_REPORT_CALL_EVENT(DELETE_GROUP_EVENT, osAccountId, requestId, appId);
     CJson *params = CreateJsonFromString(disbandParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -588,6 +586,7 @@ static int32_t RequestAddMemberToGroup(int32_t osAccountId, int64_t requestId, c
         return HC_ERR_INVALID_PARAMS;
     }
     LOGI("[Start]: RequestAddMemberToGroup! [AppId]: %s, [RequestId]: %" PRId64, appId, requestId);
+    DEV_AUTH_REPORT_CALL_EVENT(ADD_MEMBER_EVENT, osAccountId, requestId, appId);
     CJson *params = CreateJsonFromString(addParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -616,6 +615,7 @@ static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t request
         return HC_ERR_INVALID_PARAMS;
     }
     LOGI("[Start]: RequestDeleteMemberFromGroup! [AppId]: %s, [RequestId]: %" PRId64, appId, requestId);
+    DEV_AUTH_REPORT_CALL_EVENT(DEL_MEMBER_EVENT, osAccountId, requestId, appId);
     CJson *params = CreateJsonFromString(deleteParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -642,6 +642,7 @@ static int32_t RequestAddMultiMembersToGroup(int32_t osAccountId, const char *ap
         return HC_ERR_INVALID_PARAMS;
     }
     LOGI("[Start]: RequestAddMultiMembersToGroup! [AppId]: %s", appId);
+    DEV_AUTH_REPORT_CALL_EVENT(ADD_MULTI_MEMBER_EVENT, osAccountId, DEFAULT_REQUEST_ID, appId);
     CJson *params = CreateJsonFromString(addParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -681,6 +682,7 @@ static int32_t RequestDelMultiMembersFromGroup(int32_t osAccountId, const char *
         return HC_ERR_INVALID_PARAMS;
     }
     LOGI("[Start]: RequestDelMultiMembersFromGroup! [AppId]: %s", appId);
+    DEV_AUTH_REPORT_CALL_EVENT(DEL_MULTI_MEMBER_EVENT, osAccountId, DEFAULT_REQUEST_ID, appId);
     CJson *params = CreateJsonFromString(deleteParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");

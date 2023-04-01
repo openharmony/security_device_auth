@@ -1147,17 +1147,55 @@ int32_t SaveOsAccountDb(int32_t osAccountId)
     return HC_SUCCESS;
 }
 
-#ifndef DISABLE_HIVIEW
-static void DumpGroups(int fd, GroupEntryVec *vec)
+#ifdef HIVIEW_ENABLE
+static void DumpGroup(int fd, const TrustedGroupEntry *group)
 {
-    dprintf(fd, "---- GROUP INFO ----\n");
-    (void)vec;
+    dprintf(fd, "||----------------------------Group----------------------------|                   |\n");
+    dprintf(fd, "||%-12s = %-46.8s|                   |\n", "name", StringGet(&group->name));
+    dprintf(fd, "||%-12s = %-46.8s|                   |\n", "id", StringGet(&group->id));
+    dprintf(fd, "||%-12s = %-46d|                   |\n", "type", group->type);
+    dprintf(fd, "||%-12s = %-46d|                   |\n", "visibility", group->visibility);
+    dprintf(fd, "||%-12s = %-46d|                   |\n", "expireTime", group->expireTime);
+    HcString entryOwner = HC_VECTOR_GET(&group->managers, 0);
+    dprintf(fd, "||%-12s = %-46.8s|                   |\n", "ownerName", StringGet(&entryOwner));
+    dprintf(fd, "||%-12s = %-46.8s|                   |\n", "userId", StringGet(&group->userId));
+    dprintf(fd, "||%-12s = %-46.8s|                   |\n", "sharedUserId", StringGet(&group->sharedUserId));
+    dprintf(fd, "||----------------------------Group----------------------------|                   |\n");
 }
 
-static void DumpDevices(int fd, DeviceEntryVec *vec)
+static void DumpDevice(int fd, const TrustedDeviceEntry *device)
 {
-    dprintf(fd, "---- DEVICE INFO ----\n");
-    (void)vec;
+    dprintf(fd, "|||--------------------DEV--------------------|                                    |\n");
+    dprintf(fd, "|||%-12s = %-28.8s|                                    |\n", "groupId", StringGet(&device->groupId));
+    dprintf(fd, "|||%-12s = %-28.8s|                                    |\n", "udid", StringGet(&device->udid));
+    dprintf(fd, "|||%-12s = %-28.8s|                                    |\n", "authId", StringGet(&device->authId));
+    dprintf(fd, "|||%-12s = %-28.8s|                                    |\n", "userId", StringGet(&device->userId));
+    dprintf(fd, "|||%-12s = %-28.8s|                                    |\n", "serviceType",
+        StringGet(&device->serviceType));
+    dprintf(fd, "|||%-12s = %-28d|                                    |\n", "credential", device->credential);
+    dprintf(fd, "|||%-12s = %-28d|                                    |\n", "devType", device->devType);
+    dprintf(fd, "|||%-12s = %-28d|                                    |\n", "credSource", device->source);
+    dprintf(fd, "|||--------------------DEV--------------------|                                    |\n");
+}
+
+static void DumpDb(int fd, const OsAccountTrustedInfo *db)
+{
+    const GroupEntryVec *groups = &db->groups;
+    const DeviceEntryVec *devices = &db->devices;
+    dprintf(fd, "|-------------------------------------DataBase-------------------------------------|\n");
+    dprintf(fd, "|%-12s = %-67d|\n", "osAccountId", db->osAccountId);
+    dprintf(fd, "|%-12s = %-67d|\n", "groupNum", groups->size(groups));
+    dprintf(fd, "|%-12s = %-67d|\n", "deviceNum", devices->size(devices));
+    uint32_t index;
+    TrustedGroupEntry **groupEntry;
+    FOR_EACH_HC_VECTOR(*groups, index, groupEntry) {
+        DumpGroup(fd, *groupEntry);
+    }
+    TrustedDeviceEntry **deviceEntry;
+    FOR_EACH_HC_VECTOR(*devices, index, deviceEntry) {
+        DumpDevice(fd, *deviceEntry);
+    }
+    dprintf(fd, "|-------------------------------------DataBase-------------------------------------|\n");
 }
 
 static void DevAuthDataBaseDump(int fd)
@@ -1167,17 +1205,15 @@ static void DevAuthDataBaseDump(int fd)
         return;
     }
     g_databaseMutex->lock(g_databaseMutex);
-
     uint32_t index;
     OsAccountTrustedInfo *info;
     FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {
-        DumpGroups(fd, &info->groups);
-        DumpDevices(fd, &info->devices);
+        DumpDb(fd, info);
     }
-
     g_databaseMutex->unlock(g_databaseMutex);
 }
 #endif
+
 int32_t InitDatabase(void)
 {
     if (g_databaseMutex == NULL) {
@@ -1195,9 +1231,7 @@ int32_t InitDatabase(void)
     }
     g_deviceauthDb = CREATE_HC_VECTOR(DeviceAuthDb);
     LoadDeviceAuthDb();
-#ifndef DISABLE_HIVIEW
-    RegisterDumpFunc(DevAuthDataBaseDump);
-#endif
+    DEV_AUTH_REG_DUMP_FUNC(DevAuthDataBaseDump);
     return HC_SUCCESS;
 }
 

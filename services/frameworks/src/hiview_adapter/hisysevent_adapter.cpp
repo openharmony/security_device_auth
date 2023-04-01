@@ -14,35 +14,24 @@
  */
 
 #include "hisysevent_adapter.h"
+
 #include "hisysevent.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+static const char *STR_CALL_EVENT = "CALL_EVENT";
+static const char *STR_OS_ACCOUNT_ID = "OS_ACCOUNT_ID";
+static const char *STR_FUNC_NAME = "FUNC_NAME";
+static const char *STR_APP_ID = "APP_ID";
+static const char *STR_REQ_ID = "REQ_ID";
+static const char *STR_UNKNOWN = "unknown";
 
-constexpr char STR_EVENT_CORE_FUNCTION[] = "CORE_FUNCTION";
-constexpr char STR_EVENT[] = "EVENT";
-constexpr char STR_APP_ID[] = "APP_ID";
-constexpr char STR_BATCH_NUMBER[] = "BATCH_NUMBER";
-constexpr char STR_RESULT[] = "RESULT";
-constexpr char STR_OS_ACCOUNT_ID[] = "OS_ACCOUNT_ID";
-
-void ReportCoreFuncInvokeEvent(const InvokeEvent *event)
+void DevAuthReportCallEvent(const char *funcName, int32_t osAccountId, int64_t reqId, const char *appId)
 {
-    if (event == nullptr) {
-        return;
-    }
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::DEVICE_AUTH,
-        STR_EVENT_CORE_FUNCTION,
+        STR_CALL_EVENT,
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
-        STR_EVENT, event->eventId,
-        STR_APP_ID, event->appId,
-        STR_BATCH_NUMBER, event->batchNumber,
-        STR_RESULT, event->result,
-        STR_OS_ACCOUNT_ID, event->osAccountId);
+        STR_OS_ACCOUNT_ID, osAccountId,
+        STR_FUNC_NAME, ((funcName != NULL) ? funcName : STR_UNKNOWN),
+        STR_REQ_ID, reqId,
+        STR_APP_ID, ((appId != NULL) ? appId : STR_UNKNOWN));
 }
-
-#ifdef __cplusplus
-}
-#endif

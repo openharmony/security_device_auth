@@ -21,6 +21,7 @@
 #include "common_defs.h"
 #include "device_auth.h"
 #include "device_auth_defines.h"
+#include "hitrace_adapter.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
 #include "hc_time.h"
@@ -332,7 +333,9 @@ void OnChannelOpened(int64_t requestId, int64_t channelId)
         int sessionType = ((Session *)(*session))->type;
         if (sessionType == TYPE_CLIENT_BIND_SESSION) {
             BindSession *realSession = (BindSession *)(*session);
+            DEV_AUTH_START_TRACE(TRACE_TAG_CHANNEL_OPENED);
             realSession->onChannelOpened(*session, channelId, requestId);
+            DEV_AUTH_FINISH_TRACE();
             return;
         }
         LOGE("The type of the found session is not as expected!");
