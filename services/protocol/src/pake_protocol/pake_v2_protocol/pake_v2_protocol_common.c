@@ -552,7 +552,7 @@ static int32_t VerifyProof(PakeBaseParams *params)
     }
     if (memcmp(tmpKcfData.val, params->kcfDataPeer.val, tmpKcfData.length) != EOK) {
         LOGE("Compare kcfData failed.");
-        res = HC_ERR_PROOF_NOT_MATCH;
+        res = PROOF_MISMATCH;
         goto CLEAN_UP;
     }
     goto OUT;

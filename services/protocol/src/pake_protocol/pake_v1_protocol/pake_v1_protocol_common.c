@@ -341,7 +341,7 @@ static int32_t VerifyProof(PakeBaseParams *params)
 
     if (memcmp(verifyProof.val, params->kcfDataPeer.val, verifyProof.length) != 0) {
         LOGE("Compare kcfDataPeer failed.");
-        res = HC_ERR_PROOF_NOT_MATCH;
+        res = PROOF_MISMATCH;
         goto CLEAN_UP;
     }
     return res;

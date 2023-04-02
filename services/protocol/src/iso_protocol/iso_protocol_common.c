@@ -266,7 +266,7 @@ int IsoClientCheckAndGenToken(IsoBaseParams *params, const Uint8Buff *peerToken,
     if (memcmp(peerToken->val, outHmac.val, outHmac.length) != 0) {
         LOGE("Compare hmac token failed.");
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
-        return HC_ERR_PROOF_NOT_MATCH;
+        return PROOF_MISMATCH;
     }
     res = IsoCalPeerToken(params, selfToken);
     if (res != HC_SUCCESS) {
@@ -301,7 +301,7 @@ int IsoClientGenSessionKey(IsoBaseParams *params, int returnResult, const uint8_
     if (memcmp(outHmacBuf.val, hmac, hmacLen) != 0) {
         LOGE("Compare hmac result failed.");
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
-        return HC_ERR_PROOF_NOT_MATCH;
+        return PROOF_MISMATCH;
     }
 
     res = IsoGenSessionKey(params, &pskBuf, true);
@@ -361,7 +361,7 @@ int IsoServerGenSessionKeyAndCalToken(IsoBaseParams *params, const Uint8Buff *to
     if (memcmp(tokenFromPeer->val, outHmac.val, outHmac.length) != 0) {
         LOGE("Compare hmac token failed.");
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
-        return HC_ERR_PROOF_NOT_MATCH;
+        return PROOF_MISMATCH;
     }
 
     Uint8Buff pskBuf = { params->psk, sizeof(params->psk) };

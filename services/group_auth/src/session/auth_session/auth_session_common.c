@@ -397,8 +397,31 @@ static int32_t AddVersionMsgToPeer(CJson *errorToPeer)
     return res;
 }
 
-static int32_t PrepareErrorMsgToPeer(CJson *errorToPeer)
+static int32_t AddInfoToErrorData(CJson *sendToPeer, const CJson *authParam)
 {
+    int32_t authForm = AUTH_FORM_INVALID_TYPE;
+    if (GetIntFromJson(authParam, FIELD_AUTH_FORM, &authForm) != HC_SUCCESS) {
+        LOGE("Failed to get authForm from authParam!");
+        return HC_ERR_JSON_GET;
+    }
+    if (AddIntToJson(sendToPeer, FIELD_AUTH_FORM, authForm) != HC_SUCCESS) {
+        LOGE("Failed to add authForm for peer!");
+        return HC_ERR_JSON_ADD;
+    }
+    if ((authForm == AUTH_FORM_IDENTICAL_ACCOUNT) && (AddIntToJson(sendToPeer, FIELD_STEP, -1) != HC_SUCCESS)) {
+        LOGE("Failed to add step for peer!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t PrepareErrorMsgToPeer(const CJson *authParam, CJson *errorToPeer)
+{
+    int32_t res = AddInfoToErrorData(errorToPeer, authParam);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to add info to error data!");
+        return res;
+    }
     if (AddIntToJson(errorToPeer, FIELD_GROUP_ERROR_MSG, GROUP_ERR_MSG) != HC_SUCCESS) {
         LOGE("Failed to add groupErrorMsg for peer!");
         return HC_ERR_JSON_FAIL;
@@ -422,7 +445,7 @@ static int32_t ReturnErrorToPeerBySession(const CJson *authParam, const DeviceAu
         LOGE("Failed to allocate memory for errorToPeer!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t res = PrepareErrorMsgToPeer(errorToPeer);
+    int32_t res = PrepareErrorMsgToPeer(authParam, errorToPeer);
     if (res != HC_SUCCESS) {
         FreeJson(errorToPeer);
         return res;
@@ -452,7 +475,7 @@ static int32_t ReturnErrorToPeerBySession(const CJson *authParam, const DeviceAu
     return res;
 }
 
-static int32_t ReturnErrorToPeerByTask(const CJson *sendToPeer, const CJson *authParam,
+static int32_t ReturnErrorToPeerByTask(CJson *sendToPeer, const CJson *authParam,
     const DeviceAuthCallback *callback)
 {
     int64_t requestId = 0;
@@ -460,13 +483,17 @@ static int32_t ReturnErrorToPeerByTask(const CJson *sendToPeer, const CJson *aut
         LOGE("Failed to get request id!");
         return HC_ERR_JSON_FAIL;
     }
+    int32_t res = AddInfoToErrorData(sendToPeer, authParam);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to add info to error data!");
+        return res;
+    }
     char *sendToPeerStr = PackJsonToString(sendToPeer);
     if (sendToPeerStr == NULL) {
         LOGE("Failed to pack json to string!");
         return HC_ERR_ALLOC_MEMORY;
     }
 
-    int32_t res = HC_SUCCESS;
     do {
         if ((callback == NULL) || (callback->onTransmit == NULL)) {
             LOGE("The callback of onTransmit is null!");
@@ -595,7 +622,7 @@ int32_t InformAuthError(AuthSession *session, const CJson *out, int errorCode)
         LOGI("Out data is null, so assemble error msg to peer by auth session.");
         return HC_ERR_INFORM_ERR;
     }
-    const CJson *sendToPeer = GetObjFromJson(out, FIELD_SEND_TO_PEER);
+    CJson *sendToPeer = GetObjFromJson(out, FIELD_SEND_TO_PEER);
     if (sendToPeer != NULL) {
         if (ReturnErrorToPeerByTask(sendToPeer, paramInSession, session->base.callback) != HC_SUCCESS) {
             LOGE("Failed to return task's error msg to peer!");
