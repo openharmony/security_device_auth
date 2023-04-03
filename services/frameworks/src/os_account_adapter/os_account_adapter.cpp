@@ -28,11 +28,11 @@ int32_t DevAuthGetRealOsAccountLocalId(int32_t inputId)
     if (inputId == ANY_OS_ACCOUNT) {
 #ifdef SUPPORT_OS_ACCOUNT
         std::vector<int> activatedOsAccountIds;
-        LOGI("[OsAccountManager][In]: QueryActiveOsAccountIds!");
+        LOGI("[OsAccountManager]: QueryActiveOsAccountIds enter.");
         OHOS::ErrCode res = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(activatedOsAccountIds);
-        LOGI("[OsAccountManager][Out]: QueryActiveOsAccountIds! res: %d", res);
+        LOGI("[OsAccountManager]: QueryActiveOsAccountIds quit. [Res]: %d", res);
         if ((res != OHOS::ERR_OK) || (activatedOsAccountIds.size() <= 0)) {
-            LOGE("[Account]: QueryActiveOsAccountIds fail! res: %d", res);
+            LOGE("[OsAccountManager]: QueryActiveOsAccountIds fail. [Res]: %d", res);
             return INVALID_OS_ACCOUNT;
         }
         int osAccountId = activatedOsAccountIds[0];

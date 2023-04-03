@@ -25,7 +25,6 @@
 #define OUT_OF_HEX 16
 #define NUMBER_9_IN_DECIMAL 9
 #define ASCII_CASE_DIFFERENCE_VALUE 32
-#define DESENSITIZATION_LEN 4
 
 static const char * const g_base64CharacterTable =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -107,32 +106,6 @@ int64_t StringToInt64(const char *cp)
         return 0;
     }
     return strtoll(cp, NULL, DEC);
-}
-
-void ConvertToAnonymousStr(const char *originalStr, char **anonymousStr)
-{
-    if ((originalStr == NULL) || (anonymousStr == NULL)) {
-        return;
-    }
-    uint32_t desensitizationLen = DESENSITIZATION_LEN;
-    uint32_t len = strlen(originalStr);
-    if (len <= desensitizationLen) {
-        return;
-    }
-    *anonymousStr = (char *)ClibMalloc(len + 1, 0);
-    if ((*anonymousStr) == NULL) {
-        return;
-    }
-    if (memset_s(*anonymousStr, len + 1, '*', len) != EOK) {
-        ClibFree(*anonymousStr);
-        *anonymousStr = NULL;
-        return;
-    }
-    if (memcpy_s(*anonymousStr, len + 1, originalStr, len - desensitizationLen) != EOK) {
-        ClibFree(*anonymousStr);
-        *anonymousStr = NULL;
-        return;
-    }
 }
 
 static bool IsInvalidBase64Character(char c)

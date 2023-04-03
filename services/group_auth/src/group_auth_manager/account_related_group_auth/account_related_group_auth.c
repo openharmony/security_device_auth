@@ -98,7 +98,7 @@ static bool IsPeerInAccountRelatedGroup(const TrustedGroupEntry *groupEntry, con
         return false;
     }
     if (IsUserIdEqual(userIdInDb, peerUserId)) {
-        LOGI("[Account auth]: the input peer-userId is in one across group, add across-group auth!");
+        LOGI("[Account auth]: The input peer-userId is in one account group, add account-group auth!");
         return true;
     }
     return false;
@@ -160,7 +160,7 @@ static void GaGetAccountGroup(int32_t osAccountId, GroupType type, const char *p
         HC_VECTOR_POPELEMENT(vec, &tempEntry, index);
         DestroyGroupEntry((TrustedGroupEntry *)tempEntry);
     }
-    LOGI("The candidate account group size is:%d.", vec->size(vec));
+    LOGI("The candidate account group size is: %u", vec->size(vec));
 }
 
 static void GetAccountCandidateGroup(int32_t osAccountId, const CJson *param,

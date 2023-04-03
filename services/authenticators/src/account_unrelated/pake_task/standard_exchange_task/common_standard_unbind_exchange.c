@@ -190,7 +190,7 @@ static int32_t DeleteAuthInfo(PakeParams *pakeParams)
         LOGE("generate pubKey alias failed");
         return res;
     }
-    LOGI("PubKey alias: %x%x%x%x****.", keyAliasVal[0], keyAliasVal[1], keyAliasVal[2], keyAliasVal[3]);
+    LOGI("PubKey alias(HEX): %x%x%x%x****.", keyAliasVal[0], keyAliasVal[1], keyAliasVal[2], keyAliasVal[3]);
     res = pakeParams->baseParams.loader->deleteKey(&keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("deleteKey failed");
@@ -203,7 +203,7 @@ static int32_t DeleteAuthInfo(PakeParams *pakeParams)
         LOGE("generate pskKey alias failed");
         return res;
     }
-    LOGI("Psk alias: %x%x%x%x****.", keyAliasVal[0], keyAliasVal[1], keyAliasVal[2], keyAliasVal[3]);
+    LOGI("Psk alias(HEX): %x%x%x%x****.", keyAliasVal[0], keyAliasVal[1], keyAliasVal[2], keyAliasVal[3]);
     res = pakeParams->baseParams.loader->deleteKey(&keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("delete pskKey failed");

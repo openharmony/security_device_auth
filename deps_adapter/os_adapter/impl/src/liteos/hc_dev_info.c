@@ -28,9 +28,11 @@ int32_t HcGetUdid(uint8_t *udid, int32_t udidLen)
     if (udid == NULL || udidLen < INPUT_UDID_LEN || udidLen > MAX_INPUT_UDID_LEN) {
         return HAL_ERR_INVALID_PARAM;
     }
-    int32_t ret = GetDevUdid((char *)udid, udidLen);
-    if (ret != 0) {
-        LOGE("Failed to get dev udid, ret = %d", ret);
+    LOGI("[UDID]: GetDevUdid enter.");
+    int32_t res = GetDevUdid((char *)udid, udidLen);
+    LOGI("[UDID]: GetDevUdid quit. [Res]: %d", res);
+    if (res != 0) {
+        LOGE("[UDID]: GetDevUdid fail. [Res]: %d", res);
         return HAL_FAILED;
     }
     return HAL_SUCCESS;

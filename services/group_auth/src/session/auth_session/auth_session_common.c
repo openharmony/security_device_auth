@@ -141,6 +141,7 @@ static int32_t FillAuthParams(int32_t osAccountId, const CJson *param,
         }
         paramsVec->pushBack(paramsVec, (const void **)&paramsData);
     }
+    LOGI("The candidate group size is: %u", paramsVec->size(paramsVec));
     return HC_SUCCESS;
 }
 
@@ -160,7 +161,6 @@ static void GetCandidateGroupByOrder(int32_t osAccountId, const CJson *param,
 
 static void GetCandidateGroupInfo(int32_t osAccountId, const CJson *param, GroupEntryVec *vec)
 {
-    LOGI("No input of groupId, extract group info without groupId.");
     bool deviceLevelFlag = false;
     bool isClient = true;
     (void)GetBoolFromJson(param, FIELD_IS_DEVICE_LEVEL, &deviceLevelFlag);
@@ -197,8 +197,10 @@ static int32_t GetCandidateAuthInfo(int32_t osAccountId, const char *groupId,
 {
     GroupEntryVec vec = CreateGroupEntryVec();
     if (groupId == NULL) {
+        LOGI("No groupId specified, extract group info without groupId.");
         GetCandidateGroupInfo(osAccountId, param, &vec);
     } else {
+        LOGI("GroupId specified, extract group info through the groupId.");
         GetGroupInfoByGroupId(osAccountId, groupId, &vec);
     }
     if (vec.size(&vec) == 0) {

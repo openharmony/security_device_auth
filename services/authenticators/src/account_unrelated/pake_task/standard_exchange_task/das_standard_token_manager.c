@@ -62,7 +62,7 @@ static int32_t UnregisterLocalIdentity(const char *pkgName, const char *serviceT
         LOGE("Failed to generate identity keyPair alias!");
         return res;
     }
-    LOGI("KeyPair alias: %x%x%x%x****.", pakeKeyAliasVal[0], pakeKeyAliasVal[1],
+    LOGI("KeyPair alias(HEX): %x%x%x%x****.", pakeKeyAliasVal[0], pakeKeyAliasVal[1],
         pakeKeyAliasVal[2], pakeKeyAliasVal[3]);
     res = loader->deleteKey(&pakeKeyAliasBuff);
     if (res != HC_SUCCESS) {
@@ -87,7 +87,8 @@ static int32_t DeletePeerAuthInfo(const char *pkgName, const char *serviceType, 
         LOGE("Failed to generate identity keyPair alias!");
         return res;
     }
-    LOGI("PubKey alias: %x%x%x%x****.", pakeKeyAliasVal[0], pakeKeyAliasVal[1], pakeKeyAliasVal[2], pakeKeyAliasVal[3]);
+    LOGI("PubKey alias(HEX): %x%x%x%x****.", pakeKeyAliasVal[0], pakeKeyAliasVal[1],
+        pakeKeyAliasVal[2], pakeKeyAliasVal[3]);
     res = loader->deleteKey(&pakeKeyAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete key pair!");
@@ -100,7 +101,8 @@ static int32_t DeletePeerAuthInfo(const char *pkgName, const char *serviceType, 
         LOGE("Failed to generate psk alias!");
         return res;
     }
-    LOGI("Psk alias: %x%x%x%x****.", pakeKeyAliasVal[0], pakeKeyAliasVal[1], pakeKeyAliasVal[2], pakeKeyAliasVal[3]);
+    LOGI("Psk alias(HEX): %x%x%x%x****.", pakeKeyAliasVal[0], pakeKeyAliasVal[1],
+        pakeKeyAliasVal[2], pakeKeyAliasVal[3]);
     res = loader->deleteKey(&pakeKeyAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete psk!");
@@ -151,7 +153,7 @@ static int32_t ComputeAndSavePsk(const PakeParams *params)
         return res;
     }
 
-    LOGI("PubKey alias: %x%x%x%x****, priKey alias: %x%x%x%x****, psk alias: %x%x%x%x****.",
+    LOGI("PubKey alias(HEX): %x%x%x%x****, priKey alias(HEX): %x%x%x%x****, psk alias(HEX): %x%x%x%x****.",
         peerKeyAliasVal[0], peerKeyAliasVal[1], peerKeyAliasVal[2], peerKeyAliasVal[3],
         selfKeyAliasVal[0], selfKeyAliasVal[1], selfKeyAliasVal[2], selfKeyAliasVal[3],
         sharedKeyAliasVal[0], sharedKeyAliasVal[1], sharedKeyAliasVal[2], sharedKeyAliasVal[3]);

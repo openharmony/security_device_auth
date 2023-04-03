@@ -720,7 +720,7 @@ static int32_t RequestProcessBindData(int64_t requestId, const uint8_t *data, ui
         LOGE("The input data is invalid!");
         return HC_ERR_INVALID_PARAMS;
     }
-    LOGI("[Start]: RequestProcessBindData! [RequestId]: %" PRId64, requestId);
+    LOGI("[Start]: RequestProcessBindData! [ReqId]: %" PRId64, requestId);
     CJson *params = CreateJsonFromString((const char *)data);
     if (params == NULL) {
         LOGE("Failed to create json from string!");

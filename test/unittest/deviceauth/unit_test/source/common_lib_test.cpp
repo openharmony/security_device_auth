@@ -521,14 +521,6 @@ HWTEST_F(CommonLibTest, HcStringUtilTest001, TestSize.Level0)
     EXPECT_EQ(ret, 0);
     int64Res = StringToInt64(intStr);
     EXPECT_EQ(ret, 0);
-    char *anonymousStr = nullptr;
-    ConvertToAnonymousStr(nullptr, &anonymousStr);
-    EXPECT_EQ(anonymousStr, nullptr);
-    ConvertToAnonymousStr("abc", &anonymousStr);
-    EXPECT_EQ(anonymousStr, nullptr);
-    ConvertToAnonymousStr("abcde", &anonymousStr);
-    EXPECT_NE(anonymousStr, nullptr);
-    ClibFree(anonymousStr);
 }
 
 HWTEST_F(CommonLibTest, HcStringUtilTest002, TestSize.Level0)
