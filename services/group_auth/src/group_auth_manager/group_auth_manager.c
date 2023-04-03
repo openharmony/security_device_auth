@@ -17,6 +17,7 @@
 #include "common_defs.h"
 #include "dev_auth_module_manager.h"
 #include "device_auth_defines.h"
+#include "hitrace_adapter.h"
 #include "hc_log.h"
 #include "session_manager.h"
 
@@ -70,22 +71,28 @@ int32_t QueryTrustedDeviceNum(void)
 
 void DoAuthDevice(HcTaskBase *task)
 {
+    DEV_AUTH_START_TRACE(TRACE_TAG_PROC_AUTH_DEVICE_WORK_TASK);
     if (task == NULL) {
         LOGE("The input task is NULL, can't start auth device!");
+        DEV_AUTH_FINISH_TRACE();
         return;
     }
     AuthDeviceTask *realTask = (AuthDeviceTask *)task;
     bool isClient = true;
     if (GetBoolFromJson(realTask->authParams, FIELD_IS_CLIENT, &isClient)) {
         LOGE("Failed to get role of client or server when start auth!");
+        DEV_AUTH_FINISH_TRACE();
         return;
     }
     if (!isClient) {
         LOGI("Server invokes authDevice, return directly.");
+        DEV_AUTH_FINISH_TRACE();
         return;
     }
+    DEV_AUTH_START_TRACE(TRACE_TAG_CREATE_SESSION);
     int32_t result = CreateSession(realTask->authReqId, TYPE_CLIENT_AUTH_SESSION, realTask->authParams,
         realTask->callback);
+    DEV_AUTH_FINISH_TRACE();
     if (result != HC_SUCCESS) {
         LOGE("Failed to create session for authDevice!");
         if ((result != HC_ERR_CREATE_SESSION_FAIL) && (realTask->callback != NULL) &&
@@ -95,30 +102,39 @@ void DoAuthDevice(HcTaskBase *task)
             LOGE("[DoAuthDevice] End invoke onError by group auth manager!");
         }
     }
+    DEV_AUTH_FINISH_TRACE();
 }
 
 void DoProcessAuthData(HcTaskBase *task)
 {
+    DEV_AUTH_START_TRACE(TRACE_TAG_PROC_AUTH_DATA_WORK_TASK);
     if (task == NULL) {
         LOGE("The input task is NULL, can't process auth data!");
+        DEV_AUTH_FINISH_TRACE();
         return;
     }
     AuthDeviceTask *realTask = (AuthDeviceTask *)task;
     int32_t res;
     if (IsRequestExist(realTask->authReqId)) {
+        DEV_AUTH_START_TRACE(TRACE_TAG_PROCESS_SESSION);
         res = ProcessSession(realTask->authReqId, AUTH_TYPE, realTask->authParams);
+        DEV_AUTH_FINISH_TRACE();
         if (res != HC_SUCCESS) {
             DestroySession(realTask->authReqId);
         }
+        DEV_AUTH_FINISH_TRACE();
         return;
     }
     res = CheckMsgRepeatability(realTask->authParams, GetModuleTypeFromPayload(realTask->authParams));
     if (res != HC_SUCCESS) {
         LOGD("Caller inputs repeated payload, so we will ignore it.");
+        DEV_AUTH_FINISH_TRACE();
         return;
     }
+    DEV_AUTH_START_TRACE(TRACE_TAG_CREATE_SESSION);
     res = CreateSession(realTask->authReqId, TYPE_SERVER_AUTH_SESSION, realTask->authParams,
         realTask->callback);
+    DEV_AUTH_FINISH_TRACE();
     if (res != HC_SUCCESS) {
         LOGE("Failed to create session for process auth data!");
         if ((res != HC_ERR_CREATE_SESSION_FAIL) && (realTask->callback != NULL) &&
@@ -128,4 +144,5 @@ void DoProcessAuthData(HcTaskBase *task)
             LOGE("End invoke onError by group auth manager!");
         }
     }
+    DEV_AUTH_FINISH_TRACE();
 }

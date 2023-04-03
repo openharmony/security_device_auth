@@ -24,6 +24,8 @@
 #include "group_manager.h"
 #include "hc_init_protection.h"
 #include "hc_log.h"
+#include "hisysevent_adapter.h"
+#include "hitrace_adapter.h"
 #include "json_utils.h"
 #include "os_account_adapter.h"
 #include "session_manager.h"
@@ -87,69 +89,85 @@ static bool InitProcessDataTask(AuthDeviceTask *task, int64_t authReqId,
 static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *authParams,
     const DeviceAuthCallback *gaCallback)
 {
+    DEV_AUTH_START_TRACE(TRACE_TAG_CALL_AUTH_DEVICE);
     LOGI("Begin AuthDevice. [requestId]:%" PRId64, authReqId);
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((authParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("The input auth params is invalid!");
+        DEV_AUTH_FINISH_TRACE();
         return HC_ERR_INVALID_PARAMS;
     }
     CJson *jsonParams = CreateJsonFromString(authParams);
     if (jsonParams == NULL) {
         LOGE("Create json from params failed!");
+        DEV_AUTH_FINISH_TRACE();
         return HC_ERR_JSON_FAIL;
     }
+    DEV_AUTH_REPORT_CALL_EVENT(AUTH_DEV_EVENT, osAccountId, authReqId,
+        GetStringFromJson(jsonParams, FIELD_SERVICE_PKG_NAME));
     AuthDeviceTask *task = (AuthDeviceTask *)HcMalloc(sizeof(AuthDeviceTask), 0);
     if (task == NULL) {
-        FreeJson(jsonParams);
         LOGE("Failed to allocate memory for task!");
+        FreeJson(jsonParams);
+        DEV_AUTH_FINISH_TRACE();
         return HC_ERR_ALLOC_MEMORY;
     }
     if (!InitAuthDeviceTask(osAccountId, task, authReqId, jsonParams, gaCallback)) {
         LOGE("Failed to init task!");
         FreeJson(jsonParams);
         HcFree(task);
+        DEV_AUTH_FINISH_TRACE();
         return HC_ERR_INIT_TASK_FAIL;
     }
     if (PushTask((HcTaskBase*)task) != HC_SUCCESS) {
         FreeJson(jsonParams);
         HcFree(task);
+        DEV_AUTH_FINISH_TRACE();
         return HC_ERR_INIT_TASK_FAIL;
     }
     LOGI("Push AuthDevice task successfully.");
+    DEV_AUTH_FINISH_TRACE();
     return HC_SUCCESS;
 }
 
 static int32_t ProcessData(int64_t authReqId, const uint8_t *data, uint32_t dataLen,
     const DeviceAuthCallback *gaCallback)
 {
+    DEV_AUTH_START_TRACE(TRACE_TAG_CALL_PROCESS_AUTH_DATA);
     LOGI("[GA] Begin ProcessData. [requestId]:%" PRId64, authReqId);
     if ((data == NULL) || (dataLen > MAX_DATA_BUFFER_SIZE)) {
         LOGE("Invalid input for ProcessData!");
+        DEV_AUTH_FINISH_TRACE();
         return HC_ERR_INVALID_PARAMS;
     }
     CJson *receivedData = CreateJsonFromString((const char *)data);
     if (receivedData == NULL) {
         LOGE("Create Json for input data failed!");
+        DEV_AUTH_FINISH_TRACE();
         return HC_ERR_JSON_FAIL;
     }
     AuthDeviceTask *task = (AuthDeviceTask *)HcMalloc(sizeof(AuthDeviceTask), 0);
     if (task == NULL) {
-        FreeJson(receivedData);
         LOGE("Failed to allocate memory for task!");
+        FreeJson(receivedData);
+        DEV_AUTH_FINISH_TRACE();
         return HC_ERR_ALLOC_MEMORY;
     }
     if (!InitProcessDataTask(task, authReqId, receivedData, gaCallback)) {
         LOGE("Failed to init task!");
         FreeJson(receivedData);
         HcFree(task);
+        DEV_AUTH_FINISH_TRACE();
         return HC_ERR_INIT_TASK_FAIL;
     }
     if (PushTask((HcTaskBase*)task) != HC_SUCCESS) {
         FreeJson(receivedData);
         HcFree(task);
+        DEV_AUTH_FINISH_TRACE();
         return HC_ERR_INIT_TASK_FAIL;
     }
     LOGI("Push ProcessData task successfully.");
+    DEV_AUTH_FINISH_TRACE();
     return HC_SUCCESS;
 }
 

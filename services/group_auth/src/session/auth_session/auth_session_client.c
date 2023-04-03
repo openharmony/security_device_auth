@@ -18,6 +18,7 @@
 #include "auth_session_common_util.h"
 #include "auth_session_util.h"
 #include "dev_auth_module_manager.h"
+#include "hitrace_adapter.h"
 #include "hc_log.h"
 #include "hc_types.h"
 #include "json_utils.h"
@@ -50,7 +51,9 @@ static int32_t ProcessClientAuthTask(AuthSession *session, int32_t moduleType, C
         LOGE("Failed to get param in session!");
         return HC_ERR_NULL_PTR;
     }
+    DEV_AUTH_START_TRACE(TRACE_TAG_PROCESS_AUTH_TASK);
     int32_t res = ProcessTask(session->curTaskId, in, out, &status, moduleType);
+    DEV_AUTH_FINISH_TRACE();
     DeleteItemFromJson(in, FIELD_PAYLOAD);
     if (res != HC_SUCCESS) {
         DestroyTask(session->curTaskId, moduleType);

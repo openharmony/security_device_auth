@@ -18,6 +18,7 @@
 #include "common_defs.h"
 #include "data_manager.h"
 #include "group_operation.h"
+#include "hitrace_adapter.h"
 
 int32_t CreateGroupImpl(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams)
 {
@@ -33,8 +34,11 @@ int32_t DeleteGroupImpl(int32_t osAccountId, int64_t requestId, const char *appI
 
 int32_t AddMemberToGroupImpl(int32_t osAccountId, int64_t requestId, const char *appId, const char *addParams)
 {
-    return IsGroupSupport() ? GetGroupImplInstance()->addMember(osAccountId, requestId, appId, addParams)
+    DEV_AUTH_START_TRACE(TRACE_TAG_CALL_ADD_MEMBER);
+    int32_t res = IsGroupSupport() ? GetGroupImplInstance()->addMember(osAccountId, requestId, appId, addParams)
                             : HC_ERR_NOT_SUPPORT;
+    DEV_AUTH_FINISH_TRACE();
+    return res;
 }
 
 int32_t DeleteMemberFromGroupImpl(int32_t osAccountId, int64_t requestId, const char *appId, const char *deleteParams)
@@ -57,7 +61,11 @@ int32_t DelMultiMembersFromGroupImpl(int32_t osAccountId, const char *appId, con
 
 int32_t ProcessBindDataImpl(int64_t requestId, const uint8_t *data, uint32_t dataLen)
 {
-    return IsGroupSupport() ? GetGroupImplInstance()->processBindData(requestId, data, dataLen) : HC_ERR_NOT_SUPPORT;
+    DEV_AUTH_START_TRACE(TRACE_TAG_CALL_PROCESS_BIND_DATA);
+    int32_t res = IsGroupSupport() ? GetGroupImplInstance()->processBindData(requestId, data, dataLen)
+                                   : HC_ERR_NOT_SUPPORT;
+    DEV_AUTH_FINISH_TRACE();
+    return res;
 }
 
 int32_t RegListenerImpl(const char *appId, const DataChangeListener *listener)

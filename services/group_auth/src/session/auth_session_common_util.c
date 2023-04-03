@@ -17,6 +17,7 @@
 #include "common_defs.h"
 #include "string_util.h"
 #include "device_auth_defines.h"
+#include "hitrace_adapter.h"
 #include "hc_log.h"
 #include "hc_types.h"
 #define UID_HEX_STRING_LEN_MAX 64
@@ -89,7 +90,9 @@ char *GetServerConfirmation(const CJson *paramsFromClient, const CJson *reqParam
             break;
         }
         LOGD("Begin to invoke onRequest for auth!");
+        DEV_AUTH_START_TRACE(TRACE_TAG_ON_REQUEST);
         serverInfo = callback->onRequest(requestId, authForm, reqParamStr);
+        DEV_AUTH_FINISH_TRACE();
         LOGD("End to invoke onRequest for auth!");
         if (serverInfo == NULL) {
             LOGE("Failed to get server confirmation info!");

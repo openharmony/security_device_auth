@@ -23,6 +23,8 @@
 #include "group_operation_common.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
+#include "hisysevent_adapter.h"
+#include "hitrace_adapter.h"
 #include "session_manager.h"
 #include "string_util.h"
 
@@ -617,7 +619,10 @@ static int32_t AddMemberToGroup(int32_t osAccountId, int64_t requestId, CJson *j
         ProcessErrorCallback(requestId, operationCode, result, NULL, callback);
         return result;
     }
-    return CreateClientSession(requestId, operationCode, GetChannelType(callback, jsonParams), jsonParams, callback);
+    DEV_AUTH_START_TRACE(TRACE_TAG_CREATE_SESSION);
+    result = CreateClientSession(requestId, operationCode, GetChannelType(callback, jsonParams), jsonParams, callback);
+    DEV_AUTH_FINISH_TRACE();
+    return result;
 }
 
 static int32_t DeleteMemberFromGroup(int32_t osAccountId, int64_t requestId, CJson *jsonParams,
@@ -655,7 +660,10 @@ static int32_t ProcessData(int64_t requestId, CJson *jsonParams, const DeviceAut
     }
     int32_t operationCode = MEMBER_INVITE;
     (void)(GetIntFromJson(jsonParams, FIELD_GROUP_OP, &operationCode));
-    return CreateServerSession(requestId, operationCode, jsonParams, callback);
+    DEV_AUTH_START_TRACE(TRACE_TAG_CREATE_SESSION);
+    int32_t res = CreateServerSession(requestId, operationCode, jsonParams, callback);
+    DEV_AUTH_FINISH_TRACE();
+    return res;
 }
 
 static PeerToPeerGroup g_peerToPeerGroup = {

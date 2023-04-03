@@ -59,7 +59,6 @@ ohos_unittest("deviceauth_llt") {
   sources += deviceauth_common_files
   sources += database_manager_files
   sources += broadcast_manager_files
-  sources += hiview_adapter_mock_files
   sources += soft_bus_channel_mock_files
 
   sources += group_auth_files
@@ -157,7 +156,6 @@ ohos_unittest("deviceauth_unit_test") {
   sources += deviceauth_common_files
   sources += database_manager_files
   sources += broadcast_manager_files
-  sources += hiview_adapter_mock_files
   sources += soft_bus_channel_mock_files
 
   sources += group_auth_files

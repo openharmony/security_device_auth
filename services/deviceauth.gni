@@ -101,12 +101,8 @@ permission_adapter_files =
 hiview_adapter_files = [
   "${dev_frameworks_path}/src/hiview_adapter/hidump_adapter.c",
   "${dev_frameworks_path}/src/hiview_adapter/hisysevent_adapter.cpp",
-  "${dev_frameworks_path}/src/hiview_adapter/dev_auth_hievent.c",
   "${dev_frameworks_path}/src/hiview_adapter/hitrace_adapter.cpp",
 ]
-
-hiview_adapter_mock_files =
-    [ "${dev_frameworks_path}/src/hiview_adapter/hiview_mock.c" ]
 
 group_auth_files = [
   "${group_auth_path}/src/group_auth_manager/group_auth_data_operation.c",
