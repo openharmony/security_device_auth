@@ -16,18 +16,6 @@
 #ifndef HITRACE_ADAPTER_H
 #define HITRACE_ADAPTER_H
 
-#ifndef HIVIEW_ENABLE
-
-#define DEV_AUTH_START_TRACE(tag)
-#define DEV_AUTH_FINISH_TRACE()
-
-#else
-
-#include <stdint.h>
-
-#define DEV_AUTH_START_TRACE(tag) DevAuthStartTrace(tag)
-#define DEV_AUTH_FINISH_TRACE() DevAuthFinishTrace();
-
 #define TRACE_TAG_CALL_ADD_MEMBER "CallAddMember"
 #define TRACE_TAG_CALL_AUTH_DEVICE "CallAuthDevice"
 #define TRACE_TAG_CALL_PROCESS_BIND_DATA "CallProcessBindData"
@@ -47,6 +35,18 @@
 #define TRACE_TAG_PROCESS_AUTH_TASK "ProcessAuthTask"
 #define TRACE_TAG_ON_REQUEST "OnRequest"
 #define TRACE_TAG_ADD_TRUSTED_DEVICE "AddTrustedDevice"
+
+#ifndef DEV_AUTH_HIVIEW_ENABLE
+
+#define DEV_AUTH_START_TRACE(tag)
+#define DEV_AUTH_FINISH_TRACE()
+
+#else
+
+#include <stdint.h>
+
+#define DEV_AUTH_START_TRACE(tag) DevAuthStartTrace(tag)
+#define DEV_AUTH_FINISH_TRACE() DevAuthFinishTrace()
 
 #ifdef __cplusplus
 extern "C" {

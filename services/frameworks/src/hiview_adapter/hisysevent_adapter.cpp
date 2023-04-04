@@ -17,12 +17,12 @@
 
 #include "hisysevent.h"
 
-static const char *STR_CALL_EVENT = "CALL_EVENT";
-static const char *STR_OS_ACCOUNT_ID = "OS_ACCOUNT_ID";
-static const char *STR_FUNC_NAME = "FUNC_NAME";
-static const char *STR_APP_ID = "APP_ID";
-static const char *STR_REQ_ID = "REQ_ID";
-static const char *STR_UNKNOWN = "unknown";
+#define STR_CALL_EVENT "CALL_EVENT"
+#define STR_OS_ACCOUNT_ID "OS_ACCOUNT_ID"
+#define STR_FUNC_NAME "FUNC_NAME"
+#define STR_APP_ID "APP_ID"
+#define STR_REQ_ID "REQ_ID"
+#define STR_UNKNOWN "unknown"
 
 void DevAuthReportCallEvent(const char *funcName, int32_t osAccountId, int64_t reqId, const char *appId)
 {
