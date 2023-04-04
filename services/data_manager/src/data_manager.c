@@ -1147,7 +1147,7 @@ int32_t SaveOsAccountDb(int32_t osAccountId)
     return HC_SUCCESS;
 }
 
-#ifdef HIVIEW_ENABLE
+#ifdef DEV_AUTH_HIVIEW_ENABLE
 static void DumpGroup(int fd, const TrustedGroupEntry *group)
 {
     dprintf(fd, "||----------------------------Group----------------------------|                   |\n");

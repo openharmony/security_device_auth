@@ -16,7 +16,7 @@
 #ifndef HIDUMP_ADAPTER_H
 #define HIDUMP_ADAPTER_H
 
-#ifndef HIVIEW_ENABLE
+#ifndef DEV_AUTH_HIVIEW_ENABLE
 
 #define DEV_AUTH_DUMP(fd)
 #define DEV_AUTH_REG_DUMP_FUNC(func)
