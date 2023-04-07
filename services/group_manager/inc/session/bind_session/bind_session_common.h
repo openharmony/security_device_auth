@@ -29,6 +29,7 @@ bool NeedCreateGroup(int isClient, int operationCode);
 bool NeedForceDelete(const BindSession *session);
 int32_t ForceUnbindDevice(const BindSession *session);
 int32_t ProcessBindSession(Session *session, CJson *jsonParams);
+void InformPeerModuleError(CJson *out, const BindSession *session);
 
 #ifdef __cplusplus
 }

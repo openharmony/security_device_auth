@@ -34,7 +34,6 @@ int32_t SendBindSessionData(const BindSession *session, const CJson *sendData);
 int32_t CreateAndProcessModule(BindSession *session, const CJson *in, CJson *out);
 int32_t ProcessModule(const BindSession *session, const CJson *in, CJson *out, int32_t *status);
 void InformPeerGroupErrorIfNeed(bool isNeedInform, int32_t errorCode, const BindSession *session);
-void InformPeerModuleError(CJson *out, const BindSession *session);
 
 #ifdef __cplusplus
 }

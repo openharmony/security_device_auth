@@ -1228,3 +1228,29 @@ int32_t GenerateBasicModuleParams(bool isClient, BindSession *session, CJson *mo
     }
     return HC_SUCCESS;
 }
+
+void InformPeerModuleError(CJson *out, const BindSession *session)
+{
+    CJson *errorData = GetObjFromJson(out, FIELD_SEND_TO_PEER);
+    if (errorData == NULL) {
+        return;
+    }
+    if (AddStringToJson(errorData, FIELD_APP_ID, session->base.appId) != HC_SUCCESS) {
+        LOGE("Failed to add appId to errorData!");
+        return;
+    }
+    if (AddInt64StringToJson(errorData, FIELD_REQUEST_ID, session->reqId) != HC_SUCCESS) {
+        LOGE("Failed to add requestId to errorData!");
+        return;
+    }
+    if (AddInfoToSendData(false, session, errorData) != HC_SUCCESS) {
+        LOGE("Failed to add info to error data!");
+        return;
+    }
+    int32_t result = SendBindSessionData(session, errorData);
+    if (result != HC_SUCCESS) {
+        LOGE("An error occurred when notifying the peer service!");
+        return;
+    }
+    LOGI("Succeeded in notifying the peer device that an error occurred at the local end!");
+}
