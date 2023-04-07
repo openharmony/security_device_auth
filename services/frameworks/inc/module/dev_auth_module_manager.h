@@ -25,10 +25,12 @@ extern "C" {
 
 typedef struct AuthModuleBaseT {
     int moduleType;
+    int32_t (*init)(void);
+    void (*destroy)(void);
+    bool (*isMsgNeedIgnore)(const CJson *in);
     int (*createTask)(int32_t *, const CJson *in, CJson *out);
     int (*processTask)(int32_t, const CJson *in, CJson *out, int32_t *status);
     void (*destroyTask)(int);
-    void (*destroyModule)(struct AuthModuleBaseT *module);
 } AuthModuleBase;
 
 typedef struct {
@@ -40,6 +42,9 @@ typedef struct {
 
 int32_t InitModules(void);
 void DestroyModules(void);
+
+int32_t AddAuthModulePlugin(const AuthModuleBase *plugin);
+void DelAuthModulePlugin(int32_t moduleType);
 
 int32_t CreateTask(int32_t *taskId, const CJson *in, CJson *out, int moduleType);
 int32_t ProcessTask(int taskId, const CJson *in, CJson *out, int32_t *status, int moduleType);
@@ -54,9 +59,6 @@ int32_t UnregisterLocalIdentity(const char *pkgName, const char *serviceType, Ui
 int32_t DeletePeerAuthInfo(const char *pkgName, const char *serviceType, Uint8Buff *authId, int userType,
     int moduleType);
 int32_t GetPublicKey(int moduleType, AuthModuleParams *params, Uint8Buff *returnPk);
-
-// for ACCOUNT
-int32_t GetRegisterInfo(const char *reqJsonStr, char **returnRegisterInfo);
 
 #ifdef __cplusplus
 }

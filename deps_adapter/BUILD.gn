@@ -88,8 +88,14 @@ if (defined(ohos_lite)) {
         "${os_adapter_path}/impl/src/linux/hc_types.c",
       ]
 
+      defines = []
+      if (enable_extend_plugin) {
+        defines += [ "DEV_AUTH_PLUGIN_ENABLE" ]
+        sources += [ "${os_adapter_path}/impl/src/liteos/small/dev_auth_dl.c" ]
+      }
+
       cflags = [ "-DHILOG_ENABLE" ]
-      defines = [ "LITE_DEVICE" ]
+      defines += [ "LITE_DEVICE" ]
       deps = [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
         "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk",
@@ -127,6 +133,13 @@ if (defined(ohos_lite)) {
       "${os_adapter_path}/impl/src/linux/hc_thread.c",
       "${os_adapter_path}/impl/src/linux/hc_types.c",
     ]
+
+    defines = []
+    if (enable_extend_plugin) {
+      defines += [ "DEV_AUTH_PLUGIN_ENABLE" ]
+      sources += [ "${os_adapter_path}/impl/src/linux/dev_auth_dl.c" ]
+    }
+
     cflags = [ "-DHILOG_ENABLE" ]
     deps = [
       "//third_party/cJSON:cjson",

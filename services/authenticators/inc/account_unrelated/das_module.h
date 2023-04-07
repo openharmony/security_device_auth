@@ -21,7 +21,7 @@
 #include "dev_auth_module_manager.h"
 
 typedef struct DasAuthModuleT {
-    AuthModuleBase moduleBase;
+    AuthModuleBase base;
     int32_t (*registerLocalIdentity)(const char *, const char *, Uint8Buff *, int);
     int32_t (*unregisterLocalIdentity)(const char *, const char *, Uint8Buff *, int);
     int32_t (*deletePeerAuthInfo)(const char *, const char *, Uint8Buff *, int);
@@ -32,9 +32,7 @@ typedef struct DasAuthModuleT {
 extern "C" {
 #endif
 
-bool IsDasSupported(void);
-bool IsDasMsgNeedIgnore(const CJson *in);
-AuthModuleBase *CreateDasModule(void);
+const AuthModuleBase *GetDasModule(void);
 
 #ifdef __cplusplus
 }

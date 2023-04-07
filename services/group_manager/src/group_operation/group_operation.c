@@ -19,6 +19,7 @@
 #include "broadcast_manager.h"
 #include "callback_manager.h"
 #include "common_defs.h"
+#include "cred_manager.h"
 #include "data_manager.h"
 #include "dev_auth_module_manager.h"
 #include "device_auth_defines.h"
@@ -760,6 +761,44 @@ static int32_t UnRegListener(const char *appId)
     return RemoveListener(appId);
 }
 
+static int32_t GetRegisterInfo(const char *reqJsonStr, char **returnRegisterInfo)
+{
+    if ((reqJsonStr == NULL) || (returnRegisterInfo == NULL)) {
+        LOGE("The input param is NULL!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    CJson *requestJson = CreateJsonFromString(reqJsonStr);
+    if (requestJson == NULL) {
+        LOGE("Failed to create request json!");
+        return HC_ERR_JSON_CREATE;
+    }
+    if (AddIntToJson(requestJson, FIELD_CREDENTIAL_TYPE, ASYMMETRIC_CRED) != HC_SUCCESS) {
+        LOGE("Failed to add credentialType to input json!");
+        FreeJson(requestJson);
+        return HC_ERR_JSON_GET;
+    }
+    CJson *registerInfo = CreateJson();
+    if (registerInfo == NULL) {
+        LOGE("Failed to allocate registerInfo memory!");
+        FreeJson(requestJson);
+        return HC_ERR_JSON_CREATE;
+    }
+    int32_t result = ProcCred(ACCOUNT_RELATED_PLUGIN, 0, REQUEST_SIGNATURE, requestJson, registerInfo);
+    FreeJson(requestJson);
+    if (result != HC_SUCCESS) {
+        LOGE("Failed to get register info!");
+        FreeJson(registerInfo);
+        return result;
+    }
+    *returnRegisterInfo = PackJsonToString(registerInfo);
+    FreeJson(registerInfo);
+    if (*returnRegisterInfo == NULL) {
+        LOGE("Failed to convert json to string!");
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t CheckAccessToGroup(int32_t osAccountId, const char *appId, const char *groupId)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
@@ -1107,6 +1146,7 @@ static const GroupImpl GROUP_IMPL_INSTANCE = {
     .processBindData = RequestProcessBindData,
     .regListener = RegListener,
     .unRegListener = UnRegListener,
+    .getRegisterInfo = GetRegisterInfo,
     .checkAccessToGroup = CheckAccessToGroup,
     .getAccessibleGroupInfoById = GetAccessibleGroupInfoById,
     .getAccessibleGroupInfo = GetAccessibleGroupInfo,

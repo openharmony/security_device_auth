@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,20 +13,32 @@
  * limitations under the License.
  */
 
-#ifndef ACCOUNT_MODULE_H
-#define ACCOUNT_MODULE_H
+#ifndef PLUGIN_ADAPTER_H
+#define PLUGIN_ADAPTER_H
 
-#include "dev_auth_module_manager.h"
-#include "json_utils.h"
+#ifndef DEV_AUTH_PLUGIN_ENABLE
+
+#define DEV_AUTH_LOAD_PLUGIN()
+#define DEV_AUTH_UNLOAD_PLUGIN()
+
+#else
+
+#include <stdint.h>
+
+#define DEV_AUTH_LOAD_PLUGIN() LoadExtendPlugin()
+#define DEV_AUTH_UNLOAD_PLUGIN() UnloadExtendPlugin()
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-const AuthModuleBase *GetAccountModule(void);
+void LoadExtendPlugin(void);
+void UnloadExtendPlugin(void);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

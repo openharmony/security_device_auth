@@ -37,6 +37,7 @@ int32_t ProcessBindDataImpl(int64_t requestId, const uint8_t *data, uint32_t dat
 int32_t RegListenerImpl(const char *appId, const DataChangeListener *listener);
 int32_t UnRegListenerImpl(const char *appId);
 
+int32_t GetRegisterInfoImpl(const char *reqJsonStr, char **returnRegisterInfo);
 int32_t CheckAccessToGroupImpl(int32_t osAccountId, const char *appId, const char *groupId);
 int32_t GetGroupInfoByIdImpl(int32_t osAccountId, const char *appId, const char *groupId, char **returnGroupInfo);
 int32_t GetGroupInfoImpl(int32_t osAccountId, const char *appId, const char *queryParams,

@@ -33,6 +33,7 @@ typedef struct {
     int32_t (*processBindData)(int64_t requestId, const uint8_t *data, uint32_t dataLen);
     int32_t (*regListener)(const char *appId, const DataChangeListener *listener);
     int32_t (*unRegListener)(const char *appId);
+    int32_t (*getRegisterInfo)(const char *reqJsonStr, char **returnRegisterInfo);
     int32_t (*checkAccessToGroup)(int32_t osAccountId, const char *appId, const char *groupId);
     int32_t (*getAccessibleGroupInfoById)(int32_t osAccountId, const char *appId, const char *groupId,
         char **returnGroupInfo);

@@ -17,30 +17,8 @@
 #include "device_auth_defines.h"
 #include "hc_log.h"
 
-int32_t CheckAccountMsgRepeatability(const CJson *in)
-{
-    (void)in;
-    LOGE("Account module is not supported.");
-    return HC_ERR_NOT_SUPPORT;
-}
-
-bool IsAccountSupported(void)
-{
-    return false;
-}
-
-AuthModuleBase *CreateAccountModule(void)
+const AuthModuleBase *GetAccountModule(void)
 {
     LOGE("Account module is not supported.");
     return NULL;
-}
-
-int32_t ProcessAccountCredentials(int32_t osAccountId, int32_t credentialOpCode, CJson *in, CJson *out)
-{
-    (void)osAccountId;
-    (void)credentialOpCode;
-    (void)in;
-    (void)out;
-    LOGE("Account credentials manager is not supported.");
-    return HC_ERR_NOT_SUPPORT;
 }

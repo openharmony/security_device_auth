@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,20 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef ACCOUNT_MODULE_H
-#define ACCOUNT_MODULE_H
 
-#include "dev_auth_module_manager.h"
-#include "json_utils.h"
+#include "dev_auth_dl.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <dlfcn.h>
+#include "hal_error.h"
+#include "hc_log.h"
 
-const AuthModuleBase *GetAccountModule(void);
-
-#ifdef __cplusplus
+void *DevAuthDlopen(const char *filePath)
+{
+    return dlopen(filePath, RTLD_LAZY | RTLD_LOCAL);
 }
-#endif
 
-#endif
+void *DevAuthDlsym(void *handle, const char *funcName)
+{
+    return dlsym(handle, funcName);
+}
+
+void DevAuthDlclose(void *handle)
+{
+    (void)dlclose(handle);
+}
