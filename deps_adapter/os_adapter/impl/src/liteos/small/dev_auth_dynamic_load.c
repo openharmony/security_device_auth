@@ -14,11 +14,9 @@
  */
 
 
-#include "plugin_adapter.h"
+#include "dev_auth_dynamic_load.h"
 
 #include <los_ld_elflib.h>
-#include "hal_error.h"
-#include "hc_log.h"
 
 void *DevAuthDlopen(const char *filePath)
 {

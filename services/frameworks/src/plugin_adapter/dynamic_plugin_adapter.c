@@ -19,7 +19,7 @@
 #include <stddef.h>
 #include "cred_plugin_def.h"
 #include "cred_manager.h"
-#include "dev_auth_dl.h"
+#include "dev_auth_dynamic_load.h"
 #include "dev_auth_module_manager.h"
 #include "device_auth_defines.h"
 #include "hc_log.h"
@@ -40,7 +40,7 @@ void LoadExtendPlugin(void)
     }
     g_handle = DevAuthDlopen("/system/lib/libdev_auth_extend_plugin.z.so");
     if (g_handle == NULL) {
-        LOGE("[Plugin]: open dynamic plugin fail.");
+        LOGW("[Plugin]: open dynamic plugin fail.");
         return;
     }
     GetCredPluginFunc credPlugin = (GetCredPluginFunc)DevAuthDlsym(g_handle, CRED_PLUGIN_FUNC);

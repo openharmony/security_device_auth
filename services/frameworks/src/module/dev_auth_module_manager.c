@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -232,7 +232,8 @@ int32_t InitModules(void)
             (void)g_authModuleVec.pushBack(&g_authModuleVec, &dasModule);
             g_version.third |= dasModule->moduleType;
         } else {
-            LOGW("[ModuleMgr]: Init das module fail. [Res]: %d", res);
+            LOGE("[ModuleMgr]: Init das module fail. [Res]: %d", res);
+            return res;
         }
     }
     const AuthModuleBase *accountModule = GetAccountModule();
@@ -242,7 +243,8 @@ int32_t InitModules(void)
             (void)g_authModuleVec.pushBack(&g_authModuleVec, &accountModule);
             g_version.third |= accountModule->moduleType;
         } else {
-            LOGW("[ModuleMgr]: Init account module fail. [Res]: %d", res);
+            LOGE("[ModuleMgr]: Init account module fail. [Res]: %d", res);
+            return res;
         }
     }
     LOGI("Init modules success!");
@@ -272,12 +274,12 @@ int32_t AddAuthModulePlugin(const AuthModuleBase *plugin)
         LOGE("[ModuleMgr]: Init module plugin fail. [Res]: %d", res);
         return HC_ERR_INIT_FAILED;
     }
-    bool isNew = true;
+    bool isNeedReplace = false;
     uint32_t index;
     AuthModuleBase **pluginPtr;
     FOR_EACH_HC_VECTOR(g_authModuleVec, index, pluginPtr) {
         if ((*pluginPtr)->moduleType == plugin->moduleType) {
-            isNew = false;
+            isNeedReplace = true;
             break;
         }
     }
@@ -286,7 +288,7 @@ int32_t AddAuthModulePlugin(const AuthModuleBase *plugin)
         plugin->destroy();
         return HC_ERR_ALLOC_MEMORY;
     }
-    if (!isNew) {
+    if (isNeedReplace) {
         LOGI("[ModuleMgr]: Replace module plugin. [Name]: %d", plugin->moduleType);
         HC_VECTOR_POPELEMENT(&g_authModuleVec, pluginPtr, index);
     } else {
