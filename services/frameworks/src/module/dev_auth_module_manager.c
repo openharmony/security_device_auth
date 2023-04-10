@@ -23,36 +23,18 @@
 #include "version_util.h"
 #include "hitrace_adapter.h"
 
-DECLARE_HC_VECTOR(AuthModuleVec, void *);
-IMPLEMENT_HC_VECTOR(AuthModuleVec, void *, 1)
+DECLARE_HC_VECTOR(AuthModuleVec, AuthModuleBase *);
+IMPLEMENT_HC_VECTOR(AuthModuleVec, AuthModuleBase *, 2)
 
 static AuthModuleVec g_authModuleVec;
 static VersionStruct g_version;
 
-int32_t CheckMsgRepeatability(const CJson *in, int moduleType)
-{
-    if (in == NULL) {
-        LOGE("Params is null.");
-        return HC_ERR_NULL_PTR;
-    }
-    switch (moduleType) {
-        case DAS_MODULE:
-            return IsDasMsgNeedIgnore(in) ? HC_ERR_IGNORE_MSG : HC_SUCCESS;
-        case ACCOUNT_MODULE:
-            return CheckAccountMsgRepeatability(in);
-        default:
-            LOGE("Unsupported module type: %d", moduleType);
-            return HC_ERR_MODULE_NOT_FOUNT;
-    }
-    return HC_ERROR;
-}
-
 static AuthModuleBase *GetModule(int moduleType)
 {
     uint32_t index;
-    void **module = NULL;
+    AuthModuleBase **module;
     FOR_EACH_HC_VECTOR(g_authModuleVec, index, module) {
-        if (moduleType == ((AuthModuleBase *)(*module))->moduleType) {
+        if (moduleType == ((*module)->moduleType)) {
             return *module;
         }
     }
@@ -169,34 +151,18 @@ int32_t GetPublicKey(int moduleType, AuthModuleParams *params, Uint8Buff *return
     return HC_SUCCESS;
 }
 
-int32_t ProcessTask(int taskId, const CJson *in, CJson *out, int32_t *status, int moduleType)
+int32_t CheckMsgRepeatability(const CJson *in, int moduleType)
 {
-    if (in == NULL || out == NULL || status == NULL) {
+    if (in == NULL) {
         LOGE("Params is null.");
         return HC_ERR_NULL_PTR;
     }
-    LOGI("Start to process task, taskId: %d, moduleType: %d.", taskId, moduleType);
     AuthModuleBase *module = GetModule(moduleType);
     if (module == NULL) {
-        LOGE("Failed to get module!");
+        LOGE("Failed to get module for das.");
         return HC_ERR_MODULE_NOT_FOUNT;
     }
-    if (module->processTask == NULL) {
-        LOGE("Unsupported method in the module, moduleType: %d", moduleType);
-        return HC_ERR_UNSUPPORTED_METHOD;
-    }
-    int32_t res = module->processTask(taskId, in, out, status);
-    if (res != HC_SUCCESS) {
-        LOGE("Process task failed, taskId: %d, moduleType: %d, res: %d", taskId, moduleType, res);
-        return res;
-    }
-    res = AddSingleVersionToJson(out, &g_version);
-    if (res != HC_SUCCESS) {
-        LOGE("AddSingleVersionToJson failed, res: %x", res);
-        return res;
-    }
-    LOGI("Process task success, taskId: %d, moduleType: %d", taskId, moduleType);
-    return res;
+    return module->isMsgNeedIgnore(in) ? HC_ERR_IGNORE_MSG : HC_SUCCESS;
 }
 
 int32_t CreateTask(int32_t *taskId, const CJson *in, CJson *out, int moduleType)
@@ -211,10 +177,6 @@ int32_t CreateTask(int32_t *taskId, const CJson *in, CJson *out, int moduleType)
         LOGE("Failed to get module!");
         return HC_ERR_MODULE_NOT_FOUNT;
     }
-    if (module->createTask == NULL) {
-        LOGE("Unsupported method in the module, moduleType: %d", moduleType);
-        return HC_ERR_UNSUPPORTED_METHOD;
-    }
     int32_t res = module->createTask(taskId, in, out);
     if (res != HC_SUCCESS) {
         LOGE("Create task failed, taskId: %d, moduleType: %d, res: %d", *taskId, moduleType, res);
@@ -224,74 +186,64 @@ int32_t CreateTask(int32_t *taskId, const CJson *in, CJson *out, int moduleType)
     return HC_SUCCESS;
 }
 
+int32_t ProcessTask(int taskId, const CJson *in, CJson *out, int32_t *status, int moduleType)
+{
+    if (in == NULL || out == NULL || status == NULL) {
+        LOGE("Params is null.");
+        return HC_ERR_NULL_PTR;
+    }
+    AuthModuleBase *module = GetModule(moduleType);
+    if (module == NULL) {
+        LOGE("Failed to get module!");
+        return HC_ERR_MODULE_NOT_FOUNT;
+    }
+    int32_t res = module->processTask(taskId, in, out, status);
+    if (res != HC_SUCCESS) {
+        LOGE("Process task failed, taskId: %d, moduleType: %d, res: %d.", taskId, moduleType, res);
+        return res;
+    }
+    res = AddSingleVersionToJson(out, &g_version);
+    if (res != HC_SUCCESS) {
+        LOGE("AddSingleVersionToJson failed, res: %x.", res);
+        return res;
+    }
+    LOGI("Process task success, taskId: %d, moduleType: %d.", taskId, moduleType);
+    return res;
+}
+
 void DestroyTask(int taskId, int moduleType)
 {
     AuthModuleBase *module = GetModule(moduleType);
     if (module == NULL) {
         return;
     }
-    if (module->destroyTask == NULL) {
-        LOGE("Unsupported method in the module, moduleType: %d", moduleType);
-        return;
-    }
     module->destroyTask(taskId);
-}
-
-static int32_t InitDasModule(void)
-{
-    AuthModuleBase *das = CreateDasModule();
-    if (das == NULL) {
-        LOGE("Create das module failed.");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    g_authModuleVec.pushBackT(&g_authModuleVec, (void *)das);
-    return HC_SUCCESS;
-}
-
-static int32_t InitAccountModule(void)
-{
-    AuthModuleBase *accountModule = CreateAccountModule();
-    if (accountModule == NULL) {
-        LOGE("Create account module failed.");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    g_authModuleVec.pushBackT(&g_authModuleVec, (void *)accountModule);
-    return HC_SUCCESS;
-}
-
-static int32_t ProcessCredentials(int32_t osAccountId, int32_t credentialOpCode,
-    CJson *in, CJson *out, int moduleType)
-{
-    if (moduleType != ACCOUNT_MODULE) {
-        LOGE("Unsupported method in the module, moduleType: %d", moduleType);
-        return HC_ERR_NOT_SUPPORT;
-    }
-
-    return ProcessAccountCredentials(osAccountId, credentialOpCode, in, out);
 }
 
 int32_t InitModules(void)
 {
     g_authModuleVec = CREATE_HC_VECTOR(AuthModuleVec);
     InitGroupAndModuleVersion(&g_version);
-    int res;
-    if (IsDasSupported()) {
-        res = InitDasModule();
-        if (res != HC_SUCCESS) {
-            LOGE("Init das module failed, res: %x", res);
-            DestroyModules();
-            return res;
+    int32_t res;
+    const AuthModuleBase *dasModule = GetDasModule();
+    if (dasModule != NULL) {
+        res = dasModule->init();
+        if (res == HC_SUCCESS) {
+            (void)g_authModuleVec.pushBack(&g_authModuleVec, &dasModule);
+            g_version.third |= dasModule->moduleType;
+        } else {
+            LOGW("[ModuleMgr]: Init das module fail. [Res]: %d", res);
         }
-        g_version.third |= DAS_MODULE;
     }
-    if (IsAccountSupported()) {
-        res = InitAccountModule();
-        if (res != HC_SUCCESS) {
-            LOGE("Init account module failed, res: %x", res);
-            DestroyModules();
-            return res;
+    const AuthModuleBase *accountModule = GetAccountModule();
+    if (accountModule != NULL) {
+        res = accountModule->init();
+        if (res == HC_SUCCESS) {
+            (void)g_authModuleVec.pushBack(&g_authModuleVec, &accountModule);
+            g_version.third |= accountModule->moduleType;
+        } else {
+            LOGW("[ModuleMgr]: Init account module fail. [Res]: %d", res);
         }
-        g_version.third |= ACCOUNT_MODULE;
     }
     LOGI("Init modules success!");
     return HC_SUCCESS;
@@ -300,48 +252,59 @@ int32_t InitModules(void)
 void DestroyModules(void)
 {
     uint32_t index;
-    void **module = NULL;
+    AuthModuleBase **module;
     FOR_EACH_HC_VECTOR(g_authModuleVec, index, module) {
-        ((AuthModuleBase *)(*module))->destroyModule((AuthModuleBase *)*module);
+        (*module)->destroy();
     }
     DESTROY_HC_VECTOR(AuthModuleVec, &g_authModuleVec);
     (void)memset_s(&g_version, sizeof(VersionStruct), 0, sizeof(VersionStruct));
 }
 
-int32_t GetRegisterInfo(const char *reqJsonStr, char **returnRegisterInfo)
+int32_t AddAuthModulePlugin(const AuthModuleBase *plugin)
 {
-    if ((reqJsonStr == NULL) || (returnRegisterInfo == NULL)) {
-        LOGE("The input param is NULL!");
+    if (plugin == NULL || plugin->init == NULL || plugin->destroy == NULL ||
+        plugin->createTask == NULL || plugin->processTask == NULL || plugin->destroyTask == NULL) {
+        LOGE("The plugin is invalid.");
         return HC_ERR_INVALID_PARAMS;
     }
-    CJson *requestJson = CreateJsonFromString(reqJsonStr);
-    if (requestJson == NULL) {
-        LOGE("Failed to create request json!");
-        return HC_ERR_JSON_CREATE;
+    int32_t res = plugin->init();
+    if (res != HC_SUCCESS) {
+        LOGE("[ModuleMgr]: Init module plugin fail. [Res]: %d", res);
+        return HC_ERR_INIT_FAILED;
     }
-    if (AddIntToJson(requestJson, FIELD_CREDENTIAL_TYPE, ASYMMETRIC_CRED) != HC_SUCCESS) {
-        LOGE("Failed to add credentialType to input json!");
-        FreeJson(requestJson);
-        return HC_ERR_JSON_GET;
+    bool isNew = true;
+    uint32_t index;
+    AuthModuleBase **pluginPtr;
+    FOR_EACH_HC_VECTOR(g_authModuleVec, index, pluginPtr) {
+        if ((*pluginPtr)->moduleType == plugin->moduleType) {
+            isNew = false;
+            break;
+        }
     }
-    CJson *registerInfo = CreateJson();
-    if (registerInfo == NULL) {
-        LOGE("Failed to allocate registerInfo memory!");
-        FreeJson(requestJson);
-        return HC_ERR_JSON_CREATE;
+    if (g_authModuleVec.pushBack(&g_authModuleVec, &plugin) == NULL) {
+        LOGE("[ModuleMgr]: Push module plugin to vector fail.");
+        plugin->destroy();
+        return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t result = ProcessCredentials(0, REQUEST_SIGNATURE, requestJson, registerInfo, ACCOUNT_MODULE);
-    FreeJson(requestJson);
-    if (result != HC_SUCCESS) {
-        LOGE("Failed to get register info!");
-        FreeJson(registerInfo);
-        return result;
-    }
-    *returnRegisterInfo = PackJsonToString(registerInfo);
-    FreeJson(registerInfo);
-    if (*returnRegisterInfo == NULL) {
-        LOGE("Failed to convert json to string!");
-        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    if (!isNew) {
+        LOGI("[ModuleMgr]: Replace module plugin. [Name]: %d", plugin->moduleType);
+        HC_VECTOR_POPELEMENT(&g_authModuleVec, pluginPtr, index);
+    } else {
+        LOGI("[ModuleMgr]: Add new module plugin. [Name]: %d", plugin->moduleType);
     }
     return HC_SUCCESS;
+}
+
+void DelAuthModulePlugin(int32_t moduleType)
+{
+    uint32_t index;
+    AuthModuleBase **pluginPtr;
+    FOR_EACH_HC_VECTOR(g_authModuleVec, index, pluginPtr) {
+        if ((*pluginPtr)->moduleType == moduleType) {
+            LOGI("[ModuleMgr]: Delete module plugin success. [Name]: %d", moduleType);
+            (*pluginPtr)->destroy();
+            HC_VECTOR_POPELEMENT(&g_authModuleVec, pluginPtr, index);
+            break;
+        }
+    }
 }

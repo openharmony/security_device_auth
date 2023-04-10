@@ -32,6 +32,18 @@ if (os_level == "mini" || os_level == "small") {
       "${dev_frameworks_path}/inc/hiview_adapter",
     ]
     sources = deviceauth_files
+    if (enable_extend_plugin) {
+      defines += [ "DEV_AUTH_PLUGIN_ENABLE" ]
+      if (os_level == "mini") {
+        sources += [
+          "${dev_frameworks_path}/src/plugin_adapter/static_plugin_adapter.c",
+        ]
+      } else {
+        sources += [
+          "${dev_frameworks_path}/src/plugin_adapter/dynamic_plugin_adapter.c",
+        ]
+      }
+    }
     deps = [
       "${deps_adapter_path}:${hal_module_name}",
       "//build/lite/config/component/cJSON:cjson_shared",
@@ -164,6 +176,12 @@ if (os_level == "mini" || os_level == "small") {
     }
     if (support_jsapi) {
       defines += [ "SUPPORT_OS_ACCOUNT" ]
+    }
+    if (enable_extend_plugin) {
+      defines += [ "DEV_AUTH_PLUGIN_ENABLE" ]
+      sources += [
+        "${dev_frameworks_path}/src/plugin_adapter/dynamic_plugin_adapter.c",
+      ]
     }
 
     deps = [

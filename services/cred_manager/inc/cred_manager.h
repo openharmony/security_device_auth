@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,17 +13,21 @@
  * limitations under the License.
  */
 
-#ifndef ACCOUNT_MODULE_H
-#define ACCOUNT_MODULE_H
+#ifndef CRED_MANAGER_H
+#define CRED_MANAGER_H
 
-#include "dev_auth_module_manager.h"
+#include "cred_plugin_def.h"
 #include "json_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-const AuthModuleBase *GetAccountModule(void);
+int32_t InitCredMgr(void);
+void DestroyCredMgr(void);
+int32_t AddCredPlugin(const CredPlugin *plugin);
+void DelCredPlugin(int32_t pluginName);
+int32_t ProcCred(int32_t pluginName, int32_t osAccountId, int32_t cmdId, CJson *in, CJson *out);
 
 #ifdef __cplusplus
 }

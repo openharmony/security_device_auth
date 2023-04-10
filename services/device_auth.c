@@ -19,6 +19,7 @@
 #include "callback_manager.h"
 #include "channel_manager.h"
 #include "common_defs.h"
+#include "cred_manager.h"
 #include "dev_auth_module_manager.h"
 #include "group_auth_manager.h"
 #include "group_manager.h"
@@ -28,6 +29,7 @@
 #include "hitrace_adapter.h"
 #include "json_utils.h"
 #include "os_account_adapter.h"
+#include "plugin_adapter.h"
 #include "session_manager.h"
 #include "task_manager.h"
 
@@ -264,10 +266,15 @@ static int32_t InitAllModules(void)
         LOGE("[End]: [Service]: Failed to init algorithm module!");
         return res;
     }
+    res = InitCredMgr();
+    if (res != HC_SUCCESS) {
+        LOGE("[End]: [Service]: Failed to init cred mgr!");
+        return res;
+    }
     res = InitModules();
     if (res != HC_SUCCESS) {
         LOGE("[End]: [Service]: Failed to init all authenticator modules!");
-        return res;
+        goto CLEAN_CRED;
     }
     res = InitCallbackManager();
     if (res != HC_SUCCESS) {
@@ -292,6 +299,8 @@ CLEAN_CALLBACK:
     DestroyCallbackManager();
 CLEAN_MODULE:
     DestroyModules();
+CLEAN_CRED:
+    DestroyCredMgr();
     return res;
 }
 
@@ -311,6 +320,7 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
         DestroyGmAndGa();
         return res;
     }
+    DEV_AUTH_LOAD_PLUGIN();
     SetInitStatus();
     LOGI("[End]: [Service]: Init device auth service successfully!");
     return HC_SUCCESS;
@@ -327,7 +337,9 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
     DestroyGroupManager();
     DestroySessionManager();
     DestroyGmAndGa();
+    DEV_AUTH_UNLOAD_PLUGIN();
     DestroyModules();
+    DestroyCredMgr();
     DestroyChannelManager();
     DestroyCallbackManager();
     SetDeInitStatus();
@@ -352,7 +364,7 @@ DEVICE_AUTH_API_PUBLIC const DeviceGroupManager *GetGmInstance(void)
     g_groupManagerInstance->addMultiMembersToGroup = AddMultiMembersToGroupImpl;
     g_groupManagerInstance->delMultiMembersFromGroup = DelMultiMembersFromGroupImpl;
     g_groupManagerInstance->processData = ProcessBindDataImpl;
-    g_groupManagerInstance->getRegisterInfo = GetRegisterInfo;
+    g_groupManagerInstance->getRegisterInfo = GetRegisterInfoImpl;
     g_groupManagerInstance->checkAccessToGroup = CheckAccessToGroupImpl;
     g_groupManagerInstance->getPkInfoList = GetPkInfoListImpl;
     g_groupManagerInstance->getGroupInfoById = GetGroupInfoByIdImpl;

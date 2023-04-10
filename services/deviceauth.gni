@@ -16,6 +16,7 @@ import("//base/security/device_auth/deviceauth_env.gni")
 group_auth_path = "${services_path}/group_auth"
 authenticators_path = "${services_path}/authenticators"
 protocol_path = "${services_path}/protocol"
+cred_manager_path = "${services_path}/cred_manager"
 data_manager_path = "${services_path}/data_manager"
 dev_frameworks_path = "${services_path}/frameworks"
 group_manager_path = "${services_path}/group_manager"
@@ -29,6 +30,8 @@ deviceauth_defines = []
 inc_path = [
   "${inner_api_path}",
   "${frameworks_path}/inc",
+  "${cred_manager_path}/inc",
+  "${cred_manager_path}/inc/account_related",
   "${data_manager_path}/inc",
   "${group_auth_path}/inc",
   "${group_auth_path}/inc/account_unrelated_group_auth",
@@ -47,6 +50,7 @@ inc_path = [
   "${dev_frameworks_path}/inc/module",
   "${dev_frameworks_path}/inc/session",
   "${dev_frameworks_path}/inc/os_account_adapter",
+  "${dev_frameworks_path}/inc/plugin_adapter",
   "${dev_frameworks_path}/inc/task_manager",
   "${authenticators_path}/inc/account_related",
   "${authenticators_path}/inc/account_unrelated",
@@ -116,6 +120,10 @@ group_auth_files = [
 group_auth_account_unrelated_files = [ "${group_auth_path}/src/group_auth_manager/account_unrelated_group_auth/account_unrelated_group_auth.c" ]
 group_auth_account_unrelated_mock_files = [ "${group_auth_path}/src/group_auth_manager/account_unrelated_group_auth_mock/account_unrelated_group_auth_mock.c" ]
 group_auth_account_related_mock_files = [ "${group_auth_path}/src/group_auth_manager/account_related_group_auth_mock/account_related_group_auth_mock.c" ]
+
+account_related_cred_plugin_mock_files = [ "${cred_manager_path}/src/account_related_mock/account_related_cred_plugin_mock.c" ]
+
+cred_manager_files = [ "${cred_manager_path}/src/cred_manager.c" ]
 
 database_manager_files = [ "${data_manager_path}/src/data_manager.c" ]
 
@@ -202,8 +210,8 @@ if (enable_p2p_pake_dl_prime_len_256 == true) {
   deviceauth_defines += [ "P2P_PAKE_DL_PRIME_LEN_256" ]
 }
 
-deviceauth_files +=
-    group_auth_files + group_manager_files + database_manager_files
+deviceauth_files += group_auth_files + group_manager_files +
+                    database_manager_files + cred_manager_files
 
 account_unrelated_deviceauth =
     enable_p2p_bind_lite_protocol || enable_p2p_auth_lite_protocol ||
@@ -252,7 +260,8 @@ if (enable_account == true) {
   deviceauth_files += group_auth_account_related_mock_files +
                       group_manager_identical_account_mock_files +
                       group_manager_across_account_mock_files +
-                      authenticators_account_related_mock_files
+                      authenticators_account_related_mock_files +
+                      account_related_cred_plugin_mock_files
 }
 
 if (enable_soft_bus_channel == true) {

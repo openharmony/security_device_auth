@@ -221,6 +221,10 @@ typedef enum {
     } while (0)
 
 typedef enum {
+    ACCOUNT_RELATED_PLUGIN = 0x0010,
+} EnumCredPluginType;
+
+typedef enum {
     DAS_MODULE = 0x0001,
     ACCOUNT_MODULE = 0x0010,
 } EnumModuleType;

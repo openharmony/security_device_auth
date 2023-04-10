@@ -78,6 +78,12 @@ int32_t UnRegListenerImpl(const char *appId)
     return IsGroupSupport() ? GetGroupImplInstance()->unRegListener(appId) : HC_ERR_NOT_SUPPORT;
 }
 
+int32_t GetRegisterInfoImpl(const char *reqJsonStr, char **returnRegisterInfo)
+{
+    return IsGroupSupport() ? GetGroupImplInstance()->getRegisterInfo(reqJsonStr, returnRegisterInfo)
+                            : HC_ERR_NOT_SUPPORT;
+}
+
 int32_t CheckAccessToGroupImpl(int32_t osAccountId, const char *appId, const char *groupId)
 {
     return IsGroupSupport() ? GetGroupImplInstance()->checkAccessToGroup(osAccountId, appId, groupId)

@@ -17,6 +17,7 @@
 #include "alg_defs.h"
 #include "callback_manager.h"
 #include "common_defs.h"
+#include "cred_manager.h"
 #include "data_manager.h"
 #include "device_auth_defines.h"
 #include "group_operation_common.h"
@@ -172,7 +173,7 @@ static int32_t ImportSelfToken(int32_t osAccountId, CJson *jsonParams)
         LOGE("Failed to add deviceId to json!");
         return HC_ERR_JSON_ADD;
     }
-    return ProcessAccountCredentials(osAccountId, IMPORT_SELF_CREDENTIAL, credJson, NULL);
+    return ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId, IMPORT_SELF_CREDENTIAL, credJson, NULL);
 }
 
 static int32_t DelSelfToken(int32_t osAccountId, CJson *jsonParams)
@@ -182,7 +183,7 @@ static int32_t DelSelfToken(int32_t osAccountId, CJson *jsonParams)
         LOGE("Failed to get credential from json!");
         return HC_ERR_JSON_GET;
     }
-    return ProcessAccountCredentials(osAccountId, DELETE_SELF_CREDENTIAL, credJson, NULL);
+    return ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId, DELETE_SELF_CREDENTIAL, credJson, NULL);
 }
 
 static int32_t GenerateAddTokenParams(const CJson *jsonParams, CJson *addParams)
@@ -237,8 +238,8 @@ static int32_t DelDeviceToken(int32_t osAccountId, const TrustedDeviceEntry *ent
         FreeJson(delParams);
         return res;
     }
-    res = ProcessAccountCredentials(osAccountId, (isLocalDev ? DELETE_SELF_CREDENTIAL : DELETE_TRUSTED_CREDENTIALS),
-        delParams, NULL);
+    res = ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId,
+        (isLocalDev ? DELETE_SELF_CREDENTIAL : DELETE_TRUSTED_CREDENTIALS), delParams, NULL);
     FreeJson(delParams);
     return res;
 }
@@ -375,7 +376,7 @@ static int32_t AddDeviceAndToken(int32_t osAccountId, const CJson *jsonParams, C
     if (res != HC_SUCCESS) {
         return res;
     }
-    res = ProcessAccountCredentials(osAccountId, IMPORT_TRUSTED_CREDENTIALS, credential, NULL);
+    res = ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId, IMPORT_TRUSTED_CREDENTIALS, credential, NULL);
     if (res != HC_SUCCESS) {
         LOGE("Failed to import device token! res: %d", res);
         return res;

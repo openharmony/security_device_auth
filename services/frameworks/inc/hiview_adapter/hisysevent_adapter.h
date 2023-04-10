@@ -19,7 +19,6 @@
 #ifndef DEV_AUTH_HIVIEW_ENABLE
 
 #define DEV_AUTH_REPORT_CALL_EVENT(a, b, c, d)
-#define DEV_AUTH_REPORT_CORE_EVENT(a, b, c)
 
 #else
 
@@ -34,7 +33,6 @@
 #define AUTH_DEV_EVENT "AuthDevice"
 
 #define DEV_AUTH_REPORT_CALL_EVENT(a, b, c, d) DevAuthReportCallEvent(a, b, c, d)
-#define DEV_AUTH_REPORT_CORE_EVENT(a, b, c) DevAuthReportCoreEvent(a, b, c)
 
 #ifdef __cplusplus
 extern "C" {

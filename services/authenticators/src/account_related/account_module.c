@@ -18,7 +18,6 @@
 #include "account_multi_task_manager.h"
 #include "account_version_util.h"
 #include "alg_loader.h"
-#include "asy_token_manager.h"
 #include "clib_error.h"
 #include "clib_types.h"
 #include "common_defs.h"
@@ -27,23 +26,20 @@
 #include "json_utils.h"
 #include "pake_v2_auth_client_task.h"
 #include "pake_v2_auth_server_task.h"
-#include "sym_token_manager.h"
 
 #define ACCOUNT_CLIENT_FIRST_MESSAGE 0x0000
 #define ACCOUNT_CLIENT_STEP_MASK 0x000F
 
 typedef struct {
-    AuthModuleBase moduleBase;
+    AuthModuleBase base;
 } AccountModule;
 
-static AccountModule g_module;
-
-int32_t CheckAccountMsgRepeatability(const CJson *in)
+static bool IsAccountMsgNeedIgnore(const CJson *in)
 {
     int32_t opCode;
     if (GetIntFromJson(in, FIELD_OPERATION_CODE, &opCode) != CLIB_SUCCESS) {
         LOGE("Get opCode failed.");
-        return HC_ERR_JSON_GET;
+        return true;
     }
     const char *key = NULL;
     if (opCode == OP_BIND) {
@@ -52,19 +48,16 @@ int32_t CheckAccountMsgRepeatability(const CJson *in)
         key = FIELD_STEP;
     } else {
         LOGE("Invalid opCode: %d.", opCode);
-        return HC_ERR_INVALID_PARAMS;
+        return true;
     }
     uint32_t message;
-    if (GetIntFromJson(in, key, (int32_t *)&message) != CLIB_SUCCESS) {
-        LOGD("There is no message code."); // The first message of the client has no message code
-        return HC_SUCCESS;
+    if (GetIntFromJson(in, key, (int32_t *)&message) == CLIB_SUCCESS) {
+        if ((message & ACCOUNT_CLIENT_STEP_MASK) != ACCOUNT_CLIENT_FIRST_MESSAGE) {
+            LOGI("The message is repeated, ignore it, code: %u", message);
+            return true;
+        }
     }
-    if ((message & ACCOUNT_CLIENT_STEP_MASK) == ACCOUNT_CLIENT_FIRST_MESSAGE) {
-        return HC_SUCCESS;
-    }
-
-    LOGI("The message is repeated, ignore it, code: %u", message);
-    return HC_ERR_IGNORE_MSG;
+    return false;
 }
 
 static int32_t CreateAccountTask(int32_t *taskId, const CJson *in, CJson *out)
@@ -73,10 +66,8 @@ static int32_t CreateAccountTask(int32_t *taskId, const CJson *in, CJson *out)
         LOGE("Params is null in account task.");
         return HC_ERR_NULL_PTR;
     }
-    int32_t res = CheckAccountMsgRepeatability(in);
-    if (res != HC_SUCCESS) {
-        LOGE("The result of  CheckAccountMsgRepeatability is %x.", res);
-        return res;
+    if (IsAccountMsgNeedIgnore(in)) {
+        return HC_ERR_IGNORE_MSG;
     }
     AccountMultiTaskManager *authManager = GetAccountMultiTaskManager();
     if (authManager == NULL) {
@@ -92,7 +83,7 @@ static int32_t CreateAccountTask(int32_t *taskId, const CJson *in, CJson *out)
         LOGE("Create account related task failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
-    res = authManager->addTaskToManager(newTask);
+    int32_t res = authManager->addTaskToManager(newTask);
     if (res != HC_SUCCESS) {
         LOGE("Add new task into task manager failed, res: %d.", res);
         newTask->destroyTask(newTask);
@@ -127,110 +118,30 @@ static void DestroyAccountTask(int32_t taskId)
     authManager->deleteTaskFromManager(taskId);
 }
 
-static int32_t ProcessAsyTokens(int32_t osAccountId, int32_t opCode, CJson *in, CJson *out)
+static int32_t InitAccountModule(void)
 {
-    switch (opCode) {
-        case IMPORT_SELF_CREDENTIAL:
-        case IMPORT_TRUSTED_CREDENTIALS:
-            return GetAccountAuthTokenManager()->addToken(osAccountId, opCode, in);
-        case DELETE_SELF_CREDENTIAL:
-        case DELETE_TRUSTED_CREDENTIALS: {
-            const char *userId = GetStringFromJson(in, FIELD_USER_ID);
-            if (userId == NULL) {
-                LOGE("Failed to get user id.");
-                return HC_ERR_JSON_GET;
-            }
-            const char *deviceId = GetStringFromJson(in, FIELD_DEVICE_ID);
-            if (deviceId == NULL) {
-                LOGE("Failed to get deviceId from json!");
-                return HC_ERR_JSON_GET;
-            }
-            return GetAccountAuthTokenManager()->deleteToken(osAccountId, userId, deviceId);
-        }
-        case REQUEST_SIGNATURE:
-            if (out == NULL) {
-                LOGE("Params: out is null.");
-                return HC_ERR_NULL_PTR;
-            }
-            return GetAccountAuthTokenManager()->getRegisterProof(in, out);
-        default:
-            LOGE("Operation is not supported for: %d.", opCode);
-            return HC_ERR_NOT_SUPPORT;
-    }
-}
-
-static int32_t ProcessSymTokens(int32_t osAccountId, int32_t opCode, CJson *in, CJson *out)
-{
-    switch (opCode) {
-        case IMPORT_SELF_CREDENTIAL:
-        case IMPORT_TRUSTED_CREDENTIALS:
-            return GetSymTokenManager()->addToken(osAccountId, opCode, in);
-        case DELETE_SELF_CREDENTIAL:
-        case DELETE_TRUSTED_CREDENTIALS: {
-            const char *userId = GetStringFromJson(in, FIELD_USER_ID);
-            if (userId == NULL) {
-                LOGE("Failed to get userId from json!");
-                return HC_ERR_JSON_GET;
-            }
-            const char *deviceId = GetStringFromJson(in, FIELD_DEVICE_ID);
-            if (deviceId == NULL) {
-                LOGE("Failed to get deviceId from json!");
-                return HC_ERR_JSON_GET;
-            }
-            return GetSymTokenManager()->deleteToken(osAccountId, userId, deviceId);
-        }
-        default:
-            LOGE("Operation is not supported for: %d.", opCode);
-            return HC_ERR_NOT_SUPPORT;
-    }
-}
-
-static void DestroyAccountModule(AuthModuleBase *module)
-{
-    DestroyAccountMultiTaskManager();
-    DestroyTokenManager();
-    DestroySymTokenManager();
-    DestroyVersionInfos();
-    (void)memset_s(module, sizeof(AccountModule), 0, sizeof(AccountModule));
-}
-
-AuthModuleBase *CreateAccountModule(void)
-{
-    g_module.moduleBase.moduleType = ACCOUNT_MODULE;
-    g_module.moduleBase.createTask = CreateAccountTask;
-    g_module.moduleBase.processTask = ProcessAccountTask;
-    g_module.moduleBase.destroyTask = DestroyAccountTask;
-    g_module.moduleBase.destroyModule = DestroyAccountModule;
-
     InitVersionInfos();
     InitAccountMultiTaskManager();
-    InitTokenManager();
-    InitSymTokenManager();
-    return (AuthModuleBase *)&g_module;
+    return HC_SUCCESS;
 }
 
-bool IsAccountSupported(void)
+static void DestroyAccountModule(void)
 {
-    return true;
+    DestroyAccountMultiTaskManager();
+    DestroyVersionInfos();
 }
 
-int32_t ProcessAccountCredentials(int32_t osAccountId, int32_t opCode, CJson *in, CJson *out)
+static AccountModule g_module = {
+    .base.moduleType = ACCOUNT_MODULE,
+    .base.init = InitAccountModule,
+    .base.destroy = DestroyAccountModule,
+    .base.isMsgNeedIgnore = IsAccountMsgNeedIgnore,
+    .base.createTask = CreateAccountTask,
+    .base.processTask = ProcessAccountTask,
+    .base.destroyTask = DestroyAccountTask,
+};
+
+const AuthModuleBase *GetAccountModule(void)
 {
-    if (in == NULL) {
-        LOGE("The input param: in is null.");
-        return HC_ERR_NULL_PTR;
-    }
-    int32_t credentialType = INVALID_CRED;
-    if (GetIntFromJson(in, FIELD_CREDENTIAL_TYPE, &credentialType) != HC_SUCCESS) {
-        LOGE("Failed to get credentialType from json!");
-        return HC_ERR_JSON_GET;
-    }
-    if (credentialType == ASYMMETRIC_CRED) {
-        return ProcessAsyTokens(osAccountId, opCode, in, out);
-    } else if (credentialType == SYMMETRIC_CRED) {
-        return ProcessSymTokens(osAccountId, opCode, in, out);
-    } else {
-        LOGE("Invalid credential type! [CredType]: %d", credentialType);
-        return HC_ERR_NOT_SUPPORT;
-    }
+    return (const AuthModuleBase *)&g_module;
 }

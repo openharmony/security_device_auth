@@ -19,9 +19,9 @@
 #include "alg_defs.h"
 #include "callback_manager.h"
 #include "common_defs.h"
+#include "cred_manager.h"
 #include "data_manager.h"
 #include "device_auth_defines.h"
-#include "dev_auth_module_manager.h"
 #include "group_operation_common.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
@@ -308,7 +308,7 @@ static int32_t DelPeerDeviceToken(int32_t osAccountId, const TrustedDeviceEntry 
         FreeJson(delParams);
         return res;
     }
-    res = ProcessAccountCredentials(osAccountId, DELETE_TRUSTED_CREDENTIALS, delParams, NULL);
+    res = ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId, DELETE_TRUSTED_CREDENTIALS, delParams, NULL);
     FreeJson(delParams);
     return res;
 }
@@ -411,7 +411,7 @@ static int32_t AddDeviceAndToken(int32_t osAccountId, const CJson *jsonParams, C
     if (res != HC_SUCCESS) {
         return res;
     }
-    res = ProcessAccountCredentials(osAccountId, IMPORT_TRUSTED_CREDENTIALS, credential, NULL);
+    res = ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId, IMPORT_TRUSTED_CREDENTIALS, credential, NULL);
     if (res != HC_SUCCESS) {
         LOGE("Failed to import device token! res: %d", res);
         return res;

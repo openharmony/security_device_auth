@@ -47,6 +47,9 @@ authenticators_account_related_files = [
   "${services_path}/authenticators/src/account_related/auth/pake_v2_auth_task/pake_v2_auth_server_task.c",
 ]
 
+account_related_cred_plugin_files = [ "${services_path}/cred_manager/src/account_related/account_related_cred_plugin.c" ]
+
 account_related_files =
     group_auth_account_related_files + group_manager_identical_account_files +
-    group_manager_across_account_files + authenticators_account_related_files
+    group_manager_across_account_files + authenticators_account_related_files +
+    account_related_cred_plugin_files
