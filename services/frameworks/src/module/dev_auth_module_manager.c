@@ -228,24 +228,24 @@ int32_t InitModules(void)
     const AuthModuleBase *dasModule = GetDasModule();
     if (dasModule != NULL) {
         res = dasModule->init();
-        if (res == HC_SUCCESS) {
-            (void)g_authModuleVec.pushBack(&g_authModuleVec, &dasModule);
-            g_version.third |= dasModule->moduleType;
-        } else {
+        if (res != HC_SUCCESS) {
             LOGE("[ModuleMgr]: Init das module fail. [Res]: %d", res);
+            DestroyModules();
             return res;
         }
+        (void)g_authModuleVec.pushBack(&g_authModuleVec, &dasModule);
+        g_version.third |= dasModule->moduleType;
     }
     const AuthModuleBase *accountModule = GetAccountModule();
     if (accountModule != NULL) {
         res = accountModule->init();
-        if (res == HC_SUCCESS) {
-            (void)g_authModuleVec.pushBack(&g_authModuleVec, &accountModule);
-            g_version.third |= accountModule->moduleType;
-        } else {
+        if (res != HC_SUCCESS) {
             LOGE("[ModuleMgr]: Init account module fail. [Res]: %d", res);
+            DestroyModules();
             return res;
         }
+        (void)g_authModuleVec.pushBack(&g_authModuleVec, &accountModule);
+        g_version.third |= accountModule->moduleType;
     }
     LOGI("Init modules success!");
     return HC_SUCCESS;
