@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DEV_AUTH_DL_H
-#define DEV_AUTH_DL_H
+#ifndef DEV_AUTH_DYNAMIC_LOAD_H
+#define DEV_AUTH_DYNAMIC_LOAD_H
 
 #ifndef DEV_AUTH_PLUGIN_ENABLE
 

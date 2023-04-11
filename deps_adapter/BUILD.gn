@@ -91,7 +91,9 @@ if (defined(ohos_lite)) {
       defines = []
       if (enable_extend_plugin) {
         defines += [ "DEV_AUTH_PLUGIN_ENABLE" ]
-        sources += [ "${os_adapter_path}/impl/src/liteos/small/dev_auth_dl.c" ]
+        sources += [
+          "${os_adapter_path}/impl/src/liteos/small/dev_auth_dynamic_load.c",
+        ]
       }
 
       cflags = [ "-DHILOG_ENABLE" ]
@@ -137,7 +139,7 @@ if (defined(ohos_lite)) {
     defines = []
     if (enable_extend_plugin) {
       defines += [ "DEV_AUTH_PLUGIN_ENABLE" ]
-      sources += [ "${os_adapter_path}/impl/src/linux/dev_auth_dl.c" ]
+      sources += [ "${os_adapter_path}/impl/src/linux/dev_auth_dynamic_load.c" ]
     }
 
     cflags = [ "-DHILOG_ENABLE" ]

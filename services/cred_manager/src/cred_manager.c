@@ -77,12 +77,12 @@ int32_t AddCredPlugin(const CredPlugin *plugin)
         LOGE("[CredMgr]: Init cred plugin fail. [Res]: %d", res);
         return HC_ERR_INIT_FAILED;
     }
-    bool isNew = true;
+    bool isNeedReplace = false;
     uint32_t index;
     CredPlugin **pluginPtr;
     FOR_EACH_HC_VECTOR(g_credPluginVec, index, pluginPtr) {
         if ((*pluginPtr)->pluginName == plugin->pluginName) {
-            isNew = false;
+            isNeedReplace = true;
             break;
         }
     }
@@ -91,7 +91,7 @@ int32_t AddCredPlugin(const CredPlugin *plugin)
         plugin->destroy();
         return HC_ERR_ALLOC_MEMORY;
     }
-    if (!isNew) {
+    if (isNeedReplace) {
         LOGI("[CredMgr]: Replace cred plugin. [Name]: %d", plugin->pluginName);
         HC_VECTOR_POPELEMENT(&g_credPluginVec, pluginPtr, index);
     } else {
