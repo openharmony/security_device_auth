@@ -173,9 +173,6 @@ int32_t ServiceDevAuth::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
         LOGE("[IPC][C->S]: The proxy interface token is invalid!");
         return -1;
     }
-    if (CheckPermission() != HC_SUCCESS) {
-        return -1;
-    }
     int32_t ret = HC_ERR_IPC_UNKNOW_OPCODE;
     int32_t dataLen;
     int32_t methodId = 0;
@@ -187,6 +184,9 @@ int32_t ServiceDevAuth::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
     LOGI("request code %u", code);
     switch (code) {
         case DEV_AUTH_CALL_REQUEST:
+            if (CheckPermission() != HC_SUCCESS) {
+                return -1;
+            }
             ret = GetMethodId(data, methodId);
             if (ret != HC_SUCCESS) {
                 break;
