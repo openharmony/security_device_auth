@@ -85,7 +85,7 @@ void Join(struct HcThreadT *thread)
     void *status = NULL;
     LOGI("[OS]: pthread_join enter.");
     int res = pthread_join(thread->thread, &status);
-    LOGI("[OS]: pthread_join quit. [Res]: %d");
+    LOGI("[OS]: pthread_join quit. [Res]: %d", res);
     if (res != 0) {
         LOGE("[OS]: pthread_join fail. [Res]: %d", res);
     }

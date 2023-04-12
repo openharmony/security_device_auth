@@ -551,9 +551,9 @@ static int32_t AgreeSharedSecret(const KeyBuff *priKey, const KeyBuff *pubKey, A
 
     LOGI("[HUKS]: HksAgreeKey enter.");
     res = HksAgreeKey(paramSet, &priKeyBlob, &pubKeyBlob, &sharedKeyBlob);
-    LOGI("[HUKS]: HksAgreeKey quit. [Res]: %d");
+    LOGI("[HUKS]: HksAgreeKey quit. [Res]: %d", res);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksAgreeKey fail. [Res]: %d");
+        LOGE("[HUKS]: HksAgreeKey fail. [Res]: %d", res);
         HksFreeParamSet(&paramSet);
         return HAL_FAILED;
     }

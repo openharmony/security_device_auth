@@ -132,9 +132,7 @@ int32_t InitHcCond(HcCondition* hcCond, HcMutex* mutex)
 
     pthread_condattr_t attr;
     pthread_condattr_init(&attr);
-    LOGI("[OS]: pthread_cond_init enter.");
     int res = pthread_cond_init(&hcCond->cond, &attr);
-    LOGI("[OS]: pthread_cond_init quit. [Res]: %d", res);
     pthread_condattr_destroy(&attr);
     if (res != 0) {
         LOGE("[OS]: pthread_cond_init fail. [Res]: %d", res);
