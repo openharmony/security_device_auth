@@ -21,27 +21,43 @@
 #include "device_auth_defines.h"
 #include "hc_log.h"
 
-static const CredPlugin *GetExtendCredPlugin(void)
+#ifdef __CC_ARM                         /* ARM Compiler */
+    #define DEV_AUTH_WEAK               __weak
+#elif defined (__IAR_SYSTEMS_ICC__)     /* for IAR Compiler */
+    #define DEV_AUTH_WEAK               __weak
+#elif defined (__GNUC__)                /* GNU GCC Compiler */
+    #define DEV_AUTH_WEAK               __attribute__((weak))
+#else
+    #define DEV_AUTH_WEAK
+#endif
+
+DEV_AUTH_WEAK const CredPlugin *GetExtendCredPlugin(void)
 {
     return NULL;
 }
 
-static const AuthModuleBase *GetExtendAuthModulePlugin(void)
+DEV_AUTH_WEAK const AuthModuleBase *GetExtendAuthModulePlugin(void)
 {
     return NULL;
 }
 
 void LoadExtendPlugin(void)
 {
-    int32_t res = AddCredPlugin(GetExtendCredPlugin());
-    if (res != HC_SUCCESS) {
-        LOGE("[Plugin]: init plugin fail. [Res]: %d", res);
+    const CredPlugin *credPlugin = GetExtendCredPlugin();
+    const AuthModuleBase *authModulePlugin = GetExtendAuthModulePlugin();
+    if (credPlugin == NULL || authModulePlugin == NULL) {
+        LOGI("[Plugin]: no need to load plugins.");
         return;
     }
-    res = AddAuthModulePlugin(GetExtendAuthModulePlugin());
+    int32_t res = AddCredPlugin(credPlugin);
     if (res != HC_SUCCESS) {
-        LOGE("[Plugin]: init plugin fail. [Res]: %d", res);
-        DelCredPlugin(GetExtendCredPlugin()->pluginName);
+        LOGE("[Plugin]: init cred plugin fail. [Res]: %d", res);
+        return;
+    }
+    res = AddAuthModulePlugin(authModulePlugin);
+    if (res != HC_SUCCESS) {
+        LOGE("[Plugin]: init auth module plugin fail. [Res]: %d", res);
+        DelCredPlugin(credPlugin->pluginName);
         return;
     }
     LOGI("[Plugin]: load extend plugin success.");
@@ -49,7 +65,13 @@ void LoadExtendPlugin(void)
 
 void UnloadExtendPlugin(void)
 {
-    DelAuthModulePlugin(authModulePlugin()->moduleType);
-    DelCredPlugin(credPlugin()->pluginName);
+    const CredPlugin *credPlugin = GetExtendCredPlugin();
+    const AuthModuleBase *authModulePlugin = GetExtendAuthModulePlugin();
+    if (credPlugin == NULL || authModulePlugin == NULL) {
+        LOGI("[Plugin]: no need to unload plugins.");
+        return;
+    }
+    DelAuthModulePlugin(authModulePlugin->moduleType);
+    DelCredPlugin(credPlugin->pluginName);
     LOGI("[Plugin]: unload extend plugin success.");
 }
