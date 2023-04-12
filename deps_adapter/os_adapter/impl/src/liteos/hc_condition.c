@@ -54,9 +54,7 @@ int32_t InitHcCond(HcCondition* hcCond, HcMutex* mutex)
     hcCond->notifyWithoutLock = HcCondNotify;
 
     // init the signal value to zero
-    LOGI("[OS]: sem_init enter.");
     int res = sem_init(&hcCond->sem, 0, 0);
-    LOGI("[OS]: sem_init quit. [Res]: %d", res);
     if (res != 0) {
         LOGE("[OS]: sem_init fail. [Res]: %d", res);
     }
