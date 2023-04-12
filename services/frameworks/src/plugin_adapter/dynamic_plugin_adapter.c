@@ -32,6 +32,61 @@ typedef const AuthModuleBase *(*GetAuthModulePluginFunc)(void);
 
 static void *g_handle = NULL;
 
+static const CredPlugin *GetCredPluginFromLib(void *handle)
+{
+    GetCredPluginFunc getCredPluginFunc = (GetCredPluginFunc)DevAuthDlsym(handle, CRED_PLUGIN_FUNC);
+    if (getCredPluginFunc == NULL) {
+        LOGE("[Plugin]: get func from dynamic plugin fail.");
+        return NULL;
+    }
+    return getCredPluginFunc();
+}
+
+static const AuthModuleBase *GetAuthModulePluginFromLib(void *handle)
+{
+    GetAuthModulePluginFunc getAuthModulePluginFunc =
+        (GetAuthModulePluginFunc)DevAuthDlsym(handle, AUTH_MODULE_PLUGIN_FUNC);
+    if (getAuthModulePluginFunc == NULL) {
+        LOGE("[Plugin]: get func from dynamic plugin fail.");
+        return NULL;
+    }
+    return getAuthModulePluginFunc();
+}
+
+static int32_t LoadDynamicPlugin(void *handle)
+{
+    const CredPlugin *credPlugin = GetCredPluginFromLib(handle);
+    const AuthModuleBase *authModulePlugin = GetAuthModulePluginFromLib(handle);
+    if (credPlugin == NULL || authModulePlugin == NULL) {
+        LOGE("[Plugin]: no need to load plugins.");
+        return HC_ERROR;
+    }
+    int32_t res = AddCredPlugin(credPlugin);
+    if (res != HC_SUCCESS) {
+        LOGE("[Plugin]: init cred plugin fail. [Res]: %d", res);
+        return res;
+    }
+    res = AddAuthModulePlugin(authModulePlugin);
+    if (res != HC_SUCCESS) {
+        LOGE("[Plugin]: init auth module plugin fail. [Res]: %d", res);
+        DelCredPlugin(credPlugin->pluginName);
+        return res;
+    }
+    return HC_SUCCESS;
+}
+
+static void UnloadDynamicPlugin(void *handle)
+{
+    const CredPlugin *credPlugin = GetCredPluginFromLib(handle);
+    const AuthModuleBase *authModulePlugin = GetAuthModulePluginFromLib(handle);
+    if (credPlugin == NULL || authModulePlugin == NULL) {
+        LOGE("[Plugin]: no need to unload plugins.");
+        return;
+    }
+    DelAuthModulePlugin(authModulePlugin->moduleType);
+    DelCredPlugin(credPlugin->pluginName);
+}
+
 void LoadExtendPlugin(void)
 {
     if (g_handle != NULL) {
@@ -43,25 +98,7 @@ void LoadExtendPlugin(void)
         LOGW("[Plugin]: open dynamic plugin fail.");
         return;
     }
-    GetCredPluginFunc credPlugin = (GetCredPluginFunc)DevAuthDlsym(g_handle, CRED_PLUGIN_FUNC);
-    GetAuthModulePluginFunc authModulePlugin = (GetAuthModulePluginFunc)DevAuthDlsym(g_handle, AUTH_MODULE_PLUGIN_FUNC);
-    if ((credPlugin == NULL) || (authModulePlugin == NULL)) {
-        LOGE("[Plugin]: get func from dynamic plugin fail.");
-        DevAuthDlclose(g_handle);
-        g_handle = NULL;
-        return;
-    }
-    int32_t res = AddCredPlugin(credPlugin());
-    if (res != HC_SUCCESS) {
-        LOGE("[Plugin]: init plugin fail. [Res]: %d", res);
-        DevAuthDlclose(g_handle);
-        g_handle = NULL;
-        return;
-    }
-    res = AddAuthModulePlugin(authModulePlugin());
-    if (res != HC_SUCCESS) {
-        LOGE("[Plugin]: init plugin fail. [Res]: %d", res);
-        DelCredPlugin(credPlugin()->pluginName);
+    if (LoadDynamicPlugin(g_handle) != HC_SUCCESS) {
         DevAuthDlclose(g_handle);
         g_handle = NULL;
         return;
@@ -75,10 +112,7 @@ void UnloadExtendPlugin(void)
         LOGE("[Plugin]: The plugin has not been loaded.");
         return;
     }
-    GetCredPluginFunc credPlugin = (GetCredPluginFunc)DevAuthDlsym(g_handle, CRED_PLUGIN_FUNC);
-    GetAuthModulePluginFunc authModulePlugin = (GetAuthModulePluginFunc)DevAuthDlsym(g_handle, AUTH_MODULE_PLUGIN_FUNC);
-    DelAuthModulePlugin(authModulePlugin()->moduleType);
-    DelCredPlugin(credPlugin()->pluginName);
+    UnloadDynamicPlugin(g_handle);
     DevAuthDlclose(g_handle);
     g_handle = NULL;
     LOGI("[Plugin]: unload extend plugin success.");

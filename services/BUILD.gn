@@ -32,6 +32,16 @@ if (os_level == "mini" || os_level == "small") {
       "${dev_frameworks_path}/inc/hiview_adapter",
     ]
     sources = deviceauth_files
+    defines = [ "HILOG_ENABLE" ]
+    defines += deviceauth_defines
+    deps = [
+      "${deps_adapter_path}:${hal_module_name}",
+      "//build/lite/config/component/cJSON:cjson_shared",
+      "//commonlibrary/utils_lite:utils",
+    ]
+    if (enable_soft_bus_channel) {
+      deps += [ "//foundation/communication/dsoftbus/sdk:softbus_client" ]
+    }
     if (enable_extend_plugin) {
       defines += [ "DEV_AUTH_PLUGIN_ENABLE" ]
       if (os_level == "mini") {
@@ -44,16 +54,6 @@ if (os_level == "mini" || os_level == "small") {
         ]
       }
     }
-    deps = [
-      "${deps_adapter_path}:${hal_module_name}",
-      "//build/lite/config/component/cJSON:cjson_shared",
-      "//commonlibrary/utils_lite:utils",
-    ]
-    if (enable_soft_bus_channel) {
-      deps += [ "//foundation/communication/dsoftbus/sdk:softbus_client" ]
-    }
-    defines = [ "HILOG_ENABLE" ]
-    defines += deviceauth_defines
     if (board_toolchain_type == "iccarm" && os_level == "mini") {
       cflags = [
         "--diag_suppress",
