@@ -30,7 +30,7 @@ using namespace std;
 using namespace testing::ext;
 
 namespace {
-#define TEST_HKS_DATA_PATH DEVICE_AUTH_TEST_HKS_DATA_PATH "/maindata"
+#define TEST_HKS_DATA_PATH DEVICE_AUTH_TEST_HKS_DATA_PATH "/maindata/+0+0+0+0"
 
 static const std::string TEST_SYM_USER_ID = "1234ABCD";
 static const std::string TEST_SYM_DEVICE_ID = "TestAuthId";
