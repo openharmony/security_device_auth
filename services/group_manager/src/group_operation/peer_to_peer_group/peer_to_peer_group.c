@@ -280,7 +280,7 @@ static int32_t AddAuthIdAndUserTypeToParams(int32_t osAccountId, const char *gro
     }
 
     if (GetTrustedDevInfoById(osAccountId, localUdid, true, groupId, deviceInfo) != HC_SUCCESS) {
-        LOGE("Failed to obtain the device information from the database!");
+        LOGE("No local device information found in the group, udid changed.");
         DestroyDeviceEntry(deviceInfo);
         return HC_ERR_DB;
     }
@@ -301,11 +301,7 @@ static int32_t AddAuthIdAndUserTypeToParams(int32_t osAccountId, const char *gro
 
 static int32_t DelGroupAndSelfKeyInfo(int32_t osAccountId, const char *groupId, CJson *jsonParams)
 {
-    int32_t result = AddAuthIdAndUserTypeToParams(osAccountId, groupId, jsonParams);
-    if (result != HC_SUCCESS) {
-        return result;
-    }
-    result = DelGroupFromDb(osAccountId, groupId);
+    int32_t result = DelGroupFromDb(osAccountId, groupId);
     if (result != HC_SUCCESS) {
         return result;
     }
@@ -313,11 +309,14 @@ static int32_t DelGroupAndSelfKeyInfo(int32_t osAccountId, const char *groupId, 
      * If the group has been disbanded from the database but the key pair fails to be deleted,
      * we still believe we succeeded in disbanding the group. Only logs need to be printed.
      */
-    result = ProcessKeyPair(DELETE_KEY_PAIR, jsonParams, groupId);
+    result = AddAuthIdAndUserTypeToParams(osAccountId, groupId, jsonParams);
+    if (result == HC_SUCCESS) {
+        result = ProcessKeyPair(DELETE_KEY_PAIR, jsonParams, groupId);
+    }
     if (result != HC_SUCCESS) {
-        LOGD("delete self key fail! res: %d", result);
+        LOGW("delete self key fail! res: %d", result);
     } else {
-        LOGD("delete self key success!");
+        LOGI("delete self key success!");
     }
     return HC_SUCCESS;
 }

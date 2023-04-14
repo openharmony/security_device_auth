@@ -58,9 +58,9 @@ void DevAuthLogPrint(DevAuthLogLevel level, const char *funName, const char *fmt
 #include <stdio.h>
 #include <stdlib.h>
 
-#define LOGD(fmt, ...) printf("[D][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
-#define LOGI(fmt, ...) printf("[I][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
-#define LOGW(fmt, ...) printf("[W][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
-#define LOGE(fmt, ...) printf("[E][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
+#define LOGD(fmt, ...) printf("D [DEVAUTH]: %s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
+#define LOGI(fmt, ...) printf("I [DEVAUTH]: %s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
+#define LOGW(fmt, ...) printf("W [DEVAUTH]: %s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
+#define LOGE(fmt, ...) printf("E [DEVAUTH]: %s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
 #endif
 #endif

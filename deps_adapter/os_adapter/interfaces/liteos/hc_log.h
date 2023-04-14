@@ -19,9 +19,9 @@
 #include <inttypes.h>
 #include "log.h"
 
-#define LOGD(fmt, ...) HILOG_DEBUG(HILOG_MODULE_SCY, fmt, ##__VA_ARGS__)
-#define LOGI(fmt, ...) HILOG_INFO(HILOG_MODULE_SCY, fmt, ##__VA_ARGS__)
-#define LOGW(fmt, ...) HILOG_WARN(HILOG_MODULE_SCY, fmt, ##__VA_ARGS__)
-#define LOGE(fmt, ...) HILOG_ERROR(HILOG_MODULE_SCY, fmt, ##__VA_ARGS__)
+#define LOGD(fmt, ...) HILOG_DEBUG(HILOG_MODULE_SCY, "[DEVAUTH]: %{public}s: " fmt, __func__, ##__VA_ARGS__)
+#define LOGI(fmt, ...) HILOG_INFO(HILOG_MODULE_SCY, "[DEVAUTH]: %{public}s: " fmt, __func__, ##__VA_ARGS__)
+#define LOGW(fmt, ...) HILOG_WARN(HILOG_MODULE_SCY, "[DEVAUTH]: %{public}s: " fmt, __func__, ##__VA_ARGS__)
+#define LOGE(fmt, ...) HILOG_ERROR(HILOG_MODULE_SCY, "[DEVAUTH]: %{public}s: " fmt, __func__, ##__VA_ARGS__)
 
 #endif
