@@ -170,7 +170,7 @@ typedef enum {
 #define CHECK_PTR_RETURN_NULL(ptr, paramTag) \
     do { \
         if ((ptr) == NULL) { \
-            LOGE("%s is null ptr", (paramTag)); \
+            LOGE(paramTag " is null ptr"); \
             return NULL; \
         } \
     } while (0)
@@ -178,7 +178,7 @@ typedef enum {
 #define CHECK_PTR_RETURN_ERROR_CODE(ptr, paramTag) \
     do { \
         if ((ptr) == NULL) { \
-            LOGE("%s is null ptr", (paramTag)); \
+            LOGE(paramTag " is null ptr"); \
             return HC_ERR_NULL_PTR; \
         } \
     } while (0)
@@ -186,7 +186,7 @@ typedef enum {
 #define CHECK_PTR_RETURN_NONE(ptr, paramTag) \
         do { \
             if ((ptr) == NULL) { \
-                LOGE("%s is null ptr", (paramTag)); \
+                LOGE(paramTag " is null ptr"); \
                 return; \
             } \
         } while (0)
@@ -201,7 +201,7 @@ typedef enum {
 #define GOTO_IF_CHECK_NULL(ptr, paramTag) \
     do { \
         if ((ptr) == NULL) { \
-            LOGE("%s is null ptr", (paramTag)); \
+            LOGE(paramTag " is null ptr"); \
             goto ERR; \
         } \
     } while (0)
