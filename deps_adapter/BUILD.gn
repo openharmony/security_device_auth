@@ -103,10 +103,10 @@ if (defined(ohos_lite)) {
         "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk",
         "//base/startup/init/interfaces/innerkits:libbegetutil",
         "//build/lite/config/component/cJSON:cjson_shared",
-        "//build/lite/config/component/openssl:openssl_shared",
         "//commonlibrary/utils_lite:utils",
         "//third_party/bounds_checking_function:libsec_shared",
         "//third_party/mbedtls:mbedtls_shared",
+        "//third_party/openssl/ohos_lite:openssl_shared",
       ]
     }
   }
