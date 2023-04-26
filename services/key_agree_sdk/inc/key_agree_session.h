@@ -35,7 +35,7 @@
 #define CHECK_PTR_RETURN_ERROR_CODE(ptr, paramTag) \
     do { \
         if ((ptr) == NULL) { \
-            LOGE("%s is null ptr", (paramTag)); \
+            LOGE(paramTag " is null ptr"); \
             return HC_ERR_NULL_PTR; \
         } \
     } while (0)
