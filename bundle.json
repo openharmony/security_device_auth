@@ -61,7 +61,8 @@
               "header_base": "//base/security/device_auth/interfaces/inner_api",
               "header_files": [
                 "device_auth_defines.h",
-                "device_auth.h"
+                "device_auth.h",
+                "device_auth_ext.h"
               ]
             }
           }
