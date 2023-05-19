@@ -29,7 +29,7 @@ static int32_t InitAccountLifecyclePluginCtx(void)
         return HC_ERROR;
     }
     const DeviceGroupManager *gmInstace = GetGmInstance();
-    if(gmInstace == NULL) {
+    if (gmInstace == NULL) {
         LOGE("[ACCOUNT_LIFE_PLUGIN]: Gm instance is null.");
         HcFree(g_accountPluginCtx);
         g_accountPluginCtx = NULL;

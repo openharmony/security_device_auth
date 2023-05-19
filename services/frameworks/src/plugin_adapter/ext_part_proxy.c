@@ -30,10 +30,10 @@ static int32_t ParsePlugins(const ExtPartProxy *pluginProxy)
     ExtPluginNode *current =  pluginList;
     while (current != NULL) {
         switch (current->plugin.pluginType) {
-            case EXT_PLUGIN_ACCT_AUTH:
+            case EXT_PLUGIN_ACCT_LIFECYCLE:
                 SetAccountLifecyclePlugin(NULL, (AccountLifecyleExtPlug *)(&current->plugin));
                 break;
-            case EXT_PLUGIN_ACCT_LIFECYCLE:
+            case EXT_PLUGIN_ACCT_AUTH:
                 SetAccountAuthPlugin(NULL, (AccountAuthExtPlug *)(&current->plugin));
                 break;
             default:
