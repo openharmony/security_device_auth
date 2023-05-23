@@ -82,6 +82,7 @@ ohos_unittest("deviceauth_llt") {
 
   sources += [
     "source/creds_manager_test.cpp",
+    "source/device_auth_ext_mock.c",
     "source/deviceauth_standard_test.cpp",
     "source/group_operation_common_test.cpp",
     "source/iso_auth_task_test.cpp",
