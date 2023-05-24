@@ -1,5 +1,5 @@
 {
-    "name": "@ohos/deviceauth",
+    "name": "@ohos/device_auth",
     "version": "3.1",
     "description": "The device authentication module belongs to the security subsystem of OpenHarmony. It manages the entire lifecycle of trust relationships between devices.",
     "publishAs": "code-segment",
@@ -24,25 +24,25 @@
           "small",
           "mini"
         ],
-      "rom": "500KB",
-      "ram": "500KB",
+      "rom": "4096KB",
+      "ram": "4096KB",
       "deps": {
         "components": [
-          "dsoftbus",
-          "safwk",
-          "os_account",
           "access_token",
-          "security",
-          "common",
-          "utils_base",
+          "c_utils",
+          "dsoftbus",
           "hiviewdfx_hilog_native",
           "hisysevent_native",
+          "hitrace_native",
+          "huks",
+          "init",
+          "os_account",
           "samgr",
           "ipc"
         ],
         "third_party": [
-          "cJSON",
           "bounds_checking_function",
+          "cJSON",
           "mbedtls",
           "openssl"
         ]
