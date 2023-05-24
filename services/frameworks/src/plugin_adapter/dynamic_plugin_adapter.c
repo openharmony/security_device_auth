@@ -99,7 +99,6 @@ static int32_t LoadDynamicPlugin(void *handle)
         res = AddAuthModulePlugin(authModulePlugin);
         if (res != HC_SUCCESS) {
             LOGE("[Plugin]: init auth module plugin fail. [Res]: %d", res);
-            DelCredPlugin(credPlugin->pluginName);
             return res;
         }
     }
@@ -108,8 +107,6 @@ static int32_t LoadDynamicPlugin(void *handle)
         res = AddExtPlugin(pluginFunc);
         if (res != HC_SUCCESS) {
             LOGE("[Plugin]: init ext plugin fail. [Res]: %d", res);
-            DelCredPlugin(credPlugin->pluginName);
-            DelAuthModulePlugin(authModulePlugin->moduleType);
             return res;
         }
     }
@@ -120,12 +117,12 @@ static void UnloadDynamicPlugin(void *handle)
 {
     const CredPlugin *credPlugin = GetCredPluginFromLib(handle);
     const AuthModuleBase *authModulePlugin = GetAuthModulePluginFromLib(handle);
-    if (credPlugin == NULL || authModulePlugin == NULL) {
-        LOGE("[Plugin]: no need to unload plugins.");
-        return;
+    if (credPlugin != NULL) {
+        DelCredPlugin(credPlugin->pluginName);
     }
-    DelAuthModulePlugin(authModulePlugin->moduleType);
-    DelCredPlugin(credPlugin->pluginName);
+    if (authModulePlugin != NULL) {
+        DelAuthModulePlugin(authModulePlugin->moduleType);
+    }
 }
 
 void LoadExtendPlugin(void)

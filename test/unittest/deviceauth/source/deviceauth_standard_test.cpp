@@ -22,6 +22,7 @@
 #include "common_defs.h"
 #include "device_auth.h"
 #include "device_auth_defines.h"
+#include "device_auth_ext.h"
 #include "hc_dev_info_mock.h"
 #include "json_utils_mock.h"
 #include "json_utils.h"
@@ -3620,5 +3621,48 @@ HWTEST_F(DevAuthTest, DevAuthTest010, TestSize.Level0)
         }
     }
     DestroyDeviceAuthService();
+}
+
+class ExtPartTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+    ExtPart *extPart;
+};
+
+void ExtPartTest::SetUpTestCase() {}
+void ExtPartTest::TearDownTestCase() {}
+
+void ExtPartTest::SetUp()
+{
+    int ret = InitDeviceAuthService();
+    EXPECT_EQ(ret, HC_SUCCESS);
+    extPart = reinterpret_cast<ExtPart *>(HcMalloc(sizeof(ExtPart), 0));
+    ASSERT_NE(extPart, nullptr);
+}
+
+void ExtPartTest::TearDown()
+{
+    DestroyDeviceAuthService();
+    HcFree(extPart);
+}
+
+HWTEST_F(ExtPartTest, ExtPartTestTest001, TestSize.Level0)
+{
+    int ret = InitExtPart(nullptr, extPart);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(ExtPartTest, ExtPartTestTest002, TestSize.Level0)
+{
+    ExtPluginList list = GetExtPlugins(extPart);
+    ASSERT_NE(list, nullptr);
+}
+
+HWTEST_F(ExtPartTest, ExtPartTestTest003, TestSize.Level0)
+{
+    DestroyExtPart(extPart);
 }
 }
