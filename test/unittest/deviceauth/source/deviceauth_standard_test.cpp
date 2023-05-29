@@ -3664,5 +3664,6 @@ HWTEST_F(ExtPartTest, ExtPartTestTest002, TestSize.Level0)
 HWTEST_F(ExtPartTest, ExtPartTestTest003, TestSize.Level0)
 {
     DestroyExtPart(extPart);
+    ASSERT_TRUE(extPart->instance == nullptr);
 }
 }

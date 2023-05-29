@@ -99,6 +99,7 @@ void DestroyExtPart(ExtPart *extPart)
     LOGI("DestroyExtPart.");
     if (extPart != NULL) {
         HcFree(extPart->instance);
+        extPart->instance = NULL;
     }
     DestroyList(g_list);
 }
