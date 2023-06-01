@@ -362,7 +362,7 @@ static int32_t CheckPeerDeviceStatus(int32_t osAccountId, const char *groupId, c
 {
     const char *peerAuthId = GetStringFromJson(jsonParams, FIELD_DELETE_ID);
     if (peerAuthId == NULL) {
-        LOGE("Failed to get peerUdid from jsonParams!");
+        LOGE("Failed to get peerAuthId from jsonParams!");
         return HC_ERR_JSON_GET;
     }
     TrustedDeviceEntry *deviceInfo = CreateDeviceEntry();

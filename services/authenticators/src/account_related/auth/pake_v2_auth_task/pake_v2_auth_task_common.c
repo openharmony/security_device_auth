@@ -431,18 +431,6 @@ ERR:
     return HC_ERR_AUTH_INTERNAL;
 }
 
-static void FreeUint8Buff(Uint8Buff *buff)
-{
-    if (buff == NULL) {
-        return;
-    }
-    if (buff->val != NULL) {
-        HcFree(buff->val);
-        buff->val = NULL;
-    }
-    buff->length = 0;
-}
-
 void DestroyPakeAuthParams(PakeAuthParams *params)
 {
     if (params == NULL) {

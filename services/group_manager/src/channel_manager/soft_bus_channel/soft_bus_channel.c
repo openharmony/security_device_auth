@@ -18,18 +18,16 @@
 #include "common_defs.h"
 #include "device_auth.h"
 #include "device_auth_defines.h"
+#include "dev_session_mgr.h"
 #include "group_manager.h"
 #include "hc_log.h"
 #include "inner_session.h"
 #include "session.h"
-#include "session_manager.h"
 #include "task_manager.h"
 
 typedef struct {
     HcTaskBase base;
     int64_t requestId;
-    int64_t channelId;
-    CJson *params;
 } SoftBusTask;
 
 typedef struct {
@@ -97,16 +95,21 @@ static void DoOnChannelOpened(HcTaskBase *baseTask)
         LOGE("The input task is NULL!");
         return;
     }
-    LOGI("[Start]: DoOnChannelOpened!");
     SoftBusTask *task = (SoftBusTask *)baseTask;
-    OnChannelOpened(task->requestId, task->channelId);
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(task->requestId);
+    LOGI("[Start]: DoOnChannelOpened!");
+    int32_t res = StartDevSession(task->requestId);
+    if (res != HC_SUCCESS) {
+        LOGE("start session fail.[Res]: %d", res);
+        CloseDevSession(task->requestId);
+    }
 }
 
-static void InitSoftBusTask(SoftBusTask *task, int64_t requestId, int64_t channelId)
+static void InitSoftBusTask(SoftBusTask *task, int64_t requestId)
 {
     task->base.doAction = DoOnChannelOpened;
     task->base.destroy = NULL;
-    task->channelId = channelId;
     task->requestId = requestId;
 }
 
@@ -155,7 +158,7 @@ static bool IsServer(int sessionId)
 static int OnChannelOpenedCb(int sessionId, int result)
 {
     if (IsServer(sessionId)) {
-        LOGD("Peer device open channel!");
+        LOGI("Peer device open channel!");
         return HC_SUCCESS;
     }
     int64_t requestId = 0;
@@ -165,23 +168,23 @@ static int OnChannelOpenedCb(int sessionId, int result)
     }
     if (result != HC_SUCCESS) {
         LOGE("[SoftBus][Out]: Failed to open channel! res: %d", result);
-        DestroySession(requestId);
+        CloseDevSession(requestId);
         return HC_ERR_SOFT_BUS;
     }
-    LOGD("[Start]: OnChannelOpened! [ReqId]: %" PRId64 ", [ChannelId]: %d", requestId, sessionId);
+    LOGI("[Start]: OnChannelOpened! [ReqId]: %" PRId64 ", [ChannelId]: %d", requestId, sessionId);
     SoftBusTask *task = (SoftBusTask *)HcMalloc(sizeof(SoftBusTask), 0);
     if (task == NULL) {
         LOGE("Failed to allocate task memory!");
-        DestroySession(requestId);
+        CloseDevSession(requestId);
         return HC_ERR_ALLOC_MEMORY;
     }
-    InitSoftBusTask(task, requestId, sessionId);
+    InitSoftBusTask(task, requestId);
     if (PushTask((HcTaskBase *)task) != HC_SUCCESS) {
-        DestroySession(requestId);
         HcFree(task);
+        CloseDevSession(requestId);
         return HC_ERR_INIT_TASK_FAIL;
     }
-    LOGD("[End]: OnChannelOpened!");
+    LOGI("[End]: OnChannelOpened!");
     return HC_SUCCESS;
 }
 
@@ -200,7 +203,7 @@ static void OnBytesReceivedCb(int sessionId, const void *data, unsigned int data
         LOGE("Invalid input params!");
         return;
     }
-    LOGD("[Start]: OnMsgReceived! [ChannelId]: %d", sessionId);
+    LOGI("[Start]: OnMsgReceived! [ChannelId]: %d", sessionId);
     int64_t requestId = DEFAULT_REQUEST_ID;
     char *recvDataStr = GenRecvData(sessionId, data, dataLen, &requestId);
     if (recvDataStr == NULL) {
@@ -216,9 +219,9 @@ static int32_t OpenSoftBusChannel(const char *connectParams, int64_t requestId, 
         LOGE("The input connectParams or returnChannelId is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    LOGD("[SoftBus][In]: OpenChannel!");
+    LOGI("[SoftBus][In]: OpenChannel!");
     int64_t channelId = (int64_t)OpenAuthSession(GROUP_MANAGER_PACKAGE_NAME, NULL, 0, connectParams);
-    LOGD("[SoftBus][Out]: OpenChannel! channelId: %" PRId64, channelId);
+    LOGI("[SoftBus][Out]: OpenChannel! channelId: %" PRId64, channelId);
     /* If the value of channelId is less than 0, the soft bus fails to open the channel */
     if (channelId < 0) {
         LOGE("Failed to open soft bus channel!");
@@ -238,16 +241,16 @@ static void CloseSoftBusChannel(int64_t channelId)
         return;
     }
     RemoveChannelEntry(channelId);
-    LOGD("[SoftBus][In]: CloseSession!");
+    LOGI("[SoftBus][In]: CloseSession!");
     CloseSession(channelId);
-    LOGD("[SoftBus][Out]: CloseSession!");
+    LOGI("[SoftBus][Out]: CloseSession!");
 }
 
 static int32_t SendSoftBusMsg(int64_t channelId, const uint8_t *data, uint32_t dataLen)
 {
-    LOGD("[SoftBus][In]: SendMsg!");
+    LOGI("[SoftBus][In]: SendMsg!");
     int32_t res = SendBytes(channelId, data, dataLen);
-    LOGD("[SoftBus][Out]: SendMsg! res: %d", res);
+    LOGI("[SoftBus][Out]: SendMsg! res: %d", res);
     if (res != HC_SUCCESS) {
         LOGE("An error occurs when the softbus sends data!");
         return HC_ERR_SOFT_BUS;
@@ -257,9 +260,9 @@ static int32_t SendSoftBusMsg(int64_t channelId, const uint8_t *data, uint32_t d
 
 static void NotifySoftBusBindResult(int64_t channelId)
 {
-    LOGD("[SoftBus][In]: NotifyAuthSuccess!");
+    LOGI("[SoftBus][In]: NotifyAuthSuccess!");
     NotifyAuthSuccess(channelId);
-    LOGD("[SoftBus][Out]: NotifyAuthSuccess!");
+    LOGI("[SoftBus][Out]: NotifyAuthSuccess!");
 }
 
 SoftBus g_softBus = {
@@ -291,9 +294,9 @@ int32_t InitSoftBusChannelModule(void)
         .OnBytesReceived = OnBytesReceivedCb,
         .OnMessageReceived = NULL
     };
-    LOGD("[SoftBus][In]: CreateSessionServer!");
+    LOGI("[SoftBus][In]: CreateSessionServer!");
     int32_t res = CreateSessionServer(GROUP_MANAGER_PACKAGE_NAME, GROUP_MANAGER_PACKAGE_NAME, &softBusListener);
-    LOGD("[SoftBus][Out]: CreateSessionServer! res: %d", res);
+    LOGI("[SoftBus][Out]: CreateSessionServer! res: %d", res);
     return res;
 }
 
@@ -307,9 +310,9 @@ void DestroySoftBusChannelModule(void)
         HcFree(g_channelMutex);
         g_channelMutex = NULL;
     }
-    LOGD("[SoftBus][In]: RemoveSessionServer!");
+    LOGI("[SoftBus][In]: RemoveSessionServer!");
     int32_t res = RemoveSessionServer(GROUP_MANAGER_PACKAGE_NAME, GROUP_MANAGER_PACKAGE_NAME);
-    LOGD("[SoftBus][Out]: RemoveSessionServer! res: %d", res);
+    LOGI("[SoftBus][Out]: RemoveSessionServer! res: %d", res);
 }
 
 SoftBus *GetSoftBusInstance(void)

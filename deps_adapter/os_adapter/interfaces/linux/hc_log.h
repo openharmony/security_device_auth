@@ -16,6 +16,30 @@
 #ifndef HC_LOG_H
 #define HC_LOG_H
 
+typedef enum {
+    NORMAL_MODE = 0,
+    TRACE_MODE = 1,
+} LogMode;
+
+#define DESENSITIZATION_LEN 12
+#define DEV_AUTH_ZERO 0
+#define DEV_AUTH_ONE 1
+#define DEV_AUTH_TWO 2
+#define DEV_AUTH_THREE 3
+
+#define PRINT_SENSITIVE_DATA(tag, str) \
+    do { \
+        if (HcStrlen((str)) < DESENSITIZATION_LEN) { \
+            LOGW("[" tag "]: sensitive str is too short."); \
+        } else { \
+            LOGI("[" tag "]: %c%c%c%c****", (str)[DEV_AUTH_ZERO], (str)[DEV_AUTH_ONE], \
+                (str)[DEV_AUTH_TWO], (str)[DEV_AUTH_THREE]); \
+        } \
+    } while (0)
+
+#ifdef HILOG_ENABLE
+
+#include <stdint.h>
 #include <inttypes.h>
 
 typedef enum {
@@ -24,20 +48,6 @@ typedef enum {
     DEV_AUTH_LOG_LEVEL_WARN,
     DEV_AUTH_LOG_LEVEL_ERROR
 } DevAuthLogLevel;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void DevAuthLogPrint(DevAuthLogLevel level, const char *funName, const char *fmt, ...);
-
-#ifdef __cplusplus
-}
-#endif
-
-#ifdef HILOG_ENABLE
-
-#include "hilog/log.h"
 
 #ifndef DEV_AUTH_LOG_DOMAIN
 #define DEV_AUTH_LOG_DOMAIN 0xD002F00 /* Security subsystem's domain id */
@@ -48,19 +58,34 @@ void DevAuthLogPrint(DevAuthLogLevel level, const char *funName, const char *fmt
 #define LOGW(fmt, ...) (DevAuthLogPrint(DEV_AUTH_LOG_LEVEL_WARN, __FUNCTION__, fmt, ##__VA_ARGS__))
 #define LOGE(fmt, ...) (DevAuthLogPrint(DEV_AUTH_LOG_LEVEL_ERROR, __FUNCTION__, fmt, ##__VA_ARGS__))
 
-#define DEV_AUTH_LOG_DEBUG(buf) HiLogPrint(LOG_CORE, LOG_DEBUG, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
-#define DEV_AUTH_LOG_INFO(buf) HiLogPrint(LOG_CORE, LOG_INFO, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
-#define DEV_AUTH_LOG_WARN(buf) HiLogPrint(LOG_CORE, LOG_WARN, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
-#define DEV_AUTH_LOG_ERROR(buf) HiLogPrint(LOG_CORE, LOG_ERROR, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
+#define SET_LOG_MODE(mode) SetLogMode(mode)
+#define SET_TRACE_ID(traceId) SetTraceId(traceId)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void DevAuthLogPrint(DevAuthLogLevel level, const char *funName, const char *fmt, ...);
+void SetLogMode(LogMode mode);
+void SetTraceId(int64_t traceId);
+
+#ifdef __cplusplus
+}
+#endif
 
 #else
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#define LOGD(fmt, ...) printf("D [DEVAUTH]: %s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
-#define LOGI(fmt, ...) printf("I [DEVAUTH]: %s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
-#define LOGW(fmt, ...) printf("W [DEVAUTH]: %s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
-#define LOGE(fmt, ...) printf("E [DEVAUTH]: %s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
+#define LOGD(fmt, ...) printf("[D][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
+#define LOGI(fmt, ...) printf("[I][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
+#define LOGW(fmt, ...) printf("[W][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
+#define LOGE(fmt, ...) printf("[E][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
+
+#define SET_LOG_MODE(mode)
+#define SET_TRACE_ID(traceId)
+
 #endif
+
 #endif

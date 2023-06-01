@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -20,6 +20,8 @@ cred_manager_path = "${services_path}/cred_manager"
 data_manager_path = "${services_path}/data_manager"
 dev_frameworks_path = "${services_path}/frameworks"
 group_manager_path = "${services_path}/group_manager"
+session_manager_path = "${services_path}/session_manager"
+creds_manager_path = "${services_path}/creds_manager"
 
 enable_broadcast = true
 declare_args() {
@@ -67,6 +69,18 @@ inc_path = [
   "${protocol_path}/inc/pake_protocol/pake_protocol_dl_common",
   "${protocol_path}/inc/pake_protocol/pake_protocol_ec_common",
   "${protocol_path}/inc/iso_protocol",
+  "${session_manager_path}/inc",
+  "${session_manager_path}/inc/session",
+  "${session_manager_path}/inc/session/v1",
+  "${session_manager_path}/inc/session/v1/compatible_bind_sub_session",
+  "${session_manager_path}/inc/session/v1/compatible_auth_sub_session",
+  "${session_manager_path}/inc/session/v2",
+  "${session_manager_path}/inc/session/v2/auth_sub_session",
+  "${session_manager_path}/inc/session/v2/auth_sub_session/protocol_lib",
+  "${session_manager_path}/inc/session/v2/expand_sub_session",
+  "${session_manager_path}/inc/session/v2/expand_sub_session/expand_process_lib",
+  "${creds_manager_path}/inc",
+  "${creds_manager_path}/inc/account_related",
 ]
 
 deviceauth_common_files = [
@@ -135,6 +149,42 @@ group_manager_files = [
   "${group_manager_path}/src/session/bind_session/bind_session_server.c",
 ]
 
+session_manager_files = [
+  "${session_manager_path}/src/dev_session_mgr.c",
+  "${session_manager_path}/src/session/dev_session_fwk.c",
+]
+
+session_v1_files = [
+  "${session_manager_path}/src/session/v1/compatible_sub_session.c",
+  "${session_manager_path}/src/session/v1/compatible_bind_sub_session/compatible_bind_sub_session.c",
+  "${session_manager_path}/src/session/v1/compatible_bind_sub_session/compatible_bind_sub_session_common.c",
+  "${session_manager_path}/src/session/v1/compatible_bind_sub_session/compatible_bind_sub_session_util.c",
+  "${session_manager_path}/src/session/v1/compatible_auth_sub_session/compatible_auth_sub_session.c",
+  "${session_manager_path}/src/session/v1/compatible_auth_sub_session/compatible_auth_sub_session_common.c",
+  "${session_manager_path}/src/session/v1/compatible_auth_sub_session/compatible_auth_sub_session_util.c",
+]
+
+session_v2_files = [
+  "${session_manager_path}/src/session/v2/dev_session_v2.c",
+  "${session_manager_path}/src/session/v2/auth_sub_session/auth_sub_session.c",
+  "${session_manager_path}/src/session/v2/expand_sub_session/expand_sub_session.c",
+]
+session_v2_mock_files =
+    [ "${session_manager_path}/src/session/v2_mock/dev_session_v2_mock.c" ]
+
+iso_protocol_files = [ "${session_manager_path}/src/session/v2/auth_sub_session/protocol_lib/iso_protocol.c" ]
+ec_speke_protocol_files = [ "${session_manager_path}/src/session/v2/auth_sub_session/protocol_lib/ec_speke_protocol.c" ]
+
+auth_code_import_files = [ "${session_manager_path}/src/session/v2/expand_sub_session/expand_process_lib/auth_code_import.c" ]
+pub_key_exchange_files = [ "${session_manager_path}/src/session/v2/expand_sub_session/expand_process_lib/pub_key_exchange.c" ]
+save_trusted_info_files = [ "${session_manager_path}/src/session/v2/expand_sub_session/expand_process_lib/save_trusted_info.c" ]
+
+creds_manager_files = [
+  "${creds_manager_path}/src/creds_manager.c",
+  "${creds_manager_path}/src/creds_operation_utils.c",
+]
+account_related_creds_manager_mock_files = [ "${creds_manager_path}/src/account_related_mock/account_related_creds_manager_mock.c" ]
+
 group_manager_peer_to_peer_files = [ "${group_manager_path}/src/group_operation/peer_to_peer_group/peer_to_peer_group.c" ]
 group_manager_peer_to_peer_mock_files = [ "${group_manager_path}/src/group_operation/peer_to_peer_group_mock/peer_to_peer_group_mock.c" ]
 group_manager_identical_account_mock_files = [ "${group_manager_path}/src/group_operation/identical_account_group_mock/identical_account_group_mock.c" ]
@@ -201,7 +251,29 @@ broadcast_manager_files =
 broadcast_manager_mock_files =
     [ "${group_manager_path}/src/broadcast_manager/broadcast_manager_mock.c" ]
 
-deviceauth_files = dev_frameworks_files + deviceauth_common_files
+deviceauth_files = dev_frameworks_files + deviceauth_common_files +
+                   session_manager_files + creds_manager_files
+
+if (enable_session_v2 == true) {
+  deviceauth_files += session_v2_files
+  if (enable_p2p_auth_lite_protocol == true) {
+    deviceauth_defines += [ "ENABLE_ISO" ]
+    deviceauth_files += iso_protocol_files
+  }
+  if (enable_p2p_auth_standard_protocol == true) {
+    deviceauth_defines += [ "ENABLE_EC_SPEKE" ]
+    deviceauth_files += ec_speke_protocol_files
+  }
+  deviceauth_files += auth_code_import_files
+  deviceauth_files += pub_key_exchange_files
+  deviceauth_files += save_trusted_info_files
+} else {
+  deviceauth_files += session_v2_mock_files
+}
+
+if (enable_session_v1 == true) {
+  deviceauth_files += session_v1_files
+}
 
 if (enable_p2p_pake_dl_prime_len_384 == true) {
   deviceauth_defines += [ "P2P_PAKE_DL_PRIME_LEN_384" ]
@@ -261,7 +333,8 @@ if (enable_account == true) {
                       group_manager_identical_account_mock_files +
                       group_manager_across_account_mock_files +
                       authenticators_account_related_mock_files +
-                      account_related_cred_plugin_mock_files
+                      account_related_cred_plugin_mock_files +
+                      account_related_creds_manager_mock_files
 }
 
 if (enable_soft_bus_channel == true) {

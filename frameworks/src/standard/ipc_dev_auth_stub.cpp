@@ -173,6 +173,7 @@ int32_t ServiceDevAuth::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
         LOGE("[IPC][C->S]: The proxy interface token is invalid!");
         return -1;
     }
+    SET_LOG_MODE(NORMAL_MODE);
     int32_t ret = HC_ERR_IPC_UNKNOW_OPCODE;
     int32_t dataLen;
     int32_t methodId = 0;

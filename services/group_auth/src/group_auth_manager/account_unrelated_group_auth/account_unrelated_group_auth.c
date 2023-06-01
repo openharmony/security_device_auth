@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 #include "auth_session_common.h"
 #include "auth_session_common_util.h"
 #include "common_defs.h"
+#include "compatible_auth_sub_session_common.h"
 #include "device_auth_defines.h"
 #include "group_auth_data_operation.h"
 #include "hc_log.h"
@@ -29,15 +30,19 @@ static void OnDasFinish(int64_t requestId, const CJson *authParam, const CJson *
 static int32_t FillNonAccountAuthInfo(int32_t osAccountId, const TrustedGroupEntry *entry,
     const TrustedDeviceEntry *localAuthInfo, CJson *paramsData);
 static void OnDasError(int64_t requestId, const AuthSession *session, int errorCode);
+static void OnAuthError(int64_t requestId, const CompatibleAuthSubSession *session, int errorCode);
 static int32_t GetDasAuthParamForServer(const CJson *dataFromClient, ParamsVec *authParamsVec);
+static int32_t GetAuthParamsVecForServer(const CJson *dataFromClient, ParamsVecForAuth *authParamsVec);
 static int32_t GetDasReqParams(const CJson *receiveData, CJson *reqParam);
 static int32_t CombineDasServerConfirmParams(const CJson *confirmationJson, CJson *dataFromClient);
 
 static NonAccountGroupAuth g_nonAccountGroupAuth = {
     .base.onFinish = OnDasFinish,
     .base.onError = OnDasError,
+    .base.onAuthError = OnAuthError,
     .base.fillDeviceAuthInfo = FillNonAccountAuthInfo,
     .base.getAuthParamForServer = GetDasAuthParamForServer,
+    .base.getAuthParamsVecForServer = GetAuthParamsVecForServer,
     .base.getReqParams = GetDasReqParams,
     .base.combineServerConfirmParams = CombineDasServerConfirmParams,
     .base.authType = ACCOUNT_UNRELATED_GROUP_AUTH_TYPE,
@@ -338,6 +343,53 @@ static void OnDasError(int64_t requestId, const AuthSession *session, int errorC
     FreeJsonString(returnStr);
 }
 
+static void OnAuthError(int64_t requestId, const CompatibleAuthSubSession *session, int errorCode)
+{
+    const DeviceAuthCallback *callback = session->base.callback;
+    ParamsVecForAuth list = session->paramsList;
+    CJson *authParam = list.get(&list, session->currentIndex);
+    if (authParam == NULL) {
+        LOGE("The json data in session is null!");
+        return;
+    }
+    /* If there is alternative group, do not return error. */
+    const char *altGroup = GetStringFromJson(authParam, FIELD_ALTERNATIVE);
+    if ((session->currentIndex < (list.size(&list) - 1)) || (altGroup != NULL)) {
+        return;
+    }
+    CJson *returnData = CreateJson();
+    if (returnData == NULL) {
+        LOGE("Failed to create json for returnData!");
+        return;
+    }
+    int32_t res = AddGroupIdToSelfData(authParam, returnData);
+    if (res != HC_SUCCESS) {
+        FreeJson(returnData);
+        return;
+    }
+    res = AddPeerUdidToSelfData(authParam, returnData);
+    if (res != HC_SUCCESS) {
+        FreeJson(returnData);
+        return;
+    }
+    res = AddPeerAuthIdToSelfData(authParam, returnData);
+    if (res != HC_SUCCESS) {
+        FreeJson(returnData);
+        return;
+    }
+    char *returnStr = PackJsonToString(returnData);
+    FreeJson(returnData);
+    if (returnStr == NULL) {
+        LOGE("Failed to pack returnStr for onError!");
+        return;
+    }
+    if ((callback != NULL) && (callback->onError != NULL)) {
+        LOGE("Invoke OnDasError!");
+        callback->onError(requestId, AUTH_FORM_ACCOUNT_UNRELATED, errorCode, returnStr);
+    }
+    FreeJsonString(returnStr);
+}
+
 static int32_t FillNonAccountAuthInfo(int32_t osAccountId, const TrustedGroupEntry *entry,
     const TrustedDeviceEntry *localAuthInfo, CJson *paramsData)
 {
@@ -445,6 +497,21 @@ static int32_t GetDasAuthParamForServer(const CJson *dataFromClient, ParamsVec *
         return HC_ERR_JSON_GET;
     }
     int32_t res = GetAuthParamsList(osAccountId, dataFromClient, authParamsVec);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get non-account auth params!");
+    }
+    return res;
+}
+
+static int32_t GetAuthParamsVecForServer(const CJson *dataFromClient, ParamsVecForAuth *authParamsVec)
+{
+    LOGI("Begin get non-account auth params for server.");
+    int32_t osAccountId = ANY_OS_ACCOUNT;
+    if (GetIntFromJson(dataFromClient, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get os accountId from dataFromClient!");
+        return HC_ERR_JSON_GET;
+    }
+    int32_t res = GetAuthParamsVec(osAccountId, dataFromClient, authParamsVec);
     if (res != HC_SUCCESS) {
         LOGE("Failed to get non-account auth params!");
     }

@@ -180,7 +180,7 @@ HWTEST_F(CredsManagerTest, CredsManagerTest004, TestSize.Level0)
     // userId is null, delete failed
     ret = tokenManager->deleteToken(DEFAULT_OS_ACCOUNT, nullptr, TEST_SYM_DEVICE_ID.c_str());
     EXPECT_EQ(ret, HC_ERR_NULL_PTR);
-    
+
     // deviceId is null, delete failed
     ret = tokenManager->deleteToken(DEFAULT_OS_ACCOUNT, TEST_SYM_USER_ID.c_str(), nullptr);
     EXPECT_EQ(ret, HC_ERR_NULL_PTR);

@@ -172,6 +172,7 @@ const DeviceAuthCallback *GetGMCallbackByAppId(const char *appId)
 
 int32_t RegGroupManagerCallback(const char *appId, const DeviceAuthCallback *callback)
 {
+    SET_LOG_MODE(NORMAL_MODE);
     if ((appId == NULL) || (callback == NULL)) {
         LOGE("The input parameters contains NULL value!");
         return HC_ERR_INVALID_PARAMS;
@@ -189,6 +190,7 @@ int32_t RegGroupManagerCallback(const char *appId, const DeviceAuthCallback *cal
 
 int32_t UnRegGroupManagerCallback(const char *appId)
 {
+    SET_LOG_MODE(NORMAL_MODE);
     if (appId == NULL) {
         LOGE("The input appId is NULL!");
         return HC_ERR_INVALID_PARAMS;

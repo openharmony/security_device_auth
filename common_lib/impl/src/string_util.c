@@ -228,3 +228,21 @@ int32_t ToUpperCase(const char *oriStr, char **desStr)
     }
     return CLIB_SUCCESS;
 }
+
+int32_t DeepCopyString(const char *str, char **newStr)
+{
+    if (str == NULL || newStr == NULL) {
+        return CLIB_ERR_NULL_PTR;
+    }
+    uint32_t len = strlen(str);
+    if (len == 0) {
+        return CLIB_ERR_INVALID_LEN;
+    }
+    char *val = (char *)ClibMalloc(len + 1, 0);
+    if (val == NULL) {
+        return CLIB_ERR_BAD_ALLOC;
+    }
+    (void)memcpy_s(val, len, str, len);
+    *newStr = val;
+    return CLIB_SUCCESS;
+}

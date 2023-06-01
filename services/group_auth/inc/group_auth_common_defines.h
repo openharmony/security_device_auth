@@ -21,19 +21,11 @@
 #include "hc_task_thread.h"
 #include "json_utils.h"
 
-#define MAX_UDID_LEN 64
-
 typedef struct {
     HcTaskBase base;
     int64_t authReqId;
     CJson *authParams;
     const DeviceAuthCallback *callback;
 } AuthDeviceTask;
-
-typedef struct {
-    HcTaskBase base;
-    int64_t reqId;
-    char *appId;
-} AuthCancelTask;
 
 #endif
