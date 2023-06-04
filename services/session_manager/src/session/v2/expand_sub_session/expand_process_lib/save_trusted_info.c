@@ -802,6 +802,7 @@ static int32_t InitSaveTrustedInfoCmd(SaveTrustedInfoCmd *instance, const SaveTr
     instance->params.osAccountId = params->osAccountId;
     instance->params.credType = params->credType;
     instance->params.userTypeSelf = params->userType;
+    instance->params.visibility = params->visibility;
     instance->base.type = SAVE_TRUSTED_INFO_CMD_TYPE;
     instance->base.strategy = strategy;
     instance->base.isCaller = isCaller;
