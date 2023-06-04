@@ -53,7 +53,6 @@ int32_t GetTrustedDevicesImpl(int32_t osAccountId, const char *appId, const char
 bool IsDeviceInGroupImpl(int32_t osAccountId, const char *appId, const char *groupId, const char *deviceId);
 int32_t GetPkInfoListImpl(int32_t osAccountId, const char *appId, const char *queryParams,
     char **returnInfoList, uint32_t *returnInfoNum);
-void CancelRequestImpl(int64_t requestId, const char *appId);
 void DestroyInfoImpl(char **returnInfo);
 
 #ifdef __cplusplus

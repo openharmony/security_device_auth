@@ -51,7 +51,6 @@ typedef struct {
         const char *deviceId, bool isUdid);
     int32_t (*getPkInfoList)(int32_t osAccountId, const char *appId, const char *queryParams, char **returnInfoList,
         uint32_t *returnInfoNum);
-    void (*cancelGroupRequest)(int64_t requestId, const char *appId);
     void (*destroyInfo)(char **returnInfo);
 } GroupImpl;
 

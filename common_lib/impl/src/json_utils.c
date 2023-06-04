@@ -113,7 +113,9 @@ char *PackJsonToString(const CJson *jsonObj)
 
 void FreeJsonString(char *jsonStr)
 {
-    cJSON_free(jsonStr);
+    if (jsonStr != NULL) {
+        cJSON_free(jsonStr);
+    }
 }
 
 int GetItemNum(const CJson *jsonObj)
@@ -188,6 +190,20 @@ const char *GetStringFromJson(const CJson *jsonObj, const char *key)
     }
 
     return NULL;
+}
+
+int32_t GetByteLenFromJson(const CJson *jsonObj, const char *key, uint32_t *byteLen)
+{
+    if (jsonObj == NULL || key == NULL || byteLen == NULL) {
+        return CLIB_ERR_NULL_PTR;
+    }
+
+    const char *valueStr = GetStringFromJson(jsonObj, key);
+    if (valueStr == NULL) {
+        return CLIB_ERR_JSON_GET;
+    }
+    *byteLen = strlen(valueStr) / BYTE_TO_HEX_OPER_LENGTH;
+    return CLIB_SUCCESS;
 }
 
 int32_t GetByteFromJson(const CJson *jsonObj, const char *key, uint8_t *byte, uint32_t len)

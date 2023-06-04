@@ -765,8 +765,10 @@ static void GaCbOnFinishWithType(int64_t requestId, int32_t operationCode, const
     ret = EncodeCallData(dataParcel, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&requestId), sizeof(requestId));
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_OPCODE,
         reinterpret_cast<uint8_t *>(&operationCode), sizeof(operationCode));
-    ret |= EncodeCallData(dataParcel, PARAM_TYPE_COMM_DATA,
-        reinterpret_cast<const uint8_t *>(returnData), strlen(returnData) + 1);
+    if (returnData != nullptr) {
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_COMM_DATA,
+            reinterpret_cast<const uint8_t *>(returnData), strlen(returnData) + 1);
+    }
     if (ret != HC_SUCCESS) {
         LOGE("build trans data failed");
         return;

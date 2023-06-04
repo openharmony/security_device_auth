@@ -12,6 +12,8 @@
 # limitations under the License.
 
 declare_args() {
+  enable_session_v2 = true
+  enable_session_v1 = true
   enable_extend_plugin = false
   enable_account = false
 

@@ -17,16 +17,12 @@
 #define STRING_UTIL_H
 
 #include <stdint.h>
+#include "uint8buff_utils.h"
 
 #define BYTE_TO_HEX_OPER_LENGTH 2
 #define BYTE_TO_BASE64_DIVISOR 3
 #define BYTE_TO_BASE64_MULTIPLIER 4
 #define DEC 10
-
-typedef struct {
-    uint8_t *val;
-    uint32_t length;
-} Uint8Buff;
 
 #ifdef __cplusplus
 extern "C" {
@@ -85,6 +81,14 @@ int32_t ByteToBase64String(const uint8_t *byte, uint32_t byteLen, char *base64St
  * @return success(0), otherwise, failure.
  */
 int32_t ToUpperCase(const char *oriStr, char **desStr);
+
+/*
+ * Deep copy string.
+ * @param str: original string.
+ * @param newStr: the new string. Need free.
+ * @return success(0), otherwise, failure.
+ */
+int32_t DeepCopyString(const char *str, char **newStr);
 
 #ifdef __cplusplus
 }

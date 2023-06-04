@@ -59,6 +59,10 @@ ChannelType GetChannelType(const DeviceAuthCallback *callback, const CJson *json
 
 int32_t OpenChannel(ChannelType channelType, const CJson *jsonParams, int64_t requestId, int64_t *returnChannelId)
 {
+    if (returnChannelId == NULL) {
+        LOGE("returnChannelId is NULL ptr.");
+        return HC_ERR_NULL_PTR;
+    }
     if (channelType == SERVICE_CHANNEL) {
         *returnChannelId = DEFAULT_CHANNEL_ID;
         return HC_SUCCESS;

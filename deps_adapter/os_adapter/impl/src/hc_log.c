@@ -14,16 +14,38 @@
  */
 
 #include "hc_log.h"
+
+#include <inttypes.h>
 #include "securec.h"
 
-#define LOG_PRINT_MAX_LEN 256
+#define LOG_PRINT_MAX_LEN 2048
+
+#ifdef DEV_AUTH_DEBUG_PRINTF
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define DEV_AUTH_LOG_DEBUG(buf) printf("[D][DEVAUTH]: %s\n", buf)
+#define DEV_AUTH_LOG_INFO(buf) printf("[I][DEVAUTH]: %s\n", buf)
+#define DEV_AUTH_LOG_WARN(buf) printf("[W][DEVAUTH]: %s\n", buf)
+#define DEV_AUTH_LOG_ERROR(buf) printf("[E][DEVAUTH]: %s\n", buf)
+
+#else
+
+#include "hilog/log.h"
+
+#define DEV_AUTH_LOG_DEBUG(buf) HiLogPrint(LOG_CORE, LOG_DEBUG, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
+#define DEV_AUTH_LOG_INFO(buf) HiLogPrint(LOG_CORE, LOG_INFO, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
+#define DEV_AUTH_LOG_WARN(buf) HiLogPrint(LOG_CORE, LOG_WARN, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
+#define DEV_AUTH_LOG_ERROR(buf) HiLogPrint(LOG_CORE, LOG_ERROR, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
+
+#endif
+
+static __thread int32_t g_logMode = 0;
+static __thread int64_t g_traceId = 0;
 
 static void DevAuthOutPrint(const char *buf, DevAuthLogLevel level)
 {
-#ifdef DEV_AUTH_DEBUG_PRINTF
-    printf("[DEVAUTH]: %s\n", buf);
-    return;
-#endif
     switch (level) {
         case DEV_AUTH_LOG_LEVEL_DEBUG:
             DEV_AUTH_LOG_DEBUG(buf);
@@ -46,17 +68,33 @@ void DevAuthLogPrint(DevAuthLogLevel level, const char *funName, const char *fmt
 {
     int32_t ulPos = 0;
     char outStr[LOG_PRINT_MAX_LEN] = {0};
-    int32_t ret = sprintf_s(outStr, sizeof(outStr), "%s: ", funName);
-    if (ret < 0) {
+    int32_t res;
+    if (g_logMode == TRACE_MODE) {
+        res = sprintf_s(outStr, sizeof(outStr), "<%" PRId64 ">%s: ", g_traceId, funName);
+    } else {
+        res = sprintf_s(outStr, sizeof(outStr), "%s: ", funName);
+    }
+    if (res < 0) {
         return;
     }
     ulPos = strlen(outStr);
     va_list arg;
     va_start(arg, fmt);
-    ret = vsprintf_s(&outStr[ulPos], sizeof(outStr) - ulPos, fmt, arg);
+    res = vsprintf_s(&outStr[ulPos], sizeof(outStr) - ulPos, fmt, arg);
     va_end(arg);
-    if (ret < 0) {
+    if (res < 0) {
         return;
     }
     DevAuthOutPrint(outStr, level);
+}
+
+void SetLogMode(LogMode mode)
+{
+    g_logMode = mode;
+    g_traceId = 0;
+}
+
+void SetTraceId(int64_t traceId)
+{
+    g_traceId = traceId;
 }

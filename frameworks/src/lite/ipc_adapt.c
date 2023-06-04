@@ -800,7 +800,9 @@ static void GaCbOnFinishWithType(int64_t requestId, int32_t operationCode, const
     }
     ret = EncodeCallData(dataParcel, PARAM_TYPE_REQID, (uint8_t *)(&requestId), sizeof(requestId));
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_OPCODE, (uint8_t *)(&operationCode), sizeof(operationCode));
-    ret |= EncodeCallData(dataParcel, PARAM_TYPE_COMM_DATA, (const uint8_t *)(returnData), strlen(returnData) + 1);
+    if (returnData != NULL) {
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_COMM_DATA, (const uint8_t *)(returnData), strlen(returnData) + 1);
+    }
     if (ret != HC_SUCCESS) {
         UnLockCallbackList();
         HcFree((void *)dataParcel);

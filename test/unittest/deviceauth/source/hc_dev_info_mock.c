@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "hc_dev_info.h"
+#include "hc_dev_info_mock.h"
 #include "hal_error.h"
 #include "hc_log.h"
 #include "securec.h"

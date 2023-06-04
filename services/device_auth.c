@@ -20,9 +20,13 @@
 #include "channel_manager.h"
 #include "common_defs.h"
 #include "cred_manager.h"
+#include "data_manager.h"
 #include "dev_auth_module_manager.h"
+#include "dev_session_mgr.h"
 #include "group_auth_manager.h"
 #include "group_manager.h"
+#include "group_operation_common.h"
+#include "hc_dev_info.h"
 #include "hc_init_protection.h"
 #include "hc_log.h"
 #include "hisysevent_adapter.h"
@@ -36,194 +40,724 @@
 static GroupAuthManager *g_groupAuthManager =  NULL;
 static DeviceGroupManager *g_groupManagerInstance = NULL;
 
-static void DestroyGroupAuthTask(HcTaskBase *task)
+typedef struct {
+    HcTaskBase base;
+    int64_t sessionId;
+} StartSessionTask;
+
+typedef struct {
+    HcTaskBase base;
+    int64_t sessionId;
+    CJson *receivedMsg;
+} ProcSessionTask;
+
+static int32_t AddGroupInfoToContextByInput(const CJson *receivedMsg, CJson *context)
 {
-    AuthDeviceTask *realTask = (AuthDeviceTask *)task;
-    FreeJson(realTask->authParams);
+    const char *groupId = GetStringFromJson(receivedMsg, FIELD_GROUP_ID);
+    if (groupId == NULL) {
+        LOGE("get groupId from json fail.");
+        return HC_ERR_JSON_GET;
+    }
+    const char *groupName = GetStringFromJson(receivedMsg, FIELD_GROUP_NAME);
+    if (groupName == NULL) {
+        LOGE("Failed to get groupName from jsonParams!");
+        return HC_ERR_JSON_GET;
+    }
+    if (AddStringToJson(context, FIELD_GROUP_ID, groupId) != HC_SUCCESS) {
+        LOGE("Failed to add groupId to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    if (AddIntToJson(context, FIELD_GROUP_TYPE, PEER_TO_PEER_GROUP) != HC_SUCCESS) {
+        LOGE("Failed to add groupType to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    if (AddStringToJson(context, FIELD_GROUP_NAME, groupName) != HC_SUCCESS) {
+        LOGE("Failed to add groupName to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
 }
 
-static bool InitAuthDeviceTask(int32_t osAccountId, AuthDeviceTask *task, int64_t authReqId, CJson *authParams,
-    const DeviceAuthCallback *gaCallback)
+static int32_t AddDevInfoToContextByInput(CJson *context)
 {
-    task->base.doAction = DoAuthDevice;
-    task->base.destroy = DestroyGroupAuthTask;
-    task->authReqId = authReqId;
-    if (AddByteToJson(authParams, FIELD_REQUEST_ID, (const uint8_t*)&authReqId, sizeof(int64_t)) != HC_SUCCESS) {
-        LOGE("Failed to add requestId to json!");
-        return false;
+    int32_t userType = DEVICE_TYPE_ACCESSORY;
+    (void)GetIntFromJson(context, FIELD_USER_TYPE, &userType);
+    const char *authId = GetStringFromJson(context, FIELD_DEVICE_ID);
+    char udid[INPUT_UDID_LEN] = { 0 };
+    if (authId == NULL) {
+        LOGD("No authId is found. The default value is udid!");
+        int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to get local udid! res: %d", res);
+            return HC_ERR_DB;
+        }
+        authId = udid;
     }
-    if (AddIntToJson(authParams, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to add os accountId to json for auth device!");
-        return false;
+    if (AddStringToJson(context, FIELD_AUTH_ID, authId) != HC_SUCCESS) {
+        LOGE("Failed to add authId to params!");
+        return HC_ERR_JSON_FAIL;
     }
-    task->authParams = authParams;
-    task->callback = gaCallback;
-    if (task->callback == NULL) {
-        LOGE("The input auth callback is null!");
-        return false;
+    if (AddIntToJson(context, FIELD_USER_TYPE, userType) != HC_SUCCESS) {
+        LOGE("Failed to add userType to params!");
+        return HC_ERR_JSON_FAIL;
     }
-    return true;
+    return HC_SUCCESS;
 }
 
-static bool InitProcessDataTask(AuthDeviceTask *task, int64_t authReqId,
-    CJson *receivedData, const DeviceAuthCallback *gaCallback)
+static int32_t AddGroupInfoToContextByDb(const char *groupId, CJson *context)
 {
-    task->base.doAction = DoProcessAuthData;
-    task->base.destroy = DestroyGroupAuthTask;
-    task->authReqId = authReqId;
-    if (AddByteToJson(receivedData, FIELD_REQUEST_ID, (const uint8_t*)&authReqId, sizeof(int64_t)) != HC_SUCCESS) {
-        LOGE("Failed to add requestId to json!");
-        return false;
+    int32_t osAccountId;
+    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("get osAccountId from json fail.");
+        return HC_ERR_JSON_GET;
     }
-    if (AddIntToJson(receivedData, FIELD_OPERATION_CODE, AUTHENTICATE) != HC_SUCCESS) {
-        LOGE("Failed to add operation code to json!");
-        return false;
+    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
+    if (entry == NULL) {
+        LOGE("Failed to get groupEntry from db!");
+        return HC_ERR_DB;
     }
-    task->authParams = receivedData;
-    task->callback = gaCallback;
-    if (task->callback == NULL) {
-        LOGE("The input auth callback is null!");
-        return false;
+    if (AddStringToJson(context, FIELD_GROUP_ID, StringGet(&entry->id)) != HC_SUCCESS) {
+        LOGE("Failed to add groupId to json!");
+        DestroyGroupEntry(entry);
+        return HC_ERR_JSON_FAIL;
     }
-    return true;
+    if (AddIntToJson(context, FIELD_GROUP_TYPE, entry->type) != HC_SUCCESS) {
+        LOGE("Failed to add groupType to json!");
+        DestroyGroupEntry(entry);
+        return HC_ERR_JSON_FAIL;
+    }
+    if (AddStringToJson(context, FIELD_GROUP_NAME, StringGet(&entry->name)) != HC_SUCCESS) {
+        LOGE("Failed to add groupName to json!");
+        DestroyGroupEntry(entry);
+        return HC_ERR_JSON_FAIL;
+    }
+    DestroyGroupEntry(entry);
+    return HC_SUCCESS;
+}
+
+static int32_t AddDevInfoToContextByDb(const char *groupId, CJson *context)
+{
+    int32_t osAccountId;
+    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("get osAccountId from json fail.");
+        return HC_ERR_JSON_GET;
+    }
+    char udid[INPUT_UDID_LEN] = { 0 };
+    int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get local udid! res: %d", res);
+        return HC_ERR_DB;
+    }
+    TrustedDeviceEntry *devAuthParams = CreateDeviceEntry();
+    if (devAuthParams == NULL) {
+        LOGE("Failed to allocate devEntry memory!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (GetTrustedDevInfoById(osAccountId, udid, true, groupId, devAuthParams) != HC_SUCCESS) {
+        LOGE("Failed to obtain the local device information from the database!");
+        DestroyDeviceEntry(devAuthParams);
+        return HC_ERR_DB;
+    }
+    if (AddStringToJson(context, FIELD_AUTH_ID, StringGet(&devAuthParams->authId)) != HC_SUCCESS) {
+        LOGE("Failed to add authId to params!");
+        DestroyDeviceEntry(devAuthParams);
+        return HC_ERR_JSON_FAIL;
+    }
+    if (AddIntToJson(context, FIELD_USER_TYPE, devAuthParams->devType) != HC_SUCCESS) {
+        LOGE("Failed to add userType to params!");
+        DestroyDeviceEntry(devAuthParams);
+        return HC_ERR_JSON_FAIL;
+    }
+    DestroyDeviceEntry(devAuthParams);
+    return HC_SUCCESS;
+}
+
+static int32_t GetOpCodeFromContext(const CJson *context)
+{
+    bool isAdmin = true;
+    (void)GetBoolFromJson(context, FIELD_IS_ADMIN, &isAdmin);
+    return isAdmin ? MEMBER_INVITE : MEMBER_JOIN;
+}
+
+static int32_t AddClientReqInfoToContext(int32_t osAccountId, int64_t requestId, const char *appId, CJson *context)
+{
+    const char *groupId = GetStringFromJson(context, FIELD_GROUP_ID);
+    if (groupId == NULL) {
+        LOGE("get groupId from json fail.");
+        return HC_ERR_JSON_GET;
+    }
+    if (AddBoolToJson(context, FIELD_IS_BIND, true) != HC_SUCCESS) {
+        LOGE("add isBind to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddBoolToJson(context, FIELD_IS_CLIENT, true) != HC_SUCCESS) {
+        LOGE("add isClient to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
+        LOGE("add osAccountId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
+        LOGE("add requestId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    int32_t opCode = GetOpCodeFromContext(context);
+    if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
+        LOGE("add operationCode to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (opCode == MEMBER_JOIN) {
+        return AddDevInfoToContextByInput(context);
+    }
+    int32_t res = AddDevInfoToContextByDb(groupId, context);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    return AddGroupInfoToContextByDb(groupId, context);
+}
+
+static int32_t AddChannelInfoToContext(int32_t channelType, int64_t channelId, CJson *context)
+{
+    if (AddIntToJson(context, FIELD_CHANNEL_TYPE, channelType) != HC_SUCCESS) {
+        LOGE("add channelType to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddByteToJson(context, FIELD_CHANNEL_ID, (uint8_t *)&channelId, sizeof(int64_t)) != HC_SUCCESS) {
+        LOGE("add channelId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t BuildClientBindContext(int32_t osAccountId, int64_t requestId, const char *appId,
+    const DeviceAuthCallback *callback, CJson *context)
+{
+    int32_t res = AddClientReqInfoToContext(osAccountId, requestId, appId, context);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    ChannelType channelType = GetChannelType(callback, context);
+    int64_t channelId;
+    res = OpenChannel(channelType, context, requestId, &channelId);
+    if (res != HC_SUCCESS) {
+        LOGE("open channel fail.");
+        return res;
+    }
+    return AddChannelInfoToContext(channelType, channelId, context);
+}
+
+static void DoStartSession(HcTaskBase *task)
+{
+    LOGI("start session task begin.");
+    if (task == NULL) {
+        LOGE("The input task is NULL, can't start session!");
+        return;
+    }
+    StartSessionTask *realTask = (StartSessionTask *)task;
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(realTask->sessionId);
+    int32_t res = StartDevSession(realTask->sessionId);
+    if (res != HC_SUCCESS) {
+        LOGE("start session fail.[Res]: %d", res);
+        CloseDevSession(realTask->sessionId);
+    }
+}
+
+static void DoProcSession(HcTaskBase *task)
+{
+    LOGI("proc session task begin.");
+    if (task == NULL) {
+        LOGE("The input task is NULL, can't start session!");
+        return;
+    }
+    ProcSessionTask *realTask = (ProcSessionTask *)task;
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(realTask->sessionId);
+    bool isFinish;
+    int32_t res = ProcessDevSession(realTask->sessionId, realTask->receivedMsg, &isFinish);
+    if (res != HC_SUCCESS) {
+        LOGE("ProcessDevSession fail. [Res]: %d", res);
+        CloseDevSession(realTask->sessionId);
+        return;
+    }
+    LOGE("ProcessDevSession success. [State]: %s", isFinish ? "FINISH" : "CONTINUE");
+    if (isFinish) {
+        CloseDevSession(realTask->sessionId);
+    }
+}
+
+static void InitStartSessionTask(StartSessionTask *task, int64_t sessionId)
+{
+    task->base.doAction = DoStartSession;
+    task->base.destroy = NULL;
+    task->sessionId = sessionId;
+}
+
+static void DestroyProcSessionTask(HcTaskBase *task)
+{
+    ProcSessionTask *realTask = (ProcSessionTask *)task;
+    FreeJson(realTask->receivedMsg);
+}
+
+static void InitProcSessionTask(ProcSessionTask *task, int64_t sessionId, CJson *receivedMsg)
+{
+    task->base.doAction = DoProcSession;
+    task->base.destroy = DestroyProcSessionTask;
+    task->sessionId = sessionId;
+    task->receivedMsg = receivedMsg;
+}
+
+static int32_t PushStartSessionTask(int64_t sessionId)
+{
+    StartSessionTask *task = (StartSessionTask *)HcMalloc(sizeof(StartSessionTask), 0);
+    if (task == NULL) {
+        LOGE("Failed to allocate memory for task!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    InitStartSessionTask(task, sessionId);
+    if (PushTask((HcTaskBase*)task) != HC_SUCCESS) {
+        LOGE("push start session task fail.");
+        HcFree(task);
+        return HC_ERR_INIT_TASK_FAIL;
+    }
+    LOGI("push start session task success.");
+    return HC_SUCCESS;
+}
+
+static int32_t PushProcSessionTask(int64_t sessionId, CJson *receivedMsg)
+{
+    ProcSessionTask *task = (ProcSessionTask *)HcMalloc(sizeof(ProcSessionTask), 0);
+    if (task == NULL) {
+        LOGE("Failed to allocate memory for task!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    InitProcSessionTask(task, sessionId, receivedMsg);
+    if (PushTask((HcTaskBase*)task) != HC_SUCCESS) {
+        LOGE("push start session task fail.");
+        HcFree(task);
+        return HC_ERR_INIT_TASK_FAIL;
+    }
+    LOGI("push start session task success.");
+    return HC_SUCCESS;
+}
+
+static int32_t StartClientBindSession(int32_t osAccountId, int64_t requestId, const char *appId,
+    const char *contextParams, const DeviceAuthCallback *callback)
+{
+    CJson *context = CreateJsonFromString(contextParams);
+    if (context == NULL) {
+        LOGE("Failed to create json from string!");
+        return HC_ERR_JSON_FAIL;
+    }
+    int32_t res = BuildClientBindContext(osAccountId, requestId, appId, callback, context);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+    ChannelType channelType = GetChannelType(callback, context);
+    SessionInitParams params = { context, *callback };
+    res = OpenDevSession(requestId, appId, &params);
+    FreeJson(context);
+    if (res != HC_SUCCESS) {
+        LOGE("OpenDevSession fail. [Res]: %d", res);
+        return res;
+    }
+    if (channelType == SERVICE_CHANNEL) {
+        res = PushStartSessionTask(requestId);
+        if (res != HC_SUCCESS) {
+            return res;
+        }
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t AddMemberToGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *addParams)
+{
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(requestId);
+    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
+    if ((appId == NULL) || (addParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
+        LOGE("Invalid input parameters!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    LOGI("[Start]: AddMemberToGroup! [AppId]: %s, [RequestId]: %" PRId64, appId, requestId);
+    DEV_AUTH_REPORT_CALL_EVENT(ADD_MEMBER_EVENT, osAccountId, requestId, appId);
+    const DeviceAuthCallback *callback = GetGMCallbackByAppId(appId);
+    if (callback == NULL) {
+        LOGE("Failed to find callback by appId! [AppId]: %s", appId);
+        return HC_ERR_CALLBACK_NOT_FOUND;
+    }
+    return StartClientBindSession(osAccountId, requestId, appId, addParams, callback);
+}
+
+static int32_t AddServerReqInfoToContext(int64_t requestId, const char *appId, int32_t opCode,
+    const CJson *receivedMsg, CJson *context)
+{
+    const char *groupId = GetStringFromJson(receivedMsg, FIELD_GROUP_ID);
+    if (groupId == NULL) {
+        LOGE("get groupId from json fail.");
+        return HC_ERR_JSON_GET;
+    }
+    if (AddBoolToJson(context, FIELD_IS_BIND, true) != HC_SUCCESS) {
+        LOGE("add isBind to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddBoolToJson(context, FIELD_IS_CLIENT, false) != HC_SUCCESS) {
+        LOGE("add isClient to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    int32_t osAccountId = ANY_OS_ACCOUNT;
+    (void)GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId);
+    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
+    if (osAccountId == INVALID_OS_ACCOUNT) {
+        return HC_ERR_INVALID_PARAMS;
+    }
+    if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
+        LOGE("add osAccountId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
+        LOGE("add requestId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
+        LOGE("add opCode to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    int32_t res;
+    if (opCode == MEMBER_INVITE) {
+        res = AddGroupInfoToContextByInput(receivedMsg, context);
+        if (res != HC_SUCCESS) {
+            return res;
+        }
+        return AddDevInfoToContextByInput(context);
+    }
+    res = AddGroupInfoToContextByDb(groupId, context);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    return AddDevInfoToContextByDb(groupId, context);
+}
+
+static int32_t BuildServerBindContext(int64_t requestId, const char *appId, int32_t opCode,
+    const CJson *receivedMsg, CJson *context)
+{
+    int32_t res = AddServerReqInfoToContext(requestId, appId, opCode, receivedMsg, context);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    int32_t channelType;
+    int64_t channelId = DEFAULT_CHANNEL_ID;
+    if (GetByteFromJson(receivedMsg, FIELD_CHANNEL_ID, (uint8_t *)&channelId, sizeof(int64_t)) == HC_SUCCESS) {
+        channelType = SOFT_BUS;
+    } else {
+        channelType = SERVICE_CHANNEL;
+    }
+    return AddChannelInfoToContext(channelType, channelId, context);
+}
+
+static int32_t CheckAcceptRequest(const CJson *context)
+{
+    uint32_t confirmation = REQUEST_REJECTED;
+    if (GetUnsignedIntFromJson(context, FIELD_CONFIRMATION, &confirmation) != HC_SUCCESS) {
+        LOGE("Failed to get confimation from json!");
+        return HC_ERR_JSON_GET;
+    }
+    if (confirmation == REQUEST_ACCEPTED) {
+        LOGI("The service accepts this request!");
+    } else {
+        LOGE("The service rejects this request!");
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg)
+{
+    const char *appId = GetStringFromJson(receivedMsg, FIELD_APP_ID);
+    if (appId == NULL) {
+        appId = DM_APP_ID;
+        LOGW("use default device manager appId.");
+    }
+    const DeviceAuthCallback *callback = GetGMCallbackByAppId(appId);
+    if (callback == NULL) {
+        LOGE("Failed to find callback by appId! [AppId]: %s", appId);
+        return HC_ERR_CALLBACK_NOT_FOUND;
+    }
+    int32_t opCode;
+    if (GetIntFromJson(receivedMsg, FIELD_GROUP_OP, &opCode) != HC_SUCCESS) {
+        if (GetIntFromJson(receivedMsg, FIELD_OP_CODE, &opCode) != HC_SUCCESS) {
+            opCode = MEMBER_JOIN;
+            LOGW("use default opCode.");
+        }
+    }
+    char *returnDataStr = ProcessRequestCallback(requestId, opCode, NULL, callback);
+    if (returnDataStr == NULL) {
+        LOGE("The OnRequest callback is fail!");
+        return HC_ERR_REQ_REJECTED;
+    }
+    LOGE("onRequest Data: %s", returnDataStr);
+    CJson *context = CreateJsonFromString(returnDataStr);
+    FreeJsonString(returnDataStr);
+    if (context == NULL) {
+        LOGE("Failed to create context from string!");
+        return HC_ERR_JSON_FAIL;
+    }
+    int32_t res = CheckAcceptRequest(context);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+    res = BuildServerBindContext(requestId, appId, opCode, receivedMsg, context);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+    SessionInitParams params = { context, *callback };
+    res = OpenDevSession(requestId, appId, &params);
+    FreeJson(context);
+    return res;
+}
+
+static int32_t ProcessBindData(int64_t requestId, const uint8_t *data, uint32_t dataLen)
+{
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(requestId);
+    if ((data == NULL) || (dataLen == 0) || (dataLen > MAX_DATA_BUFFER_SIZE)) {
+        LOGE("The input data is invalid!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    LOGI("[Start]: RequestProcessBindData! [ReqId]: %" PRId64, requestId);
+    CJson *receivedMsg = CreateJsonFromString((const char *)data);
+    if (receivedMsg == NULL) {
+        LOGE("Failed to create json from string!");
+        return HC_ERR_JSON_FAIL;
+    }
+    int32_t res;
+    if (!IsSessionExist(requestId)) {
+        res = OpenServerBindSession(requestId, receivedMsg);
+        if (res != HC_SUCCESS) {
+            FreeJson(receivedMsg);
+            return res;
+        }
+    }
+    res = PushProcSessionTask(requestId, receivedMsg);
+    if (res != HC_SUCCESS) {
+        FreeJson(receivedMsg);
+        return res;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t BuildClientAuthContext(int32_t osAccountId, int64_t requestId, const char *appId, CJson *context)
+{
+    const char *peerUdid = GetStringFromJson(context, FIELD_PEER_CONN_DEVICE_ID);
+    if (peerUdid != NULL) {
+        if (AddStringToJson(context, FIELD_PEER_UDID, peerUdid) != HC_SUCCESS) {
+            LOGE("add peerUdid to context fail.");
+            return HC_ERR_JSON_ADD;
+        }
+    }
+    if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
+        LOGE("add isBind to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddBoolToJson(context, FIELD_IS_CLIENT, true) != HC_SUCCESS) {
+        LOGE("add isClient to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
+        LOGE("add osAccountId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
+        LOGE("add requestId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(context, FIELD_OPERATION_CODE, AUTH_FORM_ACCOUNT_UNRELATED) != HC_SUCCESS) {
+        LOGE("add opCode to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
 }
 
 static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *authParams,
     const DeviceAuthCallback *gaCallback)
 {
-    DEV_AUTH_START_TRACE(TRACE_TAG_CALL_AUTH_DEVICE);
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(authReqId);
     LOGI("Begin AuthDevice. [requestId]:%" PRId64, authReqId);
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((authParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("The input auth params is invalid!");
-        DEV_AUTH_FINISH_TRACE();
         return HC_ERR_INVALID_PARAMS;
     }
-    CJson *jsonParams = CreateJsonFromString(authParams);
-    if (jsonParams == NULL) {
-        LOGE("Create json from params failed!");
-        DEV_AUTH_FINISH_TRACE();
+    CJson *context = CreateJsonFromString(authParams);
+    if (context == NULL) {
+        LOGE("Failed to create json from string!");
         return HC_ERR_JSON_FAIL;
     }
-    DEV_AUTH_REPORT_CALL_EVENT(AUTH_DEV_EVENT, osAccountId, authReqId,
-        GetStringFromJson(jsonParams, FIELD_SERVICE_PKG_NAME));
-    AuthDeviceTask *task = (AuthDeviceTask *)HcMalloc(sizeof(AuthDeviceTask), 0);
-    if (task == NULL) {
-        LOGE("Failed to allocate memory for task!");
-        FreeJson(jsonParams);
-        DEV_AUTH_FINISH_TRACE();
-        return HC_ERR_ALLOC_MEMORY;
+    const char *appId = GetStringFromJson(context, FIELD_SERVICE_PKG_NAME);
+    if (appId == NULL) {
+        LOGE("get servicePkgName from json fail.");
+        FreeJson(context);
+        return HC_ERR_JSON_GET;
     }
-    if (!InitAuthDeviceTask(osAccountId, task, authReqId, jsonParams, gaCallback)) {
-        LOGE("Failed to init task!");
-        FreeJson(jsonParams);
-        HcFree(task);
-        DEV_AUTH_FINISH_TRACE();
-        return HC_ERR_INIT_TASK_FAIL;
+    int32_t res = BuildClientAuthContext(osAccountId, authReqId, appId, context);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
     }
-    if (PushTask((HcTaskBase*)task) != HC_SUCCESS) {
-        FreeJson(jsonParams);
-        HcFree(task);
-        DEV_AUTH_FINISH_TRACE();
-        return HC_ERR_INIT_TASK_FAIL;
+    SessionInitParams params = { context, *gaCallback };
+    res = OpenDevSession(authReqId, appId, &params);
+    FreeJson(context);
+    if (res != HC_SUCCESS) {
+        LOGE("OpenDevSession fail. [Res]: %d", res);
+        return res;
     }
-    LOGI("Push AuthDevice task successfully.");
-    DEV_AUTH_FINISH_TRACE();
-    return HC_SUCCESS;
+    return PushStartSessionTask(authReqId);
+}
+
+static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const char *appId, CJson *context)
+{
+    int32_t osAccountId = ANY_OS_ACCOUNT;
+    (void)GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId);
+    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
+    if (osAccountId == INVALID_OS_ACCOUNT) {
+        return HC_ERR_INVALID_PARAMS;
+    }
+    const char *peerUdid = GetStringFromJson(context, FIELD_PEER_CONN_DEVICE_ID);
+    if (peerUdid == NULL) {
+        LOGE("get peerUdid from json fail.");
+        return HC_ERR_JSON_GET;
+    }
+    if (AddStringToJson(context, FIELD_PEER_UDID, peerUdid) != HC_SUCCESS) {
+        LOGE("add peerUdid to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
+        LOGE("add isBind to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddBoolToJson(context, FIELD_IS_CLIENT, false) != HC_SUCCESS) {
+        LOGE("add isClient to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
+        LOGE("add operationCode to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
+        LOGE("add requestId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
+        LOGE("add opCode to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
+}
+
+static int32_t OpenServerAuthSession(int64_t requestId, const CJson *receivedMsg, const DeviceAuthCallback *callback)
+{
+    int32_t opCode = AUTH_FORM_ACCOUNT_UNRELATED;
+    if (GetIntFromJson(receivedMsg, FIELD_AUTH_FORM, &opCode) != HC_SUCCESS) {
+        if (GetIntFromJson(receivedMsg, FIELD_OP_CODE, &opCode) != HC_SUCCESS) {
+            opCode = AUTH_FORM_INVALID_TYPE;
+            LOGW("use default opCode.");
+        }
+    }
+    char *returnDataStr = ProcessRequestCallback(requestId, opCode, NULL, callback);
+    if (returnDataStr == NULL) {
+        LOGE("The OnRequest callback is fail!");
+        return HC_ERR_REQ_REJECTED;
+    }
+    LOGE("onRequest Data: %s", returnDataStr);
+    CJson *context = CreateJsonFromString(returnDataStr);
+    FreeJsonString(returnDataStr);
+    if (context == NULL) {
+        LOGE("Failed to create context from string!");
+        return HC_ERR_JSON_FAIL;
+    }
+    const char *appId = GetStringFromJson(context, FIELD_SERVICE_PKG_NAME);
+    if (appId == NULL) {
+        LOGE("get appId from json fail.");
+        FreeJson(context);
+        return HC_ERR_JSON_GET;
+    }
+    int32_t res = CheckAcceptRequest(context);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+    res = BuildServerAuthContext(requestId, opCode, appId, context);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+    SessionInitParams params = { context, *callback };
+    res = OpenDevSession(requestId, appId, &params);
+    FreeJson(context);
+    return res;
 }
 
 static int32_t ProcessData(int64_t authReqId, const uint8_t *data, uint32_t dataLen,
     const DeviceAuthCallback *gaCallback)
 {
-    DEV_AUTH_START_TRACE(TRACE_TAG_CALL_PROCESS_AUTH_DATA);
-    LOGI("[GA] Begin ProcessData. [requestId]:%" PRId64, authReqId);
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(authReqId);
+    LOGI("[GA] Begin ProcessData. [requestId]: %" PRId64, authReqId);
     if ((data == NULL) || (dataLen > MAX_DATA_BUFFER_SIZE)) {
         LOGE("Invalid input for ProcessData!");
-        DEV_AUTH_FINISH_TRACE();
         return HC_ERR_INVALID_PARAMS;
     }
-    CJson *receivedData = CreateJsonFromString((const char *)data);
-    if (receivedData == NULL) {
-        LOGE("Create Json for input data failed!");
-        DEV_AUTH_FINISH_TRACE();
+    CJson *receivedMsg = CreateJsonFromString((const char *)data);
+    if (receivedMsg == NULL) {
+        LOGE("Failed to create json from string!");
         return HC_ERR_JSON_FAIL;
     }
-    AuthDeviceTask *task = (AuthDeviceTask *)HcMalloc(sizeof(AuthDeviceTask), 0);
-    if (task == NULL) {
-        LOGE("Failed to allocate memory for task!");
-        FreeJson(receivedData);
-        DEV_AUTH_FINISH_TRACE();
-        return HC_ERR_ALLOC_MEMORY;
+    int32_t res;
+    if (!IsSessionExist(authReqId)) {
+        res = OpenServerAuthSession(authReqId, receivedMsg, gaCallback);
+        if (res != HC_SUCCESS) {
+            FreeJson(receivedMsg);
+            return res;
+        }
     }
-    if (!InitProcessDataTask(task, authReqId, receivedData, gaCallback)) {
-        LOGE("Failed to init task!");
-        FreeJson(receivedData);
-        HcFree(task);
-        DEV_AUTH_FINISH_TRACE();
-        return HC_ERR_INIT_TASK_FAIL;
+    res = PushProcSessionTask(authReqId, receivedMsg);
+    if (res != HC_SUCCESS) {
+        FreeJson(receivedMsg);
+        return res;
     }
-    if (PushTask((HcTaskBase*)task) != HC_SUCCESS) {
-        FreeJson(receivedData);
-        HcFree(task);
-        DEV_AUTH_FINISH_TRACE();
-        return HC_ERR_INIT_TASK_FAIL;
-    }
-    LOGI("Push ProcessData task successfully.");
-    DEV_AUTH_FINISH_TRACE();
     return HC_SUCCESS;
 }
 
-static void DoCancelAuthRequest(HcTaskBase *task)
+static void CancelRequest(int64_t requestId, const char *appId)
 {
-    if (task == NULL) {
-        LOGE("The input task is null!");
-        return;
-    }
-    AuthCancelTask *realTask = (AuthCancelTask *)task;
-    DestroySessionByType(realTask->reqId, realTask->appId, TYPE_CANCEL_AUTH);
-}
-
-static void DestroyAuthCancelTask(HcTaskBase *task)
-{
-    if (task == NULL) {
-        LOGE("The input task is null!");
-        return;
-    }
-    AuthCancelTask *realTask = (AuthCancelTask *)task;
-    HcFree(realTask->appId);
-}
-
-static void CancelAuthRequest(int64_t requestId, const char *appId)
-{
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(requestId);
     if (appId == NULL) {
         LOGE("Invalid app id!");
         return;
     }
-    uint32_t appIdLen = HcStrlen(appId) + 1;
-    char *copyAppId = (char *)HcMalloc(appIdLen, 0);
-    if (copyAppId == NULL) {
-        LOGE("Failed to allocate copyAppId memory!");
-        return;
-    }
-    if (strcpy_s(copyAppId, appIdLen, appId) != EOK) {
-        LOGE("Failed to copy appId!");
-        HcFree(copyAppId);
-        return;
-    }
-    AuthCancelTask *task = (AuthCancelTask *)HcMalloc(sizeof(AuthCancelTask), 0);
-    if (task == NULL) {
-        LOGE("Failed to allocate auth cancel task memory!");
-        HcFree(copyAppId);
-        return;
-    }
-    task->base.doAction = DoCancelAuthRequest;
-    task->base.destroy = DestroyAuthCancelTask;
-    task->reqId = requestId;
-    task->appId = copyAppId;
-    if (PushTask((HcTaskBase *)task) != HC_SUCCESS) {
-        HcFree(copyAppId);
-        HcFree(task);
-    }
+    LOGI("cancel request. [ReqId]: %" PRId64 ", [AppId]: %s", requestId, appId);
+    CancelDevSession(requestId, appId);
 }
 
 static int32_t AllocGmAndGa(void)
@@ -286,6 +820,10 @@ static int32_t InitAllModules(void)
         goto CLEAN_CALLBACK;
     }
     InitSessionManager();
+    res = InitDevSessionManager();
+    if (res != HC_SUCCESS) {
+        goto CLEAN_GROUP_MANAGER;
+    }
     res = InitTaskManager();
     if (res != HC_SUCCESS) {
         LOGE("[End]: [Service]: Failed to init worker thread!");
@@ -293,6 +831,8 @@ static int32_t InitAllModules(void)
     }
     return res;
 CLEAN_ALL:
+    DestroyDevSessionManager();
+CLEAN_GROUP_MANAGER:
     DestroySessionManager();
     DestroyGroupManager();
 CLEAN_CALLBACK:
@@ -359,11 +899,11 @@ DEVICE_AUTH_API_PUBLIC const DeviceGroupManager *GetGmInstance(void)
     g_groupManagerInstance->unRegDataChangeListener = UnRegListenerImpl;
     g_groupManagerInstance->createGroup = CreateGroupImpl;
     g_groupManagerInstance->deleteGroup = DeleteGroupImpl;
-    g_groupManagerInstance->addMemberToGroup = AddMemberToGroupImpl;
+    g_groupManagerInstance->addMemberToGroup = AddMemberToGroup;
     g_groupManagerInstance->deleteMemberFromGroup = DeleteMemberFromGroupImpl;
     g_groupManagerInstance->addMultiMembersToGroup = AddMultiMembersToGroupImpl;
     g_groupManagerInstance->delMultiMembersFromGroup = DelMultiMembersFromGroupImpl;
-    g_groupManagerInstance->processData = ProcessBindDataImpl;
+    g_groupManagerInstance->processData = ProcessBindData;
     g_groupManagerInstance->getRegisterInfo = GetRegisterInfoImpl;
     g_groupManagerInstance->checkAccessToGroup = CheckAccessToGroupImpl;
     g_groupManagerInstance->getPkInfoList = GetPkInfoListImpl;
@@ -374,7 +914,7 @@ DEVICE_AUTH_API_PUBLIC const DeviceGroupManager *GetGmInstance(void)
     g_groupManagerInstance->getDeviceInfoById = GetDeviceInfoByIdImpl;
     g_groupManagerInstance->getTrustedDevices = GetTrustedDevicesImpl;
     g_groupManagerInstance->isDeviceInGroup = IsDeviceInGroupImpl;
-    g_groupManagerInstance->cancelRequest = CancelRequestImpl;
+    g_groupManagerInstance->cancelRequest = CancelRequest;
     g_groupManagerInstance->destroyInfo = DestroyInfoImpl;
     return g_groupManagerInstance;
 }
@@ -388,6 +928,6 @@ DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
 
     g_groupAuthManager->processData = ProcessData;
     g_groupAuthManager->authDevice = AuthDevice;
-    g_groupAuthManager->cancelRequest = CancelAuthRequest;
+    g_groupAuthManager->cancelRequest = CancelRequest;
     return g_groupAuthManager;
 }

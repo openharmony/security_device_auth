@@ -266,7 +266,35 @@ static int32_t IpcGmUnRegDataChangeListener(const char *appId)
     return HC_SUCCESS;
 }
 
-static int32_t IpcGmCreateGroup(int32_t osAccountId, int64_t requestId, const char *appid, const char *createParams)
+static int32_t EncodeCreateGroupParams(uintptr_t callCtx, int32_t osAccountId, int64_t requestId,
+    const char *appId, const char *createParams)
+{
+    int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
+        sizeof(osAccountId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)&requestId, sizeof(requestId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_APPID, (const uint8_t *)appId, strlen(appId) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_APPID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_CREATE_PARAMS,
+                                  (const uint8_t *)createParams, strlen(createParams) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_CREATE_PARAMS);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t IpcGmCreateGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams)
 {
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -274,7 +302,7 @@ static int32_t IpcGmCreateGroup(int32_t osAccountId, int64_t requestId, const ch
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (IsStrInvalid(createParams) || IsStrInvalid(appid)) {
+    if (IsStrInvalid(createParams) || IsStrInvalid(appId)) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -283,31 +311,10 @@ static int32_t IpcGmCreateGroup(int32_t osAccountId, int64_t requestId, const ch
         LOGE("CreateCallCtx failed, ret %d", ret);
         return HC_ERR_IPC_INIT;
     }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
-        sizeof(osAccountId));
+    ret = EncodeCreateGroupParams(callCtx, osAccountId, requestId, appId, createParams);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)&requestId, sizeof(requestId));
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQID);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_APPID, (const uint8_t *)appid, strlen(appid) + 1);
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_APPID);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_CREATE_PARAMS,
-                                  (const uint8_t *)createParams, strlen(createParams) + 1);
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_CREATE_PARAMS);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
+        return ret;
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_CREATE_GROUP, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
@@ -324,7 +331,34 @@ static int32_t IpcGmCreateGroup(int32_t osAccountId, int64_t requestId, const ch
     return ret;
 }
 
-static int32_t IpcGmDelGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *delParams)
+static int32_t EncodeDeleteGroupParams(uintptr_t callCtx, int32_t osAccountId, int64_t requestId,
+    const char *appId, const char *delParams)
+{
+    int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
+        sizeof(osAccountId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)&requestId, sizeof(requestId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_DEL_PARAMS, (const uint8_t *)delParams, strlen(delParams) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_DEL_PARAMS);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_APPID, (const uint8_t *)appId, strlen(appId) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_APPID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t IpcGmDeleteGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *delParams)
 {
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -341,31 +375,10 @@ static int32_t IpcGmDelGroup(int32_t osAccountId, int64_t requestId, const char 
         LOGE("CreateCallCtx failed, ret %d", ret);
         return HC_ERR_IPC_INIT;
     }
-
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
-        sizeof(osAccountId));
+    ret = EncodeDeleteGroupParams(callCtx, osAccountId, requestId, appId, delParams);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)&requestId, sizeof(requestId));
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQID);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_DEL_PARAMS, (const uint8_t *)delParams, strlen(delParams) + 1);
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_DEL_PARAMS);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_APPID, (const uint8_t *)appId, strlen(appId) + 1);
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_APPID);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
+        return ret;
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_DEL_GROUP, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
@@ -380,6 +393,33 @@ static int32_t IpcGmDelGroup(int32_t osAccountId, int64_t requestId, const char 
     DestroyCallCtx(&callCtx, NULL);
     LOGI("process done, ret %d", ret);
     return ret;
+}
+
+static int32_t EncodeAddMemberParams(uintptr_t callCtx, int32_t osAccountId, int64_t requestId,
+    const char *appId, const char *addParams)
+{
+    int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
+        sizeof(osAccountId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)&requestId, sizeof(requestId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_APPID, (const uint8_t *)appId, strlen(appId) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_APPID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_ADD_PARAMS, (const uint8_t *)addParams, strlen(addParams) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_ADD_PARAMS);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    return HC_SUCCESS;
 }
 
 static int32_t IpcGmAddMemberToGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *addParams)
@@ -399,30 +439,10 @@ static int32_t IpcGmAddMemberToGroup(int32_t osAccountId, int64_t requestId, con
         LOGE("CreateCallCtx failed, ret %d", ret);
         return HC_ERR_IPC_INIT;
     }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
-        sizeof(osAccountId));
+    ret = EncodeAddMemberParams(callCtx, osAccountId, requestId, appId, addParams);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)&requestId, sizeof(requestId));
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQID);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_APPID, (const uint8_t *)appId, strlen(appId) + 1);
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_APPID);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_ADD_PARAMS, (const uint8_t *)addParams, strlen(addParams) + 1);
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_ADD_PARAMS);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
+        return ret;
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_ADD_GROUP_MEMBER, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
@@ -437,6 +457,33 @@ static int32_t IpcGmAddMemberToGroup(int32_t osAccountId, int64_t requestId, con
     DestroyCallCtx(&callCtx, NULL);
     LOGI("process done, ret %d", ret);
     return ret;
+}
+
+static int32_t EncodeDeleteMemberParams(uintptr_t callCtx, int32_t osAccountId, int64_t requestId,
+    const char *appId, const char *delParams)
+{
+    int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
+        sizeof(osAccountId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)&requestId, sizeof(requestId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_APPID, (const uint8_t *)appId, strlen(appId) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_APPID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_DEL_PARAMS, (const uint8_t *)delParams, strlen(delParams) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_DEL_PARAMS);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    return HC_SUCCESS;
 }
 
 static int32_t IpcGmDelMemberFromGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *delParams)
@@ -456,30 +503,10 @@ static int32_t IpcGmDelMemberFromGroup(int32_t osAccountId, int64_t requestId, c
         LOGE("CreateCallCtx failed, ret %d", ret);
         return HC_ERR_IPC_INIT;
     }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
-        sizeof(osAccountId));
+    ret = EncodeDeleteMemberParams(callCtx, osAccountId, requestId, appId, delParams);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)&requestId, sizeof(requestId));
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQID);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_APPID, (const uint8_t *)appId, strlen(appId) + 1);
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_APPID);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_DEL_PARAMS, (const uint8_t *)delParams, strlen(delParams) + 1);
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_DEL_PARAMS);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
+        return ret;
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_DEL_GROUP_MEMBER, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
@@ -1437,7 +1464,7 @@ static void InitIpcGmMethods(DeviceGroupManager *gmMethodObj)
     gmMethodObj->regDataChangeListener = IpcGmRegDataChangeListener;
     gmMethodObj->unRegDataChangeListener = IpcGmUnRegDataChangeListener;
     gmMethodObj->createGroup = IpcGmCreateGroup;
-    gmMethodObj->deleteGroup = IpcGmDelGroup;
+    gmMethodObj->deleteGroup = IpcGmDeleteGroup;
     gmMethodObj->addMemberToGroup = IpcGmAddMemberToGroup;
     gmMethodObj->deleteMemberFromGroup = IpcGmDelMemberFromGroup;
     gmMethodObj->addMultiMembersToGroup = IpcGmAddMultiMembersToGroup;
@@ -1459,6 +1486,28 @@ static void InitIpcGmMethods(DeviceGroupManager *gmMethodObj)
     return;
 }
 
+static int32_t EncodeProcessDataParams(uintptr_t callCtx, int64_t authReqId,
+    const uint8_t *data, uint32_t dataLen, const DeviceAuthCallback *callback)
+{
+    int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)(&authReqId), sizeof(authReqId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_REQID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_COMM_DATA, (const uint8_t *)data, dataLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_COMM_DATA);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_DEV_AUTH_CB, (const uint8_t *)callback, sizeof(*callback));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_DEV_AUTH_CB);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    SetCbCtxToDataCtx(callCtx, 0x0);
+    return HC_SUCCESS;
+}
+
 static int32_t IpcGaProcessData(int64_t authReqId,
     const uint8_t *data, uint32_t dataLen, const DeviceAuthCallback *callback)
 {
@@ -1477,26 +1526,11 @@ static int32_t IpcGaProcessData(int64_t authReqId,
         LOGE("CreateCallCtx failed, ret %d", ret);
         return HC_ERR_IPC_INIT;
     }
-
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)(&authReqId), sizeof(authReqId));
+    ret = EncodeProcessDataParams(callCtx, authReqId, data, dataLen, callback);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_REQID);
         DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
+        return ret;
     }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_COMM_DATA, (const uint8_t *)data, dataLen);
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_COMM_DATA);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_DEV_AUTH_CB, (const uint8_t *)callback, sizeof(*callback));
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_DEV_AUTH_CB);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    SetCbCtxToDataCtx(callCtx, 0x0);
     ret = DoBinderCall(callCtx, IPC_CALL_ID_GA_PROC_DATA, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
         LOGE("ipc call failed");
@@ -1510,6 +1544,34 @@ static int32_t IpcGaProcessData(int64_t authReqId,
     LOGI("process done, ret %d", ret);
     DestroyCallCtx(&callCtx, NULL);
     return ret;
+}
+
+static int32_t EncodeAuthDeviceParams(uintptr_t callCtx, int32_t osAccountId, int64_t authReqId,
+    const char *authParams, const DeviceAuthCallback *callback)
+{
+    int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
+        sizeof(osAccountId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)(&authReqId), sizeof(authReqId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_REQID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_AUTH_PARAMS, (const uint8_t *)authParams, strlen(authParams) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_AUTH_PARAMS);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_DEV_AUTH_CB, (const uint8_t *)callback, sizeof(*callback));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_DEV_AUTH_CB);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_AUTH_ID);
+    return HC_SUCCESS;
 }
 
 static int32_t IpcGaAuthDevice(int32_t osAccountId, int64_t authReqId, const char *authParams,
@@ -1530,32 +1592,11 @@ static int32_t IpcGaAuthDevice(int32_t osAccountId, int64_t authReqId, const cha
         LOGE("CreateCallCtx failed, ret %d", ret);
         return HC_ERR_IPC_INIT;
     }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
-        sizeof(osAccountId));
+    ret = EncodeAuthDeviceParams(callCtx, osAccountId, authReqId, authParams, callback);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
+        return ret;
     }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)(&authReqId), sizeof(authReqId));
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_REQID);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_AUTH_PARAMS, (const uint8_t *)authParams, strlen(authParams) + 1);
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_AUTH_PARAMS);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_DEV_AUTH_CB, (const uint8_t *)callback, sizeof(*callback));
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_DEV_AUTH_CB);
-        DestroyCallCtx(&callCtx, NULL);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_AUTH_ID);
     ret = DoBinderCall(callCtx, IPC_CALL_ID_AUTH_DEVICE, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
         LOGE("ipc call failed");

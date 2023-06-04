@@ -29,19 +29,23 @@
 static void OnAccountFinish(int64_t requestId, const CJson *authParam, const CJson *out,
     const DeviceAuthCallback *callback);
 static void OnAccountError(int64_t requestId, const AuthSession *session, int errorCode);
+static void OnAuthError(int64_t requestId, const CompatibleAuthSubSession *session, int errorCode);
 static int32_t FillAccountAuthInfo(int32_t osAccountId, const TrustedGroupEntry *entry,
     const TrustedDeviceEntry *localAuthInfo, CJson *paramsData);
 static void GetAccountCandidateGroup(int32_t osAccountId, const CJson *param,
     QueryGroupParams *queryParams, GroupEntryVec *vec);
 static int32_t GetAccountAuthParamForServer(const CJson *dataFromClient, ParamsVec *authParamsVec);
+static int32_t GetAuthParamsVecForServer(const CJson *dataFromClient, ParamsVecForAuth *authParamsVec);
 static int32_t GetAccountReqParams(const CJson *receiveData, CJson *reqParam);
 static int32_t CombineAccountServerConfirms(const CJson *confirmationJson, CJson *dataFromClient);
 
 static AccountRelatedGroupAuth g_accountRelatedGroupAuth = {
     .base.onFinish = OnAccountFinish,
     .base.onError = OnAccountError,
+    .base.onAuthError = OnAuthError,
     .base.fillDeviceAuthInfo = FillAccountAuthInfo,
     .base.getAuthParamForServer = GetAccountAuthParamForServer,
+    .base.getAuthParamsVecForServer = GetAuthParamsVecForServer,
     .base.getReqParams = GetAccountReqParams,
     .base.combineServerConfirmParams = CombineAccountServerConfirms,
     .base.authType = ACCOUNT_RELATED_GROUP_AUTH_TYPE,
@@ -333,6 +337,39 @@ static void OnAccountError(int64_t requestId, const AuthSession *session, int er
     }
 }
 
+static void OnAuthError(int64_t requestId, const CompatibleAuthSubSession *session, int errorCode)
+{
+    const DeviceAuthCallback *callback = session->base.callback;
+    ParamsVecForAuth list = session->paramsList;
+    CJson *authParam = list.get(&list, session->currentIndex);
+    if (authParam == NULL) {
+        LOGE("The json data in session is null!");
+        return;
+    }
+    int32_t authForm = AUTH_FORM_INVALID_TYPE;
+    if (GetIntFromJson(authParam, FIELD_AUTH_FORM, &authForm) != HC_SUCCESS) {
+        LOGE("Failed to get auth type!");
+        return;
+    }
+
+    /* If there is alternative group, do not return error. */
+    const char *altGroup = GetStringFromJson(authParam, FIELD_ALTERNATIVE);
+    if ((session->currentIndex < (list.size(&list) - 1)) || (altGroup != NULL)) {
+        LOGI("There are alternative groups.");
+        return;
+    }
+    int32_t osAccountId = ANY_OS_ACCOUNT;
+    if (GetIntFromJson(authParam, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId for account!");
+        return;
+    }
+    (void)DeleteExistedDeviceInfoInDb(osAccountId, authParam);
+    if ((callback != NULL) && (callback->onError != NULL)) {
+        LOGI("Invoke OnAccountError!");
+        callback->onError(requestId, authForm, errorCode, NULL);
+    }
+}
+
 static int32_t GetAccountReqParams(const CJson *receiveData, CJson *reqParam)
 {
     const char *peerUserId = GetStringFromJson(receiveData, FIELD_USER_ID);
@@ -525,6 +562,29 @@ static int32_t AddSelfAccountInfoForServer(CJson *dataFromClient)
 }
 
 static int32_t GetAccountAuthParamForServer(const CJson *dataFromClient, ParamsVec *authParamsVec)
+{
+    LOGI("Begin get account-related auth params for server.");
+    CJson *dupData = DuplicateJson(dataFromClient);
+    if (dupData == NULL) {
+        LOGE("Failed to create dupData for dataFromClient!");
+        return HC_ERR_JSON_FAIL;
+    }
+
+    if (AddSelfAccountInfoForServer(dupData) != HC_SUCCESS) {
+        LOGE("Failed to add account info for server!");
+        FreeJson(dupData);
+        return HC_ERR_GROUP_NOT_EXIST;
+    }
+
+    if (authParamsVec->pushBack(authParamsVec, (const void **)&dupData) == NULL) {
+        LOGE("Failed to push json data to vector in account-related auth!");
+        FreeJson(dupData);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t GetAuthParamsVecForServer(const CJson *dataFromClient, ParamsVecForAuth *authParamsVec)
 {
     LOGI("Begin get account-related auth params for server.");
     CJson *dupData = DuplicateJson(dataFromClient);

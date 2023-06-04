@@ -41,6 +41,7 @@
 #define FIELD_BIND_SESSION_TYPE "bindSessionType"
 #define FIELD_CHALLENGE "challenge"
 #define FIELD_CHANNEL_ID "channelId"
+#define FIELD_CHANNEL_TYPE "channelType"
 #define FIELD_CONN_DEVICE_ID "connDeviceId"
 #define FIELD_CONNECT_PARAMS "connectParams"
 #define FIELD_CROSS_USER_ID_LIST "crossUserIdList"
@@ -66,6 +67,7 @@
 #define FIELD_GROUP_VISIBILITY "groupVisibility"
 #define FIELD_IS_ADMIN "isAdmin"
 #define FIELD_IS_ACCOUNT_BIND "isAccountBind"
+#define FIELD_IS_BIND "isBind"
 #define FIELD_IS_FORCE_DELETE "isForceDelete"
 #define FIELD_IS_CREDENTIAL_EXISTS "isCredentialExists"
 #define FIELD_KCF_DATA "kcfData"
@@ -75,6 +77,7 @@
 #define FIELD_MIN_VERSION "minVersion"
 #define FIELD_GROUP_AND_MODULE_VERSION "groupAndModuleVersion"
 #define FIELD_NONCE "nonce"
+#define FIELD_OP_CODE "opCode"
 #define FIELD_OPERATION_CODE "operationCode"
 #define FIELD_OPERATION_PARAMS "operationParams"
 #define FIELD_OWNER_ID "ownerId"
@@ -120,11 +123,6 @@
 #define FIELD_AUTH_RESULT_MAC "authResultMac"
 #define FIELD_LOCAL_DEVICE_TYPE "localDeviceType"
 
-#define DEV_AUTH_ZERO 0
-#define DEV_AUTH_ONE 1
-#define DEV_AUTH_TWO 2
-#define DEV_AUTH_THREE 3
-
 #define INVALID_MODULE_TYPE (-1)
 #define GROUP_ERR_MSG 0x8080
 
@@ -141,6 +139,8 @@
 #define DEFAULT_CHANNEL_ID (-1)
 #define DEFAULT_EXPIRE_TIME 90
 #define GROUP_MANAGER_PACKAGE_NAME "com.huawei.devicegroupmanage"
+#define DM_APP_ID "ohos.distributedhardware.devicemanager"
+#define SOFTBUS_APP_ID "softbus_auth"
 #define DEFAULT_RETURN_KEY_LENGTH 32
 #define MAX_BUFFER_LEN 1024
 #define MAX_DATA_BUFFER_SIZE 4096
@@ -152,7 +152,6 @@
 #define ALL_GROUP_VISIBILITY (-2)
 #define INVALID_CRED 0
 #define PUBLIC_KEY_MAX_LENGTH 128
-#define DESENSITIZATION_LEN 12
 
 typedef enum {
     NO_CHANNEL = 1,
