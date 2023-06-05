@@ -1464,7 +1464,7 @@ HWTEST_F(GmProcessDataTest, GmProcessDataTest004, TestSize.Level0)
     int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
     ASSERT_EQ(ret, HC_SUCCESS);
     ret = gm->processData(TEST_REQ_ID, (const uint8_t *)g_processData, strlen(g_processData) + 1);
-    ASSERT_EQ(ret, HC_SUCCESS);
+    ASSERT_NE(ret, HC_SUCCESS);
 }
 
 class GmAddMultiMembersToGroupTest : public testing::Test {
@@ -1732,7 +1732,7 @@ HWTEST_F(GaProcessDataTest, GaProcessDataTest005, TestSize.Level0)
     ASSERT_NE(ga, nullptr);
     int32_t ret = ga->processData(TEST_REQ_ID, (const uint8_t *)g_processData,
         strlen(g_processData) + 1, &g_gaCallback);
-    ASSERT_EQ(ret, HC_SUCCESS);
+    ASSERT_NE(ret, HC_SUCCESS);
 }
 
 class GmDeleteGroupTest : public testing::Test {

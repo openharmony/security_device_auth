@@ -600,7 +600,7 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
     SET_TRACE_ID(authReqId);
     LOGI("Begin AuthDevice. [requestId]:%" PRId64, authReqId);
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    if ((authParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
+    if ((authParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT) || (gaCallback == NULL)) {
         LOGE("The input auth params is invalid!");
         return HC_ERR_INVALID_PARAMS;
     }

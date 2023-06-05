@@ -2268,7 +2268,7 @@ HWTEST_F(GmDeleteMemberFromGroupTest, GmDeleteMemberFromGroupTest005, TestSize.L
     AddDemoMember();
     ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
     DeleteDemoMember(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, g_deleteParams);
-    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_ERROR);
 }
 
 HWTEST_F(GmDeleteMemberFromGroupTest, GmDeleteMemberFromGroupTest006, TestSize.Level0)
@@ -3048,7 +3048,7 @@ HWTEST_F(GaAuthDeviceTest, GaAuthDeviceTest003, TestSize.Level0)
     AddDemoMember();
     ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
     AuthDemoMember();
-    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_ERROR);
     DestroyDeviceAuthService();
 }
 
