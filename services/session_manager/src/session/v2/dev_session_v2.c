@@ -599,7 +599,7 @@ static int32_t GetSaltMsg(Uint8Buff *saltMsg)
 static int32_t CalSalt(Uint8Buff *salt)
 {
     uint32_t saltMsgLen = DEV_SESSION_SALT_LEN + sizeof(clock_t);
-    Uint8Buff saltMsg;
+    Uint8Buff saltMsg = { NULL, 0 };
     if (InitUint8Buff(&saltMsg, saltMsgLen) != HC_SUCCESS) {
         LOGE("allocate saltMsg memory fail.");
         return HC_ERR_ALLOC_MEMORY;
