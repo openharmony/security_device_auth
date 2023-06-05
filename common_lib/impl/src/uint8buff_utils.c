@@ -27,10 +27,6 @@ int32_t InitUint8Buff(Uint8Buff *buff, uint32_t buffLen)
     if (buffLen == 0) {
         return CLIB_ERR_INVALID_LEN;
     }
-    if (buff->val != NULL) {
-        (void)memset_s(buff->val, buff->length, 0, buff->length);
-        ClibFree(buff->val);
-    }
     buff->val = (uint8_t *)ClibMalloc(buffLen, 0);
     if (buff->val == NULL) {
         return CLIB_ERR_BAD_ALLOC;
@@ -41,7 +37,7 @@ int32_t InitUint8Buff(Uint8Buff *buff, uint32_t buffLen)
 
 int32_t DeepCopyUint8Buff(const Uint8Buff *buff, Uint8Buff *newBuff)
 {
-    if (buff == NULL || newBuff == NULL) {
+    if (buff == NULL || buff->val == NULL || newBuff == NULL) {
         return CLIB_ERR_NULL_PTR;
     }
     if (buff->length == 0) {
