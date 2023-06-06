@@ -278,7 +278,7 @@ static void DoProcSession(HcTaskBase *task)
     ProcSessionTask *realTask = (ProcSessionTask *)task;
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(realTask->sessionId);
-    bool isFinish = false;
+    bool isFinish;
     int32_t res = ProcessDevSession(realTask->sessionId, realTask->receivedMsg, &isFinish);
     if (res != HC_SUCCESS) {
         LOGE("ProcessDevSession fail. [Res]: %d", res);

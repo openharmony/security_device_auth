@@ -368,7 +368,6 @@ static int32_t ProcV1SessionMsg(SessionImpl *impl, const CJson *receviedMsg, boo
             return res;
         }
     }
-    *isFinish = false;
     return HC_SUCCESS;
 }
 
