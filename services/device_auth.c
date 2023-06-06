@@ -504,7 +504,6 @@ static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg
         LOGE("The OnRequest callback is fail!");
         return HC_ERR_REQ_REJECTED;
     }
-    LOGE("onRequest Data: %s", returnDataStr);
     CJson *context = CreateJsonFromString(returnDataStr);
     FreeJsonString(returnDataStr);
     if (context == NULL) {
