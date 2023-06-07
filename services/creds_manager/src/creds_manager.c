@@ -462,7 +462,7 @@ static int32_t ComputeAndSavePsk(int32_t osAccountId, const char *groupId, const
     Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, strlen(GROUP_MANAGER_PACKAGE_NAME) };
     const char *serviceType = StringGet(&peerDeviceEntry->serviceType);
     Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, strlen(serviceType) };
-    KeyAliasType keyType = selfUserType;
+    KeyAliasType keyType = (KeyAliasType)selfUserType;
     uint8_t selfKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff selfKeyAlias = { selfKeyAliasVal, PAKE_KEY_ALIAS_LEN };
     ret = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, keyType, &selfAuthIdBuff, &selfKeyAlias);
