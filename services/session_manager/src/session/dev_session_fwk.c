@@ -161,7 +161,7 @@ static int32_t ProcEventList(SessionImpl *impl)
         LOGE("allocate sessionMsg memory fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t res;
+    int32_t res = HC_ERR_CASE;
     while (HC_VECTOR_SIZE(&impl->eventList) > 0) {
         SessionEvent event;
         HC_VECTOR_POPELEMENT(&impl->eventList, &event, 0);
@@ -255,10 +255,22 @@ static int32_t ParseAllRecvEvent(SessionImpl *impl, const CJson *receviedMsg)
         return HC_ERR_JSON_GET;
     }
     int32_t eventNum = GetItemNum(sessionMsg);
+    if (eventNum <= 0) {
+        LOGE("There are no events in the received session message.");
+        return HC_ERR_BAD_MESSAGE;
+    }
     for (int32_t i = 0; i < eventNum; i++) {
         CJson *inputEventJosn = GetItemFromArray(sessionMsg, i);
+        if (inputEventJosn == NULL) {
+            LOGE("get inputEventJosn from sessionMsg fail.");
+            return HC_ERR_JSON_GET;
+        }
         int32_t eventType = DecodeEvent(inputEventJosn);
         CJson *eventData = GetObjFromJson(inputEventJosn, FIELD_DATA);
+        if (eventData == NULL) {
+            LOGE("get eventData fail.");
+            return HC_ERR_JSON_GET;
+        }
         SessionEvent event = { eventType, eventData };
         if (HC_VECTOR_PUSHBACK(&impl->eventList, &event) == NULL) {
             LOGE("push event fail.");
