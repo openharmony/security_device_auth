@@ -24,6 +24,9 @@ IMPLEMENT_HC_VECTOR(AuthSubSessionList, AuthSubSession *, 1)
 
 int32_t SessionSwitchState(SessionImpl *impl, SessionEvent *event, CJson *sessionMsg)
 {
+    (void)impl;
+    (void)event;
+    (void)sessionMsg;
     LOGE("not support.");
     return HC_ERR_NOT_SUPPORT;
 }

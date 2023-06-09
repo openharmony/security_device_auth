@@ -1351,7 +1351,7 @@ static int32_t PeerCmdsNegotiate(SessionImpl *impl, const CJson *credAbility)
             return HC_ERR_JSON_GET;
         }
         if (IsCmdSupport(id)) {
-            peerCmds |= id;
+            peerCmds |= (uint32_t)id;
             continue;
         }
         int32_t strategy;
@@ -1756,6 +1756,10 @@ static const SessionStateNode STATE_MACHINE[] = {
 
 int32_t SessionSwitchState(SessionImpl *impl, SessionEvent *event, CJson *sessionMsg)
 {
+    if (impl == NULL || event == NULL || sessionMsg == NULL) {
+        LOGE("invalid params.");
+        return HC_ERR_NULL_PTR;
+    }
     for (uint32_t i = 0; i < sizeof(STATE_MACHINE) / sizeof(STATE_MACHINE[0]); i++) {
         if ((STATE_MACHINE[i].curState == impl->curState) && (STATE_MACHINE[i].eventType == event->type)) {
             JumpPolicy policy;
