@@ -362,7 +362,7 @@ static int32_t ReturnErrorToPeerByTask(CJson *sendToPeer, const CJson *authParam
     if (!callback->onTransmit(requestId, (uint8_t *)sendToPeerStr, HcStrlen(sendToPeerStr) + 1)) {
         LOGE("Failed to transmit error msg by task!");
         FreeJsonString(sendToPeerStr);
-        res = HC_ERR_TRANSMIT_FAIL;
+        return HC_ERR_TRANSMIT_FAIL;
     }
     LOGD("End transmit error msg to peer by task!");
     FreeJsonString(sendToPeerStr);

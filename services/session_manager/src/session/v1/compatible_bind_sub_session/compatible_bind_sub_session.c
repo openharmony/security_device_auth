@@ -142,7 +142,7 @@ static int32_t GetDuplicateAppId(const CJson *params, char **returnAppId)
         LOGE("Failed to get appId from json!");
         return HC_ERR_JSON_GET;
     }
-    int32_t appIdLen = HcStrlen(appId);
+    uint32_t appIdLen = HcStrlen(appId);
     *returnAppId = (char *)HcMalloc(appIdLen + 1, 0);
     if (*returnAppId == NULL) {
         LOGE("Failed to allocate return appId memory!");
