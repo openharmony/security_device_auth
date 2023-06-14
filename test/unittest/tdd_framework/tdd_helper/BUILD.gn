@@ -1,0 +1,73 @@
+# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("../tdd_framework.gni")
+
+ohos_static_library("device_auth_test_hal") {
+  subsystem_name = "security"
+  part_name = "device_auth"
+  include_dirs = hals_inc_path
+  include_dirs += [
+    "//third_party/cJSON",
+    "//third_party/openssl/include/",
+    "//third_party/mbedtls/include",
+    "//third_party/mbedtls/include/mbedtls",
+  ]
+  include_dirs += [
+    "exception_controller/inc",
+    "memory_mock/inc",
+    "memory_monitor/inc",
+  ]
+
+  sources = hal_common_files
+  sources += [
+    "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
+    "${key_management_adapter_path}/impl/src/standard/huks_adapter.c",
+    "${key_management_adapter_path}/impl/src/standard/mbedtls_ec_adapter.c",
+    "${os_adapter_path}/impl/src/hc_log.c",
+    "${os_adapter_path}/impl/src/linux/hc_condition.c",
+    "${os_adapter_path}/impl/src/linux/hc_dev_info.c",
+    "${os_adapter_path}/impl/src/linux/hc_file.c",
+    "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
+    "${os_adapter_path}/impl/src/linux/hc_thread.c",
+    "${os_adapter_path}/impl/src/linux/hc_types.c",
+  ]
+  sources -= [
+    "${common_lib_path}/impl/src/clib_types.c",
+    "${os_adapter_path}/impl/src/linux/hc_types.c",
+  ]
+  sources += [
+    "exception_controller/src/exception_controller.c",
+    "memory_mock/src/memory_mock.c",
+    "memory_monitor/src/memory_monitor.cpp",
+  ]
+
+  defines = [ "DEV_AUTH_MEMORY_DEBUG" ]
+  if (enable_extend_plugin) {
+    defines += [ "DEV_AUTH_PLUGIN_ENABLE" ]
+    sources += [ "${os_adapter_path}/impl/src/linux/dev_auth_dynamic_load.c" ]
+  }
+
+  cflags = [ "-DHILOG_ENABLE" ]
+  deps = [
+    "//third_party/cJSON:cjson",
+    "//third_party/mbedtls:mbedtls_shared",
+    "//third_party/openssl:libcrypto_shared",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "huks:libhukssdk",
+    "init:libbegetutil",
+  ]
+}

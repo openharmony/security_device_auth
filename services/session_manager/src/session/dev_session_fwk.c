@@ -260,13 +260,13 @@ static int32_t ParseAllRecvEvent(SessionImpl *impl, const CJson *receviedMsg)
         return HC_ERR_BAD_MESSAGE;
     }
     for (int32_t i = 0; i < eventNum; i++) {
-        CJson *inputEventJosn = GetItemFromArray(sessionMsg, i);
-        if (inputEventJosn == NULL) {
-            LOGE("get inputEventJosn from sessionMsg fail.");
+        CJson *inputEventJson = GetItemFromArray(sessionMsg, i);
+        if (inputEventJson == NULL) {
+            LOGE("get inputEventJson from sessionMsg fail.");
             return HC_ERR_JSON_GET;
         }
-        int32_t eventType = DecodeEvent(inputEventJosn);
-        CJson *eventData = GetObjFromJson(inputEventJosn, FIELD_DATA);
+        int32_t eventType = DecodeEvent(inputEventJson);
+        CJson *eventData = GetObjFromJson(inputEventJson, FIELD_DATA);
         if (eventData == NULL) {
             LOGE("get eventData fail.");
             return HC_ERR_JSON_GET;

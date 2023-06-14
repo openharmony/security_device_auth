@@ -13,35 +13,21 @@
  * limitations under the License.
  */
 
-#ifndef DEV_AUTH_EC_SPEKE_PROTOCOL_H
-#define DEV_AUTH_EC_SPEKE_PROTOCOL_H
+#ifndef DEV_AUTH_MEMORY_MOCK_H
+#define DEV_AUTH_MEMORY_MOCK_H
 
-#include "base_protocol.h"
-
-#define PROTOCOL_TYPE_EC_SPEKE 1
-
-typedef enum {
-    CURVE_TYPE_256 = 1,
-    CURVE_TYPE_25519 = 2,
-} EcSpekeCurveType;
-
-typedef struct {
-    int32_t curveType;
-    Uint8Buff authId;
-} EcSpekeInitParams;
-
-#ifdef ENABLE_EC_SPEKE
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t CreateEcSpekeProtocol(const void *baseParams, bool isClient, BaseProtocol **returnObj);
+void *MockMalloc(uint32_t size, char val, const char *strFile, int nLine);
+void MockFree(void *addr);
+void *MockMallocForJson(uint32_t size);
+uint32_t HcStrlen(const char *str);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif
-
 #endif

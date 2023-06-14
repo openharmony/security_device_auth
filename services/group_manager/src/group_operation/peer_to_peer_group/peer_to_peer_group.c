@@ -365,6 +365,7 @@ static int32_t CheckPeerDeviceStatus(int32_t osAccountId, const char *groupId, c
         LOGE("Failed to get peerAuthId from jsonParams!");
         return HC_ERR_JSON_GET;
     }
+    PRINT_SENSITIVE_DATA("PeerAuthId", peerAuthId);
     TrustedDeviceEntry *deviceInfo = CreateDeviceEntry();
     if (deviceInfo == NULL) {
         LOGE("Failed to allocate deviceInfo memory!");

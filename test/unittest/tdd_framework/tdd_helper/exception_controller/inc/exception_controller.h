@@ -13,35 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef DEV_AUTH_EC_SPEKE_PROTOCOL_H
-#define DEV_AUTH_EC_SPEKE_PROTOCOL_H
+#ifndef DEV_AUTH_EXCEPTION_CONTROLLER_H
+#define DEV_AUTH_EXCEPTION_CONTROLLER_H
 
-#include "base_protocol.h"
-
-#define PROTOCOL_TYPE_EC_SPEKE 1
-
-typedef enum {
-    CURVE_TYPE_256 = 1,
-    CURVE_TYPE_25519 = 2,
-} EcSpekeCurveType;
-
-typedef struct {
-    int32_t curveType;
-    Uint8Buff authId;
-} EcSpekeInitParams;
-
-#ifdef ENABLE_EC_SPEKE
+#include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t CreateEcSpekeProtocol(const void *baseParams, bool isClient, BaseProtocol **returnObj);
+bool IsNeedThrowException(void);
+uint32_t GetCallNum(void);
+void AddCallNum(void);
+void SetControllerMode(bool isNeedThrowException);
+void SetThrowExceptionIndex(uint32_t index);
+void InitExceptionController(void);
+void DestroyExceptionController(void);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif
-
 #endif

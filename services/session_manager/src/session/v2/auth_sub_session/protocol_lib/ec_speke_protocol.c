@@ -34,8 +34,6 @@
 #define SHARED_SECRET_DERIVED_FACTOR "hichain_speke_shared_secret_info"
 #define HICHAIN_SPEKE_SESSIONKEY_INFO "hichain_speke_sessionkey_info"
 
-// P256 define
-
 // X25519 define
 #define EC_SPEKE_PRIVATE_KEY_AND_MASK_HIGH 0xF8
 #define EC_SPEKE_PRIVATE_KEY_AND_MASK_LOW  0x7F
@@ -1087,21 +1085,9 @@ static void DestroyEcSpekeProtocol(BaseProtocol *self)
     HcFree(impl);
 }
 
-int32_t CreateEcSpekeProtocol(const void *baseParams, bool isClient, BaseProtocol **returnObj)
+static int32_t BuildEcSpekeProtocolObj(const EcSpekeInitParams *params, bool isClient, EcSpekeProtocol *instance)
 {
-    const EcSpekeInitParams *params = (const EcSpekeInitParams *)baseParams;
-    if ((params == NULL) || (returnObj == NULL) ||
-        !IsUint8BuffValid(&params->authId, EC_SPEKE_AUTH_ID_MAX_LEN)) {
-        LOGE("invalid params.");
-        return HC_ERR_INVALID_PARAMS;
-    }
-    EcSpekeProtocol *instance = (EcSpekeProtocol *)HcMalloc(sizeof(EcSpekeProtocol), 0);
-    if (instance == NULL) {
-        LOGE("allocate instance memory fail.");
-        return HC_ERR_ALLOC_MEMORY;
-    }
     if (DeepCopyUint8Buff(&params->authId, &instance->params.authIdSelf) != HC_SUCCESS) {
-        HcFree(instance);
         return HC_ERR_ALLOC_MEMORY;
     }
     instance->base.name = PROTOCOL_TYPE_EC_SPEKE;
@@ -1117,6 +1103,36 @@ int32_t CreateEcSpekeProtocol(const void *baseParams, bool isClient, BaseProtoco
     instance->base.getSessionKey = GetEcSpekeSessionKey;
     instance->base.destroy = DestroyEcSpekeProtocol;
     instance->params.curveType = params->curveType;
+    return HC_SUCCESS;
+}
+
+static bool IsCurveTypeValid(int32_t curveType)
+{
+    return (curveType == CURVE_TYPE_256 || curveType == CURVE_TYPE_25519);
+}
+
+int32_t CreateEcSpekeProtocol(const void *baseParams, bool isClient, BaseProtocol **returnObj)
+{
+    const EcSpekeInitParams *params = (const EcSpekeInitParams *)baseParams;
+    if ((params == NULL) || (returnObj == NULL) ||
+        !IsUint8BuffValid(&params->authId, EC_SPEKE_AUTH_ID_MAX_LEN)) {
+        LOGE("invalid params.");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    if (!IsCurveTypeValid(params->curveType)) {
+        LOGE("invalid curve type. [CurveType]: %d", params->curveType);
+        return HC_ERR_INVALID_PARAMS;
+    }
+    EcSpekeProtocol *instance = (EcSpekeProtocol *)HcMalloc(sizeof(EcSpekeProtocol), 0);
+    if (instance == NULL) {
+        LOGE("allocate instance memory fail.");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    int32_t res = BuildEcSpekeProtocolObj(params, isClient, instance);
+    if (res != HC_SUCCESS) {
+        DestroyEcSpekeProtocol((BaseProtocol *)instance);
+        return res;
+    }
     *returnObj = (BaseProtocol *)instance;
     return HC_SUCCESS;
 }

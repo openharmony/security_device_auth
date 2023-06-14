@@ -26,8 +26,20 @@
 extern "C" {
 #endif
 
+#ifdef DEV_AUTH_MEMORY_DEBUG
+
+#define HcMalloc(size, val) MockMalloc(size, val, __FILE__, __LINE__)
+#define HcFree(addr) MockFree(addr)
+void *MockMalloc(uint32_t size, char val, const char *strFile, int nLine);
+void MockFree(void *addr);
+
+#else
+
 void* HcMalloc(uint32_t size, char val);
 void HcFree(void* addr);
+
+#endif
+
 uint32_t HcStrlen(const char *str);
 
 #ifdef __cplusplus

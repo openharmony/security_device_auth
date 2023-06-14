@@ -13,35 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef DEV_AUTH_EC_SPEKE_PROTOCOL_H
-#define DEV_AUTH_EC_SPEKE_PROTOCOL_H
+#ifndef DEV_AUTH_MEMORY_MONITOR_H
+#define DEV_AUTH_MEMORY_MONITOR_H
 
-#include "base_protocol.h"
-
-#define PROTOCOL_TYPE_EC_SPEKE 1
-
-typedef enum {
-    CURVE_TYPE_256 = 1,
-    CURVE_TYPE_25519 = 2,
-} EcSpekeCurveType;
-
-typedef struct {
-    int32_t curveType;
-    Uint8Buff authId;
-} EcSpekeInitParams;
-
-#ifdef ENABLE_EC_SPEKE
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t CreateEcSpekeProtocol(const void *baseParams, bool isClient, BaseProtocol **returnObj);
+void HcMonitorMalloc(void *addr, uint32_t size, const char *strFile, int nLine);
+void HcMonitorFree(void *addr);
+void ReportMonitor(void);
+bool IsMemoryLead(void);
+void HcInitMallocMonitor(void);
+void HcDestroyMallocMonitor(void);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif
-
 #endif

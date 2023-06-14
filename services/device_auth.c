@@ -285,7 +285,7 @@ static void DoProcSession(HcTaskBase *task)
         CloseDevSession(realTask->sessionId);
         return;
     }
-    LOGE("ProcessDevSession success. [State]: %s", isFinish ? "FINISH" : "CONTINUE");
+    LOGI("ProcessDevSession success. [State]: %s", isFinish ? "FINISH" : "CONTINUE");
     if (isFinish) {
         CloseDevSession(realTask->sessionId);
     }
@@ -564,6 +564,7 @@ static int32_t BuildClientAuthContext(int32_t osAccountId, int64_t requestId, co
             LOGE("add peerUdid to context fail.");
             return HC_ERR_JSON_ADD;
         }
+        PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
     }
     if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
         LOGE("add isBind to context fail.");
@@ -642,6 +643,7 @@ static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const c
         LOGE("get peerUdid from json fail.");
         return HC_ERR_JSON_GET;
     }
+    PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
     if (AddStringToJson(context, FIELD_PEER_UDID, peerUdid) != HC_SUCCESS) {
         LOGE("add peerUdid to context fail.");
         return HC_ERR_JSON_ADD;
@@ -687,7 +689,6 @@ static int32_t OpenServerAuthSession(int64_t requestId, const CJson *receivedMsg
         LOGE("The OnRequest callback is fail!");
         return HC_ERR_REQ_REJECTED;
     }
-    LOGE("onRequest Data: %s", returnDataStr);
     CJson *context = CreateJsonFromString(returnDataStr);
     FreeJsonString(returnDataStr);
     if (context == NULL) {
