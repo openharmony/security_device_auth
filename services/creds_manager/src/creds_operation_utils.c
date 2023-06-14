@@ -30,6 +30,7 @@ IMPLEMENT_HC_VECTOR(IdentityInfoVec, IdentityInfo*, 1)
 
 static int32_t SetProtocolsForPinType(IdentityInfo *info)
 {
+#ifdef ENABLE_P2P_BIND_EC_SPEKE
     ProtocolEntity *ecSpekeEntity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
     if (ecSpekeEntity == NULL) {
         LOGE("Failed to alloc memory for ec speke entity!");
@@ -38,6 +39,7 @@ static int32_t SetProtocolsForPinType(IdentityInfo *info)
     ecSpekeEntity->protocolType = ALG_EC_SPEKE;
     ecSpekeEntity->expandProcessCmds = CMD_EXCHANGE_PK | CMD_ADD_TRUST_DEVICE;
     info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&ecSpekeEntity);
+#endif
 
     ProtocolEntity *dlSpekeEntity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
     if (dlSpekeEntity == NULL) {
@@ -48,6 +50,7 @@ static int32_t SetProtocolsForPinType(IdentityInfo *info)
     dlSpekeEntity->expandProcessCmds = CMD_IMPORT_AUTH_CODE | CMD_ADD_TRUST_DEVICE;
     info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&dlSpekeEntity);
 
+#ifdef ENABLE_P2P_BIND_ISO
     ProtocolEntity *isoEntity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
     if (isoEntity == NULL) {
         LOGE("Failed to alloc memory for iso entity!");
@@ -56,12 +59,14 @@ static int32_t SetProtocolsForPinType(IdentityInfo *info)
     isoEntity->protocolType = ALG_ISO;
     isoEntity->expandProcessCmds = CMD_IMPORT_AUTH_CODE | CMD_ADD_TRUST_DEVICE;
     info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&isoEntity);
+#endif
 
     return HC_SUCCESS;
 }
 
 static int32_t SetProtocolsForUidType(IdentityInfo *info)
 {
+#ifdef ENABLE_ACCOUNT_AUTH_ISO
     ProtocolEntity *entity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
     if (entity == NULL) {
         LOGE("Failed to alloc memory for entity!");
@@ -70,19 +75,40 @@ static int32_t SetProtocolsForUidType(IdentityInfo *info)
     entity->protocolType = ALG_ISO;
     entity->expandProcessCmds = CMD_ADD_TRUST_DEVICE;
     info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity);
+#else
+    (void)info;
+#endif
 
     return HC_SUCCESS;
 }
 
 static int32_t SetProtocolsForP2pType(int32_t keyType, IdentityInfo *info)
 {
-    ProtocolEntity *entity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
-    if (entity == NULL) {
-        LOGE("Failed to alloc memory for entity!");
-        return HC_ERR_ALLOC_MEMORY;
+    if (keyType == KEY_TYPE_ASYM) {
+    #ifdef ENABLE_P2P_AUTH_EC_SPEKE
+        ProtocolEntity *entity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
+        if (entity == NULL) {
+            LOGE("Failed to alloc memory for entity!");
+            return HC_ERR_ALLOC_MEMORY;
+        }
+        entity->protocolType = ALG_EC_SPEKE;
+        info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity);
+    #else
+        (void)info;
+    #endif
+    } else {
+    #ifdef ENABLE_P2P_AUTH_ISO
+        ProtocolEntity *entity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
+        if (entity == NULL) {
+            LOGE("Failed to alloc memory for entity!");
+            return HC_ERR_ALLOC_MEMORY;
+        }
+        entity->protocolType = ALG_ISO;
+        info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity);
+    #else
+        (void)info;
+    #endif
     }
-    entity->protocolType = (keyType == KEY_TYPE_ASYM) ? ALG_EC_SPEKE : ALG_ISO;
-    info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity);
 
     return HC_SUCCESS;
 }

@@ -243,6 +243,7 @@ static int32_t GetAccountAsymIdentityInfo(int32_t osAccountId, const char *userI
         return ret;
     }
 
+#ifdef ENABLE_ACCOUNT_AUTH_EC_SPEKE
     ProtocolEntity *ecSpekeEntity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
     if (ecSpekeEntity == NULL) {
         LOGE("Failed to alloc memory for ec speke entity!");
@@ -251,6 +252,7 @@ static int32_t GetAccountAsymIdentityInfo(int32_t osAccountId, const char *userI
     ecSpekeEntity->protocolType = ALG_EC_SPEKE;
     ecSpekeEntity->expandProcessCmds = CMD_ADD_TRUST_DEVICE;
     info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&ecSpekeEntity);
+#endif
 
     info->proofType = CERTIFICATED;
     return HC_SUCCESS;

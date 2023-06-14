@@ -13,7 +13,10 @@
 
 import("//base/security/device_auth/deviceauth_env.gni")
 
-account_related_defines = []
+account_related_defines = [
+  "ENABLE_ACCOUNT_AUTH_ISO",
+  "ENABLE_ACCOUNT_AUTH_EC_SPEKE",
+]
 account_related_inc_path = []
 
 deviceauth_account_group_manager_path = "${services_path}/group_manager"

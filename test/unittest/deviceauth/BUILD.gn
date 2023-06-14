@@ -107,6 +107,12 @@ ohos_unittest("deviceauth_llt") {
     "P2P_PAKE_EC_TYPE",
     "ENABLE_EC_SPEKE",
     "ENABLE_ISO",
+    "ENABLE_ACCOUNT_AUTH_ISO",
+    "ENABLE_ACCOUNT_AUTH_EC_SPEKE",
+    "ENABLE_P2P_BIND_ISO",
+    "ENABLE_P2P_BIND_EC_SPEKE",
+    "ENABLE_P2P_AUTH_ISO",
+    "ENABLE_P2P_AUTH_EC_SPEKE",
   ]
 
   cflags = [ "-DHILOG_ENABLE" ]
