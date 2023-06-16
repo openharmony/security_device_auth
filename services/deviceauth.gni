@@ -255,15 +255,17 @@ deviceauth_files = dev_frameworks_files + deviceauth_common_files +
                    session_manager_files + creds_manager_files
 
 if (enable_session_v2 == true) {
-  deviceauth_files += session_v2_files
-  if (enable_p2p_auth_lite_protocol == true) {
+  if (enable_account || enable_p2p_bind_lite_protocol ||
+      enable_p2p_auth_lite_protocol) {
     deviceauth_defines += [ "ENABLE_ISO" ]
     deviceauth_files += iso_protocol_files
   }
-  if (enable_p2p_auth_standard_protocol == true) {
+  if (enable_account || enable_p2p_bind_standard_protocol ||
+      enable_p2p_auth_standard_protocol) {
     deviceauth_defines += [ "ENABLE_EC_SPEKE" ]
     deviceauth_files += ec_speke_protocol_files
   }
+  deviceauth_files += session_v2_files
   deviceauth_files += auth_code_import_files
   deviceauth_files += pub_key_exchange_files
   deviceauth_files += save_trusted_info_files
@@ -288,6 +290,22 @@ deviceauth_files += group_auth_files + group_manager_files +
 account_unrelated_deviceauth =
     enable_p2p_bind_lite_protocol || enable_p2p_auth_lite_protocol ||
     enable_p2p_bind_standard_protocol || enable_p2p_auth_standard_protocol
+
+if (enable_p2p_bind_lite_protocol) {
+  deviceauth_defines += [ "ENABLE_P2P_BIND_ISO" ]
+}
+
+if (enable_p2p_bind_standard_protocol) {
+  deviceauth_defines += [ "ENABLE_P2P_BIND_EC_SPEKE" ]
+}
+
+if (enable_p2p_auth_lite_protocol) {
+  deviceauth_defines += [ "ENABLE_P2P_AUTH_ISO" ]
+}
+
+if (enable_p2p_auth_standard_protocol) {
+  deviceauth_defines += [ "ENABLE_P2P_AUTH_EC_SPEKE" ]
+}
 
 if (account_unrelated_deviceauth == true) {
   deviceauth_files +=
