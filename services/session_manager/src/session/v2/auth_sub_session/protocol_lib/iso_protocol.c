@@ -830,6 +830,7 @@ static void DestroyIsoProtocol(BaseProtocol *self)
     ClearFreeUint8Buff(&impl->params.authIdPeer);
     ClearFreeUint8Buff(&impl->params.tokenSelf);
     ClearFreeUint8Buff(&impl->params.tokenPeer);
+    ClearFreeUint8Buff(&impl->params.authResultMac);
     HcFree(impl);
 }
 

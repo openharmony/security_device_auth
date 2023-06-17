@@ -31,8 +31,19 @@ typedef uint32_t HcBool;
 extern "C" {
 #endif
 
+#ifdef DEV_AUTH_MEMORY_DEBUG
+
+#define ClibMalloc(size, val) MockMalloc(size, val, __FILE__, __LINE__)
+#define ClibFree(addr) MockFree(addr)
+void *MockMalloc(uint32_t size, char val, const char *strFile, int nLine);
+void MockFree(void *addr);
+
+#else
+
 void *ClibMalloc(uint32_t size, char val);
 void ClibFree(void *addr);
+
+#endif
 
 #ifdef __cplusplus
 }
