@@ -48,9 +48,9 @@ void MockFree(void *addr)
     }
 }
 
-void *MockMallocForJson(uint32_t size)
+void *MockMallocForJson(size_t size)
 {
-    return MockMalloc(size, 0, __FILE__, __LINE__);
+    return MockMalloc((uint32_t)size, 0, __FILE__, __LINE__);
 }
 
 uint32_t HcStrlen(const char *str)

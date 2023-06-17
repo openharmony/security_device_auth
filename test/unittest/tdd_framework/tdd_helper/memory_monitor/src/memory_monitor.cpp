@@ -143,7 +143,7 @@ void ReportMonitor(void)
         return;
     }
     g_mutex->lock(g_mutex);
-    printf("\n############## Monitor Report ##############\nMemoryBlock Num: %d\nMemory Used Size: %d\n"
+    printf("\n############## Monitor Report ##############\nMemoryBlock Num: %zu\nMemory Used Size: %d\n"
         "Memory Max Used Size: %d\nMemory Max Single Size: %d\n",
         gMemoryMap.size(), g_mallocCount, g_maxCount, g_maxSingleCount);
     for (map<void *, MemoryBlock>::iterator iter = gMemoryMap.begin(); iter != gMemoryMap.end(); iter++) {

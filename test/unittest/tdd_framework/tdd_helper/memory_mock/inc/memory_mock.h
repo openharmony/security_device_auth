@@ -17,6 +17,7 @@
 #define DEV_AUTH_MEMORY_MOCK_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,7 +25,7 @@ extern "C" {
 
 void *MockMalloc(uint32_t size, char val, const char *strFile, int nLine);
 void MockFree(void *addr);
-void *MockMallocForJson(uint32_t size);
+void *MockMallocForJson(size_t size);
 uint32_t HcStrlen(const char *str);
 
 #ifdef __cplusplus
