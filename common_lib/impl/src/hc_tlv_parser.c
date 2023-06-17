@@ -16,7 +16,7 @@
 #include "hc_tlv_parser.h"
 #include <stddef.h>
 
-#define MAX_TLV_LENGTH (32 * 1024)
+#define MAX_TLV_LENGTH (48 * 1024)
 
 HcBool ParseTlvHead(TlvBase *tlv, HcParcel *parcel)
 {
