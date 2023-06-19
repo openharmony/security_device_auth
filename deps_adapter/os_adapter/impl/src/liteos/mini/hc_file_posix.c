@@ -44,12 +44,15 @@ static int32_t CreateDirectory(const char *filePath)
             return -1;
         }
         dirCache[len] = 0;
-        if (access(dirCache, F_OK) == 0) {
+        res = access(dirCache, F_OK);
+        if (res == 0) {
             chPtr++;
             continue;
         }
+        LOGI("[OS]: CreateDirectory access fail. [Res]: %d, [errno]: %d", res, errno);
         DIR *dir = opendir(dirCache);
         if (dir == NULL) {
+            LOGI("[OS]: opendir fail. [errno]: %d", errno);
             res = mkdir(dirCache, DEFAULT_FILE_PERMISSION);
             if (res != 0) {
                 LOGE("[OS]: mkdir fail. [Res]: %d, [errno]: %d", res, errno);
@@ -77,6 +80,7 @@ static int HcFileOpenRead(const char *path)
 static int HcFileOpenWrite(const char *path)
 {
     if (access(path, F_OK) != 0) {
+        LOGI("[OS]: HcFileOpenWrite access fail. [errno]: %d", errno);
         if (CreateDirectory(path) != 0) {
             return -1;
         }
