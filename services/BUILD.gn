@@ -198,9 +198,9 @@ if (os_level == "mini" || os_level == "small") {
     external_deps = [
       "c_utils:utils",
       "dsoftbus:softbus_client",
-      "hisysevent_native:libhisysevent",
-      "hitrace_native:hitrace_meter",
-      "hiviewdfx_hilog_native:libhilog",
+      "hilog:libhilog",
+      "hisysevent:libhisysevent",
+      "hitrace:hitrace_meter",
     ]
     if (support_jsapi) {
       external_deps += [ "os_account:os_account_innerkits" ]
@@ -251,9 +251,9 @@ if (os_level == "mini" || os_level == "small") {
     external_deps = [
       "access_token:libaccesstoken_sdk",
       "c_utils:utils",
-      "hisysevent_native:libhisysevent",
-      "hitrace_native:hitrace_meter",
-      "hiviewdfx_hilog_native:libhilog",
+      "hilog:libhilog",
+      "hisysevent:libhisysevent",
+      "hitrace:hitrace_meter",
       "init:libbegetutil",
       "ipc:ipc_core",
       "samgr:samgr_proxy",
@@ -296,9 +296,9 @@ if (os_level == "mini" || os_level == "small") {
     external_deps = [
       "access_token:libaccesstoken_sdk",
       "c_utils:utils",
-      "hisysevent_native:libhisysevent",
-      "hitrace_native:hitrace_meter",
-      "hiviewdfx_hilog_native:libhilog",
+      "hilog:libhilog",
+      "hisysevent:libhisysevent",
+      "hitrace:hitrace_meter",
       "init:libbegetutil",
       "ipc:ipc_single",
       "samgr:samgr_proxy",
