@@ -185,9 +185,9 @@ static int32_t AddAuthIdAndUserTypeIfValidOrDefault(int32_t osAccountId, const c
         return HC_ERR_INVALID_PARAMS;
     }
     const char *authId = GetStringFromJson(jsonParams, FIELD_DEVICE_ID);
+    char udid[INPUT_UDID_LEN] = { 0 };
     if (authId == NULL) {
         LOGI("authId is not found, use udid by default!");
-        char udid[INPUT_UDID_LEN] = { 0 };
         int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
         if (res != HC_SUCCESS) {
             LOGE("Failed to get local udid! res: %d", res);
