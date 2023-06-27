@@ -24,11 +24,6 @@
 #define EC_SPEKE_KCF_CODE_LEN 1
 #define EC_SPEKE_SECRET_LEN 32
 #define EC_SPEKE_EC_KEY_LEN 32
-#define EC_SPEKE_DL_EXP_LEN 1
-#define EC_SPEKE_DL_PRIME_256_LEN 256
-#define EC_SPEKE_DL_PRIME_384_LEN 384
-#define EC_SPEKE_DL_PRIME_256_ESK_LEN 28
-#define EC_SPEKE_DL_PRIME_384_ESK_LEN 32
 #define EC_SPEKE_SESSION_KEY_LEN 32
 #define HICHAIN_SPEKE_BASE_INFO "hichain_speke_base_info"
 #define SHARED_SECRET_DERIVED_FACTOR "hichain_speke_shared_secret_info"

@@ -27,6 +27,8 @@ typedef struct {
     Uint8Buff authId;
 } PubKeyExchangeParams;
 
+#ifdef ENABLE_PUB_KEY_EXCHANGE
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,4 +38,7 @@ BaseCmd *CreatePubKeyExchangeCmd(const void *baseParams, bool isCaller, int32_t 
 #ifdef __cplusplus
 }
 #endif
+
+#endif
+
 #endif

@@ -16,13 +16,7 @@
 #ifndef EXPAND_SUB_SESSION_H
 #define EXPAND_SUB_SESSION_H
 
-#include "json_utils.h"
-#include "string_util.h"
-
-typedef enum {
-    ABORT_IF_ERROR = 1,
-    CONTINUE_IF_ERROR = 2
-} ErrorHandleStrategy;
+#include "base_cmd.h"
 
 typedef enum {
     EXPAND_STATE_INIT = 0,

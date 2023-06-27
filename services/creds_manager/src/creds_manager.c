@@ -472,7 +472,11 @@ static int32_t ComputeAndSavePsk(int32_t osAccountId, const char *groupId, const
         return ret;
     }
 
-    KeyAliasType keyTypePeer = peerDeviceEntry->devType;
+#ifdef DEV_AUTH_FUNC_TEST
+    KeyAliasType keyTypePeer = KEY_ALIAS_LT_KEY_PAIR;
+#else
+    KeyAliasType keyTypePeer = (KeyAliasType)peerDeviceEntry->devType;
+#endif
     const char *peerAuthId = StringGet(&peerDeviceEntry->authId);
     Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, strlen(peerAuthId) };
     uint8_t peerKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
@@ -496,12 +500,8 @@ static int32_t ComputeAndSavePsk(int32_t osAccountId, const char *groupId, const
 
     KeyBuff selfKeyAliasBuff = { selfKeyAlias.val, selfKeyAlias.length, true };
     KeyBuff peerKeyAliasBuff = { peerKeyAlias.val, peerKeyAlias.length, true };
-    ret = GetLoaderInstance()->agreeSharedSecretWithStorage(&selfKeyAliasBuff, &peerKeyAliasBuff, ED25519,
+    return GetLoaderInstance()->agreeSharedSecretWithStorage(&selfKeyAliasBuff, &peerKeyAliasBuff, ED25519,
         PAKE_PSK_LEN, sharedKeyAlias);
-    if (ret != HC_SUCCESS) {
-        LOGE("Failed to agree psk!");
-    }
-    return ret;
 }
 
 static int32_t GeneratePskAliasAndCheckExist(const CJson *in, const char *groupId, Uint8Buff *pskKeyAlias)

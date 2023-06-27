@@ -107,7 +107,6 @@ static int32_t BuildSelfTokenMessage(uint8_t *message, int32_t messageLen,
             LOGE("Memcpy peerMsg failed.");
             return HC_ERR_MEMORY_COPY;
         }
-        usedLen += msg->peerMsg.length;
     }
     return HC_SUCCESS;
 }
@@ -148,7 +147,6 @@ static int32_t BuildPeerTokenMessage(uint8_t *message, int32_t messageLen,
             LOGE("Memcpy selfMsg failed.");
             return HC_ERR_MEMORY_COPY;
         }
-        usedLen += msg->selfMsg.length;
     }
     return HC_SUCCESS;
 }

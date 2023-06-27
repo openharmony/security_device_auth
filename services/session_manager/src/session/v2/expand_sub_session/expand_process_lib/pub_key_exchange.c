@@ -27,7 +27,6 @@
 #define START_CMD_EVENT_NAME "StartCmd"
 #define FAIL_EVENT_NAME "CmdFail"
 
-#define FIELD_GROUP_ID "groupId"
 #define FIELD_USER_TYPE_CLIENT "userTypeC"
 #define FIELD_USER_TYPE_SERVER "userTypeS"
 #define FIELD_AUTH_ID_CLIENT "authIdC"
@@ -192,7 +191,11 @@ static int32_t GenerateKeyAlias(const CmdParams *params, bool isSelf, bool isPsk
         return res;
     }
     const Uint8Buff *authId = isSelf ? &(params->authIdSelf) : &(params->authIdPeer);
+#ifdef DEV_AUTH_FUNC_TEST
+    int32_t userType = isSelf ? params->userTypeSelf : KEY_ALIAS_LT_KEY_PAIR;
+#else
     int32_t userType = isSelf ? params->userTypeSelf : params->userTypePeer;
+#endif
     KeyAliasType keyAliasType = isPsk ? KEY_ALIAS_PSK : userType;
     Uint8Buff keyTypeBuff = { (uint8_t *)KEY_TYPE_PAIRS[keyAliasType], KEY_TYPE_PAIR_LEN };
     uint8_t keyAliasByteVal[SHA256_LEN] = { 0 };
@@ -267,11 +270,6 @@ static int32_t ClientSendPkInfoBuildEvent(const CmdParams *params, CJson **outpu
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
-    if (AddStringToJson(json, FIELD_GROUP_ID, params->groupId) != HC_SUCCESS) {
-        LOGE("add groupId to json fail.");
-        FreeJson(json);
-        return HC_ERR_JSON_ADD;
-    }
     if (AddByteToJson(json, FIELD_AUTH_ID_CLIENT, params->authIdSelf.val,
         params->authIdSelf.length) != HC_SUCCESS) {
         LOGE("add authIdC to json fail.");
@@ -318,11 +316,6 @@ static int32_t GetAuthIdPeerFromInput(const CJson *inputEvent, CmdParams *params
 
 static int32_t ServerSendPkInfoParseEvent(const CJson *inputEvent, CmdParams *params)
 {
-    const char *groupId = GetStringFromJson(inputEvent, FIELD_GROUP_ID);
-    if (groupId == NULL) {
-        LOGE("get groupId from json fail.");
-        return HC_ERR_JSON_GET;
-    }
     int32_t res = GetAuthIdPeerFromInput(inputEvent, params, false);
     if (res != HC_SUCCESS) {
         return res;
@@ -340,10 +333,6 @@ static int32_t ServerSendPkInfoParseEvent(const CJson *inputEvent, CmdParams *pa
         params->pkPeer.length) != HC_SUCCESS) {
         LOGE("get authPkC from json fail.");
         return HC_ERR_JSON_GET;
-    }
-    if (DeepCopyString(groupId, &(params->groupId)) != HC_SUCCESS) {
-        LOGE("copy groupId fail.");
-        return HC_ERR_MEMORY_COPY;
     }
     params->userTypePeer = userTypeC;
     return HC_SUCCESS;
@@ -528,11 +517,12 @@ static void NotifyPeerError(int32_t errorCode, CJson **outputEvent)
 
 static int32_t ThrowException(BaseCmd *self, const CJson *baseEvent, CJson **outputEvent)
 {
-    LOGI("throw exception.");
     (void)self;
-    (void)baseEvent;
     (void)outputEvent;
-    return HC_ERR_UNSUPPORTED_OPCODE;
+    int32_t peerErrorCode = HC_ERR_PEER_ERROR;
+    (void)GetIntFromJson(baseEvent, FIELD_ERR_CODE, &peerErrorCode);
+    LOGE("An exception occurred in the peer cmd. [Code]: %d", peerErrorCode);
+    return peerErrorCode;
 }
 
 static int32_t ClientSendPkInfo(BaseCmd *self, const CJson *inputEvent, CJson **outputEvent)
@@ -574,6 +564,7 @@ static int32_t ClientImportPk(BaseCmd *self, const CJson *inputEvent, CJson **ou
 static const CmdStateNode STATE_MACHINE[] = {
     { CREATE_AS_CLIENT_STATE, START_EVENT, ClientSendPkInfo, NotifyPeerError, CLIENT_START_REQ_STATE },
     { CREATE_AS_SERVER_STATE, CLIENT_SEND_PK_INFO_EVENT, ServerSendPkInfo, NotifyPeerError, SERVER_FINISH_STATE },
+    { CREATE_AS_SERVER_STATE, FAIL_EVENT, ThrowException, ReturnError, FAIL_STATE },
     { CLIENT_START_REQ_STATE, SERVER_SEND_PK_INFO_EVENT, ClientImportPk, ReturnError, CLIENT_FINISH_STATE },
     { CLIENT_START_REQ_STATE, FAIL_EVENT, ThrowException, ReturnError, FAIL_STATE },
 };
@@ -651,6 +642,7 @@ static void DestroyPubKeyExchangeCmd(BaseCmd *self)
         return;
     }
     PubKeyExchangeCmd *impl = (PubKeyExchangeCmd *)self;
+    ClearFreeUint8Buff(&impl->params.pkSelf);
     ClearFreeUint8Buff(&impl->params.pkPeer);
     ClearFreeUint8Buff(&impl->params.authIdSelf);
     ClearFreeUint8Buff(&impl->params.authIdPeer);

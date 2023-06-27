@@ -30,7 +30,6 @@
 #define IMPORT_AUTH_CODE_EVENT_NAME "ImportAuthCode"
 #define FAIL_EVENT_NAME "CmdFail"
 
-#define FIELD_GROUP_ID "groupId"
 #define FIELD_USER_TYPE_CLIENT "userTypeC"
 #define FIELD_USER_TYPE_SERVER "userTypeS"
 #define FIELD_AUTH_ID_CLIENT "authIdC"
@@ -73,7 +72,6 @@ typedef enum {
     START_EVENT = 0,
     CLIENT_SEND_DEV_IFNO_EVENT,
     SERVER_SEND_AUTH_CODE_EVENT,
-    CLIENT_REPLY_RESULT_EVENT,
     FAIL_EVENT,
     UNKNOWN_EVENT,
 } EventEnum;
@@ -197,11 +195,6 @@ static int32_t ClientSendDevInfoBuildEvent(const CmdParams *params, CJson **outp
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
-    if (AddStringToJson(json, FIELD_GROUP_ID, params->groupId) != HC_SUCCESS) {
-        LOGE("add groupId to json fail.");
-        FreeJson(json);
-        return HC_ERR_JSON_ADD;
-    }
     if (AddByteToJson(json, FIELD_AUTH_ID_CLIENT, params->authIdSelf.val,
         params->authIdSelf.length) != HC_SUCCESS) {
         LOGE("add authIdC to json fail.");
@@ -243,11 +236,6 @@ static int32_t GetAuthIdPeerFromInput(const CJson *inputEvent, CmdParams *params
 
 static int32_t ServerGenAuthCodeParseEvent(const CJson *inputEvent, CmdParams *params)
 {
-    const char *groupId = GetStringFromJson(inputEvent, FIELD_GROUP_ID);
-    if (groupId == NULL) {
-        LOGE("get groupId from json fail.");
-        return HC_ERR_JSON_GET;
-    }
     int32_t res = GetAuthIdPeerFromInput(inputEvent, params, false);
     if (res != HC_SUCCESS) {
         return res;
@@ -256,10 +244,6 @@ static int32_t ServerGenAuthCodeParseEvent(const CJson *inputEvent, CmdParams *p
     if (GetIntFromJson(inputEvent, FIELD_USER_TYPE_CLIENT, &userTypeC) != HC_SUCCESS) {
         LOGE("get userTypeC from json fail.");
         return HC_ERR_JSON_GET;
-    }
-    if (DeepCopyString(groupId, &(params->groupId)) != HC_SUCCESS) {
-        LOGE("copy groupId fail.");
-        return HC_ERR_MEMORY_COPY;
     }
     params->userTypePeer = userTypeC;
     return HC_SUCCESS;
@@ -405,11 +389,12 @@ static void NotifyPeerError(int32_t errorCode, CJson **outputEvent)
 
 static int32_t ThrowException(BaseCmd *self, const CJson *baseEvent, CJson **outputEvent)
 {
-    LOGI("throw exception.");
     (void)self;
-    (void)baseEvent;
     (void)outputEvent;
-    return HC_ERR_UNSUPPORTED_OPCODE;
+    int32_t peerErrorCode = HC_ERR_PEER_ERROR;
+    (void)GetIntFromJson(baseEvent, FIELD_ERR_CODE, &peerErrorCode);
+    LOGE("An exception occurred in the peer cmd. [Code]: %d", peerErrorCode);
+    return peerErrorCode;
 }
 
 static int32_t ClientSendDevInfo(BaseCmd *self, const CJson *inputEvent, CJson **outputEvent)
@@ -447,6 +432,7 @@ static int32_t ClientImportAuthCode(BaseCmd *self, const CJson *inputEvent, CJso
 static const CmdStateNode STATE_MACHINE[] = {
     { CREATE_AS_CLIENT_STATE, START_EVENT, ClientSendDevInfo, NotifyPeerError, CLIENT_START_REQ_STATE },
     { CREATE_AS_SERVER_STATE, CLIENT_SEND_DEV_IFNO_EVENT, ServerGenAuthCode, NotifyPeerError, SERVER_FINISH_STATE },
+    { CREATE_AS_SERVER_STATE, FAIL_EVENT, ThrowException, ReturnError, FAIL_STATE },
     { CLIENT_START_REQ_STATE, SERVER_SEND_AUTH_CODE_EVENT, ClientImportAuthCode, ReturnError, CLIENT_FINISH_STATE },
     { CLIENT_START_REQ_STATE, FAIL_EVENT, ThrowException, ReturnError, FAIL_STATE },
 };

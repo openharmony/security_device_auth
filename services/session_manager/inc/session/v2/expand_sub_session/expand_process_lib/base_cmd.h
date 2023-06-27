@@ -20,6 +20,11 @@
 #include "string_util.h"
 
 typedef enum {
+    ABORT_IF_ERROR = 1,
+    CONTINUE_IF_ERROR = 2
+} ErrorHandleStrategy;
+
+typedef enum {
     CMD_STATE_CONTINUE = 1,
     CMD_STATE_FINISH = 2,
 } CmdState;

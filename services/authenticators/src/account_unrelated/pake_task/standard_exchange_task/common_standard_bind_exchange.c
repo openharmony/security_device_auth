@@ -359,7 +359,11 @@ static int32_t SaveAuthInfo(const PakeParams *pakeParams, const StandardBindExch
 {
     uint8_t keyAliasPeerVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAliasPeer = { keyAliasPeerVal, PAKE_KEY_ALIAS_LEN };
-    KeyAliasType keyType = pakeParams->userTypePeer;
+#ifdef DEV_AUTH_FUNC_TEST
+    KeyAliasType keyType = KEY_ALIAS_LT_KEY_PAIR;
+#else
+    KeyAliasType keyType = (KeyAliasType)pakeParams->userTypePeer;
+#endif
     Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, strlen(pakeParams->packageName) };
     Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, strlen(pakeParams->serviceType) };
     int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(pakeParams->baseParams.idPeer),

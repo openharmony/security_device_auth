@@ -27,6 +27,7 @@ ohos_static_library("device_auth_test_hal") {
     "exception_controller/inc",
     "memory_mock/inc",
     "memory_monitor/inc",
+    "dev_info_mock/inc",
   ]
 
   sources = hal_common_files
@@ -44,9 +45,11 @@ ohos_static_library("device_auth_test_hal") {
   ]
   sources -= [
     "${common_lib_path}/impl/src/clib_types.c",
+    "${os_adapter_path}/impl/src/linux/hc_dev_info.c",
     "${os_adapter_path}/impl/src/linux/hc_types.c",
   ]
   sources += [
+    "dev_info_mock/src/dev_info_mock.c",
     "exception_controller/src/exception_controller.c",
     "memory_mock/src/memory_mock.c",
     "memory_monitor/src/memory_monitor.cpp",

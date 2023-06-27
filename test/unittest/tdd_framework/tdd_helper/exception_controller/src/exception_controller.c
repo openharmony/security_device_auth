@@ -109,9 +109,7 @@ void DestroyExceptionController(void)
     g_throwExceptionIndex = UINT32_MAX;
     g_callNum = 0;
     g_mutex->unlock(g_mutex);
-    if (g_mutex != NULL) {
-        DestroyHcMutex(g_mutex);
-        free(g_mutex);
-        g_mutex = NULL;
-    }
+    DestroyHcMutex(g_mutex);
+    free(g_mutex);
+    g_mutex = NULL;
 }

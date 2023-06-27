@@ -27,6 +27,8 @@ typedef struct {
     Uint8Buff authId;
 } AuthCodeImportParams;
 
+#ifdef ENABLE_AUTH_CODE_IMPORT
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,4 +38,7 @@ BaseCmd *CreateAuthCodeImportCmd(const void *baseParams, bool isCaller, int32_t 
 #ifdef __cplusplus
 }
 #endif
+
+#endif
+
 #endif

@@ -58,12 +58,18 @@ group("deviceauth_test_build") {
       "test/fuzztest/group_manage/registerdatachangelistener_fuzzer:fuzztest",
       "test/fuzztest/group_manage/unregistercallback_fuzzer:fuzztest",
       "test/fuzztest/group_manage/unregisterdatachangelistener_fuzzer:fuzztest",
+      "test/unittest/deviceauth:device_auth_func_test",
       "test/unittest/deviceauth:device_auth_ipc_test",
       "test/unittest/deviceauth:deviceauth_llt",
       "test/unittest/deviceauth:deviceauth_unit_test",
       "test/unittest/tdd_framework/unit_test/services/creds_manager:creds_manager_test",
+      "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/auth_sub_session:auth_sub_session_test",
       "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/auth_sub_session/protocol_lib:ec_speke_protocol_test",
       "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/auth_sub_session/protocol_lib:iso_protocol_test",
+      "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session:expand_sub_session_test",
+      "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session/expand_process_lib:auth_code_import_test",
+      "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session/expand_process_lib:pub_key_exchange_test",
+      "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session/expand_process_lib:save_trusted_info_test",
     ]
   }
 }

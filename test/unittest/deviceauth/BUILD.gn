@@ -61,6 +61,116 @@ ohos_unittest("deviceauth_llt") {
   sources += cred_manager_files
   sources += session_manager_files
   sources += session_v1_files
+  sources += session_v2_mock_files
+  sources += creds_manager_files
+  sources += broadcast_manager_files
+  sources += soft_bus_channel_mock_files
+
+  sources += group_auth_files
+  sources += group_auth_account_unrelated_files
+
+  sources += group_manager_files
+  sources += group_manager_peer_to_peer_files
+
+  sources += authenticators_p2p_files
+  sources += authenticators_p2p_iso_files
+  sources += authenticators_p2p_pake_files
+  sources += authenticators_standard_exchange_task_files
+
+  sources += account_related_files
+
+  sources -= [
+    "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
+    "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
+  ]
+
+  sources += [
+    "source/creds_manager_test.cpp",
+    "source/device_auth_ext_mock.c",
+    "source/deviceauth_standard_test.cpp",
+    "source/group_operation_common_test.cpp",
+    "source/iso_auth_task_test.cpp",
+    "source/os_account_adapter_mock.c",
+    "source/protocol_task_main_mock.c",
+    "source/standard_exchange_task_test.cpp",
+    "unit_test/source/account_related_group_auth_dir_test.cpp",
+    "unit_test/source/auth_session_dir_test.cpp",
+    "unit_test/source/pake_v2_auth_task_test.cpp",
+  ]
+  defines = [
+    "P2P_PAKE_DL_PRIME_LEN_384",
+    "P2P_PAKE_EC_TYPE",
+    "ENABLE_ACCOUNT_AUTH_ISO",
+    "ENABLE_ACCOUNT_AUTH_EC_SPEKE",
+    "ENABLE_P2P_BIND_ISO",
+    "ENABLE_P2P_BIND_EC_SPEKE",
+    "ENABLE_P2P_AUTH_ISO",
+    "ENABLE_P2P_AUTH_EC_SPEKE",
+    "DEV_AUTH_FUNC_TEST",
+  ]
+
+  cflags = [ "-DHILOG_ENABLE" ]
+
+  cflags +=
+      [ "-DDEVICE_AUTH_TEST_HKS_DATA_PATH=\"${huks_key_store_standard_path}\"" ]
+
+  deps = [
+    "//third_party/cJSON:cjson",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+    "//third_party/mbedtls:mbedtls_shared",
+    "//third_party/openssl:libcrypto_static",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "huks:libhukssdk",
+  ]
+}
+
+ohos_unittest("device_auth_func_test") {
+  module_out_path = module_output_path
+
+  include_dirs = inc_path
+  include_dirs += hals_inc_path
+
+  include_dirs += [
+    "./include",
+    "./unit_test/include",
+    "${dev_frameworks_path}/inc/hiview_adapter",
+  ]
+
+  include_dirs += [
+    "//third_party/cJSON",
+    "//commonlibrary/c_utils/base/include",
+    "//third_party/openssl/include/",
+    "//third_party/mbedtls/include",
+    "//third_party/mbedtls/include/mbedtls",
+  ]
+
+  sources = hal_common_files
+  sources -= [ "${common_lib_path}/impl/src/json_utils.c" ]
+  sources += [
+    "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
+    "${key_management_adapter_path}/impl/src/standard/huks_adapter.c",
+    "${key_management_adapter_path}/impl/src/standard/mbedtls_ec_adapter.c",
+    "${os_adapter_path}/impl/src/hc_log.c",
+    "${os_adapter_path}/impl/src/linux/hc_condition.c",
+    "${os_adapter_path}/impl/src/linux/hc_file.c",
+    "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
+    "${os_adapter_path}/impl/src/linux/hc_thread.c",
+    "${os_adapter_path}/impl/src/linux/hc_types.c",
+    "source/hc_dev_info_mock.c",
+    "source/json_utils_mock.c",
+  ]
+
+  sources += dev_frameworks_files
+  sources += deviceauth_common_files
+  sources += database_manager_files
+  sources += cred_manager_files
+  sources += session_manager_files
+  sources += session_v1_files
   sources += session_v2_files
   sources += iso_protocol_files
   sources += ec_speke_protocol_files
@@ -107,12 +217,16 @@ ohos_unittest("deviceauth_llt") {
     "P2P_PAKE_EC_TYPE",
     "ENABLE_EC_SPEKE",
     "ENABLE_ISO",
+    "ENABLE_AUTH_CODE_IMPORT",
+    "ENABLE_PUB_KEY_EXCHANGE",
+    "ENABLE_SAVE_TRUSTED_INFO",
     "ENABLE_ACCOUNT_AUTH_ISO",
     "ENABLE_ACCOUNT_AUTH_EC_SPEKE",
     "ENABLE_P2P_BIND_ISO",
     "ENABLE_P2P_BIND_EC_SPEKE",
     "ENABLE_P2P_AUTH_ISO",
     "ENABLE_P2P_AUTH_EC_SPEKE",
+    "DEV_AUTH_FUNC_TEST",
   ]
 
   cflags = [ "-DHILOG_ENABLE" ]
@@ -232,6 +346,9 @@ ohos_unittest("deviceauth_unit_test") {
     "P2P_PAKE_EC_TYPE",
     "ENABLE_EC_SPEKE",
     "ENABLE_ISO",
+    "ENABLE_AUTH_CODE_IMPORT",
+    "ENABLE_PUB_KEY_EXCHANGE",
+    "ENABLE_SAVE_TRUSTED_INFO",
   ]
 
   cflags = [ "-DHILOG_ENABLE" ]
