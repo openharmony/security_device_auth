@@ -19,31 +19,16 @@
 #include "hc_dev_info.h"
 #include "hc_log.h"
 
-static int32_t AddIsForceDeleteIfNeed(int isClient, const CJson *jsonParams, CompatibleBindSubSession *session)
+static int32_t AddPinCode(const CJson *jsonParams, CompatibleBindSubSession *session)
 {
-    if ((isClient == CLIENT) && (session->opCode == MEMBER_DELETE)) {
-        bool isForceDelete = false;
-        (void)GetBoolFromJson(jsonParams, FIELD_IS_FORCE_DELETE, &isForceDelete);
-        if (AddBoolToJson(session->params, FIELD_IS_FORCE_DELETE, isForceDelete) != HC_SUCCESS) {
-            LOGE("Failed to add isForceDelete to params!");
-            return HC_ERR_JSON_ADD;
-        }
+    const char *pinCode = GetStringFromJson(jsonParams, FIELD_PIN_CODE);
+    if (pinCode == NULL) {
+        LOGE("Failed to get pinCode from jsonParams!");
+        return HC_ERR_JSON_GET;
     }
-    return HC_SUCCESS;
-}
-
-static int32_t AddPinCodeIfNeed(const CJson *jsonParams, CompatibleBindSubSession *session)
-{
-    if (session->opCode != MEMBER_DELETE) {
-        const char *pinCode = GetStringFromJson(jsonParams, FIELD_PIN_CODE);
-        if (pinCode == NULL) {
-            LOGE("Failed to get pinCode from jsonParams!");
-            return HC_ERR_JSON_GET;
-        }
-        if (AddStringToJson(session->params, FIELD_PIN_CODE, pinCode) != HC_SUCCESS) {
-            LOGE("Failed to add pinCode to params!");
-            return HC_ERR_JSON_ADD;
-        }
+    if (AddStringToJson(session->params, FIELD_PIN_CODE, pinCode) != HC_SUCCESS) {
+        LOGE("Failed to add pinCode to params!");
+        return HC_ERR_JSON_ADD;
     }
     return HC_SUCCESS;
 }
@@ -363,56 +348,6 @@ static int32_t AddGroupAndDevInfo(int32_t osAccountId, int isClient, const CJson
     }
 }
 
-static int32_t AddPeerAuthIdIfDelete(bool isClient, const CJson *jsonParams, CompatibleBindSubSession *session)
-{
-    const char *peerAuthId = NULL;
-    if (isClient) {
-        peerAuthId = GetStringFromJson(jsonParams, FIELD_DELETE_ID);
-    } else {
-        peerAuthId = GetStringFromJson(jsonParams, FIELD_PEER_DEVICE_ID);
-    }
-    if (peerAuthId == NULL) {
-        LOGE("Failed to get peerAuthId from jsonParams!");
-        return HC_ERR_JSON_GET;
-    }
-    if (AddStringToJson(session->params, FIELD_PEER_AUTH_ID, peerAuthId) != HC_SUCCESS) {
-        LOGE("Failed to add peerAuthId to params!");
-        return HC_ERR_JSON_ADD;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t AddPeerUserTypeIfDelete(CompatibleBindSubSession *session)
-{
-    const char *peerAuthId = GetStringFromJson(session->params, FIELD_PEER_AUTH_ID);
-    if (peerAuthId == NULL) {
-        LOGE("Failed to get peerAuthId from params!");
-        return HC_ERR_JSON_GET;
-    }
-    const char *groupId = GetStringFromJson(session->params, FIELD_GROUP_ID);
-    if (groupId == NULL) {
-        LOGE("Failed to get groupId from params!");
-        return HC_ERR_JSON_GET;
-    }
-    TrustedDeviceEntry *devAuthParams = CreateDeviceEntry();
-    if (devAuthParams == NULL) {
-        LOGE("Failed to allocate devEntry memory!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    int32_t res = GetTrustedDevInfoById(session->osAccountId, peerAuthId, false, groupId, devAuthParams);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to obtain the device information from the database!");
-        DestroyDeviceEntry(devAuthParams);
-        return res;
-    }
-    if (AddIntToJson(session->params, FIELD_PEER_USER_TYPE, devAuthParams->devType) != HC_SUCCESS) {
-        DestroyDeviceEntry(devAuthParams);
-        return HC_ERR_JSON_ADD;
-    }
-    DestroyDeviceEntry(devAuthParams);
-    return HC_SUCCESS;
-}
-
 static int32_t AddPeerAuthIdAndUdidIfExist(const CJson *jsonParams, CompatibleBindSubSession *session)
 {
     const char *peerAuthId = GetStringFromJson(jsonParams, FIELD_PEER_DEVICE_ID);
@@ -426,18 +361,6 @@ static int32_t AddPeerAuthIdAndUdidIfExist(const CJson *jsonParams, CompatibleBi
         return HC_ERR_JSON_ADD;
     }
     return HC_SUCCESS;
-}
-
-static int32_t AddPeerDevInfoIfNeed(bool isClient, const CJson *jsonParams, CompatibleBindSubSession *session)
-{
-    if (session->opCode == MEMBER_DELETE) {
-        int32_t result = AddPeerAuthIdIfDelete(isClient, jsonParams, session);
-        if (result != HC_SUCCESS) {
-            return result;
-        }
-        return AddPeerUserTypeIfDelete(session);
-    }
-    return AddPeerAuthIdAndUdidIfExist(jsonParams, session);
 }
 
 static int32_t AddGroupAndDevInfoToParams(const CompatibleBindSubSession *session, CJson *moduleParams)
@@ -494,11 +417,8 @@ static int32_t AddRequestInfoToParams(bool isClient, const CompatibleBindSubSess
     return HC_SUCCESS;
 }
 
-static int32_t AddPinCodeToParamsIfNeed(CompatibleBindSubSession *session, CJson *moduleParams)
+static int32_t AddPinCodeToParams(CompatibleBindSubSession *session, CJson *moduleParams)
 {
-    if (session->opCode == MEMBER_DELETE) {
-        return HC_SUCCESS;
-    }
     const char *pinCode = GetStringFromJson(session->params, FIELD_PIN_CODE);
     if (pinCode == NULL) {
         LOGE("Failed to get pinCode from params!");
@@ -511,46 +431,6 @@ static int32_t AddPinCodeToParamsIfNeed(CompatibleBindSubSession *session, CJson
     /* Release the memory in advance to reduce the memory usage. */
     (void)DeleteItemFromJson(session->params, FIELD_PIN_CODE);
     return HC_SUCCESS;
-}
-
-static int32_t AddPeerAuthIdToParams(CompatibleBindSubSession *session, CJson *moduleParams)
-{
-    const char *peerAuthId = GetStringFromJson(session->params, FIELD_PEER_AUTH_ID);
-    if (peerAuthId == NULL) {
-        LOGE("Failed to get peerAuthId from params!");
-        return HC_ERR_JSON_GET;
-    }
-    if (AddStringToJson(moduleParams, FIELD_PEER_AUTH_ID, peerAuthId) != HC_SUCCESS) {
-        LOGE("Failed to add peerAuthId to moduleParams!");
-        return HC_ERR_JSON_ADD;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t AddPeerUserTypeToParams(CompatibleBindSubSession *session, CJson *moduleParams)
-{
-    int32_t peerUserType = DEVICE_TYPE_ACCESSORY;
-    if (GetIntFromJson(session->params, FIELD_PEER_USER_TYPE, &peerUserType) != HC_SUCCESS) {
-        LOGE("Failed to get peerUserType from params!");
-        return HC_ERR_JSON_GET;
-    }
-    if (AddIntToJson(moduleParams, FIELD_PEER_USER_TYPE, peerUserType) != HC_SUCCESS) {
-        LOGE("Failed to add peerUserType to moduleParams!");
-        return HC_ERR_JSON_ADD;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t AddPeerAuthIdAndUserTypeToParamsIfNeed(CompatibleBindSubSession *session, CJson *moduleParams)
-{
-    if (session->opCode != MEMBER_DELETE) {
-        return HC_SUCCESS;
-    }
-    int32_t result = AddPeerAuthIdToParams(session, moduleParams);
-    if (result != HC_SUCCESS) {
-        return result;
-    }
-    return AddPeerUserTypeToParams(session, moduleParams);
 }
 
 static int32_t AddGroupInfoToSendData(const CompatibleBindSubSession *session, CJson *data)
@@ -703,10 +583,9 @@ int32_t GenerateBaseBindParams(int32_t osAccountId, int isClient, const CJson *j
     }
 
     int32_t result;
-    if (((result = AddIsForceDeleteIfNeed(isClient, jsonParams, session)) != HC_SUCCESS) ||
-        ((result = AddPinCodeIfNeed(jsonParams, session)) != HC_SUCCESS) ||
+    if (((result = AddPinCode(jsonParams, session)) != HC_SUCCESS) ||
         ((result = AddGroupAndDevInfo(osAccountId, isClient, jsonParams, session)) != HC_SUCCESS) ||
-        ((result = AddPeerDevInfoIfNeed(isClient, jsonParams, session)) != HC_SUCCESS)) {
+        ((result = AddPeerAuthIdAndUdidIfExist(jsonParams, session)) != HC_SUCCESS)) {
         return result;
     }
 
@@ -718,8 +597,7 @@ int32_t GenerateBaseModuleParams(bool isClient, CompatibleBindSubSession *sessio
     int32_t result;
     if (((result = AddGroupAndDevInfoToParams(session, moduleParams)) != HC_SUCCESS) ||
         ((result = AddRequestInfoToParams(isClient, session, moduleParams)) != HC_SUCCESS) ||
-        ((result = AddPinCodeToParamsIfNeed(session, moduleParams)) != HC_SUCCESS) ||
-        ((result = AddPeerAuthIdAndUserTypeToParamsIfNeed(session, moduleParams)) != HC_SUCCESS)) {
+        ((result = AddPinCodeToParams(session, moduleParams)) != HC_SUCCESS)) {
         return result;
     }
     return HC_SUCCESS;

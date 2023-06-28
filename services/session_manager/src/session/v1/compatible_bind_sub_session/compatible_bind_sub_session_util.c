@@ -199,9 +199,7 @@ int32_t TransmitBindSessionData(const CompatibleBindSubSession *session, const C
 
 int32_t CombineConfirmData(int operationCode, const CJson *returnData, CJson *jsonParams)
 {
-    if (operationCode == MEMBER_DELETE) {
-        return HC_SUCCESS;
-    } else if (operationCode == MEMBER_JOIN) {
+    if (operationCode == MEMBER_JOIN) {
         return AddPinCode(returnData, jsonParams);
     } else {
         return CombineInfoWhenInvite(returnData, jsonParams);
