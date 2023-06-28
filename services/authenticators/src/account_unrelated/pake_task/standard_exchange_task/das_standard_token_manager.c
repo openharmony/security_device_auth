@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -79,7 +79,11 @@ static int32_t DeletePeerAuthInfo(const char *pkgName, const char *serviceType, 
     const AlgLoader *loader = GetLoaderInstance();
     Uint8Buff pkgNameBuff = { (uint8_t *)pkgName, strlen(pkgName)};
     Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, strlen(serviceType) };
-    KeyAliasType keyType = userTypePeer;
+#ifdef DEV_AUTH_FUNC_TEST
+    KeyAliasType keyType = KEY_ALIAS_LT_KEY_PAIR;
+#else
+    KeyAliasType keyType = (KeyAliasType)userTypePeer;
+#endif
     uint8_t pakeKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff pakeKeyAliasBuff = { pakeKeyAliasVal, PAKE_KEY_ALIAS_LEN };
     int32_t res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, keyType, authIdPeer, &pakeKeyAliasBuff);
@@ -127,7 +131,11 @@ static int32_t ComputeAndSavePsk(const PakeParams *params)
         LOGE("generateKeyAlias self failed");
         return res;
     }
-    KeyAliasType keyTypePeer = params->userTypePeer;
+#ifdef DEV_AUTH_FUNC_TEST
+    KeyAliasType keyTypePeer = KEY_ALIAS_LT_KEY_PAIR;
+#else
+    KeyAliasType keyTypePeer = (KeyAliasType)params->userTypePeer;
+#endif
     res = GenerateKeyAlias(&packageName, &serviceType, keyTypePeer, &(params->baseParams.idPeer), &peerKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generateKeyAlias peer failed");
@@ -160,13 +168,8 @@ static int32_t ComputeAndSavePsk(const PakeParams *params)
     KeyBuff selfKeyAliasBuff = { selfKeyAlias.val, selfKeyAlias.length, true };
     KeyBuff peerKeyAliasBuff = { peerKeyAlias.val, peerKeyAlias.length, true };
     Algorithm alg = (params->baseParams.curveType == CURVE_256) ? P256 : ED25519;
-    res = params->baseParams.loader->agreeSharedSecretWithStorage(&selfKeyAliasBuff, &peerKeyAliasBuff, alg,
+    return params->baseParams.loader->agreeSharedSecretWithStorage(&selfKeyAliasBuff, &peerKeyAliasBuff, alg,
         PAKE_PSK_LEN, &sharedKeyAlias);
-    if (res != HC_SUCCESS) {
-        LOGE("Agree psk failed.");
-    }
-
-    return res;
 }
 
 static int32_t GetPublicKey(const char *pkgName, const char *serviceType, Uint8Buff *authId, int userType,

@@ -305,11 +305,9 @@ void DestroySoftBusChannelModule(void)
     g_channelMutex->lock(g_channelMutex);
     DESTROY_HC_VECTOR(ChannelEntryVec, &g_channelVec);
     g_channelMutex->unlock(g_channelMutex);
-    if (g_channelMutex != NULL) {
-        DestroyHcMutex(g_channelMutex);
-        HcFree(g_channelMutex);
-        g_channelMutex = NULL;
-    }
+    DestroyHcMutex(g_channelMutex);
+    HcFree(g_channelMutex);
+    g_channelMutex = NULL;
     LOGI("[SoftBus][In]: RemoveSessionServer!");
     int32_t res = RemoveSessionServer(GROUP_MANAGER_PACKAGE_NAME, GROUP_MANAGER_PACKAGE_NAME);
     LOGI("[SoftBus][Out]: RemoveSessionServer! res: %d", res);

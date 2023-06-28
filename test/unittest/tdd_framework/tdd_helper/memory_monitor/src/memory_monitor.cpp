@@ -33,7 +33,7 @@ static const int MALLOC_SIZE[] = { 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 
 static int GetRealMallocSize(int size)
 {
     for (unsigned int i = 0; i < sizeof(MALLOC_SIZE) / sizeof(int); ++i) {
-        if (size < MALLOC_SIZE[i]) {
+        if (size <= MALLOC_SIZE[i]) {
             return MALLOC_SIZE[i];
         }
     }
@@ -151,16 +151,6 @@ void ReportMonitor(void)
             "MemoryBlock Size: %d\nMemoryBlock Location: %s\n",
             iter->second.id, iter->second.size, iter->second.realSize, iter->second.str.c_str());
     }
-    cout << "############## Memory Operation Report ##############" << endl;
-    cout << "[";
-    for (unsigned int i = 0; i < gOpVec.size(); i++) {
-        cout << gOpVec[i].curMemSize;
-        if (i != gOpVec.size() - 1) {
-            cout << ", ";
-        }
-    }
-    cout << "]" << endl;
-    cout << "############## Memory Operation Report ##############" << endl;
     g_mutex->unlock(g_mutex);
 }
 
@@ -193,9 +183,7 @@ void HcDestroyMallocMonitor(void)
     g_maxSingleCount = 0;
     g_count = 0;
     g_mutex->unlock(g_mutex);
-    if (g_mutex != NULL) {
-        DestroyHcMutex(g_mutex);
-        free(g_mutex);
-        g_mutex = NULL;
-    }
+    DestroyHcMutex(g_mutex);
+    free(g_mutex);
+    g_mutex = NULL;
 }

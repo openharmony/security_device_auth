@@ -122,6 +122,7 @@ int32_t InitThread(HcThread *thread, ThreadFunc func, size_t stackSize, const ch
     thread->running = HC_FALSE;
     thread->name = CreateString();
     if (StringSetPointer(&thread->name, threadName) != HC_TRUE) {
+        DeleteString(&thread->name);
         return -1;
     }
 

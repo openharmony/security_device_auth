@@ -55,18 +55,24 @@ typedef struct {
 } ExpandSubSessionImpl;
 
 static const CmdComponent CMD_COMPONENT_LIB[] = {
-    {
-        PUB_KEY_EXCHANGE_CMD_TYPE,
-        CreatePubKeyExchangeCmd,
-    },
+#ifdef ENABLE_AUTH_CODE_IMPORT
     {
         AUTH_CODE_IMPORT_CMD_TYPE,
         CreateAuthCodeImportCmd,
     },
+#endif
+#ifdef ENABLE_PUB_KEY_EXCHANGE
+    {
+        PUB_KEY_EXCHANGE_CMD_TYPE,
+        CreatePubKeyExchangeCmd,
+    },
+#endif
+#ifdef ENABLE_SAVE_TRUSTED_INFO
     {
         SAVE_TRUSTED_INFO_CMD_TYPE,
         CreateSaveTrustedInfoCmd,
     },
+#endif
 };
 
 static const CmdComponent *GetCmdComponent(int32_t type)
@@ -241,10 +247,12 @@ static int32_t ProcRecvCmd(ExpandSubSessionImpl *impl, const CJson *recvCmd, CJs
         if (res == HC_SUCCESS && !isFinish) {
             return HC_SUCCESS;
         }
-        HC_VECTOR_POPELEMENT(&impl->cmdList, iter, index);
         if (res != HC_SUCCESS && cmd->strategy == CONTINUE_IF_ERROR) {
             res = HC_SUCCESS;
         }
+        BaseCmd *popCmd = NULL;
+        HC_VECTOR_POPELEMENT(&impl->cmdList, &popCmd, index);
+        popCmd->destroy(popCmd);
         return res;
     }
     LOGE("cmd not found. [Cmd]: %d", cmdType);
@@ -262,10 +270,12 @@ static int32_t ProcAllRecvCmds(ExpandSubSessionImpl *impl, const CJson *recevied
     for (int32_t i = 0; i < cmdNum; i++) {
         res = ProcRecvCmd(impl, GetItemFromArray(recvCmdList, i), sendCmdList);
         if (res != HC_SUCCESS) {
+            FreeJson(recvCmdList);
             return res;
         }
     }
     LOGI("proc all recv cmd success. [CmdNum]: %u", cmdNum);
+    FreeJson(recvCmdList);
     return HC_SUCCESS;
 }
 
@@ -274,7 +284,11 @@ static int32_t StartCmd(BaseCmd *cmd, CJson *sendCmdList)
     CJson *sendCmdData = NULL;
     int32_t res = cmd->start(cmd, &sendCmdData);
     if (res != HC_SUCCESS) {
-        LOGW("start cmd error. [Cmd]: %d", cmd->type);
+        LOGE("start cmd error. [Cmd]: %d", cmd->type);
+        if (sendCmdData != NULL) {
+            (void)AddSendCmdDataToList(cmd->type, sendCmdData, sendCmdList);
+            FreeJson(sendCmdData);
+        }
         return res;
     }
     res = AddSendCmdDataToList(cmd->type, sendCmdData, sendCmdList);
@@ -306,7 +320,7 @@ static int32_t BuildEncData(ExpandSubSessionImpl *impl, CJson *sendCmdList, CJso
         LOGE("pack rawSendStr to string fail.");
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
-    Uint8Buff sendEncData;
+    Uint8Buff sendEncData = { NULL, 0 };
     Uint8Buff sendRawData = { (uint8_t *)rawSendStr, HcStrlen(rawSendStr) + 1 };
     int32_t res = EncryptMsg(impl, &sendRawData, &sendEncData);
     FreeJsonString(rawSendStr);
@@ -397,15 +411,24 @@ static int32_t StartExpandSubSession(ExpandSubSession *self, CJson **returnSendM
         LOGE("invalid state. [State]: %d", impl->base.state);
         return HC_ERR_UNSUPPORTED_OPCODE;
     }
+    if (HC_VECTOR_SIZE(&impl->cmdList) == 0) {
+        LOGE("The list of cmd is empty.");
+        return HC_ERR_UNSUPPORTED_OPCODE;
+    }
     CJson *sendCmdList = CreateJsonArray();
     if (sendCmdList == NULL) {
         LOGE("allocate sendCmdList memory fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t res = StartNewCmds(impl, sendCmdList);
-    if (GetItemNum(sendCmdList) > 0) {
-        (void)PackSendMsg(impl, sendCmdList, returnSendMsg);
+    if (res != HC_SUCCESS) {
+        if (GetItemNum(sendCmdList) > 0) {
+            (void)PackSendMsg(impl, sendCmdList, returnSendMsg);
+        }
+        FreeJson(sendCmdList);
+        return res;
     }
+    res = PackSendMsg(impl, sendCmdList, returnSendMsg);
     FreeJson(sendCmdList);
     if (res == HC_SUCCESS) {
         impl->base.state = EXPAND_STATE_RUNNING;
@@ -487,12 +510,13 @@ int32_t CreateExpandSubSession(const Uint8Buff *nonce, const Uint8Buff *encKey, 
     }
     if (DeepCopyUint8Buff(nonce, &(impl->nonce)) != HC_SUCCESS) {
         LOGE("copy nonce fail.");
-        DestroyExpandSubSession((ExpandSubSession *)impl);
+        HcFree(impl);
         return HC_ERR_ALLOC_MEMORY;
     }
     if (DeepCopyUint8Buff(encKey, &(impl->encKey)) != HC_SUCCESS) {
         LOGE("copy encKey fail.");
-        DestroyExpandSubSession((ExpandSubSession *)impl);
+        ClearFreeUint8Buff(&impl->nonce);
+        HcFree(impl);
         return HC_ERR_ALLOC_MEMORY;
     }
     impl->base.addCmd = AddExpandProcess;

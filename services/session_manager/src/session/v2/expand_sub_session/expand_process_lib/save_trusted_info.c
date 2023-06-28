@@ -29,7 +29,6 @@
 #define START_CMD_EVENT_NAME "StartCmd"
 #define FAIL_EVENT_NAME "CmdFail"
 
-#define FIELD_GROUP_ID "groupId"
 #define FIELD_GROUP_NAME "groupName"
 #define FIELD_USER_TYPE_CLIENT "userTypeC"
 #define FIELD_USER_TYPE_SERVER "userTypeS"
@@ -96,12 +95,6 @@ typedef struct {
 
 static TrustedGroupEntry *GetGroupEntryById(int32_t osAccountId, const char *groupId)
 {
-    if (groupId == NULL) {
-        LOGE("The input groupId is NULL!");
-        return NULL;
-    }
-    uint32_t index;
-    TrustedGroupEntry **entry = NULL;
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
     QueryGroupParams params = InitQueryGroupParams();
     params.groupId = groupId;
@@ -110,6 +103,8 @@ static TrustedGroupEntry *GetGroupEntryById(int32_t osAccountId, const char *gro
         ClearGroupEntryVec(&groupEntryVec);
         return NULL;
     }
+    uint32_t index;
+    TrustedGroupEntry **entry;
     FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
         TrustedGroupEntry *returnEntry = DeepCopyGroupEntry(*entry);
         ClearGroupEntryVec(&groupEntryVec);
@@ -165,11 +160,6 @@ static int32_t ClientSendTrustedInfoBuildEvent(const CmdParams *params, CJson **
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
-    if (AddStringToJson(json, FIELD_GROUP_ID, params->groupId) != HC_SUCCESS) {
-        LOGE("add groupId to json fail.");
-        FreeJson(json);
-        return HC_ERR_JSON_ADD;
-    }
     if (AddStringToJson(json, FIELD_AUTH_ID_CLIENT, params->authIdSelf) != HC_SUCCESS) {
         LOGE("add authIdC to json fail.");
         FreeJson(json);
@@ -205,13 +195,8 @@ static int32_t ClientSendTrustedInfoBuildEvent(const CmdParams *params, CJson **
 
 static int32_t ServerSendTrustedInfoParseEvent(const CJson *inputEvent, CmdParams *params)
 {
-    const char *groupId = GetStringFromJson(inputEvent, FIELD_GROUP_ID);
-    if (groupId == NULL) {
-        LOGE("get groupId from json fail.");
-        return HC_ERR_JSON_GET;
-    }
     const char *authId = GetStringFromJson(inputEvent, FIELD_AUTH_ID_CLIENT);
-    if (groupId == NULL) {
+    if (authId == NULL) {
         LOGE("get authIdC from json fail.");
         return HC_ERR_JSON_GET;
     }
@@ -224,10 +209,6 @@ static int32_t ServerSendTrustedInfoParseEvent(const CJson *inputEvent, CmdParam
     if (GetIntFromJson(inputEvent, FIELD_USER_TYPE_CLIENT, &userTypeC) != HC_SUCCESS) {
         LOGE("get userTypeC from json fail.");
         return HC_ERR_JSON_GET;
-    }
-    if (DeepCopyString(groupId, &(params->groupId)) != HC_SUCCESS) {
-        LOGE("copy groupId fail.");
-        return HC_ERR_MEMORY_COPY;
     }
     if (DeepCopyString(authId, &(params->authIdPeer)) != HC_SUCCESS) {
         LOGE("copy groupId fail.");
@@ -268,10 +249,12 @@ static int32_t GenerateGroupParams(const CmdParams *params, TrustedGroupEntry *g
     HcString ownerName = CreateString();
     if (!StringSetPointer(&ownerName, params->appId)) {
         LOGE("Failed to copy groupOwner!");
+        DeleteString(&ownerName);
         return HC_ERR_MEMORY_COPY;
     }
     if (groupParams->managers.pushBackT(&groupParams->managers, ownerName) == NULL) {
         LOGE("Failed to push owner to vec!");
+        DeleteString(&ownerName);
         return HC_ERR_MEMORY_COPY;
     }
     groupParams->visibility = params->visibility;
@@ -405,24 +388,19 @@ static int32_t CreatePeerToPeerGroup(const CmdParams *params)
     return AddSelfTrustedDevice(params);
 }
 
-static TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *deviceId, bool isUdid,
-    const char *groupId)
+static TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *udid, const char *groupId)
 {
-    uint32_t index;
-    TrustedDeviceEntry **deviceEntry = NULL;
     DeviceEntryVec deviceEntryVec = CreateDeviceEntryVec();
     QueryDeviceParams params = InitQueryDeviceParams();
     params.groupId = groupId;
-    if (isUdid) {
-        params.udid = deviceId;
-    } else {
-        params.authId = deviceId;
-    }
+    params.udid = udid;
     if (QueryDevices(osAccountId, &params, &deviceEntryVec) != HC_SUCCESS) {
         LOGE("Failed to query trusted devices!");
         ClearDeviceEntryVec(&deviceEntryVec);
         return NULL;
     }
+    uint32_t index;
+    TrustedDeviceEntry **deviceEntry;
     FOR_EACH_HC_VECTOR(deviceEntryVec, index, deviceEntry) {
         TrustedDeviceEntry *returnEntry = DeepCopyDeviceEntry(*deviceEntry);
         ClearDeviceEntryVec(&deviceEntryVec);
@@ -434,7 +412,7 @@ static TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const 
 
 static bool IsDeviceImportedByCloud(const CmdParams *params)
 {
-    TrustedDeviceEntry *peerDeviceEntry = GetTrustedDeviceEntryById(params->osAccountId, params->udidPeer, true,
+    TrustedDeviceEntry *peerDeviceEntry = GetTrustedDeviceEntryById(params->osAccountId, params->udidPeer,
         params->groupId);
     if (peerDeviceEntry == NULL) {
         return false;
@@ -471,6 +449,7 @@ static int32_t ServerSendTrustedInfoProcEvent(CmdParams *params)
             DestroyGroupEntry(entry);
             return HC_ERR_ALLOC_MEMORY;
         }
+        DestroyGroupEntry(entry);
     }
     if (!IsDeviceImportedByCloud(params)) {
         res = AddPeerTrustedDevice(params);
@@ -492,11 +471,6 @@ static int32_t ServerSendTrustedInfoBuildEvent(const CmdParams *params, CJson **
     }
     if (AddIntToJson(json, FIELD_EVENT, SERVER_SEND_INFO_EVENT) != HC_SUCCESS) {
         LOGE("add eventName to json fail.");
-        FreeJson(json);
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddStringToJson(json, FIELD_GROUP_ID, params->groupId) != HC_SUCCESS) {
-        LOGE("add groupId to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -535,13 +509,19 @@ static int32_t ServerSendTrustedInfoBuildEvent(const CmdParams *params, CJson **
 
 static int32_t ClientFinishProcParseEvent(const CJson *inputEvent, CmdParams *params)
 {
-    const char *groupId = GetStringFromJson(inputEvent, FIELD_GROUP_ID);
-    if (groupId == NULL) {
-        LOGE("get groupId from json fail.");
-        return HC_ERR_JSON_GET;
+    if (params->isNeedCreateGroup) {
+        const char *groupName = GetStringFromJson(inputEvent, FIELD_GROUP_NAME);
+        if (groupName == NULL) {
+            LOGE("get groupName from json fail.");
+            return HC_ERR_JSON_GET;
+        }
+        if (DeepCopyString(groupName, &(params->groupName)) != HC_SUCCESS) {
+            LOGE("copy groupName fail.");
+            return HC_ERR_MEMORY_COPY;
+        }
     }
     const char *authId = GetStringFromJson(inputEvent, FIELD_AUTH_ID_SERVER);
-    if (groupId == NULL) {
+    if (authId == NULL) {
         LOGE("get authIdS from json fail.");
         return HC_ERR_JSON_GET;
     }
@@ -555,10 +535,6 @@ static int32_t ClientFinishProcParseEvent(const CJson *inputEvent, CmdParams *pa
         LOGE("get userTypeS from json fail.");
         return HC_ERR_JSON_GET;
     }
-    if (DeepCopyString(groupId, &(params->groupId)) != HC_SUCCESS) {
-        LOGE("copy groupId fail.");
-        return HC_ERR_MEMORY_COPY;
-    }
     if (DeepCopyString(authId, &(params->authIdPeer)) != HC_SUCCESS) {
         LOGE("copy groupId fail.");
         return HC_ERR_MEMORY_COPY;
@@ -566,13 +542,6 @@ static int32_t ClientFinishProcParseEvent(const CJson *inputEvent, CmdParams *pa
     if (DeepCopyString(udid, &(params->udidPeer)) != HC_SUCCESS) {
         LOGE("copy groupId fail.");
         return HC_ERR_MEMORY_COPY;
-    }
-    const char *groupName = GetStringFromJson(inputEvent, FIELD_GROUP_NAME);
-    if (groupName != NULL) {
-        if (DeepCopyString(groupName, &(params->groupName)) != HC_SUCCESS) {
-            LOGE("copy groupName fail.");
-            return HC_ERR_MEMORY_COPY;
-        }
     }
     const char *userId = GetStringFromJson(inputEvent, FIELD_USER_ID_SERVER);
     if (userId != NULL) {
@@ -634,11 +603,12 @@ static void NotifyPeerError(int32_t errorCode, CJson **outputEvent)
 
 static int32_t ThrowException(BaseCmd *self, const CJson *baseEvent, CJson **outputEvent)
 {
-    LOGI("throw exception.");
     (void)self;
-    (void)baseEvent;
     (void)outputEvent;
-    return HC_ERR_UNSUPPORTED_OPCODE;
+    int32_t peerErrorCode = HC_ERR_PEER_ERROR;
+    (void)GetIntFromJson(baseEvent, FIELD_ERR_CODE, &peerErrorCode);
+    LOGE("An exception occurred in the peer cmd. [Code]: %d", peerErrorCode);
+    return peerErrorCode;
 }
 
 static int32_t ClientSendTrustedInfo(BaseCmd *self, const CJson *inputEvent, CJson **outputEvent)
@@ -680,6 +650,7 @@ static int32_t ClientFinishProc(BaseCmd *self, const CJson *inputEvent, CJson **
 static const CmdStateNode STATE_MACHINE[] = {
     { CREATE_AS_CLIENT_STATE, START_EVENT, ClientSendTrustedInfo, NotifyPeerError, CLIENT_START_REQ_STATE },
     { CREATE_AS_SERVER_STATE, CLIENT_SEND_INFO_EVENT, ServerSendTrustedInfo, NotifyPeerError, SERVER_FINISH_STATE },
+    { CREATE_AS_SERVER_STATE, FAIL_EVENT, ThrowException, ReturnError, FAIL_STATE },
     { CLIENT_START_REQ_STATE, SERVER_SEND_INFO_EVENT, ClientFinishProc, ReturnError, CLIENT_FINISH_STATE },
     { CLIENT_START_REQ_STATE, FAIL_EVENT, ThrowException, ReturnError, FAIL_STATE },
 };

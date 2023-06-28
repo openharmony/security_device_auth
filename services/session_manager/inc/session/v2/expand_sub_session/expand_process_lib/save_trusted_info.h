@@ -30,6 +30,8 @@ typedef struct {
     const char *authId;
 } SaveTrustedInfoParams;
 
+#ifdef ENABLE_SAVE_TRUSTED_INFO
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -39,4 +41,7 @@ BaseCmd *CreateSaveTrustedInfoCmd(const void *baseParams, bool isCaller, int32_t
 #ifdef __cplusplus
 }
 #endif
+
+#endif
+
 #endif

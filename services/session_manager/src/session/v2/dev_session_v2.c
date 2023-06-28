@@ -558,7 +558,7 @@ static int32_t GetSelfCredByInput(SessionImpl *impl, const CJson *inputData)
         return HC_ERR_JSON_GET;
     }
     int32_t res;
-    IdentityInfo *info;
+    IdentityInfo *info = NULL;
     if (credType == PRE_SHARED) {
         res = GetPreSharedCredInfo(impl, inputData, &info);
     } else {
@@ -871,8 +871,6 @@ static TrustedGroupEntry *GetGroupEntryById(int32_t osAccountId, const char *gro
 static TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *deviceId, bool isUdid,
     const char *groupId)
 {
-    uint32_t index;
-    TrustedDeviceEntry **deviceEntry = NULL;
     DeviceEntryVec deviceEntryVec = CreateDeviceEntryVec();
     QueryDeviceParams params = InitQueryDeviceParams();
     params.groupId = groupId;
@@ -886,6 +884,8 @@ static TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const 
         ClearDeviceEntryVec(&deviceEntryVec);
         return NULL;
     }
+    uint32_t index;
+    TrustedDeviceEntry **deviceEntry;
     FOR_EACH_HC_VECTOR(deviceEntryVec, index, deviceEntry) {
         TrustedDeviceEntry *returnEntry = DeepCopyDeviceEntry(*deviceEntry);
         ClearDeviceEntryVec(&deviceEntryVec);
@@ -1126,7 +1126,7 @@ static int32_t AddAuthInfoToContextByCred(SessionImpl *impl, IdentityInfo *cred)
 static int32_t AddAuthSubSessionToVec(SessionImpl *impl, IdentityInfo *cred, ProtocolEntity *entity)
 {
     int32_t res;
-    AuthSubSession *authSubSession;
+    AuthSubSession *authSubSession = NULL;
     if (entity->protocolType == ALG_EC_SPEKE) {
         res = CreateEcSpekeSubSession(impl, cred, &authSubSession);
     } else {

@@ -876,6 +876,9 @@ void DestroyDeviceEntry(TrustedDeviceEntry *deviceEntry)
 
 TrustedDeviceEntry *DeepCopyDeviceEntry(const TrustedDeviceEntry *entry)
 {
+    if (entry == NULL) {
+        return NULL;
+    }
     TrustedDeviceEntry *returnEntry = CreateDeviceEntry();
     if (returnEntry == NULL) {
         return NULL;

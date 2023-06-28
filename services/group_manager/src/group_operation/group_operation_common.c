@@ -73,8 +73,6 @@ static int32_t GetGroupNumByOwner(int32_t osAccountId, const char *ownerName)
 TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *deviceId, bool isUdid,
     const char *groupId)
 {
-    uint32_t index;
-    TrustedDeviceEntry **deviceEntry = NULL;
     DeviceEntryVec deviceEntryVec = CreateDeviceEntryVec();
     QueryDeviceParams params = InitQueryDeviceParams();
     params.groupId = groupId;
@@ -88,6 +86,8 @@ TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *d
         ClearDeviceEntryVec(&deviceEntryVec);
         return NULL;
     }
+    uint32_t index;
+    TrustedDeviceEntry **deviceEntry;
     FOR_EACH_HC_VECTOR(deviceEntryVec, index, deviceEntry) {
         TrustedDeviceEntry *returnEntry = DeepCopyDeviceEntry(*deviceEntry);
         ClearDeviceEntryVec(&deviceEntryVec);
@@ -641,10 +641,12 @@ int32_t AddGroupOwnerToParams(const char *owner, TrustedGroupEntry *groupParams)
     HcString ownerName = CreateString();
     if (!StringSetPointer(&ownerName, owner)) {
         LOGE("Failed to copy groupOwner!");
+        DeleteString(&ownerName);
         return HC_ERR_MEMORY_COPY;
     }
     if (groupParams->managers.pushBackT(&groupParams->managers, ownerName) == NULL) {
         LOGE("Failed to push owner to vec!");
+        DeleteString(&ownerName);
         return HC_ERR_MEMORY_COPY;
     }
     return HC_SUCCESS;

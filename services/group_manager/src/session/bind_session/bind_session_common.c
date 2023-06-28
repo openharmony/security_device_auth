@@ -796,10 +796,12 @@ static int32_t SetGroupOwner(const char *ownerAppId, TrustedGroupEntry *groupPar
     HcString ownerName = CreateString();
     if (!StringSetPointer(&ownerName, ownerAppId)) {
         LOGE("Failed to copy groupOwner!");
+        DeleteString(&ownerName);
         return HC_ERR_MEMORY_COPY;
     }
     if (groupParams->managers.pushBackT(&groupParams->managers, ownerName) == NULL) {
         LOGE("Failed to push owner to vec!");
+        DeleteString(&ownerName);
         return HC_ERR_MEMORY_COPY;
     }
     return HC_SUCCESS;
