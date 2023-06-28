@@ -67,59 +67,6 @@ static int32_t CheckJoinPeer(const CJson *jsonParams)
     return AssertGroupTypeMatch(groupType, PEER_TO_PEER_GROUP);
 }
 
-static int32_t CheckPeerDeviceStatus(int32_t osAccountId, const char *groupId, const CJson *jsonParams)
-{
-    const char *peerAuthId = GetStringFromJson(jsonParams, FIELD_DELETE_ID);
-    if (peerAuthId == NULL) {
-        LOGE("Failed to get peerUdid from jsonParams!");
-        return HC_ERR_JSON_GET;
-    }
-    TrustedDeviceEntry *deviceInfo = CreateDeviceEntry();
-    if (deviceInfo == NULL) {
-        LOGE("Failed to allocate deviceInfo memory!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    int32_t result = GetTrustedDevInfoById(osAccountId, peerAuthId, false, groupId, deviceInfo);
-    if (result != HC_SUCCESS) {
-        LOGE("Failed to obtain the peer device information from the database!");
-        DestroyDeviceEntry(deviceInfo);
-        return result;
-    }
-    result = AssertPeerDeviceNotSelf(StringGet(&deviceInfo->udid));
-    DestroyDeviceEntry(deviceInfo);
-    return result;
-}
-
-static int32_t CheckDeletePeer(const CJson *jsonParams)
-{
-    const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
-    if (groupId == NULL) {
-        LOGE("Failed to get groupId from jsonParams!");
-        return HC_ERR_JSON_GET;
-    }
-    const char *appId = GetStringFromJson(jsonParams, FIELD_APP_ID);
-    if (appId == NULL) {
-        LOGE("Failed to get appId from jsonParams!");
-        return HC_ERR_JSON_GET;
-    }
-    int32_t osAccountId;
-    if (GetIntFromJson(jsonParams, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId from jsonParams!");
-        return HC_ERR_JSON_GET;
-    }
-
-    int32_t groupType = PEER_TO_PEER_GROUP;
-    int32_t result;
-    if (((result = CheckGroupExist(osAccountId, groupId)) != HC_SUCCESS) ||
-        ((result = GetGroupTypeFromDb(osAccountId, groupId, &groupType)) != HC_SUCCESS) ||
-        ((result = AssertGroupTypeMatch(groupType, PEER_TO_PEER_GROUP)) != HC_SUCCESS) ||
-        ((result = CheckPermForGroup(osAccountId, MEMBER_DELETE, appId, groupId)) != HC_SUCCESS) ||
-        ((result = CheckPeerDeviceStatus(osAccountId, groupId, jsonParams)) != HC_SUCCESS)) {
-        return result;
-    }
-    return HC_SUCCESS;
-}
-
 static int32_t CheckClientStatus(int operationCode, const CJson *jsonParams)
 {
     switch (operationCode) {
@@ -127,8 +74,6 @@ static int32_t CheckClientStatus(int operationCode, const CJson *jsonParams)
             return CheckInvitePeer(jsonParams);
         case MEMBER_JOIN:
             return CheckJoinPeer(jsonParams);
-        case MEMBER_DELETE:
-            return CheckDeletePeer(jsonParams);
         default:
             LOGE("Invalid operation!");
             return HC_ERR_CASE;
@@ -250,14 +195,6 @@ static int32_t CheckServerStatusIfNotInvite(int32_t osAccountId, int operationCo
             return result;
         }
         result = CheckDeviceNumLimit(osAccountId, groupId, peerUdid);
-    } else if (operationCode == MEMBER_DELETE) {
-        result = CheckPermForGroup(osAccountId, MEMBER_DELETE, appId, groupId);
-        if (result != HC_SUCCESS) {
-            return result;
-        }
-        if (!IsTrustedDeviceInGroup(osAccountId, groupId, peerUdid, true)) {
-            result = HC_ERR_DEVICE_NOT_EXIST;
-        }
     }
     return result;
 }
@@ -318,36 +255,6 @@ static int32_t SendBindDataToPeer(CompatibleBindSubSession *session, CJson *out)
     int32_t result = InteractWithPeer(session, sendData);
     FreeJson(sendData);
     return result;
-}
-
-static int32_t InformSelfUnbindSuccess(const char *peerAuthId, const char *groupId,
-    const CompatibleBindSubSession *session)
-{
-    char *jsonDataStr = NULL;
-    int32_t result = GenerateUnbindSuccessData(peerAuthId, groupId, &jsonDataStr);
-    if (result != HC_SUCCESS) {
-        LOGE("Failed to generate the data to be sent to the service!");
-        return result;
-    }
-    ProcessFinishCallback(session->reqId, session->opCode, jsonDataStr, session->base.callback);
-    FreeJsonString(jsonDataStr);
-    return HC_SUCCESS;
-}
-
-static int32_t HandleUnbindSuccess(const char *peerAuthId, const char *groupId, const CompatibleBindSubSession *session)
-{
-    if (IsGroupExistByGroupId(session->osAccountId, groupId)) {
-        QueryDeviceParams params = InitQueryDeviceParams();
-        params.groupId = groupId;
-        params.authId = peerAuthId;
-        if (DelTrustedDevice(session->osAccountId, &params) != HC_SUCCESS ||
-            SaveOsAccountDb(session->osAccountId) != HC_SUCCESS) {
-            LOGE("Failed to unbind device from database!");
-            return HC_ERR_DB;
-        }
-        LOGI("The device is successfully unbound from the database!");
-    }
-    return InformSelfUnbindSuccess(peerAuthId, groupId, session);
 }
 
 static int32_t InformSelfBindSuccess(const char *peerAuthId, const char *groupId,
@@ -565,7 +472,7 @@ static int32_t HandleBindSuccess(const char *peerAuthId, const char *peerUdid, c
     return InformSelfBindSuccess(peerAuthId, groupId, session, out);
 }
 
-static int32_t OnBindOrUnbindFinish(const CompatibleBindSubSession *session, const CJson *jsonParams, CJson *out)
+static int32_t OnBindFinish(const CompatibleBindSubSession *session, const CJson *jsonParams, CJson *out)
 {
     const char *peerAuthId = GetStringFromJson(jsonParams, FIELD_PEER_DEVICE_ID);
     if (peerAuthId == NULL) {
@@ -588,11 +495,7 @@ static int32_t OnBindOrUnbindFinish(const CompatibleBindSubSession *session, con
         LOGE("Failed to get groupId from session params!");
         return HC_ERR_JSON_GET;
     }
-    if (session->opCode == MEMBER_DELETE) {
-        return HandleUnbindSuccess(peerAuthId, groupId, session);
-    } else {
-        return HandleBindSuccess(peerAuthId, peerUdid, groupId, session, out);
-    }
+    return HandleBindSuccess(peerAuthId, peerUdid, groupId, session, out);
 }
 
 static int32_t OnSessionFinish(const CompatibleBindSubSession *session, CJson *jsonParams, CJson *out)
@@ -606,7 +509,7 @@ static int32_t OnSessionFinish(const CompatibleBindSubSession *session, CJson *j
             return result;
         }
     }
-    result = OnBindOrUnbindFinish(session, jsonParams, out);
+    result = OnBindFinish(session, jsonParams, out);
     if (result != HC_SUCCESS) {
         LOGE("An error occurred when processing different end operations!");
         return result;
@@ -707,8 +610,7 @@ static int32_t ProcessBindTask(CompatibleBindSubSession *session, CJson *in, int
 
 static int32_t GenerateClientModuleParams(CompatibleBindSubSession *session, CJson *moduleParams)
 {
-    if (AddIntToJson(moduleParams, FIELD_OPERATION_CODE,
-        ((session->opCode == MEMBER_DELETE) ? OP_UNBIND : OP_BIND)) != HC_SUCCESS) {
+    if (AddIntToJson(moduleParams, FIELD_OPERATION_CODE, OP_BIND) != HC_SUCCESS) {
         LOGE("Failed to add operationCode to moduleParams!");
         return HC_ERR_JSON_ADD;
     }
