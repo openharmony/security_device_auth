@@ -19,7 +19,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <securec.h>
-#include <vector>
 #include "hc_mutex.h"
 #include "memory_monitor.h"
 
@@ -47,17 +46,7 @@ typedef struct {
     string str;
 } MemoryBlock;
 
-typedef struct {
-    bool isMalloc;
-    uint32_t id;
-    uint32_t size;
-    uint32_t realSize;
-    uint32_t curMemSize;
-    void *address;
-} OpBlock;
-
 static map<void*, MemoryBlock> gMemoryMap;
-static vector<OpBlock> gOpVec;
 
 static bool g_isInit = false;
 
@@ -93,15 +82,6 @@ void HcMonitorMalloc(void *addr, uint32_t size, const char *strFile, int nLine)
         mb.str += strLine;
         gMemoryMap[addr] = mb;
         g_mallocCount += realSize;
-        OpBlock opb = {
-            .isMalloc = true,
-            .id = mb.id,
-            .size = mb.size,
-            .realSize = mb.realSize,
-            .curMemSize = g_mallocCount,
-            .address = addr
-        };
-        gOpVec.push_back(opb);
         if (g_maxCount < g_mallocCount) {
             g_maxCount = g_mallocCount;
         }
@@ -121,15 +101,6 @@ void HcMonitorFree(void *addr)
     map<void *, MemoryBlock>::iterator iter = gMemoryMap.find(addr);
     if (iter != gMemoryMap.end()) {
         g_mallocCount -= GetRealMallocSize(iter->second.size);
-        OpBlock opb = {
-            .isMalloc = false,
-            .id = iter->second.id,
-            .size = iter->second.size,
-            .realSize = iter->second.realSize,
-            .curMemSize = g_mallocCount,
-            .address = iter->first
-        };
-        gOpVec.push_back(opb);
         gMemoryMap.erase(iter);
     } else {
         cout << "############## Monitor Free error, addr is not exist!" << endl;
@@ -146,7 +117,7 @@ void ReportMonitor(void)
     printf("\n############## Monitor Report ##############\nMemoryBlock Num: %zu\nMemory Used Size: %d\n"
         "Memory Max Used Size: %d\nMemory Max Single Size: %d\n",
         gMemoryMap.size(), g_mallocCount, g_maxCount, g_maxSingleCount);
-    for (map<void *, MemoryBlock>::iterator iter = gMemoryMap.begin(); iter != gMemoryMap.end(); iter++) {
+    for (map<void *, MemoryBlock>::iterator iter = gMemoryMap.begin(); iter != gMemoryMap.end(); ++iter) {
         printf("\n############## Memory Block ##############\nMemoryBlock Id: %d\nMemoryBlock Size: %d\n"
             "MemoryBlock Size: %d\nMemoryBlock Location: %s\n",
             iter->second.id, iter->second.size, iter->second.realSize, iter->second.str.c_str());
@@ -165,7 +136,7 @@ void HcInitMallocMonitor(void)
         return;
     }
     g_isInit = true;
-    g_mutex = (HcMutex *)malloc(sizeof(HcMutex));
+    g_mutex = static_cast<HcMutex *>(malloc(sizeof(HcMutex)));
     InitHcMutex(g_mutex);
 }
 
@@ -177,7 +148,6 @@ void HcDestroyMallocMonitor(void)
     g_isInit = false;
     g_mutex->lock(g_mutex);
     gMemoryMap.clear();
-    gOpVec.clear();
     g_mallocCount = 0;
     g_maxCount = 0;
     g_maxSingleCount = 0;
