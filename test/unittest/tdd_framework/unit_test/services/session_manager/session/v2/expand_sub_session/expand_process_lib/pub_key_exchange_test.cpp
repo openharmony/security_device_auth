@@ -75,9 +75,9 @@ void PubKeyExchangeTest::SetUp()
 
 void PubKeyExchangeTest::TearDown()
 {
-    bool isMemoryLead = IsMemoryLead();
-    EXPECT_FALSE(isMemoryLead);
-    if (isMemoryLead) {
+    bool isMemoryLeak = IsMemoryLeak();
+    EXPECT_FALSE(isMemoryLeak);
+    if (isMemoryLeak) {
         ReportMonitor();
     }
     cJSON_Hooks hooks = {
@@ -447,9 +447,9 @@ HWTEST_F(PubKeyExchangeTest, PubKeyExchangeTest126, TestSize.Level0)
     for (uint32_t i = 0; i < callNum; i++) {
         SetThrowExceptionIndex(i);
         (void)TestMemoryException();
-        bool isMemoryLead = IsMemoryLead();
-        EXPECT_FALSE(isMemoryLead);
-        if (isMemoryLead) {
+        bool isMemoryLeak = IsMemoryLeak();
+        EXPECT_FALSE(isMemoryLeak);
+        if (isMemoryLeak) {
             ReportMonitor();
             break;
         }

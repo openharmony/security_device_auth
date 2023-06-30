@@ -31,13 +31,9 @@ extern "C"
 #include "base_group_auth.h"
 #include "json_utils.h"
 #include "hc_string.h"
-#include "group_auth_common_defines.h"
 #include "group_auth_data_operation.h"
-#include "group_auth_manager.h"
 #include "account_related_group_auth.h"
 #include "data_manager.h"
-#include "auth_session_common_defines.h"
-#include "auth_session_common.h"
 
 #ifdef __cpluscplus
 }

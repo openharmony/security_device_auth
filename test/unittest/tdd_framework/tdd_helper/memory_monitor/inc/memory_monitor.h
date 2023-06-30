@@ -25,7 +25,7 @@ extern "C" {
 void HcMonitorMalloc(void *addr, uint32_t size, const char *strFile, int nLine);
 void HcMonitorFree(void *addr);
 void ReportMonitor(void);
-bool IsMemoryLead(void);
+bool IsMemoryLeak(void);
 void HcInitMallocMonitor(void);
 void HcDestroyMallocMonitor(void);
 

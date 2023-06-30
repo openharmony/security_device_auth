@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,9 +14,6 @@
  */
 
 #include "account_related_group_auth.h"
-#include "auth_session_common.h"
-#include "auth_session_common_util.h"
-#include "auth_session_util.h"
 #include "common_defs.h"
 #include "device_auth_defines.h"
 #include "group_auth_data_operation.h"
@@ -26,31 +23,59 @@
 #include "json_utils.h"
 #include "string_util.h"
 
+#define UID_HEX_STRING_LEN_MAX 64
+#define UID_HEX_STRING_LEN_MIN 10
+
 static void OnAccountFinish(int64_t requestId, const CJson *authParam, const CJson *out,
     const DeviceAuthCallback *callback);
-static void OnAccountError(int64_t requestId, const AuthSession *session, int errorCode);
-static void OnAuthError(int64_t requestId, const CompatibleAuthSubSession *session, int errorCode);
 static int32_t FillAccountAuthInfo(int32_t osAccountId, const TrustedGroupEntry *entry,
     const TrustedDeviceEntry *localAuthInfo, CJson *paramsData);
 static void GetAccountCandidateGroup(int32_t osAccountId, const CJson *param,
     QueryGroupParams *queryParams, GroupEntryVec *vec);
-static int32_t GetAccountAuthParamForServer(const CJson *dataFromClient, ParamsVec *authParamsVec);
 static int32_t GetAuthParamsVecForServer(const CJson *dataFromClient, ParamsVecForAuth *authParamsVec);
-static int32_t GetAccountReqParams(const CJson *receiveData, CJson *reqParam);
 static int32_t CombineAccountServerConfirms(const CJson *confirmationJson, CJson *dataFromClient);
 
 static AccountRelatedGroupAuth g_accountRelatedGroupAuth = {
     .base.onFinish = OnAccountFinish,
-    .base.onError = OnAccountError,
-    .base.onAuthError = OnAuthError,
     .base.fillDeviceAuthInfo = FillAccountAuthInfo,
-    .base.getAuthParamForServer = GetAccountAuthParamForServer,
     .base.getAuthParamsVecForServer = GetAuthParamsVecForServer,
-    .base.getReqParams = GetAccountReqParams,
     .base.combineServerConfirmParams = CombineAccountServerConfirms,
     .base.authType = ACCOUNT_RELATED_GROUP_AUTH_TYPE,
     .getAccountCandidateGroup = GetAccountCandidateGroup,
 };
+
+static int32_t ReturnSessionKey(int64_t requestId, const CJson *authParam,
+    const CJson *out, const DeviceAuthCallback *callback)
+{
+    int32_t keyLen = DEFAULT_RETURN_KEY_LENGTH;
+    (void)GetIntFromJson(authParam, FIELD_KEY_LENGTH, &keyLen);
+    uint8_t *sessionKey = (uint8_t *)HcMalloc(keyLen, 0);
+    if (sessionKey == NULL) {
+        LOGE("Failed to allocate memory for sessionKey!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+
+    int32_t res = HC_SUCCESS;
+    do {
+        if (GetByteFromJson(out, FIELD_SESSION_KEY, sessionKey, keyLen) != HC_SUCCESS) {
+            LOGE("Failed to get sessionKey!");
+            res = HC_ERR_JSON_GET;
+            break;
+        }
+        if ((callback == NULL) || (callback->onSessionKeyReturned == NULL)) {
+            LOGE("The callback of onSessionKeyReturned is null!");
+            res = HC_ERR_INVALID_PARAMS;
+            break;
+        }
+        LOGI("Begin invoke onSessionKeyReturned.");
+        callback->onSessionKeyReturned(requestId, sessionKey, keyLen);
+        LOGI("End invoke onSessionKeyReturned, res = %d.", res);
+    } while (0);
+    (void)memset_s(sessionKey, keyLen, 0, keyLen);
+    HcFree(sessionKey);
+    sessionKey = NULL;
+    return res;
+}
 
 static int32_t GetSessionKeyForAccount(const CJson *sendToSelf, CJson *returnToSelf)
 {
@@ -91,6 +116,40 @@ static int32_t GetUserIdForAccount(const CJson *sendToSelf, CJson *returnToSelf)
         return HC_ERR_JSON_FAIL;
     }
     return HC_SUCCESS;
+}
+
+static bool IsPeerUidLenValid(uint32_t peerUserIdLen)
+{
+    if ((peerUserIdLen < UID_HEX_STRING_LEN_MIN) || (peerUserIdLen > UID_HEX_STRING_LEN_MAX)) {
+        LOGE("The input userId len is invalid, input userId in hex string len = %d", peerUserIdLen);
+        return false;
+    }
+    return true;
+}
+
+static bool IsUserIdEqual(const char *userIdInDb, const char *peerUserIdInDb)
+{
+    char *peerUidToUpper = NULL;
+    if (ToUpperCase(peerUserIdInDb, &peerUidToUpper) != HC_SUCCESS) {
+        LOGE("Failed to convert the input userId to upper case!");
+        return false;
+    }
+    uint32_t userIdInDbLen = HcStrlen(userIdInDb);
+    uint32_t peerUserIdLen = HcStrlen(peerUserIdInDb);
+    if (!IsPeerUidLenValid(peerUserIdLen)) {
+        HcFree(peerUidToUpper);
+        peerUidToUpper = NULL;
+        return false;
+    }
+    uint32_t cmpLen = (userIdInDbLen > peerUserIdLen) ? peerUserIdLen : userIdInDbLen;
+    if (memcmp(userIdInDb, peerUidToUpper, cmpLen) == EOK) {
+        HcFree(peerUidToUpper);
+        peerUidToUpper = NULL;
+        return true;
+    }
+    HcFree(peerUidToUpper);
+    peerUidToUpper = NULL;
+    return false;
 }
 
 static bool IsPeerInAccountRelatedGroup(const TrustedGroupEntry *groupEntry, const char *peerUserId, GroupType type)
@@ -273,127 +332,6 @@ static bool IsDeviceImportedByCloud(int32_t osAccountId,  const char *peerUdid, 
     return false;
 }
 
-static int32_t DeleteExistedDeviceInfoInDb(int32_t osAccountId, const CJson *authParam)
-{
-    const char *peerUdid = GetStringFromJson(authParam, FIELD_PEER_CONN_DEVICE_ID);
-    if (peerUdid == NULL) {
-        LOGE("Failed to get peer udid!");
-        return HC_ERR_JSON_GET;
-    }
-    const char *groupId = GetStringFromJson(authParam, FIELD_GROUP_ID);
-    if (groupId == NULL) {
-        LOGE("Failed to get groupId from auth params when deleting device info!");
-        return HC_ERR_JSON_GET;
-    }
-    if (IsDeviceImportedByCloud(osAccountId, peerUdid, groupId)) {
-        LOGD("Peer trusted device is imported by cloud, we don't delete peer device's trusted relationship.");
-        return HC_SUCCESS;
-    }
-    QueryDeviceParams devParams = InitQueryDeviceParams();
-    devParams.groupId = groupId;
-    devParams.udid = peerUdid;
-    if (DelTrustedDevice(osAccountId, &devParams) != HC_SUCCESS) {
-        LOGE("Failed to delete peer device from database!");
-        return HC_ERR_DB;
-    }
-    if (SaveOsAccountDb(osAccountId) != HC_SUCCESS) {
-        return HC_ERR_DB;
-    }
-    LOGD("Success to delete peer account-related device in database.");
-    return HC_SUCCESS;
-}
-
-static void OnAccountError(int64_t requestId, const AuthSession *session, int errorCode)
-{
-    AuthSession *realSession = (AuthSession *)session;
-    const DeviceAuthCallback *callback = session->base.callback;
-    ParamsVec list = realSession->paramsList;
-    CJson *authParam = list.get(&list, realSession->currentIndex);
-    if (authParam == NULL) {
-        LOGE("The json data in session is null!");
-        return;
-    }
-    int32_t authForm = AUTH_FORM_INVALID_TYPE;
-    if (GetIntFromJson(authParam, FIELD_AUTH_FORM, &authForm) != HC_SUCCESS) {
-        LOGE("Failed to get auth type!");
-        return;
-    }
-
-    /* If there is alternative group, do not return error. */
-    const char *altGroup = GetStringFromJson(authParam, FIELD_ALTERNATIVE);
-    if ((realSession->currentIndex < (list.size(&list) - 1)) || (altGroup != NULL)) {
-        LOGI("There are alternative groups.");
-        return;
-    }
-    int32_t osAccountId = ANY_OS_ACCOUNT;
-    if (GetIntFromJson(authParam, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId for account!");
-        return;
-    }
-    (void)DeleteExistedDeviceInfoInDb(osAccountId, authParam);
-    if ((callback != NULL) && (callback->onError != NULL)) {
-        LOGI("Invoke OnAccountError!");
-        callback->onError(requestId, authForm, errorCode, NULL);
-    }
-}
-
-static void OnAuthError(int64_t requestId, const CompatibleAuthSubSession *session, int errorCode)
-{
-    const DeviceAuthCallback *callback = session->base.callback;
-    ParamsVecForAuth list = session->paramsList;
-    CJson *authParam = list.get(&list, session->currentIndex);
-    if (authParam == NULL) {
-        LOGE("The json data in session is null!");
-        return;
-    }
-    int32_t authForm = AUTH_FORM_INVALID_TYPE;
-    if (GetIntFromJson(authParam, FIELD_AUTH_FORM, &authForm) != HC_SUCCESS) {
-        LOGE("Failed to get auth type!");
-        return;
-    }
-
-    /* If there is alternative group, do not return error. */
-    const char *altGroup = GetStringFromJson(authParam, FIELD_ALTERNATIVE);
-    if ((session->currentIndex < (list.size(&list) - 1)) || (altGroup != NULL)) {
-        LOGI("There are alternative groups.");
-        return;
-    }
-    int32_t osAccountId = ANY_OS_ACCOUNT;
-    if (GetIntFromJson(authParam, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId for account!");
-        return;
-    }
-    (void)DeleteExistedDeviceInfoInDb(osAccountId, authParam);
-    if ((callback != NULL) && (callback->onError != NULL)) {
-        LOGI("Invoke OnAccountError!");
-        callback->onError(requestId, authForm, errorCode, NULL);
-    }
-}
-
-static int32_t GetAccountReqParams(const CJson *receiveData, CJson *reqParam)
-{
-    const char *peerUserId = GetStringFromJson(receiveData, FIELD_USER_ID);
-    if (peerUserId == NULL) {
-        LOGE("Failed to get peer uid for server!");
-        return HC_ERR_JSON_GET;
-    }
-
-    if (AddStringToJson(reqParam, FIELD_USER_ID, peerUserId) != HC_SUCCESS) {
-        LOGE("Failed to add peer uid!");
-        return HC_ERR_JSON_FAIL;
-    }
-    const char *peerDeviceId = GetStringFromJson(receiveData, FIELD_DEVICE_ID);
-    if (peerDeviceId == NULL) {
-        LOGE("Failed to get deviceId from the data transmitted by the client!");
-        return HC_ERR_JSON_GET;
-    }
-    if (AddStringToJson(reqParam, FIELD_DEVICE_ID, peerDeviceId) != HC_SUCCESS) {
-        LOGE("Failed to add reqParam: deviceId for onRequest!");
-        return HC_ERR_JSON_FAIL;
-    }
-    return HC_SUCCESS;
-}
-
 static int32_t CombineAccountServerConfirms(const CJson *confirmationJson, CJson *dataFromClient)
 {
     bool isClient = false;
@@ -559,29 +497,6 @@ static int32_t AddSelfAccountInfoForServer(CJson *dataFromClient)
     } while (0);
     ClearGroupEntryVec(&accountVec);
     return res;
-}
-
-static int32_t GetAccountAuthParamForServer(const CJson *dataFromClient, ParamsVec *authParamsVec)
-{
-    LOGI("Begin get account-related auth params for server.");
-    CJson *dupData = DuplicateJson(dataFromClient);
-    if (dupData == NULL) {
-        LOGE("Failed to create dupData for dataFromClient!");
-        return HC_ERR_JSON_FAIL;
-    }
-
-    if (AddSelfAccountInfoForServer(dupData) != HC_SUCCESS) {
-        LOGE("Failed to add account info for server!");
-        FreeJson(dupData);
-        return HC_ERR_GROUP_NOT_EXIST;
-    }
-
-    if (authParamsVec->pushBack(authParamsVec, (const void **)&dupData) == NULL) {
-        LOGE("Failed to push json data to vector in account-related auth!");
-        FreeJson(dupData);
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    return HC_SUCCESS;
 }
 
 static int32_t GetAuthParamsVecForServer(const CJson *dataFromClient, ParamsVecForAuth *authParamsVec)

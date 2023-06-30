@@ -38,16 +38,11 @@ inc_path = [
   "${group_auth_path}/inc",
   "${group_auth_path}/inc/account_unrelated_group_auth",
   "${group_auth_path}/inc/account_related_group_auth",
-  "${group_auth_path}/inc/session",
-  "${group_auth_path}/inc/session/auth_session",
-  "${group_auth_path}/inc/session/auth_session_lite",
   "${group_manager_path}/inc",
   "${group_manager_path}/inc/broadcast_manager",
   "${group_manager_path}/inc/callback_manager",
   "${group_manager_path}/inc/channel_manager",
   "${group_manager_path}/inc/channel_manager/soft_bus_channel",
-  "${group_manager_path}/inc/session",
-  "${group_manager_path}/inc/session/bind_session",
   "${dev_frameworks_path}/inc/",
   "${dev_frameworks_path}/inc/module",
   "${dev_frameworks_path}/inc/session",
@@ -85,10 +80,8 @@ inc_path = [
 
 deviceauth_common_files = [
   "${services_path}/device_auth.c",
-  "${group_auth_path}/src/session/auth_session_common_util.c",
   "${group_manager_path}/src/group_manager_common.c",
   "${group_manager_path}/src/group_manager.c",
-  "${group_manager_path}/src/session/bind_session_common_util.c",
   "${group_manager_path}/src/channel_manager/channel_manager.c",
   "${group_manager_path}/src/callback_manager/callback_manager.c",
   "${protocol_path}/src/protocol_common.c",
@@ -101,8 +94,6 @@ deviceauth_common_files = [
 ]
 
 dev_frameworks_files = [
-  "${dev_frameworks_path}/src/session/session_common.c",
-  "${dev_frameworks_path}/src/session/session_manager.c",
   "${dev_frameworks_path}/src/module/dev_auth_module_manager.c",
   "${dev_frameworks_path}/src/module/version_util.c",
   "${dev_frameworks_path}/src/task_manager/task_manager.c",
@@ -122,14 +113,8 @@ hiview_adapter_files = [
   "${dev_frameworks_path}/src/hiview_adapter/hitrace_adapter.cpp",
 ]
 
-group_auth_files = [
-  "${group_auth_path}/src/group_auth_manager/group_auth_data_operation.c",
-  "${group_auth_path}/src/group_auth_manager/group_auth_manager.c",
-  "${group_auth_path}/src/session/auth_session/auth_session_client.c",
-  "${group_auth_path}/src/session/auth_session/auth_session_common.c",
-  "${group_auth_path}/src/session/auth_session/auth_session_server.c",
-  "${group_auth_path}/src/session/auth_session/auth_session_util.c",
-]
+group_auth_files =
+    [ "${group_auth_path}/src/group_auth_manager/group_auth_data_operation.c" ]
 
 group_auth_account_unrelated_files = [ "${group_auth_path}/src/group_auth_manager/account_unrelated_group_auth/account_unrelated_group_auth.c" ]
 group_auth_account_unrelated_mock_files = [ "${group_auth_path}/src/group_auth_manager/account_unrelated_group_auth_mock/account_unrelated_group_auth_mock.c" ]
@@ -144,9 +129,6 @@ database_manager_files = [ "${data_manager_path}/src/data_manager.c" ]
 group_manager_files = [
   "${group_manager_path}/src/group_operation/group_operation.c",
   "${group_manager_path}/src/group_operation/group_operation_common.c",
-  "${group_manager_path}/src/session/bind_session/bind_session_client.c",
-  "${group_manager_path}/src/session/bind_session/bind_session_common.c",
-  "${group_manager_path}/src/session/bind_session/bind_session_server.c",
 ]
 
 session_manager_files = [
@@ -211,9 +193,7 @@ authenticators_p2p_iso_files = [
   "${authenticators_path}/src/account_unrelated/iso_task/iso_protocol_task/iso_server_protocol_task.c",
   "${authenticators_path}/src/account_unrelated/iso_task/lite_exchange_task/das_lite_token_manager.c",
   "${authenticators_path}/src/account_unrelated/iso_task/lite_exchange_task/iso_client_bind_exchange_task.c",
-  "${authenticators_path}/src/account_unrelated/iso_task/lite_exchange_task/iso_client_unbind_exchange_task.c",
   "${authenticators_path}/src/account_unrelated/iso_task/lite_exchange_task/iso_server_bind_exchange_task.c",
-  "${authenticators_path}/src/account_unrelated/iso_task/lite_exchange_task/iso_server_unbind_exchange_task.c",
 ]
 authenticators_p2p_iso_mock_files = [ "${authenticators_path}/src/account_unrelated/iso_task_mock/iso_task_main_mock.c" ]
 authenticators_p2p_pake_files = [
@@ -233,11 +213,8 @@ authenticators_p2p_pake_mock_files = [
 
 authenticators_standard_exchange_task_files = [
   "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/common_standard_bind_exchange.c",
-  "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/common_standard_unbind_exchange.c",
   "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/standard_client_bind_exchange_task.c",
-  "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/standard_client_unbind_exchange_task.c",
   "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/standard_server_bind_exchange_task.c",
-  "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/standard_server_unbind_exchange_task.c",
   "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/das_standard_token_manager.c",
   "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/standard_exchange_message_util.c",
 ]

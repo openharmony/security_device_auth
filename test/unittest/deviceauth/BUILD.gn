@@ -94,7 +94,6 @@ ohos_unittest("deviceauth_llt") {
     "source/protocol_task_main_mock.c",
     "source/standard_exchange_task_test.cpp",
     "unit_test/source/account_related_group_auth_dir_test.cpp",
-    "unit_test/source/auth_session_dir_test.cpp",
     "unit_test/source/pake_v2_auth_task_test.cpp",
   ]
   defines = [
@@ -209,7 +208,6 @@ ohos_unittest("device_auth_func_test") {
     "source/protocol_task_main_mock.c",
     "source/standard_exchange_task_test.cpp",
     "unit_test/source/account_related_group_auth_dir_test.cpp",
-    "unit_test/source/auth_session_dir_test.cpp",
     "unit_test/source/pake_v2_auth_task_test.cpp",
   ]
   defines = [
@@ -322,9 +320,6 @@ ohos_unittest("deviceauth_unit_test") {
     "//base/security/device_auth/services/group_manager/src/group_operation/across_account_group/across_account_group.c",
     "//base/security/device_auth/services/group_manager/src/group_operation/identical_account_group/identical_account_group.c",
     "//base/security/device_auth/services/group_manager/src/group_operation/peer_to_peer_group/peer_to_peer_group.c",
-    "//base/security/device_auth/services/group_manager/src/session/bind_session/bind_session_client.c",
-    "//base/security/device_auth/services/group_manager/src/session/bind_session/bind_session_common.c",
-    "//base/security/device_auth/services/group_manager/src/session/bind_session/bind_session_server.c",
   ]
 
   sources += [
@@ -332,9 +327,6 @@ ohos_unittest("deviceauth_unit_test") {
     "source/protocol_task_main_mock.c",
     "unit_test/source/account_related_creds_manager_dir_test.cpp",
     "unit_test/source/across_account_group_test.cpp",
-    "unit_test/source/bind_session_client_test.cpp",
-    "unit_test/source/bind_session_common_test.cpp",
-    "unit_test/source/bind_session_server_test.cpp",
     "unit_test/source/common_lib_test.cpp",
     "unit_test/source/identical_account_group_test.cpp",
     "unit_test/source/key_management_test.cpp",

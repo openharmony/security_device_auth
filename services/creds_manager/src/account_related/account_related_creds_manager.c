@@ -18,7 +18,6 @@
 #include "account_related_group_auth.h"
 #include "alg_loader.h"
 #include "asy_token_manager.h"
-#include "auth_session_util.h"
 #include "creds_operation_utils.h"
 #include "data_manager.h"
 #include "group_auth_data_operation.h"
@@ -53,7 +52,7 @@ static TrustedGroupEntry *GetSelfGroupEntryByPeerCert(int32_t osAccountId, const
         return NULL;
     }
     FreeJson(peerPkInfoJson);
-    BaseGroupAuth *groupAuth = GetGroupAuth(ACCOUNT_RELATED_GROUP_AUTH_TYPE);
+    BaseGroupAuth *groupAuth = GetAccountRelatedGroupAuth();
     if (groupAuth == NULL) {
         LOGE("Failed to get account group auth!");
         FreeJson(param);

@@ -198,9 +198,9 @@ void SaveTrustedInfoTest::SetUp()
 
 void SaveTrustedInfoTest::TearDown()
 {
-    bool isMemoryLead = IsMemoryLead();
-    EXPECT_FALSE(isMemoryLead);
-    if (isMemoryLead) {
+    bool isMemoryLeak = IsMemoryLeak();
+    EXPECT_FALSE(isMemoryLeak);
+    if (isMemoryLeak) {
         ReportMonitor();
     }
     cJSON_Hooks hooks = {
@@ -682,9 +682,9 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest126, TestSize.Level0)
     for (uint32_t i = 0; i < callNum; i++) {
         SetThrowExceptionIndex(i);
         (void)TestMemoryException();
-        bool isMemoryLead = IsMemoryLead();
-        EXPECT_FALSE(isMemoryLead);
-        if (isMemoryLead) {
+        bool isMemoryLeak = IsMemoryLeak();
+        EXPECT_FALSE(isMemoryLeak);
+        if (isMemoryLeak) {
             ReportMonitor();
             break;
         }
@@ -699,9 +699,9 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest127, TestSize.Level0)
     for (uint32_t i = 0; i < callNum; i++) {
         SetThrowExceptionIndex(i);
         (void)TestMemoryException2();
-        bool isMemoryLead = IsMemoryLead();
-        EXPECT_FALSE(isMemoryLead);
-        if (isMemoryLead) {
+        bool isMemoryLeak = IsMemoryLeak();
+        EXPECT_FALSE(isMemoryLeak);
+        if (isMemoryLeak) {
             ReportMonitor();
             break;
         }

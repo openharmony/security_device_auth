@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,7 +14,6 @@
  */
 
 #include "group_auth_data_operation.h"
-#include "auth_session_util.h"
 #include "common_defs.h"
 #include "device_auth.h"
 #include "device_auth_defines.h"
@@ -255,4 +254,46 @@ int32_t GaGetLocalDeviceInfo(int32_t osAccountId, const char *groupId, TrustedDe
         LOGE("Failed to get local device info from database!");
     }
     return res;
+}
+
+int32_t AuthFormToGroupType(int32_t authForm)
+{
+    int32_t groupType;
+    switch (authForm) {
+        case AUTH_FORM_ACCOUNT_UNRELATED:
+            groupType = PEER_TO_PEER_GROUP;
+            break;
+        case AUTH_FORM_IDENTICAL_ACCOUNT:
+            groupType = IDENTICAL_ACCOUNT_GROUP;
+            break;
+        case AUTH_FORM_ACROSS_ACCOUNT:
+            groupType = ACROSS_ACCOUNT_AUTHORIZE_GROUP;
+            break;
+        default:
+            LOGE("Invalid auth form!");
+            groupType = GROUP_TYPE_INVALID;
+            break;
+    }
+    return groupType;
+}
+
+int32_t GroupTypeToAuthForm(int32_t groupType)
+{
+    int32_t authForm;
+    switch (groupType) {
+        case PEER_TO_PEER_GROUP:
+            authForm = AUTH_FORM_ACCOUNT_UNRELATED;
+            break;
+        case IDENTICAL_ACCOUNT_GROUP:
+            authForm = AUTH_FORM_IDENTICAL_ACCOUNT;
+            break;
+        case ACROSS_ACCOUNT_AUTHORIZE_GROUP:
+            authForm = AUTH_FORM_ACROSS_ACCOUNT;
+            break;
+        default:
+            LOGE("Invalid group type!");
+            authForm = AUTH_FORM_INVALID_TYPE;
+            break;
+    }
+    return authForm;
 }

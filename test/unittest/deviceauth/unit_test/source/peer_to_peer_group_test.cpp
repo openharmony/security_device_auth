@@ -116,49 +116,9 @@ HWTEST_F(PeerToPeerGroupTest, PeerToPeerGroupTest012, TestSize.Level0)
     EXPECT_NE(ret, HC_SUCCESS);
 }
 
-HWTEST_F(PeerToPeerGroupTest, PeerToPeerGroupTest013, TestSize.Level0)
-{
-    int32_t ret = CheckInvitePeer(nullptr);
-    EXPECT_NE(ret, HC_SUCCESS);
-}
-
-HWTEST_F(PeerToPeerGroupTest, PeerToPeerGroupTest014, TestSize.Level0)
-{
-    int32_t ret = CheckJoinPeer(nullptr);
-    EXPECT_NE(ret, HC_SUCCESS);
-}
-
 HWTEST_F(PeerToPeerGroupTest, PeerToPeerGroupTest015, TestSize.Level0)
 {
-    int32_t ret = CheckDeletePeer(nullptr);
-    EXPECT_NE(ret, HC_SUCCESS);
-}
-
-HWTEST_F(PeerToPeerGroupTest, PeerToPeerGroupTest016, TestSize.Level0)
-{
-    int32_t ret = CheckClientStatus(CODE_NULL, nullptr);
-    EXPECT_NE(ret, HC_SUCCESS);
-}
-
-HWTEST_F(PeerToPeerGroupTest, PeerToPeerGroupTest017, TestSize.Level0)
-{
-    CJson *ret = GenerateGroupErrorMsg(HC_SUCCESS, DEFAULT_REQUEST_ID, nullptr);
-    DeviceAuthCallback callback;
-    InformPeerProcessError(DEFAULT_REQUEST_ID, nullptr, &callback, HC_SUCCESS);
-    EXPECT_EQ(ret, nullptr);
-}
-
-HWTEST_F(PeerToPeerGroupTest, PeerToPeerGroupTest019, TestSize.Level0)
-{
-    DeviceAuthCallback callback;
-    int32_t ret = CreateClientSession(DEFAULT_REQUEST_ID, CODE_NULL, NO_CHANNEL, nullptr, &callback);
-    EXPECT_NE(ret, HC_SUCCESS);
-}
-
-HWTEST_F(PeerToPeerGroupTest, PeerToPeerGroupTest020, TestSize.Level0)
-{
-    DeviceAuthCallback callback;
-    int32_t ret = CreateServerSession(DEFAULT_REQUEST_ID, CODE_NULL, nullptr, &callback);
+    int32_t ret = CheckDeletePeerStatus(nullptr);
     EXPECT_NE(ret, HC_SUCCESS);
 }
 
@@ -180,24 +140,10 @@ HWTEST_F(PeerToPeerGroupTest, PeerToPeerGroupTest023, TestSize.Level0)
     EXPECT_NE(ret, HC_SUCCESS);
 }
 
-HWTEST_F(PeerToPeerGroupTest, PeerToPeerGroupTest024, TestSize.Level0)
-{
-    DeviceAuthCallback callback;
-    int32_t ret = AddMemberToGroup(DEFAULT_OS_ACCOUNT, DEFAULT_OS_ACCOUNT, nullptr, &callback);
-    EXPECT_NE(ret, HC_SUCCESS);
-}
-
 HWTEST_F(PeerToPeerGroupTest, PeerToPeerGroupTest025, TestSize.Level0)
 {
     DeviceAuthCallback callback;
     int32_t ret = DeleteMemberFromGroup(DEFAULT_OS_ACCOUNT, DEFAULT_REQUEST_ID, nullptr, &callback);
-    EXPECT_NE(ret, HC_SUCCESS);
-}
-
-HWTEST_F(PeerToPeerGroupTest, PeerToPeerGroupTest026, TestSize.Level0)
-{
-    DeviceAuthCallback callback;
-    int32_t ret = ProcessData(DEFAULT_REQUEST_ID, nullptr, &callback);
     EXPECT_NE(ret, HC_SUCCESS);
 }
 }
