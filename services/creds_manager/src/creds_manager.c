@@ -20,7 +20,6 @@
 #include "account_related_group_auth.h"
 #include "alg_defs.h"
 #include "alg_loader.h"
-#include "auth_session_util.h"
 #include "creds_operation_utils.h"
 #include "das_task_common.h"
 #include "data_manager.h"
@@ -33,7 +32,7 @@
 static int32_t GetAccountRelatedCandidateGroups(int32_t osAccountId, const CJson *in, bool isDeviceLevel,
     GroupEntryVec *vec)
 {
-    BaseGroupAuth *groupAuth = GetGroupAuth(ACCOUNT_RELATED_GROUP_AUTH_TYPE);
+    BaseGroupAuth *groupAuth = GetAccountRelatedGroupAuth();
     if (groupAuth == NULL) {
         return HC_ERR_NULL_PTR;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,6 @@
 #include "hc_types.h"
 #include "iso_client_bind_exchange_task.h"
 #include "iso_client_protocol_task.h"
-#include "iso_client_unbind_exchange_task.h"
 #include "iso_task_common.h"
 
 static int GetIsoClientTaskType(const struct SubTaskBaseT *task)
@@ -58,19 +57,6 @@ static int CreateNextTask(IsoClientTask *realTask, const CJson *in, CJson *out, 
             realTask->curTask = CreateClientBindExchangeTask(&(realTask->params), in, out, status);
             if (realTask->curTask == NULL) {
                 LOGE("CreateBindExchangeTask failed.");
-                return HC_ERROR;
-            }
-            break;
-        case OP_UNBIND:
-            if (realTask->curTask->getCurTaskType() == TASK_TYPE_UNBIND_LITE_EXCHANGE) {
-                LOGI("Unbind exchange task end successfully.");
-                *status = FINISH;
-                return HC_SUCCESS;
-            }
-            realTask->curTask->destroyTask(realTask->curTask);
-            realTask->curTask = CreateClientUnbindExchangeTask(&(realTask->params), in, out, status);
-            if (realTask->curTask == NULL) {
-                LOGE("CreateBindExchangeTask failed");
                 return HC_ERROR;
             }
             break;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,6 @@
 #include "data_manager.h"
 #include "dev_auth_module_manager.h"
 #include "dev_session_mgr.h"
-#include "group_auth_manager.h"
 #include "group_manager.h"
 #include "group_operation_common.h"
 #include "hc_dev_info.h"
@@ -34,7 +33,6 @@
 #include "json_utils.h"
 #include "os_account_adapter.h"
 #include "plugin_adapter.h"
-#include "session_manager.h"
 #include "task_manager.h"
 
 static GroupAuthManager *g_groupAuthManager =  NULL;
@@ -819,7 +817,6 @@ static int32_t InitAllModules(void)
     if (res != HC_SUCCESS) {
         goto CLEAN_CALLBACK;
     }
-    InitSessionManager();
     res = InitDevSessionManager();
     if (res != HC_SUCCESS) {
         goto CLEAN_GROUP_MANAGER;
@@ -833,7 +830,6 @@ static int32_t InitAllModules(void)
 CLEAN_ALL:
     DestroyDevSessionManager();
 CLEAN_GROUP_MANAGER:
-    DestroySessionManager();
     DestroyGroupManager();
 CLEAN_CALLBACK:
     DestroyCallbackManager();
@@ -874,8 +870,8 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
         return;
     }
     DestroyTaskManager();
+    DestroyDevSessionManager();
     DestroyGroupManager();
-    DestroySessionManager();
     DestroyGmAndGa();
     DEV_AUTH_UNLOAD_PLUGIN();
     DestroyModules();

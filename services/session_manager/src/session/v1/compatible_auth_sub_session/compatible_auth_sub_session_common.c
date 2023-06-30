@@ -16,7 +16,6 @@
 #include "compatible_auth_sub_session_common.h"
 
 #include "account_related_group_auth.h"
-#include "auth_session_util.h"
 #include "compatible_auth_sub_session_util.h"
 #include "data_manager.h"
 #include "dev_auth_module_manager.h"

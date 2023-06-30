@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,6 @@
 #include "hc_types.h"
 #include "iso_server_bind_exchange_task.h"
 #include "iso_server_protocol_task.h"
-#include "iso_server_unbind_exchange_task.h"
 #include "iso_task_common.h"
 
 static int GetIsoServerTaskType(const struct SubTaskBaseT *task)
@@ -60,18 +59,6 @@ static int CreateNextTask(IsoServerTask *realTask, const CJson *in, CJson *out, 
                 break;
             }
             realTask->curTask = CreateServerBindExchangeTask(&(realTask->params), in, out, status);
-            if (realTask->curTask == NULL) {
-                LOGE("CreateBindExchangeTask failed");
-                return HC_ERROR;
-            }
-            break;
-        case OP_UNBIND:
-            if (message != ISO_CLIENT_UNBIND_EXCHANGE_CMD) {
-                LOGI("The message is repeated, ignore it message: %d.", message);
-                *status = IGNORE_MSG;
-                break;
-            }
-            realTask->curTask = CreateServerUnbindExchangeTask(&(realTask->params), in, out, status);
             if (realTask->curTask == NULL) {
                 LOGE("CreateBindExchangeTask failed");
                 return HC_ERROR;

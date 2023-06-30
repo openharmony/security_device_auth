@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,7 +21,6 @@
 #include "pake_v1_server_protocol_task.h"
 #include "pake_task_common.h"
 #include "standard_server_bind_exchange_task.h"
-#include "standard_server_unbind_exchange_task.h"
 
 static int GetPakeV1ServerTaskType(const struct SubTaskBaseT *task)
 {
@@ -62,21 +61,6 @@ static int CreateAndProcessNextBindTask(PakeV1ServerTask *realTask, const CJson 
     return res;
 }
 
-static int CreateAndProcessNextUnbindTask(PakeV1ServerTask *realTask, const CJson *in, CJson *out, int *status)
-{
-    realTask->curTask->destroyTask(realTask->curTask);
-    realTask->curTask = CreateStandardUnbindExchangeServerTask();
-    if (realTask->curTask == NULL) {
-        LOGE("CreateStandardUnbindExchangeServerTask failed.");
-        return HC_ERROR;
-    }
-    int res = realTask->curTask->process(realTask->curTask, &(realTask->params), in, out, status);
-    if (res != HC_SUCCESS) {
-        LOGE("Process StandardUnbindExchangeServerTask failed.");
-    }
-    return res;
-}
-
 static int CreateNextTask(PakeV1ServerTask *realTask, const CJson *in, CJson *out, int *status)
 {
     int res = HC_SUCCESS;
@@ -87,13 +71,6 @@ static int CreateNextTask(PakeV1ServerTask *realTask, const CJson *in, CJson *ou
             }
             *status = CONTINUE;
             res = CreateAndProcessNextBindTask(realTask, in, out, status);
-            break;
-        case OP_UNBIND:
-            if (realTask->curTask->getCurTaskType() == TASK_TYPE_UNBIND_STANDARD_EXCHANGE) {
-                break;
-            }
-            *status = CONTINUE;
-            res = CreateAndProcessNextUnbindTask(realTask, in, out, status);
             break;
         case AUTH_KEY_AGREEMENT:
         case AUTHENTICATE:

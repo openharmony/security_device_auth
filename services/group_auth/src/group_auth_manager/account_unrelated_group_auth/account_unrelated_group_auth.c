@@ -14,8 +14,6 @@
  */
 
 #include "account_unrelated_group_auth.h"
-#include "auth_session_common.h"
-#include "auth_session_common_util.h"
 #include "common_defs.h"
 #include "compatible_auth_sub_session_common.h"
 #include "device_auth_defines.h"
@@ -29,24 +27,49 @@ static void OnDasFinish(int64_t requestId, const CJson *authParam, const CJson *
     const DeviceAuthCallback *callback);
 static int32_t FillNonAccountAuthInfo(int32_t osAccountId, const TrustedGroupEntry *entry,
     const TrustedDeviceEntry *localAuthInfo, CJson *paramsData);
-static void OnDasError(int64_t requestId, const AuthSession *session, int errorCode);
-static void OnAuthError(int64_t requestId, const CompatibleAuthSubSession *session, int errorCode);
-static int32_t GetDasAuthParamForServer(const CJson *dataFromClient, ParamsVec *authParamsVec);
 static int32_t GetAuthParamsVecForServer(const CJson *dataFromClient, ParamsVecForAuth *authParamsVec);
-static int32_t GetDasReqParams(const CJson *receiveData, CJson *reqParam);
 static int32_t CombineDasServerConfirmParams(const CJson *confirmationJson, CJson *dataFromClient);
 
 static NonAccountGroupAuth g_nonAccountGroupAuth = {
     .base.onFinish = OnDasFinish,
-    .base.onError = OnDasError,
-    .base.onAuthError = OnAuthError,
     .base.fillDeviceAuthInfo = FillNonAccountAuthInfo,
-    .base.getAuthParamForServer = GetDasAuthParamForServer,
     .base.getAuthParamsVecForServer = GetAuthParamsVecForServer,
-    .base.getReqParams = GetDasReqParams,
     .base.combineServerConfirmParams = CombineDasServerConfirmParams,
     .base.authType = ACCOUNT_UNRELATED_GROUP_AUTH_TYPE,
 };
+
+static int32_t ReturnSessionKey(int64_t requestId, const CJson *authParam,
+    const CJson *out, const DeviceAuthCallback *callback)
+{
+    int32_t keyLen = DEFAULT_RETURN_KEY_LENGTH;
+    (void)GetIntFromJson(authParam, FIELD_KEY_LENGTH, &keyLen);
+    uint8_t *sessionKey = (uint8_t *)HcMalloc(keyLen, 0);
+    if (sessionKey == NULL) {
+        LOGE("Failed to allocate memory for sessionKey!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+
+    int32_t res = HC_SUCCESS;
+    do {
+        if (GetByteFromJson(out, FIELD_SESSION_KEY, sessionKey, keyLen) != HC_SUCCESS) {
+            LOGE("Failed to get sessionKey!");
+            res = HC_ERR_JSON_GET;
+            break;
+        }
+        if ((callback == NULL) || (callback->onSessionKeyReturned == NULL)) {
+            LOGE("The callback of onSessionKeyReturned is null!");
+            res = HC_ERR_INVALID_PARAMS;
+            break;
+        }
+        LOGI("Begin invoke onSessionKeyReturned.");
+        callback->onSessionKeyReturned(requestId, sessionKey, keyLen);
+        LOGI("End invoke onSessionKeyReturned, res = %d.", res);
+    } while (0);
+    (void)memset_s(sessionKey, keyLen, 0, keyLen);
+    HcFree(sessionKey);
+    sessionKey = NULL;
+    return res;
+}
 
 static int32_t AddGroupIdToSelfData(const CJson *authParam, CJson *returnToSelf)
 {
@@ -296,100 +319,6 @@ static int32_t AddNonAccountAuthInfo(const TrustedDeviceEntry *localAuthInfo, co
     return HC_SUCCESS;
 }
 
-static void OnDasError(int64_t requestId, const AuthSession *session, int errorCode)
-{
-    const DeviceAuthCallback *callback = session->base.callback;
-    ParamsVec list = session->paramsList;
-    CJson *authParam = list.get(&list, session->currentIndex);
-    if (authParam == NULL) {
-        LOGE("The json data in session is null!");
-        return;
-    }
-    /* If there is alternative group, do not return error. */
-    const char *altGroup = GetStringFromJson(authParam, FIELD_ALTERNATIVE);
-    if ((session->currentIndex < (list.size(&list) - 1)) || (altGroup != NULL)) {
-        return;
-    }
-    CJson *returnData = CreateJson();
-    if (returnData == NULL) {
-        LOGE("Failed to create json for returnData!");
-        return;
-    }
-    int32_t res = AddGroupIdToSelfData(authParam, returnData);
-    if (res != HC_SUCCESS) {
-        FreeJson(returnData);
-        return;
-    }
-    res = AddPeerUdidToSelfData(authParam, returnData);
-    if (res != HC_SUCCESS) {
-        FreeJson(returnData);
-        return;
-    }
-    res = AddPeerAuthIdToSelfData(authParam, returnData);
-    if (res != HC_SUCCESS) {
-        FreeJson(returnData);
-        return;
-    }
-    char *returnStr = PackJsonToString(returnData);
-    FreeJson(returnData);
-    if (returnStr == NULL) {
-        LOGE("Failed to pack returnStr for onError!");
-        return;
-    }
-    if ((callback != NULL) && (callback->onError != NULL)) {
-        LOGE("Invoke OnDasError!");
-        callback->onError(requestId, AUTH_FORM_ACCOUNT_UNRELATED, errorCode, returnStr);
-    }
-    FreeJsonString(returnStr);
-}
-
-static void OnAuthError(int64_t requestId, const CompatibleAuthSubSession *session, int errorCode)
-{
-    const DeviceAuthCallback *callback = session->base.callback;
-    ParamsVecForAuth list = session->paramsList;
-    CJson *authParam = list.get(&list, session->currentIndex);
-    if (authParam == NULL) {
-        LOGE("The json data in session is null!");
-        return;
-    }
-    /* If there is alternative group, do not return error. */
-    const char *altGroup = GetStringFromJson(authParam, FIELD_ALTERNATIVE);
-    if ((session->currentIndex < (list.size(&list) - 1)) || (altGroup != NULL)) {
-        return;
-    }
-    CJson *returnData = CreateJson();
-    if (returnData == NULL) {
-        LOGE("Failed to create json for returnData!");
-        return;
-    }
-    int32_t res = AddGroupIdToSelfData(authParam, returnData);
-    if (res != HC_SUCCESS) {
-        FreeJson(returnData);
-        return;
-    }
-    res = AddPeerUdidToSelfData(authParam, returnData);
-    if (res != HC_SUCCESS) {
-        FreeJson(returnData);
-        return;
-    }
-    res = AddPeerAuthIdToSelfData(authParam, returnData);
-    if (res != HC_SUCCESS) {
-        FreeJson(returnData);
-        return;
-    }
-    char *returnStr = PackJsonToString(returnData);
-    FreeJson(returnData);
-    if (returnStr == NULL) {
-        LOGE("Failed to pack returnStr for onError!");
-        return;
-    }
-    if ((callback != NULL) && (callback->onError != NULL)) {
-        LOGE("Invoke OnDasError!");
-        callback->onError(requestId, AUTH_FORM_ACCOUNT_UNRELATED, errorCode, returnStr);
-    }
-    FreeJsonString(returnStr);
-}
-
 static int32_t FillNonAccountAuthInfo(int32_t osAccountId, const TrustedGroupEntry *entry,
     const TrustedDeviceEntry *localAuthInfo, CJson *paramsData)
 {
@@ -433,29 +362,6 @@ static int32_t FillNonAccountAuthInfo(int32_t osAccountId, const TrustedGroupEnt
     return res;
 }
 
-static int32_t GetDasReqParams(const CJson *receiveData, CJson *reqParam)
-{
-    int32_t res = GetGeneralReqParams(receiveData, reqParam);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to get general request params!");
-        return res;
-    }
-    bool receiveDeviceLevel = false;
-    (void)GetBoolFromJson(receiveData, FIELD_IS_DEVICE_LEVEL, &receiveDeviceLevel);
-    if (receiveDeviceLevel) {
-        const char *altGroup = GetStringFromJson(receiveData, FIELD_ALTERNATIVE);
-        if (altGroup != NULL && AddStringToJson(reqParam, FIELD_ALTERNATIVE, altGroup) != HC_SUCCESS) {
-            LOGE("Failed to add alternativeGroup to reqParam!");
-            return HC_ERR_JSON_FAIL;
-        }
-    }
-    if (AddBoolToJson(reqParam, FIELD_IS_DEVICE_LEVEL, receiveDeviceLevel) != HC_SUCCESS) {
-        LOGE("Failed to add reqParam for onRequest!");
-        return HC_ERR_JSON_FAIL;
-    }
-    return res;
-}
-
 static int32_t CombineDasServerConfirmParams(const CJson *confirmationJson, CJson *dataFromClient)
 {
     bool isClient = false;
@@ -486,21 +392,6 @@ static int32_t CombineDasServerConfirmParams(const CJson *confirmationJson, CJso
         }
     }
     return HC_SUCCESS;
-}
-
-static int32_t GetDasAuthParamForServer(const CJson *dataFromClient, ParamsVec *authParamsVec)
-{
-    LOGI("Begin get non-account auth params for server.");
-    int32_t osAccountId = ANY_OS_ACCOUNT;
-    if (GetIntFromJson(dataFromClient, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get os accountId from dataFromClient!");
-        return HC_ERR_JSON_GET;
-    }
-    int32_t res = GetAuthParamsList(osAccountId, dataFromClient, authParamsVec);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to get non-account auth params!");
-    }
-    return res;
 }
 
 static int32_t GetAuthParamsVecForServer(const CJson *dataFromClient, ParamsVecForAuth *authParamsVec)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,7 +30,6 @@
 #include "hisysevent_adapter.h"
 #include "hitrace_adapter.h"
 #include "os_account_adapter.h"
-#include "session_manager.h"
 #include "task_manager.h"
 
 #include "across_account_group.h"
@@ -417,17 +416,6 @@ static int32_t DeleteGroup(int32_t osAccountId, CJson *jsonParams, char **return
     return instance->deleteGroup(osAccountId, jsonParams, returnJsonStr);
 }
 
-static int32_t AddMemberToPeerToPeerGroup(int32_t osAccountId, int64_t requestId, CJson *jsonParams,
-    const DeviceAuthCallback *callback)
-{
-    if (!IsPeerToPeerGroupSupported()) {
-        LOGE("Peer to peer group is not supported!");
-        return HC_ERR_NOT_SUPPORT;
-    }
-    PeerToPeerGroup *instance = (PeerToPeerGroup *)GetPeerToPeerGroupInstance();
-    return instance->addMember(osAccountId, requestId, jsonParams, callback);
-}
-
 static int32_t DeleteMemberFromPeerToPeerGroup(int32_t osAccountId, int64_t requestId, CJson *jsonParams,
     const DeviceAuthCallback *callback)
 {
@@ -437,24 +425,6 @@ static int32_t DeleteMemberFromPeerToPeerGroup(int32_t osAccountId, int64_t requ
     }
     PeerToPeerGroup *instance = (PeerToPeerGroup *)GetPeerToPeerGroupInstance();
     return instance->deleteMember(osAccountId, requestId, jsonParams, callback);
-}
-
-static int32_t ProcessBindData(int64_t requestId, CJson *jsonParams, const DeviceAuthCallback *callback)
-{
-    if (!IsPeerToPeerGroupSupported()) {
-        LOGE("Peer to peer group is not supported!");
-        return HC_ERR_NOT_SUPPORT;
-    }
-    PeerToPeerGroup *instance = (PeerToPeerGroup *)GetPeerToPeerGroupInstance();
-    return instance->processData(requestId, jsonParams, callback);
-}
-
-static int32_t GetOpCodeWhenAdd(const CJson *jsonParams)
-{
-    bool isAdmin = true;
-    /* The isAdmin parameter is optional. Default value is true. */
-    (void)GetBoolFromJson(jsonParams, FIELD_IS_ADMIN, &isAdmin);
-    return isAdmin ? MEMBER_INVITE : MEMBER_JOIN;
 }
 
 static void DoCreateGroup(HcTaskBase *baseTask)
@@ -489,15 +459,6 @@ static void DoDeleteGroup(HcTaskBase *baseTask)
     }
 }
 
-static void DoAddMember(HcTaskBase *baseTask)
-{
-    DEV_AUTH_START_TRACE(TRACE_TAG_PROC_ADD_MEMBER_WORK_TASK);
-    GroupManagerTask *task = (GroupManagerTask *)baseTask;
-    LOGI("[Start]: DoAddMember! [ReqId]: %" PRId64, task->reqId);
-    (void)AddMemberToPeerToPeerGroup(task->osAccountId, task->reqId, task->params, task->cb);
-    DEV_AUTH_FINISH_TRACE();
-}
-
 static void DoDeleteMember(HcTaskBase *baseTask)
 {
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
@@ -505,30 +466,6 @@ static void DoDeleteMember(HcTaskBase *baseTask)
     SET_TRACE_ID(task->reqId);
     LOGI("[Start]: DoDeleteMember! [ReqId]: %" PRId64, task->reqId);
     (void)DeleteMemberFromPeerToPeerGroup(task->osAccountId, task->reqId, task->params, task->cb);
-}
-
-static void DoProcessBindData(HcTaskBase *baseTask)
-{
-    DEV_AUTH_START_TRACE(TRACE_TAG_PROC_BIND_DATA_WORK_TASK);
-    GroupManagerTask *task = (GroupManagerTask *)baseTask;
-    LOGI("[Start]: DoProcessBindData! [ReqId]: %" PRId64, task->reqId);
-    if (IsRequestExist(task->reqId)) {
-        DEV_AUTH_START_TRACE(TRACE_TAG_PROCESS_SESSION);
-        int ret = ProcessSession(task->reqId, BIND_TYPE, task->params);
-        DEV_AUTH_FINISH_TRACE();
-        if (ret != CONTINUE) {
-            DestroySession(task->reqId);
-        }
-        DEV_AUTH_FINISH_TRACE();
-        return;
-    }
-    if ((BindCallbackToTask(task, task->params) != HC_SUCCESS) ||
-        (CheckMsgRepeatability(task->params, DAS_MODULE) != HC_SUCCESS)) {
-        DEV_AUTH_FINISH_TRACE();
-        return;
-    }
-    (void)ProcessBindData(task->reqId, task->params, task->cb);
-    DEV_AUTH_FINISH_TRACE();
 }
 
 static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams)
@@ -582,34 +519,6 @@ static int32_t RequestDeleteGroup(int32_t osAccountId, int64_t requestId, const 
         return HC_ERR_INIT_TASK_FAIL;
     }
     LOGI("[End]: RequestDeleteGroup!");
-    return HC_SUCCESS;
-}
-
-static int32_t RequestAddMemberToGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *addParams)
-{
-    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    if ((appId == NULL) || (addParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
-        LOGE("Invalid input parameters!");
-        return HC_ERR_INVALID_PARAMS;
-    }
-    LOGI("[Start]: RequestAddMemberToGroup! [AppId]: %s, [RequestId]: %" PRId64, appId, requestId);
-    DEV_AUTH_REPORT_CALL_EVENT(ADD_MEMBER_EVENT, osAccountId, requestId, appId);
-    CJson *params = CreateJsonFromString(addParams);
-    if (params == NULL) {
-        LOGE("Failed to create json from string!");
-        return HC_ERR_JSON_FAIL;
-    }
-    int32_t opCode = GetOpCodeWhenAdd(params);
-    int32_t result = AddBindParamsToJson(opCode, requestId, appId, params);
-    if (result != HC_SUCCESS) {
-        FreeJson(params);
-        return result;
-    }
-    if (InitAndPushGMTask(osAccountId, opCode, requestId, params, DoAddMember) != HC_SUCCESS) {
-        FreeJson(params);
-        return HC_ERR_INIT_TASK_FAIL;
-    }
-    LOGI("[End]: RequestAddMemberToGroup!");
     return HC_SUCCESS;
 }
 
@@ -719,26 +628,6 @@ static int32_t RequestDelMultiMembersFromGroup(int32_t osAccountId, const char *
     FreeJson(params);
     LOGI("[End]: RequestDelMultiMembersFromGroup!");
     return res;
-}
-
-static int32_t RequestProcessBindData(int64_t requestId, const uint8_t *data, uint32_t dataLen)
-{
-    if ((data == NULL) || (dataLen == 0) || (dataLen > MAX_DATA_BUFFER_SIZE)) {
-        LOGE("The input data is invalid!");
-        return HC_ERR_INVALID_PARAMS;
-    }
-    LOGI("[Start]: RequestProcessBindData! [ReqId]: %" PRId64, requestId);
-    CJson *params = CreateJsonFromString((const char *)data);
-    if (params == NULL) {
-        LOGE("Failed to create json from string!");
-        return HC_ERR_JSON_FAIL;
-    }
-    if (InitAndPushGMTask(INVALID_OS_ACCOUNT, CODE_NULL, requestId, params, DoProcessBindData) != HC_SUCCESS) {
-        FreeJson(params);
-        return HC_ERR_INIT_TASK_FAIL;
-    }
-    LOGI("[End]: RequestProcessBindData!");
-    return HC_SUCCESS;
 }
 
 static int32_t RegListener(const char *appId, const DataChangeListener *listener)
@@ -1096,11 +985,9 @@ static void DestroyInfo(char **returnInfo)
 static const GroupImpl GROUP_IMPL_INSTANCE = {
     .createGroup = RequestCreateGroup,
     .deleteGroup = RequestDeleteGroup,
-    .addMember = RequestAddMemberToGroup,
     .deleteMember = RequestDeleteMemberFromGroup,
     .addMultiMembers = RequestAddMultiMembersToGroup,
     .delMultiMembers = RequestDelMultiMembersFromGroup,
-    .processBindData = RequestProcessBindData,
     .regListener = RegListener,
     .unRegListener = UnRegListener,
     .getRegisterInfo = GetRegisterInfo,

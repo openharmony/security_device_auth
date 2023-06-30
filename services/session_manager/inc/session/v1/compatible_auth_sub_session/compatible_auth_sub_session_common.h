@@ -18,6 +18,9 @@
 
 #include "compatible_auth_sub_session_defines.h"
 
+#define MIN_KEY_LENGTH 16
+#define MAX_KEY_LENGTH 1024
+
 #ifdef __cplusplus
 extern "C" {
 #endif

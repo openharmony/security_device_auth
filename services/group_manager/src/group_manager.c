@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,15 +37,6 @@ int32_t DeleteGroupImpl(int32_t osAccountId, int64_t requestId, const char *appI
                             : HC_ERR_NOT_SUPPORT;
 }
 
-int32_t AddMemberToGroupImpl(int32_t osAccountId, int64_t requestId, const char *appId, const char *addParams)
-{
-    DEV_AUTH_START_TRACE(TRACE_TAG_CALL_ADD_MEMBER);
-    int32_t res = IsGroupSupport() ? GetGroupImplInstance()->addMember(osAccountId, requestId, appId, addParams)
-                            : HC_ERR_NOT_SUPPORT;
-    DEV_AUTH_FINISH_TRACE();
-    return res;
-}
-
 int32_t DeleteMemberFromGroupImpl(int32_t osAccountId, int64_t requestId, const char *appId, const char *deleteParams)
 {
     SET_LOG_MODE(TRACE_MODE);
@@ -66,15 +57,6 @@ int32_t DelMultiMembersFromGroupImpl(int32_t osAccountId, const char *appId, con
     SET_LOG_MODE(NORMAL_MODE);
     return IsGroupSupport() ? GetGroupImplInstance()->delMultiMembers(osAccountId, appId, deleteParams)
                             : HC_ERR_NOT_SUPPORT;
-}
-
-int32_t ProcessBindDataImpl(int64_t requestId, const uint8_t *data, uint32_t dataLen)
-{
-    DEV_AUTH_START_TRACE(TRACE_TAG_CALL_PROCESS_BIND_DATA);
-    int32_t res = IsGroupSupport() ? GetGroupImplInstance()->processBindData(requestId, data, dataLen)
-                                   : HC_ERR_NOT_SUPPORT;
-    DEV_AUTH_FINISH_TRACE();
-    return res;
 }
 
 int32_t RegListenerImpl(const char *appId, const DataChangeListener *listener)

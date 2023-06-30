@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,6 @@
 #include "hc_log.h"
 #include "hisysevent_adapter.h"
 #include "hitrace_adapter.h"
-#include "session_manager.h"
 #include "string_util.h"
 
 static bool IsSameNameGroupExist(int32_t osAccountId, const char *ownerName, const char *groupName)
@@ -382,47 +381,7 @@ static int32_t CheckPeerDeviceStatus(int32_t osAccountId, const char *groupId, c
     return result;
 }
 
-static int32_t CheckInvitePeer(const CJson *jsonParams)
-{
-    const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
-    if (groupId == NULL) {
-        LOGE("Failed to get groupId from jsonParams!");
-        return HC_ERR_JSON_GET;
-    }
-    const char *appId = GetStringFromJson(jsonParams, FIELD_APP_ID);
-    if (appId == NULL) {
-        LOGE("Failed to get appId from jsonParams!");
-        return HC_ERR_JSON_GET;
-    }
-    int32_t osAccountId;
-    if (GetIntFromJson(jsonParams, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId from jsonParams!");
-        return HC_ERR_JSON_GET;
-    }
-
-    int32_t groupType = PEER_TO_PEER_GROUP;
-    int32_t result;
-    if (((result = CheckGroupExist(osAccountId, groupId)) != HC_SUCCESS) ||
-        ((result = GetGroupTypeFromDb(osAccountId, groupId, &groupType)) != HC_SUCCESS) ||
-        ((result = AssertGroupTypeMatch(groupType, PEER_TO_PEER_GROUP)) != HC_SUCCESS) ||
-        ((result = CheckPermForGroup(osAccountId, MEMBER_INVITE, appId, groupId)) != HC_SUCCESS) ||
-        ((result = CheckDeviceNumLimit(osAccountId, groupId, NULL)) != HC_SUCCESS)) {
-        return result;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t CheckJoinPeer(const CJson *jsonParams)
-{
-    int32_t groupType = PEER_TO_PEER_GROUP;
-    if (GetIntFromJson(jsonParams, FIELD_GROUP_TYPE, &groupType) != HC_SUCCESS) {
-        LOGE("Failed to get groupType from jsonParams!");
-        return HC_ERR_JSON_GET;
-    }
-    return AssertGroupTypeMatch(groupType, PEER_TO_PEER_GROUP);
-}
-
-static int32_t CheckDeletePeer(const CJson *jsonParams)
+static int32_t CheckDeletePeerStatus(const CJson *jsonParams)
 {
     const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
     if (groupId == NULL) {
@@ -452,114 +411,13 @@ static int32_t CheckDeletePeer(const CJson *jsonParams)
     return HC_SUCCESS;
 }
 
-static int32_t CheckClientStatus(int operationCode, const CJson *jsonParams)
+static bool IsLocalForceUnbind(const CJson *jsonParams)
 {
-    switch (operationCode) {
-        case MEMBER_INVITE:
-            return CheckInvitePeer(jsonParams);
-        case MEMBER_JOIN:
-            return CheckJoinPeer(jsonParams);
-        case MEMBER_DELETE:
-            return CheckDeletePeer(jsonParams);
-        default:
-            LOGE("Enter the exception case!");
-            return HC_ERR_CASE;
-    }
-}
-
-static CJson *GenerateGroupErrorMsg(int32_t errorCode, int64_t requestId, const CJson *jsonParams)
-{
-    const char *appId = GetStringFromJson(jsonParams, FIELD_APP_ID);
-    if (appId == NULL) {
-        LOGE("Failed to get appId from jsonParams!");
-        return NULL;
-    }
-    CJson *errorData = CreateJson();
-    if (errorData == NULL) {
-        LOGE("Failed to allocate errorData memory!");
-        return NULL;
-    }
-    if (AddIntToJson(errorData, FIELD_GROUP_ERROR_MSG, errorCode) != HC_SUCCESS) {
-        LOGE("Failed to add errorCode to errorData!");
-        FreeJson(errorData);
-        return NULL;
-    }
-    if (AddStringToJson(errorData, FIELD_APP_ID, appId) != HC_SUCCESS) {
-        LOGE("Failed to add appId to errorData!");
-        FreeJson(errorData);
-        return NULL;
-    }
-    if (AddInt64StringToJson(errorData, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
-        LOGE("Failed to add requestId to errorData!");
-        FreeJson(errorData);
-        return NULL;
-    }
-    return errorData;
-}
-
-static void InformPeerProcessError(int64_t requestId, const CJson *jsonParams, const DeviceAuthCallback *callback,
-    int32_t errorCode)
-{
-    int64_t channelId = DEFAULT_CHANNEL_ID;
-    ChannelType channelType = SOFT_BUS;
-    if (GetByteFromJson(jsonParams, FIELD_CHANNEL_ID, (uint8_t *)&channelId, sizeof(int64_t)) != HC_SUCCESS) {
-        channelType = SERVICE_CHANNEL;
-    }
-    CJson *errorData = GenerateGroupErrorMsg(errorCode, requestId, jsonParams);
-    if (errorData == NULL) {
-        return;
-    }
-    char *errorDataStr = PackJsonToString(errorData);
-    FreeJson(errorData);
-    if (errorDataStr == NULL) {
-        LOGE("An error occurred when converting json to string!");
-        return;
-    }
-    (void)HcSendMsg(channelType, requestId, channelId, callback, errorDataStr);
-    FreeJsonString(errorDataStr);
-}
-
-static int32_t ShouldForceUnbind(bool isForceDelete, const CJson *jsonParams)
-{
+    bool isForceDelete = false;
+    (void)GetBoolFromJson(jsonParams, FIELD_IS_FORCE_DELETE, &isForceDelete);
     bool isIgnoreChannel = false;
     (void)GetBoolFromJson(jsonParams, FIELD_IS_IGNORE_CHANNEL, &isIgnoreChannel);
     return (isForceDelete && isIgnoreChannel);
-}
-
-static int32_t CreateClientSession(int64_t requestId, int32_t operationCode, ChannelType channelType,
-    CJson *jsonParams, const DeviceAuthCallback *callback)
-{
-    int32_t result = CreateSession(requestId, TYPE_CLIENT_BIND_SESSION, jsonParams, callback);
-    if (result != HC_SUCCESS) {
-        if (result != HC_ERR_CREATE_SESSION_FAIL) {
-            ProcessErrorCallback(requestId, operationCode, result, NULL, callback);
-        }
-        return result;
-    }
-    /**
-     * If service open the channel by itself,
-     * a channel opened message needs to be triggered to unify the channel usage policy.
-     */
-    if (channelType == SERVICE_CHANNEL) {
-        /* Release the memory in advance to reduce the memory usage. */
-        DeleteAllItem(jsonParams);
-        OnChannelOpened(requestId, DEFAULT_CHANNEL_ID);
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t CreateServerSession(int64_t requestId, int32_t operationCode, CJson *jsonParams,
-    const DeviceAuthCallback *callback)
-{
-    int32_t result = CreateSession(requestId, TYPE_SERVER_BIND_SESSION, jsonParams, callback);
-    if (result != HC_SUCCESS) {
-        if (result != HC_ERR_CREATE_SESSION_FAIL) {
-            InformPeerProcessError(requestId, jsonParams, callback, result);
-            ProcessErrorCallback(requestId, operationCode, result, NULL, callback);
-        }
-        return result;
-    }
-    return HC_SUCCESS;
 }
 
 static int32_t CreateGroup(int32_t osAccountId, CJson *jsonParams, char **returnJsonStr)
@@ -602,29 +460,6 @@ static int32_t DeleteGroup(int32_t osAccountId, CJson *jsonParams, char **return
     return HC_SUCCESS;
 }
 
-static int32_t AddMemberToGroup(int32_t osAccountId, int64_t requestId, CJson *jsonParams,
-    const DeviceAuthCallback *callback)
-{
-    LOGI("[Start]: Start to add member to a peer to peer group!");
-    if ((jsonParams == NULL) || (callback == NULL)) {
-        LOGE("The input parameters contains NULL value!");
-        return HC_ERR_INVALID_PARAMS;
-    }
-    int32_t result;
-    int32_t operationCode = MEMBER_INVITE;
-    AddIntToJson(jsonParams, FIELD_OS_ACCOUNT_ID, osAccountId);
-    (void)GetIntFromJson(jsonParams, FIELD_OPERATION_CODE, &operationCode);
-    result = CheckClientStatus(operationCode, jsonParams);
-    if (result != HC_SUCCESS) {
-        ProcessErrorCallback(requestId, operationCode, result, NULL, callback);
-        return result;
-    }
-    DEV_AUTH_START_TRACE(TRACE_TAG_CREATE_SESSION);
-    result = CreateClientSession(requestId, operationCode, GetChannelType(callback, jsonParams), jsonParams, callback);
-    DEV_AUTH_FINISH_TRACE();
-    return result;
-}
-
 static int32_t DeleteMemberFromGroup(int32_t osAccountId, int64_t requestId, CJson *jsonParams,
     const DeviceAuthCallback *callback)
 {
@@ -634,45 +469,27 @@ static int32_t DeleteMemberFromGroup(int32_t osAccountId, int64_t requestId, CJs
         return HC_ERR_INVALID_PARAMS;
     }
     AddIntToJson(jsonParams, FIELD_OS_ACCOUNT_ID, osAccountId);
-    int32_t result = CheckClientStatus(MEMBER_DELETE, jsonParams);
+    int32_t result = CheckDeletePeerStatus(jsonParams);
     if (result != HC_SUCCESS) {
         ProcessErrorCallback(requestId, MEMBER_DELETE, result, NULL, callback);
         return result;
     }
-    bool isForceDelete = false;
-    (void)(GetBoolFromJson(jsonParams, FIELD_IS_FORCE_DELETE, &isForceDelete));
-    if (ShouldForceUnbind(isForceDelete, jsonParams)) {
-        result = HandleLocalUnbind(requestId, jsonParams, callback);
-        if (result != HC_SUCCESS) {
-            ProcessErrorCallback(requestId, MEMBER_DELETE, result, NULL, callback);
-        }
-        return result;
-    }
-    return CreateClientSession(requestId, MEMBER_DELETE, GetChannelType(callback, jsonParams), jsonParams, callback);
-}
-
-static int32_t ProcessData(int64_t requestId, CJson *jsonParams, const DeviceAuthCallback *callback)
-{
-    LOGI("[Start]: Start to process binding data!");
-    if ((jsonParams == NULL) || (callback == NULL)) {
-        LOGE("The input parameters contains NULL value!");
+    if (!IsLocalForceUnbind(jsonParams)) {
+        ProcessErrorCallback(requestId, MEMBER_DELETE, HC_ERR_INVALID_PARAMS, NULL, callback);
         return HC_ERR_INVALID_PARAMS;
     }
-    int32_t operationCode = MEMBER_INVITE;
-    (void)(GetIntFromJson(jsonParams, FIELD_GROUP_OP, &operationCode));
-    DEV_AUTH_START_TRACE(TRACE_TAG_CREATE_SESSION);
-    int32_t res = CreateServerSession(requestId, operationCode, jsonParams, callback);
-    DEV_AUTH_FINISH_TRACE();
-    return res;
+    result = HandleLocalUnbind(requestId, jsonParams, callback);
+    if (result != HC_SUCCESS) {
+        ProcessErrorCallback(requestId, MEMBER_DELETE, result, NULL, callback);
+    }
+    return result;
 }
 
 static PeerToPeerGroup g_peerToPeerGroup = {
     .base.type = PEER_TO_PEER_GROUP,
     .base.createGroup = CreateGroup,
     .base.deleteGroup = DeleteGroup,
-    .addMember = AddMemberToGroup,
     .deleteMember = DeleteMemberFromGroup,
-    .processData = ProcessData,
 };
 
 BaseGroup *GetPeerToPeerGroupInstance(void)

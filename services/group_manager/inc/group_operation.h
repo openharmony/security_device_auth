@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,11 +26,9 @@ extern "C" {
 typedef struct {
     int32_t (*createGroup)(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams);
     int32_t (*deleteGroup)(int32_t osAccountId, int64_t requestId, const char *appId, const char *disbandParams);
-    int32_t (*addMember)(int32_t osAccountId, int64_t requestId, const char *appId, const char *addParams);
     int32_t (*deleteMember)(int32_t osAccountId, int64_t requestId, const char *appId, const char *deleteParams);
     int32_t (*addMultiMembers)(int32_t osAccountId, const char *appId, const char *addParams);
     int32_t (*delMultiMembers)(int32_t osAccountId, const char *appId, const char *deleteParams);
-    int32_t (*processBindData)(int64_t requestId, const uint8_t *data, uint32_t dataLen);
     int32_t (*regListener)(const char *appId, const DataChangeListener *listener);
     int32_t (*unRegListener)(const char *appId);
     int32_t (*getRegisterInfo)(const char *reqJsonStr, char **returnRegisterInfo);

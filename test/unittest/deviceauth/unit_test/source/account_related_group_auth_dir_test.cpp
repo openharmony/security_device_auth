@@ -294,16 +294,6 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0023, TestSize.
     EXPECT_EQ(ret, HC_SUCCESS);
 }
 
-HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest003, TestSize.Level0)
-{
-    int32_t ret = HC_SUCCESS;
-    AuthSession session; // This can not be NULL in unit test.
-    (void)CreateAuthParamsVec(&session.paramsList);
-    (void)GetAccountRelatedGroupAuth()->onError(0, &session, 0); // For unit test.
-    EXPECT_EQ(ret, HC_SUCCESS);
-    DestroyAuthParamsVec(&session.paramsList);
-}
-
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest004, TestSize.Level0)
 {
     int32_t ret = HC_SUCCESS;
@@ -492,69 +482,6 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0044, TestSize.
     FreeJson(paramsData);
     DestroyGroupEntry(entry);
     DestroyDeviceEntry(localAuthInfo);
-}
-
-HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest005, TestSize.Level0)
-{
-    CJson *dataFromClient = CreateJson();
-    if (dataFromClient == nullptr) {
-        return;
-    }
-    ParamsVec authParamsVec;
-    int32_t ret = GetAccountRelatedGroupAuth()->getAuthParamForServer(dataFromClient, &authParamsVec);
-    EXPECT_NE(ret, HC_SUCCESS);
-    FreeJson(dataFromClient);
-}
-
-HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0051, TestSize.Level0)
-{
-    CJson *dataFromClient = CreateJson();
-    if (dataFromClient == nullptr) {
-        return;
-    }
-    ParamsVec authParamsVec;
-    (void)AddIntToJson(dataFromClient, FIELD_OS_ACCOUNT_ID, 0); // 0 is temp id for test.
-    int32_t ret = GetAccountRelatedGroupAuth()->getAuthParamForServer(dataFromClient, &authParamsVec);
-    EXPECT_NE(ret, HC_SUCCESS);
-    FreeJson(dataFromClient);
-}
-
-HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest006, TestSize.Level0)
-{
-    CJson *receiveData = CreateJson();
-    if (receiveData == nullptr) {
-        return;
-    }
-    CJson *reqParam = CreateJson();
-    if (reqParam == nullptr) {
-        FreeJson(receiveData);
-        return;
-    }
-    int32_t ret = GetAccountRelatedGroupAuth()->getReqParams(receiveData, reqParam);
-    EXPECT_NE(ret, HC_SUCCESS);
-    FreeJson(receiveData);
-    FreeJson(reqParam);
-}
-
-HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0061, TestSize.Level0)
-{
-    CJson *receiveData = CreateJson();
-    if (receiveData == nullptr) {
-        return;
-    }
-    CJson *reqParam = CreateJson();
-    if (reqParam == nullptr) {
-        FreeJson(receiveData);
-        return;
-    }
-    (void)AddStringToJson(receiveData, FIELD_USER_ID, "FIELD_USER_ID"); // For unit test.
-    int32_t ret = GetAccountRelatedGroupAuth()->getReqParams(receiveData, reqParam);
-    EXPECT_NE(ret, HC_SUCCESS);
-    (void)AddStringToJson(receiveData, FIELD_DEVICE_ID, "FIELD_DEVICE_ID"); // For unit test.
-    ret = GetAccountRelatedGroupAuth()->getReqParams(receiveData, reqParam);
-    EXPECT_EQ(ret, HC_SUCCESS);
-    FreeJson(receiveData);
-    FreeJson(reqParam);
 }
 
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest007, TestSize.Level0)

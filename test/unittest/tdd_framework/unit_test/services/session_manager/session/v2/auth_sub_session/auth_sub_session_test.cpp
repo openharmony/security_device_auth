@@ -82,9 +82,9 @@ void AuthSubSessionTest::SetUp()
 
 void AuthSubSessionTest::TearDown()
 {
-    bool isMemoryLead = IsMemoryLead();
-    EXPECT_FALSE(isMemoryLead);
-    if (isMemoryLead) {
+    bool isMemoryLeak = IsMemoryLeak();
+    EXPECT_FALSE(isMemoryLeak);
+    if (isMemoryLeak) {
         ReportMonitor();
     }
     cJSON_Hooks hooks = {
@@ -849,9 +849,9 @@ HWTEST_F(AuthSubSessionTest, AuthSubSessionTest126, TestSize.Level0)
     for (uint32_t i = 0; i < callNum; i++) {
         SetThrowExceptionIndex(i);
         (void)TestMemoryException();
-        bool isMemoryLead = IsMemoryLead();
-        EXPECT_FALSE(isMemoryLead);
-        if (isMemoryLead) {
+        bool isMemoryLeak = IsMemoryLeak();
+        EXPECT_FALSE(isMemoryLeak);
+        if (isMemoryLeak) {
             ReportMonitor();
             break;
         }

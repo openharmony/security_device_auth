@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,11 +28,9 @@ void DestroyGroupManager(void);
 
 int32_t CreateGroupImpl(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams);
 int32_t DeleteGroupImpl(int32_t osAccountId, int64_t requestId, const char *appId, const char *disbandParams);
-int32_t AddMemberToGroupImpl(int32_t osAccountId, int64_t requestId, const char *appId, const char *addParams);
 int32_t DeleteMemberFromGroupImpl(int32_t osAccountId, int64_t requestId, const char *appId, const char *deleteParams);
 int32_t AddMultiMembersToGroupImpl(int32_t osAccountId, const char *appId, const char *addParams);
 int32_t DelMultiMembersFromGroupImpl(int32_t osAccountId, const char *appId, const char *deleteParams);
-int32_t ProcessBindDataImpl(int64_t requestId, const uint8_t *data, uint32_t dataLen);
 
 int32_t RegListenerImpl(const char *appId, const DataChangeListener *listener);
 int32_t UnRegListenerImpl(const char *appId);

@@ -15,11 +15,34 @@
 
 #include "compatible_auth_sub_session_util.h"
 
+#include "account_unrelated_group_auth.h"
 #include "account_related_group_auth.h"
 #include "hc_log.h"
 #include "hc_types.h"
 #include "os_account_adapter.h"
-#include "auth_session_util.h"
+
+static int32_t AuthFormToModuleType(int32_t authForm)
+{
+    int moduleType = INVALID_MODULE_TYPE;
+    if (authForm == AUTH_FORM_ACCOUNT_UNRELATED) {
+        moduleType = DAS_MODULE;
+    } else if ((authForm == AUTH_FORM_IDENTICAL_ACCOUNT) || (authForm == AUTH_FORM_ACROSS_ACCOUNT)) {
+        moduleType = ACCOUNT_MODULE;
+    } else {
+        LOGE("Invalid auth form!");
+    }
+    return moduleType;
+}
+
+int32_t GetAuthModuleType(const CJson *in)
+{
+    int32_t authForm = AUTH_FORM_INVALID_TYPE;
+    if (GetIntFromJson(in, FIELD_AUTH_FORM, &authForm) != HC_SUCCESS) {
+        LOGE("Failed to get auth form!");
+        return INVALID_MODULE_TYPE;
+    }
+    return AuthFormToModuleType(authForm);
+}
 
 char *GetDuplicatePkgName(const CJson *params)
 {
@@ -86,4 +109,19 @@ int32_t GetAuthType(int32_t authForm)
             LOGE("Invalid authForm!");
             return INVALID_GROUP_AUTH_TYPE;
     }
+}
+
+BaseGroupAuth *GetGroupAuth(int32_t groupAuthType)
+{
+    switch (groupAuthType) {
+        case ACCOUNT_UNRELATED_GROUP_AUTH_TYPE:
+            LOGI("Non-account auth type.");
+            return GetAccountUnrelatedGroupAuth();
+        case ACCOUNT_RELATED_GROUP_AUTH_TYPE:
+            LOGI("Account-related auth type.");
+            return GetAccountRelatedGroupAuth();
+        default:
+            LOGE("Invalid auth type!");
+    }
+    return NULL;
 }

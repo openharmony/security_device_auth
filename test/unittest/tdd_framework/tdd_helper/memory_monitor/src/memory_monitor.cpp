@@ -125,7 +125,7 @@ void ReportMonitor(void)
     g_mutex->unlock(g_mutex);
 }
 
-bool IsMemoryLead(void)
+bool IsMemoryLeak(void)
 {
     return g_mallocCount > 0;
 }

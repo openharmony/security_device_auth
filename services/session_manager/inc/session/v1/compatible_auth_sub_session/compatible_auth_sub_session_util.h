@@ -16,15 +16,18 @@
 #ifndef COMPATIBLE_AUTH_SUB_SESSION_UTIL_H
 #define COMPATIBLE_AUTH_SUB_SESSION_UTIL_H
 
+#include "base_group_auth.h"
 #include "json_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+int32_t GetAuthModuleType(const CJson *in);
 char *GetDuplicatePkgName(const CJson *params);
 int32_t CombineAuthConfirmData(const CJson *confirmationJson, CJson *dataFromClient);
 int32_t GetAuthType(int32_t authForm);
+BaseGroupAuth *GetGroupAuth(int32_t groupAuthType);
 
 #ifdef __cplusplus
 }
