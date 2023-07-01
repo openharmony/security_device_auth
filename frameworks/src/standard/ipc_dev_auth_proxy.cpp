@@ -45,7 +45,8 @@ int32_t ProxyDevAuth::DoCallRequest(MessageParcel &dataParcel, MessageParcel &re
     if (withSync == false) {
         option = { MessageOption::TF_ASYNC };
     }
-    ret = remote->SendRequest(DEV_AUTH_CALL_REQUEST, dataParcel, replyParcel, option);
+    ret = remote->SendRequest(static_cast<uint32_t>(DevAuthInterfaceCode::DEV_AUTH_CALL_REQUEST),
+        dataParcel, replyParcel, option);
     LOGI("SendRequest done, ret %d", ret);
     (ret == ERR_NONE) ? replyParcel.ReadInt32(ret) : (ret = HC_ERR_IPC_INTERNAL_FAILED);
     return ret;

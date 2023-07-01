@@ -64,7 +64,7 @@ int32_t StubDevAuthCb::OnRemoteRequest(uint32_t code,
 
     LOGI("enter invoking callback...");
     switch (code) {
-        case DEV_AUTH_CALLBACK_REQUEST:
+        case static_cast<uint32_t>(DevAuthCbInterfaceCode::DEV_AUTH_CALLBACK_REQUEST):
             if (data.GetReadableBytes() < sizeof(int32_t)) {
                 LOGE("Insufficient data available in IPC container. [Data]: callbackId");
                 return -1;

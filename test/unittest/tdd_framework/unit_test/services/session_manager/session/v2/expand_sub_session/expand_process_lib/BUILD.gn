@@ -74,6 +74,7 @@ ohos_unittest("pub_key_exchange_test") {
   defines = [
     "DEV_AUTH_MEMORY_DEBUG",
     "ENABLE_PUB_KEY_EXCHANGE",
+    "DEV_AUTH_FUNC_TEST",
   ]
 
   deps = [

@@ -269,7 +269,7 @@ static int32_t ServerGenAuthCodeProcEvent(CmdParams *params)
         LOGE("GenerateKeyAliasInIso failed, res:%d", res);
         return res;
     }
-    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
+    LOGI("AuthCode alias(HEX): %x %x %x %x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
         keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
     ExtraInfo exInfo = { params->authIdPeer, params->userTypePeer, PAIR_TYPE_BIND };
     res = GetLoaderInstance()->importSymmetricKey(&keyAlias, &authCode, KEY_PURPOSE_MAC, &exInfo);
@@ -348,7 +348,7 @@ static int32_t ClientImportAuthCodeProcEvent(const CmdParams *params)
         return res;
     }
 
-    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
+    LOGI("AuthCode alias(HEX): %x %x %x %x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
         keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
     ExtraInfo exInfo = { params->authIdPeer, params->userTypePeer, PAIR_TYPE_BIND };
     res = GetLoaderInstance()->importSymmetricKey(&keyAlias, &(params->authCode), KEY_PURPOSE_MAC, &exInfo);

@@ -573,7 +573,6 @@ bool IsCreateGroupNeeded(int isClient, int operationCode)
 int32_t GenerateBaseBindParams(int32_t osAccountId, int isClient, const CJson *jsonParams,
     CompatibleBindSubSession *session)
 {
-    LOGI("start to generate base bind params!");
     if (session->params == NULL) {
         session->params = CreateJson();
         if (session->params == NULL) {

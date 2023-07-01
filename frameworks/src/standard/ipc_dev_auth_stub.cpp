@@ -184,7 +184,7 @@ int32_t ServiceDevAuth::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
 
     LOGI("request code %u", code);
     switch (code) {
-        case DEV_AUTH_CALL_REQUEST:
+        case static_cast<uint32_t>(DevAuthInterfaceCode::DEV_AUTH_CALL_REQUEST):
             if (CheckPermission() != HC_SUCCESS) {
                 return -1;
             }

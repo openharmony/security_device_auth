@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,9 +28,7 @@ int32_t HcGetUdid(uint8_t *udid, int32_t udidLen)
     if (udid == NULL || udidLen < INPUT_UDID_LEN || udidLen > MAX_INPUT_UDID_LEN) {
         return HAL_ERR_INVALID_PARAM;
     }
-    LOGI("[UDID]: GetDevUdid enter.");
     int32_t res = GetDevUdid((char *)udid, udidLen);
-    LOGI("[UDID]: GetDevUdid quit. [Res]: %d", res);
     if (res != 0) {
         LOGE("[UDID]: GetDevUdid fail. [Res]: %d", res);
         return HAL_FAILED;

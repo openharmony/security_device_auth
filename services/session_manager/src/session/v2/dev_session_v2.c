@@ -1096,6 +1096,7 @@ static int32_t AddAuthInfoToContextByCred(SessionImpl *impl, IdentityInfo *cred)
         LOGE("Failed to get local udid!");
         return res;
     }
+    PRINT_SENSITIVE_DATA("SelfUdid", selfUdid);
     if (cred->proofType == CERTIFICATED) {
         if (AddStringToJson(impl->context, FIELD_AUTH_ID, selfUdid) != HC_SUCCESS) {
             LOGE("add selfAuthId to json fail.");
@@ -1288,7 +1289,7 @@ static int32_t AddHandshakeRspMsg(SessionImpl *impl, IdentityInfo *selfCred, CJs
     return res;
 }
 
-static int32_t IsPeerSupportCmd(int32_t cmdId, const CJson *supportCmds)
+static bool IsPeerSupportCmd(int32_t cmdId, const CJson *supportCmds)
 {
     uint32_t supportCmdsNum = GetItemNum(supportCmds);
     for (uint32_t i = 0; i < supportCmdsNum; i++) {
