@@ -43,6 +43,7 @@ ohos_unittest("expand_sub_session_test") {
     "DEV_AUTH_MEMORY_DEBUG",
     "ENABLE_AUTH_CODE_IMPORT",
     "ENABLE_PUB_KEY_EXCHANGE",
+    "DEV_AUTH_FUNC_TEST",
   ]
 
   deps = [

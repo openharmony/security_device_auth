@@ -202,7 +202,7 @@ static int32_t CreateBaseBindSubSession(int32_t sessionType, int32_t opCode, con
 static int32_t GenerateKeyPairIfNeeded(int isClient, int32_t opCode, CJson *jsonParams)
 {
     if (!IsCreateGroupNeeded(isClient, opCode)) {
-        LOGI("no need to create group.");
+        LOGI("no need to generate local keypair.");
         return HC_SUCCESS;
     }
     const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
@@ -714,7 +714,6 @@ static int32_t GenerateClientModuleParams(CompatibleBindSubSession *session, CJs
         LOGE("Failed to add operationCode to moduleParams!");
         return HC_ERR_JSON_ADD;
     }
-    LOGI("client generate base params!");
     return GenerateBaseModuleParams(true, session, moduleParams);
 }
 
@@ -808,7 +807,6 @@ static int32_t AddRecvModuleDataToParams(CJson *jsonParams, CJson *moduleParams)
 static int32_t GenerateServerModuleParams(CompatibleBindSubSession *session, CJson *jsonParams, CJson *moduleParams)
 {
     int32_t result;
-    LOGI("server generate base params!");
     if (((result = GenerateBaseModuleParams(false, session, moduleParams)) != HC_SUCCESS) ||
         ((result = AddConfirmationToParams(moduleParams)) != HC_SUCCESS) ||
         ((result = AddRecvModuleDataToParams(jsonParams, moduleParams)) != HC_SUCCESS)) {

@@ -248,6 +248,7 @@ int32_t GaGetLocalDeviceInfo(int32_t osAccountId, const char *groupId, TrustedDe
         HcFree(localUdid);
         return res;
     }
+    PRINT_SENSITIVE_DATA("SelfUdid", localUdid);
     res = GaGetTrustedDeviceEntryById(osAccountId, localUdid, true, groupId, localAuthInfo);
     HcFree(localUdid);
     if (res != HC_SUCCESS) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 
-#include "account_module.h"
-#include "device_auth_defines.h"
-#include "hc_log.h"
+#ifndef DEV_AUTH_IPC_INTERFACE_CODE_H
+#define DEV_AUTH_IPC_INTERFACE_CODE_H
 
-const AuthModuleBase *GetAccountModule(void)
-{
-    LOGI("Account module is not supported.");
-    return NULL;
+namespace OHOS {
+/* SAID:4701 */
+enum class DevAuthInterfaceCode {
+    DEV_AUTH_CALL_REQUEST = 1,
+};
 }
+
+#endif

@@ -397,7 +397,7 @@ static int32_t SavePeerPubKey(const CmdParams *params)
         LOGE("generateKeyAlias failed");
         return res;
     }
-    LOGI("PubKey alias: %x%x%x%x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
+    LOGI("PubKey alias: %x %x %x %x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
         keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
     ExtraInfo exInfo = { params->authIdPeer, params->userTypeSelf, PAIR_TYPE_BIND };
     res = GetLoaderInstance()->importPublicKey(&keyAlias, &params->pkPeer, ED25519, &exInfo);

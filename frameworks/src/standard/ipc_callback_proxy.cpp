@@ -45,7 +45,8 @@ void ProxyDevAuthCb::DoCallBack(int32_t callbackId, uintptr_t cbHook,
     if (dataParcel.GetDataSize() > 0) {
         (void)data.WriteBuffer(reinterpret_cast<const void *>(dataParcel.GetData()), dataParcel.GetDataSize());
     }
-    ret = remote->SendRequest(static_cast<uint32_t>(DEV_AUTH_CALLBACK_REQUEST), data, reply, option);
+    ret = remote->SendRequest(static_cast<uint32_t>(DevAuthCbInterfaceCode::DEV_AUTH_CALLBACK_REQUEST),
+        data, reply, option);
     if (ret != NO_ERROR) {
         LOGE("SendRequest is failed, error code: %d", ret);
     }

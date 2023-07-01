@@ -17,23 +17,19 @@
 #define IPC_IFACE_H
 
 #include <cstdint>
+#include "dev_auth_ipc_interface_code.h"
+#include "dev_auth_cb_ipc_interface_code.h"
 #include "iremote_broker.h"
 #include "message_parcel.h"
 
 namespace OHOS {
 class IMethodsIpcCall : public IRemoteBroker {
 public:
-    enum {
-        DEV_AUTH_CALL_REQUEST = 1,
-    };
     DECLARE_INTERFACE_DESCRIPTOR(u"deviceauth.IMethodsIpcCall");
 };
 
 class ICommIpcCallback : public IRemoteBroker {
 public:
-    enum {
-        DEV_AUTH_CALLBACK_REQUEST = 1,
-    };
     DECLARE_INTERFACE_DESCRIPTOR(u"deviceauth.ICommIpcCallback");
     virtual void DoCallBack(int32_t callbackId, uintptr_t cbHook,
         MessageParcel &dataParcel, MessageParcel &reply, MessageOption &option) = 0;

@@ -532,7 +532,7 @@ static int32_t GeneratePskAliasAndCheckExist(const CJson *in, const char *groupI
         DestroyDeviceEntry(deviceEntry);
         return ret;
     }
-    LOGI("psk alias: %x%x%x%x****.", pskKeyAlias->val[DEV_AUTH_ZERO], pskKeyAlias->val[DEV_AUTH_ONE],
+    LOGI("psk alias: %x %x %x %x****.", pskKeyAlias->val[DEV_AUTH_ZERO], pskKeyAlias->val[DEV_AUTH_ONE],
         pskKeyAlias->val[DEV_AUTH_TWO], pskKeyAlias->val[DEV_AUTH_THREE]);
     if (GetLoaderInstance()->checkKeyExist(pskKeyAlias) != HC_SUCCESS) {
         ret = ComputeAndSavePsk(osAccountId, groupId, deviceEntry, pskKeyAlias);
