@@ -31,8 +31,10 @@
 #include "hisysevent_adapter.h"
 #include "hitrace_adapter.h"
 #include "json_utils.h"
+#include "key_manager.h"
 #include "os_account_adapter.h"
 #include "plugin_adapter.h"
+#include "pseudonym_manager.h"
 #include "task_manager.h"
 
 static GroupAuthManager *g_groupAuthManager =  NULL;
@@ -48,6 +50,115 @@ typedef struct {
     int64_t sessionId;
     CJson *receivedMsg;
 } ProcSessionTask;
+
+static int32_t IsDeviceIdHashMatch(const char *udid, const char *subUdidHash)
+{
+    Uint8Buff udidBuf = { (uint8_t *)udid, (uint32_t)HcStrlen(udid) };
+    uint8_t udidHashByte[SHA256_LEN] = { 0 };
+    Uint8Buff udidHashBuf = { udidHashByte, sizeof(udidHashByte) };
+    int32_t ret = GetLoaderInstance()->sha256(&udidBuf, &udidHashBuf);
+    if (ret != HC_SUCCESS) {
+        LOGE("sha256 failed, ret:%d", ret);
+        return ret;
+    }
+    uint32_t udidHashLen = SHA256_LEN * BYTE_TO_HEX_OPER_LENGTH + 1;
+    char *udidHash = (char *)HcMalloc(udidHashLen, 0);
+    if (udidHash == NULL) {
+        LOGE("malloc udidHash string failed");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    ret = ByteToHexString(udidHashByte, SHA256_LEN, udidHash, udidHashLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("Byte to hexString failed, ret:%d", ret);
+        HcFree(udidHash);
+        return ret;
+    }
+    char *subUdidHashUpper = NULL;
+    ret = ToUpperCase(subUdidHash, &subUdidHashUpper);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to convert the input sub udid hash to upper case!");
+        HcFree(udidHash);
+        return ret;
+    }
+    if (strstr((const char *)udidHash, subUdidHashUpper) != NULL) {
+        LOGI("udid hash is match!");
+        HcFree(udidHash);
+        HcFree(subUdidHashUpper);
+        return HC_SUCCESS;
+    }
+    HcFree(udidHash);
+    HcFree(subUdidHashUpper);
+    return HC_ERROR;
+}
+
+static const char *GetUdidByGroup(int32_t osAccountId, const char *groupId, const char *deviceIdHash)
+{
+    uint32_t index;
+    TrustedDeviceEntry **deviceEntry = NULL;
+    DeviceEntryVec deviceEntryVec = CREATE_HC_VECTOR(DeviceEntryVec);
+    QueryDeviceParams params = InitQueryDeviceParams();
+    params.groupId = groupId;
+    if (QueryDevices(osAccountId, &params, &deviceEntryVec) != HC_SUCCESS) {
+        LOGE("query trusted devices failed!");
+        ClearDeviceEntryVec(&deviceEntryVec);
+        return NULL;
+    }
+    FOR_EACH_HC_VECTOR(deviceEntryVec, index, deviceEntry) {
+        const char *udid = StringGet(&(*deviceEntry)->udid);
+        if (IsDeviceIdHashMatch(udid, deviceIdHash) == HC_SUCCESS) {
+            ClearDeviceEntryVec(&deviceEntryVec);
+            return udid;
+        }
+        continue;
+    }
+    ClearDeviceEntryVec(&deviceEntryVec);
+    return NULL;
+}
+
+static const char *GetDeviceIdByUdidHash(int32_t osAccountId, const char *deviceIdHash)
+{
+    if (deviceIdHash == NULL) {
+        LOGE("deviceIdHash is null");
+        return NULL;
+    }
+    QueryGroupParams queryParams = InitQueryGroupParams();
+    GroupEntryVec groupEntryVec = CreateGroupEntryVec();
+    int32_t ret = QueryGroups(osAccountId, &queryParams, &groupEntryVec);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to query groups!");
+        ClearGroupEntryVec(&groupEntryVec);
+        return NULL;
+    }
+    uint32_t index;
+    TrustedGroupEntry **ptr = NULL;
+    FOR_EACH_HC_VECTOR(groupEntryVec, index, ptr) {
+        const TrustedGroupEntry *groupEntry = (const TrustedGroupEntry *)(*ptr);
+        const char *groupId = StringGet(&(groupEntry->id));
+        if (groupId == NULL) {
+            continue;
+        }
+        const char *udid = GetUdidByGroup(osAccountId, groupId, deviceIdHash);
+        if (udid != NULL) {
+            ClearGroupEntryVec(&groupEntryVec);
+            return udid;
+        }
+    }
+    ClearGroupEntryVec(&groupEntryVec);
+    return NULL;
+}
+
+static const char *GetPeerUdidFromJson(int32_t osAccountId, const CJson *in)
+{
+    const char *peerConnDeviceId = GetStringFromJson(in, FIELD_PEER_CONN_DEVICE_ID);
+    if (peerConnDeviceId != NULL) {
+        bool isUdidHash = false;
+        if (GetBoolFromJson(in, FIELD_IS_UDID_HASH, &isUdidHash) != HC_SUCCESS) {
+            LOGI("Get isUdidHash from json failed.");
+        }
+        return (isUdidHash ? GetDeviceIdByUdidHash(osAccountId, peerConnDeviceId) : peerConnDeviceId);
+    }
+    return NULL;
+}
 
 static int32_t AddGroupInfoToContextByInput(const CJson *receivedMsg, CJson *context)
 {
@@ -556,8 +667,12 @@ static int32_t ProcessBindData(int64_t requestId, const uint8_t *data, uint32_t 
 
 static int32_t BuildClientAuthContext(int32_t osAccountId, int64_t requestId, const char *appId, CJson *context)
 {
-    const char *peerUdid = GetStringFromJson(context, FIELD_PEER_CONN_DEVICE_ID);
+    const char *peerUdid = GetPeerUdidFromJson(osAccountId, context);
     if (peerUdid != NULL) {
+        if (AddStringToJson(context, FIELD_PEER_CONN_DEVICE_ID, peerUdid) != HC_SUCCESS) {
+            LOGE("add peerConnDeviceId to context fail.");
+            return HC_ERR_JSON_ADD;
+        }
         if (AddStringToJson(context, FIELD_PEER_UDID, peerUdid) != HC_SUCCESS) {
             LOGE("add peerUdid to context fail.");
             return HC_ERR_JSON_ADD;
@@ -636,12 +751,16 @@ static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const c
     if (osAccountId == INVALID_OS_ACCOUNT) {
         return HC_ERR_INVALID_PARAMS;
     }
-    const char *peerUdid = GetStringFromJson(context, FIELD_PEER_CONN_DEVICE_ID);
+    const char *peerUdid = GetPeerUdidFromJson(osAccountId, context);
     if (peerUdid == NULL) {
         LOGE("get peerUdid from json fail.");
         return HC_ERR_JSON_GET;
     }
     PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
+    if (AddStringToJson(context, FIELD_PEER_CONN_DEVICE_ID, peerUdid) != HC_SUCCESS) {
+        LOGE("add peerConnDeviceId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
     if (AddStringToJson(context, FIELD_PEER_UDID, peerUdid) != HC_SUCCESS) {
         LOGE("add peerUdid to context fail.");
         return HC_ERR_JSON_ADD;
@@ -758,6 +877,34 @@ static void CancelRequest(int64_t requestId, const char *appId)
     CancelDevSession(requestId, appId);
 }
 
+static int32_t GetRealInfo(int32_t osAccountId, const char *pseudonymId, char **realInfo)
+{
+    if (pseudonymId == NULL || realInfo == NULL) {
+        LOGE("Invalid params!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    PseudonymManager *pseudonymInstance = GetPseudonymInstance();
+    if (pseudonymInstance == NULL) {
+        LOGE("not support privacy enhancement!");
+        return HC_ERR_NOT_SUPPORT;
+    }
+    return pseudonymInstance->getRealInfo(osAccountId, pseudonymId, realInfo);
+}
+
+static int32_t GetPseudonymId(int32_t osAccountId, const char *indexKey, char **pseudonymId)
+{
+    if (indexKey == NULL || pseudonymId == NULL) {
+        LOGE("Invalid params!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    PseudonymManager *pseudonymInstance = GetPseudonymInstance();
+    if (pseudonymInstance == NULL) {
+        LOGE("not support privacy enhancement!");
+        return HC_ERR_NOT_SUPPORT;
+    }
+    return pseudonymInstance->getPseudonymId(osAccountId, indexKey, pseudonymId);
+}
+
 static int32_t AllocGmAndGa(void)
 {
     if (g_groupManagerInstance == NULL) {
@@ -840,6 +987,16 @@ CLEAN_CRED:
     return res;
 }
 
+static void InitPseudonymModule(void)
+{
+    PseudonymManager *manager = GetPseudonymInstance();
+    if (manager == NULL) {
+        LOGE("Pseudonym manager is null!");
+        return;
+    }
+    manager->loadPseudonymData();
+}
+
 DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 {
     LOGI("[Service]: Start to init device auth service!");
@@ -856,6 +1013,8 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
         DestroyGmAndGa();
         return res;
     }
+    (void)GenerateDeviceKeyPair();
+    InitPseudonymModule();
     DEV_AUTH_LOAD_PLUGIN();
     SetInitStatus();
     LOGI("[End]: [Service]: Init device auth service successfully!");
@@ -878,6 +1037,7 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
     DestroyCredMgr();
     DestroyChannelManager();
     DestroyCallbackManager();
+    DestroyPseudonymManager();
     SetDeInitStatus();
     LOGI("[End]: [Service]: Destroy device auth service successfully!");
 }
@@ -925,5 +1085,7 @@ DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
     g_groupAuthManager->processData = ProcessData;
     g_groupAuthManager->authDevice = AuthDevice;
     g_groupAuthManager->cancelRequest = CancelRequest;
+    g_groupAuthManager->getRealInfo = GetRealInfo;
+    g_groupAuthManager->getPseudonymId = GetPseudonymId;
     return g_groupAuthManager;
 }

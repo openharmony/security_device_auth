@@ -18,10 +18,12 @@ authenticators_path = "${services_path}/authenticators"
 protocol_path = "${services_path}/protocol"
 cred_manager_path = "${services_path}/cred_manager"
 data_manager_path = "${services_path}/data_manager"
+privacy_enhancement_path = "${services_path}/privacy_enhancement"
 dev_frameworks_path = "${services_path}/frameworks"
 group_manager_path = "${services_path}/group_manager"
 session_manager_path = "${services_path}/session_manager"
 creds_manager_path = "${services_path}/creds_manager"
+mk_agree_path = "${services_path}/mk_agree"
 
 enable_broadcast = true
 declare_args() {
@@ -35,6 +37,7 @@ inc_path = [
   "${cred_manager_path}/inc",
   "${cred_manager_path}/inc/account_related",
   "${data_manager_path}/inc",
+  "${privacy_enhancement_path}/inc",
   "${group_auth_path}/inc",
   "${group_auth_path}/inc/account_unrelated_group_auth",
   "${group_auth_path}/inc/account_related_group_auth",
@@ -76,6 +79,7 @@ inc_path = [
   "${session_manager_path}/inc/session/v2/expand_sub_session/expand_process_lib",
   "${creds_manager_path}/inc",
   "${creds_manager_path}/inc/account_related",
+  "${mk_agree_path}/inc",
 ]
 
 deviceauth_common_files = [
@@ -126,6 +130,22 @@ cred_manager_files = [ "${cred_manager_path}/src/cred_manager.c" ]
 
 database_manager_files = [ "${data_manager_path}/src/data_manager.c" ]
 
+privacy_enhancement_files =
+    [ "${privacy_enhancement_path}/src/pseudonym_manager.c" ]
+privacy_enhancement_mock_files =
+    [ "${privacy_enhancement_path}/src/mock/pseudonym_manager_mock.c" ]
+
+mk_agree_files = [
+  "${session_manager_path}/src/session/v2/expand_sub_session/expand_process_lib/mk_agree.c",
+  "${mk_agree_path}/src/key_manager.c",
+  "${mk_agree_path}/src/mk_agree_task.c",
+]
+
+mk_agree_mock_files = [
+  "${mk_agree_path}/src/mock/key_manager_mock.c",
+  "${mk_agree_path}/src/mock/mk_agree_task_mock.c",
+]
+
 group_manager_files = [
   "${group_manager_path}/src/group_operation/group_operation.c",
   "${group_manager_path}/src/group_operation/group_operation_common.c",
@@ -148,6 +168,7 @@ session_v1_files = [
 
 session_v2_files = [
   "${session_manager_path}/src/session/v2/dev_session_v2.c",
+  "${session_manager_path}/src/session/v2/dev_session_util.c",
   "${session_manager_path}/src/session/v2/auth_sub_session/auth_sub_session.c",
   "${session_manager_path}/src/session/v2/expand_sub_session/expand_sub_session.c",
 ]
@@ -231,6 +252,15 @@ broadcast_manager_mock_files = [
 
 deviceauth_files = dev_frameworks_files + deviceauth_common_files +
                    session_manager_files + creds_manager_files
+
+if (enable_pseudonym == true) {
+  deviceauth_defines += [ "ENABLE_PSEUDONYM" ]
+  deviceauth_files += privacy_enhancement_files
+  deviceauth_files += mk_agree_files
+} else {
+  deviceauth_files += privacy_enhancement_mock_files
+  deviceauth_files += mk_agree_mock_files
+}
 
 if (enable_session_v2 == true) {
   deviceauth_files += session_v2_files

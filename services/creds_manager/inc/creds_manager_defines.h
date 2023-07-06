@@ -67,6 +67,7 @@ typedef enum {
     CMD_EXCHANGE_PK = 0x0001,
     CMD_IMPORT_AUTH_CODE = 0x0002,
     CMD_ADD_TRUST_DEVICE = 0x0004,
+    CMD_MK_AGREE = 0x0008,
 } ExpandProcessCmd;
 
 typedef struct {
@@ -79,6 +80,7 @@ typedef struct {
     Uint8Buff pkInfoStr;
     Uint8Buff pkInfoSignature;
     Algorithm signAlg;
+    bool isPseudonym;
 } CertInfo;
 
 typedef struct {

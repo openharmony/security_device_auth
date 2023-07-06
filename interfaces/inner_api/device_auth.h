@@ -67,6 +67,7 @@
 #define FIELD_OS_ACCOUNT_ID "osAccountId"
 #define FIELD_AUTH_CODE "authCode"
 #define FIELD_DEVICE_LIST "deviceList"
+#define FIELD_IS_UDID_HASH "isUdidHash"
 
 /**
  * @brief type of local system account
@@ -211,6 +212,10 @@ typedef struct {
         const DeviceAuthCallback *gaCallback);
     /** This interface is used to cancel an authentication process. */
     void (*cancelRequest)(int64_t requestId, const char *appId);
+    /** This interface is used to get real info by pseudonym id. */
+    int32_t (*getRealInfo)(int32_t osAccountId, const char *pseudonymId, char **realInfo);
+    /** This interface is used to get pseudonym id by an index. */
+    int32_t (*getPseudonymId)(int32_t osAccountId, const char *indexKey, char **pseudonymId);
 } GroupAuthManager;
 
 typedef struct {

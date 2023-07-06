@@ -79,6 +79,9 @@ ohos_unittest("deviceauth_llt") {
 
   sources += account_related_files
 
+  sources += privacy_enhancement_files
+  sources += mk_agree_files
+
   sources -= [
     "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
     "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
@@ -106,6 +109,7 @@ ohos_unittest("deviceauth_llt") {
     "ENABLE_P2P_AUTH_ISO",
     "ENABLE_P2P_AUTH_EC_SPEKE",
     "DEV_AUTH_FUNC_TEST",
+    "ENABLE_PSEUDONYM",
   ]
 
   cflags = [ "-DHILOG_ENABLE" ]
@@ -193,6 +197,9 @@ ohos_unittest("device_auth_func_test") {
 
   sources += account_related_files
 
+  sources += privacy_enhancement_files
+  sources += mk_agree_files
+
   sources -= [
     "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
     "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
@@ -225,6 +232,7 @@ ohos_unittest("device_auth_func_test") {
     "ENABLE_P2P_AUTH_ISO",
     "ENABLE_P2P_AUTH_EC_SPEKE",
     "DEV_AUTH_FUNC_TEST",
+    "ENABLE_PSEUDONYM",
   ]
 
   cflags = [ "-DHILOG_ENABLE" ]
@@ -310,6 +318,9 @@ ohos_unittest("deviceauth_unit_test") {
 
   sources += account_related_files
 
+  sources += privacy_enhancement_files
+  sources += mk_agree_files
+
   sources -= [
     "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
     "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
@@ -341,6 +352,7 @@ ohos_unittest("deviceauth_unit_test") {
     "ENABLE_AUTH_CODE_IMPORT",
     "ENABLE_PUB_KEY_EXCHANGE",
     "ENABLE_SAVE_TRUSTED_INFO",
+    "ENABLE_PSEUDONYM",
   ]
 
   cflags = [ "-DHILOG_ENABLE" ]

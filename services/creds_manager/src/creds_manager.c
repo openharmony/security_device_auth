@@ -138,6 +138,17 @@ static bool IsDeviceInGroup(int32_t osAccountId, int32_t groupType, const char *
     }
 }
 
+static void AddNoPseudonymIdentityInfo(int32_t osAccountId, const TrustedGroupEntry *groupEntry, const char *deviceId,
+    bool isUdid, IdentityInfoVec *identityInfoVec)
+{
+    IdentityInfo *info = NULL;
+    if (GetIdentityInfo(osAccountId, groupEntry, deviceId, isUdid, &info) != HC_SUCCESS) {
+        return;
+    }
+    info->proof.certInfo.isPseudonym = false;
+    identityInfoVec->pushBack(identityInfoVec, (const IdentityInfo **)&info);
+}
+
 static int32_t GetIdentityInfos(int32_t osAccountId, const CJson *in, const GroupEntryVec *groupEntryVec,
     IdentityInfoVec *identityInfoVec)
 {
@@ -170,7 +181,13 @@ static int32_t GetIdentityInfos(int32_t osAccountId, const CJson *in, const Grou
         if (GetIdentityInfo(osAccountId, groupEntry, deviceId, isUdid, &info) != HC_SUCCESS) {
             continue;
         }
+        if (info->proofType == CERTIFICATED) {
+            info->proof.certInfo.isPseudonym = true;
+        }
         identityInfoVec->pushBack(identityInfoVec, (const IdentityInfo **)&info);
+        if (info->proofType == CERTIFICATED) {
+            AddNoPseudonymIdentityInfo(osAccountId, groupEntry, deviceId, isUdid, identityInfoVec);
+        }
     }
     LOGI("The identity info size is: %u", identityInfoVec->size(identityInfoVec));
     return HC_SUCCESS;
@@ -791,7 +808,17 @@ int32_t GetCredInfoByPeerCert(const CJson *in, const CertInfo *certInfo, Identit
         LOGE("Failed to get osAccountId!");
         return HC_ERR_JSON_GET;
     }
-    return GetAccountAsymCredInfo(osAccountId, certInfo, returnInfo);
+    int32_t res = GetAccountAsymCredInfo(osAccountId, certInfo, returnInfo);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get account asym cred info!");
+        return res;
+    }
+    if (certInfo->isPseudonym) {
+        (*returnInfo)->proof.certInfo.isPseudonym = true;
+    } else {
+        (*returnInfo)->proof.certInfo.isPseudonym = false;
+    }
+    return HC_SUCCESS;
 }
 
 int32_t GetSharedSecretByPeerCert(const CJson *in, const CertInfo *peerCertInfo, ProtocolAlgType protocolType,

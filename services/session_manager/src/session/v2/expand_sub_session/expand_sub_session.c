@@ -23,6 +23,7 @@
 #include "json_utils.h"
 
 #include "auth_code_import.h"
+#include "mk_agree.h"
 #include "pub_key_exchange.h"
 #include "save_trusted_info.h"
 
@@ -72,6 +73,12 @@ static const CmdComponent CMD_COMPONENT_LIB[] = {
         SAVE_TRUSTED_INFO_CMD_TYPE,
         CreateSaveTrustedInfoCmd,
     },
+#endif
+#ifdef ENABLE_PSEUDONYM
+    {
+        MK_AGREE_CMD_TYPE,
+        CreateMkAgreeCmd,
+    }
 #endif
 };
 
