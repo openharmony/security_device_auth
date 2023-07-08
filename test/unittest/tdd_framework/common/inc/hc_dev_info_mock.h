@@ -39,6 +39,7 @@ int32_t HcGetUdid(uint8_t *udid, int32_t udidLen);
 const char *GetStoragePath(void);
 const char *GetStorageDirPath(void);
 const char *GetAccountStoragePath(void);
+const char *GetPseudonymStoragePath(void);
 
 void SetDeviceStatus(bool isClient);
 void SetAccountStorageTest(bool isAccountStorageTest);

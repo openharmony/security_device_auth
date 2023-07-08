@@ -25,8 +25,10 @@
 #include "hc_mutex.h"
 #include "hc_string_vector.h"
 #include "hc_types.h"
+#include "key_manager.h"
 #include "securec.h"
 #include "hidump_adapter.h"
+#include "pseudonym_manager.h"
 
 typedef struct {
     DECLARE_TLV_STRUCT(9)
@@ -763,6 +765,18 @@ static void PostDeviceBoundMsg(OsAccountTrustedInfo *info, const TrustedDeviceEn
     }
 }
 
+static bool IsSelfDeviceEntry(const TrustedDeviceEntry *deviceEntry)
+{
+    char selfUdid[INPUT_UDID_LEN] = { 0 };
+    int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get local udid! res: %d", res);
+        return false;
+    }
+    const char *entryUdid = StringGet(&deviceEntry->udid);
+    return strcmp(selfUdid, entryUdid) == 0;
+}
+
 static void PostDeviceUnBoundMsg(OsAccountTrustedInfo *info, const TrustedDeviceEntry *deviceEntry)
 {
     if (!IsBroadcastSupported()) {
@@ -780,6 +794,37 @@ static void PostDeviceUnBoundMsg(OsAccountTrustedInfo *info, const TrustedDevice
     deviceParams.udid = udid;
     if (QueryDeviceEntryPtrIfMatch(&info->devices, &deviceParams) == NULL) {
         GetBroadcaster()->postOnDeviceNotTrusted(udid);
+        if (!IsSelfDeviceEntry(deviceEntry)) {
+            (void)DeleteMk(udid);
+            (void)DeletePseudonymPsk(udid);
+        }
+    }
+}
+
+static void DeletePdidByDeviceEntry(int32_t osAccountId, const TrustedDeviceEntry *deviceEntry)
+{
+    if (IsSelfDeviceEntry(deviceEntry)) {
+        return;
+    }
+    const char *userId = StringGet(&deviceEntry->userId);
+    if (userId == NULL) {
+        LOGW("userId is null!");
+        return;
+    }
+    if (deviceEntry->credential != ASYMMETRIC_CRED) {
+        LOGW("credential type is not asymmetric!");
+        return;
+    }
+    PseudonymManager *manager = GetPseudonymInstance();
+    if (manager == NULL) {
+        LOGE("Pseudonym manager is null!");
+        return;
+    }
+    int32_t res = manager->deletePseudonymId(osAccountId, userId);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to delete pdid!");
+    } else {
+        LOGI("Delete pdid successfully!");
     }
 }
 
@@ -1052,6 +1097,7 @@ int32_t DelTrustedDevice(int32_t osAccountId, const QueryDeviceParams *params)
         TrustedDeviceEntry *popEntry;
         HC_VECTOR_POPELEMENT(&info->devices, &popEntry, index);
         PostDeviceUnBoundMsg(info, popEntry);
+        DeletePdidByDeviceEntry(osAccountId, popEntry);
         LOGI("[DB]: Delete a trusted device from database successfully!");
         DestroyDeviceEntry(popEntry);
         count++;

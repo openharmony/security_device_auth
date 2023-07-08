@@ -28,6 +28,7 @@
 extern "C" {
 #endif
 
+#define IPC_DATA_CACHES_1 1
 #define IPC_DATA_CACHES_3 3
 #define IPC_DATA_CACHES_4 4
 #define REPLAY_CACHE_NUM(caches) (sizeof(caches) / sizeof(IpcDataInfo))
@@ -1648,12 +1649,118 @@ static void IpcGaCancelRequest(int64_t requestId, const char *appId)
     }
 }
 
+static int32_t GetIpcReplyByTypeInner(const IpcDataInfo *replies, int32_t cacheNum, char **outInfo)
+{
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_RETURN_DATA, (uint8_t *)outInfo, NULL);
+    if (*outInfo == NULL) {
+        return HC_ERR_IPC_OUT_DATA;
+    }
+    *outInfo = strdup(*outInfo);
+    if (*outInfo == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t IpcGaGetRealInfo(int32_t osAccountId, const char *pseudonymId, char **realInfo)
+{
+    uintptr_t callCtx = 0x0;
+    int32_t ret;
+    IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
+
+    LOGI("starting ...");
+    if (IsStrInvalid(pseudonymId) || (realInfo == NULL)) {
+        LOGE("Invalid params.");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    ret = CreateCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("CreateCallCtx failed, ret %d", ret);
+        return HC_ERR_IPC_INIT;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
+        sizeof(osAccountId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_PSEUDONYM_ID, (const uint8_t *)pseudonymId,
+        strlen(pseudonymId) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_PSEUDONYM_ID);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = DoBinderCall(callCtx, IPC_CALL_ID_GET_REAL_INFO, true);
+    if (ret != HC_SUCCESS) {
+        LOGE("ipc call failed");
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_PROC_FAILED;
+    }
+    LOGI("process done, ret %d", ret);
+    DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
+    ret = GetIpcReplyByTypeInner(replyCache, REPLAY_CACHE_NUM(replyCache), realInfo);
+    if (ret != HC_SUCCESS) {
+        LOGE("GetIpcReplyByType failed, ret %d", ret);
+    }
+    DestroyCallCtx(&callCtx, NULL);
+    return ret;
+}
+
+static int32_t IpcGaGetPseudonymId(int32_t osAccountId, const char *indexKey, char **pseudonymId)
+{
+    uintptr_t callCtx = 0x0;
+    int32_t ret;
+    IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
+
+    LOGI("starting ...");
+    if (IsStrInvalid(indexKey) || (pseudonymId == NULL)) {
+        LOGE("Invalid params.");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    ret = CreateCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("CreateCallCtx failed, ret %d", ret);
+        return HC_ERR_IPC_INIT;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
+        sizeof(osAccountId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_INDEX_KEY, (const uint8_t *)indexKey, strlen(indexKey) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_INDEX_KEY);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = DoBinderCall(callCtx, IPC_CALL_ID_GET_PSEUDONYM_ID, true);
+    if (ret != HC_SUCCESS) {
+        LOGE("ipc call failed");
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_PROC_FAILED;
+    }
+    LOGI("process done, ret %d", ret);
+    DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
+    ret = GetIpcReplyByTypeInner(replyCache, REPLAY_CACHE_NUM(replyCache), pseudonymId);
+    if (ret != HC_SUCCESS) {
+        LOGE("GetIpcReplyByType failed, ret %d", ret);
+    }
+    DestroyCallCtx(&callCtx, NULL);
+    return ret;
+}
+
 static void InitIpcGaMethods(GroupAuthManager *gaMethodObj)
 {
     LOGI("entering...");
     gaMethodObj->processData = IpcGaProcessData;
     gaMethodObj->authDevice = IpcGaAuthDevice;
     gaMethodObj->cancelRequest = IpcGaCancelRequest;
+    gaMethodObj->getRealInfo = IpcGaGetRealInfo;
+    gaMethodObj->getPseudonymId = IpcGaGetPseudonymId;
     LOGI("process done");
     return;
 }

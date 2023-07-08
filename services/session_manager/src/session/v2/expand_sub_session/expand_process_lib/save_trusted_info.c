@@ -44,7 +44,8 @@
 #define FIELD_ERR_MSG "errMsg"
 
 typedef struct {
-    bool isNeedCreateGroup;
+    bool isGroupExistSelf;
+    bool isGroupExistPeer;
     int32_t osAccountId;
     int32_t credType;
     int32_t userTypeSelf;
@@ -128,21 +129,20 @@ static int32_t ClientSendTrustedInfoProcEvent(CmdParams *params)
     }
     TrustedGroupEntry *entry = GetGroupEntryById(params->osAccountId, params->groupId);
     if (entry == NULL) {
-        params->isNeedCreateGroup = true;
+        params->isGroupExistSelf = false;
         return HC_SUCCESS;
     }
-    params->isNeedCreateGroup = false;
+    params->isGroupExistSelf = true;
     if (DeepCopyString(StringGet(&entry->name), &params->groupName) != HC_SUCCESS) {
         LOGE("copy groupName fail.");
         DestroyGroupEntry(entry);
         return HC_ERR_ALLOC_MEMORY;
     }
-    if (entry->type != PEER_TO_PEER_GROUP) {
-        if (DeepCopyString(StringGet(&entry->userId), &params->userIdSelf) != HC_SUCCESS) {
-            LOGE("copy userIdSelf fail.");
-            DestroyGroupEntry(entry);
-            return HC_ERR_ALLOC_MEMORY;
-        }
+    if ((entry->type != PEER_TO_PEER_GROUP) &&
+        (DeepCopyString(StringGet(&entry->userId), &params->userIdSelf) != HC_SUCCESS)) {
+        LOGE("copy userIdSelf fail.");
+        DestroyGroupEntry(entry);
+        return HC_ERR_ALLOC_MEMORY;
     }
     DestroyGroupEntry(entry);
     return HC_SUCCESS;
@@ -175,7 +175,7 @@ static int32_t ClientSendTrustedInfoBuildEvent(const CmdParams *params, CJson **
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
-    if (!params->isNeedCreateGroup) {
+    if (params->isGroupExistSelf) {
         if (AddStringToJson(json, FIELD_GROUP_NAME, params->groupName) != HC_SUCCESS) {
             LOGE("add groupName to json fail.");
             FreeJson(json);
@@ -224,6 +224,9 @@ static int32_t ServerSendTrustedInfoParseEvent(const CJson *inputEvent, CmdParam
             LOGE("copy groupName fail.");
             return HC_ERR_MEMORY_COPY;
         }
+        params->isGroupExistPeer = true;
+    } else {
+        params->isGroupExistPeer = false;
     }
     const char *userId = GetStringFromJson(inputEvent, FIELD_USER_ID_CLIENT);
     if (userId != NULL) {
@@ -436,16 +439,23 @@ static int32_t ServerSendTrustedInfoProcEvent(CmdParams *params)
     }
     TrustedGroupEntry *entry = GetGroupEntryById(params->osAccountId, params->groupId);
     if (entry == NULL) {
-        params->isNeedCreateGroup = true;
+        params->isGroupExistSelf = false;
         res = CreatePeerToPeerGroup(params);
         if (res != HC_SUCCESS) {
             LOGE("Failed to add the group to the database!");
             return res;
         }
     } else {
-        params->isNeedCreateGroup = false;
-        if (DeepCopyString(StringGet(&entry->name), &params->groupName) != HC_SUCCESS) {
+        params->isGroupExistSelf = true;
+        if ((params->groupName == NULL) &&
+            (DeepCopyString(StringGet(&entry->name), &params->groupName) != HC_SUCCESS)) {
             LOGE("copy groupName fail.");
+            DestroyGroupEntry(entry);
+            return HC_ERR_ALLOC_MEMORY;
+        }
+        if ((entry->type != PEER_TO_PEER_GROUP) &&
+            (DeepCopyString(StringGet(&entry->userId), &params->userIdSelf) != HC_SUCCESS)) {
+            LOGE("copy userIdSelf fail.");
             DestroyGroupEntry(entry);
             return HC_ERR_ALLOC_MEMORY;
         }
@@ -489,7 +499,7 @@ static int32_t ServerSendTrustedInfoBuildEvent(const CmdParams *params, CJson **
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
-    if (!params->isNeedCreateGroup) {
+    if (!params->isGroupExistPeer) {
         if (AddStringToJson(json, FIELD_GROUP_NAME, params->groupName) != HC_SUCCESS) {
             LOGE("add groupName to json fail.");
             FreeJson(json);
@@ -509,7 +519,7 @@ static int32_t ServerSendTrustedInfoBuildEvent(const CmdParams *params, CJson **
 
 static int32_t ClientFinishProcParseEvent(const CJson *inputEvent, CmdParams *params)
 {
-    if (params->isNeedCreateGroup) {
+    if (!params->isGroupExistSelf) {
         const char *groupName = GetStringFromJson(inputEvent, FIELD_GROUP_NAME);
         if (groupName == NULL) {
             LOGE("get groupName from json fail.");
@@ -557,7 +567,7 @@ static int32_t ClientFinishProcParseEvent(const CJson *inputEvent, CmdParams *pa
 static int32_t ClientFinishProcProcEvent(const CmdParams *params)
 {
     int32_t res;
-    if (params->isNeedCreateGroup) {
+    if (!params->isGroupExistSelf) {
         res = CreatePeerToPeerGroup(params);
         if (res != HC_SUCCESS) {
             LOGE("Failed to add the group to the database!");
@@ -769,7 +779,8 @@ static int32_t InitSaveTrustedInfoCmd(SaveTrustedInfoCmd *instance, const SaveTr
         LOGE("copy groupId fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
-    instance->params.isNeedCreateGroup = true;
+    instance->params.isGroupExistSelf = false;
+    instance->params.isGroupExistPeer = false;
     instance->params.osAccountId = params->osAccountId;
     instance->params.credType = params->credType;
     instance->params.userTypeSelf = params->userType;

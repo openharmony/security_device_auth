@@ -94,6 +94,16 @@ const char *GetAccountStoragePath(void)
     return storageFile;
 }
 
+const char *GetPseudonymStoragePath(void)
+{
+#ifndef LITE_DEVICE
+    const char *storageFile = "/data/service/el1/public/deviceauth/pseudonym";
+#else
+    const char *storageFile = "/storage/deviceauth/pseudonym";
+#endif
+    return storageFile;
+}
+
 #ifdef __cplusplus
 }
 #endif

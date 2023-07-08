@@ -1045,6 +1045,70 @@ static int32_t IpcServiceGaCancelRequest(const IpcDataInfo *ipcParams, int32_t p
     return ret;
 }
 
+static int32_t IpcServiceGaGetRealInfo(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t ret;
+    int32_t osAccountId;
+    const char *pseudonymId = NULL;
+
+    LOGI("starting ...");
+    int32_t inOutLen = sizeof(int64_t);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
+    if ((inOutLen != sizeof(int32_t)) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_PSEUDONYM_ID, (uint8_t *)&pseudonymId, NULL);
+    if ((pseudonymId == NULL) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_PSEUDONYM_ID);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+
+    char *realInfo = NULL;
+    ret = g_groupAuthMgrMethod.getRealInfo(osAccountId, pseudonymId, &realInfo);
+    if ((realInfo != NULL) && (ret == HC_SUCCESS)) {
+        ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_RETURN_DATA, (const uint8_t *)realInfo,
+            strlen(realInfo) + 1);
+        HcFree(realInfo);
+    } else {
+        ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_RETURN_DATA, NULL, 0);
+    }
+    LOGI("process done, ipc ret %d", ret);
+    return ret;
+}
+
+static int32_t IpcServiceGaGetPseudonymId(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t ret;
+    int32_t osAccountId;
+    const char *indexKey = NULL;
+
+    LOGI("starting ...");
+    int32_t inOutLen = sizeof(int64_t);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
+    if ((inOutLen != sizeof(int32_t)) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_INDEX_KEY, (uint8_t *)&indexKey, NULL);
+    if ((indexKey == NULL) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_INDEX_KEY);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+
+    char *pseudonymId = NULL;
+    ret = g_groupAuthMgrMethod.getPseudonymId(osAccountId, indexKey, &pseudonymId);
+    if ((pseudonymId != NULL) && (ret == HC_SUCCESS)) {
+        ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_RETURN_DATA, (const uint8_t *)pseudonymId,
+            strlen(pseudonymId) + 1);
+        HcFree(pseudonymId);
+    } else {
+        ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_RETURN_DATA, NULL, 0);
+    }
+    LOGI("process done, ipc ret %d", ret);
+    return ret;
+}
+
 static int32_t AddMethodMap(uintptr_t ipcInstance)
 {
     uint32_t ret;
@@ -1077,6 +1141,8 @@ static int32_t AddMethodMap(uintptr_t ipcInstance)
     ret &= SetIpcCallMap(ipcInstance, IpcServiceGaProcessData, IPC_CALL_ID_GA_PROC_DATA);
     ret &= SetIpcCallMap(ipcInstance, IpcServiceGaAuthDevice, IPC_CALL_ID_AUTH_DEVICE);
     ret &= SetIpcCallMap(ipcInstance, IpcServiceGaCancelRequest, IPC_CALL_GA_CANCEL_REQUEST);
+    ret &= SetIpcCallMap(ipcInstance, IpcServiceGaGetRealInfo, IPC_CALL_ID_GET_REAL_INFO);
+    ret &= SetIpcCallMap(ipcInstance, IpcServiceGaGetPseudonymId, IPC_CALL_ID_GET_PSEUDONYM_ID);
     LOGI("process done, ret %u", ret);
     return ret;
 }

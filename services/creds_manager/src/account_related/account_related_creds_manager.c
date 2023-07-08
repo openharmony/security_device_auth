@@ -24,6 +24,7 @@
 #include "group_operation_common.h"
 #include "hc_log.h"
 #include "hc_types.h"
+#include "pseudonym_manager.h"
 #include "sym_token_manager.h"
 
 static TrustedGroupEntry *GetSelfGroupEntryByPeerCert(int32_t osAccountId, const CertInfo *certInfo)
@@ -234,7 +235,7 @@ static int32_t GetCertInfo(int32_t osAccountId, const char *userId, const char *
 }
 
 static int32_t GetAccountAsymIdentityInfo(int32_t osAccountId, const char *userId, const char *authId,
-    IdentityInfo *info)
+    IdentityInfo *info, bool isNeedGeneratePdid)
 {
     int32_t ret = GetCertInfo(osAccountId, userId, authId, &info->proof.certInfo);
     if (ret != HC_SUCCESS) {
@@ -250,7 +251,16 @@ static int32_t GetAccountAsymIdentityInfo(int32_t osAccountId, const char *userI
     }
     ecSpekeEntity->protocolType = ALG_EC_SPEKE;
     ecSpekeEntity->expandProcessCmds = CMD_ADD_TRUST_DEVICE;
+#ifdef ENABLE_PSEUDONYM
+    if (isNeedGeneratePdid) {
+        ecSpekeEntity->expandProcessCmds |= CMD_MK_AGREE;
+    }
+#else
+    (void)isNeedGeneratePdid;
+#endif
     info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&ecSpekeEntity);
+#else
+    (void)isNeedGeneratePdid;
 #endif
 
     info->proofType = CERTIFICATED;
@@ -382,7 +392,8 @@ static int32_t GenerateAuthTokenByDevType(const CJson *in, const CJson *urlJson,
     return ret;
 }
 
-static int32_t GetSelfAccountIdentityInfo(int32_t osAccountId, const char *groupId, IdentityInfo *info)
+static int32_t GetSelfAccountIdentityInfo(int32_t osAccountId, const char *groupId, IdentityInfo *info,
+    bool isNeedGeneratePdid)
 {
     TrustedDeviceEntry *deviceEntry = CreateDeviceEntry();
     if (deviceEntry == NULL) {
@@ -400,10 +411,34 @@ static int32_t GetSelfAccountIdentityInfo(int32_t osAccountId, const char *group
     } else {
         const char *userId = StringGet(&deviceEntry->userId);
         const char *authId = StringGet(&deviceEntry->authId);
-        ret = GetAccountAsymIdentityInfo(osAccountId, userId, authId, info);
+        ret = GetAccountAsymIdentityInfo(osAccountId, userId, authId, info, isNeedGeneratePdid);
     }
     DestroyDeviceEntry(deviceEntry);
     return ret;
+}
+
+static bool isNeedGeneratePdidByPeerCert(int32_t osAccountId, const CertInfo *certInfo)
+{
+#ifdef ENABLE_PSEUDONYM
+    CJson *pkInfoJson = CreateJsonFromString((const char *)certInfo->pkInfoStr.val);
+    if (pkInfoJson == NULL) {
+        LOGE("Failed to create pkInfo json!");
+        return false;
+    }
+    const char *userId = GetStringFromJson(pkInfoJson, FIELD_USER_ID);
+    if (userId == NULL) {
+        LOGE("Failed to get userId!");
+        FreeJson(pkInfoJson);
+        return false;
+    }
+    bool isNeedGenerate = GetPseudonymInstance()->isNeedRefreshPseudonymId(osAccountId, userId);
+    FreeJson(pkInfoJson);
+    return isNeedGenerate;
+#else
+    (void)osAccountId;
+    (void)certInfo;
+    return false;
+#endif
 }
 
 int32_t GetAccountRelatedCredInfo(int32_t osAccountId, const char *groupId, const char *deviceId,
@@ -422,12 +457,17 @@ int32_t GetAccountRelatedCredInfo(int32_t osAccountId, const char *groupId, cons
     if (ret != HC_SUCCESS) {
         LOGI("peer device not exist, get self identity info.");
         DestroyDeviceEntry(deviceEntry);
-        return GetSelfAccountIdentityInfo(osAccountId, groupId, info);
+        return GetSelfAccountIdentityInfo(osAccountId, groupId, info, true);
     }
+    bool isNeedGeneratePdid = false;
+#ifdef ENABLE_PSEUDONYM
+    const char *peerUserId = StringGet(&deviceEntry->userId);
+    isNeedGeneratePdid = GetPseudonymInstance()->isNeedRefreshPseudonymId(osAccountId, peerUserId);
+#endif
     if (deviceEntry->source == SELF_CREATED) {
         LOGI("peer device is from self created, get self identity info.");
         DestroyDeviceEntry(deviceEntry);
-        return GetSelfAccountIdentityInfo(osAccountId, groupId, info);
+        return GetSelfAccountIdentityInfo(osAccountId, groupId, info, isNeedGeneratePdid);
     }
     int credType = deviceEntry->credential;
     DestroyDeviceEntry(deviceEntry);
@@ -436,7 +476,7 @@ int32_t GetAccountRelatedCredInfo(int32_t osAccountId, const char *groupId, cons
         return GetIdentityInfoByType(KEY_TYPE_SYM, TRUST_TYPE_UID, groupId, info);
     } else {
         LOGI("credential type is asymmetric, get self identity info.");
-        return GetSelfAccountIdentityInfo(osAccountId, groupId, info);
+        return GetSelfAccountIdentityInfo(osAccountId, groupId, info, isNeedGeneratePdid);
     }
 }
 
@@ -532,7 +572,8 @@ int32_t GetAccountAsymCredInfo(int32_t osAccountId, const CertInfo *certInfo, Id
     }
     const char *selfUserId = StringGet(&deviceEntry->userId);
     const char *selfAuthId = StringGet(&deviceEntry->authId);
-    ret = GetAccountAsymIdentityInfo(osAccountId, selfUserId, selfAuthId, info);
+    bool isNeedGeneratePdid = isNeedGeneratePdidByPeerCert(osAccountId, certInfo);
+    ret = GetAccountAsymIdentityInfo(osAccountId, selfUserId, selfAuthId, info, isNeedGeneratePdid);
     DestroyDeviceEntry(deviceEntry);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to get account asym identity info!");

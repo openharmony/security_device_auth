@@ -16,6 +16,7 @@ declare_args() {
   enable_session_v1 = true
   enable_extend_plugin = true
   enable_account = true
+  enable_pseudonym = true
 
   enable_p2p_bind_lite_protocol = false
   enable_p2p_auth_lite_protocol = false

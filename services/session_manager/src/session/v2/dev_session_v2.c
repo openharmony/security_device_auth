@@ -24,6 +24,7 @@
 #include "creds_manager.h"
 #include "creds_operation_utils.h"
 #include "data_manager.h"
+#include "dev_session_util.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
 #include "hc_types.h"
@@ -34,6 +35,8 @@
 
 #include "expand_sub_session.h"
 #include "auth_code_import.h"
+#include "mk_agree.h"
+#include "pseudonym_manager.h"
 #include "pub_key_exchange.h"
 #include "save_trusted_info.h"
 
@@ -157,10 +160,33 @@ static int32_t CmdSaveTrustedInfoGenerator(SessionImpl *impl)
         (!impl->isClient), ABORT_IF_ERROR);
 }
 
+static int32_t CmdMkAgreeGenerator(SessionImpl *impl)
+{
+    int32_t osAccountId;
+    if (GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
+    const char *peerInfo = GetStringFromJson(impl->context, FIELD_REAL_INFO);
+    if (peerInfo == NULL) {
+        LOGE("Failed to get peerInfo!");
+        return HC_ERR_JSON_GET;
+    }
+    const char *pdidIndex = GetStringFromJson(impl->context, FIELD_INDEX_KEY);
+    if (pdidIndex == NULL) {
+        LOGE("Failed to get pdidIndex!");
+        return HC_ERR_JSON_GET;
+    }
+    MkAgreeParams params = { osAccountId, peerInfo, pdidIndex };
+    return impl->expandSubSession->addCmd(impl->expandSubSession, MK_AGREE_CMD_TYPE, (void *)&params,
+        (!impl->isClient), CONTINUE_IF_ERROR);
+}
+
 static const CmdProcessor CMDS_LIB[] = {
     { CMD_EXCHANGE_PK, ABORT_IF_ERROR, CmdExchangePkGenerator },
     { CMD_IMPORT_AUTH_CODE, ABORT_IF_ERROR, CmdImportAuthCodeGenerator },
-    { CMD_ADD_TRUST_DEVICE, ABORT_IF_ERROR, CmdSaveTrustedInfoGenerator }
+    { CMD_ADD_TRUST_DEVICE, ABORT_IF_ERROR, CmdSaveTrustedInfoGenerator },
+    { CMD_MK_AGREE, CONTINUE_IF_ERROR, CmdMkAgreeGenerator }
 };
 
 static bool InterceptNotSupportCmd(SessionImpl *impl, CmdProcessor processor)
@@ -443,7 +469,11 @@ static int32_t AddCertCredInfo(SessionImpl *impl, IdentityInfo *cred, CJson *cre
         LOGE("add signAlg to json fail.");
         return HC_ERR_JSON_ADD;
     }
-    if (AddStringToJson(credInfo, FIELD_PK_INFO,
+    int32_t res = HC_ERROR;
+    if (cred->proof.certInfo.isPseudonym) {
+        res = AddPkInfoWithPdid(impl->context, credInfo, (const char *)cred->proof.certInfo.pkInfoStr.val);
+    }
+    if (res != HC_SUCCESS && AddStringToJson(credInfo, FIELD_PK_INFO,
         (const char *)cred->proof.certInfo.pkInfoStr.val) != HC_SUCCESS) {
         LOGE("add pkInfoStr to json fail.");
         return HC_ERR_JSON_ADD;
@@ -474,7 +504,7 @@ static int32_t GetPreSharedCredInfo(SessionImpl *impl, const CJson *credInfo, Id
     const char *preSharedUrl = GetStringFromJson(credInfo, FIELD_CRED_URL);
     if (preSharedUrl == NULL) {
         LOGE("get preSharedUrl from json fail.");
-        return HC_ERR_JSON_ADD;
+        return HC_ERR_JSON_GET;
     }
     Uint8Buff peerSharedUrl = { (uint8_t *)preSharedUrl, HcStrlen(preSharedUrl) + 1 };
     IdentityInfo *info;
@@ -512,36 +542,57 @@ static int32_t BuildPeerCertInfo(const char *pkInfoStr, const char *pkInfoSignHe
     return HC_SUCCESS;
 }
 
-static int32_t GetPeerCertInfo(const CJson *credInfo, CertInfo *peerCert)
+static void DestroyCertInfo(CertInfo *certInfo)
 {
+    ClearFreeUint8Buff(&certInfo->pkInfoSignature);
+    ClearFreeUint8Buff(&certInfo->pkInfoStr);
+}
+
+static int32_t GetPeerCertInfo(CJson *context, const CJson *credInfo, CertInfo *peerCert)
+{
+    int32_t osAccountId;
+    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
     int32_t signAlg;
     if (GetIntFromJson(credInfo, FIELD_SIGN_ALG, &signAlg) != HC_SUCCESS) {
         LOGE("get signAlg from json fail.");
         return HC_ERR_JSON_ADD;
     }
-    const char *pkInfoStr = GetStringFromJson(credInfo, FIELD_PK_INFO);
-    if (pkInfoStr == NULL) {
-        LOGE("get pkInfoStr from json fail.");
-        return HC_ERR_JSON_GET;
+    char *pkInfoStr = NULL;
+    int32_t res = GetRealPkInfoStr(osAccountId, credInfo, &pkInfoStr, &peerCert->isPseudonym);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get real pkInfo string!");
+        return res;
     }
     const char *pkInfoSignHexStr = GetStringFromJson(credInfo, FIELD_PK_INFO_SIGNATURE);
     if (pkInfoSignHexStr == NULL) {
         LOGE("get pkInfoSignature from json fail.");
+        HcFree(pkInfoStr);
         return HC_ERR_JSON_GET;
     }
-    return BuildPeerCertInfo(pkInfoStr, pkInfoSignHexStr, signAlg, peerCert);
+    res = BuildPeerCertInfo(pkInfoStr, pkInfoSignHexStr, signAlg, peerCert);
+    HcFree(pkInfoStr);
+    return res;
 }
 
 static int32_t GetCertCredInfo(SessionImpl *impl, const CJson *credInfo, IdentityInfo **selfCred)
 {
+    int32_t res = CheckPeerPkInfoForPdid(impl->context, credInfo);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to check peer pkInfo!");
+        return res;
+    }
     CertInfo cert;
-    int32_t res = GetPeerCertInfo(credInfo, &cert);
+    res = GetPeerCertInfo(impl->context, credInfo, &cert);
     if (res != HC_SUCCESS) {
         LOGE("get peer cert fail.");
         return res;
     }
     IdentityInfo *info;
     res = GetCredInfoByPeerCert(impl->context, &cert, &info);
+    DestroyCertInfo(&cert);
     if (res != HC_SUCCESS) {
         LOGE("get cred info by peer url fail.");
         return res;
@@ -771,7 +822,7 @@ static int32_t AddAuthMsgToSessionMsg(AuthSubSession *authSubSession, CJson *aut
     return res;
 }
 
-static int32_t AddAuthFirstMsg(AuthSubSession *authSubSession, CJson *sessionMsg)
+static int32_t AddAuthFirstMsg(AuthSubSession *authSubSession, CJson *sessionMsg, bool shouldReplace)
 {
     CJson *authData = NULL;
     int32_t res = authSubSession->start(authSubSession, &authData);
@@ -779,18 +830,25 @@ static int32_t AddAuthFirstMsg(AuthSubSession *authSubSession, CJson *sessionMsg
         LOGE("process auth sub session fail. [Res]: %d", res);
         return res;
     }
+    if (shouldReplace) {
+        res = ReplaceAuthIdWithRandom(authData);
+        if (res != HC_SUCCESS) {
+            FreeJson(authData);
+            return res;
+        }
+    }
     res = AddAuthMsgToSessionMsg(authSubSession, authData, sessionMsg);
     FreeJson(authData);
     return res;
 }
 
-static int32_t AddAllAuthFirstMsg(SessionImpl *impl, CJson *sessionMsg)
+static int32_t AddAllAuthFirstMsg(SessionImpl *impl, CJson *sessionMsg, bool shouldReplace)
 {
     uint32_t index;
     AuthSubSession **ptr;
     FOR_EACH_HC_VECTOR(impl->authSubSessionList, index, ptr) {
         AuthSubSession *authSubSesion = *ptr;
-        int32_t res = AddAuthFirstMsg(authSubSesion, sessionMsg);
+        int32_t res = AddAuthFirstMsg(authSubSesion, sessionMsg, shouldReplace);
         if (res != HC_SUCCESS) {
             return res;
         }
@@ -865,33 +923,6 @@ static TrustedGroupEntry *GetGroupEntryById(int32_t osAccountId, const char *gro
         return returnEntry;
     }
     ClearGroupEntryVec(&groupEntryVec);
-    return NULL;
-}
-
-static TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *deviceId, bool isUdid,
-    const char *groupId)
-{
-    DeviceEntryVec deviceEntryVec = CreateDeviceEntryVec();
-    QueryDeviceParams params = InitQueryDeviceParams();
-    params.groupId = groupId;
-    if (isUdid) {
-        params.udid = deviceId;
-    } else {
-        params.authId = deviceId;
-    }
-    if (QueryDevices(osAccountId, &params, &deviceEntryVec) != HC_SUCCESS) {
-        LOGE("Failed to query trusted devices!");
-        ClearDeviceEntryVec(&deviceEntryVec);
-        return NULL;
-    }
-    uint32_t index;
-    TrustedDeviceEntry **deviceEntry;
-    FOR_EACH_HC_VECTOR(deviceEntryVec, index, deviceEntry) {
-        TrustedDeviceEntry *returnEntry = DeepCopyDeviceEntry(*deviceEntry);
-        ClearDeviceEntryVec(&deviceEntryVec);
-        return returnEntry;
-    }
-    ClearDeviceEntryVec(&deviceEntryVec);
     return NULL;
 }
 
@@ -970,7 +1001,7 @@ static int32_t AddGroupInfoToContext(SessionImpl *impl, int32_t osAccountId, con
 
 static int32_t AddDevInfoToContext(SessionImpl *impl, int32_t osAccountId, const char *groupId, const char *selfUdid)
 {
-    TrustedDeviceEntry *deviceEntry = GetTrustedDeviceEntryById(osAccountId, selfUdid, true, groupId);
+    TrustedDeviceEntry *deviceEntry = GetDeviceEntryById(osAccountId, selfUdid, true, groupId);
     if (deviceEntry == NULL) {
         LOGE("The trusted device is not found!");
         return HC_ERR_DEVICE_NOT_EXIST;
@@ -1190,7 +1221,7 @@ static int32_t ProcStartEventInner(SessionImpl *impl, CJson *sessionMsg)
     if (res != HC_SUCCESS) {
         return res;
     }
-    return AddAllAuthFirstMsg(impl, sessionMsg);
+    return AddAllAuthFirstMsg(impl, sessionMsg, IsP2pAuth(curCred));
 }
 
 static int32_t GetSessionSaltFromInput(SessionImpl *impl, const CJson *inputData)
@@ -1220,17 +1251,60 @@ static int32_t GetSharedSecret(SessionImpl *impl, const CJson *inputData, Identi
         return GetSharedSecretByUrl(impl->context, &selfCred->proof.preSharedUrl,
             impl->protocolEntity.protocolType, psk);
     }
-    CertInfo peerCert;
-    int32_t res = GetPeerCertInfo(inputData, &peerCert);
+    int32_t res = SetPeerInfoToContext(impl->context, inputData);
     if (res != HC_SUCCESS) {
         return res;
     }
-    return GetSharedSecretByPeerCert(impl->context, &peerCert, impl->protocolEntity.protocolType, psk);
+    CertInfo peerCert;
+    res = GetPeerCertInfo(impl->context, inputData, &peerCert);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    res = GetSharedSecretByPeerCert(impl->context, &peerCert, impl->protocolEntity.protocolType, psk);
+    DestroyCertInfo(&peerCert);
+    return res;
 }
 
-static int32_t ServerCreateAuthSubSessionByCred(SessionImpl *impl, IdentityInfo *cred)
+static int32_t SetPeerUserIdToContext(CJson *context, const CJson *inputData, const IdentityInfo *cred)
 {
-    int32_t res = AddAuthInfoToContextByCred(impl, cred);
+    if (cred->proofType != CERTIFICATED) {
+        LOGI("credential type is not certificate, no need to set peer userId!");
+        return HC_SUCCESS;
+    }
+    CertInfo peerCert;
+    int32_t res = GetPeerCertInfo(context, inputData, &peerCert);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get peer cert!");
+        return res;
+    }
+    CJson *pkInfoJson = CreateJsonFromString((const char *)peerCert.pkInfoStr.val);
+    DestroyCertInfo(&peerCert);
+    if (pkInfoJson == NULL) {
+        LOGE("Failed to create pkInfo json!");
+        return HC_ERR_JSON_CREATE;
+    }
+    const char *userId = GetStringFromJson(pkInfoJson, FIELD_USER_ID);
+    if (userId == NULL) {
+        LOGE("Failed to get userId!");
+        FreeJson(pkInfoJson);
+        return HC_ERR_JSON_GET;
+    }
+    if (AddStringToJson(context, FIELD_USER_ID, userId) != HC_SUCCESS) {
+        LOGE("Failed to add userId!");
+        FreeJson(pkInfoJson);
+        return HC_ERR_JSON_ADD;
+    }
+    FreeJson(pkInfoJson);
+    return HC_SUCCESS;
+}
+
+static int32_t ServerCreateAuthSubSessionByCred(SessionImpl *impl, const CJson *inputData, IdentityInfo *cred)
+{
+    int32_t res = SetPeerUserIdToContext(impl->context, inputData, cred);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    res = AddAuthInfoToContextByCred(impl, cred);
     if (res != HC_SUCCESS) {
         return res;
     }
@@ -1464,11 +1538,15 @@ static int32_t ProcHandshakeReqEventInner(SessionImpl *impl, SessionEvent *input
     }
     CheckAllCredsValidity(impl);
     IdentityInfo *selfCred = HC_VECTOR_GET(&impl->credList, 0);
+    res = SetPeerAuthIdToContextIfNeeded(impl->context, selfCred);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
     res = CredNegotiate(impl, inputEvent->data, selfCred);
     if (res != HC_SUCCESS) {
         return res;
     }
-    res = ServerCreateAuthSubSessionByCred(impl, selfCred);
+    res = ServerCreateAuthSubSessionByCred(impl, inputEvent->data, selfCred);
     if (res != HC_SUCCESS) {
         return res;
     }
@@ -1505,7 +1583,11 @@ static int32_t RemoveInvalidAuthSubSession(SessionImpl *impl)
 static int32_t ProcHandshakeRspEventInner(SessionImpl *impl, SessionEvent *inputEvent)
 {
     IdentityInfo *selfCred = impl->credList.get(&impl->credList, 0);
-    int32_t res = CredNegotiate(impl, inputEvent->data, selfCred);
+    int32_t res = SetPeerAuthIdToContextIfNeeded(impl->context, selfCred);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    res = CredNegotiate(impl, inputEvent->data, selfCred);
     if (res != HC_SUCCESS) {
         return res;
     }
@@ -1559,7 +1641,8 @@ static int32_t StartExpandSubSession(ExpandSubSession *expandSubSession, CJson *
     return res;
 }
 
-static int32_t ProcAuthSubSessionMsg(AuthSubSession *authSubSession, const CJson *receviedMsg, CJson *sessionMsg)
+static int32_t ProcAuthSubSessionMsg(AuthSubSession *authSubSession, const CJson *receviedMsg, CJson *sessionMsg,
+    bool shouldReplace)
 {
     CJson *authData = NULL;
     int32_t res = authSubSession->process(authSubSession, receviedMsg, &authData);
@@ -1571,14 +1654,19 @@ static int32_t ProcAuthSubSessionMsg(AuthSubSession *authSubSession, const CJson
         }
         return res;
     }
-    if (authData != NULL) {
-        res = AddAuthMsgToSessionMsg(authSubSession, authData, sessionMsg);
-        FreeJson(authData);
+    if (authData == NULL) {
+        return HC_SUCCESS;
+    }
+    if (shouldReplace) {
+        res = ReplaceAuthIdWithRandom(authData);
         if (res != HC_SUCCESS) {
+            FreeJson(authData);
             return res;
         }
     }
-    return HC_SUCCESS;
+    res = AddAuthMsgToSessionMsg(authSubSession, authData, sessionMsg);
+    FreeJson(authData);
+    return res;
 }
 
 static int32_t OnAuthSubSessionFinish(SessionImpl *impl, AuthSubSession *authSubSession, CJson *sessionMsg)
@@ -1605,19 +1693,30 @@ static int32_t OnAuthSubSessionFinish(SessionImpl *impl, AuthSubSession *authSub
     return HC_SUCCESS;
 }
 
-static int32_t ProcAuthEventInner(SessionImpl *impl, SessionEvent *inputEvent, CJson *sessionMsg, bool *isAuthFinish)
+static int32_t ProcAuthEventInner(SessionImpl *impl, SessionEvent *inputEvent, CJson *sessionMsg, bool *isAuthFinish,
+    bool isServerProcess)
 {
     int32_t protocolType;
     if (GetIntFromJson(inputEvent->data, FIELD_PROTOCOL, &protocolType) != HC_SUCCESS) {
         LOGE("get protocol from json fail.");
         return HC_ERR_JSON_GET;
     }
+    int32_t res = FillPeerAuthIdIfNeeded(impl->isClient, impl->context, (CJson *)inputEvent->data);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
     AuthSubSession *curAuthSubSession = impl->authSubSessionList.get(&impl->authSubSessionList, 0);
     if (protocolType != curAuthSubSession->protocolType) {
         LOGI("Protocol type mismatch. Ignore it. [ProtocolType]: %d", protocolType);
         return HC_SUCCESS;
     }
-    int32_t res = ProcAuthSubSessionMsg(curAuthSubSession, inputEvent->data, sessionMsg);
+    IdentityInfo *selfCred = HC_VECTOR_GET(&impl->credList, 0);
+    bool isP2pAuth = IsP2pAuth(selfCred);
+    if (isServerProcess && isP2pAuth) {
+        res = ProcAuthSubSessionMsg(curAuthSubSession, inputEvent->data, sessionMsg, true);
+    } else {
+        res = ProcAuthSubSessionMsg(curAuthSubSession, inputEvent->data, sessionMsg, false);
+    }
     if (res != HC_SUCCESS) {
         return res;
     }
@@ -1701,7 +1800,7 @@ static int32_t ProcHandshakeRspEvent(SessionImpl *impl, SessionEvent *inputEvent
 static int32_t ProcFirstAuthEvent(SessionImpl *impl, SessionEvent *inputEvent, CJson *sessionMsg, JumpPolicy *policy)
 {
     bool isAuthFinish = false;
-    int32_t res = ProcAuthEventInner(impl, inputEvent, sessionMsg, &isAuthFinish);
+    int32_t res = ProcAuthEventInner(impl, inputEvent, sessionMsg, &isAuthFinish, true);
     if (res != HC_SUCCESS) {
         ErrorInformPeer(res, sessionMsg);
         return RestartSession(impl, policy) == HC_SUCCESS ? HC_SUCCESS : res;
@@ -1714,7 +1813,7 @@ static int32_t ProcFirstAuthEvent(SessionImpl *impl, SessionEvent *inputEvent, C
 static int32_t ProcAuthEvent(SessionImpl *impl, SessionEvent *inputEvent, CJson *sessionMsg, JumpPolicy *policy)
 {
     bool isAuthFinish = false;
-    int32_t res = ProcAuthEventInner(impl, inputEvent, sessionMsg, &isAuthFinish);
+    int32_t res = ProcAuthEventInner(impl, inputEvent, sessionMsg, &isAuthFinish, false);
     if (res != HC_SUCCESS) {
         ErrorInformPeer(res, sessionMsg);
         return RestartSession(impl, policy) == HC_SUCCESS ? HC_SUCCESS : res;
