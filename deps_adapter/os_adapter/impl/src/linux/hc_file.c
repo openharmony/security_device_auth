@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -72,7 +72,7 @@ static FILE *HcFileOpenWrite(const char *path)
             return NULL;
         }
     }
-    return fopen(path, "w+");
+    return fopen(path, "wb+");
 }
 
 int HcFileOpen(const char *path, int mode, FileHandle *file)
@@ -140,6 +140,10 @@ int HcFileWrite(FileHandle file, const void *src, int srcSize)
         return -1;
     }
 
+    if (fseek(fp, 0L, SEEK_SET) != 0) {
+        LOGE("[OS]: fseek file error!");
+        return -1;
+    }
     const char *srcBuffer = (const char *)src;
     int total = 0;
     LOGI("[OS]: file write enter. [OriSize]: %d", srcSize);
@@ -151,6 +155,12 @@ int HcFileWrite(FileHandle file, const void *src, int srcSize)
         total += writeCount;
     }
     LOGI("[OS]: file write quit. [WriteSize]: %d", total);
+    if (fflush(fp) != 0) {
+        LOGE("[OS]: fflush fail. [errno]: %d", errno);
+    }
+    if (fsync(fileno(fp)) != 0) {
+        LOGE("[OS]: fsync fail. [errno]: %d", errno);
+    }
     return total;
 }
 
