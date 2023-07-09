@@ -746,7 +746,6 @@ PseudonymManager *GetPseudonymInstance(void)
 void DestroyPseudonymManager(void)
 {
     g_mutex->lock(g_mutex);
-    (void)memset_s(&g_pseudonymManager, sizeof(PseudonymManager), 0, sizeof(PseudonymManager));
     uint32_t index;
     OsAccountPseudonymInfo *info = NULL;
     FOR_EACH_HC_VECTOR(g_pseudonymDb, index, info) {
