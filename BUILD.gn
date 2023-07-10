@@ -37,6 +37,8 @@ group("deviceauth_test_build") {
     deps += [
       "test/fuzztest/group_auth/authdevice_fuzzer:fuzztest",
       "test/fuzztest/group_auth/cancelauthrequest_fuzzer:fuzztest",
+      "test/fuzztest/group_auth/getpseudonymid_fuzzer:fuzztest",
+      "test/fuzztest/group_auth/getrealinfo_fuzzer:fuzztest",
       "test/fuzztest/group_auth/processauthdata_fuzzer:fuzztest",
       "test/fuzztest/group_manage/addmember_fuzzer:fuzztest",
       "test/fuzztest/group_manage/cancelbindrequest_fuzzer:fuzztest",
