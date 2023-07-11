@@ -464,7 +464,7 @@ static void LoadOsAccountPseudonymDb(int32_t osAccountId)
     LOGI("Load pseudonym os account db successfully! [Id]: %d", osAccountId);
 }
 
-static void InitPseudonymManger()
+static void InitPseudonymManger(void)
 {
     if (g_mutex == NULL) {
         g_mutex = (HcMutex *)HcMalloc(sizeof(HcMutex), 0);
@@ -487,7 +487,7 @@ static void InitPseudonymManger()
     g_mutex->unlock(g_mutex);
 }
 
-static void LoadPseudonymData()
+static void LoadPseudonymData(void)
 {
     InitPseudonymManger();
     StringVector dbNameVec = CreateStrVector();
