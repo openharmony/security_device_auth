@@ -150,14 +150,17 @@ static const char *GetDeviceIdByUdidHash(int32_t osAccountId, const char *device
 static const char *GetPeerUdidFromJson(int32_t osAccountId, const CJson *in)
 {
     const char *peerConnDeviceId = GetStringFromJson(in, FIELD_PEER_CONN_DEVICE_ID);
-    if (peerConnDeviceId != NULL) {
-        bool isUdidHash = false;
-        if (GetBoolFromJson(in, FIELD_IS_UDID_HASH, &isUdidHash) != HC_SUCCESS) {
-            LOGI("Get isUdidHash from json failed.");
-        }
-        return (isUdidHash ? GetDeviceIdByUdidHash(osAccountId, peerConnDeviceId) : peerConnDeviceId);
+    if (peerConnDeviceId == NULL) {
+        LOGE("get peerConnDeviceId from json fail.");
+        return NULL;
     }
-    return NULL;
+    bool isUdidHash = false;
+    (void)GetBoolFromJson(in, FIELD_IS_UDID_HASH, &isUdidHash);
+    if (isUdidHash) {
+        const char *deviceId = GetDeviceIdByUdidHash(osAccountId, peerConnDeviceId);
+        return (deviceId == NULL ? peerConnDeviceId : deviceId);
+    }
+    return peerConnDeviceId;
 }
 
 static int32_t AddGroupInfoToContextByInput(const CJson *receivedMsg, CJson *context)
