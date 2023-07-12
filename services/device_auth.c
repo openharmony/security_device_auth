@@ -672,15 +672,23 @@ static int32_t BuildClientAuthContext(int32_t osAccountId, int64_t requestId, co
 {
     const char *peerUdid = GetPeerUdidFromJson(osAccountId, context);
     if (peerUdid != NULL) {
-        if (AddStringToJson(context, FIELD_PEER_CONN_DEVICE_ID, peerUdid) != HC_SUCCESS) {
-            LOGE("add peerConnDeviceId to context fail.");
-            return HC_ERR_JSON_ADD;
+        char *deviceId = NULL;
+        if (DeepCopyString(peerUdid, &deviceId) != HC_SUCCESS) {
+            LOGE("Failed to copy peerUdid!");
+            return HC_ERR_ALLOC_MEMORY;
         }
-        if (AddStringToJson(context, FIELD_PEER_UDID, peerUdid) != HC_SUCCESS) {
+        if (AddStringToJson(context, FIELD_PEER_UDID, deviceId) != HC_SUCCESS) {
             LOGE("add peerUdid to context fail.");
+            HcFree(deviceId);
             return HC_ERR_JSON_ADD;
         }
-        PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
+        if (AddStringToJson(context, FIELD_PEER_CONN_DEVICE_ID, deviceId) != HC_SUCCESS) {
+            LOGE("add peerConnDeviceId to context fail.");
+            HcFree(deviceId);
+            return HC_ERR_JSON_ADD;
+        }
+        PRINT_SENSITIVE_DATA("PeerUdid", deviceId);
+        HcFree(deviceId);
     }
     if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
         LOGE("add isBind to context fail.");
