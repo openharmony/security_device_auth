@@ -754,6 +754,27 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
     return PushStartSessionTask(authReqId);
 }
 
+static int32_t AddDeviceIdToJson(CJson *context, const char *peerUdid)
+{
+    char *deviceId = NULL;
+    if (DeepCopyString(peerUdid, &deviceId) != HC_SUCCESS) {
+        LOGE("Failed to copy peerUdid!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (AddStringToJson(context, FIELD_PEER_UDID, deviceId) != HC_SUCCESS) {
+        LOGE("add peerUdid to context fail.");
+        HcFree(deviceId);
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(context, FIELD_PEER_CONN_DEVICE_ID, deviceId) != HC_SUCCESS) {
+        LOGE("add peerConnDeviceId to context fail.");
+        HcFree(deviceId);
+        return HC_ERR_JSON_ADD;
+    }
+    HcFree(deviceId); 
+    return HC_SUCCESS;
+}
+
 static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const char *appId, CJson *context)
 {
     int32_t osAccountId = ANY_OS_ACCOUNT;
@@ -768,12 +789,8 @@ static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const c
         return HC_ERR_JSON_GET;
     }
     PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
-    if (AddStringToJson(context, FIELD_PEER_CONN_DEVICE_ID, peerUdid) != HC_SUCCESS) {
-        LOGE("add peerConnDeviceId to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddStringToJson(context, FIELD_PEER_UDID, peerUdid) != HC_SUCCESS) {
-        LOGE("add peerUdid to context fail.");
+    if (AddDeviceIdToJson(context, peerUdid) != HC_SUCCESS) {
+        LOGE("add deviceId to context fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
