@@ -771,7 +771,7 @@ static int32_t AddDeviceIdToJson(CJson *context, const char *peerUdid)
         HcFree(deviceId);
         return HC_ERR_JSON_ADD;
     }
-    HcFree(deviceId); 
+    HcFree(deviceId);
     return HC_SUCCESS;
 }
 
