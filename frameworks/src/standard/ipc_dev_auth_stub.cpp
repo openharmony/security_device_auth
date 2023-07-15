@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -185,12 +185,12 @@ int32_t ServiceDevAuth::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
     LOGI("request code %u", code);
     switch (code) {
         case static_cast<uint32_t>(DevAuthInterfaceCode::DEV_AUTH_CALL_REQUEST):
-            if (CheckPermission() != HC_SUCCESS) {
-                return -1;
-            }
             ret = GetMethodId(data, methodId);
             if (ret != HC_SUCCESS) {
                 break;
+            }
+            if (CheckPermission(methodId) != HC_SUCCESS) {
+                return -1;
             }
             serviceCall = GetCallMethodByMethodId(methodId);
             if (serviceCall == nullptr) {
