@@ -35,6 +35,8 @@ group("deviceauth_test_build") {
   if (os_level == "standard") {
     testonly = true
     deps += [
+      "test/fuzztest/devauth_fuzzer:fuzztest",
+      "test/fuzztest/devauthcb_fuzzer:fuzztest",
       "test/fuzztest/group_auth/authdevice_fuzzer:fuzztest",
       "test/fuzztest/group_auth/cancelauthrequest_fuzzer:fuzztest",
       "test/fuzztest/group_auth/getpseudonymid_fuzzer:fuzztest",
