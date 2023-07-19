@@ -1109,7 +1109,7 @@ static int32_t IpcServiceGaGetPseudonymId(const IpcDataInfo *ipcParams, int32_t 
     return ret;
 }
 
-static int32_t AddMethodMap(uintptr_t ipcInstance)
+int32_t AddMethodMap(uintptr_t ipcInstance)
 {
     uint32_t ret;
 
@@ -1189,6 +1189,7 @@ int32_t MainRescInit(void)
     return HC_SUCCESS;
 }
 
+#ifndef DEV_AUTH_FUZZ_TEST
 int32_t main(int32_t argc, char const *argv[])
 {
     uintptr_t serviceCtx = 0x0;
@@ -1227,6 +1228,7 @@ int32_t main(int32_t argc, char const *argv[])
     DestroyHcCond(&cond);
     return 0;
 }
+#endif
 
 #ifdef __cplusplus
 }
