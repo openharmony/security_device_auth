@@ -711,11 +711,11 @@ static int32_t ProcessSpekeSession(SpekeSession *spekeSession, const KeyAgreeBlo
     LOGI("Process session start!");
     CJson *inParams = NULL;
     int32_t step = 0;
-    if ((spekeSession->step == STEP_INIT) && (in == NULL)) {
+    if (spekeSession->step == STEP_INIT) {
         LOGI("It is first message!");
         spekeSession->step = STEP_ONE;
     } else {
-        if (in->data == NULL) {
+        if ((in == NULL) || (in->data == NULL)) {
             LOGE("Invalid params!");
             return HC_ERR_INVALID_PARAMS;
         }
