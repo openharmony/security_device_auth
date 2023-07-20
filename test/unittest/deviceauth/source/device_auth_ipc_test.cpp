@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,9 @@ using namespace std;
 using namespace testing::ext;
 
 namespace {
+#define PROC_NAME_DEVICE_MANAGER "device_manager"
+#define PROC_NAME_SOFT_BUS "softbus_server"
+#define PROC_NAME_DEVICE_SECURITY_LEVEL "dslm_service"
 #define TEST_REQ_ID 123
 #define TEST_REQ_ID2 321
 #define TEST_REQ_ID3 322
@@ -99,7 +102,7 @@ static uint32_t g_transmitDataMaxLen = 2048;
 static uint8_t g_transmitData[2048] = { 0 };
 static uint32_t g_transmitDataLen = 0;
 
-static void SetAccessToken()
+static void NativeTokenSet(const char *procName)
 {
     const char *acls[] = {"ACCESS_IDS"};
     const char *perms[] = {
@@ -114,7 +117,7 @@ static void SetAccessToken()
         .dcaps = NULL,
         .perms = perms,
         .acls = acls,
-        .processName = "dslm_service",
+        .processName = procName,
         .aplStr = "system_core",
     };
     tokenId = GetAccessTokenId(&infoInstance);
@@ -370,7 +373,7 @@ void GmRegCallbackTest::TearDownTestCase() {}
 
 void GmRegCallbackTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
@@ -431,7 +434,7 @@ void GmRegDataChangeListenerTest::TearDownTestCase() {}
 
 void GmRegDataChangeListenerTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_SOFT_BUS);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
@@ -485,7 +488,7 @@ public:
 
 void GmCreateGroupTest::SetUpTestCase()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     ASSERT_EQ(ret, HC_SUCCESS);
     const DeviceGroupManager *gm = GetGmInstance();
@@ -540,7 +543,7 @@ public:
 
 void GmDestroyInfoTest::SetUpTestCase()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     ASSERT_EQ(ret, HC_SUCCESS);
 }
@@ -578,7 +581,7 @@ public:
 
 void GmCheckAccessToGroupTest::SetUpTestCase()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     ASSERT_EQ(ret, HC_SUCCESS);
 }
@@ -645,7 +648,7 @@ void GmGetPkInfoListTest::TearDownTestCase() {}
 
 void GmGetPkInfoListTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_SECURITY_LEVEL);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
@@ -734,7 +737,7 @@ void GmGetGroupInfoByIdTest::TearDownTestCase() {}
 
 void GmGetGroupInfoByIdTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
@@ -812,7 +815,7 @@ void GmGetGroupInfoTest::TearDownTestCase() {}
 
 void GmGetGroupInfoTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
@@ -899,7 +902,7 @@ void GmGetJoinedGroupsTest::TearDownTestCase() {}
 
 void GmGetJoinedGroupsTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
@@ -975,7 +978,7 @@ void GmGetRelatedGroupsTest::TearDownTestCase() {}
 
 void GmGetRelatedGroupsTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
@@ -1061,7 +1064,7 @@ void GmGetDeviceInfoByIdTest::TearDownTestCase() {}
 
 void GmGetDeviceInfoByIdTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
@@ -1148,7 +1151,7 @@ void GmGetTrustedDevicesTest::TearDownTestCase() {}
 
 void GmGetTrustedDevicesTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
@@ -1242,7 +1245,7 @@ void GmIsDeviceInGroupTest::TearDownTestCase() {}
 
 void GmIsDeviceInGroupTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
@@ -1310,7 +1313,7 @@ public:
 
 void GmAddMemberToGroupTest::SetUpTestCase()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     ASSERT_EQ(ret, HC_SUCCESS);
     const DeviceGroupManager *gm = GetGmInstance();
@@ -1363,7 +1366,7 @@ public:
 
 void GmDeleteMemberFromGroupTest::SetUpTestCase()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     ASSERT_EQ(ret, HC_SUCCESS);
     const DeviceGroupManager *gm = GetGmInstance();
@@ -1416,7 +1419,7 @@ public:
 
 void GmProcessDataTest::SetUpTestCase()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     ASSERT_EQ(ret, HC_SUCCESS);
     const DeviceGroupManager *gm = GetGmInstance();
@@ -1480,7 +1483,7 @@ void GmAddMultiMembersToGroupTest::TearDownTestCase() {}
 
 void GmAddMultiMembersToGroupTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     ASSERT_EQ(ret, HC_SUCCESS);
     const DeviceGroupManager *gm = GetGmInstance();
@@ -1533,7 +1536,7 @@ void GmDelMultiMembersFromGroupTest::TearDownTestCase() {}
 
 void GmDelMultiMembersFromGroupTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     ASSERT_EQ(ret, HC_SUCCESS);
     const DeviceGroupManager *gm = GetGmInstance();
@@ -1586,7 +1589,7 @@ void GmGetRegisterInfoTest::TearDownTestCase() {}
 
 void GmGetRegisterInfoTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
@@ -1634,7 +1637,7 @@ public:
 
 void GaAuthDeviceTest::SetUpTestCase()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_SOFT_BUS);
     int ret = InitDeviceAuthService();
     ASSERT_EQ(ret, HC_SUCCESS);
 }
@@ -1681,7 +1684,7 @@ public:
 
 void GaProcessDataTest::SetUpTestCase()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_SOFT_BUS);
     int ret = InitDeviceAuthService();
     ASSERT_EQ(ret, HC_SUCCESS);
 }
@@ -1748,7 +1751,7 @@ void GmDeleteGroupTest::TearDownTestCase() {}
 
 void GmDeleteGroupTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     ASSERT_EQ(ret, HC_SUCCESS);
     const DeviceGroupManager *gm = GetGmInstance();
@@ -1803,7 +1806,7 @@ void GmUnRegCallbackTest::TearDownTestCase() {}
 
 void GmUnRegCallbackTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
@@ -1853,7 +1856,7 @@ void GmUnRegDataChangeListenerTest::TearDownTestCase() {}
 
 void GmUnRegDataChangeListenerTest::SetUp()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_SOFT_BUS);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
@@ -1899,7 +1902,7 @@ public:
 
 void GmCancelRequestTest::SetUpTestCase()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
@@ -1936,7 +1939,7 @@ public:
 
 void GaCancelRequestTest::SetUpTestCase()
 {
-    SetAccessToken();
+    NativeTokenSet(PROC_NAME_SOFT_BUS);
     int ret = InitDeviceAuthService();
     EXPECT_EQ(ret, HC_SUCCESS);
 }
