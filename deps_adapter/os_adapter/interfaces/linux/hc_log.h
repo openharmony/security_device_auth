@@ -77,6 +77,7 @@ void SetTraceId(int64_t traceId);
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 #define LOGD(fmt, ...) printf("[D][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
 #define LOGI(fmt, ...) printf("[I][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)

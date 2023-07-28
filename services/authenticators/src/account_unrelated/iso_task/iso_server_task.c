@@ -65,6 +65,11 @@ static int CreateNextTask(IsoServerTask *realTask, const CJson *in, CJson *out, 
             }
             break;
         case AUTHENTICATE:
+            if (message != ISO_RESULT_CONFIRM_CMD) {
+                LOGI("The message is repeated, ignore it message: %d.", message);
+                *status = IGNORE_MSG;
+                break;
+            }
             if ((res = CheckEncResult(&(realTask->params), in, RESULT_AAD)) != 0) {
                 LOGE("CheckEncResult failed, res: %d.", res);
                 break;
