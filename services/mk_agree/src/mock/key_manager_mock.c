@@ -48,13 +48,13 @@ int32_t DeletePseudonymPsk(const char *peerDeviceId)
 }
 
 int32_t GenerateAndSavePseudonymId(int32_t osAccountId, const char *peerDeviceId, const PseudonymKeyInfo *info,
-    const Uint8Buff *salt, Uint8Buff *returnKey)
+    const Uint8Buff *saltBuff, Uint8Buff *returnHmac)
 {
     (void)osAccountId;
     (void)peerDeviceId;
     (void)info;
-    (void)salt;
-    (void)returnKey;
+    (void)saltBuff;
+    (void)returnHmac;
     return HC_ERR_NOT_SUPPORT;
 }
 
