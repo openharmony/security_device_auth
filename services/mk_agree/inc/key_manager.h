@@ -33,7 +33,7 @@ int32_t DeleteMk(const char *peerDeviceId);
 int32_t GeneratePseudonymPsk(const char *peerDeviceId, const Uint8Buff *salt);
 int32_t DeletePseudonymPsk(const char *peerDeviceId);
 int32_t GenerateAndSavePseudonymId(int32_t osAccountId, const char *peerDeviceId, const PseudonymKeyInfo *info,
-    const Uint8Buff *salt, Uint8Buff *returnKey);
+    const Uint8Buff *saltBuff, Uint8Buff *returnHmac);
 int32_t GetDevicePubKey(Uint8Buff *devicePk);
 
 #ifdef __cplusplus

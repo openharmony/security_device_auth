@@ -148,7 +148,7 @@ static int32_t CombineSalt(const Uint8Buff *firstSalt, const Uint8Buff *secondSa
 }
 
 static int32_t ComputeKcfData(PakeMkAgreeTask *pakeTask, const Uint8Buff *firstSalt, const Uint8Buff *secondSalt,
-    Uint8Buff *kcfData)
+    Uint8Buff *returnKcfData)
 {
     Uint8Buff saltBuff = { NULL, 0 };
     int32_t res = CombineSalt(firstSalt, secondSalt, &saltBuff);
@@ -156,29 +156,18 @@ static int32_t ComputeKcfData(PakeMkAgreeTask *pakeTask, const Uint8Buff *firstS
         LOGE("Failed to combine salt!");
         return res;
     }
-    Uint8Buff hmacKey = { NULL, 0 };
+    Uint8Buff tmpKcfData = { NULL, 0 };
     PseudonymKeyInfo info = { pakeTask->taskBase.peerInfo, pakeTask->taskBase.pdidIndex };
     res = GenerateAndSavePseudonymId(pakeTask->taskBase.osAccountId, pakeTask->taskBase.peerUdid,
-        &info, &saltBuff, &hmacKey);
+        &info, &saltBuff, &tmpKcfData);
+    FreeUint8Buff(&saltBuff);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to generate hmac key from tmp mk!");
-        FreeUint8Buff(&saltBuff);
+        LOGE("Failed to generate and save pdid!");
         return res;
     }
-    if (InitUint8Buff(kcfData, HMAC_LEN) != HC_SUCCESS) {
-        LOGE("Failed to alloc memory for kcf data!");
-        FreeUint8Buff(&saltBuff);
-        ClearFreeUint8Buff(&hmacKey);
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    res = pakeTask->taskBase.loader->computeHmac(&hmacKey, &saltBuff, kcfData, false);
-    FreeUint8Buff(&saltBuff);
-    ClearFreeUint8Buff(&hmacKey);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to compute hmac!");
-        ClearFreeUint8Buff(kcfData);
-    }
-    return res;
+    returnKcfData->val = tmpKcfData.val;
+    returnKcfData->length = tmpKcfData.length;
+    return HC_SUCCESS;
 }
 
 static int32_t GeneratePakeResponsePayloadData(PakeMkAgreeTask *pakeTask, Uint8Buff *payloadData)

@@ -283,7 +283,7 @@ int32_t GeneratePseudonymPsk(const char *peerDeviceId, const Uint8Buff *salt)
         FreeUint8Buff(&pskBuff);
         return res;
     }
-    res = GetLoaderInstance()->importSymmetricKey(&pskAliasBuff, &pskBuff, KEY_PURPOSE_DERIVE, NULL);
+    res = GetLoaderInstance()->importSymmetricKey(&pskAliasBuff, &pskBuff, KEY_PURPOSE_MAC, NULL);
     ClearFreeUint8Buff(&pskBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to import pseudonym psk!");
@@ -320,41 +320,41 @@ int32_t DeletePseudonymPsk(const char *peerDeviceId)
 }
 
 int32_t GenerateAndSavePseudonymId(int32_t osAccountId, const char *peerDeviceId, const PseudonymKeyInfo *info,
-    const Uint8Buff *salt, Uint8Buff *returnKey)
+    const Uint8Buff *saltBuff, Uint8Buff *returnHmac)
 {
-    if (peerDeviceId == NULL || info == NULL || salt == NULL || returnKey == NULL) {
+    if (peerDeviceId == NULL || info == NULL || saltBuff == NULL || returnHmac == NULL) {
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
-    uint8_t pseudonymPskAlias[PAKE_KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff pskAliasBuff = { pseudonymPskAlias, PAKE_KEY_ALIAS_LEN };
+    uint8_t pskAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
+    Uint8Buff pskAliasBuff = { pskAliasVal, PAKE_KEY_ALIAS_LEN };
     int32_t res = GeneratePseudonymPskAlias(peerDeviceId, &pskAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate pseudonym psk alias!");
         return res;
     }
-    res = InitUint8Buff(returnKey, MK_LEN);
+    uint8_t pseudonymIdVal[MK_LEN] = { 0 };
+    Uint8Buff pseudonymIdBuff = { pseudonymIdVal, MK_LEN };
+    res = GetLoaderInstance()->computeHmac(&pskAliasBuff, saltBuff, &pseudonymIdBuff, true);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to init return key!");
+        LOGE("Failed to compute hmac!");
         return res;
     }
-    res = KeyDerivation(&pskAliasBuff, salt, true, returnKey);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to generate pseudonym id!");
-        FreeUint8Buff(returnKey);
-        return res;
+    if (DeepCopyUint8Buff(&pseudonymIdBuff, returnHmac) != HC_SUCCESS) {
+        LOGE("Failed to copy hmac!");
+        return HC_ERR_ALLOC_MEMORY;
     }
-    uint32_t pdidLen = returnKey->length * 2 + 1;
+    uint32_t pdidLen = pseudonymIdBuff.length * BYTE_TO_HEX_OPER_LENGTH + 1;
     char *pdid = (char *)HcMalloc(pdidLen, 0);
     if (pdid == NULL) {
         LOGE("Failed to alloc memory for pdid!");
-        ClearFreeUint8Buff(returnKey);
+        ClearFreeUint8Buff(returnHmac);
         return HC_ERR_ALLOC_MEMORY;
     }
-    res = ByteToHexString(returnKey->val, returnKey->length, pdid, pdidLen);
+    res = ByteToHexString(pseudonymIdBuff.val, pseudonymIdBuff.length, pdid, pdidLen);
     if (res != HC_SUCCESS) {
         LOGE("Failed to convert pdid from byte to hex string!");
-        ClearFreeUint8Buff(returnKey);
+        ClearFreeUint8Buff(returnHmac);
         HcFree(pdid);
         return res;
     }
@@ -362,10 +362,10 @@ int32_t GenerateAndSavePseudonymId(int32_t osAccountId, const char *peerDeviceId
     HcFree(pdid);
     if (res != HC_SUCCESS) {
         LOGE("Failed to save pdid!");
-        ClearFreeUint8Buff(returnKey);
+        ClearFreeUint8Buff(returnHmac);
         return res;
     }
-    LOGI("Generate and save pseudonym id successfully!");
+    LOGI("Generate and save pdid successfully!");
     return HC_SUCCESS;
 }
 
