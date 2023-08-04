@@ -495,7 +495,7 @@ static int32_t ProcessSession(DevSession *self, const CJson *receviedMsg, bool *
         return HC_ERR_INVALID_PARAMS;
     }
     SessionImpl *impl = (SessionImpl *)self;
-    if (IsV1SessionMsg(receviedMsg)) {
+    if (!IsSupportSessionV2() || IsV1SessionMsg(receviedMsg)) {
         return ProcV1Session(impl, receviedMsg, isFinish);
     } else {
         return ProcV2Session(impl, receviedMsg, isFinish);
