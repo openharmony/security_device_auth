@@ -15,7 +15,7 @@
 
 #include "hc_parcel.h"
 #include "securec.h"
-#include "clib_types.h"
+#include "hc_types.h"
 
 const int PARCEL_DEFAULT_INCREASE_STEP = 16;
 const uint32_t PARCEL_UINT_MAX = 0xffffffffU;
@@ -29,7 +29,7 @@ HcParcel CreateParcel(uint32_t size, uint32_t allocUnit)
         parcel.allocUnit = PARCEL_DEFAULT_INCREASE_STEP;
     }
     if (size > 0) {
-        parcel.data = (char *)ClibMalloc(size, 0);
+        parcel.data = (char *)HcMalloc(size, 0);
         if (parcel.data != NULL) {
             parcel.length = size;
         }
@@ -44,7 +44,7 @@ void DeleteParcel(HcParcel *parcel)
     }
 
     if (parcel->data != NULL) {
-        ClibFree(parcel->data);
+        HcFree(parcel->data);
         parcel->data = 0;
     }
     parcel->length = 0;
@@ -172,18 +172,18 @@ HcBool ParcelReadRevert(HcParcel *parcel, void *dst, uint32_t dataSize)
 HcBool ParcelWriteRevert(HcParcel *parcel, const void *src, uint32_t dataSize)
 {
     errno_t rc;
-    void *srcCopy = ClibMalloc(dataSize, 0);
+    void *srcCopy = HcMalloc(dataSize, 0);
     if (srcCopy == NULL) {
         return HC_FALSE;
     }
     rc = memmove_s(srcCopy, dataSize, src, dataSize);
     if (rc != EOK) {
-        ClibFree(srcCopy);
+        HcFree(srcCopy);
         return HC_FALSE;
     }
     DataRevert(srcCopy, dataSize);
     HcBool ret = ParcelWrite(parcel, srcCopy, dataSize);
-    ClibFree(srcCopy);
+    HcFree(srcCopy);
     return ret;
 }
 
@@ -232,15 +232,15 @@ static HcBool ParcelRealloc(HcParcel *parcel, uint32_t size)
     if (parcel->length >= size) {
         return HC_FALSE;
     }
-    char *newData = (char *)ClibMalloc(size, 0);
+    char *newData = (char *)HcMalloc(size, 0);
     if (newData == NULL) {
         return HC_FALSE;
     }
     if (memcpy_s(newData, size, parcel->data, parcel->length) != EOK) {
-        ClibFree(newData);
+        HcFree(newData);
         return HC_FALSE;
     }
-    ClibFree(parcel->data);
+    HcFree(parcel->data);
     parcel->data = newData;
     parcel->length = size;
     return HC_TRUE;

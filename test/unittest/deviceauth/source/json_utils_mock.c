@@ -17,9 +17,9 @@
 #include "json_utils.h"
 #include <inttypes.h>
 #include <string.h>
-#include "securec.h"
 #include "clib_error.h"
-#include "clib_types.h"
+#include "hc_types.h"
+#include "securec.h"
 #include "string_util.h"
 
 #define RECURSE_FLAG_TRUE 1
@@ -479,23 +479,23 @@ int32_t AddByteToJson(CJson *jsonObj, const char *key, const uint8_t *byte, uint
     }
 
     uint32_t hexLen = len * BYTE_TO_HEX_OPER_LENGTH + 1;
-    char *hexStr = (char *)ClibMalloc(hexLen, 0);
+    char *hexStr = (char *)HcMalloc(hexLen, 0);
     if (hexStr == NULL) {
         return CLIB_ERR_BAD_ALLOC;
     }
     int32_t ret = ByteToHexString(byte, len, hexStr, hexLen);
     if (ret != CLIB_SUCCESS) {
-        ClibFree(hexStr);
+        HcFree(hexStr);
         return ret;
     }
 
     ret = AddStringToJson(jsonObj, key, hexStr);
     if (ret != CLIB_SUCCESS) {
-        ClibFree(hexStr);
+        HcFree(hexStr);
         return ret;
     }
 
-    ClibFree(hexStr);
+    HcFree(hexStr);
     return CLIB_SUCCESS;
 }
 

@@ -171,7 +171,7 @@ static int OnChannelOpenedCb(int sessionId, int result)
         CloseDevSession(requestId);
         return HC_ERR_SOFT_BUS;
     }
-    LOGI("[Start]: OnChannelOpened! [ReqId]: %" PRId64 ", [ChannelId]: %d", requestId, sessionId);
+    LOGI("[Start]: OnChannelOpened! [ChannelId]: %d, [ReqId]: %" PRId64, sessionId, requestId);
     SoftBusTask *task = (SoftBusTask *)HcMalloc(sizeof(SoftBusTask), 0);
     if (task == NULL) {
         LOGE("Failed to allocate task memory!");

@@ -17,7 +17,7 @@
 
 #include "securec.h"
 #include "clib_error.h"
-#include "clib_types.h"
+#include "hc_types.h"
 
 int32_t InitUint8Buff(Uint8Buff *buff, uint32_t buffLen)
 {
@@ -27,7 +27,7 @@ int32_t InitUint8Buff(Uint8Buff *buff, uint32_t buffLen)
     if (buffLen == 0) {
         return CLIB_ERR_INVALID_LEN;
     }
-    buff->val = (uint8_t *)ClibMalloc(buffLen, 0);
+    buff->val = (uint8_t *)HcMalloc(buffLen, 0);
     if (buff->val == NULL) {
         return CLIB_ERR_BAD_ALLOC;
     }
@@ -43,7 +43,7 @@ int32_t DeepCopyUint8Buff(const Uint8Buff *buff, Uint8Buff *newBuff)
     if (buff->length == 0) {
         return CLIB_ERR_INVALID_LEN;
     }
-    uint8_t *val = (uint8_t *)ClibMalloc(buff->length, 0);
+    uint8_t *val = (uint8_t *)HcMalloc(buff->length, 0);
     if (val == NULL) {
         return CLIB_ERR_BAD_ALLOC;
     }
@@ -58,7 +58,7 @@ void FreeUint8Buff(Uint8Buff *buff)
     if (buff == NULL || buff->val == NULL || buff->length == 0) {
         return;
     }
-    ClibFree(buff->val);
+    HcFree(buff->val);
     buff->val = NULL;
     buff->length = 0;
 }
@@ -69,7 +69,7 @@ void ClearFreeUint8Buff(Uint8Buff *buff)
         return;
     }
     (void)memset_s(buff->val, buff->length, 0, buff->length);
-    ClibFree(buff->val);
+    HcFree(buff->val);
     buff->val = NULL;
     buff->length = 0;
 }

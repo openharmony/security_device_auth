@@ -17,7 +17,6 @@
 
 #include "alg_defs.h"
 #include "alg_loader.h"
-#include "clib_types.h"
 #include "common_defs.h"
 #include "device_auth_defines.h"
 #include "hc_dev_info.h"

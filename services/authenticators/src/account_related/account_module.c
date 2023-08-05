@@ -18,8 +18,6 @@
 #include "account_multi_task_manager.h"
 #include "account_version_util.h"
 #include "alg_loader.h"
-#include "clib_error.h"
-#include "clib_types.h"
 #include "common_defs.h"
 #include "device_auth_defines.h"
 #include "hc_log.h"
@@ -37,7 +35,7 @@ typedef struct {
 static bool IsAccountMsgNeedIgnore(const CJson *in)
 {
     int32_t opCode;
-    if (GetIntFromJson(in, FIELD_OPERATION_CODE, &opCode) != CLIB_SUCCESS) {
+    if (GetIntFromJson(in, FIELD_OPERATION_CODE, &opCode) != HC_SUCCESS) {
         LOGE("Get opCode failed.");
         return true;
     }
@@ -51,7 +49,7 @@ static bool IsAccountMsgNeedIgnore(const CJson *in)
         return true;
     }
     uint32_t message;
-    if (GetIntFromJson(in, key, (int32_t *)&message) == CLIB_SUCCESS) {
+    if (GetIntFromJson(in, key, (int32_t *)&message) == HC_SUCCESS) {
         if ((message & ACCOUNT_CLIENT_STEP_MASK) != ACCOUNT_CLIENT_FIRST_MESSAGE) {
             LOGI("The message is repeated, ignore it, code: %u", message);
             return true;

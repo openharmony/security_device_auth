@@ -52,16 +52,6 @@ void CommonLibTest::TearDownTestCase() {}
 void CommonLibTest::SetUp() {}
 void CommonLibTest::TearDown() {}
 
-HWTEST_F(CommonLibTest, ClibTypesTest001, TestSize.Level0)
-{
-    char *data01 = static_cast<char *>(ClibMalloc(TEST_INVALID_BUFFER_SIZE, 0));
-    EXPECT_EQ(data01, nullptr);
-    char *data02 = static_cast<char *>(ClibMalloc(TEST_BUFFER_SIZE, 0));
-    EXPECT_NE(data02, nullptr);
-    ClibFree(data01);
-    ClibFree(data02);
-}
-
 HWTEST_F(CommonLibTest, HcParcelCreateTest001, TestSize.Level0)
 {
     HcParcel parcelNullData = CreateParcel(TEST_INVALID_BUFFER_SIZE, PARCEL_DEFAULT_ALLOC_UNIT);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,14 @@
 #include <string.h>
 #include <stdbool.h>
 #include "securec.h"
+
+typedef uint32_t HcBool;
+#define HC_TRUE 1
+#define HC_FALSE 0
+
+#ifndef NULL
+#define NULL 0
+#endif
 
 #ifdef __cplusplus
 extern "C" {

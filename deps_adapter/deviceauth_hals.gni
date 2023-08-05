@@ -39,7 +39,6 @@ if (target_os == "liteos" ||
 }
 
 hal_common_files = [
-  "${common_lib_path}/impl/src/clib_types.c",
   "${common_lib_path}/impl/src/hc_parcel.c",
   "${common_lib_path}/impl/src/hc_string.c",
   "${common_lib_path}/impl/src/hc_string_vector.c",
