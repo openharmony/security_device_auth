@@ -17,7 +17,7 @@
 #define HC_PARCEL_H
 
 #include <stdint.h>
-#include "clib_types.h"
+#include "hc_types.h"
 
 #ifdef __cplusplus
 extern "C" {

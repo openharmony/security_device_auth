@@ -14,7 +14,6 @@
  */
 
 #include "memory_mock.h"
-#include "clib_types.h"
 #include "hc_types.h"
 
 #include <securec.h>

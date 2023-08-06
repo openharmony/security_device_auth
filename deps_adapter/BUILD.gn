@@ -53,6 +53,7 @@ if (defined(ohos_lite)) {
         cflags += [
           "--diag_suppress",
           "Pe223,Pe226",
+          "-DOHOS_MEM",
         ]
       }
       deps = [

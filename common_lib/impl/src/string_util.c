@@ -20,7 +20,7 @@
 #include <string.h>
 #include "securec.h"
 #include "clib_error.h"
-#include "clib_types.h"
+#include "hc_types.h"
 
 #define OUT_OF_HEX 16
 #define NUMBER_9_IN_DECIMAL 9
@@ -215,7 +215,7 @@ int32_t ToUpperCase(const char *oriStr, char **desStr)
         return CLIB_ERR_NULL_PTR;
     }
     uint32_t len = strlen(oriStr);
-    *desStr = ClibMalloc(len + 1, 0);
+    *desStr = HcMalloc(len + 1, 0);
     if (*desStr == NULL) {
         return CLIB_ERR_BAD_ALLOC;
     }
@@ -238,7 +238,7 @@ int32_t DeepCopyString(const char *str, char **newStr)
     if (len == 0) {
         return CLIB_ERR_INVALID_LEN;
     }
-    char *val = (char *)ClibMalloc(len + 1, 0);
+    char *val = (char *)HcMalloc(len + 1, 0);
     if (val == NULL) {
         return CLIB_ERR_BAD_ALLOC;
     }

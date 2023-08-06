@@ -97,7 +97,7 @@ static int32_t AddCallbackIfNotExist(const char *appId, const DeviceAuthCallback
 bool ProcessTransmitCallback(int64_t reqId, const uint8_t *data, uint32_t dataLen, const DeviceAuthCallback *callback)
 {
     if ((callback != NULL) && (callback->onTransmit != NULL)) {
-        LOGI("[Service][In]: ProcessTransmitCallback! [ReqId]: %" PRId64 ", [DataLen]: %u", reqId, dataLen);
+        LOGI("[Service][In]: ProcessTransmitCallback! [DataLen]: %u, [ReqId]: %" PRId64, dataLen, reqId);
         bool res = callback->onTransmit(reqId, data, dataLen);
         LOGI("[Service][Out]: ProcessTransmitCallback!");
         return res;
@@ -115,7 +115,7 @@ void ProcessSessionKeyCallback(int64_t reqId, const uint8_t *sessionKey, uint32_
         LOGI("[Service][Out]: ProcessSessionKeyCallback!");
         return;
     }
-    LOGE("[OnSessionKeyReturned]: Currently, the service callback is NULL! [reqId]: %" PRId64, reqId);
+    LOGE("[OnSessionKeyReturned]: Currently, the service callback is NULL! [ReqId]: %" PRId64, reqId);
 }
 
 void ProcessFinishCallback(int64_t reqId, int operationCode, const char *returnData,
@@ -127,7 +127,7 @@ void ProcessFinishCallback(int64_t reqId, int operationCode, const char *returnD
         LOGI("[Service][Out]: ProcessFinishCallback!");
         return;
     }
-    LOGE("[OnFinish]: Currently, the service callback is NULL! [reqId]: %" PRId64, reqId);
+    LOGE("[OnFinish]: Currently, the service callback is NULL! [ReqId]: %" PRId64, reqId);
 }
 
 void ProcessErrorCallback(int64_t reqId, int operationCode, int errorCode, const char *errorReturn,
@@ -139,7 +139,7 @@ void ProcessErrorCallback(int64_t reqId, int operationCode, int errorCode, const
         LOGI("[Service][Out]: ProcessErrorCallback!");
         return;
     }
-    LOGE("[OnError]: Currently, the service callback is NULL! [reqId]: %" PRId64, reqId);
+    LOGE("[OnError]: Currently, the service callback is NULL! [ReqId]: %" PRId64, reqId);
 }
 
 char *ProcessRequestCallback(int64_t reqId, int operationCode, const char *reqParams,
@@ -151,7 +151,7 @@ char *ProcessRequestCallback(int64_t reqId, int operationCode, const char *reqPa
         LOGI("[Service][Out]: ProcessRequestCallback!");
         return returnData;
     }
-    LOGE("[OnRequest]: Currently, the service callback is NULL! [reqId]: %" PRId64, reqId);
+    LOGE("[OnRequest]: Currently, the service callback is NULL! [ReqId]: %" PRId64, reqId);
     return NULL;
 }
 

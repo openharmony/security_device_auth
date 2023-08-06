@@ -60,8 +60,8 @@ static void RemoveTimeoutSession(void)
             continue;
         }
         DevSession *session = sessionInfo->session;
-        LOGI("session timeout. [Id]: %" PRId64 ", [AppId]: %s, [RunningTime(/s)]: %" PRId64 ", [TimeLimit(/s)]: %d",
-            session->id, session->appId, runningTime, TIME_OUT_VALUE);
+        LOGI("session timeout. [AppId]: %s, [Id]: %" PRId64, session->appId, session->id);
+        LOGI("session timeout. [TimeLimit(/s)]: %d, [RunningTime(/s)]: %" PRId64, TIME_OUT_VALUE, runningTime);
         ProcessErrorCallback(session->id, session->opCode, HC_ERR_TIME_OUT, NULL, &session->callback);
         session->destroy(session);
         g_sessionInfoList.eraseElement(&(g_sessionInfoList), sessionInfo, index);
@@ -146,7 +146,7 @@ int32_t OpenDevSession(int64_t sessionId, const char *appId, SessionInitParams *
     DevSession *session;
     res = CreateDevSession(sessionId, appId, params, &session);
     if (res != HC_SUCCESS) {
-        LOGE("create session fail. [Id]: %" PRId64 ", [AppId]: %s", sessionId, appId);
+        LOGE("create session fail. [AppId]: %s, [Id]: %" PRId64, appId, sessionId);
         g_sessionMutex.unlock(&g_sessionMutex);
         return res;
     }
@@ -156,8 +156,8 @@ int32_t OpenDevSession(int64_t sessionId, const char *appId, SessionInitParams *
         g_sessionMutex.unlock(&g_sessionMutex);
         return res;
     }
-    LOGI("create session success. [Id]: %" PRId64 " [AppId]: %s, [CurNum]: %u",
-        sessionId, appId, HC_VECTOR_SIZE(&g_sessionInfoList));
+    LOGI("create session success. [AppId]: %s, [CurNum]: %u, [Id]: %" PRId64,
+        appId, HC_VECTOR_SIZE(&g_sessionInfoList), sessionId);
     g_sessionMutex.unlock(&g_sessionMutex);
     return HC_SUCCESS;
 }
@@ -211,8 +211,7 @@ void CloseDevSession(int64_t sessionId)
         if (session->id == sessionId) {
             session->destroy(session);
             HC_VECTOR_POPELEMENT(&g_sessionInfoList, ptr, index);
-            LOGI("close session success. [Id]: %" PRId64 ", [CurNum]: %u",
-                sessionId, HC_VECTOR_SIZE(&g_sessionInfoList));
+            LOGI("close session success. [CurNum]: %u, [Id]: %" PRId64, HC_VECTOR_SIZE(&g_sessionInfoList), sessionId);
             g_sessionMutex.unlock(&g_sessionMutex);
             return;
         }
@@ -236,8 +235,7 @@ void CancelDevSession(int64_t sessionId, const char *appId)
         if (session->id == sessionId && strcmp(session->appId, appId) == 0) {
             session->destroy(session);
             HC_VECTOR_POPELEMENT(&g_sessionInfoList, ptr, index);
-            LOGI("cancel session success. [Id]: %" PRId64 ", [CurNum]: %u",
-                sessionId, HC_VECTOR_SIZE(&g_sessionInfoList));
+            LOGI("cancel session success. [CurNum]: %u, [Id]: %" PRId64, HC_VECTOR_SIZE(&g_sessionInfoList), sessionId);
             g_sessionMutex.unlock(&g_sessionMutex);
             return;
         }

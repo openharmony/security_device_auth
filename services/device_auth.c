@@ -497,7 +497,7 @@ static int32_t AddMemberToGroup(int32_t osAccountId, int64_t requestId, const ch
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    LOGI("[Start]: AddMemberToGroup! [AppId]: %s, [RequestId]: %" PRId64, appId, requestId);
+    LOGI("[Start]: AddMemberToGroup! [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
     DEV_AUTH_REPORT_CALL_EVENT(ADD_MEMBER_EVENT, osAccountId, requestId, appId);
     const DeviceAuthCallback *callback = GetGMCallbackByAppId(appId);
     if (callback == NULL) {
@@ -722,7 +722,7 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
 {
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(authReqId);
-    LOGI("Begin AuthDevice. [requestId]:%" PRId64, authReqId);
+    LOGI("Begin AuthDevice. [ReqId]:%" PRId64, authReqId);
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((authParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT) || (gaCallback == NULL)) {
         LOGE("The input auth params is invalid!");
@@ -867,7 +867,7 @@ static int32_t ProcessData(int64_t authReqId, const uint8_t *data, uint32_t data
 {
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(authReqId);
-    LOGI("[GA] Begin ProcessData. [requestId]: %" PRId64, authReqId);
+    LOGI("[GA] Begin ProcessData. [DataLen]: %u, [ReqId]: %" PRId64, dataLen, authReqId);
     if ((data == NULL) || (dataLen > MAX_DATA_BUFFER_SIZE)) {
         LOGE("Invalid input for ProcessData!");
         return HC_ERR_INVALID_PARAMS;
@@ -901,7 +901,7 @@ static void CancelRequest(int64_t requestId, const char *appId)
         LOGE("Invalid app id!");
         return;
     }
-    LOGI("cancel request. [ReqId]: %" PRId64 ", [AppId]: %s", requestId, appId);
+    LOGI("cancel request. [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
     CancelDevSession(requestId, appId);
 }
 
