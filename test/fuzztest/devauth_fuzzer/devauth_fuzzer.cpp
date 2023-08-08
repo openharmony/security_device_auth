@@ -60,7 +60,6 @@ static void NativeTokenSet(const char *procName)
 
 bool FuzzDoRegCallback(const uint8_t* data, size_t size)
 {
-    NativeTokenSet("device_manager");
     (void)InitDeviceAuthService();
     (void)MainRescInit();
     ServiceDevAuth *serviceObj = new(std::nothrow) ServiceDevAuth();
@@ -71,6 +70,13 @@ bool FuzzDoRegCallback(const uint8_t* data, size_t size)
     uintptr_t serviceCtx = reinterpret_cast<uintptr_t>(serviceObj);
     (void)AddMethodMap(serviceCtx);
     for (int32_t i = IPC_CALL_ID_REG_CB; i <= IPC_CALL_ID_GET_PSEUDONYM_ID; i++) {
+        if (i == IPC_CALL_ID_AUTH_DEVICE || i == IPC_CALL_ID_GA_PROC_DATA || i == IPC_CALL_GA_CANCEL_REQUEST) {
+            NativeTokenSet("softbus_server");
+        } else if (i == IPC_CALL_ID_GET_PK_INFO_LIST) {
+            NativeTokenSet("dslm_service");
+        } else {
+            NativeTokenSet("device_manager");
+        }
         MessageParcel datas;
         datas.WriteInterfaceToken(DEV_AUTH_SERVICE_INTERFACE_TOKEN);
         datas.WriteInt32(i);
