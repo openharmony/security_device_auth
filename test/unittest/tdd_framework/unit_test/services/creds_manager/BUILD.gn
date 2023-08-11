@@ -36,6 +36,7 @@ ohos_unittest("creds_manager_test") {
   sources -= soft_bus_channel_files
   sources += soft_bus_channel_mock_files
   sources += [
+    "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter.c",
     "${key_management_adapter_path}/impl/src/standard/mbedtls_ec_adapter.c",

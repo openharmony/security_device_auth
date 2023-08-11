@@ -29,6 +29,7 @@ int32_t ExcuteCredMgrCmd(int32_t osAccountId, int32_t cmdId, const CJson *in, CJ
 int32_t CreateAuthSession(int32_t *sessionId, const CJson *in, CJson *out);
 int32_t ProcessAuthSession(int32_t *sessionId, const CJson *in, CJson *out, int32_t *status);
 void DestoryAccountAuthPlugin(void);
+int32_t HasAccountAuthPlugin(void);
 
 #ifdef __cplusplus
 }

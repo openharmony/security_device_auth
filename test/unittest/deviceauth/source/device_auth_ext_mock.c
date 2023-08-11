@@ -39,12 +39,12 @@ ExtPluginNode *CreateNode(int32_t plugType)
 {
     LOGI("CreateNode");
     ExtPluginNode *node = (ExtPluginNode *)HcMalloc(sizeof(ExtPluginNode), 0);
-    if (node == NULL) {
+    if (node == NULL || node->plugin == NULL) {
         return NULL;
     }
-    node->plugin.pluginType = plugType;
-    node->plugin.init = InitPlugin;
-    node->plugin.destroy = DestroyPlugin;
+    node->plugin->pluginType = plugType;
+    node->plugin->init = InitPlugin;
+    node->plugin->destroy = DestroyPlugin;
     node->next = NULL;
     return node;
 }

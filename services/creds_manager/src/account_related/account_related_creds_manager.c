@@ -15,9 +15,11 @@
 
 #include "account_related_creds_manager.h"
 
+#include "account_auth_plugin_proxy.h"
 #include "account_related_group_auth.h"
 #include "alg_loader.h"
 #include "asy_token_manager.h"
+#include "creds_manager.h"
 #include "creds_operation_utils.h"
 #include "data_manager.h"
 #include "group_auth_data_operation.h"
@@ -26,6 +28,8 @@
 #include "hc_types.h"
 #include "pseudonym_manager.h"
 #include "sym_token_manager.h"
+
+#define FIELD_SHARED_SECRET "sharedSecret"
 
 static TrustedGroupEntry *GetSelfGroupEntryByPeerCert(int32_t osAccountId, const CertInfo *certInfo)
 {
@@ -230,7 +234,7 @@ static int32_t GetCertInfo(int32_t osAccountId, const char *userId, const char *
         LOGE("Failed to generate cert info!");
         return ret;
     }
-    certInfo->signAlg = GetAccountAuthTokenManager()->getAlgVersion(osAccountId, userId, authId);
+    certInfo->signAlg = P256;
     return HC_SUCCESS;
 }
 
@@ -480,11 +484,55 @@ int32_t GetAccountRelatedCredInfo(int32_t osAccountId, const char *groupId, cons
     }
 }
 
+static int32_t GetSharedSecretByPeerCertFromPlugin(int32_t osAccountId, const CertInfo *peerCertInfo,
+    Uint8Buff *sharedSecret)
+{
+    CJson *input = CreateJson();
+    if (input == NULL) {
+        LOGE("Create input params json failed!");
+        return HC_ERR_JSON_CREATE;
+    }
+    CJson *output = CreateJson();
+    if (output == NULL) {
+        LOGE("Create output results json failed!");
+        FreeJson(input);
+        return HC_ERR_JSON_CREATE;
+    }
+    int32_t res;
+    GOTO_ERR_AND_SET_RET(AddCertInfoToJson(peerCertInfo, input), res);
+    GOTO_ERR_AND_SET_RET(ExcuteCredMgrCmd(osAccountId, GET_SHARED_SECRET_BY_PEER_CERT, input, output), res);
+    res = HC_ERR_JSON_GET;
+    const char *sharedKeyAlias = GetStringFromJson(output, FIELD_SHARED_SECRET);
+    if (sharedKeyAlias == NULL) {
+        LOGE("Get alias failed!");
+        goto ERR;
+    }
+    uint32_t sharedKeyAliasLen = HcStrlen(sharedKeyAlias) + 1;
+    uint8_t *aliasVal = (uint8_t *)HcMalloc(sharedKeyAliasLen, 0);
+    GOTO_IF_CHECK_NULL(aliasVal, FIELD_SHARED_SECRET);
+    if (memcpy_s(aliasVal, sharedKeyAliasLen, sharedKeyAlias, sharedKeyAliasLen) != EOK) {
+        LOGE("parse output result set memcpy alias failed!");
+        HcFree(aliasVal);
+        aliasVal = NULL;
+        goto ERR;
+    }
+    sharedSecret->val = aliasVal;
+    sharedSecret->length = sharedKeyAliasLen;
+    res = HC_SUCCESS;
+ERR:
+    FreeJson(input);
+    FreeJson(output);
+    return res;
+}
+
 int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
 {
     if (peerCertInfo == NULL || sharedSecret == NULL) {
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
+    }
+    if (HasAccountAuthPlugin() == HC_SUCCESS) {
+        return GetSharedSecretByPeerCertFromPlugin(osAccountId, peerCertInfo, sharedSecret);
     }
     TrustedDeviceEntry *deviceEntry = CreateDeviceEntry();
     if (deviceEntry == NULL) {

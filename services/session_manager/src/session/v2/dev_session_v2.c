@@ -44,7 +44,6 @@
 #define FIELD_VR "vr"
 #define FIELD_INDEX "index"
 #define FIELD_TOTAL "total"
-#define FIELD_SIGN_ALG "signAlg"
 #define FIELD_CRED_URL "credUrl"
 #define FIELD_PROTOCOL "protocol"
 #define FIELD_CMDS "cmds"

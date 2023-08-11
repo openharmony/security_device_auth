@@ -86,6 +86,7 @@
 #define FIELD_PAYLOAD "payload"
 #define FIELD_PIN_CODE "pinCode"
 #define FIELD_PUBLIC_KEY "publicKey"
+#define FIELD_SIGN_ALG "signAlg"
 #define FIELD_PK_INFO "pkInfo"
 #define FIELD_REAL_INFO "realInfo"
 #define FIELD_PSEUDONYM_ID "pseudonymId"
@@ -257,6 +258,7 @@ typedef enum {
     DELETE_TRUSTED_CREDENTIALS = 4,
     QUERY_TRUSTED_CREDENTIALS = 5,
     REQUEST_SIGNATURE = 6,
+    GET_SHARED_SECRET_BY_PEER_CERT = 8,
 } CredentialCode;
 
 #endif
