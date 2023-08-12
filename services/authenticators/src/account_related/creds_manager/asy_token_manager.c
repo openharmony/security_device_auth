@@ -14,7 +14,10 @@
  */
 
 #include "asy_token_manager.h"
+
+#include "account_auth_plugin_proxy.h"
 #include "account_module_defines.h"
+#include "account_related_cred_plugin.h"
 #include "alg_loader.h"
 #include "common_defs.h"
 #include "hc_dev_info.h"
@@ -727,11 +730,42 @@ static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, const c
     return HC_SUCCESS;
 }
 
+static int32_t GetTokenFromPlugin(int32_t osAccountId, AccountToken *token, const char *userId, const char *deviceId)
+{
+    CJson *input = CreateJson();
+    if (input == NULL) {
+        LOGE("Create input params json failed!");
+        return HC_ERR_JSON_CREATE;
+    }
+    CJson *output = CreateJson();
+    if (output == NULL) {
+        LOGE("Create output results json failed!");
+        FreeJson(input);
+        return HC_ERR_JSON_CREATE;
+    }
+    int32_t res = HC_ERR_JSON_ADD;
+    if (AddStringToJson(input, FIELD_USER_ID, userId) != HC_SUCCESS) {
+        goto ERR;
+    }
+    if (AddStringToJson(input, FIELD_DEVICE_ID, deviceId) != HC_SUCCESS) {
+        goto ERR;
+    }
+    GOTO_ERR_AND_SET_RET(ExcuteCredMgrCmd(osAccountId, QUERY_SELF_CREDENTIAL_INFO, input, output), res);
+    GOTO_ERR_AND_SET_RET(GenerateTokenFromJson(output, token), res);
+ERR:
+    FreeJson(input);
+    FreeJson(output);
+    return res;
+}
+
 static int32_t GetToken(int32_t osAccountId, AccountToken *token, const char *userId, const char *deviceId)
 {
     if ((token == NULL) || (userId == NULL) || (deviceId == NULL)) {
         LOGE("Invalid input params");
         return HC_ERR_NULL_PTR;
+    }
+    if (HasAccountAuthPlugin() == HC_SUCCESS) {
+        return GetTokenFromPlugin(osAccountId, token, userId, deviceId);
     }
     AccountToken *existToken = GetAccountToken(osAccountId, userId, deviceId);
     if (existToken == NULL) {

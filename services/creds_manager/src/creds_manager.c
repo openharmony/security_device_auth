@@ -719,6 +719,28 @@ static int32_t GetCredInfosForGroups(const CJson *in, IdentityInfoVec *identityI
     return ret;
 }
 
+int32_t AddCertInfoToJson(const CertInfo *certInfo, CJson *out)
+{
+    if (certInfo == NULL || out == NULL) {
+        LOGE("Invalid cert info or out!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    if (AddIntToJson(out, FIELD_SIGN_ALG, certInfo->signAlg) != HC_SUCCESS) {
+        LOGE("add sign alg to json failed!");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(out, FIELD_PK_INFO, (const char *)certInfo->pkInfoStr.val) != HC_SUCCESS) {
+        LOGE("add pk info str to json failed!");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddByteToJson(out, FIELD_PK_INFO_SIGNATURE, certInfo->pkInfoSignature.val,
+        certInfo->pkInfoSignature.length) != HC_SUCCESS) {
+        LOGE("add pk info sign to json failed!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *identityInfoVec)
 {
     if (in == NULL || identityInfoVec == NULL) {

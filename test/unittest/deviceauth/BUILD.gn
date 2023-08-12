@@ -88,6 +88,7 @@ ohos_unittest("deviceauth_llt") {
   ]
 
   sources += [
+    "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c",
     "source/creds_manager_test.cpp",
     "source/device_auth_ext_mock.c",
     "source/deviceauth_standard_test.cpp",
@@ -206,6 +207,7 @@ ohos_unittest("device_auth_func_test") {
   ]
 
   sources += [
+    "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c",
     "source/creds_manager_test.cpp",
     "source/device_auth_ext_mock.c",
     "source/deviceauth_standard_test.cpp",
@@ -334,6 +336,7 @@ ohos_unittest("deviceauth_unit_test") {
   ]
 
   sources += [
+    "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c",
     "source/os_account_adapter_mock.c",
     "source/protocol_task_main_mock.c",
     "unit_test/source/account_related_creds_manager_dir_test.cpp",

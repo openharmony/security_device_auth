@@ -15,6 +15,7 @@
 
 #include "account_related_cred_plugin.h"
 
+#include "account_auth_plugin_proxy.h"
 #include "asy_token_manager.h"
 #include "hc_log.h"
 #include "sym_token_manager.h"
@@ -79,6 +80,9 @@ static int32_t ProcessSymTokens(int32_t osAccountId, int32_t cmdId, CJson *in, C
 
 static int32_t ProcessAccountCredentials(int32_t osAccountId, int32_t cmdId, CJson *in, CJson *out)
 {
+    if (HasAccountAuthPlugin() == HC_SUCCESS) {
+        return ExcuteCredMgrCmd(osAccountId, cmdId, in, out);
+    }
     if (in == NULL) {
         LOGE("The input param: in is null.");
         return HC_ERR_NULL_PTR;

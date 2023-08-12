@@ -29,15 +29,19 @@ static int32_t ParsePlugins(const ExtPartProxy *pluginProxy)
     ExtPluginList pluginList = pluginProxy->getPluginListFunc(g_extPart);
     ExtPluginNode *current =  pluginList;
     while (current != NULL) {
-        switch (current->plugin.pluginType) {
+        if (current->plugin == NULL) {
+            current = current->next;
+            continue;
+        }
+        switch (current->plugin->pluginType) {
             case EXT_PLUGIN_ACCT_LIFECYCLE:
-                SetAccountLifecyclePlugin(NULL, (AccountLifecyleExtPlug *)(&current->plugin));
+                SetAccountLifecyclePlugin(NULL, (AccountLifecyleExtPlug *)(current->plugin));
                 break;
             case EXT_PLUGIN_ACCT_AUTH:
-                SetAccountAuthPlugin(NULL, (AccountAuthExtPlug *)(&current->plugin));
+                SetAccountAuthPlugin(NULL, (AccountAuthExtPlug *)(current->plugin));
                 break;
             default:
-                LOGW("Invalid plugin type %d", current->plugin.pluginType);
+                LOGW("Invalid plugin type %d", current->plugin->pluginType);
                 break;
         }
         current = current->next;

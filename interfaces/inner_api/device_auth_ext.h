@@ -49,7 +49,7 @@ typedef struct ExtPlugin {
  */
 typedef struct ExtPluginNode {
     /** The element of list, denote the plugin. */
-    ExtPlugin plugin;
+    ExtPlugin *plugin;
     /** The next node of list. */
     struct ExtPluginNode *next;
 } ExtPluginNode, *ExtPluginList;
@@ -68,6 +68,9 @@ typedef struct ExtPart {
 typedef struct ExtWorkerTask {
     /** The function of task, this can execute time-consuming function. */
     void (*execute)(struct ExtWorkerTask *task);
+
+    /** The deinit of task, this can destroy the task. */
+    void (*destroy)(struct ExtWorkerTask *task);
 } ExtWorkerTask;
 
 /**

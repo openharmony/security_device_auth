@@ -88,3 +88,12 @@ void DestoryAccountAuthPlugin(void)
         g_accountAuthPlugCtx = NULL;
     }
 }
+
+int32_t HasAccountAuthPlugin(void)
+{
+    if (g_accountAuthPlugin == NULL || g_accountAuthPlugin->excuteCredMgrCmd == NULL) {
+        LOGI("[ACCOUNT_AUTH_PLUGIN]: processSession: plugin is invalid.");
+        return HC_ERR_NOT_SUPPORT;
+    }
+    return HC_SUCCESS;
+}

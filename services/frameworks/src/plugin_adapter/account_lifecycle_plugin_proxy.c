@@ -17,9 +17,80 @@
 #include "device_auth_defines.h"
 #include "hc_log.h"
 #include "hc_types.h"
+#include "task_manager.h"
 
 static AccountLifecyleExtPlug *g_accountLifeCyclePlugin = NULL;
 static AccountLifecyleExtPlugCtx *g_accountPluginCtx = NULL;
+
+typedef struct {
+    HcTaskBase base;
+    ExtWorkerTask *extTask;
+} WorkerTask;
+
+static void DoWorkerTask(HcTaskBase *task)
+{
+    LOGD("[ACCOUNT_LIFE_PLUGIN]: Do worker task begin.");
+    if (task == NULL) {
+        LOGE("[ACCOUNT_LIFE_PLUGIN]: The input task is NULL, cannot do task!");
+        return;
+    }
+    WorkerTask *workerTask = (WorkerTask *)task;
+    if (workerTask->extTask == NULL) {
+        LOGE("[ACCOUNT_LIFE_PLUGIN]: The inner task is NULL, cannot do task!");
+        return;
+    }
+    if (workerTask->extTask->execute == NULL) {
+        LOGE("[ACCOUNT_LIFE_PLUGIN]: The ext func is NULL, cannot do task!");
+        return;
+    }
+    workerTask->extTask->execute(workerTask->extTask);
+    LOGD("[ACCOUNT_LIFE_PLUGIN]: Do worker task end.");
+}
+
+static void DestroyExtWorkerTask(ExtWorkerTask *task)
+{
+    if (task == NULL || task->destroy == NULL) {
+        LOGI("[ACCOUNT_LIFE_PLUGIN]: The destroy func is NULL, cannot destroy task!");
+        return;
+    }
+    task->destroy(task);
+}
+
+static void DestroyWorkerTask(HcTaskBase *workerTask)
+{
+    LOGD("[ACCOUNT_LIFE_PLUGIN]: Destroy worker task begin.");
+    if (workerTask == NULL) {
+        LOGE("[ACCOUNT_LIFE_PLUGIN]: The inner task is NULL, cannot do task!");
+        return;
+    }
+    DestroyExtWorkerTask(((WorkerTask *)workerTask)->extTask);
+    LOGD("[ACCOUNT_LIFE_PLUGIN]: Destroy worker task end.");
+}
+
+static int32_t ExecuteWorkerTask(struct ExtWorkerTask *extTask)
+{
+    if (extTask == NULL) {
+        LOGE("[ACCOUNT_LIFE_PLUGIN]: The input task is NULL.");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    WorkerTask *baseTask = (WorkerTask *)HcMalloc(sizeof(WorkerTask), 0);
+    if (baseTask == NULL) {
+        LOGE("[ACCOUNT_LIFE_PLUGIN]: Failed to allocate task memory!");
+        DestroyExtWorkerTask(extTask);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    baseTask->extTask = extTask;
+    baseTask->base.doAction = DoWorkerTask;
+    baseTask->base.destroy = DestroyWorkerTask;
+    if (PushTask((HcTaskBase *)baseTask) != HC_SUCCESS) {
+        LOGE("[ACCOUNT_LIFE_PLUGIN]: Push worker task fail.");
+        DestroyExtWorkerTask(extTask);
+        HcFree(baseTask);
+        return HC_ERR_INIT_TASK_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
 
 static int32_t InitAccountLifecyclePluginCtx(void)
 {
@@ -41,6 +112,7 @@ static int32_t InitAccountLifecyclePluginCtx(void)
     g_accountPluginCtx->getRegisterInfo = gmInstace->getRegisterInfo;
     g_accountPluginCtx->regCallback = gmInstace->regCallback;
     g_accountPluginCtx->unRegCallback = gmInstace->unRegCallback;
+    g_accountPluginCtx->executeWorkerTask = ExecuteWorkerTask;
     return HC_SUCCESS;
 }
 
