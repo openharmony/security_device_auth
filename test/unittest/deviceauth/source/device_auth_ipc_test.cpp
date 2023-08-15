@@ -46,11 +46,11 @@ namespace {
 #define TEST_UDID_CLIENT "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930"
 #define TEST_UDID_SERVER "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C"
 #define TEST_USER_ID_AUTH "4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4"
-#define TEST_USER_ID "1234ABCD"
+#define TEST_USER_ID "4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4"
 #define TEST_USER_ID2 "DCBA4321"
 #define TEST_GROUP_ID "E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21"
 #define TEST_GROUP_ID2 "F2AA208B1E010542B20A34B03B4B6289EA7C7F6DFE97DA2E370348B826682D3D"
-#define TEST_GROUP_ID3 "1234ABCD"
+#define TEST_GROUP_ID3 "4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4"
 #define TEST_GROUP_ID4 "6B7B805962B8EB8275D73128BFDAA7ECD755A2EC304E36543941874A277FA75F"
 #define TEST_AUTH_CODE "37364761534f454d33567a73424e794f33573330507069434b31676f7254706b"
 #define TEST_AUTH_CODE2 "2f7562744654535564586e665467546b322b4b506b65626373466f48766a4335"
@@ -60,8 +60,8 @@ namespace {
 #define TEST_PIN_CODE "123456"
 #define TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN 32
 #define TEST_DEV_AUTH_SLEEP_TIME 50000
-static const char *g_createParams = "{\"groupName\":\"TestGroup\",\"deviceId\":\"TestAuthId\",\"groupType\":256,\"group"
-    "Visibility\":-1,\"userType\":0,\"expireTime\":-1}";
+static const char *g_createParams = "{\"groupName\":\"TestGroup\",\"deviceId\":\"TestAuthId\",\"groupType\":256,"
+    "\"groupVisibility\":-1,\"userType\":0,\"expireTime\":-1}";
 static const char *g_createParams2 = "{\"groupName\":\"TestPrivateGroup\",\"deviceId\":\"TestAuth"
     "Id\",\"groupType\":256,\"groupVisibility\":0,\"userType\":0,\"expireTime\":-1}";
 static const char *g_disbandParams =
@@ -72,23 +72,24 @@ static const char *g_addParams =
     "{\"groupId\":\"E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21\","
     "\"groupType\":256,\"pinCode\":\"123456\"}";
 static const char *g_addParams2 =
-    "{\"groupType\":1,\"groupId\":\"1234ABCD\","
-    "\"deviceList\":[{\"deviceId\":\"TestAuthId2\",\"udid\":\"TestUdid\",\"userId\":\"1234ABCD\","
-    "\"credential\":{\"credentialType\":1,"
+    "{\"groupType\":1,\"groupId\":\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\","
+    "\"deviceList\":[{\"deviceId\":\"TestAuthId2\",\"udid\":\"TestUdid\",\"userId\":"
+    "\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\",\"credential\":{\"credentialType\":1,"
     "\"authCode\":\"37364761534f454d33567a73424e794f33573330507069434b31676f7254706b\"}},"
-    "{\"deviceId\":\"TestAuthId3\",\"udid\":\"TestUdid2\",\"userId\":\"1234ABCD\","
-    "\"credential\":{\"credentialType\":1,"
+    "{\"deviceId\":\"TestAuthId3\",\"udid\":\"TestUdid2\",\"userId\":"
+    "\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\",\"credential\":{\"credentialType\":1,"
     "\"authCode\":\"2f7562744654535564586e665467546b322b4b506b65626373466f48766a4335\"}}]}";
 static const char *g_deleteParams =
     "{\"groupId\":\"E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21\",\"deleteId\":\"TestAuthId2\"}";
 static const char *g_deleteParams2 =
-    "{\"groupType\":1,\"groupId\":\"1234ABCD\","
+    "{\"groupType\":1,\"groupId\":\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\","
     "\"deviceList\":[{\"deviceId\":\"TestAuthId2\"},{\"deviceId\":\"TestAuthId3\"}]}";
 static const char *g_processData = "{\"appId\":\"TestAppId\"}";
 static const char *g_authParams = "{\"peerConnDeviceId\":\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C"
     "749558BD2E6492C\",\"servicePkgName\":\"TestAppId\",\"isClient\":true}";
 static const char *g_getRegisterInfoParams =
-    "{\"version\":\"1.0.0\",\"deviceId\":\"TestAuthId\",\"userId\":\"1234ABCD\"}";
+    "{\"version\":\"1.0.0\",\"deviceId\":\"TestAuthId\",\"userId\":"
+    "\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\"}";
 
 enum AsyncStatus {
     ASYNC_STATUS_WAITING = 0,

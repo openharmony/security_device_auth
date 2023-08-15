@@ -39,7 +39,14 @@ ExtPluginNode *CreateNode(int32_t plugType)
 {
     LOGI("CreateNode");
     ExtPluginNode *node = (ExtPluginNode *)HcMalloc(sizeof(ExtPluginNode), 0);
-    if (node == NULL || node->plugin == NULL) {
+    if (node == NULL) {
+        LOGE("Failed to malloc plugin node!");
+        return NULL;
+    }
+    node->plugin = (ExtPlugin *)HcMalloc(sizeof(ExtPlugin), 0);
+    if (node->plugin == NULL) {
+        LOGE("Failed to malloc plugin!");
+        HcFree(node);
         return NULL;
     }
     node->plugin->pluginType = plugType;
@@ -67,6 +74,8 @@ void DestroyList(ExtPluginList list)
     while (list != NULL) {
         ExtPluginNode *node = list;
         list = list->next;
+        HcFree(node->plugin);
+        node->plugin = NULL;
         HcFree(node);
         node = NULL;
     }
