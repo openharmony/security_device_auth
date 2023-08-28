@@ -1041,6 +1041,7 @@ static int32_t IpcServiceGaCancelRequest(const IpcDataInfo *ipcParams, int32_t p
     }
 
     g_groupAuthMgrMethod.cancelRequest(requestId, appId);
+    DelIpcCallBackByReqId(requestId, CB_TYPE_TMP_DEV_AUTH, true);
     LOGI("process done, ipc ret %d", ret);
     return ret;
 }
