@@ -145,6 +145,14 @@ if (defined(ohos_lite)) {
     }
 
     cflags = [ "-DHILOG_ENABLE" ]
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      integer_overflow = true
+      boundary_sanitize = true
+      ubsan = true
+      debug = false
+    }
     deps = [
       "//third_party/cJSON:cjson",
       "//third_party/mbedtls:mbedtls_shared",
