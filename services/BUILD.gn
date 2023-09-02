@@ -190,6 +190,15 @@ if (os_level == "mini" || os_level == "small") {
       ]
     }
 
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      integer_overflow = true
+      boundary_sanitize = true
+      ubsan = true
+      debug = false
+    }
+
     deps = [
       "${deps_adapter_path}:${hal_module_name}",
       "//third_party/cJSON:cjson",
@@ -241,6 +250,16 @@ if (os_level == "mini" || os_level == "small") {
       cflags += [ "-DBINDER_IPC_32BIT" ]
     }
 
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      integer_overflow = true
+      boundary_sanitize = true
+      ubsan = true
+      debug = false
+      blocklist = "../cfi_blocklist.txt"
+    }
+
     deps = [
       ":auth_service.rc",
       ":deviceauth",
@@ -286,6 +305,16 @@ if (os_level == "mini" || os_level == "small") {
     cflags += [ "-fPIC" ]
     if (target_cpu == "arm") {
       cflags += [ "-DBINDER_IPC_32BIT" ]
+    }
+
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      integer_overflow = true
+      boundary_sanitize = true
+      ubsan = true
+      debug = false
+      blocklist = "../cfi_blocklist.txt"
     }
 
     deps = [

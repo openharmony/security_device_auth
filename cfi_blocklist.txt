@@ -1,0 +1,1 @@
+src:*/frameworks/src/standard/ipc_adapt.cpp
