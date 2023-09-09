@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/xattr.h>
 #include <unistd.h>
 #include "hc_log.h"
 #include "hc_types.h"
@@ -28,6 +29,56 @@ extern "C" {
 #endif
 
 #define MAX_FOLDER_NAME_SIZE 128
+#define SECURITY_LABEL_XATTR_KEY "user.security"
+#define DATA_SECURITY_LEVEL "s2"
+
+#ifndef LITE_DEVICE
+static int32_t GetSecurityLabel(const char *filePath, char **returnLabel)
+{
+    int32_t labelSize = getxattr(filePath, SECURITY_LABEL_XATTR_KEY, NULL, 0);
+    if (labelSize <= 0 || errno == ENOTSUP) {
+        return -1;
+    }
+    char *label = (char *)HcMalloc(labelSize + 1, 0);
+    if (label == NULL) {
+        LOGE("Failed to malloc label memory!");
+        return -1;
+    }
+    labelSize = getxattr(filePath, SECURITY_LABEL_XATTR_KEY, label, labelSize);
+    if (labelSize <= 0 || errno == ENOTSUP) {
+        HcFree(label);
+        return -1;
+    }
+    *returnLabel = label;
+    return 0;
+}
+
+static bool IsSetLabelNeeded(const char *filePath)
+{
+    char *label = NULL;
+    int32_t res = GetSecurityLabel(filePath, &label);
+    if (res != 0) {
+        return true;
+    }
+    if (strcmp(label, DATA_SECURITY_LEVEL) != 0) {
+        HcFree(label);
+        return true;
+    }
+    HcFree(label);
+    return false;
+}
+
+static void SetSecurityLabel(const char *filePath)
+{
+    if (!IsSetLabelNeeded(filePath)) {
+        LOGI("Security label already set, no need to set again.");
+        return;
+    }
+    int32_t res = setxattr(filePath, SECURITY_LABEL_XATTR_KEY, DATA_SECURITY_LEVEL,
+        strlen(DATA_SECURITY_LEVEL), 0);
+    LOGI("Set security label, [Res]: %d", res);
+}
+#endif
 
 static int32_t CreateDirectory(const char *filePath)
 {
@@ -87,9 +138,11 @@ int HcFileOpen(const char *path, int mode, FileHandle *file)
     }
     if (file->pfd == NULL) {
         return -1;
-    } else {
-        return 0;
     }
+#ifndef LITE_DEVICE
+    SetSecurityLabel(path);
+#endif
+    return 0;
 }
 
 int HcFileSize(FileHandle file)
