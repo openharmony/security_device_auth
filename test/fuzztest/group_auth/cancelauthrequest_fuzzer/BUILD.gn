@@ -17,7 +17,7 @@ import("//base/security/device_auth/services/deviceauth.gni")
 import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
-module_output_path = "device_auth/group_auth"
+module_output_path = "device_auth/device_auth"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("CancelAuthRequestFuzzTest") {
