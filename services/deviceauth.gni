@@ -106,7 +106,7 @@ dev_frameworks_files = [
 os_account_adapter_files =
     [ "${dev_frameworks_path}/src/os_account_adapter/os_account_adapter.cpp" ]
 
-os_account_adapter_lite_files = [ "${dev_frameworks_path}/src/os_account_adapter_mock/os_account_adapter_mock.cpp" ]
+os_account_adapter_mock_files = [ "${dev_frameworks_path}/src/os_account_adapter_mock/os_account_adapter_mock.cpp" ]
 
 permission_adapter_files =
     [ "${dev_frameworks_path}/src/permission_adapter/permission_adapter.cpp" ]
@@ -378,10 +378,13 @@ if (enable_broadcast == true) {
   deviceauth_files += broadcast_manager_mock_files
 }
 
-if (defined(ohos_lite)) {
-  deviceauth_files += os_account_adapter_lite_files
-} else {
+if (!defined(ohos_lite) && (!defined(global_parts_info) ||
+                            defined(global_parts_info.account_os_account))) {
   deviceauth_files += os_account_adapter_files
+  support_os_account = true
+} else {
+  deviceauth_files += os_account_adapter_mock_files
+  support_os_account = false
 }
 
 #build_flags = [ "-Wrestrict" ]

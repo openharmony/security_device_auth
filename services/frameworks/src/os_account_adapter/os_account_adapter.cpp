@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,14 +19,11 @@
 #include "common_defs.h"
 #include "device_auth.h"
 #include "hc_log.h"
-#ifdef SUPPORT_OS_ACCOUNT
 #include "os_account_manager.h"
-#endif
 
 int32_t DevAuthGetRealOsAccountLocalId(int32_t inputId)
 {
     if (inputId == ANY_OS_ACCOUNT) {
-#ifdef SUPPORT_OS_ACCOUNT
         std::vector<int> activatedOsAccountIds;
         LOGI("[OsAccountManager]: QueryActiveOsAccountIds enter.");
         OHOS::ErrCode res = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(activatedOsAccountIds);
@@ -38,9 +35,6 @@ int32_t DevAuthGetRealOsAccountLocalId(int32_t inputId)
         int osAccountId = activatedOsAccountIds[0];
         LOGI("[Account]: Use activated os account! [Id]: %d", osAccountId);
         return osAccountId;
-#else
-        return 0;
-#endif
     } else if (inputId >= 0) {
         LOGI("[Account]: Use input os account! [Id]: %d", inputId);
         return inputId;

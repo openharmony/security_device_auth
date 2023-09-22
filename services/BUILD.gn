@@ -177,9 +177,6 @@ if (os_level == "mini" || os_level == "small") {
     if (target_cpu == "arm") {
       cflags += [ "-DBINDER_IPC_32BIT" ]
     }
-    if (support_jsapi) {
-      defines += [ "SUPPORT_OS_ACCOUNT" ]
-    }
     if (enable_extend_plugin) {
       defines += [ "DEV_AUTH_PLUGIN_ENABLE" ]
       sources += [
@@ -211,7 +208,7 @@ if (os_level == "mini" || os_level == "small") {
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
     ]
-    if (support_jsapi) {
+    if (support_os_account) {
       external_deps += [ "os_account:os_account_innerkits" ]
     }
   }
