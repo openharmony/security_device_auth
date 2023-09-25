@@ -95,11 +95,8 @@ static bool IsPeerGroupAuthError(const CJson *in)
     return true;
 }
 
-static int32_t CheckPeerGroupAuthMsg(CompatibleAuthSubSession *session, CJson *receivedData)
+static int32_t HandlePeerAuthError(CompatibleAuthSubSession *session)
 {
-    if (!IsPeerGroupAuthError(receivedData)) {
-        return HC_SUCCESS;
-    }
     if (AuthOnNextGroupIfExist(session) != HC_SUCCESS) {
         LOGE("Failed to auth on next group!");
         return HC_ERR_PEER_ERROR;
@@ -147,17 +144,17 @@ static int32_t ProcessClientAuthTask(CompatibleAuthSubSession *session, CJson *r
     }
     ProcessDeviceLevel(receivedData, paramInSession);
 
-    int32_t res = CheckPeerGroupAuthMsg(session, receivedData);
-    if (res != HC_SUCCESS) {
-        return res;
+    if (IsPeerGroupAuthError(receivedData)) {
+        return HandlePeerAuthError(session);
     }
+
     CJson *out = CreateJson();
     if (out == NULL) {
         LOGE("Failed to create json for out!");
         NotifyPeerAuthError(paramInSession, session->base.callback);
         return HC_ERR_JSON_CREATE;
     }
-    res = ProcessClientAuthTaskInner(session, GetAuthModuleType(paramInSession), receivedData, out, status);
+    int32_t res = ProcessClientAuthTaskInner(session, GetAuthModuleType(paramInSession), receivedData, out, status);
     ClearSensitiveStringInJson(out, FIELD_SESSION_KEY);
     FreeJson(out);
     if (res == FINISH) {
