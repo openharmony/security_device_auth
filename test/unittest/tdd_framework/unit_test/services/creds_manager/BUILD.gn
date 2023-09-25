@@ -32,7 +32,11 @@ ohos_unittest("creds_manager_test") {
   sources += [ "creds_manager_test.cpp" ]
   sources += hal_common_files
   sources += hiview_adapter_files
-  sources -= os_account_adapter_files
+  if (support_os_account) {
+    sources -= os_account_adapter_files
+  } else {
+    sources -= os_account_adapter_mock_files
+  }
   sources -= soft_bus_channel_files
   sources += soft_bus_channel_mock_files
   sources += [
