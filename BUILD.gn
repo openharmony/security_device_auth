@@ -67,6 +67,7 @@ group("deviceauth_test_build") {
       "test/unittest/deviceauth:deviceauth_llt",
       "test/unittest/deviceauth:deviceauth_unit_test",
       "test/unittest/tdd_framework/unit_test/services/creds_manager:creds_manager_test",
+      "test/unittest/tdd_framework/unit_test/services/frameworks/os_account_adapter:os_account_adapter_test_group",
       "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/auth_sub_session:auth_sub_session_test",
       "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/auth_sub_session/protocol_lib:ec_speke_protocol_test",
       "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/auth_sub_session/protocol_lib:iso_protocol_test",

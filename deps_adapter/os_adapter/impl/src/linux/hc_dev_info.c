@@ -46,6 +46,11 @@ const char *GetStoragePath(void)
     return storageFile;
 }
 
+const char *GetStorageDirPathCe(void)
+{
+    return "/data/service/el2";
+}
+
 const char *GetStorageDirPath(void)
 {
 #ifndef LITE_DEVICE

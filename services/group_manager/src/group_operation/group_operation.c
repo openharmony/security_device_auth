@@ -475,6 +475,10 @@ static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const 
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
     LOGI("[Start]: RequestCreateGroup! [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
     DEV_AUTH_REPORT_CALL_EVENT(CREATE_GROUP_EVENT, osAccountId, requestId, appId);
     CJson *params = CreateJsonFromString(createParams);
@@ -501,6 +505,10 @@ static int32_t RequestDeleteGroup(int32_t osAccountId, int64_t requestId, const 
     if ((appId == NULL) || (disbandParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
+    }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
     LOGI("[Start]: RequestDeleteGroup! [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
     DEV_AUTH_REPORT_CALL_EVENT(DELETE_GROUP_EVENT, osAccountId, requestId, appId);
@@ -530,6 +538,10 @@ static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t request
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
     LOGI("[Start]: RequestDeleteMemberFromGroup! [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
     DEV_AUTH_REPORT_CALL_EVENT(DEL_MEMBER_EVENT, osAccountId, requestId, appId);
     CJson *params = CreateJsonFromString(deleteParams);
@@ -556,6 +568,10 @@ static int32_t RequestAddMultiMembersToGroup(int32_t osAccountId, const char *ap
     if ((appId == NULL) || (addParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
+    }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
     LOGI("[Start]: RequestAddMultiMembersToGroup! [AppId]: %s", appId);
     DEV_AUTH_REPORT_CALL_EVENT(ADD_MULTI_MEMBER_EVENT, osAccountId, DEFAULT_REQUEST_ID, appId);
@@ -596,6 +612,10 @@ static int32_t RequestDelMultiMembersFromGroup(int32_t osAccountId, const char *
     if ((appId == NULL) || (deleteParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
+    }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
     LOGI("[Start]: RequestDelMultiMembersFromGroup! [AppId]: %s", appId);
     DEV_AUTH_REPORT_CALL_EVENT(DEL_MULTI_MEMBER_EVENT, osAccountId, DEFAULT_REQUEST_ID, appId);
@@ -701,6 +721,10 @@ static int32_t CheckAccessToGroup(int32_t osAccountId, const char *appId, const 
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
     if (CheckGroupAccessible(osAccountId, groupId, appId) != HC_SUCCESS) {
         LOGE("You do not have the permission to query the group information!");
         return HC_ERR_ACCESS_DENIED;
@@ -715,6 +739,10 @@ static int32_t GetAccessibleGroupInfoById(int32_t osAccountId, const char *appId
     if ((appId == NULL) || (groupId == NULL) || (returnGroupInfo == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
+    }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
     if (!IsGroupExistByGroupId(osAccountId, groupId)) {
         LOGE("No group is found based on the query parameters!");
@@ -759,6 +787,10 @@ static int32_t GetAccessibleGroupInfo(int32_t osAccountId, const char *appId, co
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
     CJson *queryParamsJson = CreateJsonFromString(queryParams);
     if (queryParamsJson == NULL) {
         LOGE("Failed to create queryParamsJson from string!");
@@ -800,6 +832,10 @@ static int32_t GetAccessibleJoinedGroups(int32_t osAccountId, const char *appId,
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
     if (!IsGroupTypeSupported(groupType)) {
         LOGE("Invalid group type!");
         return HC_ERR_INVALID_PARAMS;
@@ -825,6 +861,10 @@ static int32_t GetAccessibleRelatedGroups(int32_t osAccountId, const char *appId
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
     LOGI("Start to get related groups! [AppId]: %s", appId);
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
     int32_t result = GetRelatedGroups(osAccountId, peerDeviceId, isUdid, &groupEntryVec);
@@ -846,6 +886,10 @@ static int32_t GetAccessibleDeviceInfoById(int32_t osAccountId, const char *appI
         (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
+    }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
     if (!IsGroupExistByGroupId(osAccountId, groupId)) {
         LOGE("No group is found based on the query parameters!");
@@ -895,6 +939,10 @@ static int32_t GetAccessibleTrustedDevices(int32_t osAccountId, const char *appI
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
     if (!IsGroupExistByGroupId(osAccountId, groupId)) {
         LOGE("No group is found based on the query parameters!");
         return HC_ERR_GROUP_NOT_EXIST;
@@ -922,6 +970,10 @@ static bool IsDeviceInAccessibleGroup(int32_t osAccountId, const char *appId, co
         LOGE("Invalid input parameters!");
         return false;
     }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return false;
+    }
     if (!IsGroupExistByGroupId(osAccountId, groupId)) {
         LOGE("No group is found based on the query parameters!");
         return false;
@@ -942,6 +994,10 @@ static int32_t GetPkInfoList(int32_t osAccountId, const char *appId, const char 
         (returnInfoNum == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
+    }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
     CJson *params = CreateJsonFromString(queryParams);
     if (params == NULL) {

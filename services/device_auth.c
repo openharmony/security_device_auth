@@ -497,6 +497,10 @@ static int32_t AddMemberToGroup(int32_t osAccountId, int64_t requestId, const ch
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
     LOGI("[Start]: AddMemberToGroup! [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
     DEV_AUTH_REPORT_CALL_EVENT(ADD_MEMBER_EVENT, osAccountId, requestId, appId);
     const DeviceAuthCallback *callback = GetGMCallbackByAppId(appId);
@@ -505,6 +509,21 @@ static int32_t AddMemberToGroup(int32_t osAccountId, int64_t requestId, const ch
         return HC_ERR_CALLBACK_NOT_FOUND;
     }
     return StartClientBindSession(osAccountId, requestId, appId, addParams, callback);
+}
+
+static int32_t CheckAndGetValidOsAccountId(const CJson *context, int32_t *osAccountId)
+{
+    (void)GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, osAccountId);
+    *osAccountId = DevAuthGetRealOsAccountLocalId(*osAccountId);
+    if (*osAccountId == INVALID_OS_ACCOUNT) {
+        LOGE("Invalid os accountId!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    if (!CheckOsAccountStatus(*osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
+    return HC_SUCCESS;
 }
 
 static int32_t AddServerReqInfoToContext(int64_t requestId, const char *appId, int32_t opCode,
@@ -524,10 +543,9 @@ static int32_t AddServerReqInfoToContext(int64_t requestId, const char *appId, i
         return HC_ERR_JSON_ADD;
     }
     int32_t osAccountId = ANY_OS_ACCOUNT;
-    (void)GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId);
-    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    if (osAccountId == INVALID_OS_ACCOUNT) {
-        return HC_ERR_INVALID_PARAMS;
+    int32_t ret = CheckAndGetValidOsAccountId(context, &osAccountId);
+    if (ret != HC_SUCCESS) {
+        return ret;
     }
     if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
         LOGE("add osAccountId to context fail.");
@@ -728,6 +746,10 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
         LOGE("The input auth params is invalid!");
         return HC_ERR_INVALID_PARAMS;
     }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
     CJson *context = CreateJsonFromString(authParams);
     if (context == NULL) {
         LOGE("Failed to create json from string!");
@@ -782,6 +804,10 @@ static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const c
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if (osAccountId == INVALID_OS_ACCOUNT) {
         return HC_ERR_INVALID_PARAMS;
+    }
+    if (!CheckOsAccountStatus(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
     const char *peerUdid = GetPeerUdidFromJson(osAccountId, context);
     if (peerUdid == NULL) {
@@ -1036,6 +1062,7 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     if (res != HC_SUCCESS) {
         return res;
     }
+    INIT_OS_ACCOUNT_ADAPTER();
     res = InitAllModules();
     if (res != HC_SUCCESS) {
         DestroyGmAndGa();
@@ -1066,6 +1093,7 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
     DestroyChannelManager();
     DestroyCallbackManager();
     DestroyPseudonymManager();
+    DESTROY_OS_ACCOUNT_ADAPTER();
     SetDeInitStatus();
     LOGI("[End]: [Service]: Destroy device auth service successfully!");
 }

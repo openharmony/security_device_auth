@@ -128,6 +128,7 @@ enum {
     HC_ERR_DEVICE_NOT_EXIST = 0x00006008,                                 // 24584
     HC_ERR_DEVICE_DUPLICATE = 0x00006009,                                 // 24585
     HC_ERR_LOST_DATA = 0x0000600A,                                        // 24586
+    HC_ERR_OS_ACCOUNT_NOT_UNLOCKED = 0x0000600B,                          // 24587
 
     /* error code for broadcast , 0x00007000 ~ 0x00007FFF */
     HC_ERR_LISTENER_NOT_EXIST = 0x00007001,                               // 28673

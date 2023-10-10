@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,10 @@
 #include "hc_log.h"
 #include "hc_mutex.h"
 #include "hc_types.h"
+#ifdef SUPPORT_OS_ACCOUNT
+#include "os_account_adapter.h"
+#endif
+#include "security_label_adapter.h"
 #include "string_util.h"
 
 IMPLEMENT_HC_VECTOR(SymTokenVec, SymToken*, 1)
@@ -50,7 +54,24 @@ static bool IsTokenMatch(const SymToken *token, const char *userId, const char *
     return (strcmp(userId, token->userId) == 0) && (strcmp(deviceId, token->deviceId) == 0);
 }
 
-static bool GetTokensFilePath(int32_t osAccountId, char *tokenPath, uint32_t pathBufferLen)
+#ifdef SUPPORT_OS_ACCOUNT
+static bool GetTokensFilePathCe(int32_t osAccountId, char *tokenPath, uint32_t pathBufferLen)
+{
+    const char *beginPath = GetStorageDirPathCe();
+    if (beginPath == NULL) {
+        LOGE("Failed to get the storage path!");
+        return false;
+    }
+    if (sprintf_s(tokenPath, pathBufferLen, "%s/%d/deviceauth/account/account_data_sym.dat",
+        beginPath, osAccountId) <= 0) {
+        LOGE("Failed to generate token path!");
+        return false;
+    }
+    return true;
+}
+#endif
+
+static bool GetTokensFilePathDe(int32_t osAccountId, char *tokenPath, uint32_t pathBufferLen)
 {
     const char *beginPath = GetAccountStoragePath();
     if (beginPath == NULL) {
@@ -68,6 +89,15 @@ static bool GetTokensFilePath(int32_t osAccountId, char *tokenPath, uint32_t pat
         return false;
     }
     return true;
+}
+
+static bool GetTokensFilePath(int32_t osAccountId, char *tokenPath, uint32_t pathBufferLen)
+{
+#ifdef SUPPORT_OS_ACCOUNT
+    return GetTokensFilePathCe(osAccountId, tokenPath, pathBufferLen);
+#else
+    return GetTokensFilePathDe(osAccountId, tokenPath, pathBufferLen);
+#endif
 }
 
 static SymToken *CreateSymTokenByJson(const CJson *tokenJson)
@@ -137,35 +167,19 @@ static int32_t CreateTokensFromJson(CJson *tokensJson, SymTokenVec *vec)
     return HC_SUCCESS;
 }
 
-static int32_t OpenTokenFile(int32_t osAccountId, FileHandle *file, int32_t mode)
-{
-    char *tokenPath = (char *)HcMalloc(MAX_DB_PATH_LEN, 0);
-    if (tokenPath == NULL) {
-        LOGE("Malloc tokenPath failed");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    if (!GetTokensFilePath(osAccountId, tokenPath, MAX_DB_PATH_LEN)) {
-        LOGE("Get token path failed");
-        HcFree(tokenPath);
-        return HC_ERROR;
-    }
-    int32_t ret = HcFileOpen(tokenPath, mode, file);
-    HcFree(tokenPath);
-    return ret;
-}
-
-static int32_t ReadTokensFromFile(int32_t osAccountId, SymTokenVec *vec)
+static int32_t ReadTokensFromFile(SymTokenVec *vec, const char *tokenPath)
 {
     if (vec == NULL) {
         LOGE("Input token vec is null.");
         return HC_ERR_NULL_PTR;
     }
     FileHandle file = { 0 };
-    int32_t ret = OpenTokenFile(osAccountId, &file, MODE_FILE_READ);
+    int32_t ret = HcFileOpen(tokenPath, MODE_FILE_READ, &file);
     if (ret != HC_SUCCESS) {
         LOGE("Open token file failed");
         return ret;
     }
+    SetSecurityLabel(tokenPath, SECURITY_LABEL_S2);
     int32_t fileSize = HcFileSize(file);
     if (fileSize <= 0) {
         LOGE("file size stat failed");
@@ -199,7 +213,7 @@ static int32_t ReadTokensFromFile(int32_t osAccountId, SymTokenVec *vec)
     return ret;
 }
 
-static int32_t WriteTokensJsonToFile(int32_t osAccountId, CJson *tokensJson)
+static int32_t WriteTokensJsonToFile(CJson *tokensJson, const char *tokenPath)
 {
     char *storeJsonString = PackJsonToString(tokensJson);
     if (storeJsonString == NULL) {
@@ -207,12 +221,13 @@ static int32_t WriteTokensJsonToFile(int32_t osAccountId, CJson *tokensJson)
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     FileHandle file = { 0 };
-    int32_t ret = OpenTokenFile(osAccountId, &file, MODE_FILE_WRITE);
+    int32_t ret = HcFileOpen(tokenPath, MODE_FILE_WRITE, &file);
     if (ret != HC_SUCCESS) {
         LOGE("Open token file failed.");
         FreeJsonString(storeJsonString);
         return ret;
     }
+    SetSecurityLabel(tokenPath, SECURITY_LABEL_S2);
     int32_t fileSize = (int32_t)(HcStrlen(storeJsonString) + 1);
     if (HcFileWrite(file, storeJsonString, fileSize) != fileSize) {
         LOGE("Failed to write token array to file.");
@@ -236,7 +251,7 @@ static int32_t GenerateJsonFromToken(const SymToken *token, CJson *tokenJson)
     return HC_SUCCESS;
 }
 
-static int32_t SaveTokensToFile(int32_t osAccountId, const SymTokenVec *vec)
+static int32_t SaveTokensToFile(const SymTokenVec *vec, const char *tokenPath)
 {
     CJson *symTokensJson = CreateJsonArray();
     if (symTokensJson == NULL) {
@@ -280,7 +295,7 @@ static int32_t SaveTokensToFile(int32_t osAccountId, const SymTokenVec *vec)
         return HC_ERR_JSON_ADD;
     }
     FreeJson(symTokensJson);
-    ret = WriteTokensJsonToFile(osAccountId, allTokensJson);
+    ret = WriteTokensJsonToFile(allTokensJson, tokenPath);
     FreeJson(allTokensJson);
     return ret;
 }
@@ -308,12 +323,17 @@ static OsSymTokensInfo *GetTokensInfoByOsAccountId(int32_t osAccountId)
 
 static int32_t SaveOsSymTokensDb(int32_t osAccountId)
 {
+    char tokenPath[MAX_DB_PATH_LEN] = { 0 };
+    if (!GetTokensFilePath(osAccountId, tokenPath, MAX_DB_PATH_LEN)) {
+        LOGE("Failed to get token path!");
+        return HC_ERROR;
+    }
     OsSymTokensInfo *info = GetTokensInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         LOGE("Failed to get tokens by os account id. [OsAccountId]: %d", osAccountId);
         return HC_ERR_INVALID_PARAMS;
     }
-    int32_t ret = SaveTokensToFile(osAccountId, &info->tokens);
+    int32_t ret = SaveTokensToFile(&info->tokens, tokenPath);
     if (ret != HC_SUCCESS) {
         LOGE("Save tokens to file failed");
         return ret;
@@ -565,10 +585,15 @@ static int32_t DeleteToken(int32_t osAccountId, const char *userId, const char *
 
 static void LoadOsSymTokensDb(int32_t osAccountId)
 {
+    char tokenPath[MAX_DB_PATH_LEN] = { 0 };
+    if (!GetTokensFilePath(osAccountId, tokenPath, MAX_DB_PATH_LEN)) {
+        LOGE("Failed to get token path!");
+        return;
+    }
     OsSymTokensInfo info;
     info.osAccountId = osAccountId;
     info.tokens = CreateSymTokenVec();
-    if (ReadTokensFromFile(osAccountId, &info.tokens) != HC_SUCCESS) {
+    if (ReadTokensFromFile(&info.tokens, tokenPath) != HC_SUCCESS) {
         DestroySymTokenVec(&info.tokens);
         return;
     }
@@ -579,8 +604,145 @@ static void LoadOsSymTokensDb(int32_t osAccountId)
     LOGI("Load os account db successfully! [Id]: %d", osAccountId);
 }
 
+#ifdef SUPPORT_OS_ACCOUNT
+static void TryMoveDeDataToCe(int32_t osAccountId)
+{
+    char tokenPathDe[MAX_DB_PATH_LEN] = { 0 };
+    if (!GetTokensFilePathDe(osAccountId, tokenPathDe, MAX_DB_PATH_LEN)) {
+        LOGE("Failed to get de token path!");
+        return;
+    }
+    char tokenPathCe[MAX_DB_PATH_LEN] = { 0 };
+    if (!GetTokensFilePathCe(osAccountId, tokenPathCe, MAX_DB_PATH_LEN)) {
+        LOGE("Failed to get ce token path!");
+        return;
+    }
+    OsSymTokensInfo info;
+    info.osAccountId = osAccountId;
+    info.tokens = CreateSymTokenVec();
+    if (ReadTokensFromFile(&info.tokens, tokenPathCe) == HC_SUCCESS) {
+        LOGI("Ce data exists, no need to move!");
+        ClearSymTokenVec(&info.tokens);
+        return;
+    }
+    ClearSymTokenVec(&info.tokens);
+    info.tokens = CreateSymTokenVec();
+    if (ReadTokensFromFile(&info.tokens, tokenPathDe) != HC_SUCCESS) {
+        LOGI("De data not exists, no need to move!");
+        ClearSymTokenVec(&info.tokens);
+        return;
+    }
+    if (SaveTokensToFile(&info.tokens, tokenPathCe) != HC_SUCCESS) {
+        LOGE("Failed to save tokens to ce file!");
+        ClearSymTokenVec(&info.tokens);
+        return;
+    }
+    ClearSymTokenVec(&info.tokens);
+    info.tokens = CreateSymTokenVec();
+    if (ReadTokensFromFile(&info.tokens, tokenPathCe) != HC_SUCCESS) {
+        LOGE("Failed to read ce file data!");
+        ClearSymTokenVec(&info.tokens);
+        return;
+    }
+    ClearSymTokenVec(&info.tokens);
+    LOGI("Move de data to ce successfully, remove the de file!");
+    HcFileRemove(tokenPathDe);
+}
+
+static void RemoveOsSymTokensInfo(int32_t osAccountId)
+{
+    uint32_t index = 0;
+    OsSymTokensInfo *info = NULL;
+    FOR_EACH_HC_VECTOR(g_symTokensDb, index, info) {
+        if (info->osAccountId == osAccountId) {
+            OsSymTokensInfo deleteInfo;
+            HC_VECTOR_POPELEMENT(&g_symTokensDb, &deleteInfo, index);
+            ClearSymTokenVec(&deleteInfo.tokens);
+            return;
+        }
+    }
+}
+
+static void LoadOsSymTokensDbCe(int32_t osAccountId)
+{
+    TryMoveDeDataToCe(osAccountId);
+    RemoveOsSymTokensInfo(osAccountId);
+    LoadOsSymTokensDb(osAccountId);
+}
+
+static void OnOsAccountUnlocked(int32_t osAccountId)
+{
+    LOGI("Os account is unlocked, osAccountId: %d", osAccountId);
+    g_dataMutex->lock(g_dataMutex);
+    LoadOsSymTokensDbCe(osAccountId);
+    g_dataMutex->unlock(g_dataMutex);
+}
+
+static void OnOsAccountRemoved(int32_t osAccountId)
+{
+    LOGI("Os account is removed, osAccountId: %d", osAccountId);
+    g_dataMutex->lock(g_dataMutex);
+    RemoveOsSymTokensInfo(osAccountId);
+    g_dataMutex->unlock(g_dataMutex);
+}
+
+static bool IsOsAccountDataLoaded(int32_t osAccountId)
+{
+    uint32_t index = 0;
+    OsSymTokensInfo *info = NULL;
+    FOR_EACH_HC_VECTOR(g_symTokensDb, index, info) {
+        if (info->osAccountId == osAccountId) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void LoadDataIfNotLoaded(int32_t osAccountId)
+{
+    g_dataMutex->lock(g_dataMutex);
+    if (IsOsAccountDataLoaded(osAccountId)) {
+        g_dataMutex->unlock(g_dataMutex);
+        return;
+    }
+    LOGI("Data has not been loaded, load it, osAccountId: %d", osAccountId);
+    LoadOsSymTokensDbCe(osAccountId);
+    g_dataMutex->unlock(g_dataMutex);
+}
+
+static void AddSymTokenDataCallback(void)
+{
+    OsAccountEventCallback *eventCallback = (OsAccountEventCallback *)HcMalloc(sizeof(OsAccountEventCallback), 0);
+    if (eventCallback == NULL) {
+        LOGE("Failed to alloc memory for sym token data callback!");
+        return;
+    }
+    eventCallback->callbackId = SYM_TOKEN_DATA_CALLBACK;
+    eventCallback->onOsAccountUnlocked = OnOsAccountUnlocked;
+    eventCallback->onOsAccountRemoved = OnOsAccountRemoved;
+    eventCallback->loadDataIfNotLoaded = LoadDataIfNotLoaded;
+    if (AddOsAccountEventCallback(eventCallback) != HC_SUCCESS) {
+        LOGE("Failed to add sym token data callback!");
+        HcFree(eventCallback);
+        return;
+    }
+    LOGE("Add sym token data callback successfully!");
+}
+
+static void RemoveSymTokenDataCallback(void)
+{
+    OsAccountEventCallback *callback = RemoveOsAccountEventCallback(SYM_TOKEN_DATA_CALLBACK);
+    if (callback == NULL) {
+        LOGE("Callback is null!");
+        return;
+    }
+    HcFree(callback);
+}
+#endif
+
 static void LoadTokenDb(void)
 {
+#ifndef SUPPORT_OS_ACCOUNT
     StringVector dbNameVec = CreateStrVector();
     HcFileGetSubFileName(GetAccountStoragePath(), &dbNameVec);
     uint32_t index;
@@ -598,6 +760,7 @@ static void LoadTokenDb(void)
         }
     }
     DestroyStrVector(&dbNameVec);
+#endif
 }
 
 void ClearSymTokenVec(SymTokenVec *vec)
@@ -636,6 +799,9 @@ void InitSymTokenManager(void)
     g_symTokenManager.deleteToken = DeleteToken;
     g_symTokenManager.generateKeyAlias = GenerateKeyAlias;
     g_symTokensDb = CREATE_HC_VECTOR(SymTokensDb);
+#ifdef SUPPORT_OS_ACCOUNT
+    AddSymTokenDataCallback();
+#endif
     LoadTokenDb();
     g_dataMutex->unlock(g_dataMutex);
 }
@@ -643,6 +809,9 @@ void InitSymTokenManager(void)
 void DestroySymTokenManager(void)
 {
     g_dataMutex->lock(g_dataMutex);
+#ifdef SUPPORT_OS_ACCOUNT
+    RemoveSymTokenDataCallback();
+#endif
     (void)memset_s(&g_symTokenManager, sizeof(SymTokenManager), 0, sizeof(SymTokenManager));
     uint32_t index;
     OsSymTokensInfo *info = NULL;

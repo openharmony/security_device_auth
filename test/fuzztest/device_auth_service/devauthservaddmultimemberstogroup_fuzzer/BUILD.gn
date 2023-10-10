@@ -38,6 +38,11 @@ ohos_fuzztest("DevAuthServAddMultiMembersToGroupFuzzTest") {
     sources += soft_bus_channel_mock_files
   }
   defines = deviceauth_defines
+  if (support_os_account) {
+    sources -= os_account_adapter_files
+    sources += os_account_adapter_mock_files
+    defines -= [ "SUPPORT_OS_ACCOUNT" ]
+  }
   cflags = [
     "-g",
     "-O0",
@@ -60,9 +65,6 @@ ohos_fuzztest("DevAuthServAddMultiMembersToGroupFuzzTest") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
   ]
-  if (support_os_account) {
-    external_deps += [ "os_account:os_account_innerkits" ]
-  }
 }
 
 ###############################################################################

@@ -1,0 +1,100 @@
+# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("../../../../tdd_framework.gni")
+
+if (support_os_account) {
+  module_output_path = "device_auth/deviceauth_test"
+
+  ohos_unittest("os_account_adapter_test") {
+    module_out_path = module_output_path
+
+    include_dirs = inc_path + hals_inc_path
+    include_dirs += [
+      "${dev_frameworks_path}/inc/hiview_adapter",
+      "${tdd_framework_path}/common/inc",
+      "//third_party/cJSON",
+      "//third_party/openssl/include/",
+      "//third_party/mbedtls/include",
+      "//third_party/mbedtls/include/mbedtls",
+    ]
+    include_dirs += [ "${dev_frameworks_path}/inc/account_subscriber" ]
+    include_dirs += [ "${dev_frameworks_path}/inc/sa_subscriber" ]
+
+    sources = deviceauth_files
+    sources += hal_common_files
+    sources += hiview_adapter_files
+    sources -= soft_bus_channel_files
+    sources += soft_bus_channel_mock_files
+    sources += [
+      "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c",
+      "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
+      "${key_management_adapter_path}/impl/src/standard/huks_adapter.c",
+      "${key_management_adapter_path}/impl/src/standard/mbedtls_ec_adapter.c",
+      "${os_adapter_path}/impl/src/hc_log.c",
+      "${os_adapter_path}/impl/src/linux/hc_condition.c",
+      "${os_adapter_path}/impl/src/linux/hc_file.c",
+      "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
+      "${os_adapter_path}/impl/src/linux/hc_thread.c",
+      "${os_adapter_path}/impl/src/linux/hc_types.c",
+    ]
+    sources += [ "${tdd_framework_path}/common/src/hc_dev_info_mock.c" ]
+    sources += [ "os_account_adapter_test.cpp" ]
+    sources += account_subscriber_files
+    sources += sa_subscriber_files
+
+    cflags = [ "-DHILOG_ENABLE" ]
+    if (target_cpu == "arm") {
+      cflags += [ "-DBINDER_IPC_32BIT" ]
+    }
+    cflags += [
+      "-DDEVICE_AUTH_TEST_HKS_DATA_PATH=\"${huks_key_store_standard_path}\"",
+    ]
+
+    defines = deviceauth_defines
+    defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
+    defines -= [ "ENABLE_PSEUDONYM" ]
+
+    deps = [
+      "//third_party/cJSON:cjson",
+      "//third_party/googletest:gmock_main",
+      "//third_party/googletest:gtest_main",
+      "//third_party/mbedtls:mbedtls_shared",
+      "//third_party/openssl:libcrypto_static",
+    ]
+
+    external_deps = [
+      "ability_base:want",
+      "access_token:libnativetoken",
+      "access_token:libtoken_setproc",
+      "c_utils:utils",
+      "common_event_service:cesfwk_innerkits",
+      "dsoftbus:softbus_client",
+      "hilog:libhilog",
+      "hisysevent:libhisysevent",
+      "hitrace:hitrace_meter",
+      "huks:libhukssdk",
+      "init:libbegetutil",
+      "ipc:ipc_core",
+      "os_account:os_account_innerkits",
+      "samgr:samgr_proxy",
+    ]
+  }
+}
+
+group("os_account_adapter_test_group") {
+  testonly = true
+  if (support_os_account) {
+    deps = [ ":os_account_adapter_test" ]
+  }
+}
