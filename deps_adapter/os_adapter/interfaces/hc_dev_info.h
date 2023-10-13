@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,6 +36,7 @@ extern "C" {
 int32_t HcGetUdid(uint8_t *udid, int32_t udidLen);
 
 const char *GetStoragePath(void);
+const char *GetStorageDirPathCe(void);
 const char *GetStorageDirPath(void);
 const char *GetAccountStoragePath(void);
 const char *GetPseudonymStoragePath(void);

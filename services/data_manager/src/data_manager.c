@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,11 @@
 #include "key_manager.h"
 #include "securec.h"
 #include "hidump_adapter.h"
+#ifdef SUPPORT_OS_ACCOUNT
+#include "os_account_adapter.h"
+#endif
 #include "pseudonym_manager.h"
+#include "security_label_adapter.h"
 
 typedef struct {
     DECLARE_TLV_STRUCT(9)
@@ -198,7 +202,23 @@ static OsAccountTrustedInfo *GetTrustedInfoByOsAccountId(int32_t osAccountId)
     return returnInfo;
 }
 
-static bool GetOsAccountInfoPath(int32_t osAccountId, char *infoPath, uint32_t pathBufferLen)
+#ifdef SUPPORT_OS_ACCOUNT
+static bool GetOsAccountInfoPathCe(int32_t osAccountId, char *infoPath, uint32_t pathBufferLen)
+{
+    const char *beginPath = GetStorageDirPathCe();
+    if (beginPath == NULL) {
+        LOGE("[DB]: Failed to get the storage path!");
+        return false;
+    }
+    if (sprintf_s(infoPath, pathBufferLen, "%s/%d/deviceauth/hcgroup.dat", beginPath, osAccountId) <= 0) {
+        LOGE("[DB]: Failed to generate db file path!");
+        return false;
+    }
+    return true;
+}
+#endif
+
+static bool GetOsAccountInfoPathDe(int32_t osAccountId, char *infoPath, uint32_t pathBufferLen)
 {
     const char *beginPath = GetStorageDirPath();
     if (beginPath == NULL) {
@@ -216,6 +236,15 @@ static bool GetOsAccountInfoPath(int32_t osAccountId, char *infoPath, uint32_t p
         return false;
     }
     return true;
+}
+
+static bool GetOsAccountInfoPath(int32_t osAccountId, char *infoPath, uint32_t pathBufferLen)
+{
+#ifdef SUPPORT_OS_ACCOUNT
+    return GetOsAccountInfoPathCe(osAccountId, infoPath, pathBufferLen);
+#else
+    return GetOsAccountInfoPathDe(osAccountId, infoPath, pathBufferLen);
+#endif
 }
 
 bool GenerateGroupEntryFromEntry(const TrustedGroupEntry *entry, TrustedGroupEntry *returnEntry)
@@ -429,18 +458,15 @@ static bool ReadInfoFromParcel(HcParcel *parcel, OsAccountTrustedInfo *info)
     return ret;
 }
 
-static bool ReadParcelFromFile(int32_t osAccountId, HcParcel *parcel)
+static bool ReadParcelFromFile(const char *filePath, HcParcel *parcel)
 {
-    char infoPath[MAX_DB_PATH_LEN] = { 0 };
-    if (!GetOsAccountInfoPath(osAccountId, infoPath, MAX_DB_PATH_LEN)) {
-        return false;
-    }
     FileHandle file;
-    int ret = HcFileOpen(infoPath, MODE_FILE_READ, &file);
+    int ret = HcFileOpen(filePath, MODE_FILE_READ, &file);
     if (ret != 0) {
         LOGE("[DB]: Failed to open database file!");
         return false;
     }
+    SetSecurityLabel(filePath, SECURITY_LABEL_S2);
     int fileSize = HcFileSize(file);
     if (fileSize <= 0) {
         LOGE("[DB]: The database file size is invalid!");
@@ -469,10 +495,36 @@ static bool ReadParcelFromFile(int32_t osAccountId, HcParcel *parcel)
     return true;
 }
 
+static bool SaveParcelToFile(const char *filePath, HcParcel *parcel)
+{
+    FileHandle file;
+    int ret = HcFileOpen(filePath, MODE_FILE_WRITE, &file);
+    if (ret != HC_SUCCESS) {
+        LOGE("[DB]: Failed to open database file!");
+        return false;
+    }
+    SetSecurityLabel(filePath, SECURITY_LABEL_S2);
+    int fileSize = (int)GetParcelDataSize(parcel);
+    const char *fileData = GetParcelData(parcel);
+    int writeSize = HcFileWrite(file, fileData, fileSize);
+    HcFileClose(file);
+    if (writeSize == fileSize) {
+        return true;
+    } else {
+        LOGE("[DB]: write file error!");
+        return false;
+    }
+}
+
 static void LoadOsAccountDb(int32_t osAccountId)
 {
+    char filePath[MAX_DB_PATH_LEN] = { 0 };
+    if (!GetOsAccountInfoPath(osAccountId, filePath, MAX_DB_PATH_LEN)) {
+        LOGE("[DB]: Failed to get os account info path!");
+        return;
+    }
     HcParcel parcel = CreateParcel(0, 0);
-    if (!ReadParcelFromFile(osAccountId, &parcel)) {
+    if (!ReadParcelFromFile(filePath, &parcel)) {
         DeleteParcel(&parcel);
         return;
     }
@@ -491,12 +543,150 @@ static void LoadOsAccountDb(int32_t osAccountId)
         LOGE("[DB]: Failed to push osAccountInfo to database!");
         ClearGroupEntryVec(&info.groups);
         ClearDeviceEntryVec(&info.devices);
+        return;
     }
     LOGI("[DB]: Load os account db successfully! [Id]: %d", osAccountId);
 }
 
+#ifdef SUPPORT_OS_ACCOUNT
+static void TryMoveDeDataToCe(int32_t osAccountId)
+{
+    char ceFilePath[MAX_DB_PATH_LEN] = { 0 };
+    if (!GetOsAccountInfoPathCe(osAccountId, ceFilePath, MAX_DB_PATH_LEN)) {
+        LOGE("[DB]: Failed to get ce database file path!");
+        return;
+    }
+    HcParcel parcelCe = CreateParcel(0, 0);
+    if (ReadParcelFromFile(ceFilePath, &parcelCe)) {
+        LOGI("[DB]: ce data exists, no need to move.");
+        DeleteParcel(&parcelCe);
+        return;
+    }
+    DeleteParcel(&parcelCe);
+    char deFilePath[MAX_DB_PATH_LEN] = { 0 };
+    if (!GetOsAccountInfoPathDe(osAccountId, deFilePath, MAX_DB_PATH_LEN)) {
+        LOGE("[DB]: Failed to get de database file path!");
+        return;
+    }
+    HcParcel parcelDe = CreateParcel(0, 0);
+    if (!ReadParcelFromFile(deFilePath, &parcelDe)) {
+        LOGI("[DB]: no data in de file, no need to move!");
+        DeleteParcel(&parcelDe);
+        return;
+    }
+    if (!SaveParcelToFile(ceFilePath, &parcelDe)) {
+        LOGE("[DB]: save de parcel to ce file failed!");
+        DeleteParcel(&parcelDe);
+        return;
+    }
+    DeleteParcel(&parcelDe);
+    parcelCe = CreateParcel(0, 0);
+    if (!ReadParcelFromFile(ceFilePath, &parcelCe)) {
+        LOGE("[DB]: Failed to read ce file data!");
+        DeleteParcel(&parcelCe);
+        return;
+    }
+    DeleteParcel(&parcelCe);
+    LOGI("[DB]: move de data to ce successfully, remove de file!");
+    HcFileRemove(deFilePath);
+}
+
+static void RemoveOsAccountTrustedInfo(int32_t osAccountId)
+{
+    uint32_t index = 0;
+    OsAccountTrustedInfo *info = NULL;
+    FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {
+        if (info->osAccountId == osAccountId) {
+            OsAccountTrustedInfo deleteInfo;
+            HC_VECTOR_POPELEMENT(&g_deviceauthDb, &deleteInfo, index);
+            ClearGroupEntryVec(&deleteInfo.groups);
+            ClearDeviceEntryVec(&deleteInfo.devices);
+            return;
+        }
+    }
+}
+
+static bool IsOsAccountDataLoaded(int32_t osAccountId)
+{
+    uint32_t index = 0;
+    OsAccountTrustedInfo *info = NULL;
+    FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {
+        if (info->osAccountId == osAccountId) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void LoadOsAccountDbCe(int32_t osAccountId)
+{
+    TryMoveDeDataToCe(osAccountId);
+    RemoveOsAccountTrustedInfo(osAccountId);
+    LoadOsAccountDb(osAccountId);
+}
+
+static void OnOsAccountUnlocked(int32_t osAccountId)
+{
+    LOGI("[DB]: os account is unlocked, osAccountId: %d", osAccountId);
+    g_databaseMutex->lock(g_databaseMutex);
+    LoadOsAccountDbCe(osAccountId);
+    g_databaseMutex->unlock(g_databaseMutex);
+}
+
+static void OnOsAccountRemoved(int32_t osAccountId)
+{
+    LOGI("[DB]: os account is removed, osAccountId: %d", osAccountId);
+    g_databaseMutex->lock(g_databaseMutex);
+    RemoveOsAccountTrustedInfo(osAccountId);
+    g_databaseMutex->unlock(g_databaseMutex);
+}
+
+static void LoadDataIfNotLoaded(int32_t osAccountId)
+{
+    g_databaseMutex->lock(g_databaseMutex);
+    if (IsOsAccountDataLoaded(osAccountId)) {
+        g_databaseMutex->unlock(g_databaseMutex);
+        return;
+    }
+    LOGI("[DB]: data has not been loaded, load it, osAccountId: %d", osAccountId);
+    LoadOsAccountDbCe(osAccountId);
+    g_databaseMutex->unlock(g_databaseMutex);
+}
+
+static void AddGroupDataCallback(void)
+{
+    OsAccountEventCallback *eventCallback = (OsAccountEventCallback *)HcMalloc(sizeof(OsAccountEventCallback), 0);
+    if (eventCallback == NULL) {
+        LOGE("[DB]: Failed to alloc memory for group data callback!");
+        return;
+    }
+    eventCallback->callbackId = GROUP_DATA_CALLBACK;
+    eventCallback->onOsAccountUnlocked = OnOsAccountUnlocked;
+    eventCallback->onOsAccountRemoved = OnOsAccountRemoved;
+    eventCallback->loadDataIfNotLoaded = LoadDataIfNotLoaded;
+    if (AddOsAccountEventCallback(eventCallback) != HC_SUCCESS) {
+        LOGE("[DB]: Failed to add group data callback!");
+        HcFree(eventCallback);
+        return;
+    }
+    LOGE("[DB]: Add group data callback successfully!");
+}
+
+static void RemoveGroupDataCallback(void)
+{
+    OsAccountEventCallback *callback = RemoveOsAccountEventCallback(GROUP_DATA_CALLBACK);
+    if (callback == NULL) {
+        LOGE("[DB]: callback is null!");
+        return;
+    }
+    HcFree(callback);
+}
+#endif
+
 static void LoadDeviceAuthDb(void)
 {
+#ifndef SUPPORT_OS_ACCOUNT
+    g_databaseMutex->lock(g_databaseMutex);
     StringVector osAccountDbNameVec = CreateStrVector();
     HcFileGetSubFileName(GetStorageDirPath(), &osAccountDbNameVec);
     uint32_t index;
@@ -514,6 +704,8 @@ static void LoadDeviceAuthDb(void)
         }
     }
     DestroyStrVector(&osAccountDbNameVec);
+    g_databaseMutex->unlock(g_databaseMutex);
+#endif
 }
 
 static bool SetGroupElement(TlvGroupElement *element, TrustedGroupEntry *entry)
@@ -640,30 +832,6 @@ static bool SaveInfoToParcel(const OsAccountTrustedInfo *info, HcParcel *parcel)
     } while (0);
     TLV_DEINIT(dbv1)
     return ret;
-}
-
-static bool SaveParcelToFile(const OsAccountTrustedInfo *info, HcParcel *parcel)
-{
-    char infoPath[MAX_DB_PATH_LEN] = { 0 };
-    if (!GetOsAccountInfoPath(info->osAccountId, infoPath, MAX_DB_PATH_LEN)) {
-        return false;
-    }
-    FileHandle file;
-    int ret = HcFileOpen(infoPath, MODE_FILE_WRITE, &file);
-    if (ret != HC_SUCCESS) {
-        LOGE("[DB]: Failed to open database file!");
-        return false;
-    }
-    int fileSize = (int)GetParcelDataSize(parcel);
-    const char *fileData = GetParcelData(parcel);
-    int writeSize = HcFileWrite(file, fileData, fileSize);
-    HcFileClose(file);
-    if (writeSize == fileSize) {
-        return true;
-    } else {
-        LOGE("[DB]: write file error!");
-        return false;
-    }
 }
 
 static bool CompareQueryGroupParams(const QueryGroupParams *params, const TrustedGroupEntry *entry)
@@ -1183,7 +1351,13 @@ int32_t SaveOsAccountDb(int32_t osAccountId)
         g_databaseMutex->unlock(g_databaseMutex);
         return HC_ERR_MEMORY_COPY;
     }
-    if (!SaveParcelToFile(info, &parcel)) {
+    char filePath[MAX_DB_PATH_LEN] = { 0 };
+    if (!GetOsAccountInfoPath(osAccountId, filePath, MAX_DB_PATH_LEN)) {
+        DeleteParcel(&parcel);
+        g_databaseMutex->unlock(g_databaseMutex);
+        return HC_ERROR;
+    }
+    if (!SaveParcelToFile(filePath, &parcel)) {
         DeleteParcel(&parcel);
         g_databaseMutex->unlock(g_databaseMutex);
         return HC_ERR_MEMORY_COPY;
@@ -1251,6 +1425,9 @@ static void DevAuthDataBaseDump(int fd)
         LOGE("[DB]: Init mutex failed");
         return;
     }
+#ifdef SUPPORT_OS_ACCOUNT
+    LoadAllAccountsData();
+#endif
     g_databaseMutex->lock(g_databaseMutex);
     uint32_t index;
     OsAccountTrustedInfo *info;
@@ -1277,6 +1454,9 @@ int32_t InitDatabase(void)
         }
     }
     g_deviceauthDb = CREATE_HC_VECTOR(DeviceAuthDb);
+#ifdef SUPPORT_OS_ACCOUNT
+    AddGroupDataCallback();
+#endif
     LoadDeviceAuthDb();
     DEV_AUTH_REG_DUMP_FUNC(DevAuthDataBaseDump);
     return HC_SUCCESS;
@@ -1284,6 +1464,9 @@ int32_t InitDatabase(void)
 
 void DestroyDatabase(void)
 {
+#ifdef SUPPORT_OS_ACCOUNT
+    RemoveGroupDataCallback();
+#endif
     g_databaseMutex->lock(g_databaseMutex);
     uint32_t index;
     OsAccountTrustedInfo *info;

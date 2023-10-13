@@ -52,6 +52,7 @@ inc_path = [
   "${dev_frameworks_path}/inc/os_account_adapter",
   "${dev_frameworks_path}/inc/plugin_adapter",
   "${dev_frameworks_path}/inc/task_manager",
+  "${dev_frameworks_path}/inc/security_label_adapter",
   "${authenticators_path}/inc/account_related",
   "${authenticators_path}/inc/account_unrelated",
   "${authenticators_path}/inc/account_unrelated/iso_task",
@@ -108,6 +109,12 @@ os_account_adapter_files =
 
 os_account_adapter_mock_files = [ "${dev_frameworks_path}/src/os_account_adapter_mock/os_account_adapter_mock.cpp" ]
 
+security_label_adapter_files = [
+  "${dev_frameworks_path}/src/security_label_adapter/security_label_adapter.c",
+]
+
+security_label_adapter_mock_files = [ "${dev_frameworks_path}/src/security_label_adapter_mock/security_label_adapter_mock.c" ]
+
 permission_adapter_files =
     [ "${dev_frameworks_path}/src/permission_adapter/permission_adapter.cpp" ]
 
@@ -116,6 +123,12 @@ hiview_adapter_files = [
   "${dev_frameworks_path}/src/hiview_adapter/hisysevent_adapter.cpp",
   "${dev_frameworks_path}/src/hiview_adapter/hitrace_adapter.cpp",
 ]
+
+account_subscriber_files =
+    [ "${dev_frameworks_path}/src/account_subscriber/account_subscriber.cpp" ]
+
+sa_subscriber_files =
+    [ "${dev_frameworks_path}/src/sa_subscriber/sa_subscriber.cpp" ]
 
 group_auth_files =
     [ "${group_auth_path}/src/group_auth_manager/group_auth_data_operation.c" ]
@@ -382,9 +395,23 @@ if (!defined(ohos_lite) && (!defined(global_parts_info) ||
                             defined(global_parts_info.account_os_account))) {
   deviceauth_files += os_account_adapter_files
   support_os_account = true
+  deviceauth_defines += [ "SUPPORT_OS_ACCOUNT" ]
 } else {
   deviceauth_files += os_account_adapter_mock_files
   support_os_account = false
+}
+
+if (defined(global_parts_info) &&
+    defined(global_parts_info.notification_common_event_service)) {
+  common_event_enabled = true
+} else {
+  common_event_enabled = false
+}
+
+if (defined(ohos_lite)) {
+  deviceauth_files += security_label_adapter_mock_files
+} else {
+  deviceauth_files += security_label_adapter_files
 }
 
 #build_flags = [ "-Wrestrict" ]

@@ -35,6 +35,7 @@ namespace {
 #define TEST_REQ_ID2 321
 #define TEST_REQ_ID3 322
 #define TEST_REQ_ID4 323
+#define TEST_OS_ACCOUNT_ID 100
 #define TEST_APP_ID "TestAppId"
 #define TEST_APP_ID2 "TestAppId2"
 #define TEST_GROUP_NAME "TestGroup"
@@ -85,6 +86,8 @@ static const char *g_deleteParams2 =
     "{\"groupType\":1,\"groupId\":\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\","
     "\"deviceList\":[{\"deviceId\":\"TestAuthId2\"},{\"deviceId\":\"TestAuthId3\"}]}";
 static const char *g_processData = "{\"appId\":\"TestAppId\"}";
+static const char *g_processData2 =
+    "{\"groupId\":\"E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21\",\"appId\":\"TestAppId\"}";
 static const char *g_authParams = "{\"peerConnDeviceId\":\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C"
     "749558BD2E6492C\",\"servicePkgName\":\"TestAppId\",\"isClient\":true}";
 static const char *g_getRegisterInfoParams =
@@ -158,9 +161,33 @@ static char *OnBindRequest(int64_t requestId, int operationCode, const char* req
     return nullptr;
 }
 
+static char *OnBindRequest2(int64_t requestId, int operationCode, const char* reqParam)
+{
+    CJson *json = CreateJson();
+    AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, DEFAULT_OS_ACCOUNT);
+    AddStringToJson(json, FIELD_PIN_CODE, TEST_PIN_CODE);
+    AddStringToJson(json, FIELD_DEVICE_ID, TEST_AUTH_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
 static char *OnAuthRequest(int64_t requestId, int operationCode, const char* reqParam)
 {
     return nullptr;
+}
+
+static char *OnAuthRequest2(int64_t requestId, int operationCode, const char* reqParam)
+{
+    CJson *json = CreateJson();
+    AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, DEFAULT_OS_ACCOUNT);
+    AddStringToJson(json, FIELD_PEER_CONN_DEVICE_ID, TEST_UDID_CLIENT);
+    AddStringToJson(json, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
 }
 
 static DeviceAuthCallback g_gmCallback = {
@@ -171,12 +198,28 @@ static DeviceAuthCallback g_gmCallback = {
     .onRequest = OnBindRequest
 };
 
+static DeviceAuthCallback g_gmCallback2 = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnBindRequest2
+};
+
 static DeviceAuthCallback g_gaCallback = {
     .onTransmit = OnTransmit,
     .onSessionKeyReturned = OnSessionKeyReturned,
     .onFinish = OnFinish,
     .onError = OnError,
     .onRequest = OnAuthRequest
+};
+
+static DeviceAuthCallback g_gaCallback2 = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnAuthRequest2
 };
 
 static void OnGroupCreated(const char *groupInfo)
@@ -510,7 +553,7 @@ HWTEST_F(GmCreateGroupTest, GmCreateGroupTest001, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->createGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, nullptr, g_createParams);
+    int32_t ret = gm->createGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID, nullptr, g_createParams);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -518,7 +561,7 @@ HWTEST_F(GmCreateGroupTest, GmCreateGroupTest002, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->createGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, nullptr);
+    int32_t ret = gm->createGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID, TEST_APP_ID, nullptr);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -528,10 +571,20 @@ HWTEST_F(GmCreateGroupTest, GmCreateGroupTest003, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
     ASSERT_EQ(ret, HC_SUCCESS);
+    CreateDemoGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID, TEST_APP_ID, g_createParams);
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    CreateDemoGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID, TEST_APP_ID, g_createParams2);
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(GmCreateGroupTest, GmCreateGroupTest004, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
     CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, g_createParams);
-    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
-    CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, g_createParams2);
-    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_ERROR);
 }
 
 class GmDestroyInfoTest : public testing::Test {
@@ -600,7 +653,7 @@ HWTEST_F(GmCheckAccessToGroupTest, GmCheckAccessToGroupTest001, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->checkAccessToGroup(DEFAULT_OS_ACCOUNT, nullptr, TEST_GROUP_ID);
+    int32_t ret = gm->checkAccessToGroup(TEST_OS_ACCOUNT_ID, nullptr, TEST_GROUP_ID);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -608,7 +661,7 @@ HWTEST_F(GmCheckAccessToGroupTest, GmCheckAccessToGroupTest002, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->checkAccessToGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID, nullptr);
+    int32_t ret = gm->checkAccessToGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID, nullptr);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -616,7 +669,7 @@ HWTEST_F(GmCheckAccessToGroupTest, GmCheckAccessToGroupTest003, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->checkAccessToGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_GROUP_ID);
+    int32_t ret = gm->checkAccessToGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_GROUP_ID);
     ASSERT_EQ(ret, HC_SUCCESS);
 }
 
@@ -624,11 +677,19 @@ HWTEST_F(GmCheckAccessToGroupTest, GmCheckAccessToGroupTest004, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->checkAccessToGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID2, TEST_GROUP_ID2);
+    int32_t ret = gm->checkAccessToGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID2, TEST_GROUP_ID2);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GmCheckAccessToGroupTest, GmCheckAccessToGroupTest005, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->checkAccessToGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_GROUP_ID3);
+    ASSERT_NE(ret, HC_SUCCESS);
+}
+
+HWTEST_F(GmCheckAccessToGroupTest, GmCheckAccessToGroupTest006, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
@@ -665,7 +726,7 @@ HWTEST_F(GmGetPkInfoListTest, GmGetPkInfoListTest001, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getPkInfoList(DEFAULT_OS_ACCOUNT, nullptr, TEST_QUERY_PARAMS, &returnData, &returnNum);
+    int32_t ret = gm->getPkInfoList(TEST_OS_ACCOUNT_ID, nullptr, TEST_QUERY_PARAMS, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -675,7 +736,7 @@ HWTEST_F(GmGetPkInfoListTest, GmGetPkInfoListTest002, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getPkInfoList(DEFAULT_OS_ACCOUNT, TEST_APP_ID, nullptr, &returnData, &returnNum);
+    int32_t ret = gm->getPkInfoList(TEST_OS_ACCOUNT_ID, TEST_APP_ID, nullptr, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -684,7 +745,7 @@ HWTEST_F(GmGetPkInfoListTest, GmGetPkInfoListTest003, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     uint32_t returnNum = 0;
-    int32_t ret = gm->getPkInfoList(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_QUERY_PARAMS, nullptr, &returnNum);
+    int32_t ret = gm->getPkInfoList(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_QUERY_PARAMS, nullptr, &returnNum);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -693,7 +754,7 @@ HWTEST_F(GmGetPkInfoListTest, GmGetPkInfoListTest004, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
-    int32_t ret = gm->getPkInfoList(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_QUERY_PARAMS, &returnData, nullptr);
+    int32_t ret = gm->getPkInfoList(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_QUERY_PARAMS, &returnData, nullptr);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -705,7 +766,7 @@ HWTEST_F(GmGetPkInfoListTest, GmGetPkInfoListTest005, TestSize.Level0)
     uint32_t returnNum = 0;
     const char *queryParams = "{\"udid\":\"5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242"
         "B3930\",\"isSelfPk\":true}";
-    int32_t ret = gm->getPkInfoList(DEFAULT_OS_ACCOUNT, TEST_APP_ID, queryParams, &returnData, &returnNum);
+    int32_t ret = gm->getPkInfoList(TEST_OS_ACCOUNT_ID, TEST_APP_ID, queryParams, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_SUCCESS);
     ASSERT_NE(returnData, nullptr);
     ASSERT_EQ(returnNum, 0);
@@ -719,10 +780,21 @@ HWTEST_F(GmGetPkInfoListTest, GmGetPkInfoListTest006, TestSize.Level0)
     char *returnData = nullptr;
     uint32_t returnNum = 0;
     const char *queryParams = "{\"udid\":\"ABCD\",\"isSelfPk\":true}";
-    int32_t ret = gm->getPkInfoList(DEFAULT_OS_ACCOUNT, TEST_APP_ID, queryParams, &returnData, &returnNum);
+    int32_t ret = gm->getPkInfoList(TEST_OS_ACCOUNT_ID, TEST_APP_ID, queryParams, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_SUCCESS);
     ASSERT_NE(returnData, nullptr);
     gm->destroyInfo(&returnData);
+}
+
+HWTEST_F(GmGetPkInfoListTest, GmGetPkInfoListTest007, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    EXPECT_NE(gm, nullptr);
+    char *returnData = nullptr;
+    uint32_t returnNum = 0;
+    const char *queryParams = "{\"udid\":\"ABCD\",\"isSelfPk\":true}";
+    int32_t ret = gm->getPkInfoList(DEFAULT_OS_ACCOUNT, TEST_APP_ID, queryParams, &returnData, &returnNum);
+    ASSERT_NE(ret, HC_SUCCESS);
 }
 
 class GmGetGroupInfoByIdTest : public testing::Test {
@@ -753,7 +825,7 @@ HWTEST_F(GmGetGroupInfoByIdTest, GmGetGroupInfoByIdTest001, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
-    int32_t ret = gm->getGroupInfoById(DEFAULT_OS_ACCOUNT, nullptr, TEST_GROUP_ID, &returnData);
+    int32_t ret = gm->getGroupInfoById(TEST_OS_ACCOUNT_ID, nullptr, TEST_GROUP_ID, &returnData);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -762,7 +834,7 @@ HWTEST_F(GmGetGroupInfoByIdTest, GmGetGroupInfoByIdTest002, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
-    int32_t ret = gm->getGroupInfoById(DEFAULT_OS_ACCOUNT, TEST_APP_ID, nullptr, &returnData);
+    int32_t ret = gm->getGroupInfoById(TEST_OS_ACCOUNT_ID, TEST_APP_ID, nullptr, &returnData);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -770,7 +842,7 @@ HWTEST_F(GmGetGroupInfoByIdTest, GmGetGroupInfoByIdTest003, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->getGroupInfoById(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_GROUP_ID, nullptr);
+    int32_t ret = gm->getGroupInfoById(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_GROUP_ID, nullptr);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -779,7 +851,7 @@ HWTEST_F(GmGetGroupInfoByIdTest, GmGetGroupInfoByIdTest004, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
-    int32_t ret = gm->getGroupInfoById(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_GROUP_ID, &returnData);
+    int32_t ret = gm->getGroupInfoById(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_GROUP_ID, &returnData);
     ASSERT_EQ(ret, HC_SUCCESS);
     ASSERT_NE(returnData, nullptr);
     gm->destroyInfo(&returnData);
@@ -790,11 +862,20 @@ HWTEST_F(GmGetGroupInfoByIdTest, GmGetGroupInfoByIdTest005, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
-    int32_t ret = gm->getGroupInfoById(DEFAULT_OS_ACCOUNT, TEST_APP_ID2, TEST_GROUP_ID2, &returnData);
+    int32_t ret = gm->getGroupInfoById(TEST_OS_ACCOUNT_ID, TEST_APP_ID2, TEST_GROUP_ID2, &returnData);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GmGetGroupInfoByIdTest, GmGetGroupInfoByIdTest006, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    char *returnData = nullptr;
+    int32_t ret = gm->getGroupInfoById(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_GROUP_ID3, &returnData);
+    ASSERT_NE(ret, HC_SUCCESS);
+}
+
+HWTEST_F(GmGetGroupInfoByIdTest, GmGetGroupInfoByIdTest007, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
@@ -832,7 +913,7 @@ HWTEST_F(GmGetGroupInfoTest, GmGetGroupInfoTest001, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getGroupInfo(DEFAULT_OS_ACCOUNT, nullptr, TEST_QUERY_PARAMS, &returnData, &returnNum);
+    int32_t ret = gm->getGroupInfo(TEST_OS_ACCOUNT_ID, nullptr, TEST_QUERY_PARAMS, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -842,7 +923,7 @@ HWTEST_F(GmGetGroupInfoTest, GmGetGroupInfoTest002, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getGroupInfo(DEFAULT_OS_ACCOUNT, TEST_APP_ID, nullptr, &returnData, &returnNum);
+    int32_t ret = gm->getGroupInfo(TEST_OS_ACCOUNT_ID, TEST_APP_ID, nullptr, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -851,7 +932,7 @@ HWTEST_F(GmGetGroupInfoTest, GmGetGroupInfoTest003, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     uint32_t returnNum = 0;
-    int32_t ret = gm->getGroupInfo(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_QUERY_PARAMS, nullptr, &returnNum);
+    int32_t ret = gm->getGroupInfo(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_QUERY_PARAMS, nullptr, &returnNum);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -860,7 +941,7 @@ HWTEST_F(GmGetGroupInfoTest, GmGetGroupInfoTest004, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
-    int32_t ret = gm->getGroupInfo(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_QUERY_PARAMS, &returnData, nullptr);
+    int32_t ret = gm->getGroupInfo(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_QUERY_PARAMS, &returnData, nullptr);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -871,7 +952,7 @@ HWTEST_F(GmGetGroupInfoTest, GmGetGroupInfoTest005, TestSize.Level0)
     char *returnData = nullptr;
     uint32_t returnNum = 0;
     const char *queryParams = "{\"groupOwner\":\"TestAppId\"}";
-    int32_t ret = gm->getGroupInfo(DEFAULT_OS_ACCOUNT, TEST_APP_ID, queryParams, &returnData, &returnNum);
+    int32_t ret = gm->getGroupInfo(TEST_OS_ACCOUNT_ID, TEST_APP_ID, queryParams, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_SUCCESS);
     ASSERT_NE(returnData, nullptr);
     gm->destroyInfo(&returnData);
@@ -884,10 +965,21 @@ HWTEST_F(GmGetGroupInfoTest, GmGetGroupInfoTest006, TestSize.Level0)
     char *returnData = nullptr;
     uint32_t returnNum = 0;
     const char *queryParams = "{\"groupOwner\":\"TestAppId2\"}";
-    int32_t ret = gm->getGroupInfo(DEFAULT_OS_ACCOUNT, TEST_APP_ID, queryParams, &returnData, &returnNum);
+    int32_t ret = gm->getGroupInfo(TEST_OS_ACCOUNT_ID, TEST_APP_ID, queryParams, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_SUCCESS);
     ASSERT_NE(returnData, nullptr);
     gm->destroyInfo(&returnData);
+}
+
+HWTEST_F(GmGetGroupInfoTest, GmGetGroupInfoTest007, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    char *returnData = nullptr;
+    uint32_t returnNum = 0;
+    const char *queryParams = "{\"groupOwner\":\"TestAppId2\"}";
+    int32_t ret = gm->getGroupInfo(DEFAULT_OS_ACCOUNT, TEST_APP_ID, queryParams, &returnData, &returnNum);
+    ASSERT_NE(ret, HC_SUCCESS);
 }
 
 class GmGetJoinedGroupsTest : public testing::Test {
@@ -919,7 +1011,7 @@ HWTEST_F(GmGetJoinedGroupsTest, GmGetJoinedGroupsTest001, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getJoinedGroups(DEFAULT_OS_ACCOUNT, nullptr, PEER_TO_PEER_GROUP, &returnData, &returnNum);
+    int32_t ret = gm->getJoinedGroups(TEST_OS_ACCOUNT_ID, nullptr, PEER_TO_PEER_GROUP, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -928,7 +1020,7 @@ HWTEST_F(GmGetJoinedGroupsTest, GmGetJoinedGroupsTest002, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     uint32_t returnNum = 0;
-    int32_t ret = gm->getJoinedGroups(DEFAULT_OS_ACCOUNT, TEST_APP_ID, PEER_TO_PEER_GROUP, nullptr, &returnNum);
+    int32_t ret = gm->getJoinedGroups(TEST_OS_ACCOUNT_ID, TEST_APP_ID, PEER_TO_PEER_GROUP, nullptr, &returnNum);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -937,7 +1029,7 @@ HWTEST_F(GmGetJoinedGroupsTest, GmGetJoinedGroupsTest003, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
-    int32_t ret = gm->getJoinedGroups(DEFAULT_OS_ACCOUNT, nullptr, PEER_TO_PEER_GROUP, &returnData, nullptr);
+    int32_t ret = gm->getJoinedGroups(TEST_OS_ACCOUNT_ID, nullptr, PEER_TO_PEER_GROUP, &returnData, nullptr);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -947,7 +1039,7 @@ HWTEST_F(GmGetJoinedGroupsTest, GmGetJoinedGroupsTest004, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getJoinedGroups(DEFAULT_OS_ACCOUNT, TEST_APP_ID, PEER_TO_PEER_GROUP, &returnData, &returnNum);
+    int32_t ret = gm->getJoinedGroups(TEST_OS_ACCOUNT_ID, TEST_APP_ID, PEER_TO_PEER_GROUP, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_SUCCESS);
     ASSERT_NE(returnData, nullptr);
     ASSERT_NE(returnNum, 0);
@@ -960,10 +1052,20 @@ HWTEST_F(GmGetJoinedGroupsTest, GmGetJoinedGroupsTest005, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getJoinedGroups(DEFAULT_OS_ACCOUNT, TEST_APP_ID2, PEER_TO_PEER_GROUP, &returnData, &returnNum);
+    int32_t ret = gm->getJoinedGroups(TEST_OS_ACCOUNT_ID, TEST_APP_ID2, PEER_TO_PEER_GROUP, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_SUCCESS);
     ASSERT_NE(returnData, nullptr);
     gm->destroyInfo(&returnData);
+}
+
+HWTEST_F(GmGetJoinedGroupsTest, GmGetJoinedGroupsTest006, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    char *returnData = nullptr;
+    uint32_t returnNum = 0;
+    int32_t ret = gm->getJoinedGroups(DEFAULT_OS_ACCOUNT, TEST_APP_ID2, PEER_TO_PEER_GROUP, &returnData, &returnNum);
+    ASSERT_NE(ret, HC_SUCCESS);
 }
 
 class GmGetRelatedGroupsTest : public testing::Test {
@@ -995,7 +1097,7 @@ HWTEST_F(GmGetRelatedGroupsTest, GmGetRelatedGroupsTest001, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getRelatedGroups(DEFAULT_OS_ACCOUNT, nullptr, TEST_AUTH_ID, &returnData, &returnNum);
+    int32_t ret = gm->getRelatedGroups(TEST_OS_ACCOUNT_ID, nullptr, TEST_AUTH_ID, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1005,7 +1107,7 @@ HWTEST_F(GmGetRelatedGroupsTest, GmGetRelatedGroupsTest002, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getRelatedGroups(DEFAULT_OS_ACCOUNT, TEST_APP_ID, nullptr, &returnData, &returnNum);
+    int32_t ret = gm->getRelatedGroups(TEST_OS_ACCOUNT_ID, TEST_APP_ID, nullptr, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1014,7 +1116,7 @@ HWTEST_F(GmGetRelatedGroupsTest, GmGetRelatedGroupsTest003, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     uint32_t returnNum = 0;
-    int32_t ret = gm->getRelatedGroups(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_AUTH_ID, nullptr, &returnNum);
+    int32_t ret = gm->getRelatedGroups(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_AUTH_ID, nullptr, &returnNum);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1023,7 +1125,7 @@ HWTEST_F(GmGetRelatedGroupsTest, GmGetRelatedGroupsTest004, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
-    int32_t ret = gm->getRelatedGroups(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_AUTH_ID, &returnData, nullptr);
+    int32_t ret = gm->getRelatedGroups(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_AUTH_ID, &returnData, nullptr);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1033,7 +1135,7 @@ HWTEST_F(GmGetRelatedGroupsTest, GmGetRelatedGroupsTest005, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getRelatedGroups(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_AUTH_ID, &returnData, &returnNum);
+    int32_t ret = gm->getRelatedGroups(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_AUTH_ID, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_SUCCESS);
     ASSERT_NE(returnData, nullptr);
     ASSERT_NE(returnNum, 0);
@@ -1046,10 +1148,20 @@ HWTEST_F(GmGetRelatedGroupsTest, GmGetRelatedGroupsTest006, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getRelatedGroups(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_AUTH_ID2, &returnData, &returnNum);
+    int32_t ret = gm->getRelatedGroups(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_AUTH_ID2, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_SUCCESS);
     ASSERT_NE(returnData, nullptr);
     gm->destroyInfo(&returnData);
+}
+
+HWTEST_F(GmGetRelatedGroupsTest, GmGetRelatedGroupsTest007, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    char *returnData = nullptr;
+    uint32_t returnNum = 0;
+    int32_t ret = gm->getRelatedGroups(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_AUTH_ID2, &returnData, &returnNum);
+    ASSERT_NE(ret, HC_SUCCESS);
 }
 
 class GmGetDeviceInfoByIdTest : public testing::Test {
@@ -1080,7 +1192,7 @@ HWTEST_F(GmGetDeviceInfoByIdTest, GmGetDeviceInfoByIdTest001, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
-    int32_t ret = gm->getDeviceInfoById(DEFAULT_OS_ACCOUNT, nullptr, TEST_AUTH_ID, TEST_GROUP_ID, &returnData);
+    int32_t ret = gm->getDeviceInfoById(TEST_OS_ACCOUNT_ID, nullptr, TEST_AUTH_ID, TEST_GROUP_ID, &returnData);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1089,7 +1201,7 @@ HWTEST_F(GmGetDeviceInfoByIdTest, GmGetDeviceInfoByIdTest002, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
-    int32_t ret = gm->getDeviceInfoById(DEFAULT_OS_ACCOUNT, TEST_APP_ID, nullptr, TEST_GROUP_ID, &returnData);
+    int32_t ret = gm->getDeviceInfoById(TEST_OS_ACCOUNT_ID, TEST_APP_ID, nullptr, TEST_GROUP_ID, &returnData);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1098,7 +1210,7 @@ HWTEST_F(GmGetDeviceInfoByIdTest, GmGetDeviceInfoByIdTest003, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
-    int32_t ret = gm->getDeviceInfoById(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_AUTH_ID, nullptr, &returnData);
+    int32_t ret = gm->getDeviceInfoById(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_AUTH_ID, nullptr, &returnData);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1106,7 +1218,7 @@ HWTEST_F(GmGetDeviceInfoByIdTest, GmGetDeviceInfoByIdTest004, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->getDeviceInfoById(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_AUTH_ID, TEST_GROUP_ID, nullptr);
+    int32_t ret = gm->getDeviceInfoById(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_AUTH_ID, TEST_GROUP_ID, nullptr);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1115,7 +1227,7 @@ HWTEST_F(GmGetDeviceInfoByIdTest, GmGetDeviceInfoByIdTest005, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
-    int32_t ret = gm->getDeviceInfoById(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_AUTH_ID, TEST_GROUP_ID, &returnData);
+    int32_t ret = gm->getDeviceInfoById(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_AUTH_ID, TEST_GROUP_ID, &returnData);
     ASSERT_EQ(ret, HC_SUCCESS);
     ASSERT_NE(returnData, nullptr);
     gm->destroyInfo(&returnData);
@@ -1126,11 +1238,20 @@ HWTEST_F(GmGetDeviceInfoByIdTest, GmGetDeviceInfoByIdTest006, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
-    int32_t ret = gm->getDeviceInfoById(DEFAULT_OS_ACCOUNT, TEST_APP_ID2, TEST_AUTH_ID, TEST_GROUP_ID2, &returnData);
+    int32_t ret = gm->getDeviceInfoById(TEST_OS_ACCOUNT_ID, TEST_APP_ID2, TEST_AUTH_ID, TEST_GROUP_ID2, &returnData);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GmGetDeviceInfoByIdTest, GmGetDeviceInfoByIdTest007, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    char *returnData = nullptr;
+    int32_t ret = gm->getDeviceInfoById(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_AUTH_ID, TEST_GROUP_ID3, &returnData);
+    ASSERT_NE(ret, HC_SUCCESS);
+}
+
+HWTEST_F(GmGetDeviceInfoByIdTest, GmGetDeviceInfoByIdTest008, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
@@ -1168,7 +1289,7 @@ HWTEST_F(GmGetTrustedDevicesTest, GmGetTrustedDevicesTest001, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getTrustedDevices(DEFAULT_OS_ACCOUNT, nullptr, TEST_GROUP_ID, &returnData, &returnNum);
+    int32_t ret = gm->getTrustedDevices(TEST_OS_ACCOUNT_ID, nullptr, TEST_GROUP_ID, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1178,7 +1299,7 @@ HWTEST_F(GmGetTrustedDevicesTest, GmGetTrustedDevicesTest002, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getTrustedDevices(DEFAULT_OS_ACCOUNT, TEST_APP_ID, nullptr, &returnData, &returnNum);
+    int32_t ret = gm->getTrustedDevices(TEST_OS_ACCOUNT_ID, TEST_APP_ID, nullptr, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1187,7 +1308,7 @@ HWTEST_F(GmGetTrustedDevicesTest, GmGetTrustedDevicesTest003, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     uint32_t returnNum = 0;
-    int32_t ret = gm->getTrustedDevices(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_GROUP_ID, nullptr, &returnNum);
+    int32_t ret = gm->getTrustedDevices(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_GROUP_ID, nullptr, &returnNum);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1196,7 +1317,7 @@ HWTEST_F(GmGetTrustedDevicesTest, GmGetTrustedDevicesTest004, TestSize.Level0)
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
-    int32_t ret = gm->getTrustedDevices(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_GROUP_ID, &returnData, nullptr);
+    int32_t ret = gm->getTrustedDevices(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_GROUP_ID, &returnData, nullptr);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1206,7 +1327,7 @@ HWTEST_F(GmGetTrustedDevicesTest, GmGetTrustedDevicesTest005, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getTrustedDevices(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_GROUP_ID, &returnData, &returnNum);
+    int32_t ret = gm->getTrustedDevices(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_GROUP_ID, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_SUCCESS);
     ASSERT_NE(returnData, nullptr);
     ASSERT_NE(returnNum, 0);
@@ -1219,11 +1340,21 @@ HWTEST_F(GmGetTrustedDevicesTest, GmGetTrustedDevicesTest006, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     uint32_t returnNum = 0;
-    int32_t ret = gm->getTrustedDevices(DEFAULT_OS_ACCOUNT, TEST_APP_ID2, TEST_GROUP_ID2, &returnData, &returnNum);
+    int32_t ret = gm->getTrustedDevices(TEST_OS_ACCOUNT_ID, TEST_APP_ID2, TEST_GROUP_ID2, &returnData, &returnNum);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GmGetTrustedDevicesTest, GmGetTrustedDevicesTest007, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    char *returnData = nullptr;
+    uint32_t returnNum = 0;
+    int32_t ret = gm->getTrustedDevices(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_GROUP_ID3, &returnData, &returnNum);
+    ASSERT_NE(ret, HC_SUCCESS);
+}
+
+HWTEST_F(GmGetTrustedDevicesTest, GmGetTrustedDevicesTest008, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
@@ -1260,7 +1391,7 @@ HWTEST_F(GmIsDeviceInGroupTest, GmIsDeviceInGroupTest001, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    bool ret = gm->isDeviceInGroup(DEFAULT_OS_ACCOUNT, nullptr, TEST_GROUP_ID, TEST_AUTH_ID);
+    bool ret = gm->isDeviceInGroup(TEST_OS_ACCOUNT_ID, nullptr, TEST_GROUP_ID, TEST_AUTH_ID);
     ASSERT_EQ(ret, false);
 }
 
@@ -1268,7 +1399,7 @@ HWTEST_F(GmIsDeviceInGroupTest, GmIsDeviceInGroupTest002, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    bool ret = gm->isDeviceInGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID, nullptr, TEST_AUTH_ID);
+    bool ret = gm->isDeviceInGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID, nullptr, TEST_AUTH_ID);
     ASSERT_EQ(ret, false);
 }
 
@@ -1276,7 +1407,7 @@ HWTEST_F(GmIsDeviceInGroupTest, GmIsDeviceInGroupTest003, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    bool ret = gm->isDeviceInGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_GROUP_ID, nullptr);
+    bool ret = gm->isDeviceInGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_GROUP_ID, nullptr);
     ASSERT_EQ(ret, false);
 }
 
@@ -1284,7 +1415,7 @@ HWTEST_F(GmIsDeviceInGroupTest, GmIsDeviceInGroupTest004, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    bool ret = gm->isDeviceInGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_GROUP_ID, TEST_AUTH_ID);
+    bool ret = gm->isDeviceInGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_GROUP_ID, TEST_AUTH_ID);
     ASSERT_EQ(ret, true);
 }
 
@@ -1292,11 +1423,19 @@ HWTEST_F(GmIsDeviceInGroupTest, GmIsDeviceInGroupTest005, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    bool ret = gm->isDeviceInGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID2, TEST_GROUP_ID2, TEST_AUTH_ID);
+    bool ret = gm->isDeviceInGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID2, TEST_GROUP_ID2, TEST_AUTH_ID);
     ASSERT_NE(ret, true);
 }
 
 HWTEST_F(GmIsDeviceInGroupTest, GmIsDeviceInGroupTest006, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    bool ret = gm->isDeviceInGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_GROUP_ID3, TEST_AUTH_ID);
+    ASSERT_EQ(ret, false);
+}
+
+HWTEST_F(GmIsDeviceInGroupTest, GmIsDeviceInGroupTest007, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
@@ -1335,7 +1474,7 @@ HWTEST_F(GmAddMemberToGroupTest, GmAddMemberToGroupTest001, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->addMemberToGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, nullptr, TEST_QUERY_PARAMS);
+    int32_t ret = gm->addMemberToGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID, nullptr, TEST_QUERY_PARAMS);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1343,7 +1482,7 @@ HWTEST_F(GmAddMemberToGroupTest, GmAddMemberToGroupTest002, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->addMemberToGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, nullptr);
+    int32_t ret = gm->addMemberToGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID, TEST_APP_ID, nullptr);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1353,8 +1492,18 @@ HWTEST_F(GmAddMemberToGroupTest, GmAddMemberToGroupTest003, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
     ASSERT_EQ(ret, HC_SUCCESS);
-    ret = gm->addMemberToGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID2, TEST_APP_ID, g_addParams);
+    ret = gm->addMemberToGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID2, TEST_APP_ID, g_addParams);
     ASSERT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(GmAddMemberToGroupTest, GmAddMemberToGroupTest004, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->addMemberToGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID3, TEST_APP_ID, g_addParams);
+    ASSERT_NE(ret, HC_SUCCESS);
 }
 
 class GmDeleteMemberFromGroupTest : public testing::Test {
@@ -1388,7 +1537,7 @@ HWTEST_F(GmDeleteMemberFromGroupTest, GmDeleteMemberFromGroupTest001, TestSize.L
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->deleteMemberFromGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, nullptr, TEST_QUERY_PARAMS);
+    int32_t ret = gm->deleteMemberFromGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID, nullptr, TEST_QUERY_PARAMS);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1396,7 +1545,7 @@ HWTEST_F(GmDeleteMemberFromGroupTest, GmDeleteMemberFromGroupTest002, TestSize.L
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->deleteMemberFromGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, nullptr);
+    int32_t ret = gm->deleteMemberFromGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID, TEST_APP_ID, nullptr);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1406,8 +1555,18 @@ HWTEST_F(GmDeleteMemberFromGroupTest, GmDeleteMemberFromGroupTest003, TestSize.L
     ASSERT_NE(gm, nullptr);
     int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
     ASSERT_EQ(ret, HC_SUCCESS);
-    ret = gm->deleteMemberFromGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID3, TEST_APP_ID, g_deleteParams);
+    ret = gm->deleteMemberFromGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID3, TEST_APP_ID, g_deleteParams);
     ASSERT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(GmDeleteMemberFromGroupTest, GmDeleteMemberFromGroupTest004, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->deleteMemberFromGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID4, TEST_APP_ID, g_deleteParams);
+    ASSERT_NE(ret, HC_SUCCESS);
 }
 
 class GmProcessDataTest : public testing::Test {
@@ -1471,6 +1630,16 @@ HWTEST_F(GmProcessDataTest, GmProcessDataTest004, TestSize.Level0)
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
+HWTEST_F(GmProcessDataTest, GmProcessDataTest005, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback2);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->processData(TEST_REQ_ID, (const uint8_t *)g_processData2, strlen(g_processData2) + 1);
+    ASSERT_NE(ret, HC_SUCCESS);
+}
+
 class GmAddMultiMembersToGroupTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -1502,7 +1671,7 @@ HWTEST_F(GmAddMultiMembersToGroupTest, GmAddMultiMembersToGroupTest001, TestSize
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->addMultiMembersToGroup(DEFAULT_OS_ACCOUNT, nullptr, TEST_QUERY_PARAMS);
+    int32_t ret = gm->addMultiMembersToGroup(TEST_OS_ACCOUNT_ID, nullptr, TEST_QUERY_PARAMS);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1510,11 +1679,21 @@ HWTEST_F(GmAddMultiMembersToGroupTest, GmAddMultiMembersToGroupTest002, TestSize
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->addMultiMembersToGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID, nullptr);
+    int32_t ret = gm->addMultiMembersToGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID, nullptr);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
 HWTEST_F(GmAddMultiMembersToGroupTest, GmAddMultiMembersToGroupTest003, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->addMultiMembersToGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID, g_addParams2);
+    ASSERT_NE(ret, HC_SUCCESS);
+}
+
+HWTEST_F(GmAddMultiMembersToGroupTest, GmAddMultiMembersToGroupTest004, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
@@ -1555,7 +1734,7 @@ HWTEST_F(GmDelMultiMembersFromGroupTest, GmDelMultiMembersFromGroupTest001, Test
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->delMultiMembersFromGroup(DEFAULT_OS_ACCOUNT, nullptr, TEST_QUERY_PARAMS);
+    int32_t ret = gm->delMultiMembersFromGroup(TEST_OS_ACCOUNT_ID, nullptr, TEST_QUERY_PARAMS);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1563,11 +1742,21 @@ HWTEST_F(GmDelMultiMembersFromGroupTest, GmDelMultiMembersFromGroupTest002, Test
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->delMultiMembersFromGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID, nullptr);
+    int32_t ret = gm->delMultiMembersFromGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID, nullptr);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
 HWTEST_F(GmDelMultiMembersFromGroupTest, GmDelMultiMembersFromGroupTest003, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->delMultiMembersFromGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID, g_deleteParams2);
+    ASSERT_NE(ret, HC_SUCCESS);
+}
+
+HWTEST_F(GmDelMultiMembersFromGroupTest, GmDelMultiMembersFromGroupTest004, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
@@ -1655,7 +1844,7 @@ HWTEST_F(GaAuthDeviceTest, GaAuthDeviceTest001, TestSize.Level0)
 {
     const GroupAuthManager *ga = GetGaInstance();
     ASSERT_NE(ga, nullptr);
-    int32_t ret = ga->authDevice(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, nullptr, &g_gmCallback);
+    int32_t ret = ga->authDevice(TEST_OS_ACCOUNT_ID, TEST_REQ_ID, nullptr, &g_gmCallback);
     ASSERT_EQ(ret, HC_ERR_INVALID_PARAMS);
 }
 
@@ -1663,7 +1852,7 @@ HWTEST_F(GaAuthDeviceTest, GaAuthDeviceTest002, TestSize.Level0)
 {
     const GroupAuthManager *ga = GetGaInstance();
     ASSERT_NE(ga, nullptr);
-    int32_t ret = ga->authDevice(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, g_authParams, nullptr);
+    int32_t ret = ga->authDevice(TEST_OS_ACCOUNT_ID, TEST_REQ_ID, g_authParams, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
@@ -1671,8 +1860,16 @@ HWTEST_F(GaAuthDeviceTest, GaAuthDeviceTest003, TestSize.Level0)
 {
     const GroupAuthManager *ga = GetGaInstance();
     ASSERT_NE(ga, nullptr);
-    int32_t ret = ga->authDevice(DEFAULT_OS_ACCOUNT, TEST_REQ_ID4, g_authParams, &g_gaCallback);
+    int32_t ret = ga->authDevice(TEST_OS_ACCOUNT_ID, TEST_REQ_ID4, g_authParams, &g_gaCallback);
     ASSERT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(GaAuthDeviceTest, GaAuthDeviceTest004, TestSize.Level0)
+{
+    const GroupAuthManager *ga = GetGaInstance();
+    ASSERT_NE(ga, nullptr);
+    int32_t ret = ga->authDevice(DEFAULT_OS_ACCOUNT, TEST_REQ_ID2, g_authParams, &g_gaCallback);
+    ASSERT_NE(ret, HC_SUCCESS);
 }
 
 class GaProcessDataTest : public testing::Test {
@@ -1739,6 +1936,15 @@ HWTEST_F(GaProcessDataTest, GaProcessDataTest005, TestSize.Level0)
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
+HWTEST_F(GaProcessDataTest, GaProcessDataTest006, TestSize.Level0)
+{
+    const GroupAuthManager *ga = GetGaInstance();
+    ASSERT_NE(ga, nullptr);
+    int32_t ret = ga->processData(TEST_REQ_ID, (const uint8_t *)g_processData,
+        strlen(g_processData) + 1, &g_gaCallback2);
+    ASSERT_NE(ret, HC_SUCCESS);
+}
+
 class GmDeleteGroupTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -1770,7 +1976,7 @@ HWTEST_F(GmDeleteGroupTest, GmDeleteGroupTest001, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->deleteGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, nullptr, g_disbandParams);
+    int32_t ret = gm->deleteGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID, nullptr, g_disbandParams);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
@@ -1778,7 +1984,7 @@ HWTEST_F(GmDeleteGroupTest, GmDeleteGroupTest002, TestSize.Level0)
 {
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
-    int32_t ret = gm->deleteGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, nullptr);
+    int32_t ret = gm->deleteGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID, TEST_APP_ID, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
@@ -1788,10 +1994,20 @@ HWTEST_F(GmDeleteGroupTest, GmDeleteGroupTest003, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
     ASSERT_EQ(ret, HC_SUCCESS);
+    DeleteDemoGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID, TEST_APP_ID, g_disbandParams);
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    DeleteDemoGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID, TEST_APP_ID, g_disbandParams2);
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(GmDeleteGroupTest, GmDeleteGroupTest004, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
     DeleteDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, g_disbandParams);
-    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
-    DeleteDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, g_disbandParams2);
-    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_ERROR);
 }
 
 class GmUnRegCallbackTest : public testing::Test {

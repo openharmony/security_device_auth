@@ -171,12 +171,14 @@ HWTEST_F(AsyTokenManagerTest, AsyTokenManagerTest006, TestSize.Level0)
         if (in == nullptr) {
             break;
         }
+        char tokenPath[MAX_DB_PATH_LEN] = { 0 };
+        (void)GetTokenPathDe(DEFAULT_OS_ACCOUNT, tokenPath, MAX_DB_PATH_LEN);
         ret = GenerateTokenFromJson(nullptr, &accountToken);
         ret = CreateTokensFromJson(nullptr, nullptr);
-        ret = ReadTokensFromFile(DEFAULT_OS_ACCOUNT, nullptr);
-        ret = ReadTokensFromFile(DEFAULT_OS_ACCOUNT, &vec);
-        ret = WriteTokensJsonToFile(DEFAULT_OS_ACCOUNT, nullptr);
-        ret = WriteTokensJsonToFile(DEFAULT_OS_ACCOUNT, in);
+        ret = ReadTokensFromFile(nullptr, tokenPath);
+        ret = ReadTokensFromFile(&vec, tokenPath);
+        ret = WriteTokensJsonToFile(nullptr, tokenPath);
+        ret = WriteTokensJsonToFile(in, tokenPath);
         ret = GenerateJsonFromToken(&accountToken, nullptr);
         ret = GenerateServerPkAlias(nullptr, nullptr);
         if (AddStringToJson(in, FIELD_USER_ID, "user_id_test") != HC_SUCCESS) { // For unit test.

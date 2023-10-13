@@ -13,16 +13,10 @@
  * limitations under the License.
  */
 
-#include "os_account_adapter.h"
-#include "device_auth.h"
+#include "security_label_adapter.h"
 
-int32_t DevAuthGetRealOsAccountLocalId(int32_t inputId)
+void SetSecurityLabel(const char *filePath, const char *labelToSet)
 {
-    return inputId;
-}
-
-bool CheckOsAccountStatus(int32_t osAccountId)
-{
-    (void)osAccountId;
-    return true;
+    (void)filePath;
+    (void)labelToSet;
 }

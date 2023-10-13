@@ -82,6 +82,8 @@ ohos_unittest("deviceauth_llt") {
   sources += privacy_enhancement_files
   sources += mk_agree_files
 
+  sources += security_label_adapter_files
+
   sources -= [
     "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
     "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
@@ -200,6 +202,8 @@ ohos_unittest("device_auth_func_test") {
 
   sources += privacy_enhancement_files
   sources += mk_agree_files
+
+  sources += security_label_adapter_files
 
   sources -= [
     "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
@@ -322,6 +326,8 @@ ohos_unittest("deviceauth_unit_test") {
 
   sources += privacy_enhancement_files
   sources += mk_agree_files
+
+  sources += security_label_adapter_files
 
   sources -= [
     "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
