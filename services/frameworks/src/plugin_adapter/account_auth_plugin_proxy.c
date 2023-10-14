@@ -37,7 +37,8 @@ int32_t SetAccountAuthPlugin(const CJson *inputParams, AccountAuthExtPlug *accou
 {
     g_accountAuthPlugin = accountAuthPlugin;
     if (g_accountAuthPlugin == NULL || g_accountAuthPlugin->createSession == NULL ||
-        g_accountAuthPlugin->excuteCredMgrCmd == NULL || g_accountAuthPlugin->processSession == NULL) {
+        g_accountAuthPlugin->excuteCredMgrCmd == NULL || g_accountAuthPlugin->processSession == NULL ||
+        g_accountAuthPlugin->destroySession == NULL) {
         LOGE("[ACCOUNT_AUTH_PLUGIN]: SetAccountAuthPlugin:Input params is invalid.");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -75,6 +76,15 @@ int32_t ProcessAuthSession(int32_t *sessionId, const CJson *in, CJson *out, int3
         return HC_ERR_INVALID_PARAMS;
     }
     return g_accountAuthPlugin->processSession(sessionId, in, out, status);
+}
+
+int32_t DestroyAuthSession(int32_t sessionId)
+{
+    if (g_accountAuthPlugin == NULL || g_accountAuthPlugin->destroySession == NULL) {
+        LOGE("[ACCOUNT_AUTH_PLUGIN]: destroySession: Input params is invalid.");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    return g_accountAuthPlugin->destroySession(sessionId);
 }
 
 void DestoryAccountAuthPlugin(void)

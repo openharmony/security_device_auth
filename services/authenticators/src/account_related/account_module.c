@@ -14,6 +14,7 @@
  */
 
 #include "account_module.h"
+#include "account_auth_plugin_proxy.h"
 #include "account_module_defines.h"
 #include "account_multi_task_manager.h"
 #include "account_version_util.h"
@@ -67,6 +68,9 @@ static int32_t CreateAccountTask(int32_t *taskId, const CJson *in, CJson *out)
     if (IsAccountMsgNeedIgnore(in)) {
         return HC_ERR_IGNORE_MSG;
     }
+    if (HasAccountAuthPlugin() == HC_SUCCESS) {
+        return CreateAuthSession(taskId, in, out);
+    }
     AccountMultiTaskManager *authManager = GetAccountMultiTaskManager();
     if (authManager == NULL) {
         LOGE("Get multi auth manager instance failed.");
@@ -91,6 +95,9 @@ static int32_t CreateAccountTask(int32_t *taskId, const CJson *in, CJson *out)
 
 static int32_t ProcessAccountTask(int32_t taskId, const CJson *in, CJson *out, int32_t *status)
 {
+    if (HasAccountAuthPlugin() == HC_SUCCESS) {
+        return ProcessAuthSession(&taskId, in, out, status);
+    }
     AccountMultiTaskManager *authManager = GetAccountMultiTaskManager();
     if (authManager == NULL) {
         LOGE("Get multi auth manager instance failed.");
@@ -107,6 +114,10 @@ static int32_t ProcessAccountTask(int32_t taskId, const CJson *in, CJson *out, i
 
 static void DestroyAccountTask(int32_t taskId)
 {
+    if (HasAccountAuthPlugin() == HC_SUCCESS) {
+        (void)DestroyAuthSession(taskId);
+        return;
+    }
     AccountMultiTaskManager *authManager = GetAccountMultiTaskManager();
     if (authManager == NULL) {
         LOGE("Get multi auth manager instance failed.");

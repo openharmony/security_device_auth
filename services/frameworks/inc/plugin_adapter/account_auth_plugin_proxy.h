@@ -28,6 +28,7 @@ int32_t SetAccountAuthPlugin(const CJson *inputParams, AccountAuthExtPlug *accou
 int32_t ExcuteCredMgrCmd(int32_t osAccountId, int32_t cmdId, const CJson *in, CJson *out);
 int32_t CreateAuthSession(int32_t *sessionId, const CJson *in, CJson *out);
 int32_t ProcessAuthSession(int32_t *sessionId, const CJson *in, CJson *out, int32_t *status);
+int32_t DestroyAuthSession(int32_t sessionId);
 void DestoryAccountAuthPlugin(void);
 int32_t HasAccountAuthPlugin(void);
 

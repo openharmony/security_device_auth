@@ -85,6 +85,8 @@ typedef struct {
     int32_t (*createSession)(int32_t *sessionId, const cJSON *in, cJSON *out);
     /** This function is used to process authentication dat. */
     int32_t (*processSession)(int32_t *sessionId, const cJSON *in, cJSON *out, int32_t *status);
+    /** This function is used to destroy authentication dat. */
+    int32_t (*destroySession)(int32_t sessionId);
 } AccountAuthExtPlug;
 
 /**

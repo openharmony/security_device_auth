@@ -15,6 +15,7 @@
 
 #include "device_auth.h"
 
+#include "account_auth_plugin_proxy.h"
 #include "alg_loader.h"
 #include "callback_manager.h"
 #include "channel_manager.h"
@@ -439,6 +440,15 @@ static int32_t PushStartSessionTask(int64_t sessionId)
     }
     LOGI("push start session task success.");
     return HC_SUCCESS;
+}
+
+static int32_t AddOriginDataForPlugin(CJson *receivedMsg, const uint8_t *data)
+{
+    if ((receivedMsg == NULL) || (data == NULL)) {
+        LOGE("Invalid params");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    return AddStringToJson(receivedMsg, FIELD_PLUGIN_EXT_DATA, (const char *)data);
 }
 
 static int32_t PushProcSessionTask(int64_t sessionId, CJson *receivedMsg)
@@ -906,6 +916,13 @@ static int32_t ProcessData(int64_t authReqId, const uint8_t *data, uint32_t data
     int32_t res;
     if (!IsSessionExist(authReqId)) {
         res = OpenServerAuthSession(authReqId, receivedMsg, gaCallback);
+        if (res != HC_SUCCESS) {
+            FreeJson(receivedMsg);
+            return res;
+        }
+    }
+    if (HasAccountAuthPlugin() == HC_SUCCESS) {
+        res = AddOriginDataForPlugin(receivedMsg, data);
         if (res != HC_SUCCESS) {
             FreeJson(receivedMsg);
             return res;
