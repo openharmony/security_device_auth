@@ -126,6 +126,7 @@
 #define FIELD_AUTH_PK_INFO_SIGN "authPkInfoSign"
 #define FIELD_AUTH_RESULT_MAC "authResultMac"
 #define FIELD_LOCAL_DEVICE_TYPE "localDeviceType"
+#define FIELD_PLUGIN_EXT_DATA "originPeerData"
 
 #define INVALID_MODULE_TYPE (-1)
 #define GROUP_ERR_MSG 0x8080

@@ -14,6 +14,7 @@
  */
 
 #include "account_related_group_auth.h"
+#include "account_auth_plugin_proxy.h"
 #include "common_defs.h"
 #include "device_auth_defines.h"
 #include "group_auth_data_operation.h"
@@ -508,7 +509,7 @@ static int32_t GetAuthParamsVecForServer(const CJson *dataFromClient, ParamsVecF
         return HC_ERR_JSON_FAIL;
     }
 
-    if (AddSelfAccountInfoForServer(dupData) != HC_SUCCESS) {
+    if ((HasAccountAuthPlugin() != HC_SUCCESS) && (AddSelfAccountInfoForServer(dupData) != HC_SUCCESS)) {
         LOGE("Failed to add account info for server!");
         FreeJson(dupData);
         return HC_ERR_GROUP_NOT_EXIST;

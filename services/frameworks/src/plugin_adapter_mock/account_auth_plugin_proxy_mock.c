@@ -50,6 +50,12 @@ int32_t ProcessAuthSession(int32_t *sessionId, const CJson *in, CJson *out, int3
     return HC_ERR_NOT_SUPPORT;
 }
 
+int32_t DestroyAuthSession(int32_t sessionId)
+{
+    (void)sessionId;
+    return HC_ERR_NOT_SUPPORT;
+}
+
 void DestoryAccountAuthPlugin(void)
 {
 }

@@ -15,6 +15,7 @@
 
 #include "creds_manager.h"
 
+#include "account_auth_plugin_proxy.h"
 #include "account_module_defines.h"
 #include "account_related_creds_manager.h"
 #include "account_related_group_auth.h"
@@ -41,6 +42,24 @@ static int32_t GetAccountRelatedCandidateGroups(int32_t osAccountId, const CJson
         queryParams.groupVisibility = GROUP_VISIBILITY_PUBLIC;
     }
     ((AccountRelatedGroupAuth *)groupAuth)->getAccountCandidateGroup(osAccountId, in, &queryParams, vec);
+    // All return success, only notify the plugin.
+    if (HasAccountAuthPlugin() == HC_SUCCESS && vec->size(vec) == 0) {
+        CJson *input = CreateJson();
+        if (input == NULL) {
+            return HC_SUCCESS;
+        }
+        CJson *output = CreateJson();
+        if (output == NULL) {
+            FreeJson(input);
+            return HC_SUCCESS;
+        }
+        int32_t ret = ExcuteCredMgrCmd(osAccountId, QUERY_SELF_CREDENTIAL_INFO, input, output);
+        if (ret != HC_SUCCESS) {
+            LOGE("Account cred is empty.");
+        }
+        FreeJson(input);
+        FreeJson(output);
+    }
     return HC_SUCCESS;
 }
 
