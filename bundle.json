@@ -1,6 +1,6 @@
 {
     "name": "@ohos/device_auth",
-    "version": "3.1",
+    "version": "4.0.2",
     "description": "The device authentication module belongs to the security subsystem of OpenHarmony. It manages the entire lifecycle of trust relationships between devices.",
     "publishAs": "code-segment",
     "segment": {
@@ -9,7 +9,9 @@
     "dirs": {},
     "scripts": {},
     "author": {},
-    "repository": "",
+    "homePage": "https://gitee.com/openharmony",
+    "repository": "https://gitee.com/openharmony/security_device_auth",
+    "supplier": "Organization: OpenHarmony",
     "license": "Apache License 2.0",
     "component": {
       "name": "device_auth",
