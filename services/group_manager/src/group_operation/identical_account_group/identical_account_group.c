@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -388,7 +388,7 @@ static int32_t AddDeviceAndToken(int32_t osAccountId, const CJson *jsonParams, C
     return res;
 }
 
-static int32_t DelPeerDeviceAndToken(int32_t osAccountId, CJson *jsonParams, CJson *deviceInfo)
+static int32_t DelPeerDevice(int32_t osAccountId, CJson *jsonParams, CJson *deviceInfo, bool needDeleteToken)
 {
     const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
     if (groupId == NULL) {
@@ -416,12 +416,19 @@ static int32_t DelPeerDeviceAndToken(int32_t osAccountId, CJson *jsonParams, CJs
         DestroyDeviceEntry(entry);
         return res;
     }
-    res = DelDeviceToken(osAccountId, entry, false);
+    if (needDeleteToken) {
+        res = DelDeviceToken(osAccountId, entry, false);
+    }
     DestroyDeviceEntry(entry);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete token! res: %d", res);
     }
     return res;
+}
+
+static int32_t DelPeerDeviceAndToken(int32_t osAccountId, CJson *jsonParams, CJson *deviceInfo)
+{
+    return DelPeerDevice(osAccountId, jsonParams, deviceInfo, true);
 }
 
 static int32_t CheckChangeParams(int32_t osAccountId, const char *appId, CJson *jsonParams)
@@ -556,6 +563,92 @@ static int32_t DeleteGroup(int32_t osAccountId, CJson *jsonParams, char **return
     return HC_SUCCESS;
 }
 
+static void updateTrustedDeviceForMetaNode(int32_t osAccountId, CJson *jsonParams, CJson *deviceList)
+{
+    const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
+    if (groupId == NULL) {
+        LOGE("Failed to get groupId from json!");
+        return;
+    }
+
+    int32_t deviceNum = GetItemNum(deviceList);
+    int32_t addedCount = 0;
+    int32_t deletedCount = 0;
+    for (int32_t i = 0; i < deviceNum; i++) {
+        CJson *deviceInfo = GetItemFromArray(deviceList, i);
+        if (deviceInfo == NULL) {
+            LOGE("The deviceInfo is NULL!");
+            continue;
+        }
+        int32_t opCode = 0;
+        if (GetIntFromJson(deviceInfo, FIELD_GROUP_OP, &opCode) != HC_SUCCESS) {
+            LOGE("There is no group op code.");
+            continue;
+        }
+        if (CheckDeviceInfoValid(osAccountId, jsonParams, deviceInfo) != HC_SUCCESS) {
+            continue;
+        }
+        switch (opCode) {
+            case MEMBER_INVITE:
+            case MEMBER_JOIN:
+                if (AddDeviceToDatabaseByJson(osAccountId, GenerateTrustedDevParams, deviceInfo, groupId) ==
+                    HC_SUCCESS) {
+                    addedCount++;
+                }
+                break;
+            case MEMBER_DELETE:
+                if (DelPeerDevice(osAccountId, jsonParams, deviceInfo, false) == HC_SUCCESS) {
+                    deletedCount++;
+                }
+                break;
+            default:
+                LOGE("Unknown group operate code: %d!", opCode);
+                break;
+        }
+    }
+    if (addedCount > 0) {
+        LOGI("Add multiple members to a identical account group successfully! [ListNum]: %d, [AddedNum]: %d",
+            deviceNum, addedCount);
+    }
+    if (deletedCount > 0) {
+        LOGI("Delete multiple members from a identical account group successfully! [ListNum]: %d, [DeletedNum]: %d",
+            deviceNum, deletedCount);
+    }
+}
+
+static int32_t AddMetaNodeDeviceToGroup(int32_t osAccountId, CJson *jsonParams)
+{
+    LOGI("[Start]: Start to add meta node device to a identical account group!");
+    CJson *processResult = CreateJson();
+    if (processResult == NULL) {
+        LOGE("Failed to allocate processResult memory!");
+        return HC_ERR_JSON_CREATE;
+    }
+    int32_t res = ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId, IMPORT_TRUSTED_CREDENTIALS, jsonParams, processResult);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to import device token! res: %d", res);
+        FreeJson(processResult);
+        return res;
+    }
+
+    CJson *deviceList = GetObjFromJson(processResult, FIELD_DEVICE_LIST);
+    if (deviceList == NULL) {
+        LOGE("Failed to get deviceList from json!");
+        FreeJson(processResult);
+        return HC_ERR_JSON_GET;
+    }
+    updateTrustedDeviceForMetaNode(osAccountId, jsonParams, deviceList);
+    FreeJson(processResult);
+
+    res = SaveOsAccountDb(osAccountId);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to save database!");
+        return res;
+    }
+    LOGI("[End]: Add meta node device successfully!");
+    return HC_SUCCESS;
+}
+
 static int32_t AddMultiMembersToGroup(int32_t osAccountId, const char *appId, CJson *jsonParams)
 {
     LOGI("[Start]: Start to add multiple members to a identical account group!");
@@ -567,6 +660,13 @@ static int32_t AddMultiMembersToGroup(int32_t osAccountId, const char *appId, CJ
     if (res != HC_SUCCESS) {
         return res;
     }
+
+    const char *metaNodeType = GetStringFromJson(jsonParams, FIELD_META_NODE_TYPE);
+    if (metaNodeType != NULL) {
+        LOGI("Find MetaNodeType: %s", metaNodeType);
+        return AddMetaNodeDeviceToGroup(osAccountId, jsonParams);
+    }
+
     CJson *deviceList = GetObjFromJson(jsonParams, FIELD_DEVICE_LIST);
     if (deviceList == NULL) {
         LOGE("Failed to get deviceList from json!");
