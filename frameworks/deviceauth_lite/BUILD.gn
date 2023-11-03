@@ -17,10 +17,10 @@ import("//build/ohos.gni")
 
 group("hichainsdk") {
   deps = []
-  
+
   #  if (os_level == "mini" || os_level == "small") {
     deps += [ 
-      "//base/security/device_auth/frameworks/deviceauth_lite/source:hichainsdk" 
+      "//base/security/device_auth/frameworks/deviceauth_lite/source:hichainsdk", 
     ]
 
   #  }
