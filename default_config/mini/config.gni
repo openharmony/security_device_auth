@@ -31,4 +31,6 @@ declare_args() {
   enable_key_agree_dl_prime_len_256 = true
   enable_key_agree_pake_ec_prime_p256 = true
   enable_key_agree_pake_ec_prime_x25519 = true
+
+  max_auth_session_count = 10
 }

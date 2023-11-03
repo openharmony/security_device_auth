@@ -117,19 +117,34 @@ static int32_t VerifyPeerCertInfo(const char *selfUserId, const char *selfAuthId
     return HC_SUCCESS;
 }
 
-static int32_t GetPeerPubKeyFromCert(const CertInfo *peerCertInfo, uint8_t *pkPeer, uint32_t pkSize)
+static int32_t GetPeerPubKeyFromCert(const CertInfo *peerCertInfo, Uint8Buff *peerPkBuff)
 {
     CJson *pkInfoPeer = CreateJsonFromString((const char *)peerCertInfo->pkInfoStr.val);
     if (pkInfoPeer == NULL) {
         LOGE("Failed to create peer pkInfo json!");
         return HC_ERR_JSON_CREATE;
     }
-    if (GetByteFromJson(pkInfoPeer, FIELD_DEVICE_PK, pkPeer, pkSize) != HC_SUCCESS) {
+    const char *devicePk = GetStringFromJson(pkInfoPeer, FIELD_DEVICE_PK);
+    if (devicePk == NULL) {
+        LOGE("Failed to get peer devicePk!");
+        FreeJson(pkInfoPeer);
+        return HC_ERR_JSON_GET;
+    }
+    uint32_t pkSize = HcStrlen(devicePk) / BYTE_TO_HEX_OPER_LENGTH;
+    peerPkBuff->val = (uint8_t *)HcMalloc(pkSize, 0);
+    if (peerPkBuff->val == NULL) {
+        LOGE("Failed to alloc memory for peerPk!");
+        FreeJson(pkInfoPeer);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (GetByteFromJson(pkInfoPeer, FIELD_DEVICE_PK, peerPkBuff->val, pkSize) != HC_SUCCESS) {
         LOGE("Failed to get peer public key!");
+        HcFree(peerPkBuff->val);
         FreeJson(pkInfoPeer);
         return HC_ERR_JSON_GET;
     }
     FreeJson(pkInfoPeer);
+    peerPkBuff->length = pkSize;
     return HC_SUCCESS;
 }
 
@@ -152,15 +167,15 @@ static int32_t GetSharedSecretForAccountInPake(const char *userId, const char *a
         .keyLen = aliasBuff.length,
         .isAlias = true
     };
-    uint8_t pkPeer[PK_SIZE] = { 0 };
-    ret = GetPeerPubKeyFromCert(peerCertInfo, pkPeer, PK_SIZE);
+    Uint8Buff peerPkBuff =  { 0 };
+    ret = GetPeerPubKeyFromCert(peerCertInfo, &peerPkBuff);
     if (ret != HC_SUCCESS) {
         HcFree(priAliasVal);
         return ret;
     }
     KeyBuff publicKeyBuff = {
-        .key = pkPeer,
-        .keyLen = sizeof(pkPeer),
+        .key = peerPkBuff.val,
+        .keyLen = peerPkBuff.length,
         .isAlias = false
     };
 
@@ -169,6 +184,7 @@ static int32_t GetSharedSecretForAccountInPake(const char *userId, const char *a
     if (sharedSecret->val == NULL) {
         LOGE("Failed to malloc for psk alias.");
         HcFree(priAliasVal);
+        ClearFreeUint8Buff(&peerPkBuff);
         return HC_ERR_ALLOC_MEMORY;
     }
     sharedSecret->length = sharedKeyAliasLen;
@@ -176,6 +192,7 @@ static int32_t GetSharedSecretForAccountInPake(const char *userId, const char *a
     ret = GetLoaderInstance()->agreeSharedSecretWithStorage(&priAliasKeyBuff, &publicKeyBuff,
         P256, P256_SHARED_SECRET_KEY_SIZE, sharedSecret);
     HcFree(priAliasVal);
+    ClearFreeUint8Buff(&peerPkBuff);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to agree shared secret!");
         FreeBuffData(sharedSecret);
