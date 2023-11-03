@@ -41,6 +41,11 @@ const char *GetStoragePath(void)
     return AUTH_STORAGE_PATH "/hcgroup.dat";
 }
 
+const char *GetStorageDirPathCe(void)
+{
+    return NULL;
+}
+
 const char *GetStorageDirPath(void)
 {
     return AUTH_STORAGE_PATH;

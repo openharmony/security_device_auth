@@ -20,6 +20,7 @@
 
 #define MOCK_STORAGE_FILE "/data/service/el1/public/deviceauthMock/hcgroup.dat"
 #define MOCK_STORAGE_DIR "/data/service/el1/public/deviceauthMock"
+#define MOCK_STORAGE_DIR_CE "/data/service/el1/public/deviceauthMock/ce"
 #define MOCK_ACCOUNT_STORAGE_DIR "/data/service/el1/public/deviceauthMock/account"
 
 static bool g_isClient = true;
@@ -54,6 +55,11 @@ int32_t HcGetUdid(uint8_t *udid, int32_t udidLen)
 const char *GetStoragePath(void)
 {
     return MOCK_STORAGE_FILE;
+}
+
+const char *GetStorageDirPathCe(void)
+{
+    return MOCK_STORAGE_DIR_CE;
 }
 
 const char *GetStorageDirPath(void)

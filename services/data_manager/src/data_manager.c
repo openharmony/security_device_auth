@@ -28,9 +28,7 @@
 #include "key_manager.h"
 #include "securec.h"
 #include "hidump_adapter.h"
-#ifdef SUPPORT_OS_ACCOUNT
 #include "os_account_adapter.h"
-#endif
 #include "pseudonym_manager.h"
 #include "security_label_adapter.h"
 
@@ -179,30 +177,6 @@ static bool SaveStringVectorToParcel(const StringVector *vec, HcParcel *parcel)
     return true;
 }
 
-static OsAccountTrustedInfo *GetTrustedInfoByOsAccountId(int32_t osAccountId)
-{
-    uint32_t index = 0;
-    OsAccountTrustedInfo *info = NULL;
-    FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {
-        if (info->osAccountId == osAccountId) {
-            return info;
-        }
-    }
-    LOGI("[DB]: Create a new os account database cache! [Id]: %d", osAccountId);
-    OsAccountTrustedInfo newInfo;
-    newInfo.osAccountId = osAccountId;
-    newInfo.groups = CreateGroupEntryVec();
-    newInfo.devices = CreateDeviceEntryVec();
-    OsAccountTrustedInfo *returnInfo = g_deviceauthDb.pushBackT(&g_deviceauthDb, newInfo);
-    if (returnInfo == NULL) {
-        LOGE("[DB]: Failed to push osAccountInfo to database!");
-        DestroyGroupEntryVec(&newInfo.groups);
-        DestroyDeviceEntryVec(&newInfo.devices);
-    }
-    return returnInfo;
-}
-
-#ifdef SUPPORT_OS_ACCOUNT
 static bool GetOsAccountInfoPathCe(int32_t osAccountId, char *infoPath, uint32_t pathBufferLen)
 {
     const char *beginPath = GetStorageDirPathCe();
@@ -216,7 +190,6 @@ static bool GetOsAccountInfoPathCe(int32_t osAccountId, char *infoPath, uint32_t
     }
     return true;
 }
-#endif
 
 static bool GetOsAccountInfoPathDe(int32_t osAccountId, char *infoPath, uint32_t pathBufferLen)
 {
@@ -240,11 +213,11 @@ static bool GetOsAccountInfoPathDe(int32_t osAccountId, char *infoPath, uint32_t
 
 static bool GetOsAccountInfoPath(int32_t osAccountId, char *infoPath, uint32_t pathBufferLen)
 {
-#ifdef SUPPORT_OS_ACCOUNT
-    return GetOsAccountInfoPathCe(osAccountId, infoPath, pathBufferLen);
-#else
-    return GetOsAccountInfoPathDe(osAccountId, infoPath, pathBufferLen);
-#endif
+    if (IsOsAccountSupported())  {
+        return GetOsAccountInfoPathCe(osAccountId, infoPath, pathBufferLen);
+    } else {
+        return GetOsAccountInfoPathDe(osAccountId, infoPath, pathBufferLen);
+    }
 }
 
 bool GenerateGroupEntryFromEntry(const TrustedGroupEntry *entry, TrustedGroupEntry *returnEntry)
@@ -548,7 +521,6 @@ static void LoadOsAccountDb(int32_t osAccountId)
     LOGI("[DB]: Load os account db successfully! [Id]: %d", osAccountId);
 }
 
-#ifdef SUPPORT_OS_ACCOUNT
 static void TryMoveDeDataToCe(int32_t osAccountId)
 {
     char ceFilePath[MAX_DB_PATH_LEN] = { 0 };
@@ -606,18 +578,6 @@ static void RemoveOsAccountTrustedInfo(int32_t osAccountId)
     }
 }
 
-static bool IsOsAccountDataLoaded(int32_t osAccountId)
-{
-    uint32_t index = 0;
-    OsAccountTrustedInfo *info = NULL;
-    FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {
-        if (info->osAccountId == osAccountId) {
-            return true;
-        }
-    }
-    return false;
-}
-
 static void LoadOsAccountDbCe(int32_t osAccountId)
 {
     TryMoveDeDataToCe(osAccountId);
@@ -641,51 +601,58 @@ static void OnOsAccountRemoved(int32_t osAccountId)
     g_databaseMutex->unlock(g_databaseMutex);
 }
 
+static bool IsOsAccountDataLoaded(int32_t osAccountId)
+{
+    uint32_t index = 0;
+    OsAccountTrustedInfo *info = NULL;
+    FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {
+        if (info->osAccountId == osAccountId) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void LoadDataIfNotLoaded(int32_t osAccountId)
 {
-    g_databaseMutex->lock(g_databaseMutex);
     if (IsOsAccountDataLoaded(osAccountId)) {
-        g_databaseMutex->unlock(g_databaseMutex);
         return;
     }
     LOGI("[DB]: data has not been loaded, load it, osAccountId: %d", osAccountId);
     LoadOsAccountDbCe(osAccountId);
-    g_databaseMutex->unlock(g_databaseMutex);
 }
 
-static void AddGroupDataCallback(void)
+static OsAccountTrustedInfo *GetTrustedInfoByOsAccountId(int32_t osAccountId)
 {
-    OsAccountEventCallback *eventCallback = (OsAccountEventCallback *)HcMalloc(sizeof(OsAccountEventCallback), 0);
-    if (eventCallback == NULL) {
-        LOGE("[DB]: Failed to alloc memory for group data callback!");
-        return;
+    if (IsOsAccountSupported()) {
+        LoadDataIfNotLoaded(osAccountId);
     }
-    eventCallback->callbackId = GROUP_DATA_CALLBACK;
-    eventCallback->onOsAccountUnlocked = OnOsAccountUnlocked;
-    eventCallback->onOsAccountRemoved = OnOsAccountRemoved;
-    eventCallback->loadDataIfNotLoaded = LoadDataIfNotLoaded;
-    if (AddOsAccountEventCallback(eventCallback) != HC_SUCCESS) {
-        LOGE("[DB]: Failed to add group data callback!");
-        HcFree(eventCallback);
-        return;
+    uint32_t index = 0;
+    OsAccountTrustedInfo *info = NULL;
+    FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {
+        if (info->osAccountId == osAccountId) {
+            return info;
+        }
     }
-    LOGE("[DB]: Add group data callback successfully!");
+    LOGI("[DB]: Create a new os account database cache! [Id]: %d", osAccountId);
+    OsAccountTrustedInfo newInfo;
+    newInfo.osAccountId = osAccountId;
+    newInfo.groups = CreateGroupEntryVec();
+    newInfo.devices = CreateDeviceEntryVec();
+    OsAccountTrustedInfo *returnInfo = g_deviceauthDb.pushBackT(&g_deviceauthDb, newInfo);
+    if (returnInfo == NULL) {
+        LOGE("[DB]: Failed to push osAccountInfo to database!");
+        DestroyGroupEntryVec(&newInfo.groups);
+        DestroyDeviceEntryVec(&newInfo.devices);
+    }
+    return returnInfo;
 }
-
-static void RemoveGroupDataCallback(void)
-{
-    OsAccountEventCallback *callback = RemoveOsAccountEventCallback(GROUP_DATA_CALLBACK);
-    if (callback == NULL) {
-        LOGE("[DB]: callback is null!");
-        return;
-    }
-    HcFree(callback);
-}
-#endif
 
 static void LoadDeviceAuthDb(void)
 {
-#ifndef SUPPORT_OS_ACCOUNT
+    if (IsOsAccountSupported()) {
+        return;
+    }
     g_databaseMutex->lock(g_databaseMutex);
     StringVector osAccountDbNameVec = CreateStrVector();
     HcFileGetSubFileName(GetStorageDirPath(), &osAccountDbNameVec);
@@ -705,7 +672,6 @@ static void LoadDeviceAuthDb(void)
     }
     DestroyStrVector(&osAccountDbNameVec);
     g_databaseMutex->unlock(g_databaseMutex);
-#endif
 }
 
 static bool SetGroupElement(TlvGroupElement *element, TrustedGroupEntry *entry)
@@ -1419,16 +1385,31 @@ static void DumpDb(int fd, const OsAccountTrustedInfo *db)
     dprintf(fd, "|-------------------------------------DataBase-------------------------------------|\n");
 }
 
+static void LoadAllAccountsData(void)
+{
+    int32_t *accountIds = NULL;
+    uint32_t size = 0;
+    int32_t ret = GetAllOsAccountIds(&accountIds, &size);
+    if (ret != HC_SUCCESS) {
+        LOGE("[DB]: Failed to get all os account ids, [res]: %d", ret);
+        return;
+    }
+    for (uint32_t index = 0; index < size; index++) {
+        LoadDataIfNotLoaded(accountIds[index]);
+    }
+    HcFree(accountIds);
+}
+
 static void DevAuthDataBaseDump(int fd)
 {
     if (g_databaseMutex == NULL) {
         LOGE("[DB]: Init mutex failed");
         return;
     }
-#ifdef SUPPORT_OS_ACCOUNT
-    LoadAllAccountsData();
-#endif
     g_databaseMutex->lock(g_databaseMutex);
+    if (IsOsAccountSupported()) {
+        LoadAllAccountsData();
+    }
     uint32_t index;
     OsAccountTrustedInfo *info;
     FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {
@@ -1454,9 +1435,7 @@ int32_t InitDatabase(void)
         }
     }
     g_deviceauthDb = CREATE_HC_VECTOR(DeviceAuthDb);
-#ifdef SUPPORT_OS_ACCOUNT
-    AddGroupDataCallback();
-#endif
+    AddOsAccountEventCallback(GROUP_DATA_CALLBACK, OnOsAccountUnlocked, OnOsAccountRemoved);
     LoadDeviceAuthDb();
     DEV_AUTH_REG_DUMP_FUNC(DevAuthDataBaseDump);
     return HC_SUCCESS;
@@ -1464,9 +1443,7 @@ int32_t InitDatabase(void)
 
 void DestroyDatabase(void)
 {
-#ifdef SUPPORT_OS_ACCOUNT
-    RemoveGroupDataCallback();
-#endif
+    RemoveOsAccountEventCallback(GROUP_DATA_CALLBACK);
     g_databaseMutex->lock(g_databaseMutex);
     uint32_t index;
     OsAccountTrustedInfo *info;

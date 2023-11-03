@@ -23,9 +23,7 @@
 #include "hc_time.h"
 #include "hc_types.h"
 #include "hc_vector.h"
-#ifdef SUPPORT_OS_ACCOUNT
 #include "os_account_adapter.h"
-#endif
 #include "security_label_adapter.h"
 
 #define MAX_REFRESH_COUNT 1000
@@ -182,7 +180,6 @@ static int32_t CreatePseudonymFromJson(CJson *pseudonymJson, PseudonymInfoVec *v
     return HC_SUCCESS;
 }
 
-#ifdef SUPPORT_OS_ACCOUNT
 static bool GetPseudonymPathCe(int32_t osAccountId, char *path, uint32_t pathBufferLen)
 {
     const char *beginPath = GetStorageDirPathCe();
@@ -196,7 +193,7 @@ static bool GetPseudonymPathCe(int32_t osAccountId, char *path, uint32_t pathBuf
     }
     return true;
 }
-#else
+
 static bool GetPseudonymPathDe(int32_t osAccountId, char *path, uint32_t pathBufferLen)
 {
     const char *beginPath = GetPseudonymStoragePath();
@@ -216,15 +213,14 @@ static bool GetPseudonymPathDe(int32_t osAccountId, char *path, uint32_t pathBuf
     }
     return true;
 }
-#endif
 
 static bool GetPseudonymPath(int32_t osAccountId, char *path, uint32_t pathBufferLen)
 {
-#ifdef SUPPORT_OS_ACCOUNT
-    return GetPseudonymPathCe(osAccountId, path, pathBufferLen);
-#else
-    return GetPseudonymPathDe(osAccountId, path, pathBufferLen);
-#endif
+    if (IsOsAccountSupported()) {
+        return GetPseudonymPathCe(osAccountId, path, pathBufferLen);
+    } else {
+        return GetPseudonymPathDe(osAccountId, path, pathBufferLen);
+    }
 }
 
 static int32_t OpenPseudonymFile(int32_t osAccountId, FileHandle *file, int32_t mode)
@@ -305,27 +301,6 @@ static bool IsNeedRefresh(PseudonymInfo *pseudonymInfo)
         return true;
     }
     return false;
-}
-
-static OsAccountPseudonymInfo *GetPseudonymInfoByOsAccountId(int32_t osAccountId)
-{
-    uint32_t index = 0;
-    OsAccountPseudonymInfo *info = NULL;
-    FOR_EACH_HC_VECTOR(g_pseudonymDb, index, info) {
-        if (info->osAccountId == osAccountId) {
-            return info;
-        }
-    }
-    LOGI("Create a new os account database cache! [Id]: %d", osAccountId);
-    OsAccountPseudonymInfo newInfo;
-    newInfo.osAccountId = osAccountId;
-    newInfo.pseudonymInfoVec = CreatePseudonymInfoVec();
-    OsAccountPseudonymInfo *returnInfo = g_pseudonymDb.pushBackT(&g_pseudonymDb, newInfo);
-    if (returnInfo == NULL) {
-        LOGE("Failed to push OsAccountPseudonymInfo to database!");
-        DestroyPseudonymInfoVec(&newInfo.pseudonymInfoVec);
-    }
-    return returnInfo;
 }
 
 static int32_t GenerateJsonFromPseudonymInfo(PseudonymInfo *pseudonymInfo, CJson *pseudonymJson)
@@ -409,26 +384,6 @@ static int32_t SavePseudonymInfoToFile(int32_t osAccountId, const PseudonymInfoV
     return ret;
 }
 
-static int32_t SaveOsAccountPseudonymDb(int32_t osAccountId)
-{
-    g_mutex->lock(g_mutex);
-    OsAccountPseudonymInfo *info = GetPseudonymInfoByOsAccountId(osAccountId);
-    if (info == NULL) {
-        LOGE("Get pseudonym info by os account id failed");
-        g_mutex->unlock(g_mutex);
-        return HC_ERROR;
-    }
-    int32_t ret = SavePseudonymInfoToFile(osAccountId, &info->pseudonymInfoVec);
-    if (ret != HC_SUCCESS) {
-        LOGE("Save pseudonym info to file failed");
-        g_mutex->unlock(g_mutex);
-        return ret;
-    }
-    g_mutex->unlock(g_mutex);
-    LOGI("Save an os account database successfully! [Id]: %d", osAccountId);
-    return HC_SUCCESS;
-}
-
 static const char *GetParamByFieldName(const char *fieldName, PseudonymInfo *pseudonymInfoEntry)
 {
     if (strcmp(fieldName, FIELD_DEVICE_ID) == 0) {
@@ -439,45 +394,6 @@ static const char *GetParamByFieldName(const char *fieldName, PseudonymInfo *pse
         LOGE("Not support this field!");
         return NULL;
     }
-}
-
-static int32_t DeletePseudonymInner(int32_t osAccountId, const char *dataTodelete, PseudonymInfoVec *deleteVec,
-    const char *fieldName)
-{
-    LOGI("Start to delete Pseudonym from database!");
-    g_mutex->lock(g_mutex);
-    OsAccountPseudonymInfo *info = GetPseudonymInfoByOsAccountId(osAccountId);
-    if (info == NULL) {
-        LOGE("Get pseudonym info by os account id failed");
-        g_mutex->unlock(g_mutex);
-        return HC_ERROR;
-    }
-    int32_t count = 0;
-    uint32_t index = 0;
-    PseudonymInfo **pseudonymInfoEntry = NULL;
-    while (index < HC_VECTOR_SIZE(&info->pseudonymInfoVec)) {
-        pseudonymInfoEntry = info->pseudonymInfoVec.getp(&info->pseudonymInfoVec, index);
-        if ((pseudonymInfoEntry == NULL) || (*pseudonymInfoEntry == NULL) ||
-            (strcmp(dataTodelete, GetParamByFieldName(fieldName, *pseudonymInfoEntry))) != 0) {
-            index++;
-            continue;
-        }
-        PseudonymInfo *deletepseudonymInfoEntry = NULL;
-        HC_VECTOR_POPELEMENT(&info->pseudonymInfoVec, &deletepseudonymInfoEntry, index);
-        count++;
-        LOGI("Delete pseudonymInfoEntry from database successfully!");
-        if (deleteVec->pushBackT(deleteVec, deletepseudonymInfoEntry) == NULL) {
-            LOGE("Failed to push deleted pseudonymInfoEntry to vec");
-            DestroyPseudonymInfo(deletepseudonymInfoEntry);
-        }
-    }
-    g_mutex->unlock(g_mutex);
-    if (count == 0) {
-        LOGE("No pseudonym info deleted");
-        return HC_ERROR;
-    }
-    LOGI("Number of pseudonym info deleted: %d", count);
-    return HC_SUCCESS;
 }
 
 static void LoadOsAccountPseudonymDb(int32_t osAccountId)
@@ -496,7 +412,6 @@ static void LoadOsAccountPseudonymDb(int32_t osAccountId)
     LOGI("Load pseudonym os account db successfully! [Id]: %d", osAccountId);
 }
 
-#ifdef SUPPORT_OS_ACCOUNT
 static void OnOsAccountUnlocked(int32_t osAccountId)
 {
     LOGI("Os account is unlocked, osAccountId: %d", osAccountId);
@@ -541,45 +456,95 @@ static bool IsOsAccountDataLoaded(int32_t osAccountId)
 
 static void LoadDataIfNotLoaded(int32_t osAccountId)
 {
-    g_mutex->lock(g_mutex);
     if (IsOsAccountDataLoaded(osAccountId)) {
-        g_mutex->unlock(g_mutex);
         return;
     }
     LOGI("Data has not been loaded, load it, osAccountId: %d", osAccountId);
     LoadOsAccountPseudonymDb(osAccountId);
+}
+
+static OsAccountPseudonymInfo *GetPseudonymInfoByOsAccountId(int32_t osAccountId)
+{
+    if (IsOsAccountSupported()) {
+        LoadDataIfNotLoaded(osAccountId);
+    }
+    uint32_t index = 0;
+    OsAccountPseudonymInfo *info = NULL;
+    FOR_EACH_HC_VECTOR(g_pseudonymDb, index, info) {
+        if (info->osAccountId == osAccountId) {
+            return info;
+        }
+    }
+    LOGI("Create a new os account database cache! [Id]: %d", osAccountId);
+    OsAccountPseudonymInfo newInfo;
+    newInfo.osAccountId = osAccountId;
+    newInfo.pseudonymInfoVec = CreatePseudonymInfoVec();
+    OsAccountPseudonymInfo *returnInfo = g_pseudonymDb.pushBackT(&g_pseudonymDb, newInfo);
+    if (returnInfo == NULL) {
+        LOGE("Failed to push OsAccountPseudonymInfo to database!");
+        DestroyPseudonymInfoVec(&newInfo.pseudonymInfoVec);
+    }
+    return returnInfo;
+}
+
+static int32_t SaveOsAccountPseudonymDb(int32_t osAccountId)
+{
+    g_mutex->lock(g_mutex);
+    OsAccountPseudonymInfo *info = GetPseudonymInfoByOsAccountId(osAccountId);
+    if (info == NULL) {
+        LOGE("Get pseudonym info by os account id failed");
+        g_mutex->unlock(g_mutex);
+        return HC_ERROR;
+    }
+    int32_t ret = SavePseudonymInfoToFile(osAccountId, &info->pseudonymInfoVec);
+    if (ret != HC_SUCCESS) {
+        LOGE("Save pseudonym info to file failed");
+        g_mutex->unlock(g_mutex);
+        return ret;
+    }
     g_mutex->unlock(g_mutex);
+    LOGI("Save an os account database successfully! [Id]: %d", osAccountId);
+    return HC_SUCCESS;
 }
 
-static void AddPseudonymDataCallback(void)
+static int32_t DeletePseudonymInner(int32_t osAccountId, const char *dataTodelete, PseudonymInfoVec *deleteVec,
+    const char *fieldName)
 {
-    OsAccountEventCallback *eventCallback = (OsAccountEventCallback *)HcMalloc(sizeof(OsAccountEventCallback), 0);
-    if (eventCallback == NULL) {
-        LOGE("Failed to alloc memory for pseudonym data callback!");
-        return;
+    LOGI("Start to delete Pseudonym from database!");
+    g_mutex->lock(g_mutex);
+    OsAccountPseudonymInfo *info = GetPseudonymInfoByOsAccountId(osAccountId);
+    if (info == NULL) {
+        LOGE("Get pseudonym info by os account id failed");
+        g_mutex->unlock(g_mutex);
+        return HC_ERROR;
     }
-    eventCallback->callbackId = PSEUDONYM_DATA_CALLBACK;
-    eventCallback->onOsAccountUnlocked = OnOsAccountUnlocked;
-    eventCallback->onOsAccountRemoved = OnOsAccountRemoved;
-    eventCallback->loadDataIfNotLoaded = LoadDataIfNotLoaded;
-    if (AddOsAccountEventCallback(eventCallback) != HC_SUCCESS) {
-        LOGE("Failed to add pseudonym data callback!");
-        HcFree(eventCallback);
-        return;
+    int32_t count = 0;
+    uint32_t index = 0;
+    PseudonymInfo **pseudonymInfoEntry = NULL;
+    while (index < HC_VECTOR_SIZE(&info->pseudonymInfoVec)) {
+        pseudonymInfoEntry = info->pseudonymInfoVec.getp(&info->pseudonymInfoVec, index);
+        if ((pseudonymInfoEntry == NULL) || (*pseudonymInfoEntry == NULL) ||
+            (strcmp(dataTodelete, GetParamByFieldName(fieldName, *pseudonymInfoEntry))) != 0) {
+            index++;
+            continue;
+        }
+        PseudonymInfo *deletepseudonymInfoEntry = NULL;
+        HC_VECTOR_POPELEMENT(&info->pseudonymInfoVec, &deletepseudonymInfoEntry, index);
+        count++;
+        LOGI("Delete pseudonymInfoEntry from database successfully!");
+        if (deleteVec->pushBackT(deleteVec, deletepseudonymInfoEntry) == NULL) {
+            LOGE("Failed to push deleted pseudonymInfoEntry to vec");
+            DestroyPseudonymInfo(deletepseudonymInfoEntry);
+        }
     }
-    LOGE("Add pseudonym data callback successfully!");
+    g_mutex->unlock(g_mutex);
+    if (count == 0) {
+        LOGE("No pseudonym info deleted");
+        return HC_ERROR;
+    }
+    LOGI("Number of pseudonym info deleted: %d", count);
+    return HC_SUCCESS;
 }
-
-static void RemovePseudonymDataCallback(void)
-{
-    OsAccountEventCallback *callback = RemoveOsAccountEventCallback(PSEUDONYM_DATA_CALLBACK);
-    if (callback == NULL) {
-        LOGE("callback is null!");
-        return;
-    }
-    HcFree(callback);
-}
-#endif
 
 static void InitPseudonymManger(void)
 {
@@ -599,9 +564,7 @@ static void InitPseudonymManger(void)
     g_mutex->lock(g_mutex);
     if (!g_isInitial) {
         g_pseudonymDb = CREATE_HC_VECTOR(PseudonymDb);
-    #ifdef SUPPORT_OS_ACCOUNT
-        AddPseudonymDataCallback();
-    #endif
+        AddOsAccountEventCallback(PSEUDONYM_DATA_CALLBACK, OnOsAccountUnlocked, OnOsAccountRemoved);
         g_isInitial = true;
     }
     g_mutex->unlock(g_mutex);
@@ -610,7 +573,9 @@ static void InitPseudonymManger(void)
 static void LoadPseudonymData(void)
 {
     InitPseudonymManger();
-#ifndef SUPPORT_OS_ACCOUNT
+    if (IsOsAccountSupported()) {
+        return;
+    }
     g_mutex->lock(g_mutex);
     StringVector dbNameVec = CreateStrVector();
     HcFileGetSubFileName(GetPseudonymStoragePath(), &dbNameVec);
@@ -630,7 +595,6 @@ static void LoadPseudonymData(void)
     }
     DestroyStrVector(&dbNameVec);
     g_mutex->unlock(g_mutex);
-#endif
 }
 
 static int32_t GetRealInfo(int32_t osAccountId, const char *pseudonymId, char **realInfo)
@@ -870,9 +834,7 @@ PseudonymManager *GetPseudonymInstance(void)
 void DestroyPseudonymManager(void)
 {
     g_mutex->lock(g_mutex);
-#ifdef SUPPORT_OS_ACCOUNT
-    RemovePseudonymDataCallback();
-#endif
+    RemoveOsAccountEventCallback(PSEUDONYM_DATA_CALLBACK);
     uint32_t index;
     OsAccountPseudonymInfo *info = NULL;
     FOR_EACH_HC_VECTOR(g_pseudonymDb, index, info) {

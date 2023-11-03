@@ -507,7 +507,7 @@ static int32_t AddMemberToGroup(int32_t osAccountId, int64_t requestId, const ch
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -529,7 +529,7 @@ static int32_t CheckAndGetValidOsAccountId(const CJson *context, int32_t *osAcco
         LOGE("Invalid os accountId!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(*osAccountId)) {
+    if (!IsOsAccountUnlocked(*osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -756,7 +756,7 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
         LOGE("The input auth params is invalid!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -815,7 +815,7 @@ static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const c
     if (osAccountId == INVALID_OS_ACCOUNT) {
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -1079,7 +1079,7 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     if (res != HC_SUCCESS) {
         return res;
     }
-    INIT_OS_ACCOUNT_ADAPTER();
+    InitOsAccountAdapter();
     res = InitAllModules();
     if (res != HC_SUCCESS) {
         DestroyGmAndGa();
@@ -1110,7 +1110,7 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
     DestroyChannelManager();
     DestroyCallbackManager();
     DestroyPseudonymManager();
-    DESTROY_OS_ACCOUNT_ADAPTER();
+    DestroyOsAccountAdapter();
     SetDeInitStatus();
     LOGI("[End]: [Service]: Destroy device auth service successfully!");
 }

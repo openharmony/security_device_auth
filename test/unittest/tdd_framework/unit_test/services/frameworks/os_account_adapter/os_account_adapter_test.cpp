@@ -240,19 +240,17 @@ static void NativeTokenSet(void)
 {
     const char *acls[] = {
         "ohos.permission.DISTRIBUTED_DATASYNC",
-        "ohos.permission.MANAGE_LOCAL_ACCOUNTS",
-        "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS"
+        "ohos.permission.MANAGE_LOCAL_ACCOUNTS"
     };
     const char *perms[] = {
         "ohos.permission.DISTRIBUTED_DATASYNC",
-        "ohos.permission.MANAGE_LOCAL_ACCOUNTS",
-        "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS"
+        "ohos.permission.MANAGE_LOCAL_ACCOUNTS"
     };
     uint64_t tokenId;
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
-        .permsNum = 3,
-        .aclsNum = 3,
+        .permsNum = 2,
+        .aclsNum = 2,
         .dcaps = NULL,
         .perms = perms,
         .acls = acls,
@@ -291,18 +289,6 @@ static void OnOsAccountRemoved(int32_t osAccountId)
     (void)osAccountId;
 }
 
-static void LoadDataIfNotLoaded(int32_t osAccountId)
-{
-    (void)osAccountId;
-}
-
-static OsAccountEventCallback g_eventCallback = {
-    .callbackId = GROUP_DATA_CALLBACK,
-    .onOsAccountUnlocked = OnOsAccountUnlocked,
-    .onOsAccountRemoved = OnOsAccountRemoved,
-    .loadDataIfNotLoaded = LoadDataIfNotLoaded
-};
-
 static void PublicCommonEvent(bool isUserUnlockEvent, int32_t osAccountId)
 {
     OHOS::AAFwk::Want want;
@@ -333,79 +319,41 @@ void OsAccountAdapterTest::TearDown() {}
 
 HWTEST_F(OsAccountAdapterTest, OsAccountAdapterTest001, TestSize.Level0)
 {
-    int32_t res = AddOsAccountEventCallback(nullptr);
-    EXPECT_EQ(res, HC_ERR_INIT_FAILED);
-    LoadAllAccountsData();
-    OsAccountEventCallback *callback = RemoveOsAccountEventCallback(GROUP_DATA_CALLBACK);
-    EXPECT_EQ(callback, nullptr);
-}
-
-HWTEST_F(OsAccountAdapterTest, OsAccountAdapterTest002, TestSize.Level0)
-{
+    AddOsAccountEventCallback(GROUP_DATA_CALLBACK, nullptr, nullptr);
+    RemoveOsAccountEventCallback(GROUP_DATA_CALLBACK);
     InitOsAccountAdapter();
     InitOsAccountAdapter();
-    int32_t res = AddOsAccountEventCallback(nullptr);
-    EXPECT_EQ(res, HC_ERR_INVALID_PARAMS);
-    LoadAllAccountsData();
+    AddOsAccountEventCallback(GROUP_DATA_CALLBACK, nullptr, nullptr);
+    AddOsAccountEventCallback(GROUP_DATA_CALLBACK, OnOsAccountUnlocked, nullptr);
+    AddOsAccountEventCallback(GROUP_DATA_CALLBACK, OnOsAccountUnlocked, OnOsAccountRemoved);
+    AddOsAccountEventCallback(GROUP_DATA_CALLBACK, OnOsAccountUnlocked, OnOsAccountRemoved);
+    RemoveOsAccountEventCallback(ASY_TOKEN_DATA_CALLBACK);
+    RemoveOsAccountEventCallback(GROUP_DATA_CALLBACK);
     DestroyOsAccountAdapter();
     DestroyOsAccountAdapter();
-}
-
-HWTEST_F(OsAccountAdapterTest, OsAccountAdapterTest003, TestSize.Level0)
-{
-    InitOsAccountAdapter();
-    int32_t res = AddOsAccountEventCallback(&g_eventCallback);
-    EXPECT_EQ(res, HC_SUCCESS);
-    res = AddOsAccountEventCallback(&g_eventCallback);
-    EXPECT_EQ(res, HC_ERR_INVALID_PARAMS);
-    OsAccountEventCallback *callback = RemoveOsAccountEventCallback(GROUP_DATA_CALLBACK);
-    EXPECT_NE(callback, nullptr);
-    callback = RemoveOsAccountEventCallback(ASY_TOKEN_DATA_CALLBACK);
-    EXPECT_EQ(callback, nullptr);
-    DestroyOsAccountAdapter();
-}
-
-HWTEST_F(OsAccountAdapterTest, OsAccountAdapterTest004, TestSize.Level0)
-{
     int32_t osAccountId = DevAuthGetRealOsAccountLocalId(ANY_OS_ACCOUNT);
     EXPECT_NE(osAccountId, INVALID_OS_ACCOUNT);
     osAccountId = DevAuthGetRealOsAccountLocalId(DEFAULT_OS_ACCOUNT);
     EXPECT_EQ(osAccountId, DEFAULT_OS_ACCOUNT);
     osAccountId = DevAuthGetRealOsAccountLocalId(INVALID_OS_ACCOUNT);
     EXPECT_EQ(osAccountId, INVALID_OS_ACCOUNT);
-}
-
-HWTEST_F(OsAccountAdapterTest, OsAccountAdapterTest005, TestSize.Level0)
-{
+    int32_t res = GetAllOsAccountIds(nullptr, nullptr);
+    EXPECT_EQ(res, HC_ERR_INVALID_PARAMS);
+    int32_t *osAccountIds = nullptr;
+    res = GetAllOsAccountIds(&osAccountIds, nullptr);
+    EXPECT_EQ(res, HC_ERR_INVALID_PARAMS);
+    uint32_t size = 0;
     NativeTokenSet();
-    InitOsAccountAdapter();
-    int32_t res = AddOsAccountEventCallback(&g_eventCallback);
-    EXPECT_EQ(res, HC_SUCCESS);
-    bool status = CheckOsAccountStatus(DEFAULT_OS_ACCOUNT);
+    bool status = IsOsAccountUnlocked(DEFAULT_OS_ACCOUNT);
     EXPECT_EQ(status, false);
-    status = CheckOsAccountStatus(TEST_OS_ACCOUNT_ID);
+    status = IsOsAccountUnlocked(TEST_OS_ACCOUNT_ID);
     EXPECT_EQ(status, true);
-    OsAccountEventCallback *callback = RemoveOsAccountEventCallback(GROUP_DATA_CALLBACK);
-    EXPECT_NE(callback, nullptr);
-    DestroyOsAccountAdapter();
-}
-
-HWTEST_F(OsAccountAdapterTest, OsAccountAdapterTest006, TestSize.Level0)
-{
-    NativeTokenSet();
-    int32_t res = InitDeviceAuthService();
+    res = GetAllOsAccountIds(&osAccountIds, &size);
     EXPECT_EQ(res, HC_SUCCESS);
-    int32_t osAccountId = GetCurrentActiveOsAccountId();
-    EXPECT_NE(osAccountId, INVALID_OS_ACCOUNT);
-    bool status = CheckOsAccountStatus(osAccountId);
-    EXPECT_EQ(status, true);
-    PublicCommonEvent(true, TEST_OS_ACCOUNT_ID2);
-    PublicCommonEvent(false, TEST_OS_ACCOUNT_ID2);
-    usleep(TEST_DEV_AUTH_SLEEP_TIME);
-    DestroyDeviceAuthService();
+    HcFree(osAccountIds);
 }
 
-HWTEST_F(OsAccountAdapterTest, OsAccountAdapterTest007, TestSize.Level0)
+HWTEST_F(OsAccountAdapterTest, OsAccountAdapterTest002, TestSize.Level0)
 {
     NativeTokenSet();
     DeleteDatabase();
@@ -415,7 +363,7 @@ HWTEST_F(OsAccountAdapterTest, OsAccountAdapterTest007, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     res = gm->regCallback(TEST_APP_ID, &g_gmCallback);
     EXPECT_EQ(res, HC_SUCCESS);
-    int32_t osAccountId = GetCurrentActiveOsAccountId();
+    int32_t osAccountId = DevAuthGetRealOsAccountLocalId(ANY_OS_ACCOUNT);
     EXPECT_NE(osAccountId, INVALID_OS_ACCOUNT);
     CreateDemoGroup(osAccountId, TEST_REQ_ID, TEST_APP_ID, g_createParams);
     CreateDemoIdenticalAccountGroup(osAccountId, TEST_USER_ID, g_registerParam);
@@ -423,9 +371,10 @@ HWTEST_F(OsAccountAdapterTest, OsAccountAdapterTest007, TestSize.Level0)
     EXPECT_EQ(res, HC_SUCCESS);
     res = GetPseudonymInstance()->savePseudonymId(osAccountId, TEST_PDID, TEST_USER_ID, TEST_AUTH_ID, TEST_USER_ID);
     EXPECT_EQ(res, HC_SUCCESS);
-    bool status = CheckOsAccountStatus(osAccountId);
+    bool status = IsOsAccountUnlocked(osAccountId);
     EXPECT_EQ(status, true);
     PublicCommonEvent(true, osAccountId);
+    PublicCommonEvent(false, osAccountId);
     usleep(TEST_DEV_AUTH_SLEEP_TIME);
     DestroyDeviceAuthService();
 }

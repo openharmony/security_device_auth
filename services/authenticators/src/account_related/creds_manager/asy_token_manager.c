@@ -26,9 +26,7 @@
 #include "hc_log.h"
 #include "hc_mutex.h"
 #include "hc_types.h"
-#ifdef SUPPORT_OS_ACCOUNT
 #include "os_account_adapter.h"
-#endif
 #include "security_label_adapter.h"
 #include "string_util.h"
 
@@ -93,7 +91,6 @@ static int32_t GeneratePkInfoFromJson(PkInfo *info, const CJson *pkInfoJson)
     return HC_SUCCESS;
 }
 
-#ifdef SUPPORT_OS_ACCOUNT
 static bool GetTokenPathCe(int32_t osAccountId, char *tokenPath, uint32_t pathBufferLen)
 {
     const char *beginPath = GetStorageDirPathCe();
@@ -108,7 +105,6 @@ static bool GetTokenPathCe(int32_t osAccountId, char *tokenPath, uint32_t pathBu
     }
     return true;
 }
-#endif
 
 static bool GetTokenPathDe(int32_t osAccountId, char *tokenPath, uint32_t pathBufferLen)
 {
@@ -132,11 +128,11 @@ static bool GetTokenPathDe(int32_t osAccountId, char *tokenPath, uint32_t pathBu
 
 static bool GetTokenPath(int32_t osAccountId, char *tokenPath, uint32_t pathBufferLen)
 {
-#ifdef SUPPORT_OS_ACCOUNT
-    return GetTokenPathCe(osAccountId, tokenPath, pathBufferLen);
-#else
-    return GetTokenPathDe(osAccountId, tokenPath, pathBufferLen);
-#endif
+    if (IsOsAccountSupported()) {
+        return GetTokenPathCe(osAccountId, tokenPath, pathBufferLen);
+    } else {
+        return GetTokenPathDe(osAccountId, tokenPath, pathBufferLen);
+    }
 }
 
 static int32_t GenerateTokenFromJson(const CJson *tokenJson, AccountToken *token)
@@ -557,27 +553,6 @@ static int32_t VerifySignature(const CJson *credJson)
     return ret;
 }
 
-static OsAccountTokenInfo *GetTokenInfoByOsAccountId(int32_t osAccountId)
-{
-    uint32_t index = 0;
-    OsAccountTokenInfo *info = NULL;
-    FOR_EACH_HC_VECTOR(g_accountTokenDb, index, info) {
-        if (info->osAccountId == osAccountId) {
-            return info;
-        }
-    }
-    LOGI("Create a new os account database cache! [Id]: %d", osAccountId);
-    OsAccountTokenInfo newInfo;
-    newInfo.osAccountId = osAccountId;
-    newInfo.tokens = CreateAccountTokenVec();
-    OsAccountTokenInfo *returnInfo = g_accountTokenDb.pushBackT(&g_accountTokenDb, newInfo);
-    if (returnInfo == NULL) {
-        LOGE("Failed to push OsAccountTokenInfo to database!");
-        DestroyAccountTokenVec(&newInfo.tokens);
-    }
-    return returnInfo;
-}
-
 static int32_t GeneratePkInfoFromInfo(const PkInfo *srcInfo, PkInfo *desInfo)
 {
     if (memcpy_s(desInfo->userId.val, desInfo->userId.length,
@@ -604,31 +579,6 @@ static int32_t GeneratePkInfoFromInfo(const PkInfo *srcInfo, PkInfo *desInfo)
         return HC_ERR_MEMORY_COPY;
     }
     desInfo->version.length = srcInfo->version.length;
-    return HC_SUCCESS;
-}
-
-static int32_t SaveOsAccountTokenDb(int32_t osAccountId)
-{
-    char tokenPath[MAX_DB_PATH_LEN] = { 0 };
-    if (!GetTokenPath(osAccountId, tokenPath, MAX_DB_PATH_LEN)) {
-        LOGE("Failed to get token path!");
-        return HC_ERROR;
-    }
-    g_accountDbMutex->lock(g_accountDbMutex);
-    OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
-    if (info == NULL) {
-        LOGE("Get token info by os account id failed");
-        g_accountDbMutex->unlock(g_accountDbMutex);
-        return HC_ERROR;
-    }
-    int32_t ret = SaveTokensToFile(&info->tokens, tokenPath);
-    if (ret != HC_SUCCESS) {
-        LOGE("Save tokens to file failed");
-        g_accountDbMutex->unlock(g_accountDbMutex);
-        return ret;
-    }
-    g_accountDbMutex->unlock(g_accountDbMutex);
-    LOGI("Save an os account database successfully! [Id]: %d", osAccountId);
     return HC_SUCCESS;
 }
 
@@ -691,65 +641,6 @@ static AccountToken **QueryTokenPtrIfMatch(const AccountTokenVec *vec, const cha
     return NULL;
 }
 
-static AccountToken *GetAccountToken(int32_t osAccountId, const char *userId, const char *deviceId)
-{
-    g_accountDbMutex->lock(g_accountDbMutex);
-    OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
-    if (info == NULL) {
-        LOGE("Failed to get token by osAccountId");
-        g_accountDbMutex->unlock(g_accountDbMutex);
-        return NULL;
-    }
-    AccountToken **token = QueryTokenPtrIfMatch(&info->tokens, userId, deviceId);
-    if ((token == NULL) || (*token == NULL)) {
-        LOGE("Query token failed");
-        g_accountDbMutex->unlock(g_accountDbMutex);
-        return NULL;
-    }
-    g_accountDbMutex->unlock(g_accountDbMutex);
-    return *token;
-}
-
-static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, const char *deviceId,
-    AccountTokenVec *deleteTokens)
-{
-    LOGI("Start to delete tokens from database!");
-    g_accountDbMutex->lock(g_accountDbMutex);
-    OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
-    if (info == NULL) {
-        LOGE("Failed to get token by os account id");
-        g_accountDbMutex->unlock(g_accountDbMutex);
-        return HC_ERROR;
-    }
-    int32_t count = 0;
-    uint32_t index = 0;
-    AccountToken **token = NULL;
-    while (index < HC_VECTOR_SIZE(&info->tokens)) {
-        token = info->tokens.getp(&info->tokens, index);
-        if ((token == NULL) || (*token == NULL) ||
-            (strcmp(userId, (const char *)((*token)->pkInfo.userId.val)) != 0) ||
-            (strcmp(deviceId, (const char *)((*token)->pkInfo.deviceId.val)) != 0)) {
-            index++;
-            continue;
-        }
-        AccountToken *deleteToken = NULL;
-        HC_VECTOR_POPELEMENT(&info->tokens, &deleteToken, index);
-        count++;
-        LOGI("Delete a token from database successfully!");
-        if (deleteTokens->pushBackT(deleteTokens, deleteToken) == NULL) {
-            LOGE("Failed to push deleted token to vec");
-            DestroyAccountToken(deleteToken);
-        }
-    }
-    g_accountDbMutex->unlock(g_accountDbMutex);
-    if (count == 0) {
-        LOGE("No token deleted");
-        return HC_ERROR;
-    }
-    LOGI("Number of tokens deleted: %d", count);
-    return HC_SUCCESS;
-}
-
 static int32_t GetTokenFromPlugin(int32_t osAccountId, AccountToken *token, const char *userId, const char *deviceId)
 {
     CJson *input = CreateJson();
@@ -776,77 +667,6 @@ ERR:
     FreeJson(input);
     FreeJson(output);
     return res;
-}
-
-static int32_t GetToken(int32_t osAccountId, AccountToken *token, const char *userId, const char *deviceId)
-{
-    if ((token == NULL) || (userId == NULL) || (deviceId == NULL)) {
-        LOGE("Invalid input params");
-        return HC_ERR_NULL_PTR;
-    }
-    if (HasAccountAuthPlugin() == HC_SUCCESS) {
-        return GetTokenFromPlugin(osAccountId, token, userId, deviceId);
-    }
-    AccountToken *existToken = GetAccountToken(osAccountId, userId, deviceId);
-    if (existToken == NULL) {
-        LOGE("Token not exist");
-        return HC_ERROR;
-    }
-    int32_t ret = GeneratePkInfoFromInfo(&existToken->pkInfo, &token->pkInfo);
-    if (ret != HC_SUCCESS) {
-        LOGE("Generate pkInfo failed");
-        return ret;
-    }
-    GOTO_ERR_AND_SET_RET(memcpy_s(token->pkInfoStr.val, token->pkInfoStr.length,
-        existToken->pkInfoStr.val, existToken->pkInfoStr.length), ret);
-    token->pkInfoStr.length = existToken->pkInfoStr.length;
-    GOTO_ERR_AND_SET_RET(memcpy_s(token->pkInfoSignature.val, token->pkInfoSignature.length,
-        existToken->pkInfoSignature.val, existToken->pkInfoSignature.length), ret);
-    token->pkInfoSignature.length = existToken->pkInfoSignature.length;
-    GOTO_ERR_AND_SET_RET(memcpy_s(token->serverPk.val, token->serverPk.length,
-        existToken->serverPk.val, existToken->serverPk.length), ret);
-    token->serverPk.length = existToken->serverPk.length;
-
-    ret = HC_SUCCESS;
-    LOGI("GetToken successfully!");
-ERR:
-    return ret;
-}
-
-static int32_t AddTokenInner(int32_t osAccountId, const AccountToken *token)
-{
-    LOGI("Start to add a token to database!");
-    g_accountDbMutex->lock(g_accountDbMutex);
-    OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
-    if (info == NULL) {
-        LOGE("Failed to get token by os account id");
-        g_accountDbMutex->unlock(g_accountDbMutex);
-        return HC_ERROR;
-    }
-    AccountToken *newToken = DeepCopyToken(token);
-    if (newToken == NULL) {
-        LOGE("Deep copy token failed");
-        g_accountDbMutex->unlock(g_accountDbMutex);
-        return HC_ERR_MEMORY_COPY;
-    }
-    AccountToken **oldTokenPtr = QueryTokenPtrIfMatch(&info->tokens, (const char *)(newToken->pkInfo.userId.val),
-        (const char *)(newToken->pkInfo.deviceId.val));
-    if (oldTokenPtr != NULL) {
-        DestroyAccountToken(*oldTokenPtr);
-        *oldTokenPtr = newToken;
-        g_accountDbMutex->unlock(g_accountDbMutex);
-        LOGI("Replace an old token successfully!");
-        return HC_SUCCESS;
-    }
-    if (info->tokens.pushBackT(&info->tokens, newToken) == NULL) {
-        DestroyAccountToken(newToken);
-        g_accountDbMutex->unlock(g_accountDbMutex);
-        LOGE("Failed to push token to vec!");
-        return HC_ERR_MEMORY_COPY;
-    }
-    g_accountDbMutex->unlock(g_accountDbMutex);
-    LOGI("Add a token to database successfully!");
-    return HC_SUCCESS;
 }
 
 static int32_t DoExportPkAndCompare(const char *userId, const char *deviceId,
@@ -984,41 +804,6 @@ static int32_t CheckCredValidity(int32_t opCode, const CJson *in)
     return ret;
 }
 
-static int32_t AddToken(int32_t osAccountId, int32_t opCode, const CJson *in)
-{
-    if (in == NULL) {
-        LOGE("Input param is null!");
-        return HC_ERR_NULL_PTR;
-    }
-    int32_t ret = CheckCredValidity(opCode, in);
-    if (ret != HC_SUCCESS) {
-        LOGE("Invalid credential");
-        return ret;
-    }
-    AccountToken *token = CreateAccountToken();
-    if (token == NULL) {
-        LOGE("Failed to allocate token memory!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    ret = GenerateTokenFromJson(in, token);
-    if (ret != HC_SUCCESS) {
-        LOGE("Failed to generate token");
-        DestroyAccountToken(token);
-        return ret;
-    }
-    ret = AddTokenInner(osAccountId, token);
-    DestroyAccountToken(token);
-    if (ret != HC_SUCCESS) {
-        LOGE("Failed to add token inner");
-        return ret;
-    }
-    ret = SaveOsAccountTokenDb(osAccountId);
-    if (ret != HC_SUCCESS) {
-        LOGE("Failed to save token to db");
-    }
-    return ret;
-}
-
 static int32_t DoGenerateAndExportPk(const char *userId, const char *deviceId,
     Uint8Buff *keyAlias, Uint8Buff *publicKey)
 {
@@ -1102,20 +887,6 @@ ERR:
     return ret;
 }
 
-static Algorithm GetAlgVersion(int32_t osAccountId, const char *userId, const char *deviceId)
-{
-    if (userId == NULL) {
-        LOGE("Invalid input params, return default alg.");
-        return P256;
-    }
-    AccountToken *token = GetAccountToken(osAccountId, userId, deviceId);
-    if (token == NULL) {
-        LOGE("Token not exist, return default alg.");
-        return P256;
-    }
-    return GetVerifyAlg((const char *)token->pkInfo.version.val);
-}
-
 static void DeleteKeyPair(AccountToken *token)
 {
     uint8_t *keyAliasValue = (uint8_t *)HcMalloc(SHA256_LEN, 0);
@@ -1144,34 +915,6 @@ static void DeleteKeyPair(AccountToken *token)
     g_accountDbMutex->unlock(g_accountDbMutex);
 }
 
-static int32_t DeleteToken(int32_t osAccountId, const char *userId, const char *deviceId)
-{
-    if ((userId == NULL) || (deviceId == NULL)) {
-        LOGE("Invalid input params!");
-        return HC_ERR_NULL_PTR;
-    }
-    AccountTokenVec deleteTokens = CreateAccountTokenVec();
-    int32_t ret = DeleteTokenInner(osAccountId, userId, deviceId, &deleteTokens);
-    if (ret != HC_SUCCESS) {
-        LOGE("Failed to delete token inner, account id is: %d", osAccountId);
-        DestroyAccountTokenVec(&deleteTokens);
-        return ret;
-    }
-    ret = SaveOsAccountTokenDb(osAccountId);
-    if (ret != HC_SUCCESS) {
-        LOGE("Failed to save token to db, account id is: %d", osAccountId);
-        ClearAccountTokenVec(&deleteTokens);
-        return ret;
-    }
-    uint32_t index;
-    AccountToken **token;
-    FOR_EACH_HC_VECTOR(deleteTokens, index, token) {
-        DeleteKeyPair(*token);
-    }
-    ClearAccountTokenVec(&deleteTokens);
-    return HC_SUCCESS;
-}
-
 static void LoadOsAccountTokenDb(int32_t osAccountId)
 {
     char tokenPath[MAX_DB_PATH_LEN] = { 0 };
@@ -1193,7 +936,6 @@ static void LoadOsAccountTokenDb(int32_t osAccountId)
     LOGI("Load os account db successfully! [Id]: %d", osAccountId);
 }
 
-#ifdef SUPPORT_OS_ACCOUNT
 static void TryMoveDeDataToCe(int32_t osAccountId)
 {
     char tokenPathDe[MAX_DB_PATH_LEN] = { 0 };
@@ -1289,49 +1031,274 @@ static bool IsOsAccountDataLoaded(int32_t osAccountId)
 
 static void LoadDataIfNotLoaded(int32_t osAccountId)
 {
-    g_accountDbMutex->lock(g_accountDbMutex);
     if (IsOsAccountDataLoaded(osAccountId)) {
-        g_accountDbMutex->unlock(g_accountDbMutex);
         return;
     }
     LOGI("Data has not been loaded, load it, osAccountId: %d", osAccountId);
     LoadOsAccountTokenDbCe(osAccountId);
+}
+
+static OsAccountTokenInfo *GetTokenInfoByOsAccountId(int32_t osAccountId)
+{
+    if (IsOsAccountSupported()) {
+        LoadDataIfNotLoaded(osAccountId);
+    }
+    uint32_t index = 0;
+    OsAccountTokenInfo *info = NULL;
+    FOR_EACH_HC_VECTOR(g_accountTokenDb, index, info) {
+        if (info->osAccountId == osAccountId) {
+            return info;
+        }
+    }
+    LOGI("Create a new os account database cache! [Id]: %d", osAccountId);
+    OsAccountTokenInfo newInfo;
+    newInfo.osAccountId = osAccountId;
+    newInfo.tokens = CreateAccountTokenVec();
+    OsAccountTokenInfo *returnInfo = g_accountTokenDb.pushBackT(&g_accountTokenDb, newInfo);
+    if (returnInfo == NULL) {
+        LOGE("Failed to push OsAccountTokenInfo to database!");
+        DestroyAccountTokenVec(&newInfo.tokens);
+    }
+    return returnInfo;
+}
+
+static int32_t SaveOsAccountTokenDb(int32_t osAccountId)
+{
+    char tokenPath[MAX_DB_PATH_LEN] = { 0 };
+    if (!GetTokenPath(osAccountId, tokenPath, MAX_DB_PATH_LEN)) {
+        LOGE("Failed to get token path!");
+        return HC_ERROR;
+    }
+    g_accountDbMutex->lock(g_accountDbMutex);
+    OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
+    if (info == NULL) {
+        LOGE("Get token info by os account id failed");
+        g_accountDbMutex->unlock(g_accountDbMutex);
+        return HC_ERROR;
+    }
+    int32_t ret = SaveTokensToFile(&info->tokens, tokenPath);
+    if (ret != HC_SUCCESS) {
+        LOGE("Save tokens to file failed");
+        g_accountDbMutex->unlock(g_accountDbMutex);
+        return ret;
+    }
     g_accountDbMutex->unlock(g_accountDbMutex);
+    LOGI("Save an os account database successfully! [Id]: %d", osAccountId);
+    return HC_SUCCESS;
 }
 
-static void AddAsyTokenDataCallback(void)
+static AccountToken *GetAccountToken(int32_t osAccountId, const char *userId, const char *deviceId)
 {
-    OsAccountEventCallback *eventCallback = (OsAccountEventCallback *)HcMalloc(sizeof(OsAccountEventCallback), 0);
-    if (eventCallback == NULL) {
-        LOGE("Failed to alloc memory for asy token data callback!");
-        return;
+    g_accountDbMutex->lock(g_accountDbMutex);
+    OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
+    if (info == NULL) {
+        LOGE("Failed to get token by osAccountId");
+        g_accountDbMutex->unlock(g_accountDbMutex);
+        return NULL;
     }
-    eventCallback->callbackId = ASY_TOKEN_DATA_CALLBACK;
-    eventCallback->onOsAccountUnlocked = OnOsAccountUnlocked;
-    eventCallback->onOsAccountRemoved = OnOsAccountRemoved;
-    eventCallback->loadDataIfNotLoaded = LoadDataIfNotLoaded;
-    if (AddOsAccountEventCallback(eventCallback) != HC_SUCCESS) {
-        LOGE("Failed to add asy token data callback!");
-        HcFree(eventCallback);
-        return;
+    AccountToken **token = QueryTokenPtrIfMatch(&info->tokens, userId, deviceId);
+    if ((token == NULL) || (*token == NULL)) {
+        LOGE("Query token failed");
+        g_accountDbMutex->unlock(g_accountDbMutex);
+        return NULL;
     }
-    LOGE("Add asy token data callback successfully!");
+    g_accountDbMutex->unlock(g_accountDbMutex);
+    return *token;
 }
 
-static void RemoveAsyTokenDataCallback(void)
+static int32_t GetToken(int32_t osAccountId, AccountToken *token, const char *userId, const char *deviceId)
 {
-    OsAccountEventCallback *callback = RemoveOsAccountEventCallback(ASY_TOKEN_DATA_CALLBACK);
-    if (callback == NULL) {
-        LOGE("Callback is null!");
-        return;
+    if ((token == NULL) || (userId == NULL) || (deviceId == NULL)) {
+        LOGE("Invalid input params");
+        return HC_ERR_NULL_PTR;
     }
-    HcFree(callback);
+    if (HasAccountAuthPlugin() == HC_SUCCESS) {
+        return GetTokenFromPlugin(osAccountId, token, userId, deviceId);
+    }
+    AccountToken *existToken = GetAccountToken(osAccountId, userId, deviceId);
+    if (existToken == NULL) {
+        LOGE("Token not exist");
+        return HC_ERROR;
+    }
+    int32_t ret = GeneratePkInfoFromInfo(&existToken->pkInfo, &token->pkInfo);
+    if (ret != HC_SUCCESS) {
+        LOGE("Generate pkInfo failed");
+        return ret;
+    }
+    GOTO_ERR_AND_SET_RET(memcpy_s(token->pkInfoStr.val, token->pkInfoStr.length,
+        existToken->pkInfoStr.val, existToken->pkInfoStr.length), ret);
+    token->pkInfoStr.length = existToken->pkInfoStr.length;
+    GOTO_ERR_AND_SET_RET(memcpy_s(token->pkInfoSignature.val, token->pkInfoSignature.length,
+        existToken->pkInfoSignature.val, existToken->pkInfoSignature.length), ret);
+    token->pkInfoSignature.length = existToken->pkInfoSignature.length;
+    GOTO_ERR_AND_SET_RET(memcpy_s(token->serverPk.val, token->serverPk.length,
+        existToken->serverPk.val, existToken->serverPk.length), ret);
+    token->serverPk.length = existToken->serverPk.length;
+
+    ret = HC_SUCCESS;
+    LOGI("GetToken successfully!");
+ERR:
+    return ret;
 }
-#endif
+
+static Algorithm GetAlgVersion(int32_t osAccountId, const char *userId, const char *deviceId)
+{
+    if (userId == NULL) {
+        LOGE("Invalid input params, return default alg.");
+        return P256;
+    }
+    AccountToken *token = GetAccountToken(osAccountId, userId, deviceId);
+    if (token == NULL) {
+        LOGE("Token not exist, return default alg.");
+        return P256;
+    }
+    return GetVerifyAlg((const char *)token->pkInfo.version.val);
+}
+
+static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, const char *deviceId,
+    AccountTokenVec *deleteTokens)
+{
+    LOGI("Start to delete tokens from database!");
+    g_accountDbMutex->lock(g_accountDbMutex);
+    OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
+    if (info == NULL) {
+        LOGE("Failed to get token by os account id");
+        g_accountDbMutex->unlock(g_accountDbMutex);
+        return HC_ERROR;
+    }
+    int32_t count = 0;
+    uint32_t index = 0;
+    AccountToken **token = NULL;
+    while (index < HC_VECTOR_SIZE(&info->tokens)) {
+        token = info->tokens.getp(&info->tokens, index);
+        if ((token == NULL) || (*token == NULL) ||
+            (strcmp(userId, (const char *)((*token)->pkInfo.userId.val)) != 0) ||
+            (strcmp(deviceId, (const char *)((*token)->pkInfo.deviceId.val)) != 0)) {
+            index++;
+            continue;
+        }
+        AccountToken *deleteToken = NULL;
+        HC_VECTOR_POPELEMENT(&info->tokens, &deleteToken, index);
+        count++;
+        LOGI("Delete a token from database successfully!");
+        if (deleteTokens->pushBackT(deleteTokens, deleteToken) == NULL) {
+            LOGE("Failed to push deleted token to vec");
+            DestroyAccountToken(deleteToken);
+        }
+    }
+    g_accountDbMutex->unlock(g_accountDbMutex);
+    if (count == 0) {
+        LOGE("No token deleted");
+        return HC_ERROR;
+    }
+    LOGI("Number of tokens deleted: %d", count);
+    return HC_SUCCESS;
+}
+
+static int32_t AddTokenInner(int32_t osAccountId, const AccountToken *token)
+{
+    LOGI("Start to add a token to database!");
+    g_accountDbMutex->lock(g_accountDbMutex);
+    OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
+    if (info == NULL) {
+        LOGE("Failed to get token by os account id");
+        g_accountDbMutex->unlock(g_accountDbMutex);
+        return HC_ERROR;
+    }
+    AccountToken *newToken = DeepCopyToken(token);
+    if (newToken == NULL) {
+        LOGE("Deep copy token failed");
+        g_accountDbMutex->unlock(g_accountDbMutex);
+        return HC_ERR_MEMORY_COPY;
+    }
+    AccountToken **oldTokenPtr = QueryTokenPtrIfMatch(&info->tokens, (const char *)(newToken->pkInfo.userId.val),
+        (const char *)(newToken->pkInfo.deviceId.val));
+    if (oldTokenPtr != NULL) {
+        DestroyAccountToken(*oldTokenPtr);
+        *oldTokenPtr = newToken;
+        g_accountDbMutex->unlock(g_accountDbMutex);
+        LOGI("Replace an old token successfully!");
+        return HC_SUCCESS;
+    }
+    if (info->tokens.pushBackT(&info->tokens, newToken) == NULL) {
+        DestroyAccountToken(newToken);
+        g_accountDbMutex->unlock(g_accountDbMutex);
+        LOGE("Failed to push token to vec!");
+        return HC_ERR_MEMORY_COPY;
+    }
+    g_accountDbMutex->unlock(g_accountDbMutex);
+    LOGI("Add a token to database successfully!");
+    return HC_SUCCESS;
+}
+
+static int32_t AddToken(int32_t osAccountId, int32_t opCode, const CJson *in)
+{
+    if (in == NULL) {
+        LOGE("Input param is null!");
+        return HC_ERR_NULL_PTR;
+    }
+    int32_t ret = CheckCredValidity(opCode, in);
+    if (ret != HC_SUCCESS) {
+        LOGE("Invalid credential");
+        return ret;
+    }
+    AccountToken *token = CreateAccountToken();
+    if (token == NULL) {
+        LOGE("Failed to allocate token memory!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    ret = GenerateTokenFromJson(in, token);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to generate token");
+        DestroyAccountToken(token);
+        return ret;
+    }
+    ret = AddTokenInner(osAccountId, token);
+    DestroyAccountToken(token);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to add token inner");
+        return ret;
+    }
+    ret = SaveOsAccountTokenDb(osAccountId);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to save token to db");
+    }
+    return ret;
+}
+
+static int32_t DeleteToken(int32_t osAccountId, const char *userId, const char *deviceId)
+{
+    if ((userId == NULL) || (deviceId == NULL)) {
+        LOGE("Invalid input params!");
+        return HC_ERR_NULL_PTR;
+    }
+    AccountTokenVec deleteTokens = CreateAccountTokenVec();
+    int32_t ret = DeleteTokenInner(osAccountId, userId, deviceId, &deleteTokens);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to delete token inner, account id is: %d", osAccountId);
+        DestroyAccountTokenVec(&deleteTokens);
+        return ret;
+    }
+    ret = SaveOsAccountTokenDb(osAccountId);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to save token to db, account id is: %d", osAccountId);
+        ClearAccountTokenVec(&deleteTokens);
+        return ret;
+    }
+    uint32_t index;
+    AccountToken **token;
+    FOR_EACH_HC_VECTOR(deleteTokens, index, token) {
+        DeleteKeyPair(*token);
+    }
+    ClearAccountTokenVec(&deleteTokens);
+    return HC_SUCCESS;
+}
 
 static void LoadTokenDb(void)
 {
-#ifndef SUPPORT_OS_ACCOUNT
+    if (IsOsAccountSupported()) {
+        return;
+    }
     StringVector dbNameVec = CreateStrVector();
     HcFileGetSubFileName(GetAccountStoragePath(), &dbNameVec);
     uint32_t index;
@@ -1349,7 +1316,6 @@ static void LoadTokenDb(void)
         }
     }
     DestroyStrVector(&dbNameVec);
-#endif
 }
 
 void InitTokenManager(void)
@@ -1377,9 +1343,7 @@ void InitTokenManager(void)
     g_asyTokenManager.getAlgVersion = GetAlgVersion;
     if (!g_isInitial) {
         g_accountTokenDb = CREATE_HC_VECTOR(AccountTokenDb);
-    #ifdef SUPPORT_OS_ACCOUNT
-        AddAsyTokenDataCallback();
-    #endif
+        AddOsAccountEventCallback(ASY_TOKEN_DATA_CALLBACK, OnOsAccountUnlocked, OnOsAccountRemoved);
         g_isInitial = true;
     }
 
@@ -1484,9 +1448,7 @@ AccountAuthTokenManager *GetAccountAuthTokenManager(void)
 void DestroyTokenManager(void)
 {
     g_accountDbMutex->lock(g_accountDbMutex);
-#ifdef SUPPORT_OS_ACCOUNT
-    RemoveAsyTokenDataCallback();
-#endif
+    RemoveOsAccountEventCallback(ASY_TOKEN_DATA_CALLBACK);
     g_algLoader = NULL;
     (void)memset_s(&g_asyTokenManager, sizeof(AccountAuthTokenManager), 0, sizeof(AccountAuthTokenManager));
     uint32_t index;

@@ -120,6 +120,7 @@ ohos_unittest("save_trusted_info_test") {
   sources += privacy_enhancement_mock_files
   sources += mk_agree_mock_files
   sources += security_label_adapter_files
+  sources += [ "${tdd_framework_path}/common/src/os_account_adapter_mock.c" ]
   sources += [ "save_trusted_info_test.cpp" ]
 
   cflags = [ "-DHILOG_ENABLE" ]

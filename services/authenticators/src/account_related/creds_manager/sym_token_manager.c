@@ -24,9 +24,7 @@
 #include "hc_log.h"
 #include "hc_mutex.h"
 #include "hc_types.h"
-#ifdef SUPPORT_OS_ACCOUNT
 #include "os_account_adapter.h"
-#endif
 #include "security_label_adapter.h"
 #include "string_util.h"
 
@@ -54,7 +52,6 @@ static bool IsTokenMatch(const SymToken *token, const char *userId, const char *
     return (strcmp(userId, token->userId) == 0) && (strcmp(deviceId, token->deviceId) == 0);
 }
 
-#ifdef SUPPORT_OS_ACCOUNT
 static bool GetTokensFilePathCe(int32_t osAccountId, char *tokenPath, uint32_t pathBufferLen)
 {
     const char *beginPath = GetStorageDirPathCe();
@@ -69,7 +66,6 @@ static bool GetTokensFilePathCe(int32_t osAccountId, char *tokenPath, uint32_t p
     }
     return true;
 }
-#endif
 
 static bool GetTokensFilePathDe(int32_t osAccountId, char *tokenPath, uint32_t pathBufferLen)
 {
@@ -93,11 +89,11 @@ static bool GetTokensFilePathDe(int32_t osAccountId, char *tokenPath, uint32_t p
 
 static bool GetTokensFilePath(int32_t osAccountId, char *tokenPath, uint32_t pathBufferLen)
 {
-#ifdef SUPPORT_OS_ACCOUNT
-    return GetTokensFilePathCe(osAccountId, tokenPath, pathBufferLen);
-#else
-    return GetTokensFilePathDe(osAccountId, tokenPath, pathBufferLen);
-#endif
+    if (IsOsAccountSupported()) {
+        return GetTokensFilePathCe(osAccountId, tokenPath, pathBufferLen);
+    } else {
+        return GetTokensFilePathDe(osAccountId, tokenPath, pathBufferLen);
+    }
 }
 
 static SymToken *CreateSymTokenByJson(const CJson *tokenJson)
@@ -300,48 +296,6 @@ static int32_t SaveTokensToFile(const SymTokenVec *vec, const char *tokenPath)
     return ret;
 }
 
-static OsSymTokensInfo *GetTokensInfoByOsAccountId(int32_t osAccountId)
-{
-    uint32_t index = 0;
-    OsSymTokensInfo *info = NULL;
-    FOR_EACH_HC_VECTOR(g_symTokensDb, index, info) {
-        if (info->osAccountId == osAccountId) {
-            return info;
-        }
-    }
-    LOGI("Create a new os account database cache! [Id]: %d", osAccountId);
-    OsSymTokensInfo newInfo;
-    newInfo.osAccountId = osAccountId;
-    newInfo.tokens = CreateSymTokenVec();
-    OsSymTokensInfo *returnInfo = g_symTokensDb.pushBackT(&g_symTokensDb, newInfo);
-    if (returnInfo == NULL) {
-        LOGE("Failed to push OsSymTokensInfo to database!");
-        DestroySymTokenVec(&newInfo.tokens);
-    }
-    return returnInfo;
-}
-
-static int32_t SaveOsSymTokensDb(int32_t osAccountId)
-{
-    char tokenPath[MAX_DB_PATH_LEN] = { 0 };
-    if (!GetTokensFilePath(osAccountId, tokenPath, MAX_DB_PATH_LEN)) {
-        LOGE("Failed to get token path!");
-        return HC_ERROR;
-    }
-    OsSymTokensInfo *info = GetTokensInfoByOsAccountId(osAccountId);
-    if (info == NULL) {
-        LOGE("Failed to get tokens by os account id. [OsAccountId]: %d", osAccountId);
-        return HC_ERR_INVALID_PARAMS;
-    }
-    int32_t ret = SaveTokensToFile(&info->tokens, tokenPath);
-    if (ret != HC_SUCCESS) {
-        LOGE("Save tokens to file failed");
-        return ret;
-    }
-    LOGI("Save an os account database successfully! [Id]: %d", osAccountId);
-    return HC_SUCCESS;
-}
-
 static SymToken **QueryTokenPtrIfMatch(const SymTokenVec *vec, const char *userId, const char *deviceId)
 {
     uint32_t index;
@@ -352,29 +306,6 @@ static SymToken **QueryTokenPtrIfMatch(const SymTokenVec *vec, const char *userI
         }
     }
     return NULL;
-}
-
-static int32_t AddSymTokenToVec(int32_t osAccountId, SymToken *token)
-{
-    LOGI("Start to add a token to database!");
-    OsSymTokensInfo *info = GetTokensInfoByOsAccountId(osAccountId);
-    if (info == NULL) {
-        LOGE("Failed to get tokens by os account id. [OsAccountId]: %d", osAccountId);
-        return HC_ERR_INVALID_PARAMS;
-    }
-    SymToken **oldTokenPtr = QueryTokenPtrIfMatch(&info->tokens, token->userId, token->deviceId);
-    if (oldTokenPtr != NULL) {
-        LOGI("Replace an old token successfully!");
-        HcFree(*oldTokenPtr);
-        *oldTokenPtr = token;
-        return HC_SUCCESS;
-    }
-    if (info->tokens.pushBackT(&info->tokens, token) == NULL) {
-        LOGE("Failed to push token to vec!");
-        return HC_ERR_MEMORY_COPY;
-    }
-    LOGI("Add a token to database successfully!");
-    return HC_SUCCESS;
 }
 
 static int32_t GenerateKeyAlias(const char *userId, const char *deviceId, Uint8Buff *keyAlias)
@@ -465,67 +396,6 @@ static int32_t ImportSymTokenToKeyManager(const SymToken *token, CJson *in, int3
     return res;
 }
 
-static int32_t AddToken(int32_t osAccountId, int32_t opCode, CJson *in)
-{
-    LOGI("[Token]: Add sym token starting ...");
-    if (in == NULL) {
-        LOGE("Invalid params!");
-        return HC_ERR_NULL_PTR;
-    }
-    SymToken *symToken = CreateSymTokenByJson(in);
-    if (symToken == NULL) {
-        LOGE("Failed to create symToken from json!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    g_dataMutex->lock(g_dataMutex);
-    int32_t res = AddSymTokenToVec(osAccountId, symToken);
-    if (res != HC_SUCCESS) {
-        g_dataMutex->unlock(g_dataMutex);
-        LOGE("Failed to add sym token to vec");
-        HcFree(symToken);
-        return res;
-    }
-    res = ImportSymTokenToKeyManager(symToken, in, opCode);
-    if (res != HC_SUCCESS) {
-        g_dataMutex->unlock(g_dataMutex);
-        LOGE("Failed to import sym token!");
-        return res;
-    }
-    res = SaveOsSymTokensDb(osAccountId);
-    g_dataMutex->unlock(g_dataMutex);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to save token to db");
-        return res;
-    }
-    LOGI("[Token]: Add sym token success");
-    return HC_SUCCESS;
-}
-
-static SymToken *PopSymTokenFromVec(int32_t osAccountId, const char *userId, const char *deviceId)
-{
-    LOGI("Start to pop token from database!");
-    OsSymTokensInfo *info = GetTokensInfoByOsAccountId(osAccountId);
-    if (info == NULL) {
-        LOGE("Failed to get tokens by os account id. [OsAccountId]: %d", osAccountId);
-        return NULL;
-    }
-    uint32_t index = 0;
-    SymToken **token = NULL;
-    while (index < HC_VECTOR_SIZE(&info->tokens)) {
-        token = info->tokens.getp(&info->tokens, index);
-        if ((token == NULL) || (*token == NULL) || (!IsTokenMatch(*token, userId, deviceId))) {
-            index++;
-            continue;
-        }
-        SymToken *deleteToken = NULL;
-        HC_VECTOR_POPELEMENT(&info->tokens, &deleteToken, index);
-        LOGI("Pop a token from database successfully!");
-        return deleteToken;
-    }
-    LOGE("The token is not found!");
-    return NULL;
-}
-
 static int32_t DeleteSymTokenFromKeyManager(const SymToken *token)
 {
     uint8_t *keyAliasVal = (uint8_t *)HcMalloc(SHA256_LEN, 0);
@@ -553,36 +423,6 @@ static int32_t DeleteSymTokenFromKeyManager(const SymToken *token)
     return res;
 }
 
-static int32_t DeleteToken(int32_t osAccountId, const char *userId, const char *deviceId)
-{
-    LOGI("[Token]: Delete sym token starting ...");
-    if ((userId == NULL) || (deviceId == NULL)) {
-        LOGE("Invalid params");
-        return HC_ERR_NULL_PTR;
-    }
-    g_dataMutex->lock(g_dataMutex);
-    SymToken *symToken = PopSymTokenFromVec(osAccountId, userId, deviceId);
-    if (symToken == NULL) {
-        g_dataMutex->unlock(g_dataMutex);
-        return HC_ERR_NULL_PTR;
-    }
-    int32_t res = DeleteSymTokenFromKeyManager(symToken);
-    HcFree(symToken);
-    if (res != HC_SUCCESS) {
-        g_dataMutex->unlock(g_dataMutex);
-        LOGE("Failed to delete sym token!");
-        return res;
-    }
-    res = SaveOsSymTokensDb(osAccountId);
-    g_dataMutex->unlock(g_dataMutex);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to save token to db, account id is: %d", osAccountId);
-        return res;
-    }
-    LOGI("[Token]: Delete sym token success");
-    return HC_SUCCESS;
-}
-
 static void LoadOsSymTokensDb(int32_t osAccountId)
 {
     char tokenPath[MAX_DB_PATH_LEN] = { 0 };
@@ -604,7 +444,6 @@ static void LoadOsSymTokensDb(int32_t osAccountId)
     LOGI("Load os account db successfully! [Id]: %d", osAccountId);
 }
 
-#ifdef SUPPORT_OS_ACCOUNT
 static void TryMoveDeDataToCe(int32_t osAccountId)
 {
     char tokenPathDe[MAX_DB_PATH_LEN] = { 0 };
@@ -700,49 +539,177 @@ static bool IsOsAccountDataLoaded(int32_t osAccountId)
 
 static void LoadDataIfNotLoaded(int32_t osAccountId)
 {
-    g_dataMutex->lock(g_dataMutex);
     if (IsOsAccountDataLoaded(osAccountId)) {
-        g_dataMutex->unlock(g_dataMutex);
         return;
     }
     LOGI("Data has not been loaded, load it, osAccountId: %d", osAccountId);
     LoadOsSymTokensDbCe(osAccountId);
+}
+
+static OsSymTokensInfo *GetTokensInfoByOsAccountId(int32_t osAccountId)
+{
+    if (IsOsAccountSupported()) {
+        LoadDataIfNotLoaded(osAccountId);
+    }
+    uint32_t index = 0;
+    OsSymTokensInfo *info = NULL;
+    FOR_EACH_HC_VECTOR(g_symTokensDb, index, info) {
+        if (info->osAccountId == osAccountId) {
+            return info;
+        }
+    }
+    LOGI("Create a new os account database cache! [Id]: %d", osAccountId);
+    OsSymTokensInfo newInfo;
+    newInfo.osAccountId = osAccountId;
+    newInfo.tokens = CreateSymTokenVec();
+    OsSymTokensInfo *returnInfo = g_symTokensDb.pushBackT(&g_symTokensDb, newInfo);
+    if (returnInfo == NULL) {
+        LOGE("Failed to push OsSymTokensInfo to database!");
+        DestroySymTokenVec(&newInfo.tokens);
+    }
+    return returnInfo;
+}
+
+static int32_t SaveOsSymTokensDb(int32_t osAccountId)
+{
+    char tokenPath[MAX_DB_PATH_LEN] = { 0 };
+    if (!GetTokensFilePath(osAccountId, tokenPath, MAX_DB_PATH_LEN)) {
+        LOGE("Failed to get token path!");
+        return HC_ERROR;
+    }
+    OsSymTokensInfo *info = GetTokensInfoByOsAccountId(osAccountId);
+    if (info == NULL) {
+        LOGE("Failed to get tokens by os account id. [OsAccountId]: %d", osAccountId);
+        return HC_ERR_INVALID_PARAMS;
+    }
+    int32_t ret = SaveTokensToFile(&info->tokens, tokenPath);
+    if (ret != HC_SUCCESS) {
+        LOGE("Save tokens to file failed");
+        return ret;
+    }
+    LOGI("Save an os account database successfully! [Id]: %d", osAccountId);
+    return HC_SUCCESS;
+}
+
+static int32_t AddSymTokenToVec(int32_t osAccountId, SymToken *token)
+{
+    LOGI("Start to add a token to database!");
+    OsSymTokensInfo *info = GetTokensInfoByOsAccountId(osAccountId);
+    if (info == NULL) {
+        LOGE("Failed to get tokens by os account id. [OsAccountId]: %d", osAccountId);
+        return HC_ERR_INVALID_PARAMS;
+    }
+    SymToken **oldTokenPtr = QueryTokenPtrIfMatch(&info->tokens, token->userId, token->deviceId);
+    if (oldTokenPtr != NULL) {
+        LOGI("Replace an old token successfully!");
+        HcFree(*oldTokenPtr);
+        *oldTokenPtr = token;
+        return HC_SUCCESS;
+    }
+    if (info->tokens.pushBackT(&info->tokens, token) == NULL) {
+        LOGE("Failed to push token to vec!");
+        return HC_ERR_MEMORY_COPY;
+    }
+    LOGI("Add a token to database successfully!");
+    return HC_SUCCESS;
+}
+
+static SymToken *PopSymTokenFromVec(int32_t osAccountId, const char *userId, const char *deviceId)
+{
+    LOGI("Start to pop token from database!");
+    OsSymTokensInfo *info = GetTokensInfoByOsAccountId(osAccountId);
+    if (info == NULL) {
+        LOGE("Failed to get tokens by os account id. [OsAccountId]: %d", osAccountId);
+        return NULL;
+    }
+    uint32_t index = 0;
+    SymToken **token = NULL;
+    while (index < HC_VECTOR_SIZE(&info->tokens)) {
+        token = info->tokens.getp(&info->tokens, index);
+        if ((token == NULL) || (*token == NULL) || (!IsTokenMatch(*token, userId, deviceId))) {
+            index++;
+            continue;
+        }
+        SymToken *deleteToken = NULL;
+        HC_VECTOR_POPELEMENT(&info->tokens, &deleteToken, index);
+        LOGI("Pop a token from database successfully!");
+        return deleteToken;
+    }
+    LOGE("The token is not found!");
+    return NULL;
+}
+
+static int32_t AddToken(int32_t osAccountId, int32_t opCode, CJson *in)
+{
+    LOGI("[Token]: Add sym token starting ...");
+    if (in == NULL) {
+        LOGE("Invalid params!");
+        return HC_ERR_NULL_PTR;
+    }
+    SymToken *symToken = CreateSymTokenByJson(in);
+    if (symToken == NULL) {
+        LOGE("Failed to create symToken from json!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    g_dataMutex->lock(g_dataMutex);
+    int32_t res = AddSymTokenToVec(osAccountId, symToken);
+    if (res != HC_SUCCESS) {
+        g_dataMutex->unlock(g_dataMutex);
+        LOGE("Failed to add sym token to vec");
+        HcFree(symToken);
+        return res;
+    }
+    res = ImportSymTokenToKeyManager(symToken, in, opCode);
+    if (res != HC_SUCCESS) {
+        g_dataMutex->unlock(g_dataMutex);
+        LOGE("Failed to import sym token!");
+        return res;
+    }
+    res = SaveOsSymTokensDb(osAccountId);
     g_dataMutex->unlock(g_dataMutex);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to save token to db");
+        return res;
+    }
+    LOGI("[Token]: Add sym token success");
+    return HC_SUCCESS;
 }
 
-static void AddSymTokenDataCallback(void)
+static int32_t DeleteToken(int32_t osAccountId, const char *userId, const char *deviceId)
 {
-    OsAccountEventCallback *eventCallback = (OsAccountEventCallback *)HcMalloc(sizeof(OsAccountEventCallback), 0);
-    if (eventCallback == NULL) {
-        LOGE("Failed to alloc memory for sym token data callback!");
-        return;
+    LOGI("[Token]: Delete sym token starting ...");
+    if ((userId == NULL) || (deviceId == NULL)) {
+        LOGE("Invalid params");
+        return HC_ERR_NULL_PTR;
     }
-    eventCallback->callbackId = SYM_TOKEN_DATA_CALLBACK;
-    eventCallback->onOsAccountUnlocked = OnOsAccountUnlocked;
-    eventCallback->onOsAccountRemoved = OnOsAccountRemoved;
-    eventCallback->loadDataIfNotLoaded = LoadDataIfNotLoaded;
-    if (AddOsAccountEventCallback(eventCallback) != HC_SUCCESS) {
-        LOGE("Failed to add sym token data callback!");
-        HcFree(eventCallback);
-        return;
+    g_dataMutex->lock(g_dataMutex);
+    SymToken *symToken = PopSymTokenFromVec(osAccountId, userId, deviceId);
+    if (symToken == NULL) {
+        g_dataMutex->unlock(g_dataMutex);
+        return HC_ERR_NULL_PTR;
     }
-    LOGE("Add sym token data callback successfully!");
+    int32_t res = DeleteSymTokenFromKeyManager(symToken);
+    HcFree(symToken);
+    if (res != HC_SUCCESS) {
+        g_dataMutex->unlock(g_dataMutex);
+        LOGE("Failed to delete sym token!");
+        return res;
+    }
+    res = SaveOsSymTokensDb(osAccountId);
+    g_dataMutex->unlock(g_dataMutex);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to save token to db, account id is: %d", osAccountId);
+        return res;
+    }
+    LOGI("[Token]: Delete sym token success");
+    return HC_SUCCESS;
 }
-
-static void RemoveSymTokenDataCallback(void)
-{
-    OsAccountEventCallback *callback = RemoveOsAccountEventCallback(SYM_TOKEN_DATA_CALLBACK);
-    if (callback == NULL) {
-        LOGE("Callback is null!");
-        return;
-    }
-    HcFree(callback);
-}
-#endif
 
 static void LoadTokenDb(void)
 {
-#ifndef SUPPORT_OS_ACCOUNT
+    if (IsOsAccountSupported()) {
+        return;
+    }
     StringVector dbNameVec = CreateStrVector();
     HcFileGetSubFileName(GetAccountStoragePath(), &dbNameVec);
     uint32_t index;
@@ -760,7 +727,6 @@ static void LoadTokenDb(void)
         }
     }
     DestroyStrVector(&dbNameVec);
-#endif
 }
 
 void ClearSymTokenVec(SymTokenVec *vec)
@@ -799,9 +765,7 @@ void InitSymTokenManager(void)
     g_symTokenManager.deleteToken = DeleteToken;
     g_symTokenManager.generateKeyAlias = GenerateKeyAlias;
     g_symTokensDb = CREATE_HC_VECTOR(SymTokensDb);
-#ifdef SUPPORT_OS_ACCOUNT
-    AddSymTokenDataCallback();
-#endif
+    AddOsAccountEventCallback(SYM_TOKEN_DATA_CALLBACK, OnOsAccountUnlocked, OnOsAccountRemoved);
     LoadTokenDb();
     g_dataMutex->unlock(g_dataMutex);
 }
@@ -809,9 +773,7 @@ void InitSymTokenManager(void)
 void DestroySymTokenManager(void)
 {
     g_dataMutex->lock(g_dataMutex);
-#ifdef SUPPORT_OS_ACCOUNT
-    RemoveSymTokenDataCallback();
-#endif
+    RemoveOsAccountEventCallback(SYM_TOKEN_DATA_CALLBACK);
     (void)memset_s(&g_symTokenManager, sizeof(SymTokenManager), 0, sizeof(SymTokenManager));
     uint32_t index;
     OsSymTokensInfo *info = NULL;
