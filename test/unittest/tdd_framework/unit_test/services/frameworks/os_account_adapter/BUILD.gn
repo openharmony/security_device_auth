@@ -57,6 +57,7 @@ if (support_os_account) {
     sources += sa_subscriber_files
 
     cflags = [ "-DHILOG_ENABLE" ]
+    cflags += [ "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}" ]
     if (target_cpu == "arm") {
       cflags += [ "-DBINDER_IPC_32BIT" ]
     }

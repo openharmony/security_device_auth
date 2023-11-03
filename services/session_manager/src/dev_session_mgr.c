@@ -77,9 +77,9 @@ static int32_t CheckEnvForOpenSession(int64_t sessionId)
         return HC_ERR_REQUEST_EXIST;
     }
     uint32_t curSessionNum = HC_VECTOR_SIZE(&g_sessionInfoList);
-    if (curSessionNum >= MAX_SESSION_COUNT) {
+    if (curSessionNum >= MAX_AUTH_SESSION_COUNT) {
         LOGE("The number of sessions has reached the maximum limit. [CurNum]: %u, [NumLimit]: %d",
-            curSessionNum, MAX_SESSION_COUNT);
+            curSessionNum, MAX_AUTH_SESSION_COUNT);
         return HC_ERR_SESSION_IS_FULL;
     }
     return HC_SUCCESS;

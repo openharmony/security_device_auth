@@ -67,6 +67,7 @@ ohos_unittest("creds_manager_test") {
   }
 
   cflags = [ "-DHILOG_ENABLE" ]
+  cflags += [ "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}" ]
   cflags +=
       [ "-DDEVICE_AUTH_TEST_HKS_DATA_PATH=\"${huks_key_store_standard_path}\"" ]
 
