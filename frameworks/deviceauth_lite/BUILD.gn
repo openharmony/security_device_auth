@@ -19,9 +19,9 @@ group("hichainsdk") {
   deps = []
 
   #  if (os_level == "mini" || os_level == "small") {
-    deps += [ 
-      "//base/security/device_auth/frameworks/deviceauth_lite/source:hichainsdk", 
-    ]
+  deps += [ 
+    "//base/security/device_auth/frameworks/deviceauth_lite/source:hichainsdk", 
+  ]
 
   #  }
 }
