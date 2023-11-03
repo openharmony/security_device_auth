@@ -78,11 +78,11 @@ config("hichain_config") {
   ]
 
   defines = [
-#    "_SCANTY_MEMORY_",
-#    "_CUT_STS_CLIENT_",
+    #    "_SCANTY_MEMORY_",
+    #    "_CUT_STS_CLIENT_",
     "_CUT_REMOVE_",
-#    "_CUT_ADD_",
-#    "_CUT_LOG_",
+    #    "_CUT_ADD_",
+    #    "_CUT_LOG_",
   ]
 }
 
@@ -109,9 +109,7 @@ if (ohos_kernel_type == "liteos_m") {
       "//third_party/cJSON:cjson",
       "//third_party/bounds_checking_function:libsec_shared",
     ]
-    external_deps = [
-      "huks:libhukssdk",
-    ]
+    external_deps = [ "huks:libhukssdk" ]
     cflags = [
       "-flto",
       "-Wall",
@@ -128,9 +126,7 @@ ohos_static_library("hichainsdk_static") {
     "//third_party/cJSON:cjson",
     "//third_party/bounds_checking_function:libsec_shared",
   ]
-  external_deps = [
-    "huks:libhukssdk",
-  ]
+  external_deps = [ "huks:libhukssdk" ]
   cflags = [
     "-flto",
     "-Wall",
