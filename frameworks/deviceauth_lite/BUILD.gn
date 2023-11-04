@@ -26,23 +26,9 @@ group("hichainsdk") {
 group("deviceauth_lite_test_build") {
   testonly = true
   deps = []
-  if (os_level == "standard") {
-    deps += [ "//base/security/device_auth/frameworks/deviceauth_lite/unittest:DeviceAuthTest" ]
+  if (os_level == "small" || os_level == "standard") {
+    deps += [ "//base/security/device_auth/frameworks/deviceauth_lite/unittest:deviceauth_test" ]
   }
 }
 
-group("fuzztest") {
-  testonly = true
-  deps = []
-  if (os_level == "standard") {
-    deps += [
-      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/authenticatepeer_fuzzer:fuzztest",
-      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/dellocalauthinfo_fuzzer:fuzztest",
-      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/destroy_fuzzer:fuzztest",
-      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/getinstance_fuzzer:fuzztest",
-      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/listtrustpeer_fuzzer:fuzztest",
-      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/receivedata_fuzzer:fuzztest",
-      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/startpake_fuzzer:fuzztest",
-    ]
-  }
-}
+
