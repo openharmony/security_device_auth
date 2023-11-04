@@ -21,7 +21,6 @@ group("hichainsdk") {
   deps += [
     "//base/security/device_auth/frameworks/deviceauth_lite/source:hichainsdk",
   ]
-
 }
 
 group("deviceauth_lite_test_build") {
