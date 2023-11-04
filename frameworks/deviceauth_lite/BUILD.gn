@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020-2022 Huawei Device Co., Ltd.
+# Copyright (c) 2020-2021 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,37 +12,124 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 import("//build/ohos.gni")
+ohos_kernel_type = "liteos_a"
+hichian_sources = [
+  "auth_info/add_auth_info.c",
+  "auth_info/add_auth_info_client.c",
+  "auth_info/auth_info.c",
+  "auth_info/exchange_auth_info.c",
+  "auth_info/exchange_auth_info_client.c",
+  "auth_info/remove_auth_info_client.c",
+  "hichain.c",
+  "huks_adapter/huks_adapter.c",
+  "json/commonutil.c",
+  "json/jsonutil.c",
+  "key_agreement/key_agreement.c",
+  "key_agreement/key_agreement_client.c",
+  "key_agreement/key_agreement_server.c",
+  "key_agreement/pake_client.c",
+  "key_agreement/pake_server.c",
+  "key_agreement/sec_clone_server.c",
+  "key_agreement/sts_client.c",
+  "key_agreement/sts_server.c",
+  "log/log.c",
+  "schedule/build_object.c",
+  "schedule/distribution.c",
+  "struct/add_auth_info_data.c",
+  "struct/add_auth_info_request.c",
+  "struct/add_auth_info_response.c",
+  "struct/auth_ack_request.c",
+  "struct/auth_ack_response.c",
+  "struct/auth_start_request.c",
+  "struct/auth_start_response.c",
+  "struct/exchange_auth_data.c",
+  "struct/exchange_request.c",
+  "struct/exchange_response.c",
+  "struct/import_add_auth_data.c",
+  "struct/inform_message.c",
+  "struct/key_agreement_version.c",
+  "struct/key_agreement_version.h",
+  "struct/pake_client_confirm.c",
+  "struct/pake_request.c",
+  "struct/pake_response.c",
+  "struct/pake_server_confirm.c",
+  "struct/parsedata.c",
+  "struct/rmv_auth_info_data.c",
+  "struct/rmv_auth_info_request.c",
+  "struct/rmv_auth_info_response.c",
+  "struct/sec_clone_data.c",
+]
 
-group("hichainsdk") {
-  deps = []
+config("hichain_config") {
+  include_dirs = [
+    "//third_party/bounds_checking_function/include",
+    "//base/security/device_auth/interfaces/inner_api/deviceauth_lite",
+    "//base/security/huks/interfaces/inner_api/huks_standard/main/include",
+    "//third_party/cJSON",
+    "base",
+    "huks_adapter",
+    "json",
+    "key_agreement",
+    "log",
+    "schedule",
+    "struct",
+    "auth_info",
+  ]
 
-  deps += [
-    "//base/security/device_auth/frameworks/deviceauth_lite/source:hichainsdk",
+  defines = [
+    #    "_SCANTY_MEMORY_",
+    #    "_CUT_STS_CLIENT_",
+    "_CUT_REMOVE_",
+    #    "_CUT_ADD_",
+    #    "_CUT_LOG_",
   ]
 }
 
-group("deviceauth_lite_test_build") {
-  testonly = true
-  deps = []
-  if (os_level == "standard") {
-    deps += [ "//base/security/device_auth/frameworks/deviceauth_lite/unittest:DeviceAuthTest" ]
+if (ohos_kernel_type == "liteos_m") {
+  static_library("hichainsdk") {
+    sources = hichian_sources
+    public_configs = [ ":hichain_config" ]
+    deps =
+        [ "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk" ]
+    if (board_toolchain_type == "iccarm") {
+      cflags = [
+        "--diag_suppress",
+        "Pe1097,Pe546,Pe188,Pe111",
+      ]
+    }
   }
-}
-
-group("fuzztest") {
-  testonly = true
-  deps = []
-  if (os_level == "standard") {
-    deps += [
-      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/authenticatepeer_fuzzer:fuzztest",
-      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/dellocalauthinfo_fuzzer:fuzztest",
-      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/destroy_fuzzer:fuzztest",
-      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/getinstance_fuzzer:fuzztest",
-      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/listtrustpeer_fuzzer:fuzztest",
-      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/receivedata_fuzzer:fuzztest",
-      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/startpake_fuzzer:fuzztest",
+} else {
+  ohos_shared_library("hichainsdk") {
+    subsystem_name = "security"
+    part_name = "device_auth"
+    sources = hichian_sources
+    public_configs = [ ":hichain_config" ]
+    deps = [
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/cJSON:cjson",
+    ]
+    external_deps = [ "huks:libhukssdk" ]
+    cflags = [
+      "-flto",
+      "-Wall",
+      "-fvisibility=hidden",
     ]
   }
+}
+ohos_static_library("hichainsdk_static") {
+  subsystem_name = "security"
+  part_name = "device_auth"
+  sources = hichian_sources
+  public_configs = [ ":hichain_config" ]
+  deps = [
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/cJSON:cjson",
+  ]
+  external_deps = [ "huks:libhukssdk" ]
+  cflags = [
+    "-flto",
+    "-Wall",
+    "-fvisibility=hidden",
+  ]
 }
