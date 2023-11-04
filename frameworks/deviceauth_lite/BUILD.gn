@@ -26,9 +26,7 @@ group("hichainsdk") {
 group("deviceauth_lite_test_build") {
   testonly = true
   deps = []
-  if (os_level == "small" || os_level == "standard") {
+  if (os_level == "small") {
     deps += [ "//base/security/device_auth/frameworks/deviceauth_lite/unittest:deviceauth_test" ]
   }
 }
-
-
