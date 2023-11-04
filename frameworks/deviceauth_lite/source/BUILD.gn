@@ -65,6 +65,30 @@ config("hichain_config") {
   include_dirs = [
     "//third_party/bounds_checking_function/include",
     "//base/security/device_auth/interfaces/inner_api/deviceauth_lite",
+    "//third_party/cJSON",
+    "base",
+    "huks_adapter",
+    "json",
+    "key_agreement",
+    "log",
+    "schedule",
+    "struct",
+    "auth_info",
+  ]
+
+  defines = [
+    "_SCANTY_MEMORY_",
+    "_CUT_STS_CLIENT_",
+    "_CUT_REMOVE_",
+    "_CUT_ADD_",
+    "_CUT_LOG_",
+  ]
+}
+
+config("hichain_standard_config") {
+  include_dirs = [
+    "//third_party/bounds_checking_function/include",
+    "//base/security/device_auth/interfaces/inner_api/deviceauth_lite",
     "//base/security/huks/interfaces/inner_api/huks_standard/main/include",
     "//third_party/cJSON",
     "base",
@@ -85,12 +109,13 @@ config("hichain_config") {
     #    "_CUT_LOG_",
   ]
 }
+
 if (os_level == "standard") {
   ohos_shared_library("hichainsdk") {
     subsystem_name = "security"
     part_name = "device_auth"
     sources = hichian_sources
-    public_configs = [ ":hichain_config" ]
+    public_configs = [ ":hichain_standard_config" ]
     deps = [
       "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/cJSON:cjson",
@@ -106,7 +131,7 @@ if (os_level == "standard") {
     subsystem_name = "security"
     part_name = "device_auth"
     sources = hichian_sources
-    public_configs = [ ":hichain_config" ]
+    public_configs = [ ":hichain_standard_config" ]
     deps = [
       "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/cJSON:cjson",
