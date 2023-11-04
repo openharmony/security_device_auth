@@ -106,8 +106,8 @@ if (ohos_kernel_type == "liteos_m") {
     sources = hichian_sources
     public_configs = [ ":hichain_config" ]
     deps = [
-      "//third_party/cJSON:cjson",
       "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/cJSON:cjson",
     ]
     external_deps = [ "huks:libhukssdk" ]
     cflags = [
@@ -123,8 +123,8 @@ ohos_static_library("hichainsdk_static") {
   sources = hichian_sources
   public_configs = [ ":hichain_config" ]
   deps = [
-    "//third_party/cJSON:cjson",
     "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/cJSON:cjson",
   ]
   external_deps = [ "huks:libhukssdk" ]
   cflags = [
