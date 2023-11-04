@@ -19,8 +19,8 @@ group("hichainsdk") {
   deps = []
 
   #  if (os_level == "mini" || os_level == "small") {
-  deps += [ 
-    "//base/security/device_auth/frameworks/deviceauth_lite/source:hichainsdk", 
+  deps += [
+    "//base/security/device_auth/frameworks/deviceauth_lite/source:hichainsdk",
   ]
 
   #  }
@@ -38,7 +38,7 @@ group("fuzztest") {
   testonly = true
   deps = []
   if (os_level == "standard") {
-    deps += [ 
+    deps += [
       "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/authenticatepeer_fuzzer:fuzztest",
       "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/dellocalauthinfo_fuzzer:fuzztest",
       "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/destroy_fuzzer:fuzztest",
