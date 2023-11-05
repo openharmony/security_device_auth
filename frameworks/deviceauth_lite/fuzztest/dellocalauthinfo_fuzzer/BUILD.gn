@@ -17,20 +17,24 @@ import("//base/security/device_auth/services/deviceauth.gni")
 #####################hydra-fuzz###################
 import("//build/config/features.gni")
 import("//build/test.gni")
+
+ROOT_PATH = "//base/security/device_auth"
+THIRD_PATH = "//third_party/bounds_checking_function"
 module_output_path = "device_auth/deviceauth_test"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("DelLocalAuthInfoFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/dellocalauthinfo_fuzzer"
+  fuzz_config_file = "$ROOT_PATH/frameworks/deviceauth_lite/fuzztest/istrustpeer_fuzzer"
   include_dirs = []
   include_dirs += [
-    "//base/security/device_auth/interfaces/inner_api/deviceauth_lite",
-    "//base/security/device_auth/frameworks/deviceauth_lite/source/schdeule",
-    "//base/security/device_auth/frameworks/deviceauth_lite/source/key_agreement",
-    "//base/security/device_auth/frameworks/deviceauth_lite/source/base",
-    "//base/security/device_auth/frameworks/deviceauth_lite/source/struct",
-    "//foundation/distributeddatamgr/kv_store/kvstoremock/interfaces/mock/base",
+    "$ROOT_PATH/interfaces/inner_api/deviceauth_lite",
+    "$ROOT_PATH/frameworks/deviceauth_lite/source/schdeule",
+    "$ROOT_PATH/frameworks/deviceauth_lite/source/key_agreement",
+    "$ROOT_PATH/frameworks/deviceauth_lite/source/base",
+    "$ROOT_PATH/frameworks/deviceauth_lite/source/struct",
+    "$THIRD_PATH/include",
+    "$ROOT_PATH/frameworks/deviceauth_lite/source/json",
   ]
     cflags = [
     "-g",
@@ -46,8 +50,8 @@ ohos_fuzztest("DelLocalAuthInfoFuzzTest") {
 
     sources = [ "dellocalauthinfo_fuzzer.cpp", ]
     deps = [
-        "//third_party/bounds_checking_function:libsec_shared",
-        "//base/security/device_auth/frameworks/deviceauth_lite/source:hichainsdk",
+        "$THIRD_PATH:libsec_shared",
+        "$ROOT_PATH/frameworks/deviceauth_lite/source:hichainsdk",
     ]
 }
 

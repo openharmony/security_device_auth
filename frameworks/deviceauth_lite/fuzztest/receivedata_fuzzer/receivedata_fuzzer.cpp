@@ -68,7 +68,7 @@ namespace OHOS {
         }
         uint8_t *val = const_cast<uint8_t *>data;
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
-        uint8_buff buff = {val, strlen((char *)(val)), strlen((char *)(val))}
+        uint8_buff buff = {val, strlen((std::string)(val)), strlen((std::string)(val))}
         receive_data(handle, &buff);
         destroy(&handle);
         return true;

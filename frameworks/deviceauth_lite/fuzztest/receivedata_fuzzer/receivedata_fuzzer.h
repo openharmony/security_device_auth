@@ -24,6 +24,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fcntl.h>
+#include <string>
 
 #define FUZZ_PROJECT_NAME "receivedata_fuzzer"
 

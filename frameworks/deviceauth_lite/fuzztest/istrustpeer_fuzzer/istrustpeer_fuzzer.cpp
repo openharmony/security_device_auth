@@ -72,7 +72,7 @@ namespace OHOS {
         }
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
         struct hc_auth_id selfId = {sizeof({*data;}), {*data}};
-        int32_t type = atoi(reinterpret_cast<char *>(data));
+        int32_t type = atoi(reinterpret_cast<std::string>(data));
         struct hc_user_info user_info;
         user_info.auth_id = selfId;
         user_info.user_type = type;

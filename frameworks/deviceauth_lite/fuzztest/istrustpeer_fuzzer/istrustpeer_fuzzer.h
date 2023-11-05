@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef STARTPAKE_FUZZER_H
-#define STARTPAKE_FUZZER_H
+#ifndef ISTRUSTPEER_FUZZER_H
+#define ISTRUSTPEER_FUZZER_H
 
 #include <cstdint>
 #include <unistd.h>
@@ -22,6 +22,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fcntl.h>
+#include <string>
 
 #define FUZZ_PROJECT_NAME "istrustpeer_fuzzer"
 
