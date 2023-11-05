@@ -68,7 +68,7 @@ namespace OHOS{
         hc_auth_id authId = {sizeof({*data;}), {*data}};
         hc_user_info userInfo = {authId, 1};
         delete_local_auth_info(handle, &userInfo);
-        destroy(handle);
+        destroy(&handle);
         return true;
     }
 }

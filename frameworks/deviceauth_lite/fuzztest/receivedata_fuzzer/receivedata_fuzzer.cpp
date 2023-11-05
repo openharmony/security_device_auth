@@ -66,11 +66,11 @@ namespace OHOS{
         if((data == nullptr) || (size < sizeof(int32_t))) {
             return false;
         }
-        uint8_t *val = (uint8_t *)data;
+        uint8_t *val = const_cast<uint8_t *>data;
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
         uint8_buff buff = {val, strlen((char *)(val)), strlen((char *)(val))}
         receive_data(handle, &buff);
-        destroy(handle);
+        destroy(&handle);
         return true;
     }
 }

@@ -60,17 +60,22 @@ namespace OHOS{
 
     bool GetInstanceFuzz(const uint8_t *data, size_t size)
     {
+    int ret;
         int32_t sessionId = atoi(reinterpret_cast<const char *>(data));
         hc_package_name package_name = {sizeof("hicar"), "hicar"};
         hc_service_type service_type = {sizeof("CarDevice"), "CarDevice"};
         struct session_identity identity;
-        memset_s(&identity, sizeof(identity), 0, sizeof(identity));
+        ret = memset_s(&identity, sizeof(identity), 0, sizeof(identity));
+        if(ret != EOK)
+        {
+            return false;
+        }
         identity.session_id = sessionId;
         identity.package_name = package_name;
         identity.service_type = service_type;
         identity.context = 0;
         hc_handle demo = get_instance(&identity, HC_CENTRE, &callback);
-        destroy(demo);
+        destroy(&demo);
         return true;
     }
 }

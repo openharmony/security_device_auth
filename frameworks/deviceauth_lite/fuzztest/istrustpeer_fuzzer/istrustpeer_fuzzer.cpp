@@ -71,13 +71,13 @@ namespace OHOS{
             return false;
         }
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
-        struct hc_auth_id selfId = {sizeof({*data}), {*data}};
+        struct hc_auth_id selfId = {sizeof({*data;}), {*data}};
         int32_t type = atoi(reinterpret_cast<char *>(data));
         struct hc_user_info user_info;
         user_info.auth_id = selfId;
         user_info.user_type = type;
         is_trust_peer(handle, &user_info);
-        destroy(handle);
+        destroy(&handle);
         return true;
     }
 }

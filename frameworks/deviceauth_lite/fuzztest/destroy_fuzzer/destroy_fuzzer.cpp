@@ -70,7 +70,7 @@ namespace OHOS{
         struct hichain *hichain = (struct hichain *)handle;
         hichain->operation_code = atoi(reinterpret_cast<const char *>(data));
         hc_handle server = (void *)hichain;
-        destroy(server);
+        destroy(&server);
         return true;
     }
 }

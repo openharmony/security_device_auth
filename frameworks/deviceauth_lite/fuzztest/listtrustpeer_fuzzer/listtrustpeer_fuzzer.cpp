@@ -64,13 +64,18 @@ namespace OHOS{
 
     bool ListTrustPeerFuzz(const uint8_t *data, size_t size)
     {
+        int ret;
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
         struct hc_auth_id *peer_authid_list = (struct hc_auth_id *)malloc(MAX_LIST_NUM * sizeof(struct hc_auth_id));
-        memset_s(peer_authid_list, MAX_LIST_NUM * sizeof(struct hc_auth_id),
+        ret = memset_s(peer_authid_list, MAX_LIST_NUM * sizeof(struct hc_auth_id),
                  0, MAX_LIST_NUM * sizeof(struct hc_auth_id));
-        struct hc_auth_id authId = {sizeof({*data}), {*data}};
+        if(ret != EOK)
+        {
+            return false;
+        }
+        struct hc_auth_id authId = {sizeof({*data;}), {*data}};
         list_trust_peers(handle, 0, &authId, &peer_authid_list);
-        destroy(handle);
+        destroy(&handle);
         return true;
     }
 }
