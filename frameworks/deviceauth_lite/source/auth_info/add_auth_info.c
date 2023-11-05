@@ -132,6 +132,3 @@ static int32_t get_field_from_request_payload(struct uint8_buff *payload, int32_
 }
 
 #endif /* _CUT_XXX_ */
-
-
-

@@ -134,7 +134,7 @@ public:
 
 void GetInstanceTest::SetUpTestCase(void) {}
 void GetInstanceTest::TearDownTestCase(void) {}
-void GetInstanceTest::SetUp() 
+void GetInstanceTest::SetUp()
 {
     init_hc_auth_id();
 }
@@ -254,7 +254,7 @@ public:
 
 void StartPakeTest::SetUpTestCase(void) {}
 void StartPakeTest::TearDownTestCase(void) {}
-void StartPakeTest::SetUp() 
+void StartPakeTest::SetUp()
 {
     init_hc_auth_id();
 }
@@ -330,7 +330,7 @@ public:
 
 void AuthenticatePeerTest::SetUpTestCase(void) {}
 void AuthenticatePeerTest::TearDownTestCase(void) {}
-void AuthenticatePeerTest::SetUp() 
+void AuthenticatePeerTest::SetUp()
 {
     init_hc_auth_id();
 }
@@ -406,7 +406,7 @@ public:
 
 void ListTrustPeersTest::SetUpTestCase(void) {}
 void ListTrustPeersTest::TearDownTestCase(void) {}
-void ListTrustPeersTest::SetUp() 
+void ListTrustPeersTest::SetUp()
 {
     init_hc_auth_id();
 }
@@ -435,7 +435,7 @@ static HWTEST_F(ListTrustPeersTest, ListTrustPeersTest002, TestSize.Level2)
     LOG("--------ListTrustPeersTest ListTrustPeersTest002--------");
     LOG("--------list_trust_peers--------");
     int ret = list_trust_peers(NULL, HC_USER_TYPE_ACCESSORY, &g_test_client_auth_id, auth_id_list);
-    EXPECT_EQ(ret, 0);  
+    EXPECT_EQ(ret, 0);
     LOG("--------ListTrustPeersTest ListTrustPeersTest002--------");
 }
 
@@ -468,7 +468,7 @@ public:
 
 void DestroyTest::SetUpTestCase(void) {}
 void DestroyTest::TearDownTestCase(void) {}
-void DestroyTest::SetUp() 
+void DestroyTest::SetUp()
 {
     init_hc_auth_id();
 }
@@ -487,7 +487,7 @@ static HWTEST_F(DestroyTest, DestroyTest001, TestSize.Level2)
     };
     hc_handle val = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     destroy(&val);
-    EXPECT_TRUE(val == NULL);    
+    EXPECT_TRUE(val == NULL);
     LOG("--------DestroyTest DestroyTest001--------");
 }
 
@@ -505,7 +505,7 @@ static HWTEST_F(DestroyTest, DestroyTest002, TestSize.Level2)
     hc_handle val = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     val = NULL;
     destroy(&val);
-    EXPECT_TRUE(val == NULL);    
+    EXPECT_TRUE(val == NULL);
     LOG("--------DestroyTest DestroyTest002--------");
 }
 
@@ -520,7 +520,7 @@ public:
 
 void DeleteLocalAuthInfoTest::SetUpTestCase(void) {}
 void DeleteLocalAuthInfoTest::TearDownTestCase(void) {}
-void DeleteLocalAuthInfoTest::SetUp() 
+void DeleteLocalAuthInfoTest::SetUp()
 {
     init_hc_auth_id();
 }
@@ -562,7 +562,7 @@ public:
 
 void ReceiveDataTest::SetUpTestCase(void) {}
 void ReceiveDataTest::TearDownTestCase(void) {}
-void ReceiveDataTest::SetUp() 
+void ReceiveDataTest::SetUp()
 {
     init_hc_auth_id();
 }
@@ -692,7 +692,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest005_pake_client1, TestSize.Level
 
     uint8_t data_str[] = "{\"message\":32769,\"payload\":{\"version\":{"\
         "\"currentVersion\":\"1.0.0\",\"minVersion\":\"1.0.0\"},\"challenge\":\"E01AE0AA018ECDA852ACA4CCA45FCC56\","\
-        "\"salt\":\"6DDD4B7A0FDD999E9355A10D68F79EA9\",\"epk\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";    
+        "\"salt\":\"6DDD4B7A0FDD999E9355A10D68F79EA9\",\"epk\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";
     uint8_buff data = {
         data_str,
         sizeof(data_str),
@@ -720,7 +720,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest006_pake_client1error, TestSize.
 
     uint8_t data_str[] = "{\"message\":32769,\"payload\":{\"version\":{"\
         "\"currentVersion\":\"1.0.0\",\"minVersion\":\"1.0.0\"},\"challenge\":\"E01AE0AA018ECDA852ACA4CCA45FCC56\","\
-        "\"salt\":\"6DDD4B7A0FDD999E9355A10D68F79EA9\"}}";    
+        "\"salt\":\"6DDD4B7A0FDD999E9355A10D68F79EA9\"}}";
     uint8_buff data = {
         data_str,
         sizeof(data_str),
@@ -749,7 +749,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest007_pake_server2, TestSize.Level
 
     uint8_t data_str[] = "{\"message\":2,\"payload\":{"\
         "\"kcfData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55B4F0707345\","\
-        "\"challenge\":\"E01AE0AA018ECDA852ACA4CCA45FCC56\", \"epk\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";    
+        "\"challenge\":\"E01AE0AA018ECDA852ACA4CCA45FCC56\", \"epk\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";
     uint8_buff data = {
         data_str,
         sizeof(data_str),
@@ -778,7 +778,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest008_pake_server2error, TestSize.
 
     uint8_t data_str[] = "{\"message\":2,\"payload\":{"\
         "\"kcfData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55B4F0707345\","\
-        "\"challenge\":\"E01AE0AA018ECDA852ACA4CCA45FCC56\"}}";    
+        "\"challenge\":\"E01AE0AA018ECDA852ACA4CCA45FCC56\"}}"; 
     uint8_buff data = {
         data_str,
         sizeof(data_str),
@@ -805,7 +805,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest009_pake_client2, TestSize.Level
     ASSERT_TRUE(server != NULL);
 
     uint8_t data_str[] = "{\"message\":32770,\"payload\":{\""\
-        "kcfData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55B4F0707345\"}}";    
+        "kcfData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55B4F0707345\"}}";   
     uint8_buff data = {
         data_str,
         sizeof(data_str),
@@ -831,7 +831,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest010_pake_client2error, TestSize.
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":32770,\"payload\":{}}";    
+    uint8_t data_str[] = "{\"message\":32770,\"payload\":{}}";
     uint8_buff data = {
         data_str,
         sizeof(data_str),
@@ -858,7 +858,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest011_pake_server3, TestSize.Level
     ASSERT_TRUE(server != NULL);
 
     uint8_t data_str[] = "{\"message\":3,\"payload\":{"\
-        "\"exAuthInfo\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";    
+        "\"exAuthInfo\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";
     uint8_buff data = {
         data_str,
         sizeof(data_str),
@@ -885,7 +885,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest012_pake_server3error, TestSize.
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":3,\"payload\":{}}";    
+    uint8_t data_str[] = "{\"message\":3,\"payload\":{}}";
     uint8_buff data = {
         data_str,
         sizeof(data_str),
@@ -913,7 +913,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest013_pake_client3, TestSize.Level
     ASSERT_TRUE(server != NULL);
 
     uint8_t data_str[] = "{\"message\":32771,\"payload\":{"\
-        "\"exAuthInfo\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";   
+        "\"exAuthInfo\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";
     uint8_buff data = {
         data_str,
         sizeof(data_str),
@@ -940,7 +940,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest014_pake_client3error, TestSize.
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":32771,\"payload\":{}}";   
+    uint8_t data_str[] = "{\"message\":32771,\"payload\":{}}";
     uint8_buff data = {
         data_str,
         sizeof(data_str),

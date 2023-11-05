@@ -205,8 +205,6 @@ inform:
     return ret; /* hc_error */
 }
 
-
-
 DLL_API_PUBLIC int32_t receive_data_with_json_object(hc_handle handle, const void *json_object)
 {
     LOGI("Begin receive data json object");
@@ -556,8 +554,6 @@ DLL_API_PUBLIC uint32_t list_trust_peers(hc_handle handle, int32_t trust_user_ty
     }
     return count;
 }
-
-
 
 #endif /* _CUT_XXX_ */
 #endif /* DESC */

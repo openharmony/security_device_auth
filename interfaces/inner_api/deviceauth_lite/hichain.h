@@ -339,8 +339,6 @@ DLL_API_PUBLIC int32_t authenticate_peer(hc_handle handle, struct operation_para
  */
 DLL_API_PUBLIC int32_t delete_local_auth_info(hc_handle handle, struct hc_user_info *user_info);
 
-
-
 /*
  * Share the bound device to other users
  *
