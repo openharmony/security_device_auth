@@ -69,12 +69,12 @@ void init_hc_auth_id()
 static struct hc_auth_id g_test_client_auth_id_001 = {strlen("authClient1"), "authClient1"};
 static struct hc_auth_id g_test_client_auth_id_002 = {strlen("authClient2"), "authClient2"};
 
-struct hc_auth_id *auth_id_client_list[3] = {
+struct hc_auth_id *g_auth_id_client_list[3] = {
     &g_test_client_auth_id,
     &g_test_client_auth_id_001,
     &g_test_client_auth_id_002
 };
-struct hc_auth_id **auth_id_list = auth_id_client_list;
+struct hc_auth_id **g_auth_id_list = g_auth_id_client_list;
 
 static void Transmit(const struct session_identity *identity, const void *data, uint32_t length)
 {
@@ -424,7 +424,7 @@ static HWTEST_F(ListTrustPeersTest, ListTrustPeersTest001, TestSize.Level2)
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    int ret = list_trust_peers(server, HC_USER_TYPE_ACCESSORY, &g_test_client_auth_id, auth_id_list);
+    int ret = list_trust_peers(server, HC_USER_TYPE_ACCESSORY, &g_test_client_auth_id, g_auth_id_list);
     EXPECT_EQ(ret, 0);
     destroy(&server);
     LOG("--------ListTrustPeersTest ListTrustPeersTest001--------");
@@ -434,7 +434,7 @@ static HWTEST_F(ListTrustPeersTest, ListTrustPeersTest002, TestSize.Level2)
 {
     LOG("--------ListTrustPeersTest ListTrustPeersTest002--------");
     LOG("--------list_trust_peers--------");
-    int ret = list_trust_peers(NULL, HC_USER_TYPE_ACCESSORY, &g_test_client_auth_id, auth_id_list);
+    int ret = list_trust_peers(NULL, HC_USER_TYPE_ACCESSORY, &g_test_client_auth_id, g_auth_id_list);
     EXPECT_EQ(ret, 0);
     LOG("--------ListTrustPeersTest ListTrustPeersTest002--------");
 }
@@ -451,7 +451,7 @@ static HWTEST_F(ListTrustPeersTest, ListTrustPeersTest003, TestSize.Level2)
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    int ret = list_trust_peers(server, 2, &g_test_client_auth_id, auth_id_list);
+    int ret = list_trust_peers(server, 2, &g_test_client_auth_id, g_auth_id_list);
     EXPECT_EQ(ret, 0);
     destroy(&server);
     LOG("--------ListTrustPeersTest ListTrustPeersTest003--------");
