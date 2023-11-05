@@ -33,18 +33,18 @@ static int32_t ConfirmReceiveRequestFunc(const struct session_identity *identity
 }
 
 static void GetProtocolParamsCb(const struct session_identity *identity, int32_t operation_code,
-                                    struct hc_pin *pin, struct operation_parameter *para)                    
+                                    struct hc_pin *pin, struct operation_parameter *para)
 {
     return;
 }
 
 static void SetSessionKeyFunc(const struct session_identity *identity,
-                                    const struct hc_session_key *session_key)                    
+                                    const struct hc_session_key *session_key)
 {
     return;
 }
 
-static void SetServiceResultFunc(const struct session_identity *identity, int32_t result)                    
+static void SetServiceResultFunc(const struct session_identity *identity, int32_t result)
 {
     return;
 }
@@ -74,7 +74,7 @@ bool AuthenticatePeerFuzz(const uint8_t* data, size_t size)
     struct hc_auth_id selfId = {sizeof({*data;}), {*data}};
     struct hc_auth_id peerId = {sizeof({*data;}), {*data}};
     struct operation_parameter params;
-    ret = memset_s(&params, sizeof(params), 0 sizeof(params));
+    ret = memset_s(&params, sizeof(params), 0, sizeof(params));
     if(ret != EOK)
     {
         return false;

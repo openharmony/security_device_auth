@@ -19,7 +19,7 @@ module_output_path = "device_auth/deviceauth_test"
 ##############################fuzztest##########################################
 ohos_fuzztest("ListTrustPeerFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "base//security/device_auth/frameworks/deviceauth_lite/fuzztest/listtrustpeer_fuzzer"
+  fuzz_config_file = "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/listtrustpeer_fuzzer"
   include_dirs = []
   include_dirs += [
     "//base/security/device_auth/interfaces/inner_api/deviceauth_lite",

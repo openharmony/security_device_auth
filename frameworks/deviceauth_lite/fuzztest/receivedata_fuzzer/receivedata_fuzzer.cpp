@@ -81,14 +81,3 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::ReceiveDataFuzz(data, size);
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
