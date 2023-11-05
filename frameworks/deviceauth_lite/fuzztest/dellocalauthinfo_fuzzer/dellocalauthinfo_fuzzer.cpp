@@ -23,18 +23,18 @@ namespace OHOS {
         return;
     }
 
-    static int32_t ConfirmReceiveRequestFunc(const struct session_identity *identity, int32_t operation_code)
+    static int32_t ConfirmReceiveRequestFunc(const struct session_identity *identity, int32_t operationCode)
     {
         return HC_OK;
     }
 
-    static void GetProtocolParamsCb(const struct session_identity *identity, int32_t operation_code,
+    static void GetProtocolParamsCb(const struct session_identity *identity, int32_t operationCode,
                                     struct hc_pin *pin, struct operation_parameter *para)
     {
         return;
     }
 
-    static void SetSessionKeyFunc(const struct session_identity *identity, const struct hc_session_key *session_key)
+    static void SetSessionKeyFunc(const struct session_identity *identity, const struct hc_session_key *sessionKey)
     {
         return;
     }

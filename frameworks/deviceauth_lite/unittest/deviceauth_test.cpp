@@ -40,7 +40,7 @@ static struct session_identity g_server_identity = {
     0
 };
 
-enum hc_user_type {
+enum HcUserType {
     HC_USER_TYPE_ACCESSORY = 0,
     HC_USER_TYPE_CONTROLLER = 1
 };
@@ -52,15 +52,15 @@ static struct hc_auth_id g_test_server_auth_Id;
 
 static int32_t g_result;
 
-uint8_t g_test_phone_id[65] = {"14bb6543b893a3250f5793fbbbd48be56641505dc6514be1bb37b032903ebc67"};
-uint8_t g_test_car_id[65] = {"14bb6543b893a3250f5793fbbbd48be56641505dc6514be1bb37b032903abcde"};
+uint8_t g_testPhoneId[65] = {"14bb6543b893a3250f5793fbbbd48be56641505dc6514be1bb37b032903ebc67"};
+uint8_t g_testCarId[65] = {"14bb6543b893a3250f5793fbbbd48be56641505dc6514be1bb37b032903abcde"};
 
 void init_hc_auth_id()
 {
-    memcpy_s(g_test_client_auth_id.auth_id, AUTH_ID_LENGTH, g_test_phone_id, AUTH_ID_LENGTH);
+    memcpy_s(g_test_client_auth_id.auth_id, AUTH_ID_LENGTH, g_testPhoneId, AUTH_ID_LENGTH);
     g_test_client_auth_id.length = AUTH_ID_LENGTH;
 
-    memcpy_s(g_test_server_auth_Id.auth_id, AUTH_ID_LENGTH, g_test_car_id, AUTH_ID_LENGTH);
+    memcpy_s(g_test_server_auth_Id.auth_id, AUTH_ID_LENGTH, g_testCarId, AUTH_ID_LENGTH);
     g_test_server_auth_Id.length = AUTH_ID_LENGTH;
 
     return;
@@ -544,8 +544,8 @@ static HWTEST_F(DeleteLocalAuthInfoTest, DeleteLocalAuthInfoTest001, TestSize.Le
         g_test_server_auth_Id,
         1
     };
-    int32_t trusted_peers_num = delete_local_auth_info(server, &car_user_info);
-    EXPECT_EQ(trusted_peers_num, 0);
+    int32_t trustedPeersNum = delete_local_auth_info(server, &car_user_info);
+    EXPECT_EQ(trustedPeersNum, 0);
 
     destroy(&server);
     LOG("--------DeleteLocalAuthInfoTest DeleteLocalAuthInfoTest001--------");
@@ -582,11 +582,11 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest001_empty, TestSize.Level2)
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "";
+    uint8_t dataStr[] = "";
     uint8_buff data = {
-        data_str,
-        sizeof(data_str),
-        strlen((char *) data_str)
+        dataStr,
+        sizeof(dataStr),
+        strlen((char *) dataStr)
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -608,11 +608,11 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest002_msg0, TestSize.Level2)
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":0}";
+    uint8_t dataStr[] = "{\"message\":0}";
     uint8_buff data = {
-        data_str,
-        sizeof(data_str),
-        strlen((char *) data_str)
+        dataStr,
+        sizeof(dataStr),
+        strlen((char *) dataStr)
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -636,12 +636,12 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest003_pake_server1, TestSize.Level
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":1,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","\
+    uint8_t dataStr[] = "{\"message\":1,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","\
         "\"minVersion\":\"1.0.0\"},\"support256mod\":true,\"operationCode\":1}}";
     uint8_buff data = {
-        data_str,
-        sizeof(data_str),
-        strlen((char *) data_str)
+        dataStr,
+        sizeof(dataStr),
+        strlen((char *) dataStr)
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, KEY_AGREEMENT_PROCESSING);
@@ -663,12 +663,12 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest004_pake_server1error, TestSize.
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":1,\"payload\":{"\
+    uint8_t dataStr[] = "{\"message\":1,\"payload\":{"\
         "\"support256mod\":true,\"operationCode\":1}}";
     uint8_buff data = {
-        data_str,
-        sizeof(data_str),
-        strlen((char *) data_str)
+        dataStr,
+        sizeof(dataStr),
+        strlen((char *) dataStr)
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -690,13 +690,13 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest005_pake_client1, TestSize.Level
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":32769,\"payload\":{\"version\":{"\
+    uint8_t dataStr[] = "{\"message\":32769,\"payload\":{\"version\":{"\
         "\"currentVersion\":\"1.0.0\",\"minVersion\":\"1.0.0\"},\"challenge\":\"E01AE0AA018ECDA852ACA4CCA45FCC56\","\
         "\"salt\":\"6DDD4B7A0FDD999E9355A10D68F79EA9\",\"epk\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";
     uint8_buff data = {
-        data_str,
-        sizeof(data_str),
-        strlen((char *) data_str)
+        dataStr,
+        sizeof(dataStr),
+        strlen((char *) dataStr)
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -718,13 +718,13 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest006_pake_client1error, TestSize.
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":32769,\"payload\":{\"version\":{"\
+    uint8_t dataStr[] = "{\"message\":32769,\"payload\":{\"version\":{"\
         "\"currentVersion\":\"1.0.0\",\"minVersion\":\"1.0.0\"},\"challenge\":\"E01AE0AA018ECDA852ACA4CCA45FCC56\","\
         "\"salt\":\"6DDD4B7A0FDD999E9355A10D68F79EA9\"}}";
     uint8_buff data = {
-        data_str,
-        sizeof(data_str),
-        strlen((char *) data_str)
+        dataStr,
+        sizeof(dataStr),
+        strlen((char *) dataStr)
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -747,13 +747,13 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest007_pake_server2, TestSize.Level
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":2,\"payload\":{"\
+    uint8_t dataStr[] = "{\"message\":2,\"payload\":{"\
         "\"kcfData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55B4F0707345\","\
         "\"challenge\":\"E01AE0AA018ECDA852ACA4CCA45FCC56\", \"epk\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";
     uint8_buff data = {
-        data_str,
-        sizeof(data_str),
-        strlen((char *) data_str)
+        dataStr,
+        sizeof(dataStr),
+        strlen((char *) dataStr)
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -804,12 +804,12 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest009_pake_client2, TestSize.Level
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":32770,\"payload\":{\""\
+    uint8_t dataStr[] = "{\"message\":32770,\"payload\":{\""\
         "kcfData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55B4F0707345\"}}";
     uint8_buff data = {
-        data_str,
-        sizeof(data_str),
-        strlen((char *) data_str)
+        dataStr,
+        sizeof(dataStr),
+        strlen((char *) dataStr)
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -831,11 +831,11 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest010_pake_client2error, TestSize.
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":32770,\"payload\":{}}";
+    uint8_t dataStr[] = "{\"message\":32770,\"payload\":{}}";
     uint8_buff data = {
-        data_str,
-        sizeof(data_str),
-        strlen((char *) data_str)
+        dataStr,
+        sizeof(dataStr),
+        strlen((char *) dataStr)
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -857,12 +857,12 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest011_pake_server3, TestSize.Level
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":3,\"payload\":{"\
+    uint8_t dataStr[] = "{\"message\":3,\"payload\":{"\
         "\"exAuthInfo\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";
     uint8_buff data = {
-        data_str,
-        sizeof(data_str),
-        strlen((char *) data_str)
+        dataStr,
+        sizeof(dataStr),
+        strlen((char *) dataStr)
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -885,11 +885,11 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest012_pake_server3error, TestSize.
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":3,\"payload\":{}}";
+    uint8_t dataStr[] = "{\"message\":3,\"payload\":{}}";
     uint8_buff data = {
-        data_str,
-        sizeof(data_str),
-        strlen((char *) data_str)
+        dataStr,
+        sizeof(dataStr),
+        strlen((char *) dataStr)
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -912,12 +912,12 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest013_pake_client3, TestSize.Level
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":32771,\"payload\":{"\
+    uint8_t dataStr[] = "{\"message\":32771,\"payload\":{"\
         "\"exAuthInfo\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";
     uint8_buff data = {
-        data_str,
-        sizeof(data_str),
-        strlen((char *) data_str)
+        dataStr,
+        sizeof(dataStr),
+        strlen((char *) dataStr)
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -940,11 +940,11 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest014_pake_client3error, TestSize.
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":32771,\"payload\":{}}";
+    uint8_t dataStr[] = "{\"message\":32771,\"payload\":{}}";
     uint8_buff data = {
-        data_str,
-        sizeof(data_str),
-        strlen((char *) data_str)
+        dataStr,
+        sizeof(dataStr),
+        strlen((char *) dataStr)
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);

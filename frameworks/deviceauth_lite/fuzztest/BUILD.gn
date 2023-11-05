@@ -14,16 +14,16 @@
 group("fuzztest") {
   testonly = true
   deps = []
-  if(os_level == "standard") {
+  if (os_level == "standard") {
     deps += [
-        "getinstance_fuzzer:fuzztest",
-        "destroy_fuzzer:fuzztest",
-        "startpake_fuzzer:fuzztest",
-        "authenticatepeer_fuzzer:fuzztest",
-        "receivedata_fuzzer:fuzztest",
-        "dellocalauthinfo_fuzzer:fuzztest",
-        "listtrustpeer_fuzzer:fuzztest",
-        "istrustpeer_fuzzer:fuzztest",
+      "authenticatepeer_fuzzer:fuzztest",
+      "dellocalauthinfo_fuzzer:fuzztest",
+      "destroy_fuzzer:fuzztest",
+      "getinstance_fuzzer:fuzztest",
+      "istrustpeer_fuzzer:fuzztest",
+      "listtrustpeer_fuzzer:fuzztest",
+      "receivedata_fuzzer:fuzztest",
+      "startpake_fuzzer:fuzztest",
     ]
   }
 }
