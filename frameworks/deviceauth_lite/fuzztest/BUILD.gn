@@ -16,14 +16,14 @@ group("fuzztest") {
   deps = []
   if(os_level == "standard") {
     deps += [
-        "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/getinstance_fuzzer:fuzztest",
-        "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/destroy_fuzzer:fuzztest",
-        "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/startpake_fuzzer:fuzztest",
-        "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/authenticatepeer_fuzzer:fuzztest",
-        "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/receivedata_fuzzer:fuzztest",
-        "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/dellocalauthinfo_fuzzer:fuzztest",
-        "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/listtrustpeer_fuzzer:fuzztest",
-        "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest/istrustpeer_fuzzer:fuzztest",
+        "getinstance_fuzzer:fuzztest",
+        "destroy_fuzzer:fuzztest",
+        "startpake_fuzzer:fuzztest",
+        "authenticatepeer_fuzzer:fuzztest",
+        "receivedata_fuzzer:fuzztest",
+        "dellocalauthinfo_fuzzer:fuzztest",
+        "listtrustpeer_fuzzer:fuzztest",
+        "istrustpeer_fuzzer:fuzztest",
     ]
   }
 }

@@ -19,7 +19,7 @@
 #include "distribution.h"
 #include "securec.h"
 
-namespace OHOS{
+namespace OHOS {
     const unsigned int MAX_LIST_NUM = 20;
     static void TransmitCb(const struct session_identity *identity, const void *data, uint32_t length)
     {
@@ -32,12 +32,12 @@ namespace OHOS{
     }
 
     static void GetProtocolParamsCb(const struct session_identity *identity, int32_t operation_code,
-                                    struct hc_pin *pin, struct operation_paramter *para)
+                                    struct hc_pin *pin, struct operation_parameter *para)
     {
         return;
     }
 
-    static void SetSessionKeyFunc(const struct session_identity *identity, const struct hc_session *session_key)
+    static void SetSessionKeyFunc(const struct session_identity *identity, const struct hc_session_key *session_key)
     {
         return;
     }
@@ -68,9 +68,8 @@ namespace OHOS{
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
         struct hc_auth_id *peer_authid_list = (struct hc_auth_id *)malloc(MAX_LIST_NUM * sizeof(struct hc_auth_id));
         ret = memset_s(peer_authid_list, MAX_LIST_NUM * sizeof(struct hc_auth_id),
-                 0, MAX_LIST_NUM * sizeof(struct hc_auth_id));
-        if(ret != EOK)
-        {
+                       0, MAX_LIST_NUM * sizeof(struct hc_auth_id));
+        if (ret != EOK) {
             return false;
         }
         struct hc_auth_id authId = {sizeof({*data;}), {*data}};

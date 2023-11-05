@@ -17,7 +17,7 @@
 
 #include "hichain.h"
 
-namespace OHOS{
+namespace OHOS {
     static void TransmitCb(const struct session_identity *identity, const void *data, uint32_t length)
     {
         return;
@@ -61,7 +61,7 @@ namespace OHOS{
 
     bool DelLocalaAuthInfoFuzz(const uint8_t *data, size_t size)
     {
-        if((data == nullptr) || (size < sizeof(int32_t))) {
+        if ((data == nullptr) || (size < sizeof(int32_t))) {
             return false;
         }
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);

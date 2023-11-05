@@ -275,7 +275,7 @@ static HWTEST_F(StartPakeTest, StartPakeTest001, TestSize.Level2)
     const struct operation_parameter params = {g_test_server_auth_Id, g_test_client_auth_id, KEY_LEN};
     int32_t ret = start_pake(server, &params);
     EXPECT_EQ(ret, HC_OK);
-    destroy(&server);    
+    destroy(&server);
     LOG("--------StartPakeTest StartPakeTest001--------");
 }
 
@@ -295,7 +295,7 @@ static HWTEST_F(StartPakeTest, StartPakeTest002, TestSize.Level2)
     const struct operation_parameter params = {g_test_server_auth_Id, g_test_client_auth_id, KEY_LEN};
     int32_t ret = start_pake(NULL, &params);
     EXPECT_NE(ret, HC_OK);
-    destroy(&server);    
+    destroy(&server);
     LOG("--------StartPakeTest StartPakeTest002--------");
 }
 
@@ -314,7 +314,7 @@ static HWTEST_F(StartPakeTest, StartPakeTest003, TestSize.Level2)
     ASSERT_TRUE(server != NULL);
     int32_t ret = start_pake(server, NULL);
     EXPECT_NE(ret, HC_OK);
-    destroy(&server);    
+    destroy(&server);
     LOG("--------StartPakeTest StartPakeTest003--------");
 }
 
@@ -352,7 +352,7 @@ static HWTEST_F(AuthenticatePeerTest, AuthenticatePeerTest001, TestSize.Level2)
     struct operation_parameter params = {g_test_server_auth_Id, g_test_client_auth_id, KEY_LEN};
     int32_t ret = authenticate_peer(server, &params);
     EXPECT_EQ(ret, HC_BUILD_OBJECT_FAILED);
-    destroy(&server);    
+    destroy(&server);
     LOG("--------AuthenticatePeerTest AuthenticatePeerTest001--------");
 }
 
@@ -372,7 +372,7 @@ static HWTEST_F(AuthenticatePeerTest, AuthenticatePeerTest002, TestSize.Level2)
     struct operation_parameter params = {g_test_server_auth_Id, g_test_client_auth_id, KEY_LEN};
     int32_t ret = authenticate_peer(NULL, &params);
     EXPECT_NE(ret, HC_OK);
-    destroy(&server);    
+    destroy(&server);
     LOG("--------AuthenticatePeerTest AuthenticatePeerTest002--------");
 }
 
@@ -391,7 +391,7 @@ static HWTEST_F(AuthenticatePeerTest, AuthenticatePeerTest003, TestSize.Level2)
     ASSERT_TRUE(server != NULL);
     int32_t ret = authenticate_peer(server, NULL);
     EXPECT_NE(ret, HC_OK);
-    destroy(&server);    
+    destroy(&server);
     LOG("--------AuthenticatePeerTest AuthenticatePeerTest003--------");
 }
 
@@ -426,7 +426,7 @@ static HWTEST_F(ListTrustPeersTest, ListTrustPeersTest001, TestSize.Level2)
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     int ret = list_trust_peers(server, HC_USER_TYPE_ACCESSORY, &g_test_client_auth_id, auth_id_list);
     EXPECT_EQ(ret, 0);
-    destroy(&server);    
+    destroy(&server);
     LOG("--------ListTrustPeersTest ListTrustPeersTest001--------");
 }
 
@@ -453,7 +453,7 @@ static HWTEST_F(ListTrustPeersTest, ListTrustPeersTest003, TestSize.Level2)
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     int ret = list_trust_peers(server, 2, &g_test_client_auth_id, auth_id_list);
     EXPECT_EQ(ret, 0);
-    destroy(&server);    
+    destroy(&server);
     LOG("--------ListTrustPeersTest ListTrustPeersTest003--------");
 }
 
@@ -778,7 +778,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest008_pake_server2error, TestSize.
 
     uint8_t data_str[] = "{\"message\":2,\"payload\":{"\
         "\"kcfData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55B4F0707345\","\
-        "\"challenge\":\"E01AE0AA018ECDA852ACA4CCA45FCC56\"}}"; 
+        "\"challenge\":\"E01AE0AA018ECDA852ACA4CCA45FCC56\"}}";
     uint8_buff data = {
         data_str,
         sizeof(data_str),
@@ -805,7 +805,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest009_pake_client2, TestSize.Level
     ASSERT_TRUE(server != NULL);
 
     uint8_t data_str[] = "{\"message\":32770,\"payload\":{\""\
-        "kcfData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55B4F0707345\"}}";   
+        "kcfData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55B4F0707345\"}}";
     uint8_buff data = {
         data_str,
         sizeof(data_str),

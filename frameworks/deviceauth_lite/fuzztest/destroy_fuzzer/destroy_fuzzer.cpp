@@ -19,7 +19,7 @@
 #include "distribution.h"
 #include "securec.h"
 
-namespace OHOS{
+namespace OHOS {
     static void TransmitCb(const struct session_identity *identity, const void *data, uint32_t length)
     {
         return;
@@ -31,12 +31,12 @@ namespace OHOS{
     }
 
     static void GetProtocolParamsCb(const struct session_identity *identity, int32_t operation_code,
-                                    struct hc_pin *pin, struct operation_paramter *para)
+                                    struct hc_pin *pin, struct operation_parameter *para)
     {
         return;
     }
 
-    static void SetSessionKeyFunc(const struct session_identity *identity, const struct hc_session *session_key)
+    static void SetSessionKeyFunc(const struct session_identity *identity, const struct hc_session_key *session_key)
     {
         return;
     }
@@ -63,7 +63,7 @@ namespace OHOS{
 
     bool DestroyFuzz(const uint8_t *data, size_t size)
     {
-        if((data == nullptr) || (size < sizeof(int32_t))) {
+        if ((data == nullptr) || (size < sizeof(int32_t))) {
             return false;
         }
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);

@@ -23,7 +23,7 @@
 #include "distribution.h"
 #include "securec.h"
 
-namespace OHOS{
+namespace OHOS {
     static void TransmitCb(const struct session_identity *identity, const void *data, uint32_t length)
     {
         return;
@@ -66,8 +66,7 @@ namespace OHOS{
         hc_service_type service_type = {sizeof("CarDevice"), "CarDevice"};
         struct session_identity identity;
         ret = memset_s(&identity, sizeof(identity), 0, sizeof(identity));
-        if(ret != EOK)
-        {
+        if (ret != EOK) {
             return false;
         }
         identity.session_id = sessionId;
