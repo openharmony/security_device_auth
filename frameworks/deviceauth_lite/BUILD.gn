@@ -28,6 +28,9 @@ group("deviceauth_lite_test_build") {
   deps = []
 
   if (os_level == "standard") {
-    deps += [ "//base/security/device_auth/frameworks/deviceauth_lite/unittest:DeviceAuthTest" ]
+    deps += [ 
+      "//base/security/device_auth/frameworks/deviceauth_lite/unittest:DeviceAuthTest", 
+      "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest:fuzztest",
+    ]
   }
 }
