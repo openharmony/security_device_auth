@@ -71,8 +71,8 @@ bool AuthenticatePeerFuzz(const uint8_t* data, size_t size)
     }
     int ret;
     hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
-    struct hc_auth_id selfId = {sizeof({*data;}), {*data}};
-    struct hc_auth_id peerId = {sizeof({*data;}), {*data}};
+    hc_auth_id selfId = {sizeof({*data;}), {*data}};
+    hc_auth_id peerId = {sizeof({*data;}), {*data}};
     struct operation_parameter params;
     ret = memset_s(&params, sizeof(params), 0, sizeof(params));
     if (ret != EOK) {

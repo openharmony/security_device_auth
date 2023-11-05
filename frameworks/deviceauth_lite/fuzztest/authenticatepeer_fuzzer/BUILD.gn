@@ -15,23 +15,22 @@
 import("//build/config/features.gni")
 import("//build/test.gni")
 
-ROOT_PATH = "//base/security/device_auth"
 THIRD_PATH = "//third_party/bounds_checking_function"
 module_output_path = "device_auth/deviceauth_test"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("AuthenticatePeerFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "$ROOT_PATH/frameworks/deviceauth_lite/fuzztest/istrustpeer_fuzzer"
+  fuzz_config_file = "${deviceauth_path}/frameworks/deviceauth_lite/fuzztest/istrustpeer_fuzzer"
   include_dirs = []
   include_dirs += [
-    "$ROOT_PATH/interfaces/inner_api/deviceauth_lite",
-    "$ROOT_PATH/frameworks/deviceauth_lite/source/schdeule",
-    "$ROOT_PATH/frameworks/deviceauth_lite/source/key_agreement",
-    "$ROOT_PATH/frameworks/deviceauth_lite/source/base",
-    "$ROOT_PATH/frameworks/deviceauth_lite/source/struct",
+    "${deviceauth_path}/interfaces/inner_api/deviceauth_lite",
+    "${deviceauth_path}/frameworks/deviceauth_lite/source/schdeule",
+    "${deviceauth_path}/frameworks/deviceauth_lite/source/key_agreement",
+    "${deviceauth_path}/frameworks/deviceauth_lite/source/base",
+    "${deviceauth_path}/frameworks/deviceauth_lite/source/struct",
     "$THIRD_PATH/include",
-    "$ROOT_PATH/frameworks/deviceauth_lite/source/json",
+    "${deviceauth_path}/frameworks/deviceauth_lite/source/json",
   ]
     cflags = [
     "-g",
@@ -52,7 +51,7 @@ ohos_fuzztest("AuthenticatePeerFuzzTest") {
     ]
     deps = [
         "$THIRD_PATH:libsec_shared",
-        "$ROOT_PATH/frameworks/deviceauth_lite/source:hichainsdk",
+        "${deviceauth_path}/frameworks/deviceauth_lite/source:hichainsdk",
     ]
 }
 
