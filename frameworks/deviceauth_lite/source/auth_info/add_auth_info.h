@@ -38,14 +38,4 @@ struct import_auth_data {
     int32_t user_type;
 };
 
-int32_t import_signed_auth_info_hilink(const struct hichain *hichain, const struct hc_auth_id *auth_id,
-    struct uint8_buff *data);
-#if (defined(_SUPPORT_SEC_CLONE_) || defined(_SUPPORT_SEC_CLONE_SERVER_))
-int32_t import_signed_auth_info(const struct hichain *hichain, const struct hc_auth_id *auth_id,
-    struct uint8_buff *data);
-int32_t import_lite_auth_info(const struct hichain *hichain, const struct hc_auth_id *auth_id,
-    struct uint8_buff *data);
-
-#endif /* _SUPPORT_SEC_ */
-
 #endif /* __ADD_AUTH_INFO_H__ */

@@ -46,7 +46,6 @@ hichian_sources = [
   "struct/exchange_auth_data.c",
   "struct/exchange_request.c",
   "struct/exchange_response.c",
-  "struct/import_add_auth_data.c",
   "struct/inform_message.c",
   "struct/key_agreement_version.c",
   "struct/key_agreement_version.h",

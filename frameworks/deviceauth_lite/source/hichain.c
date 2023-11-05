@@ -205,60 +205,7 @@ inform:
     return ret; /* hc_error */
 }
 
-int32_t init_center(const struct hc_package_name *package_name, const struct hc_service_type *service_type,
-    const struct hc_auth_id *auth_id, struct hc_key_alias *dek)
-#if (defined(_SUPPORT_SEC_CLONE_) || defined(_SUPPORT_SEC_CLONE_SERVER_))
-{
-    LOGI("Begin init center");
-    check_ptr_return_val(package_name, HC_INPUT_ERROR);
-    check_ptr_return_val(service_type, HC_INPUT_ERROR);
-    check_ptr_return_val(auth_id, HC_INPUT_ERROR);
-    check_ptr_return_val(dek, HC_INPUT_ERROR);
 
-    struct session_identity identity;
-    identity.session_id = 0;
-    identity.package_name = *package_name;
-    identity.service_type = *service_type;
-    struct service_id service_id = generate_service_id(&identity);
-    struct hc_auth_id origin_id;
-    int32_t ret = hex_string_to_byte((char *)auth_id->auth_id, auth_id->length, origin_id.auth_id);
-    if (ret != HC_OK) {
-        LOGE("auth_id convert failed");
-        return ret;
-    }
-    origin_id.length = auth_id->length / BYTE_TO_HEX_OPER_LENGTH;
-
-    struct hc_key_alias kek_alias = generate_key_alias(&service_id, &origin_id, KEY_ALIAS_KEK);
-    struct hc_key_alias dek_alias = generate_key_alias(&service_id, &origin_id, KEY_ALIAS_DEK);
-    struct hc_key_alias base_alias = generate_key_alias(&service_id, &origin_id, KEY_ALIAS_LT_KEY_PAIR);
-
-    ret = gen_derived_key(&base_alias, &kek_alias);
-    if (ret != HC_OK) {
-        LOGE("Generate derived kek failed");
-        return ret;
-    }
-    ret = gen_derived_key(&base_alias, &dek_alias);
-    if (ret != HC_OK) {
-        LOGE("Generate derived dek failed");
-        return ret;
-    }
-    if (memcpy_s(dek, sizeof(struct hc_key_alias), &dek_alias, sizeof(struct hc_key_alias)) != EOK) {
-        return HC_INNER_ERROR;
-    }
-
-    LOGI("End init center");
-    return HC_OK;
-}
-#else
-{
-    LOGE("Secclone has been cut, init center not support");
-    (void)package_name;
-    (void)service_type;
-    (void)auth_id;
-    (void)dek;
-    return HC_UNSUPPORT;
-}
-#endif
 
 DLL_API_PUBLIC int32_t receive_data_with_json_object(hc_handle handle, const void *json_object)
 {
@@ -610,55 +557,7 @@ DLL_API_PUBLIC uint32_t list_trust_peers(hc_handle handle, int32_t trust_user_ty
     return count;
 }
 
-DLL_API_PUBLIC int32_t import_auth_info(hc_handle handle, struct hc_user_info *user_info, struct hc_auth_id *auth_id,
-    enum hc_export_type auth_info_type, struct uint8_buff *auth_info)
-#if (defined(_SUPPORT_SEC_CLONE_) || defined(_SUPPORT_SEC_CLONE_SERVER_))
-{
-    LOGI("Begin import auth info");
-    (void)user_info;
-    struct hichain *hichain = (struct hichain *)handle;
 
-    check_ptr_return_val(hichain, HC_INPUT_ERROR);
-    check_ptr_return_val(auth_id, HC_INPUT_ERROR);
-    check_ptr_return_val(auth_info, HC_INPUT_ERROR);
-    check_ptr_return_val(auth_info->val, HC_INPUT_ERROR);
-
-    struct hc_auth_id origin_id;
-    int32_t ret  = hex_string_to_byte((char *)auth_id->auth_id, auth_id->length, origin_id.auth_id);
-    if (ret != HC_OK) {
-        LOGE("Auth id convert failed");
-        return ret;
-    }
-    origin_id.length = auth_id->length / BYTE_TO_HEX_OPER_LENGTH;
-    origin_id.auth_id[origin_id.length] = '\0';
-
-    if (auth_info_type == EXPORT_DATA_SIGNED_AUTH_INFO) {
-        return import_signed_auth_info(hichain, &origin_id, auth_info);
-    } else if (auth_info_type == EXPORT_DATA_LITE_AUTH_INFO) {
-        return import_lite_auth_info(hichain, &origin_id, auth_info);
-    }
-    LOGE("Auth info type is not support, type is %u", auth_info_type);
-    return HC_UNSUPPORT;
-}
-#else
-{
-    LOGI("Begin hilink import auth info");
-    (void)user_info;
-    struct hichain *hichain = (struct hichain *)handle;
-
-    check_ptr_return_val(hichain, HC_INPUT_ERROR);
-    check_ptr_return_val(auth_id, HC_INPUT_ERROR);
-    check_ptr_return_val(auth_info, HC_INPUT_ERROR);
-    check_ptr_return_val(auth_info->val, HC_INPUT_ERROR);
-
-    if (auth_info_type == EXPORT_DATA_SIGNED_AUTH_INFO) {
-        return import_signed_auth_info_hilink(hichain, auth_id, auth_info);
-    }
-
-    LOGE("Auth info type is not support, type is %u", auth_info_type);
-    return HC_UNSUPPORT;
-}
-#endif
 
 #endif /* _CUT_XXX_ */
 #endif /* DESC */

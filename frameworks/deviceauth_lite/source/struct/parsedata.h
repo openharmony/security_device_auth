@@ -155,10 +155,6 @@ void *parse_inform_message(const char *payload, enum json_object_data_type data_
 void free_inform_message(void *obj);
 char *make_inform_message(void *data);
 
-/* improt data message */
-void *parse_import_add_auth_data(const char *payload, enum json_object_data_type data_type);
-void free_import_add_auth_data(void *obj);
-
 #define FIELD_ADD_TYPE        "addType"
 #define FIELD_ADD_ID          "addId"
 #define FIELD_ADD_KEY         "addKey"
