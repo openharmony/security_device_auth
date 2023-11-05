@@ -145,6 +145,7 @@ if (defined(ohos_lite)) {
     }
 
     cflags = [ "-DHILOG_ENABLE" ]
+    branch_protector_ret = "pac_ret"
     sanitize = {
       cfi = true
       cfi_cross_dso = true
