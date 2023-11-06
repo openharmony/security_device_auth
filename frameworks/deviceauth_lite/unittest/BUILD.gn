@@ -13,16 +13,36 @@
 # limitations under the License.
 #
 
-import("//build/lite/config/test.gni")
+import("//build/ohos.gni")
+import("//build/test.gni")
 
-unittest("deviceauth_test") {
-  output_extension = "bin"
-  output_dir = "$root_out_dir/test/unittest/security"
-  sources = [ "deviceauth_test.cpp" ]
+module_output_path = "device_auth/deviceauth_test"
+
+config("standard_config") {
+  visibility = [ ":*" ]
   include_dirs =
       [ "//base/security/device_auth/interfaces/inner_api/deviceauth_lite" ]
+}
+
+ohos_unittest("DeviceAuthTest") {
+  module_out_path = module_output_path
+  testonly = true
+  configs = [ ":standard_config" ]
+
+  cflags_cc = [ "--coverage" ]
+  ldflags = [ "--coverage" ]
+
+  sources = [ "deviceauth_test.cpp" ]
+
   deps = [
     "//base/security/device_auth/frameworks/deviceauth_lite/source:hichainsdk",
-    "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk",
+    "//base/security/huks/interfaces/inner_api/huks_standard/main:libhukssdk",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
   ]
 }

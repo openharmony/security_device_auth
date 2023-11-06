@@ -311,17 +311,6 @@ DLL_API_PUBLIC int32_t receive_data_with_json_object(hc_handle handle, const voi
 
 #ifndef _CUT_API_
 
-/*
- * Initialize the center device
- *
- * para hc_package_name:  the package name of the product
- * para hc_service_type:  the type of the product
- * para hc_auth_id:  the auth id of controller
- * para dek:  the alias of secret key used for encryption and decryption of data
- * return  0 ok, others error
- */
-DLL_API_PUBLIC int32_t init_center(const struct hc_package_name *package_name,
-    const struct hc_service_type *service_type, const struct hc_auth_id *auth_id, struct hc_key_alias *dek);
 
 /*
  * Start pake module
@@ -349,21 +338,6 @@ DLL_API_PUBLIC int32_t authenticate_peer(hc_handle handle, struct operation_para
  * return  0 ok, others error
  */
 DLL_API_PUBLIC int32_t delete_local_auth_info(hc_handle handle, struct hc_user_info *user_info);
-
-/*
- * Import auth info of bounded trust accessory
- *
- * para handle:  hichain instance
- * para hc_user_info:  the information of Authorized user
- * para hc_auth_id:  the auth id of device
- * para auth_info_type:  the export auth info type: 0: full authentication data
- *                                                  1: lite authentication data
- *                                                  2: signed authentication data
- * para auth_info:  auth info of accessory
- * return  0 ok, others error
- */
-DLL_API_PUBLIC int32_t import_auth_info(hc_handle handle, struct hc_user_info *user_info, struct hc_auth_id *auth_id,
-    enum hc_export_type auth_info_type, struct uint8_buff *auth_info);
 
 /*
  * Share the bound device to other users

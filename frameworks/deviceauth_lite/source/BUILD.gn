@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import("//build/ohos.gni")
 
 hichian_sources = [
   "auth_info/add_auth_info.c",
@@ -45,7 +46,6 @@ hichian_sources = [
   "struct/exchange_auth_data.c",
   "struct/exchange_request.c",
   "struct/exchange_response.c",
-  "struct/import_add_auth_data.c",
   "struct/inform_message.c",
   "struct/key_agreement_version.c",
   "struct/key_agreement_version.h",
@@ -84,32 +84,92 @@ config("hichain_config") {
   ]
 }
 
-if (ohos_kernel_type == "liteos_m") {
-  static_library("hichainsdk") {
+config("hichain_standard_config") {
+  include_dirs = [
+    "//third_party/bounds_checking_function/include",
+    "//base/security/device_auth/interfaces/inner_api/deviceauth_lite",
+    "//base/security/huks/interfaces/inner_api/huks_standard/main/include",
+    "//third_party/cJSON",
+    "base",
+    "huks_adapter",
+    "json",
+    "key_agreement",
+    "log",
+    "schedule",
+    "struct",
+    "auth_info",
+  ]
+
+  defines = [
+    #    "_SCANTY_MEMORY_",
+    #    "_CUT_STS_CLIENT_",
+    "_CUT_REMOVE_",
+    #    "_CUT_ADD_",
+    #    "_CUT_LOG_",
+  ]
+}
+
+if (os_level == "standard") {
+  ohos_shared_library("hichainsdk") {
+    subsystem_name = "security"
+    part_name = "device_auth"
     sources = hichian_sources
-    public_configs = [ ":hichain_config" ]
-    deps =
-        [ "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk" ]
-    if (board_toolchain_type == "iccarm") {
-      cflags = [
-        "--diag_suppress",
-        "Pe1097,Pe546,Pe188,Pe111",
-      ]
-    }
-  }
-} else {
-  shared_library("hichainsdk") {
-    sources = hichian_sources
-    public_configs = [ ":hichain_config" ]
+    public_configs = [ ":hichain_standard_config" ]
     deps = [
-      "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk",
-      "//build/lite/config/component/cJSON:cjson_shared",
       "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/cJSON:cjson",
     ]
+    external_deps = [ "huks:libhukssdk" ]
     cflags = [
       "-flto",
       "-Wall",
       "-fvisibility=hidden",
     ]
+  }
+  ohos_static_library("hichainsdk_static") {
+    subsystem_name = "security"
+    part_name = "device_auth"
+    sources = hichian_sources
+    public_configs = [ ":hichain_standard_config" ]
+    deps = [
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/cJSON:cjson",
+    ]
+    external_deps = [ "huks:libhukssdk" ]
+    cflags = [
+      "-flto",
+      "-Wall",
+      "-fvisibility=hidden",
+    ]
+  }
+} else {
+  if (ohos_kernel_type == "liteos_m") {
+    static_library("hichainsdk") {
+      sources = hichian_sources
+      public_configs = [ ":hichain_config" ]
+      deps =
+          [ "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk" ]
+      if (board_toolchain_type == "iccarm") {
+        cflags = [
+          "--diag_suppress",
+          "Pe1097,Pe546,Pe188,Pe111",
+        ]
+      }
+    }
+  } else {
+    shared_library("hichainsdk") {
+      sources = hichian_sources
+      public_configs = [ ":hichain_config" ]
+      deps = [
+        "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk",
+        "//build/lite/config/component/cJSON:cjson_shared",
+        "//third_party/bounds_checking_function:libsec_shared",
+      ]
+      cflags = [
+        "-flto",
+        "-Wall",
+        "-fvisibility=hidden",
+      ]
+    }
   }
 }

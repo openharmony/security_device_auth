@@ -1,0 +1,63 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/security/device_auth/deps_adapter/deviceauth_hals.gni")
+import("//base/security/device_auth/services/deviceauth.gni")
+
+#####################hydra-fuzz###################
+import("//build/config/features.gni")
+import("//build/test.gni")
+THIRD_PATH = "//third_party/bounds_checking_function"
+module_output_path = "device_auth/deviceauth_test"
+
+##############################fuzztest##########################################
+ohos_fuzztest("AuthenticatePeerFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "${deviceauth_path}/frameworks/deviceauth_lite/fuzztest/authenticatepeer_fuzzer"
+  include_dirs = []
+  include_dirs += [
+    "${deviceauth_path}/interfaces/inner_api/deviceauth_lite",
+    "${deviceauth_path}/frameworks/deviceauth_lite/source/schdeule",
+    "${deviceauth_path}/frameworks/deviceauth_lite/source/key_agreement",
+    "${deviceauth_path}/frameworks/deviceauth_lite/source/base",
+    "${deviceauth_path}/frameworks/deviceauth_lite/source/struct",
+    "$THIRD_PATH/include",
+    "${deviceauth_path}/frameworks/deviceauth_lite/source/json",
+  ]
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  cflags_cc = [ "--coverage" ]
+
+  ldflags = [ "--coverage" ]
+
+  sources = [ "authenticatepeer_fuzzer.cpp" ]
+  deps = [
+    "$THIRD_PATH:libsec_shared",
+    "${deviceauth_path}/frameworks/deviceauth_lite/source:hichainsdk",
+  ]
+}
+
+###############################################################################
+group("fuzztest") {
+  testonly = true
+  deps = []
+  deps += [
+    # deps file
+    ":AuthenticatePeerFuzzTest",
+  ]
+}
+###############################################################################

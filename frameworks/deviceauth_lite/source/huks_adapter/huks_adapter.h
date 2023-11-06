@@ -294,8 +294,6 @@ int32_t asset_unwrap(struct uint8_buff *sec_data, struct hc_key_alias *dec_alias
 int32_t get_key_attestation(const struct uint8_buff *challenge, struct hc_key_alias *sk_alias,
     struct uint8_buff *out_cert_chain);
 
-int32_t gen_derived_key(struct hc_key_alias *base_alias, struct hc_key_alias *to_save_alias);
-
 #endif
 
 /*
