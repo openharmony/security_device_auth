@@ -54,7 +54,7 @@ namespace OHOS {
         .confirm_receive_request = ConfirmReceiveRequestFunc
     };
 
-    satatic struct session_identity identity = {
+    static struct session_identity identity = {
         1,
         {sizeof("hicar"), "hicar"},
         {sizeof("CarDevice"), "CarDevice"},
@@ -71,7 +71,7 @@ namespace OHOS {
         struct hc_auth_id selfId = {sizeof({*data;}), {*data}};
         struct hc_auth_id peerId = {sizeof({*data;}), {*data}};
         struct operation_parameter params;
-        ret = memset_s(&params, sizeof(params), 0 sizeof(params));
+        ret = memset_s(&params, sizeof(params), 0, sizeof(params));
         if (ret != EOK) {
             return false;
         }
