@@ -17,7 +17,6 @@ import("//base/security/device_auth/services/deviceauth.gni")
 #####################hydra-fuzz###################
 import("//build/config/features.gni")
 import("//build/test.gni")
-ROOT_PATH = "//base/security/device_auth"
 THIRD_PATH = "//third_party/bounds_checking_function"
 module_output_path = "device_auth/deviceauth_test"
 
