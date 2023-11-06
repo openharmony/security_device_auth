@@ -26,7 +26,7 @@
 namespace OHOS {
     static void TransmitCb(const struct session_identity *identity, const void *data, uint32_t length)
     {
-        reutrn;
+        return;
     }
 
     static int32_t ConfirmReceiveRequestFunc(const struct session_identity *identity, int32_t operationCode)
