@@ -136,7 +136,7 @@ void GetInstanceTest::SetUpTestCase(void) {}
 void GetInstanceTest::TearDownTestCase(void) {}
 void GetInstanceTest::SetUp()
 {
-    initHcAuthId();
+    InitHcAuthId();
 }
 void GetInstanceTest::TearDown() {}
 
@@ -256,7 +256,7 @@ void StartPakeTest::SetUpTestCase(void) {}
 void StartPakeTest::TearDownTestCase(void) {}
 void StartPakeTest::SetUp()
 {
-    initHcAuthId();
+    InitHcAuthId();
 }
 void StartPakeTest::TearDown() {}
 
@@ -332,7 +332,7 @@ void AuthenticatePeerTest::SetUpTestCase(void) {}
 void AuthenticatePeerTest::TearDownTestCase(void) {}
 void AuthenticatePeerTest::SetUp()
 {
-    initHcAuthId();
+    InitHcAuthId();
 }
 void AuthenticatePeerTest::TearDown() {}
 
@@ -408,7 +408,7 @@ void ListTrustPeersTest::SetUpTestCase(void) {}
 void ListTrustPeersTest::TearDownTestCase(void) {}
 void ListTrustPeersTest::SetUp()
 {
-    initHcAuthId();
+    InitHcAuthId();
 }
 void ListTrustPeersTest::TearDown() {}
 
@@ -424,7 +424,7 @@ static HWTEST_F(ListTrustPeersTest, ListTrustPeersTest001, TestSize.Level2)
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    int ret = list_trust_peers(server, HC_USER_TYPE_ACCESSORY, &g_test_client_auth_id, g_auth_id_list);
+    int ret = list_trust_peers(server, HC_USER_TYPE_ACCESSORY, &g_test_client_auth_id, g_authIdList);
     EXPECT_EQ(ret, 0);
     destroy(&server);
     LOG("--------ListTrustPeersTest ListTrustPeersTest001--------");
@@ -434,7 +434,7 @@ static HWTEST_F(ListTrustPeersTest, ListTrustPeersTest002, TestSize.Level2)
 {
     LOG("--------ListTrustPeersTest ListTrustPeersTest002--------");
     LOG("--------list_trust_peers--------");
-    int ret = list_trust_peers(NULL, HC_USER_TYPE_ACCESSORY, &g_test_client_auth_id, g_auth_id_list);
+    int ret = list_trust_peers(NULL, HC_USER_TYPE_ACCESSORY, &g_test_client_auth_id, g_authIdList);
     EXPECT_EQ(ret, 0);
     LOG("--------ListTrustPeersTest ListTrustPeersTest002--------");
 }
@@ -451,7 +451,7 @@ static HWTEST_F(ListTrustPeersTest, ListTrustPeersTest003, TestSize.Level2)
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    int ret = list_trust_peers(server, 2, &g_test_client_auth_id, g_auth_id_list);
+    int ret = list_trust_peers(server, 2, &g_test_client_auth_id, g_authIdList);
     EXPECT_EQ(ret, 0);
     destroy(&server);
     LOG("--------ListTrustPeersTest ListTrustPeersTest003--------");
@@ -470,7 +470,7 @@ void DestroyTest::SetUpTestCase(void) {}
 void DestroyTest::TearDownTestCase(void) {}
 void DestroyTest::SetUp()
 {
-    initHcAuthId();
+    InitHcAuthId();
 }
 void DestroyTest::TearDown() {}
 
@@ -522,7 +522,7 @@ void DeleteLocalAuthInfoTest::SetUpTestCase(void) {}
 void DeleteLocalAuthInfoTest::TearDownTestCase(void) {}
 void DeleteLocalAuthInfoTest::SetUp()
 {
-    initHcAuthId();
+    InitHcAuthId();
 }
 void DeleteLocalAuthInfoTest::TearDown() {}
 
@@ -564,7 +564,7 @@ void ReceiveDataTest::SetUpTestCase(void) {}
 void ReceiveDataTest::TearDownTestCase(void) {}
 void ReceiveDataTest::SetUp()
 {
-    initHcAuthId();
+    InitHcAuthId();
 }
 void ReceiveDataTest::TearDown() {}
 
