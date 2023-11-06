@@ -475,7 +475,7 @@ static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const 
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -506,7 +506,7 @@ static int32_t RequestDeleteGroup(int32_t osAccountId, int64_t requestId, const 
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -538,7 +538,7 @@ static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t request
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -569,7 +569,7 @@ static int32_t RequestAddMultiMembersToGroup(int32_t osAccountId, const char *ap
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -613,7 +613,7 @@ static int32_t RequestDelMultiMembersFromGroup(int32_t osAccountId, const char *
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -721,7 +721,7 @@ static int32_t CheckAccessToGroup(int32_t osAccountId, const char *appId, const 
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -740,7 +740,7 @@ static int32_t GetAccessibleGroupInfoById(int32_t osAccountId, const char *appId
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -787,7 +787,7 @@ static int32_t GetAccessibleGroupInfo(int32_t osAccountId, const char *appId, co
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -832,7 +832,7 @@ static int32_t GetAccessibleJoinedGroups(int32_t osAccountId, const char *appId,
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -861,7 +861,7 @@ static int32_t GetAccessibleRelatedGroups(int32_t osAccountId, const char *appId
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -887,7 +887,7 @@ static int32_t GetAccessibleDeviceInfoById(int32_t osAccountId, const char *appI
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -939,7 +939,7 @@ static int32_t GetAccessibleTrustedDevices(int32_t osAccountId, const char *appI
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
@@ -970,7 +970,7 @@ static bool IsDeviceInAccessibleGroup(int32_t osAccountId, const char *appId, co
         LOGE("Invalid input parameters!");
         return false;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return false;
     }
@@ -995,7 +995,7 @@ static int32_t GetPkInfoList(int32_t osAccountId, const char *appId, const char 
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (!CheckOsAccountStatus(osAccountId)) {
+    if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }

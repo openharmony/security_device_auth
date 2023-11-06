@@ -15,14 +15,44 @@
 
 #include "os_account_adapter.h"
 #include "device_auth.h"
+#include "device_auth_defines.h"
 
 int32_t DevAuthGetRealOsAccountLocalId(int32_t inputId)
 {
     return inputId;
 }
 
-bool CheckOsAccountStatus(int32_t osAccountId)
+bool IsOsAccountUnlocked(int32_t osAccountId)
 {
     (void)osAccountId;
     return true;
+}
+
+void AddOsAccountEventCallback(EventCallbackId callbackId, OsAccountCallbackFunc unlockFunc,
+    OsAccountCallbackFunc removeFunc)
+{
+    (void)callbackId;
+    (void)unlockFunc;
+    (void)removeFunc;
+}
+
+void RemoveOsAccountEventCallback(EventCallbackId callbackId)
+{
+    (void)callbackId;
+}
+
+void InitOsAccountAdapter(void) {}
+
+void DestroyOsAccountAdapter(void) {}
+
+int32_t GetAllOsAccountIds(int32_t **osAccountIds, uint32_t *size)
+{
+    (void)osAccountIds;
+    (void)size;
+    return HC_ERR_NOT_SUPPORT;
+}
+
+bool IsOsAccountSupported(void)
+{
+    return false;
 }

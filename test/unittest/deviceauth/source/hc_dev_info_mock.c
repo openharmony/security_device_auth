@@ -69,6 +69,11 @@ const char *GetStoragePath(void)
     return storageFile;
 }
 
+const char *GetStorageDirPathCe(void)
+{
+    return "/data/service/el1/public/deviceauthMock/ce";
+}
+
 const char *GetStorageDirPath(void)
 {
 #ifndef LITE_DEVICE

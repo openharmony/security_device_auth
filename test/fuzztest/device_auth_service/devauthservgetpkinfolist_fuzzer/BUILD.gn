@@ -41,7 +41,6 @@ ohos_fuzztest("DevAuthServGetPkInfoListFuzzTest") {
   if (support_os_account) {
     sources -= os_account_adapter_files
     sources += os_account_adapter_mock_files
-    defines -= [ "SUPPORT_OS_ACCOUNT" ]
   }
   cflags = [
     "-g",
