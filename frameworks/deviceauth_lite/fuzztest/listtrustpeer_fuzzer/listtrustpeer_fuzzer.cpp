@@ -52,7 +52,7 @@ namespace OHOS {
         .get_protocol_params = GetProtocolParamsCb,
         .set_session_key = SetSessionKeyFunc,
         .set_service_result = SetServiceResultFunc,
-        .confirm_receive_request = ConfirmReceiveRequestFunc,
+        .confirm_receive_request = ConfirmReceiveRequestFunc
     };
 
     static struct session_identity identity = {
@@ -66,14 +66,14 @@ namespace OHOS {
     {
         int ret;
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
-        struct hc_auth_id *peer_authid_list = (struct hc_auth_id *)malloc(MAX_LIST_NUM * sizeof(struct hc_auth_id));
-        ret = memset_s(peer_authid_list, MAX_LIST_NUM * sizeof(struct hc_auth_id),
+        struct hc_auth_id *peerAuthidList = (struct hc_auth_id *)malloc(MAX_LIST_NUM * sizeof(struct hc_auth_id));
+        ret = memset_s(peerAuthidList, MAX_LIST_NUM * sizeof(struct hc_auth_id),
                        0, MAX_LIST_NUM * sizeof(struct hc_auth_id));
         if (ret != EOK) {
             return false;
         }
         struct hc_auth_id authId = {sizeof({*data;}), {*data}};
-        list_trust_peers(handle, 0, &authId, &peer_authid_list);
+        list_trust_peers(handle, 0, &authId, &peerAuthidList);
         destroy(&handle);
         return true;
     }

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "destroy_fuzzer.h"
+#include "startpake_fuzzer.h"
 
 #include "hichain.h"
 #include "distribution.h"
@@ -51,7 +51,7 @@ namespace OHOS {
         .get_protocol_params = GetProtocolParamsCb,
         .set_session_key = SetSessionKeyFunc,
         .set_service_result = SetServiceResultFunc,
-        .confirm_receive_request = ConfirmReceiveRequestFunc,
+        .confirm_receive_request = ConfirmReceiveRequestFunc
     };
 
     satatic struct session_identity identity = {

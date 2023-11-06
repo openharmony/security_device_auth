@@ -22,7 +22,7 @@
 namespace OHOS {
     static void TransmitCb(const struct session_identity *identity, const void *data, uint32_t length)
     {
-        reutrn;
+        return;
     }
 
     static int32_t ConfirmReceiveRequestFunc(const struct session_identity *identity, int32_t operationCode)
@@ -46,12 +46,12 @@ namespace OHOS {
         return;
     }
 
-    static hc_cal_back callback = {
-        .transmit = TransmitCb;
-        .get_protocol_params = GetProtocolParamsCb;
-        .set_session_key = SetSessionKeyFunc;
-        .set_service_result = SetServiceResultFunc;
-        .confirm_receive_request = ConfirmReceiveRequestFunc;
+    static hc_call_back callback = {
+        .transmit = TransmitCb,
+        .get_protocol_params = GetProtocolParamsCb,
+        .set_session_key = SetSessionKeyFunc,
+        .set_service_result = SetServiceResultFunc,
+        .confirm_receive_request = ConfirmReceiveRequestFunc,
     };
 
     struct session_identity identity = {
@@ -66,13 +66,16 @@ namespace OHOS {
         if ((data == nullptr) || (size < sizeof(int32_t))) {
             return false;
         }
-        uint8_t *val = const_cast<uint8_t *>data;
+        string val = data;
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
-        uint8_buff buff = {val, strlen((char *)(val)), strlen((char *)(val))}
+        uint8_buff buff;
+        buff.size = val.length();
+        buff.length = val.length();
+        strcpy_s(buff.val, buff.size, val.c_str());
         receive_data(handle, &buff);
         destroy(&handle);
         return true;
-    }
+    };
 }
 
 /* Fuzzer entry point*/

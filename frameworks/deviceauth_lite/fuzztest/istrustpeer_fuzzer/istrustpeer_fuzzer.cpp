@@ -50,12 +50,12 @@ namespace OHOS {
         return;
     }
 
-    static hc_cal_back callback = {
-        .transmit = TransmitCb;
-        .get_protocol_params = GetProtocolParamsCb;
-        .set_session_key = SetSessionKeyFunc;
-        .set_service_result = SetServiceResultFunc;
-        .confirm_receive_request = ConfirmReceiveRequestFunc;
+    static hc_call_back callback = {
+        .transmit = TransmitCb,
+        .get_protocol_params = GetProtocolParamsCb,
+        .set_session_key = SetSessionKeyFunc,
+        .set_service_result = SetServiceResultFunc,
+        .confirm_receive_request = ConfirmReceiveRequestFunc
     };
 
     struct session_identity identity = {
@@ -72,7 +72,8 @@ namespace OHOS {
         }
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
         struct hc_auth_id selfId = {sizeof({*data;}), {*data}};
-        int32_t type = atoi(reinterpret_cast<char *>(data));
+        string val = data;
+        int32_t type = atoi(val.c_str());
         struct hc_user_info user_info;
         user_info.auth_id = selfId;
         user_info.user_type = type;

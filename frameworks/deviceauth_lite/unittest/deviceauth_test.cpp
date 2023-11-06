@@ -55,7 +55,7 @@ static int32_t g_result;
 uint8_t g_testPhoneId[65] = {"14bb6543b893a3250f5793fbbbd48be56641505dc6514be1bb37b032903ebc67"};
 uint8_t g_testCarId[65] = {"14bb6543b893a3250f5793fbbbd48be56641505dc6514be1bb37b032903abcde"};
 
-void init_hc_auth_id()
+void initHcAuthId()
 {
     memcpy_s(g_test_client_auth_id.auth_id, AUTH_ID_LENGTH, g_testPhoneId, AUTH_ID_LENGTH);
     g_test_client_auth_id.length = AUTH_ID_LENGTH;
@@ -69,12 +69,12 @@ void init_hc_auth_id()
 static struct hc_auth_id g_test_client_auth_id_001 = {strlen("authClient1"), "authClient1"};
 static struct hc_auth_id g_test_client_auth_id_002 = {strlen("authClient2"), "authClient2"};
 
-struct hc_auth_id *g_auth_id_client_list[3] = {
+struct hc_auth_id *g_authIdClientList[3] = {
     &g_test_client_auth_id,
     &g_test_client_auth_id_001,
     &g_test_client_auth_id_002
 };
-struct hc_auth_id **g_auth_id_list = g_auth_id_client_list;
+struct hc_auth_id **g_auth_id_list = g_authIdClientList;
 
 static void Transmit(const struct session_identity *identity, const void *data, uint32_t length)
 {
@@ -136,7 +136,7 @@ void GetInstanceTest::SetUpTestCase(void) {}
 void GetInstanceTest::TearDownTestCase(void) {}
 void GetInstanceTest::SetUp()
 {
-    init_hc_auth_id();
+    initHcAuthId();
 }
 void GetInstanceTest::TearDown() {}
 
@@ -155,8 +155,8 @@ static HWTEST_F(GetInstanceTest, GetInstanceTest001, TestSize.Level2)
 
     hc_handle server = get_instance(&g_server_identity, HC_ACCESSORY, &callBack);
     ASSERT_TRUE(server != NULL);
-    struct hichain *hichain_test = (struct hichain *)server;
-    EXPECT_EQ(hichain_test->state, 0);
+    struct hichain *hichainTest = (struct hichain *)server;
+    EXPECT_EQ(hichainTest->state, 0);
     destroy(&server);
     LOG("--------DeviceAuthTest Test001--------");
 }
@@ -175,9 +175,9 @@ static HWTEST_F(GetInstanceTest, GetInstanceTest002, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    struct hichain *hichain_test = (struct hichain *)server;
+    struct hichain *hichainTest = (struct hichain *)server;
     ASSERT_TRUE(server != NULL);
-    EXPECT_EQ(hichain_test->state, 0);
+    EXPECT_EQ(hichainTest->state, 0);
     destroy(&server);
     LOG("--------DeviceAuthTest Test002--------");
 }
@@ -256,7 +256,7 @@ void StartPakeTest::SetUpTestCase(void) {}
 void StartPakeTest::TearDownTestCase(void) {}
 void StartPakeTest::SetUp()
 {
-    init_hc_auth_id();
+    initHcAuthId();
 }
 void StartPakeTest::TearDown() {}
 
@@ -332,7 +332,7 @@ void AuthenticatePeerTest::SetUpTestCase(void) {}
 void AuthenticatePeerTest::TearDownTestCase(void) {}
 void AuthenticatePeerTest::SetUp()
 {
-    init_hc_auth_id();
+    initHcAuthId();
 }
 void AuthenticatePeerTest::TearDown() {}
 
@@ -408,7 +408,7 @@ void ListTrustPeersTest::SetUpTestCase(void) {}
 void ListTrustPeersTest::TearDownTestCase(void) {}
 void ListTrustPeersTest::SetUp()
 {
-    init_hc_auth_id();
+    initHcAuthId();
 }
 void ListTrustPeersTest::TearDown() {}
 
@@ -470,7 +470,7 @@ void DestroyTest::SetUpTestCase(void) {}
 void DestroyTest::TearDownTestCase(void) {}
 void DestroyTest::SetUp()
 {
-    init_hc_auth_id();
+    initHcAuthId();
 }
 void DestroyTest::TearDown() {}
 
@@ -522,7 +522,7 @@ void DeleteLocalAuthInfoTest::SetUpTestCase(void) {}
 void DeleteLocalAuthInfoTest::TearDownTestCase(void) {}
 void DeleteLocalAuthInfoTest::SetUp()
 {
-    init_hc_auth_id();
+    initHcAuthId();
 }
 void DeleteLocalAuthInfoTest::TearDown() {}
 
@@ -564,7 +564,7 @@ void ReceiveDataTest::SetUpTestCase(void) {}
 void ReceiveDataTest::TearDownTestCase(void) {}
 void ReceiveDataTest::SetUp()
 {
-    init_hc_auth_id();
+    initHcAuthId();
 }
 void ReceiveDataTest::TearDown() {}
 
@@ -776,13 +776,13 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest008_pake_server2error, TestSize.
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != NULL);
 
-    uint8_t data_str[] = "{\"message\":2,\"payload\":{"\
+    uint8_t dataStr[] = "{\"message\":2,\"payload\":{"\
         "\"kcfData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55B4F0707345\","\
         "\"challenge\":\"E01AE0AA018ECDA852ACA4CCA45FCC56\"}}";
     uint8_buff data = {
-        data_str,
-        sizeof(data_str),
-        strlen((char *) data_str)
+        dataStr,
+        sizeof(dataStr),
+        strlen((char *) dataStr)
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
