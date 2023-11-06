@@ -55,7 +55,7 @@ static int32_t g_result;
 uint8_t g_testPhoneId[65] = {"14bb6543b893a3250f5793fbbbd48be56641505dc6514be1bb37b032903ebc67"};
 uint8_t g_testCarId[65] = {"14bb6543b893a3250f5793fbbbd48be56641505dc6514be1bb37b032903abcde"};
 
-void initHcAuthId()
+void InitHcAuthId()
 {
     memcpy_s(g_test_client_auth_id.auth_id, AUTH_ID_LENGTH, g_testPhoneId, AUTH_ID_LENGTH);
     g_test_client_auth_id.length = AUTH_ID_LENGTH;
@@ -74,7 +74,7 @@ struct hc_auth_id *g_authIdClientList[3] = {
     &g_test_client_auth_id_001,
     &g_test_client_auth_id_002
 };
-struct hc_auth_id **g_auth_id_list = g_authIdClientList;
+struct hc_auth_id **g_authIdList = g_authIdClientList;
 
 static void Transmit(const struct session_identity *identity, const void *data, uint32_t length)
 {
