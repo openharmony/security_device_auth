@@ -66,7 +66,7 @@ namespace OHOS {
         if ((data == nullptr) || (size < sizeof(int32_t))) {
             return false;
         }
-        std::string val(data);
+        std::string val(reinterpret_cast<const char *>(data));
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
         uint8_buff buff;
         buff.size = val.length();
