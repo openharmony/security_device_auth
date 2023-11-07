@@ -133,7 +133,7 @@ static void NotifySystemAbilityAdded(int32_t systemAbilityId)
 
 static void SubscribeSystemAbility(void)
 {
-    if (g_isCommonEventSubscribed || g_isSaSubscribed) {
+    if (g_isSaSubscribed) {
         return;
     }
     OHOS::sptr<OHOS::ISystemAbilityManager> sysMgr =
@@ -186,7 +186,6 @@ void InitOsAccountAdapter(void)
     if (g_isInitialized) {
         return;
     }
-    SubscribeCommonEvent();
     SubscribeSystemAbility();
     g_callbackVec = CREATE_HC_VECTOR(EventCallbackVec);
     g_isInitialized = true;
