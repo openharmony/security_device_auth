@@ -71,7 +71,7 @@ namespace OHOS {
         uint8_buff buff;
         buff.size = val.length();
         buff.length = val.length();
-        strcpy_s(buff.val, buff.size, val.c_str());
+        memcpy_s(buff.val, buff.size, val.c_str(), val.length());
         receive_data(handle, &buff);
         destroy(&handle);
         return true;
