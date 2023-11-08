@@ -65,9 +65,9 @@ if (os_level == "mini" || os_level == "small") {
       cflags = build_flags
     }
     cflags += [
-      "-DHICHAIN_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",
+      "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",
+      "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}",
     ]
-    cflags += [ "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}" ]
     if (ohos_kernel_type == "linux" || ohos_kernel_type == "liteos_a") {
       include_dirs +=
           [ "//base/hiviewdfx/hilog_lite/interfaces/native/innerkits/hilog" ]
@@ -183,7 +183,10 @@ if (os_level == "mini" || os_level == "small") {
     defines += [ "HILOG_ENABLE" ]
     defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
     cflags = build_flags
-    cflags += [ "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}" ]
+    cflags += [
+      "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",
+      "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}",
+    ]
     if (target_cpu == "arm") {
       cflags += [ "-DBINDER_IPC_32BIT" ]
     }
