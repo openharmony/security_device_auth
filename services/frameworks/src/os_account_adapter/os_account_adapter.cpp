@@ -48,6 +48,9 @@ static OHOS::DevAuth::SaEventNotifier g_saEventNotifier;
 
 static void NotifyOsAccountUnlocked(int32_t osAccountId)
 {
+    if (!g_isInitialized) {
+        return;
+    }
     uint32_t index;
     OsAccountEventCallback *callback;
     FOR_EACH_HC_VECTOR(g_callbackVec, index, callback) {
@@ -57,6 +60,9 @@ static void NotifyOsAccountUnlocked(int32_t osAccountId)
 
 static void NotifyOsAccountRemoved(int32_t osAccountId)
 {
+    if (!g_isInitialized) {
+        return;
+    }
     uint32_t index;
     OsAccountEventCallback *callback;
     FOR_EACH_HC_VECTOR(g_callbackVec, index, callback) {
@@ -186,8 +192,8 @@ void InitOsAccountAdapter(void)
     if (g_isInitialized) {
         return;
     }
-    SubscribeSystemAbility();
     g_callbackVec = CREATE_HC_VECTOR(EventCallbackVec);
+    SubscribeSystemAbility();
     g_isInitialized = true;
 }
 
@@ -197,9 +203,9 @@ void DestroyOsAccountAdapter(void)
         return;
     }
     g_isInitialized = false;
-    DESTROY_HC_VECTOR(EventCallbackVec, &g_callbackVec);
     UnSubscribeSystemAbility();
     UnSubscribeCommonEvent();
+    DESTROY_HC_VECTOR(EventCallbackVec, &g_callbackVec);
 }
 
 bool IsOsAccountUnlocked(int32_t osAccountId)
