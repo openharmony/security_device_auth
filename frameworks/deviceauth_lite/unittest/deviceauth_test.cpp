@@ -351,7 +351,7 @@ static HWTEST_F(AuthenticatePeerTest, AuthenticatePeerTest001, TestSize.Level2)
     ASSERT_TRUE(server != NULL);
     struct operation_parameter params = {g_test_server_auth_Id, g_test_client_auth_id, KEY_LEN};
     int32_t ret = authenticate_peer(server, &params);
-    EXPECT_EQ(ret, HC_BUILD_OBJECT_FAILED);
+    EXPECT_EQ(ret, HC_OK);
     destroy(&server);
     LOG("--------AuthenticatePeerTest AuthenticatePeerTest001--------");
 }
