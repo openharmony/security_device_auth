@@ -45,11 +45,14 @@ static AccountRelatedGroupAuth g_accountRelatedGroupAuth = {
     .getAccountCandidateGroup = GetAccountCandidateGroup,
 };
 
-static int32_t ReturnSessionKey(int64_t requestId, const CJson *authParam,
-    const CJson *out, const DeviceAuthCallback *callback)
+static int32_t ReturnSessionKey(int64_t requestId, const CJson *out, const DeviceAuthCallback *callback)
 {
-    int32_t keyLen = DEFAULT_RETURN_KEY_LENGTH;
-    (void)GetIntFromJson(authParam, FIELD_KEY_LENGTH, &keyLen);
+    const char *returnSessionKeyStr = GetStringFromJson(out, FIELD_SESSION_KEY);
+    if (returnSessionKeyStr == NULL) {
+        LOGE("Failed to get sessionKey!");
+        return HC_ERR_JSON_GET;
+    }
+    uint32_t keyLen = (strlen(returnSessionKeyStr) / BYTE_TO_HEX_OPER_LENGTH);
     uint8_t *sessionKey = (uint8_t *)HcMalloc(keyLen, 0);
     if (sessionKey == NULL) {
         LOGE("Failed to allocate memory for sessionKey!");
@@ -694,7 +697,7 @@ static void OnAccountFinish(int64_t requestId, const CJson *authParam, const CJs
         LOGE("Failed to send data to peer when account-related auth finished!");
         return;
     }
-    if (ReturnSessionKey(requestId, authParam, out, callback) != HC_SUCCESS) {
+    if (ReturnSessionKey(requestId, out, callback) != HC_SUCCESS) {
         LOGE("Failed to return session key for account-related auth!");
         return;
     }
