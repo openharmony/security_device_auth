@@ -16,6 +16,7 @@
 #include "compatible_auth_sub_session_common.h"
 
 #include "account_auth_plugin_proxy.h"
+#include "account_module_defines.h"
 #include "account_related_group_auth.h"
 #include "compatible_auth_sub_session_util.h"
 #include "data_manager.h"
@@ -244,7 +245,7 @@ static int32_t AddInfoToErrorData(CJson *sendToPeer, const CJson *authParam)
         LOGE("Failed to add authForm for peer!");
         return HC_ERR_JSON_ADD;
     }
-    if ((authForm == AUTH_FORM_IDENTICAL_ACCOUNT) && (AddIntToJson(sendToPeer, FIELD_STEP, -1) != HC_SUCCESS)) {
+    if ((authForm == AUTH_FORM_IDENTICAL_ACCOUNT) && (AddIntToJson(sendToPeer, FIELD_STEP, ERR_MSG) != HC_SUCCESS)) {
         LOGE("Failed to add step for peer!");
         return HC_ERR_JSON_ADD;
     }
