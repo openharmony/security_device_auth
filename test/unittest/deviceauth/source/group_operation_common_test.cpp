@@ -307,20 +307,20 @@ HWTEST_F(GroupOperationTest, GroupOperationTest036, TestSize.Level0)
 HWTEST_F(GroupOperationTest, GroupOperationTest037, TestSize.Level0)
 {
     char *returnJsonStr = nullptr;
-    int32_t ret = GenerateBindSuccessData(nullptr, g_normalStr, &returnJsonStr);
+    int32_t ret = GenerateBindSuccessData(nullptr, g_normalStr, g_normalStr, &returnJsonStr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest038, TestSize.Level0)
 {
     char *returnJsonStr = nullptr;
-    int32_t ret = GenerateBindSuccessData(g_normalStr, nullptr, &returnJsonStr);
+    int32_t ret = GenerateBindSuccessData(g_normalStr, nullptr, g_normalStr, &returnJsonStr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest039, TestSize.Level0)
 {
-    int32_t ret = GenerateBindSuccessData(g_normalStr, g_normalStr, nullptr);
+    int32_t ret = GenerateBindSuccessData(g_normalStr, g_normalStr, g_normalStr, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 

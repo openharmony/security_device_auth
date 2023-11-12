@@ -75,7 +75,8 @@ int32_t AddDeviceToDatabaseByJson(int32_t osAccountId, int32_t (*generateDevPara
 int32_t DelGroupFromDb(int32_t osAccountId, const char *groupId);
 
 int32_t ConvertGroupIdToJsonStr(const char *groupId, char **returnJsonStr);
-int32_t GenerateBindSuccessData(const char *peerAuthId, const char *groupId, char **returnDataStr);
+int32_t GenerateBindSuccessData(const char *peerAuthId, const char *peerUdid, const char *groupId,
+    char **returnDataStr);
 int32_t GenerateUnbindSuccessData(const char *peerAuthId, const char *groupId, char **returnDataStr);
 
 int32_t GetCurDeviceNumByGroupId(int32_t osAccountId, const char *groupId);

@@ -358,6 +358,7 @@ static int32_t AddPeerTrustedDevice(const CmdParams *params)
         LOGI("add trusted device success.");
         PRINT_SENSITIVE_DATA("GroupId", params->groupId);
         PRINT_SENSITIVE_DATA("PeerAuthId", params->authIdPeer);
+        PRINT_SENSITIVE_DATA("PeerUdid", params->udidPeer);
     }
     return res;
 }
