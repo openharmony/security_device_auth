@@ -267,10 +267,9 @@ static int32_t FillAccountCredentialInfo(int32_t osAccountId, const char *peerUd
         LOGI("Peer device's query result = %d, pass local device info to account authenticator.", res);
         localDevType = DEVICE_TYPE_ACCESSORY; /* Controller has peer device info, which is added by caller. */
     }
-    if ((res == HC_SUCCESS) && (peerDevInfo->credential == SYMMETRIC_CRED) &&
-        (peerDevInfo->source == IMPORTED_FROM_CLOUD)) {
+    if ((res == HC_SUCCESS) && (peerDevInfo->source == IMPORTED_FROM_CLOUD)) {
         LOGI("Peer trusted device is imported by cloud, invoke sym account auth.");
-        authCredential = SYMMETRIC_CRED;
+        authCredential = peerDevInfo->credential;
     }
     DestroyDeviceEntry(peerDevInfo);
     if (AddIntToJson(paramsData, FIELD_LOCAL_DEVICE_TYPE, localDevType) != HC_SUCCESS) {
