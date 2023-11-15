@@ -982,20 +982,16 @@ int32_t ConvertGroupIdToJsonStr(const char *groupId, char **returnJsonStr)
     return HC_SUCCESS;
 }
 
-int32_t GenerateBindSuccessData(const char *peerAuthId, const char *groupId, char **returnDataStr)
+int32_t GenerateBindSuccessData(const char *peerAuthId, const char *peerUdid,
+    const char *groupId, char **returnDataStr)
 {
-    if ((peerAuthId == NULL) || (groupId == NULL) || (returnDataStr == NULL)) {
+    if ((peerAuthId == NULL) || (peerUdid == NULL) || (groupId == NULL) || (returnDataStr == NULL)) {
         LOGE("The input params contains NULL value!");
         return HC_ERR_NULL_PTR;
     }
-    LOGI("Bind successfully! [GroupId]: %c%c%c%c****", groupId[DEV_AUTH_ZERO], groupId[DEV_AUTH_ONE],
-        groupId[DEV_AUTH_TWO], groupId[DEV_AUTH_THREE]);
-    if (HcStrlen(peerAuthId) >= DESENSITIZATION_LEN) {
-        LOGI("Bind successfully! [PeerAuthId]: %c%c%c%c****", peerAuthId[DEV_AUTH_ZERO], peerAuthId[DEV_AUTH_ONE],
-            peerAuthId[DEV_AUTH_TWO], peerAuthId[DEV_AUTH_THREE]);
-    } else {
-        LOGI("Bind successfully! [PeerAuthId]: too short");
-    }
+    PRINT_SENSITIVE_DATA("GroupId", groupId);
+    PRINT_SENSITIVE_DATA("PeerAuthId", peerAuthId);
+    PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
     CJson *jsonData = CreateJson();
     if (jsonData == NULL) {
         LOGE("Failed to allocate jsonData memory!");
@@ -1027,14 +1023,8 @@ int32_t GenerateUnbindSuccessData(const char *peerAuthId, const char *groupId, c
         LOGE("The input params contains NULL value!");
         return HC_ERR_NULL_PTR;
     }
-    LOGI("Unbind successfully! [GroupId]: %c%c%c%c****", groupId[DEV_AUTH_ZERO], groupId[DEV_AUTH_ONE],
-        groupId[DEV_AUTH_TWO], groupId[DEV_AUTH_THREE]);
-    if (HcStrlen(peerAuthId) >= DESENSITIZATION_LEN) {
-        LOGI("Unbind successfully! [PeerAuthId]: %c%c%c%c****", peerAuthId[DEV_AUTH_ZERO], peerAuthId[DEV_AUTH_ONE],
-            peerAuthId[DEV_AUTH_TWO], peerAuthId[DEV_AUTH_THREE]);
-    } else {
-        LOGI("Unbind successfully! [PeerAuthId]: too short");
-    }
+    PRINT_SENSITIVE_DATA("GroupId", groupId);
+    PRINT_SENSITIVE_DATA("PeerAuthId", peerAuthId);
     CJson *jsonData = CreateJson();
     if (jsonData == NULL) {
         LOGE("Failed to allocate jsonData memory!");

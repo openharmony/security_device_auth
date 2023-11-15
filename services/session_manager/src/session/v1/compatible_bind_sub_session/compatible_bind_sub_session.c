@@ -257,7 +257,7 @@ static int32_t SendBindDataToPeer(CompatibleBindSubSession *session, CJson *out)
     return result;
 }
 
-static int32_t InformSelfBindSuccess(const char *peerAuthId, const char *groupId,
+static int32_t InformSelfBindSuccess(const char *peerAuthId, const char *peerUdid, const char *groupId,
     const CompatibleBindSubSession *session, CJson *out)
 {
     uint8_t sessionKey[DEFAULT_RETURN_KEY_LENGTH] = { 0 };
@@ -268,7 +268,7 @@ static int32_t InformSelfBindSuccess(const char *peerAuthId, const char *groupId
     }
 
     char *jsonDataStr = NULL;
-    int32_t result = GenerateBindSuccessData(peerAuthId, groupId, &jsonDataStr);
+    int32_t result = GenerateBindSuccessData(peerAuthId, peerUdid, groupId, &jsonDataStr);
     if (result != HC_SUCCESS) {
         LOGE("Failed to generate the data to be sent to the service!");
         return result;
@@ -471,7 +471,7 @@ static int32_t HandleBindSuccess(const char *peerAuthId, const char *peerUdid, c
     if (result != HC_SUCCESS) {
         return result;
     }
-    return InformSelfBindSuccess(peerAuthId, groupId, session, out);
+    return InformSelfBindSuccess(peerAuthId, peerUdid, groupId, session, out);
 }
 
 static int32_t OnBindFinish(const CompatibleBindSubSession *session, const CJson *jsonParams, CJson *out)
