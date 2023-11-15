@@ -68,7 +68,12 @@ namespace OHOS {
         }
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
         struct hichain *hichain = (struct hichain *)handle;
-        hichain->operation_code = atoi(reinterpret_cast<const char *>(data));
+        std::string str(reinterpret_cast<const char *>(data), 9);
+        for(int i = 0; i < str.length(); i++)
+        {
+            str[i] = str[i] % str.length() + '0';
+        }
+        hichain->operation_code = stoi(str);
         hc_handle server = (void *)hichain;
         destroy(&server);
         return true;
