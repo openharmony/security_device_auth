@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,9 @@ void *StaticThreadFunc(void *args)
     int res = pthread_setname_np(pthread_self(), StringGet(&thread->name));
     if (res != 0) {
         LOGW("[OS]: pthread_setname_np fail. [Res]: %d", res);
+    } else {
+        LOGI("[OS]: pthread_setname_np success. [StackSize]: %zu, [Name]: %s",
+            thread->stackSize, StringGet(&thread->name));
     }
 
     if (thread->threadFunc) {

@@ -26,9 +26,6 @@ creds_manager_path = "${services_path}/creds_manager"
 mk_agree_path = "${services_path}/mk_agree"
 
 enable_broadcast = true
-declare_args() {
-  deviceauth_hichain_thread_stack_size = 8192
-}
 deviceauth_defines = []
 
 inc_path = [

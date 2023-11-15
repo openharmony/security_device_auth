@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,10 +17,6 @@
 
 #include "device_auth_defines.h"
 #include "hc_log.h"
-
-#ifndef HICHAIN_THREAD_STACK_SIZE
-#define HICHAIN_THREAD_STACK_SIZE 16384
-#endif
 
 static HcTaskThread *g_taskThread = NULL;
 
@@ -44,7 +40,7 @@ int32_t InitTaskManager(void)
     if (g_taskThread == NULL) {
         return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t res = InitHcTaskThread(g_taskThread, HICHAIN_THREAD_STACK_SIZE, "DevAuthWork");
+    int32_t res = InitHcTaskThread(g_taskThread, DEV_AUTH_WORK_THREAD_STACK_SIZE, "DevAuthWork");
     if (res != HC_SUCCESS) {
         LOGE("Failed to init task thread! res: %d", res);
         HcFree(g_taskThread);
