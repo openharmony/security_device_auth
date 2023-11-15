@@ -97,7 +97,7 @@ bool AuthenticatePeerFuzz(const uint8_t* data, size_t size)
     }
     params.self_auth_id = selfId;
     params.peer_auth_id = peerId;
-    std::string str(reinterpret_cast<const char *>(data), 9)
+    std::string str(reinterpret_cast<const char *>(data), 9);
     for (int i = 0; i < str.length(); i++) {
         str[i] = str[i] % str.length() + '0';
     }
