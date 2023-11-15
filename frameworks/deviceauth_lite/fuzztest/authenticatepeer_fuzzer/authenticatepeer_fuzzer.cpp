@@ -73,24 +73,20 @@ bool AuthenticatePeerFuzz(const uint8_t* data, size_t size)
     hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
 
     hc_auth_id selfId;
-    if (memset_s(&selfId, sizeof(struct hc_auth_id), 0, sizeof(struct hc_auth_id)) != EOK)
-    {
+    if (memset_s(&selfId, sizeof(struct hc_auth_id), 0, sizeof(struct hc_auth_id)) != EOK) {
         return false;
     }
     selfId.length = strnlen(reinterpret_cast<const char *>(data), HC_AUTH_ID_BUFF_LEN);
-    if (memcpy_s(selfId.auth_id, HC_AUTH_ID_BUFF_LEN, data, selfId.length) != EOK)
-    {
+    if (memcpy_s(selfId.auth_id, HC_AUTH_ID_BUFF_LEN, data, selfId.length) != EOK) {
         return false;
     }
 
     hc_auth_id peerId;
-    if (memset_s(&peerId, sizeof(struct hc_auth_id), 0, sizeof(struct hc_auth_id)) != EOK)
-    {
+    if (memset_s(&peerId, sizeof(struct hc_auth_id), 0, sizeof(struct hc_auth_id)) != EOK) {
         return false;
     }
     peerId.length = strnlen(reinterpret_cast<const char *>(data), HC_AUTH_ID_BUFF_LEN);
-    if (memcpy_s(peerId.auth_id, HC_AUTH_ID_BUFF_LEN, data, peerId.length) != EOK)
-    {
+    if (memcpy_s(peerId.auth_id, HC_AUTH_ID_BUFF_LEN, data, peerId.length) != EOK) {
         return false;
     }
 
@@ -102,8 +98,7 @@ bool AuthenticatePeerFuzz(const uint8_t* data, size_t size)
     params.self_auth_id = selfId;
     params.peer_auth_id = peerId;
     std::string str(reinterpret_cast<const char *>(data), 9)
-    for(int i = 0; i < str.length(); i++)
-    {
+    for (int i = 0; i < str.length(); i++) {
         str[i] = str[i] % str.length() + '0';
     }
     params.key_length = stoi(str);
