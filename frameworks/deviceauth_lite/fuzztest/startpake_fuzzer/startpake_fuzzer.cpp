@@ -68,8 +68,23 @@ namespace OHOS {
             return false;
         }
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
-        struct hc_auth_id selfId = {sizeof({*data;}), {*data}};
-        struct hc_auth_id peerId = {sizeof({*data;}), {*data}};
+        hc_auth_id selfId;
+        if (memset_s(&selfId, sizeof(struct hc_auth_id), 0, sizeof(struct hc_auth_id)) != EOK) {
+            return false;
+        }
+        selfId.length = strnlen(reinterpret_cast<const char *>(data), HC_AUTH_ID_BUFF_LEN);
+        if (memcpy_s(selfId.auth_id, HC_AUTH_ID_BUFF_LEN, data, selfId.length) != EOK) {
+            return false;
+        }
+
+        hc_auth_id peerId;
+        if (memset_s(&peerId, sizeof(struct hc_auth_id), 0, sizeof(struct hc_auth_id)) != EOK) {
+            return false;
+        }
+        peerId.length = strnlen(reinterpret_cast<const char *>(data), HC_AUTH_ID_BUFF_LEN);
+        if (memcpy_s(peerId.auth_id, HC_AUTH_ID_BUFF_LEN, data, peerId.length) != EOK) {
+            return false;
+        }
         struct operation_parameter params;
         ret = memset_s(&params, sizeof(params), 0, sizeof(params));
         if (ret != EOK) {
@@ -77,7 +92,11 @@ namespace OHOS {
         }
         params.self_auth_id = selfId;
         params.peer_auth_id = peerId;
-        params.key_length = atoi(reinterpret_cast<const char *>(data));
+        std::string str(reinterpret_cast<const char *>(data), 9);
+        for (int i = 0; i < str.length(); i++) {
+            str[i] = str[i] % str.length() + '0';
+        }
+        params.key_length = stoi(str);
         start_pake(handle, &params);
         destroy(&handle);
         return true;
