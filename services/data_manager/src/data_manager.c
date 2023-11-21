@@ -1091,7 +1091,7 @@ void ClearDeviceEntryVec(DeviceEntryVec *vec)
 
 int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
 {
-    LOGI("[DB]: Start to add a group to database!");
+    LOGI("[DB]: Start to add a group to database! [OsAccountId]: %d", osAccountId);
     if (groupEntry == NULL) {
         LOGE("[DB]: The input groupEntry is NULL!");
         return HC_ERR_NULL_PTR;
@@ -1132,7 +1132,7 @@ int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
 
 int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEntry)
 {
-    LOGI("[DB]: Start to add a trusted device to database!");
+    LOGI("[DB]: Start to add a trusted device to database! [OsAccountId]: %d", osAccountId);
     if (deviceEntry == NULL) {
         LOGE("[DB]: The input deviceEntry is NULL!");
         return HC_ERR_NULL_PTR;
@@ -1174,7 +1174,7 @@ int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEn
 
 int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params)
 {
-    LOGI("[DB]: Start to delete groups from database!");
+    LOGI("[DB]: Start to delete groups from database! [OsAccountId]: %d", osAccountId);
     if (params == NULL) {
         LOGE("[DB]: The input params is NULL!");
         return HC_ERR_NULL_PTR;
@@ -1208,7 +1208,7 @@ int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params)
 
 int32_t DelTrustedDevice(int32_t osAccountId, const QueryDeviceParams *params)
 {
-    LOGI("[DB]: Start to delete devices from database!");
+    LOGI("[DB]: Start to delete devices from database! [OsAccountId]: %d", osAccountId);
     if (params == NULL) {
         LOGE("[DB]: The input params is NULL!");
         return HC_ERR_NULL_PTR;
