@@ -468,7 +468,7 @@ static void DoDeleteMember(HcTaskBase *baseTask)
     (void)DeleteMemberFromPeerToPeerGroup(task->osAccountId, task->reqId, task->params, task->cb);
 }
 
-static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams)
+static int32_t CreateGroupInner(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((appId == NULL) || (createParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
@@ -479,8 +479,7 @@ static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const 
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("[Start]: RequestCreateGroup! [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
-    DEV_AUTH_REPORT_CALL_EVENT(CREATE_GROUP_EVENT, osAccountId, requestId, appId);
+    LOGI("[Start]: [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
     CJson *params = CreateJsonFromString(createParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -495,11 +494,18 @@ static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const 
         FreeJson(params);
         return HC_ERR_INIT_TASK_FAIL;
     }
-    LOGI("[End]: RequestCreateGroup!");
+    LOGI("[End]: create group successfully!");
     return HC_SUCCESS;
 }
 
-static int32_t RequestDeleteGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *disbandParams)
+static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams)
+{
+    int32_t res = CreateGroupInner(osAccountId, requestId, appId, createParams);
+    DEV_AUTH_REPORT_CALL_EVENT(requestId, CREATE_GROUP_EVENT, appId, osAccountId, res);
+    return res;
+}
+
+static int32_t DeleteGroupInner(int32_t osAccountId, int64_t requestId, const char *appId, const char *disbandParams)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((appId == NULL) || (disbandParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
@@ -510,8 +516,7 @@ static int32_t RequestDeleteGroup(int32_t osAccountId, int64_t requestId, const 
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("[Start]: RequestDeleteGroup! [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
-    DEV_AUTH_REPORT_CALL_EVENT(DELETE_GROUP_EVENT, osAccountId, requestId, appId);
+    LOGI("[Start]: [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
     CJson *params = CreateJsonFromString(disbandParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -526,11 +531,18 @@ static int32_t RequestDeleteGroup(int32_t osAccountId, int64_t requestId, const 
         FreeJson(params);
         return HC_ERR_INIT_TASK_FAIL;
     }
-    LOGI("[End]: RequestDeleteGroup!");
+    LOGI("[End]: delete group successfully!");
     return HC_SUCCESS;
 }
 
-static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t requestId, const char *appId,
+static int32_t RequestDeleteGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *disbandParams)
+{
+    int32_t res = DeleteGroupInner(osAccountId, requestId, appId, disbandParams);
+    DEV_AUTH_REPORT_CALL_EVENT(requestId, DELETE_GROUP_EVENT, appId, osAccountId, res);
+    return res;
+}
+
+static int32_t DeleteMemberFromGroupInner(int32_t osAccountId, int64_t requestId, const char *appId,
     const char *deleteParams)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
@@ -542,8 +554,7 @@ static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t request
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("[Start]: RequestDeleteMemberFromGroup! [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
-    DEV_AUTH_REPORT_CALL_EVENT(DEL_MEMBER_EVENT, osAccountId, requestId, appId);
+    LOGI("[Start]: [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
     CJson *params = CreateJsonFromString(deleteParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -558,11 +569,19 @@ static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t request
         FreeJson(params);
         return HC_ERR_INIT_TASK_FAIL;
     }
-    LOGI("[End]: RequestDeleteMemberFromGroup!");
+    LOGI("[End]: delete member from group successully!");
     return HC_SUCCESS;
 }
 
-static int32_t RequestAddMultiMembersToGroup(int32_t osAccountId, const char *appId, const char *addParams)
+static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t requestId, const char *appId,
+    const char *deleteParams)
+{
+    int32_t res = DeleteMemberFromGroupInner(osAccountId, requestId, appId, deleteParams);
+    DEV_AUTH_REPORT_CALL_EVENT(requestId, DEL_MEMBER_EVENT, appId, osAccountId, res);
+    return res;
+}
+
+static int32_t AddMultiMembersToGroupInner(int32_t osAccountId, const char *appId, const char *addParams)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((appId == NULL) || (addParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
@@ -573,8 +592,7 @@ static int32_t RequestAddMultiMembersToGroup(int32_t osAccountId, const char *ap
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("[Start]: RequestAddMultiMembersToGroup! [AppId]: %s", appId);
-    DEV_AUTH_REPORT_CALL_EVENT(ADD_MULTI_MEMBER_EVENT, osAccountId, DEFAULT_REQUEST_ID, appId);
+    LOGI("[Start]: [AppId]: %s", appId);
     CJson *params = CreateJsonFromString(addParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -602,11 +620,18 @@ static int32_t RequestAddMultiMembersToGroup(int32_t osAccountId, const char *ap
         res = HC_ERR_INVALID_PARAMS;
     }
     FreeJson(params);
-    LOGI("[End]: RequestAddMultiMembersToGroup!");
+    LOGI("[End]: [Res]: %d!", res);
     return res;
 }
 
-static int32_t RequestDelMultiMembersFromGroup(int32_t osAccountId, const char *appId, const char *deleteParams)
+static int32_t RequestAddMultiMembersToGroup(int32_t osAccountId, const char *appId, const char *addParams)
+{
+    int32_t res = AddMultiMembersToGroupInner(osAccountId, appId, addParams);
+    DEV_AUTH_REPORT_CALL_EVENT(DEFAULT_REQUEST_ID, ADD_MULTI_MEMBER_EVENT, appId, osAccountId, res);
+    return res;
+}
+
+static int32_t DelMultiMembersFromGroupInner(int32_t osAccountId, const char *appId, const char *deleteParams)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((appId == NULL) || (deleteParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
@@ -617,8 +642,7 @@ static int32_t RequestDelMultiMembersFromGroup(int32_t osAccountId, const char *
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("[Start]: RequestDelMultiMembersFromGroup! [AppId]: %s", appId);
-    DEV_AUTH_REPORT_CALL_EVENT(DEL_MULTI_MEMBER_EVENT, osAccountId, DEFAULT_REQUEST_ID, appId);
+    LOGI("[Start]: [AppId]: %s", appId);
     CJson *params = CreateJsonFromString(deleteParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -646,7 +670,14 @@ static int32_t RequestDelMultiMembersFromGroup(int32_t osAccountId, const char *
         res = HC_ERR_INVALID_PARAMS;
     }
     FreeJson(params);
-    LOGI("[End]: RequestDelMultiMembersFromGroup!");
+    LOGI("[End]: [Res]: %d!", res);
+    return res;
+}
+
+static int32_t RequestDelMultiMembersFromGroup(int32_t osAccountId, const char *appId, const char *deleteParams)
+{
+    int32_t res = DelMultiMembersFromGroupInner(osAccountId, appId, deleteParams);
+    DEV_AUTH_REPORT_CALL_EVENT(DEFAULT_REQUEST_ID, DEL_MULTI_MEMBER_EVENT, appId, osAccountId, res);
     return res;
 }
 

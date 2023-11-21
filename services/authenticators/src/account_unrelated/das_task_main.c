@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -283,6 +283,18 @@ ERR:
     return res;
 }
 
+#ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+static bool ShouldSkipIso(Task *task, const CJson *in)
+{
+    if (task->versionInfo.opCode != OP_BIND) {
+        return false;
+    }
+    int32_t protocolExpandVal = INVALID_PROTOCOL_EXPAND_VALUE;
+    (void)GetIntFromJson(in, FIELD_PROTOCOL_EXPAND, &protocolExpandVal);
+    return protocolExpandVal != LITE_PROTOCOL_STANDARD_MODE && protocolExpandVal != LITE_PROTOCOL_COMPATIBILITY_MODE;
+}
+#endif
+
 static int CreateMultiSubTask(Task *task, const CJson *in)
 {
     InitVersionInfo(&(task->versionInfo));
@@ -290,6 +302,12 @@ static int CreateMultiSubTask(Task *task, const CJson *in)
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_protocolEntityVec, index, ptr) {
         DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
+    #ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+        if (temp->type == ISO && ShouldSkipIso(task, in)) {
+            LOGI("Skip iso protocol!");
+            continue;
+        }
+    #endif
         SubTaskBase *subTask = temp->createSubTask(in);
         if (subTask == NULL) {
             LOGE("Create subTask failed, protocolType: %d.", temp->type);
@@ -325,6 +343,12 @@ static int CreateSingleSubTask(Task *task, const CJson *in)
     void **ptr = NULL;
     FOR_EACH_HC_VECTOR(g_protocolEntityVec, index, ptr) {
         if (((DasProtocolEntity *)(*ptr))->type == protocolType) {
+        #ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+            if (protocolType == ISO && ShouldSkipIso(task, in)) {
+                LOGE("Skip iso protocol!");
+                return HC_ERR_NOT_SUPPORT;
+            }
+        #endif
             DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
             SubTaskBase *subTask = temp->createSubTask(in);
             if (subTask == NULL) {

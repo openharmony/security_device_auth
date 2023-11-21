@@ -20,6 +20,7 @@
 #include "hc_types.h"
 #include "iso_protocol.h"
 #include "ec_speke_protocol.h"
+#include "dl_speke_protocol.h"
 
 #define MAX_MSG_LEN 1024
 
@@ -38,6 +39,9 @@ typedef struct {
 static const ProtocolComponent PROTOCOL_COMPONENT_LIB[] = {
 #ifdef ENABLE_EC_SPEKE
     { PROTOCOL_TYPE_EC_SPEKE, CreateEcSpekeProtocol },
+#endif
+#ifdef ENABLE_P2P_BIND_DL_SPEKE
+    { PROTOCOL_TYPE_DL_SPEKE, CreateDlSpekeProtocol },
 #endif
 #ifdef ENABLE_ISO
     { PROTOCOL_TYPE_ISO, CreateIsoProtocol },

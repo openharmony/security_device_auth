@@ -212,14 +212,14 @@ static int32_t GetIdentityInfos(int32_t osAccountId, const CJson *in, const Grou
     return HC_SUCCESS;
 }
 
-static int32_t GetCredInfosForPinType(IdentityInfoVec *identityInfoVec)
+static int32_t GetCredInfosForPinType(const CJson *in, IdentityInfoVec *identityInfoVec)
 {
     IdentityInfo *info = CreateIdentityInfo();
     if (info == NULL) {
         LOGE("Failed to create identity info!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t ret = GetIdentityInfoByType(KEY_TYPE_SYM, TRUST_TYPE_PIN, NULL, info);
+    int32_t ret = GetIdentityInfoForPinType(in, info);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to get credential info for pin!");
         DestroyIdentityInfo(info);
@@ -285,7 +285,7 @@ static int32_t GetCredInfoByPeerUrlInner(const CJson *in, const Uint8Buff *presh
     int32_t ret;
     switch (trustType) {
         case TRUST_TYPE_PIN:
-            ret = GetIdentityInfoByType(KEY_TYPE_SYM, TRUST_TYPE_PIN, NULL, info);
+            ret = GetIdentityInfoForPinType(in, info);
             break;
         case TRUST_TYPE_UID:
             ret = GetAccountSymCredInfoByPeerUrl(in, urlJson, info);
@@ -310,6 +310,10 @@ static int32_t GetSharedSecretForPinInPake(const CJson *in, Uint8Buff *sharedSec
         return HC_ERR_JSON_GET;
     }
     uint32_t pinLen = strlen(pinCode);
+    if (pinLen < PIN_CODE_LEN_SHORT) {
+        LOGE("Invalid pin code len!");
+        return HC_ERR_INVALID_LEN;
+    }
     sharedSecret->val = (uint8_t *)HcMalloc(pinLen, 0);
     if (sharedSecret->val == NULL) {
         LOGE("Failed to alloc sharedSecret memory!");
@@ -381,6 +385,19 @@ static int32_t AuthGeneratePskUsePin(const Uint8Buff *seed, const char *pinCode,
     return GetLoaderInstance()->computeHmac(&hashBuf, seed, sharedSecret, false);
 }
 
+#ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+static bool CheckPinLenForStandardIso(const CJson *in, const char *pinCode)
+{
+    int32_t protocolExpandVal = INVALID_PROTOCOL_EXPAND_VALUE;
+    (void)GetIntFromJson(in, FIELD_PROTOCOL_EXPAND, &protocolExpandVal);
+    if (protocolExpandVal != LITE_PROTOCOL_STANDARD_MODE) {
+        LOGI("not standard iso, no need to check.");
+        return true;
+    }
+    return HcStrlen(pinCode) >= PIN_CODE_LEN_LONG;
+}
+#endif
+
 static int32_t GetSharedSecretForPinInIso(const CJson *in, Uint8Buff *sharedSecret)
 {
     const char *pinCode = GetStringFromJson(in, FIELD_PIN_CODE);
@@ -388,6 +405,16 @@ static int32_t GetSharedSecretForPinInIso(const CJson *in, Uint8Buff *sharedSecr
         LOGE("Failed to get pinCode!");
         return HC_ERR_JSON_GET;
     }
+    if (HcStrlen(pinCode) < PIN_CODE_LEN_SHORT) {
+        LOGE("Pin code is too short!");
+        return HC_ERR_INVALID_LEN;
+    }
+#ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+    if (!CheckPinLenForStandardIso(in, pinCode)) {
+        LOGE("Invalid pin code len!");
+        return HC_ERR_INVALID_LEN;
+    }
+#endif
     uint8_t *seedVal = (uint8_t *)HcMalloc(SEED_LEN, 0);
     if (seedVal == NULL) {
         LOGE("Failed to alloc seed memory!");
@@ -768,7 +795,7 @@ int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *identityInf
     }
     const char *pinCode = GetStringFromJson(in, FIELD_PIN_CODE);
     if (pinCode != NULL) {
-        return GetCredInfosForPinType(identityInfoVec);
+        return GetCredInfosForPinType(in, identityInfoVec);
     } else {
         return GetCredInfosForGroups(in, identityInfoVec);
     }

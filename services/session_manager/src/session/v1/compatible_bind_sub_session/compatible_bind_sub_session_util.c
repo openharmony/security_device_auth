@@ -19,7 +19,9 @@
 #include "dev_auth_module_manager.h"
 #include "group_operation_common.h"
 #include "hc_log.h"
+#include "hc_time.h"
 #include "hitrace_adapter.h"
+#include "performance_dumper.h"
 
 static int32_t AddPinCode(const CJson *returnData, CJson *jsonParams)
 {
@@ -186,6 +188,7 @@ int32_t TransmitBindSessionData(const CompatibleBindSubSession *session, const C
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     DEV_AUTH_START_TRACE(TRACE_TAG_SEND_DATA);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(session->reqId, HcGetCurTimeInMillis());
     int32_t res = HcSendMsg(session->channelType, session->reqId, session->channelId,
         session->base.callback, sendDataStr);
     DEV_AUTH_FINISH_TRACE();

@@ -28,6 +28,7 @@ int32_t GetSelfDeviceEntry(int32_t osAccountId, const char *groupId, TrustedDevi
 const char *GetPeerDevIdFromJson(const CJson *in, bool *isUdid);
 int32_t GetPeerDeviceEntry(int32_t osAccountId, const CJson *in, const char *groupId,
     TrustedDeviceEntry *returnDeviceEntry);
+int32_t GetIdentityInfoForPinType(const CJson *in, IdentityInfo *info);
 int32_t GetIdentityInfoByType(int32_t keyType, int32_t trustType, const char *groupId, IdentityInfo *info);
 void FreeBuffData(Uint8Buff *buff);
 

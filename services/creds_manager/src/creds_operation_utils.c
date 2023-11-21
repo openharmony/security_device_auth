@@ -15,6 +15,7 @@
 
 #include "creds_operation_utils.h"
 
+#include "common_defs.h"
 #include "creds_manager_defines.h"
 #include "device_auth.h"
 #include "device_auth_defines.h"
@@ -28,7 +29,76 @@
 IMPLEMENT_HC_VECTOR(ProtocolEntityVec, ProtocolEntity*, 1)
 IMPLEMENT_HC_VECTOR(IdentityInfoVec, IdentityInfo*, 1)
 
-static int32_t SetProtocolsForPinType(IdentityInfo *info)
+static int32_t SetDlSpekeProtocol(IdentityInfo *info)
+{
+#ifdef ENABLE_P2P_BIND_DL_SPEKE
+    ProtocolEntity *dlSpekeEntity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
+    if (dlSpekeEntity == NULL) {
+        LOGE("Failed to alloc memory for dl speke entity!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    dlSpekeEntity->protocolType = ALG_DL_SPEKE;
+    dlSpekeEntity->expandProcessCmds = CMD_IMPORT_AUTH_CODE | CMD_ADD_TRUST_DEVICE;
+    if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&dlSpekeEntity) == NULL) {
+        LOGE("Failed to push dl speke entity!");
+        HcFree(dlSpekeEntity);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    return HC_SUCCESS;
+#else
+    (void)info;
+    return HC_SUCCESS;
+#endif
+}
+
+static int32_t SetIsoProtocol(IdentityInfo *info)
+{
+#ifdef ENABLE_P2P_BIND_ISO
+    ProtocolEntity *isoEntity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
+    if (isoEntity == NULL) {
+        LOGE("Failed to alloc memory for iso entity!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    isoEntity->protocolType = ALG_ISO;
+    isoEntity->expandProcessCmds = CMD_IMPORT_AUTH_CODE | CMD_ADD_TRUST_DEVICE;
+    if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&isoEntity) == NULL) {
+        LOGE("Failed to push iso entity!");
+        HcFree(isoEntity);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    return HC_SUCCESS;
+#else
+    (void)info;
+    return HC_SUCCESS;
+#endif
+}
+
+static int32_t SetLiteProtocols(IdentityInfo *info)
+{
+    int32_t res = SetDlSpekeProtocol(info);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    return SetIsoProtocol(info);
+}
+
+static int32_t SetLiteProtocolsForPinType(const CJson *in, IdentityInfo *info)
+{
+#ifndef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+    (void)in;
+    return SetLiteProtocols(info);
+#else
+    int32_t protocolExpandVal = INVALID_PROTOCOL_EXPAND_VALUE;
+    (void)GetIntFromJson(in, FIELD_PROTOCOL_EXPAND, &protocolExpandVal);
+    int32_t res = HC_SUCCESS;
+    if (protocolExpandVal == LITE_PROTOCOL_STANDARD_MODE || protocolExpandVal == LITE_PROTOCOL_COMPATIBILITY_MODE) {
+        res = SetLiteProtocols(info);
+    }
+    return res;
+#endif
+}
+
+static int32_t SetProtocolsForPinType(const CJson *in, IdentityInfo *info)
 {
 #ifdef ENABLE_P2P_BIND_EC_SPEKE
     ProtocolEntity *ecSpekeEntity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
@@ -38,30 +108,14 @@ static int32_t SetProtocolsForPinType(IdentityInfo *info)
     }
     ecSpekeEntity->protocolType = ALG_EC_SPEKE;
     ecSpekeEntity->expandProcessCmds = CMD_EXCHANGE_PK | CMD_ADD_TRUST_DEVICE;
-    info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&ecSpekeEntity);
-#endif
-
-    ProtocolEntity *dlSpekeEntity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
-    if (dlSpekeEntity == NULL) {
-        LOGE("Failed to alloc memory for dl speke entity!");
+    if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&ecSpekeEntity) == NULL) {
+        LOGE("Failed to push ec speke entity!");
+        HcFree(ecSpekeEntity);
         return HC_ERR_ALLOC_MEMORY;
     }
-    dlSpekeEntity->protocolType = ALG_DL_SPEKE;
-    dlSpekeEntity->expandProcessCmds = CMD_IMPORT_AUTH_CODE | CMD_ADD_TRUST_DEVICE;
-    info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&dlSpekeEntity);
-
-#ifdef ENABLE_P2P_BIND_ISO
-    ProtocolEntity *isoEntity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
-    if (isoEntity == NULL) {
-        LOGE("Failed to alloc memory for iso entity!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    isoEntity->protocolType = ALG_ISO;
-    isoEntity->expandProcessCmds = CMD_IMPORT_AUTH_CODE | CMD_ADD_TRUST_DEVICE;
-    info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&isoEntity);
 #endif
 
-    return HC_SUCCESS;
+    return SetLiteProtocolsForPinType(in, info);
 }
 
 static int32_t SetProtocolsForUidType(IdentityInfo *info)
@@ -133,9 +187,7 @@ static int32_t SetPreSharedUrlForProof(const char *urlStr, Uint8Buff *preSharedU
 
 static int32_t SetProtocolsForPresharedCred(int32_t trustType, int32_t keyType, IdentityInfo *info)
 {
-    if (trustType == TRUST_TYPE_PIN) {
-        return SetProtocolsForPinType(info);
-    } else if (trustType == TRUST_TYPE_UID) {
+    if (trustType == TRUST_TYPE_UID) {
         return SetProtocolsForUidType(info);
     } else {
         return SetProtocolsForP2pType(keyType, info);
@@ -173,6 +225,52 @@ int32_t GetPeerDeviceEntry(int32_t osAccountId, const CJson *in, const char *gro
         return HC_ERR_JSON_GET;
     }
     return GaGetTrustedDeviceEntryById(osAccountId, peerDeviceId, isUdid, groupId, returnDeviceEntry);
+}
+
+int32_t GetIdentityInfoForPinType(const CJson *in, IdentityInfo *info)
+{
+    CJson *urlJson = CreateJson();
+    if (urlJson == NULL) {
+        LOGE("Failed to create url json!");
+        return HC_ERR_JSON_CREATE;
+    }
+    if (AddIntToJson(urlJson, PRESHARED_URL_CREDENTIAL_TYPE, PRE_SHARED) != HC_SUCCESS) {
+        LOGE("Failed to add credential type!");
+        FreeJson(urlJson);
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(urlJson, PRESHARED_URL_KEY_TYPE, KEY_TYPE_SYM) != HC_SUCCESS) {
+        LOGE("Failed to add key type!");
+        FreeJson(urlJson);
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(urlJson, PRESHARED_URL_TRUST_TYPE, TRUST_TYPE_PIN) != HC_SUCCESS) {
+        LOGE("Failed to add trust type!");
+        FreeJson(urlJson);
+        return HC_ERR_JSON_ADD;
+    }
+    char *urlStr = PackJsonToString(urlJson);
+    FreeJson(urlJson);
+    if (urlStr == NULL) {
+        LOGE("Failed to pack url json to string!");
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+
+    int32_t ret = SetPreSharedUrlForProof(urlStr, &info->proof.preSharedUrl);
+    FreeJsonString(urlStr);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to set preSharedUrl of proof!");
+        return ret;
+    }
+
+    ret = SetProtocolsForPinType(in, info);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to set protocols!");
+        return ret;
+    }
+
+    info->proofType = PRE_SHARED;
+    return ret;
 }
 
 int32_t GetIdentityInfoByType(int32_t keyType, int32_t trustType, const char *groupId, IdentityInfo *info)

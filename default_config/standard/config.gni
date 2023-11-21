@@ -18,8 +18,10 @@ declare_args() {
   enable_account = true
   enable_pseudonym = true
 
-  enable_p2p_bind_lite_protocol = false
-  enable_p2p_auth_lite_protocol = false
+  enable_p2p_bind_lite_protocol = true
+  enable_p2p_bind_dl_speke_protocol = true
+  enable_p2p_bind_lite_protocol_check = true
+  enable_p2p_auth_lite_protocol = true
   enable_p2p_bind_standard_protocol = true
   enable_p2p_auth_standard_protocol = true
 

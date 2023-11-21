@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,9 @@
 #include <time.h>
 #include "hc_log.h"
 
+#define SECOND_TO_MILLISECOND 1000
+#define MILLISECOND_TO_NANOSECOND 1000000
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,6 +34,17 @@ int64_t HcGetCurTime(void)
         return -1;
     }
     return start.tv_sec;
+}
+
+int64_t HcGetCurTimeInMillis(void)
+{
+    struct timespec start;
+    int res = clock_gettime(CLOCK_MONOTONIC, &start);
+    if (res != 0) {
+        LOGE("[TIMER]: clock_gettime fail. [Res] :%d", res);
+        return -1;
+    }
+    return start.tv_sec * SECOND_TO_MILLISECOND + start.tv_nsec / MILLISECOND_TO_NANOSECOND;
 }
 
 int64_t HcGetIntervalTime(int64_t startTime)

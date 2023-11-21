@@ -20,6 +20,8 @@ declare_args() {
   enable_pseudonym = false
 
   enable_p2p_bind_lite_protocol = true
+  enable_p2p_bind_dl_speke_protocol = false
+  enable_p2p_bind_lite_protocol_check = false
   enable_p2p_auth_lite_protocol = true
   enable_p2p_bind_standard_protocol = false
   enable_p2p_auth_standard_protocol = false

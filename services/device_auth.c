@@ -29,6 +29,7 @@
 #include "hc_dev_info.h"
 #include "hc_init_protection.h"
 #include "hc_log.h"
+#include "hc_time.h"
 #include "hisysevent_adapter.h"
 #include "hitrace_adapter.h"
 #include "json_utils.h"
@@ -37,6 +38,7 @@
 #include "plugin_adapter.h"
 #include "pseudonym_manager.h"
 #include "task_manager.h"
+#include "performance_dumper.h"
 
 static GroupAuthManager *g_groupAuthManager =  NULL;
 static DeviceGroupManager *g_groupManagerInstance = NULL;
@@ -468,6 +470,54 @@ static int32_t PushProcSessionTask(int64_t sessionId, CJson *receivedMsg)
     return HC_SUCCESS;
 }
 
+#ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+// If bind with iso short pin, groupVisibility must be private
+static int32_t CheckGroupVisibility(const CJson *context)
+{
+    int32_t osAccountId = INVALID_OS_ACCOUNT;
+    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
+    const char *groupId = GetStringFromJson(context, FIELD_GROUP_ID);
+    if (groupId == NULL) {
+        LOGE("Failed to get groupId!");
+        return HC_ERR_JSON_GET;
+    }
+    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
+    if (entry == NULL) {
+        LOGE("Failed to get group entry!");
+        return HC_ERR_GROUP_NOT_EXIST;
+    }
+    if (entry->visibility != GROUP_VISIBILITY_PRIVATE) {
+        LOGE("Group is not private, can not bind old version wearable device!");
+        DestroyGroupEntry(entry);
+        return HC_ERR_INVALID_PARAMS;
+    }
+    DestroyGroupEntry(entry);
+    return HC_SUCCESS;
+}
+#endif
+
+#ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+static int32_t CheckBindParams(const CJson *context, bool isClient)
+{
+    int32_t opCode;
+    if (GetIntFromJson(context, FIELD_OPERATION_CODE, &opCode) != HC_SUCCESS) {
+        LOGE("Failed to get operation code!");
+        return HC_ERR_JSON_GET;
+    }
+    if ((isClient && opCode == MEMBER_INVITE) || (!isClient && opCode == MEMBER_JOIN)) {
+        int32_t protocolExpandVal = INVALID_PROTOCOL_EXPAND_VALUE;
+        (void)GetIntFromJson(context, FIELD_PROTOCOL_EXPAND, &protocolExpandVal);
+        if (protocolExpandVal == LITE_PROTOCOL_COMPATIBILITY_MODE) {
+            return CheckGroupVisibility(context);
+        }
+    }
+    return HC_SUCCESS;
+}
+#endif
+
 static int32_t StartClientBindSession(int32_t osAccountId, int64_t requestId, const char *appId,
     const char *contextParams, const DeviceAuthCallback *callback)
 {
@@ -481,6 +531,13 @@ static int32_t StartClientBindSession(int32_t osAccountId, int64_t requestId, co
         FreeJson(context);
         return res;
     }
+#ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+    res = CheckBindParams(context, true);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+#endif
     ChannelType channelType = GetChannelType(callback, context);
     SessionInitParams params = { context, *callback };
     res = OpenDevSession(requestId, appId, &params);
@@ -498,10 +555,36 @@ static int32_t StartClientBindSession(int32_t osAccountId, int64_t requestId, co
     return HC_SUCCESS;
 }
 
-static int32_t AddMemberToGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *addParams)
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+static const char *GetAddMemberCallEventFuncName(const char *addParams)
+{
+    if (addParams == NULL) {
+        LOGE("add params is null!");
+        return ADD_MEMBER_EVENT;
+    }
+    CJson *in = CreateJsonFromString(addParams);
+    if (in == NULL) {
+        LOGE("Failed to create json param!");
+        return ADD_MEMBER_EVENT;
+    }
+    int32_t protocolExpandVal = INVALID_PROTOCOL_EXPAND_VALUE;
+    (void)GetIntFromJson(in, FIELD_PROTOCOL_EXPAND, &protocolExpandVal);
+    FreeJson(in);
+    if (protocolExpandVal == LITE_PROTOCOL_STANDARD_MODE) {
+        return ADD_MEMBER_WITH_LITE_STANDARD;
+    } else if (protocolExpandVal == LITE_PROTOCOL_COMPATIBILITY_MODE) {
+        return ADD_MEMBER_WITH_LITE_COMPATIBILITY;
+    } else {
+        return ADD_MEMBER_EVENT;
+    }
+}
+#endif
+
+static int32_t AddMemberToGroupInner(int32_t osAccountId, int64_t requestId, const char *appId, const char *addParams)
 {
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(requestId);
+    ADD_PERFORM_DATA(requestId, true, true, HcGetCurTimeInMillis());
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((appId == NULL) || (addParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
@@ -511,14 +594,23 @@ static int32_t AddMemberToGroup(int32_t osAccountId, int64_t requestId, const ch
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("[Start]: AddMemberToGroup! [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
-    DEV_AUTH_REPORT_CALL_EVENT(ADD_MEMBER_EVENT, osAccountId, requestId, appId);
+    LOGI("[Start]: [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
     const DeviceAuthCallback *callback = GetGMCallbackByAppId(appId);
     if (callback == NULL) {
         LOGE("Failed to find callback by appId! [AppId]: %s", appId);
         return HC_ERR_CALLBACK_NOT_FOUND;
     }
     return StartClientBindSession(osAccountId, requestId, appId, addParams, callback);
+}
+
+static int32_t AddMemberToGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *addParams)
+{
+    int32_t res = AddMemberToGroupInner(osAccountId, requestId, appId, addParams);
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    const char *callEventFuncName = GetAddMemberCallEventFuncName(addParams);
+    DEV_AUTH_REPORT_CALL_EVENT(requestId, callEventFuncName, appId, osAccountId, res);
+#endif
+    return res;
 }
 
 static int32_t CheckAndGetValidOsAccountId(const CJson *context, int32_t *osAccountId)
@@ -620,13 +712,19 @@ static int32_t CheckAcceptRequest(const CJson *context)
     return HC_SUCCESS;
 }
 
-static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg)
+static const char *GetAppIdFromReceivedMsg(const CJson *receivedMsg)
 {
     const char *appId = GetStringFromJson(receivedMsg, FIELD_APP_ID);
     if (appId == NULL) {
-        appId = DM_APP_ID;
         LOGW("use default device manager appId.");
+        appId = DM_APP_ID;
     }
+    return appId;
+}
+
+static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg)
+{
+    const char *appId = GetAppIdFromReceivedMsg(receivedMsg);
     const DeviceAuthCallback *callback = GetGMCallbackByAppId(appId);
     if (callback == NULL) {
         LOGE("Failed to find callback by appId! [AppId]: %s", appId);
@@ -660,6 +758,13 @@ static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg
         FreeJson(context);
         return res;
     }
+#ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+    res = CheckBindParams(context, false);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+#endif
     SessionInitParams params = { context, *callback };
     res = OpenDevSession(requestId, appId, &params);
     FreeJson(context);
@@ -670,6 +775,11 @@ static int32_t ProcessBindData(int64_t requestId, const uint8_t *data, uint32_t 
 {
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(requestId);
+    if (!IsSessionExist(requestId)) {
+        ADD_PERFORM_DATA(requestId, true, false, HcGetCurTimeInMillis());
+    } else {
+        UPDATE_PERFORM_DATA_BY_SELF_INDEX(requestId, HcGetCurTimeInMillis());
+    }
     if ((data == NULL) || (dataLen == 0) || (dataLen > MAX_DATA_BUFFER_SIZE)) {
         LOGE("The input data is invalid!");
         return HC_ERR_INVALID_PARAMS;
@@ -750,6 +860,7 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
 {
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(authReqId);
+    ADD_PERFORM_DATA(authReqId, false, true, HcGetCurTimeInMillis());
     LOGI("Begin AuthDevice. [ReqId]:%" PRId64, authReqId);
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((authParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT) || (gaCallback == NULL)) {
@@ -903,6 +1014,11 @@ static int32_t ProcessData(int64_t authReqId, const uint8_t *data, uint32_t data
 {
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(authReqId);
+    if (!IsSessionExist(authReqId)) {
+        ADD_PERFORM_DATA(authReqId, false, false, HcGetCurTimeInMillis());
+    } else {
+        UPDATE_PERFORM_DATA_BY_SELF_INDEX(authReqId, HcGetCurTimeInMillis());
+    }
     LOGI("[GA] Begin ProcessData. [DataLen]: %u, [ReqId]: %" PRId64, dataLen, authReqId);
     if ((data == NULL) || (dataLen > MAX_DATA_BUFFER_SIZE)) {
         LOGE("Invalid input for ProcessData!");
@@ -1085,6 +1201,7 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
         DestroyGmAndGa();
         return res;
     }
+    INIT_PERFORMANCE_DUMPER();
     (void)GenerateDeviceKeyPair();
     InitPseudonymModule();
     DEV_AUTH_LOAD_PLUGIN();
@@ -1109,6 +1226,7 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
     DestroyCredMgr();
     DestroyChannelManager();
     DestroyCallbackManager();
+    DESTROY_PERFORMANCE_DUMPER();
     DestroyPseudonymManager();
     DestroyOsAccountAdapter();
     SetDeInitStatus();

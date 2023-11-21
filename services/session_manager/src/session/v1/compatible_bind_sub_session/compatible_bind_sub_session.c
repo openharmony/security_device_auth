@@ -24,8 +24,10 @@
 #include "group_operation_common.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
+#include "hc_time.h"
 #include "hc_types.h"
 #include "hitrace_adapter.h"
+#include "performance_dumper.h"
 
 static int32_t CheckInvitePeer(const CJson *jsonParams)
 {
@@ -262,6 +264,7 @@ static int32_t InformSelfBindSuccess(const char *peerAuthId, const char *peerUdi
 {
     uint8_t sessionKey[DEFAULT_RETURN_KEY_LENGTH] = { 0 };
     if (GetByteFromJson(out, FIELD_SESSION_KEY, sessionKey, DEFAULT_RETURN_KEY_LENGTH) == HC_SUCCESS) {
+        UPDATE_PERFORM_DATA_BY_INPUT_INDEX(session->reqId, ON_SESSION_KEY_RETURN_TIME, HcGetCurTimeInMillis());
         ProcessSessionKeyCallback(session->reqId, sessionKey, DEFAULT_RETURN_KEY_LENGTH, session->base.callback);
         (void)memset_s(sessionKey, DEFAULT_RETURN_KEY_LENGTH, 0, DEFAULT_RETURN_KEY_LENGTH);
         ClearSensitiveStringInJson(out, FIELD_SESSION_KEY);
@@ -273,6 +276,7 @@ static int32_t InformSelfBindSuccess(const char *peerAuthId, const char *peerUdi
         LOGE("Failed to generate the data to be sent to the service!");
         return result;
     }
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(session->reqId, ON_FINISH_TIME, HcGetCurTimeInMillis());
     ProcessFinishCallback(session->reqId, session->opCode, jsonDataStr, session->base.callback);
     FreeJsonString(jsonDataStr);
     return HC_SUCCESS;

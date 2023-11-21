@@ -16,27 +16,34 @@
 #ifndef HIDUMP_ADAPTER_H
 #define HIDUMP_ADAPTER_H
 
+#include <stdio.h>
+#include "hc_string_vector.h"
+
+#define PERFORM_DUMP_ARG "performance"
+
+typedef void (*DumpCallBack)(int);
+typedef void (*PerformanceDumpCallBack)(int, StringVector *);
+
 #ifndef DEV_AUTH_HIVIEW_ENABLE
 
-#define DEV_AUTH_DUMP(fd)
+#define DEV_AUTH_DUMP(fd, strArgVec)
 #define DEV_AUTH_REG_DUMP_FUNC(func)
+#define DEV_AUTH_REG_PERFORM_DUMP_FUNC(func)
 
 #else
 
-#include <stdio.h>
-
-#define DEV_AUTH_DUMP(fd) DevAuthDump(fd)
+#define DEV_AUTH_DUMP(fd, strArgVec) DevAuthDump(fd, strArgVec)
 #define DEV_AUTH_REG_DUMP_FUNC(func) RegisterDumpFunc(func)
-
-typedef void (*DumpCallBack)(int);
+#define DEV_AUTH_REG_PERFORM_DUMP_FUNC(func) RegisterPerformDumpFunc(func)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void DevAuthDump(int fd);
+void DevAuthDump(int fd, StringVector *strArgVec);
 
 void RegisterDumpFunc(DumpCallBack func);
+void RegisterPerformDumpFunc(PerformanceDumpCallBack func);
 
 #ifdef __cplusplus
 }
