@@ -58,17 +58,14 @@ namespace OHOS {
 
     bool GetInstanceFuzz(const uint8_t *data, size_t size)
     {
-        int ret;
-        std::string str(reinterpret_cast<const char *>(data), 9);
-        for (int i = 0; i < str.length(); i++) {
-            str[i] = str[i] % str.length() + '0';
+        if ((data == nullptr) || (size < sizeof(int32_t))) {
+            return false;
         }
-        int32_t sessionId = stoi(str);
+        int32_t sessionId = *reinterpret_cast<const int *>(data);
         hc_package_name package_name = {sizeof("hicar"), "hicar"};
         hc_service_type service_type = {sizeof("CarDevice"), "CarDevice"};
         struct session_identity identity;
-        ret = memset_s(&identity, sizeof(identity), 0, sizeof(identity));
-        if (ret != EOK) {
+        if (memset_s(&identity, sizeof(identity), 0, sizeof(identity)) != EOK) {
             return false;
         }
         identity.session_id = sessionId;
@@ -81,7 +78,7 @@ namespace OHOS {
     }
 }
 
-/* Fuzzer entry point*/
+/* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     OHOS::GetInstanceFuzz(data, size);

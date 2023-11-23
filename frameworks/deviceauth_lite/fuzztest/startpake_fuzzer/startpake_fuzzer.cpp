@@ -69,19 +69,18 @@ namespace OHOS {
         }
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
         hc_auth_id selfId;
+        hc_auth_id peerId;
         if (memset_s(&selfId, sizeof(struct hc_auth_id), 0, sizeof(struct hc_auth_id)) != EOK) {
             return false;
         }
-        selfId.length = strnlen(reinterpret_cast<const char *>(data), HC_AUTH_ID_BUFF_LEN);
-        if (memcpy_s(selfId.auth_id, HC_AUTH_ID_BUFF_LEN, data, selfId.length) != EOK) {
-            return false;
-        }
-
-        hc_auth_id peerId;
         if (memset_s(&peerId, sizeof(struct hc_auth_id), 0, sizeof(struct hc_auth_id)) != EOK) {
             return false;
         }
-        peerId.length = strnlen(reinterpret_cast<const char *>(data), HC_AUTH_ID_BUFF_LEN);
+        selfId.length = size > HC_AUTH_ID_BUFF_LEN ? HC_AUTH_ID_BUFF_LEN : size;
+        if (memcpy_s(selfId.auth_id, HC_AUTH_ID_BUFF_LEN, data, selfId.length) != EOK) {
+            return false;
+        }
+        peerId.length = size > HC_AUTH_ID_BUFF_LEN ? HC_AUTH_ID_BUFF_LEN : size;
         if (memcpy_s(peerId.auth_id, HC_AUTH_ID_BUFF_LEN, data, peerId.length) != EOK) {
             return false;
         }
@@ -92,18 +91,14 @@ namespace OHOS {
         }
         params.self_auth_id = selfId;
         params.peer_auth_id = peerId;
-        std::string str(reinterpret_cast<const char *>(data), 9);
-        for (int i = 0; i < str.length(); i++) {
-            str[i] = str[i] % str.length() + '0';
-        }
-        params.key_length = stoi(str);
+        params.key_length = *reinterpret_cast<const uint32_t *>(data);
         start_pake(handle, &params);
         destroy(&handle);
         return true;
     }
 }
 
-/* Fuzzer entry point*/
+/* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     OHOS::StartPakeFuzz(data, size);

@@ -16,6 +16,8 @@
 #include "dellocalauthinfo_fuzzer.h"
 
 #include "hichain.h"
+#include "distribution.h"
+#include "securec.h"
 
 namespace OHOS {
     static void TransmitCb(const struct session_identity *identity, const void *data, uint32_t length)
@@ -61,11 +63,18 @@ namespace OHOS {
 
     bool DelLocalaAuthInfoFuzz(const uint8_t *data, size_t size)
     {
-        if ((data == nullptr) || (size < sizeof(int32_t))) {
+        if ((data == nullptr) || (size < sizeof(uint8_t))) {
             return false;
         }
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
-        hc_auth_id authId = {sizeof({*data;}), {*data}};
+        hc_auth_id authId;
+        if (memset_s(&authId, sizeof(authId), 0, sizeof(authId)) != EOK) {
+            return false;
+        }
+        authId.length = size > HC_AUTH_ID_BUFF_LEN ? HC_AUTH_ID_BUFF_LEN : size;
+        if (memcpy_s(authId.auth_id, HC_AUTH_ID_BUFF_LEN, data, authId.length) != EOK) {
+            return false;
+        }
         hc_user_info userInfo = {authId, 1};
         delete_local_auth_info(handle, &userInfo);
         destroy(&handle);
@@ -73,7 +82,7 @@ namespace OHOS {
     }
 }
 
-/* Fuzzer entry point*/
+/* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     OHOS::DelLocalaAuthInfoFuzz(data, size);
