@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020-2020. All rights reserved.
+ */
+/*
  * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,22 +67,37 @@ namespace OHOS {
 
     bool ListTrustPeerFuzz(const uint8_t *data, size_t size)
     {
-        int ret;
-        hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
-        struct hc_auth_id *peerAuthidList = (struct hc_auth_id *)malloc(MAX_LIST_NUM * sizeof(struct hc_auth_id));
-        ret = memset_s(peerAuthidList, MAX_LIST_NUM * sizeof(struct hc_auth_id),
-                       0, MAX_LIST_NUM * sizeof(struct hc_auth_id));
-        if (ret != EOK) {
+        if ((data == nullptr) || (size < sizeof(uint8_t))) {
             return false;
         }
-        struct hc_auth_id authId = {sizeof({*data;}), {*data}};
+        hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
+        struct hc_auth_id *peerAuthidList = new hc_auth_id[MAX_LIST_NUM];
+        if (peerAuthidList == nullptr) {
+            return false;
+        }
+        if (memset_s(peerAuthidList, MAX_LIST_NUM * sizeof(struct hc_auth_id),
+                     0, MAX_LIST_NUM * sizeof(struct hc_auth_id)) != EOK) {
+            delete[] peerAuthidList;
+            peerAuthidList = nullptr;
+            return false;
+        }
+        hc_auth_id authId;
+        if (memset_s(&authId, sizeof(authId), 0, sizeof(authId)) != EOK) {
+            return false;
+        }
+        authId.length = size > HC_AUTH_ID_BUFF_LEN ? HC_AUTH_ID_BUFF_LEN : size;
+        if (memcpy_s(authId.auth_id, HC_AUTH_ID_BUFF_LEN, data, authId.length) != EOK) {
+            return false;
+        }
         list_trust_peers(handle, 0, &authId, &peerAuthidList);
         destroy(&handle);
+        delete[] peerAuthidList;
+        peerAuthidList = nullptr;
         return true;
     }
 }
 
-/* Fuzzer entry point*/
+/* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     OHOS::ListTrustPeerFuzz(data, size);

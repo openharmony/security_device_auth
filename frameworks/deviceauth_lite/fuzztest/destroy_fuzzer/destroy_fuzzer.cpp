@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020-2020. All rights reserved.
+ */
+/*
  * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,19 +70,15 @@ namespace OHOS {
             return false;
         }
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
-        struct hichain *hichain = (struct hichain *)handle;
-        std::string str(reinterpret_cast<const char *>(data), 9);
-        for (int i = 0; i < str.length(); i++) {
-            str[i] = str[i] % str.length() + '0';
-        }
-        hichain->operation_code = stoi(str);
-        hc_handle server = (void *)hichain;
+        struct hichain *hichain = static_cast<struct hichain *>(handle);
+        hichain->operation_code = *reinterpret_cast<const int32_t *>(data);
+        hc_handle server = static_cast<void *>(hichain);
         destroy(&server);
         return true;
     }
 }
 
-/* Fuzzer entry point*/
+/* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     OHOS::DestroyFuzz(data, size);
