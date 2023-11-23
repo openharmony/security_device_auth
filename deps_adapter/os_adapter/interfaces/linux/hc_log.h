@@ -50,7 +50,7 @@ typedef enum {
 } DevAuthLogLevel;
 
 #ifndef DEV_AUTH_LOG_DOMAIN
-#define DEV_AUTH_LOG_DOMAIN 0xD002F00 /* Security subsystem's domain id */
+#define DEV_AUTH_LOG_DOMAIN 0xD002F03 /* Security subsystem's domain id */
 #endif
 
 #define LOGD(fmt, ...) (DevAuthLogPrint(DEV_AUTH_LOG_LEVEL_DEBUG, __FUNCTION__, fmt, ##__VA_ARGS__))
