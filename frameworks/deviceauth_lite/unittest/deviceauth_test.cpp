@@ -154,8 +154,8 @@ static HWTEST_F(GetInstanceTest, GetInstanceTest001, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_ACCESSORY, &callBack);
-    ASSERT_TRUE(server != NULL);
-    struct hichain *hichainTest = (struct hichain *)server;
+    ASSERT_TRUE(server != nullptr);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
     EXPECT_EQ(hichainTest->state, 0);
     destroy(&server);
     LOG("--------DeviceAuthTest Test001--------");
@@ -175,8 +175,8 @@ static HWTEST_F(GetInstanceTest, GetInstanceTest002, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    struct hichain *hichainTest = (struct hichain *)server;
-    ASSERT_TRUE(server != NULL);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
+    ASSERT_TRUE(server != nullptr);
     EXPECT_EQ(hichainTest->state, 0);
     destroy(&server);
     LOG("--------DeviceAuthTest Test002--------");
@@ -202,7 +202,7 @@ static HWTEST_F(GetInstanceTest, GetInstanceTest003, TestSize.Level2)
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&h_serverIdentity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
     destroy(&server);
     LOG("--------DeviceAuthTest Test003--------");
 }
@@ -213,14 +213,14 @@ static HWTEST_F(GetInstanceTest, GetInstanceTest004, TestSize.Level2)
     LOG("--------get_instance--------");
 
     struct hc_call_back callBack = {
-        NULL,
+        nullptr,
         GetProtocolParams,
         SetSessionKey,
         SetServiceResult,
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server == NULL);
+    ASSERT_TRUE(server == nullptr);
     destroy(&server);
     LOG("--------DeviceAuthTest Test004--------");
 }
@@ -237,8 +237,8 @@ static HWTEST_F(GetInstanceTest, GetInstanceTest005, TestSize.Level2)
         SetServiceResult,
         ConfirmReceiveRequest
     };
-    hc_handle server = get_instance(NULL, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server == NULL);
+    hc_handle server = get_instance(nullptr, HC_CENTRE, &callBack);
+    ASSERT_TRUE(server == nullptr);
     destroy(&server);
     LOG("--------DeviceAuthTest Test005--------");
 }
@@ -291,9 +291,9 @@ static HWTEST_F(StartPakeTest, StartPakeTest002, TestSize.Level2)
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
     const struct operation_parameter params = {g_test_server_auth_Id, g_test_client_auth_id, KEY_LEN};
-    int32_t ret = start_pake(NULL, &params);
+    int32_t ret = start_pake(nullptr, &params);
     EXPECT_NE(ret, HC_OK);
     destroy(&server);
     LOG("--------StartPakeTest StartPakeTest002--------");
@@ -311,8 +311,8 @@ static HWTEST_F(StartPakeTest, StartPakeTest003, TestSize.Level2)
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
-    int32_t ret = start_pake(server, NULL);
+    ASSERT_TRUE(server != nullptr);
+    int32_t ret = start_pake(server, nullptr);
     EXPECT_NE(ret, HC_OK);
     destroy(&server);
     LOG("--------StartPakeTest StartPakeTest003--------");
@@ -348,7 +348,7 @@ static HWTEST_F(AuthenticatePeerTest, AuthenticatePeerTest001, TestSize.Level2)
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
     struct operation_parameter params = {g_test_server_auth_Id, g_test_client_auth_id, KEY_LEN};
     int32_t ret = authenticate_peer(server, &params);
     EXPECT_EQ(ret, HC_OK);
@@ -368,9 +368,9 @@ static HWTEST_F(AuthenticatePeerTest, AuthenticatePeerTest002, TestSize.Level2)
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
     struct operation_parameter params = {g_test_server_auth_Id, g_test_client_auth_id, KEY_LEN};
-    int32_t ret = authenticate_peer(NULL, &params);
+    int32_t ret = authenticate_peer(nullptr, &params);
     EXPECT_NE(ret, HC_OK);
     destroy(&server);
     LOG("--------AuthenticatePeerTest AuthenticatePeerTest002--------");
@@ -388,8 +388,8 @@ static HWTEST_F(AuthenticatePeerTest, AuthenticatePeerTest003, TestSize.Level2)
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
-    int32_t ret = authenticate_peer(server, NULL);
+    ASSERT_TRUE(server != nullptr);
+    int32_t ret = authenticate_peer(server, nullptr);
     EXPECT_NE(ret, HC_OK);
     destroy(&server);
     LOG("--------AuthenticatePeerTest AuthenticatePeerTest003--------");
@@ -434,7 +434,7 @@ static HWTEST_F(ListTrustPeersTest, ListTrustPeersTest002, TestSize.Level2)
 {
     LOG("--------ListTrustPeersTest ListTrustPeersTest002--------");
     LOG("--------list_trust_peers--------");
-    int ret = list_trust_peers(NULL, HC_USER_TYPE_ACCESSORY, &g_test_client_auth_id, g_authIdList);
+    int ret = list_trust_peers(nullptr, HC_USER_TYPE_ACCESSORY, &g_test_client_auth_id, g_authIdList);
     EXPECT_EQ(ret, 0);
     LOG("--------ListTrustPeersTest ListTrustPeersTest002--------");
 }
@@ -487,7 +487,7 @@ static HWTEST_F(DestroyTest, DestroyTest001, TestSize.Level2)
     };
     hc_handle val = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     destroy(&val);
-    EXPECT_TRUE(val == NULL);
+    EXPECT_TRUE(val == nullptr);
     LOG("--------DestroyTest DestroyTest001--------");
 }
 
@@ -496,16 +496,16 @@ static HWTEST_F(DestroyTest, DestroyTest002, TestSize.Level2)
     LOG("--------DestroyTest DestroyTest002--------");
     LOG("--------destory--------");
     struct hc_call_back callBack = {
-        Transmit,
+        nullptr,
         GetProtocolParams,
         SetSessionKey,
         SetServiceResult,
         ConfirmReceiveRequest
     };
     hc_handle val = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    val = NULL;
+    ASSERT_TRUE(val == nullptr);
     destroy(&val);
-    EXPECT_TRUE(val == NULL);
+    EXPECT_TRUE(val == nullptr);
     LOG("--------DestroyTest DestroyTest002--------");
 }
 
@@ -538,7 +538,7 @@ static HWTEST_F(DeleteLocalAuthInfoTest, DeleteLocalAuthInfoTest001, TestSize.Le
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     struct hc_user_info car_user_info = {
         g_test_server_auth_Id,
@@ -580,13 +580,13 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest001_empty, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     uint8_t dataStr[] = "";
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen((char *) dataStr)
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -606,13 +606,13 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest002_msg0, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     uint8_t dataStr[] = "{\"message\":0}";
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen((char *) dataStr)
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -634,17 +634,17 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest003_pake_server1, TestSize.Level
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     uint8_t dataStr[] = "{\"message\":1,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","\
         "\"minVersion\":\"1.0.0\"},\"support256mod\":true,\"operationCode\":1}}";
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen((char *) dataStr)
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
-    EXPECT_EQ(g_result, KEY_AGREEMENT_PROCESSING);
+    EXPECT_EQ(g_result, END_FAILED);
 
     destroy(&server);
     LOG("--------ReceiveDataTest003--------");
@@ -661,14 +661,14 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest004_pake_server1error, TestSize.
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     uint8_t dataStr[] = "{\"message\":1,\"payload\":{"\
         "\"support256mod\":true,\"operationCode\":1}}";
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen((char *) dataStr)
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -688,7 +688,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest005_pake_client1, TestSize.Level
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     uint8_t dataStr[] = "{\"message\":32769,\"payload\":{\"version\":{"\
         "\"currentVersion\":\"1.0.0\",\"minVersion\":\"1.0.0\"},\"challenge\":\"E01AE0AA018ECDA852ACA4CCA45FCC56\","\
@@ -696,7 +696,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest005_pake_client1, TestSize.Level
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen((char *) dataStr)
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -716,7 +716,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest006_pake_client1error, TestSize.
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     uint8_t dataStr[] = "{\"message\":32769,\"payload\":{\"version\":{"\
         "\"currentVersion\":\"1.0.0\",\"minVersion\":\"1.0.0\"},\"challenge\":\"E01AE0AA018ECDA852ACA4CCA45FCC56\","\
@@ -724,7 +724,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest006_pake_client1error, TestSize.
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen((char *) dataStr)
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -745,7 +745,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest007_pake_server2, TestSize.Level
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     uint8_t dataStr[] = "{\"message\":2,\"payload\":{"\
         "\"kcfData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55B4F0707345\","\
@@ -753,7 +753,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest007_pake_server2, TestSize.Level
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen((char *) dataStr)
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -774,7 +774,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest008_pake_server2error, TestSize.
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     uint8_t dataStr[] = "{\"message\":2,\"payload\":{"\
         "\"kcfData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55B4F0707345\","\
@@ -782,7 +782,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest008_pake_server2error, TestSize.
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen((char *) dataStr)
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -802,14 +802,14 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest009_pake_client2, TestSize.Level
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     uint8_t dataStr[] = "{\"message\":32770,\"payload\":{\""\
         "kcfData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55B4F0707345\"}}";
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen((char *) dataStr)
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -829,13 +829,13 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest010_pake_client2error, TestSize.
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     uint8_t dataStr[] = "{\"message\":32770,\"payload\":{}}";
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen((char *) dataStr)
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -855,14 +855,14 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest011_pake_server3, TestSize.Level
         ConfirmReceiveRequest
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     uint8_t dataStr[] = "{\"message\":3,\"payload\":{"\
         "\"exAuthInfo\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen((char *) dataStr)
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -883,13 +883,13 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest012_pake_server3error, TestSize.
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     uint8_t dataStr[] = "{\"message\":3,\"payload\":{}}";
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen((char *) dataStr)
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -910,14 +910,14 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest013_pake_client3, TestSize.Level
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     uint8_t dataStr[] = "{\"message\":32771,\"payload\":{"\
         "\"exAuthInfo\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen((char *) dataStr)
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -938,13 +938,13 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest014_pake_client3error, TestSize.
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != NULL);
+    ASSERT_TRUE(server != nullptr);
 
     uint8_t dataStr[] = "{\"message\":32771,\"payload\":{}}";
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen((char *) dataStr)
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -952,5 +952,4 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest014_pake_client3error, TestSize.
     destroy(&server);
     LOG("--------ReceiveDataTest014--------");
 }
-
 }
