@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,7 @@
 #define STEP_ONE 1
 #define STEP_TWO 2
 #define STEP_THREE 3
-#define MIN_PIN_LEN 4
+#define MIN_PIN_LEN 6
 #define MAX_PIN_LEN 1024
 #define MIN_OUTPUT_KEY_LEN 16
 #define MAX_OUTPUT_KEY_LEN 32

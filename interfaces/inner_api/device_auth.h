@@ -68,6 +68,17 @@
 #define FIELD_AUTH_CODE "authCode"
 #define FIELD_DEVICE_LIST "deviceList"
 #define FIELD_IS_UDID_HASH "isUdidHash"
+#define FIELD_PROTOCOL_EXPAND "protocolExpand"
+
+/**
+ * @brief protocol expand value for bind
+ */
+typedef enum {
+    /** use this flag to support bind base on symmetric credential when interact with lite device */
+    LITE_PROTOCOL_STANDARD_MODE = 1,
+    /** use this flag when interact with lite device which used iso with short pin */
+    LITE_PROTOCOL_COMPATIBILITY_MODE = 2,
+} ProtocolExpandValue;
 
 /**
  * @brief type of local system account

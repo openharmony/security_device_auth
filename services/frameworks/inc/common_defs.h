@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -158,6 +158,9 @@
 #define ALL_GROUP_VISIBILITY (-2)
 #define INVALID_CRED 0
 #define PUBLIC_KEY_MAX_LENGTH 128
+#define PIN_CODE_LEN_SHORT 6
+#define PIN_CODE_LEN_LONG 128
+#define INVALID_PROTOCOL_EXPAND_VALUE (-1)
 
 typedef enum {
     NO_CHANNEL = 1,

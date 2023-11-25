@@ -16,14 +16,6 @@
 #ifndef HISYSEVENT_ADAPTER_H
 #define HISYSEVENT_ADAPTER_H
 
-#ifndef DEV_AUTH_HIVIEW_ENABLE
-
-#define DEV_AUTH_REPORT_CALL_EVENT(a, b, c, d)
-
-#else
-
-#include <stdint.h>
-
 #define CREATE_GROUP_EVENT "CreateGroup"
 #define DELETE_GROUP_EVENT "DeleteGroup"
 #define ADD_MEMBER_EVENT "AddMember"
@@ -31,14 +23,36 @@
 #define ADD_MULTI_MEMBER_EVENT "AddMultiMember"
 #define DEL_MULTI_MEMBER_EVENT "DelMultiMember"
 #define AUTH_DEV_EVENT "AuthDevice"
+#define ADD_MEMBER_WITH_LITE_COMPATIBILITY "AddMemberWithLiteCompatibility"
+#define ADD_MEMBER_WITH_LITE_STANDARD "AddMemberWithLiteStandard"
 
-#define DEV_AUTH_REPORT_CALL_EVENT(a, b, c, d) DevAuthReportCallEvent(a, b, c, d)
+#ifndef DEV_AUTH_HIVIEW_ENABLE
+
+#define DEV_AUTH_REPORT_CALL_EVENT(reqId, funcName, appId, osAccountId, callResult)
+#define DEV_AUTH_REPORT_FAULT_EVENT(funcName, faultReason, credType, groupType, appId)
+#define DEV_AUTH_REPORT_STATISTIC_EVENT(appId, callResult, funcName, credType, protocolType)
+
+#else
+
+#include <stdint.h>
+
+#define DEV_AUTH_REPORT_CALL_EVENT(reqId, funcName, appId, osAccountId, callResult) \
+    DevAuthReportCallEvent(reqId, funcName, appId, osAccountId, callResult)
+#define DEV_AUTH_REPORT_FAULT_EVENT(funcName, faultReason, credType, groupType, appId) \
+    DevAuthReportFaultEvent(funcName, faultReason, credType, groupType, appId)
+#define DEV_AUTH_REPORT_STATISTIC_EVENT(appId, callResult, funcName, credType, protocolType) \
+    DevAuthReportStatisticEvent(appId, callResult, funcName, credType, protocolType)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void DevAuthReportCallEvent(const char *funcName, int32_t osAccountId, int64_t reqId, const char *appId);
+void DevAuthReportCallEvent(int64_t reqId, const char *funcName, const char *appId, int32_t osAccountId,
+    int32_t callResult);
+void DevAuthReportFaultEvent(const char *funcName, int32_t faultReason, uint8_t credType, int32_t groupType,
+    const char *appId);
+void DevAuthReportStatisticEvent(const char *appId, int32_t callResult, const char *funcName, uint8_t credType,
+    int32_t protocolType);
 
 #ifdef __cplusplus
 }

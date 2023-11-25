@@ -28,9 +28,11 @@
 #include "hc_dev_info.h"
 #include "hc_log.h"
 #include "hc_types.h"
+#include "performance_dumper.h"
 
 #include "auth_sub_session.h"
 #include "iso_protocol.h"
+#include "dl_speke_protocol.h"
 #include "ec_speke_protocol.h"
 
 #include "expand_sub_session.h"
@@ -235,6 +237,7 @@ static int32_t RestartSession(SessionImpl *impl, JumpPolicy *policy)
         LOGE("session has no next available credential, session failed.");
         return HC_ERR_NO_CANDIDATE_GROUP;
     }
+    RESET_PERFORM_DATA(impl->base.id);
     ResetSessionState(impl);
     if (impl->isClient) {
         SessionEvent event = { START_EVENT, NULL };
@@ -879,6 +882,53 @@ static int32_t CreateIsoSubSession(SessionImpl *impl, const IdentityInfo *cred, 
     return HC_SUCCESS;
 }
 
+static int32_t CreateDlSpekeSubSession(SessionImpl *impl, const IdentityInfo *cred, AuthSubSession **returnSubSession)
+{
+    if (cred->proofType == CERTIFICATED) {
+        LOGE("Cert credential not support.");
+        return HC_ERR_UNSUPPORTED_VERSION;
+    }
+    CJson *urlJson = CreateJsonFromString((const char *)cred->proof.preSharedUrl.val);
+    if (urlJson == NULL) {
+        LOGE("Failed to create preshared url json!");
+        return HC_ERR_JSON_CREATE;
+    }
+    int32_t trustType;
+    if (GetIntFromJson(urlJson, PRESHARED_URL_TRUST_TYPE, &trustType) != HC_SUCCESS) {
+        LOGE("Failed to get trust type!");
+        FreeJson(urlJson);
+        return HC_ERR_JSON_GET;
+    }
+    FreeJson(urlJson);
+    if (trustType != TRUST_TYPE_PIN) {
+        LOGE("Invalid trust type!");
+        return HC_ERR_UNSUPPORTED_VERSION;
+    }
+    const char *authId = GetStringFromJson(impl->context, FIELD_AUTH_ID);
+    if (authId == NULL) {
+        LOGE("Failed to get self authId!");
+        return HC_ERR_JSON_GET;
+    }
+    DlSpekePrimeMod primeMod = DL_SPEKE_PRIME_MOD_NONE;
+#ifdef P2P_PAKE_DL_PRIME_LEN_384
+    primeMod = (uint32_t)primeMod | DL_SPEKE_PRIME_MOD_384;
+#endif
+#ifdef P2P_PAKE_DL_PRIME_LEN_256
+    primeMod = (uint32_t)primeMod | DL_SPEKE_PRIME_MOD_256;
+#endif
+    Uint8Buff authIdBuff = { (uint8_t *)authId, HcStrlen(authId) + 1 };
+    DlSpekeInitParams params = { primeMod, authIdBuff };
+    AuthSubSession *authSubSession;
+    int32_t res = CreateAuthSubSession(PROTOCOL_TYPE_DL_SPEKE, &params, impl->isClient, &authSubSession);
+    if (res != HC_SUCCESS) {
+        LOGE("create dl speke auth sub session fail. [Res]: %d", res);
+        return res;
+    }
+    *returnSubSession = authSubSession;
+    LOGI("create dl speke auth sub session success.");
+    return HC_SUCCESS;
+}
+
 static int32_t CreateEcSpekeSubSession(SessionImpl *impl, const IdentityInfo *cred, AuthSubSession **returnSubSession)
 {
     EcSpekeCurveType curveType = (cred->proofType == CERTIFICATED) ? CURVE_TYPE_256 : CURVE_TYPE_25519;
@@ -1160,6 +1210,8 @@ static int32_t AddAuthSubSessionToVec(SessionImpl *impl, IdentityInfo *cred, Pro
     AuthSubSession *authSubSession = NULL;
     if (entity->protocolType == ALG_EC_SPEKE) {
         res = CreateEcSpekeSubSession(impl, cred, &authSubSession);
+    } else if (entity->protocolType == ALG_DL_SPEKE) {
+        res = CreateDlSpekeSubSession(impl, cred, &authSubSession);
     } else {
         res = CreateIsoSubSession(impl, cred, &authSubSession);
     }
@@ -1560,13 +1612,23 @@ static int32_t ProcHandshakeReqEventInner(SessionImpl *impl, SessionEvent *input
     return AddHandshakeRspMsg(impl, selfCred, sessionMsg);
 }
 
+static ProtocolAlgType GetAlgTypeByProtocolType(int32_t protocolType)
+{
+    if (protocolType == PROTOCOL_TYPE_EC_SPEKE) {
+        return ALG_EC_SPEKE;
+    } else if (protocolType == PROTOCOL_TYPE_DL_SPEKE) {
+        return ALG_DL_SPEKE;
+    } else {
+        return ALG_ISO;
+    }
+}
+
 static int32_t RemoveInvalidAuthSubSession(SessionImpl *impl)
 {
     uint32_t index = 0;
     while (index < HC_VECTOR_SIZE(&impl->authSubSessionList)) {
         AuthSubSession *authSubSesion = impl->authSubSessionList.get(&impl->authSubSessionList, index);
-        ProtocolAlgType curProtocolType = (authSubSesion->protocolType == PROTOCOL_TYPE_EC_SPEKE ?
-            ALG_EC_SPEKE : ALG_ISO);
+        ProtocolAlgType curProtocolType = GetAlgTypeByProtocolType(authSubSesion->protocolType);
         if (curProtocolType == impl->protocolEntity.protocolType) {
             index++;
             continue;
@@ -1710,8 +1772,7 @@ static int32_t ProcAuthEventInner(SessionImpl *impl, SessionEvent *inputEvent, C
         return HC_SUCCESS;
     }
     IdentityInfo *selfCred = HC_VECTOR_GET(&impl->credList, 0);
-    bool isP2pAuth = IsP2pAuth(selfCred);
-    if (isServerProcess && isP2pAuth) {
+    if (isServerProcess && IsP2pAuth(selfCred)) {
         res = ProcAuthSubSessionMsg(curAuthSubSession, inputEvent->data, sessionMsg, true);
     } else {
         res = ProcAuthSubSessionMsg(curAuthSubSession, inputEvent->data, sessionMsg, false);

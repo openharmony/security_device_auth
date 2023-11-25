@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -376,6 +376,19 @@ static int FillPkgNameAndServiceType(IsoParams *params, const CJson *in)
     return HC_SUCCESS;
 }
 
+#ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+static bool CheckPinLenForStandardIso(const CJson *in, const char *pinCode)
+{
+    int32_t protocolExpandVal = INVALID_PROTOCOL_EXPAND_VALUE;
+    (void)GetIntFromJson(in, FIELD_PROTOCOL_EXPAND, &protocolExpandVal);
+    if (protocolExpandVal != LITE_PROTOCOL_STANDARD_MODE) {
+        LOGI("not standard iso, no need to check.");
+        return true;
+    }
+    return HcStrlen(pinCode) >= PIN_CODE_LEN_LONG;
+}
+#endif
+
 static int FillPin(IsoParams *params, const CJson *in)
 {
     if (params->opCode == OP_BIND) {
@@ -388,6 +401,12 @@ static int FillPin(IsoParams *params, const CJson *in)
             LOGE("Pin is too short.");
             return HC_ERR_INVALID_PARAMS;
         }
+    #ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+        if (!CheckPinLenForStandardIso(in, pinString)) {
+            LOGE("Invalid pin code len!");
+            return HC_ERR_INVALID_LEN;
+        }
+    #endif
         params->pinCodeString = (char *)HcMalloc(strlen(pinString) + 1, 0);
         if (params->pinCodeString == NULL) {
             LOGE("malloc pinCode failed.");

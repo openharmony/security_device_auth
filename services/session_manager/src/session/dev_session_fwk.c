@@ -29,7 +29,9 @@
 #include "dev_session_v2.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
+#include "hc_time.h"
 #include "hc_types.h"
+#include "performance_dumper.h"
 
 #define FIELD_MSG "msg"
 #define FIELD_TYPE "type"
@@ -128,6 +130,7 @@ static int32_t SendJsonMsg(const SessionImpl *impl, const CJson *sendMsg)
         LOGE("convert sendMsg to sendMsgStr fail.");
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(impl->base.id, HcGetCurTimeInMillis());
     int32_t res = HcSendMsg(impl->channelType, impl->base.id, impl->channelId, &impl->base.callback, sendMsgStr);
     FreeJsonString(sendMsgStr);
     return res;
@@ -442,9 +445,11 @@ static char *GetSessionReturnData(const SessionImpl *impl)
 
 static void OnDevSessionFinish(const SessionImpl *impl)
 {
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(impl->base.id, ON_SESSION_KEY_RETURN_TIME, HcGetCurTimeInMillis());
     ProcessSessionKeyCallback(impl->base.id, impl->sessionKey.val, impl->sessionKey.length, &impl->base.callback);
 
     char *returnData = GetSessionReturnData(impl);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(impl->base.id, ON_FINISH_TIME, HcGetCurTimeInMillis());
     ProcessFinishCallback(impl->base.id, impl->base.opCode, returnData, &impl->base.callback);
     FreeJsonString(returnData);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,28 +13,36 @@
  * limitations under the License.
  */
 
-#ifndef HC_TIME_H
-#define HC_TIME_H
+#ifndef DEV_AUTH_DL_SPEKE_PROTOCOL_H
+#define DEV_AUTH_DL_SPEKE_PROTOCOL_H
 
-#include <stdint.h>
+#include "base_protocol.h"
+
+#define PROTOCOL_TYPE_DL_SPEKE 2
+
+typedef enum {
+    DL_SPEKE_PRIME_MOD_NONE = 0x0000,
+    DL_SPEKE_PRIME_MOD_256 = 0x0001,
+    DL_SPEKE_PRIME_MOD_384 = 0x0002,
+} DlSpekePrimeMod;
+
+typedef struct {
+    int32_t primeMod;
+    Uint8Buff authId;
+} DlSpekeInitParams;
+
+#ifdef ENABLE_P2P_BIND_DL_SPEKE
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Calculate in seconds */
-#define TIME_OUT_VALUE 300
-
-/* Return in seconds */
-int64_t HcGetCurTime(void);
-
-/* Return current time in milliseconds */
-int64_t HcGetCurTimeInMillis(void);
-
-/* Return the interval seconds from startTime to current Time */
-int64_t HcGetIntervalTime(int64_t startTime);
+int32_t CreateDlSpekeProtocol(const void *baseParams, bool isClient, BaseProtocol **returnObj);
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif
+
 #endif

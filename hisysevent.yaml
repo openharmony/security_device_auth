@@ -1,21 +1,39 @@
-#  Copyright (c) 2022 Huawei Device Co., Ltd.
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
+# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 domain: DEVICE_AUTH
 
 CALL_EVENT:
-  __BASE: {type: STATISTIC, level: MINOR, desc: the frequency of function calling}
-  OS_ACCOUNT_ID: {type: INT32, desc: os account id}
-  FUNC_NAME: {type: STRING, desc: function name}
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: the frequency of function calling}
   REQ_ID: {type: INT64, desc: request id}
+  FUNC_NAME: {type: STRING, desc: function name}
   APP_ID: {type: STRING, desc: app id}
+  OS_ACCOUNT_ID: {type: INT32, desc: os account id}
+  CALL_RESULT: {type: INT32, desc: call result}
+
+FAULT_EVENT:
+  __BASE: {type: FAULT, level: CRITICAL, desc: fault event}
+  FUNCTION_NAME: {type: STRING, desc: function name}
+  FAULT_REASON: {type: INT32, desc: fault reason}
+  CRED_TYPE: {type: UINT8, desc: credential type}
+  GROUP_TYPE: {type: INT32, desc: group type}
+  APP_ID: {type: STRING, desc: app id}
+
+STATISTIC_EVENT:
+  __BASE: {type: STATISTIC, level: MINOR, desc: Statistic Event}
+  APP_ID: {type: STRING, desc: app id}
+  COST_TIME: {type: INT64, desc: cost time}
+  CALL_RESULT: {type: INT32, desc: call result}
+  FUNCTION_NAME: {type: STRING, desc: function name}
+  CRED_TYPE: {type: UINT8, desc: credential type}
+  PROTOCOL_TYPE: {type: INT32, desc: protocol type}

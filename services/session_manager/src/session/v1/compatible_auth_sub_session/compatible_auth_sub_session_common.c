@@ -23,8 +23,10 @@
 #include "dev_auth_module_manager.h"
 #include "group_auth_data_operation.h"
 #include "hc_log.h"
+#include "hc_time.h"
 #include "hc_types.h"
 #include "hitrace_adapter.h"
+#include "performance_dumper.h"
 
 #define MIN_PROTOCOL_VERSION "1.0.0"
 IMPLEMENT_HC_VECTOR(ParamsVecForAuth, void *, 1)
@@ -426,6 +428,7 @@ static int32_t ReturnTransmitData(const CompatibleAuthSubSession *session, CJson
     }
     LOGI("Start to transmit data to peer for auth!");
     DEV_AUTH_START_TRACE(TRACE_TAG_SEND_DATA);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(requestId, HcGetCurTimeInMillis());
     if (!callback->onTransmit(requestId, (uint8_t *)outStr, HcStrlen(outStr) + 1)) {
         LOGE("Failed to transmit data to peer!");
         FreeJsonString(outStr);
@@ -475,6 +478,12 @@ int32_t AuthOnNextGroupIfExist(CompatibleAuthSubSession *session)
         LOGE("The json data in session is null!");
         return HC_ERR_NULL_PTR;
     }
+    int64_t requestId = 0;
+    if (GetInt64FromJson(paramInNextSession, FIELD_REQUEST_ID, &requestId) != HC_SUCCESS) {
+        LOGE("Failed to get request id!");
+        return HC_ERR_JSON_GET;
+    }
+    RESET_PERFORM_DATA(requestId);
     CJson *outNext = CreateJson();
     if (outNext == NULL) {
         LOGE("Failed to create json for outNext!");

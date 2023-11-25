@@ -20,8 +20,10 @@
 #include "group_auth_data_operation.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
+#include "hc_time.h"
 #include "hc_types.h"
 #include "json_utils.h"
+#include "performance_dumper.h"
 #include "string_util.h"
 
 #define UID_HEX_STRING_LEN_MAX 64
@@ -72,6 +74,7 @@ static int32_t ReturnSessionKey(int64_t requestId, const CJson *out, const Devic
             break;
         }
         LOGI("Begin invoke onSessionKeyReturned.");
+        UPDATE_PERFORM_DATA_BY_INPUT_INDEX(requestId, ON_SESSION_KEY_RETURN_TIME, HcGetCurTimeInMillis());
         callback->onSessionKeyReturned(requestId, sessionKey, keyLen);
         LOGI("End invoke onSessionKeyReturned, res = %d.", res);
     } while (0);
@@ -540,6 +543,7 @@ static int32_t AccountOnFinishToPeer(int64_t requestId, const CJson *out, const 
     }
     if ((callback != NULL) && (callback->onTransmit != NULL)) {
         LOGD("Begin to transmit data to peer for auth in AccountOnFinishToPeer.");
+        UPDATE_PERFORM_DATA_BY_SELF_INDEX(requestId, HcGetCurTimeInMillis());
         if (!callback->onTransmit(requestId, (uint8_t *)sendToPeerStr, HcStrlen(sendToPeerStr) + 1)) {
             LOGE("Failed to transmit data to peer!");
             res = HC_ERR_TRANSMIT_FAIL;
@@ -681,6 +685,7 @@ static int32_t AccountOnFinishToSelf(int64_t requestId, const CJson *authParam, 
         }
         if ((callback != NULL) && (callback->onFinish != NULL)) {
             LOGD("Group auth call onFinish for account related auth.");
+            UPDATE_PERFORM_DATA_BY_INPUT_INDEX(requestId, ON_FINISH_TIME, HcGetCurTimeInMillis());
             callback->onFinish(requestId, authForm, returnStr);
         }
     } while (0);

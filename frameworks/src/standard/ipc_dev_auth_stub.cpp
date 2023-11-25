@@ -23,7 +23,9 @@
 #include "permission_adapter.h"
 #include "securec.h"
 #include "system_ability_definition.h"
+#include "hc_string_vector.h"
 #include "hidump_adapter.h"
+#include "string_ex.h"
 
 using namespace std;
 namespace OHOS {
@@ -51,8 +53,26 @@ ServiceDevAuth::~ServiceDevAuth()
 
 int32_t ServiceDevAuth::Dump(int32_t fd, const std::vector<std::u16string>& args)
 {
-    DEV_AUTH_DUMP(fd);
-    (void)args;
+    std::vector<std::string> strArgs;
+    for (auto arg : args) {
+        strArgs.emplace_back(Str16ToStr8(arg));
+    }
+    int argc = strArgs.size();
+    StringVector strArgVec = CreateStrVector();
+    for (int i = 0; i < argc; i++) {
+        HcString strArg = CreateString();
+        if (!StringSetPointer(&strArg, strArgs[i].c_str())) {
+            LOGE("Failed to set strArg!");
+            DeleteString(&strArg);
+            continue;
+        }
+        if (strArgVec.pushBackT(&strArgVec, strArg) == NULL) {
+            LOGE("Failed to push strArg to strArgVec!");
+            DeleteString(&strArg);
+        }
+    }
+    DEV_AUTH_DUMP(fd, &strArgVec);
+    DestroyStrVector(&strArgVec);
     return 0;
 }
 

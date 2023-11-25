@@ -19,9 +19,11 @@
 #include "device_auth_defines.h"
 #include "group_auth_data_operation.h"
 #include "hc_log.h"
+#include "hc_time.h"
 #include "hc_types.h"
 #include "json_utils.h"
 #include "os_account_adapter.h"
+#include "performance_dumper.h"
 #include "string_util.h"
 
 static void OnDasFinish(int64_t requestId, const CJson *authParam, const CJson *out,
@@ -66,6 +68,7 @@ static int32_t ReturnSessionKey(int64_t requestId, const CJson *out, const Devic
             break;
         }
         LOGI("Begin invoke onSessionKeyReturned.");
+        UPDATE_PERFORM_DATA_BY_INPUT_INDEX(requestId, ON_SESSION_KEY_RETURN_TIME, HcGetCurTimeInMillis());
         callback->onSessionKeyReturned(requestId, sessionKey, keyLen);
         LOGI("End invoke onSessionKeyReturned, res = %d.", res);
     } while (0);
@@ -218,6 +221,7 @@ static int32_t DasOnFinishToPeer(int64_t requestId, const CJson *out, const Devi
     }
     if ((callback != NULL) && (callback->onTransmit != NULL)) {
         LOGD("Begin to transmit data to peer for auth in DasOnFinishToPeer.");
+        UPDATE_PERFORM_DATA_BY_SELF_INDEX(requestId, HcGetCurTimeInMillis());
         if (!callback->onTransmit(requestId, (uint8_t *)sendToPeerStr, (uint32_t)strlen(sendToPeerStr) + 1)) {
             LOGE("Failed to transmit data to peer!");
             res = HC_ERR_TRANSMIT_FAIL;
@@ -257,6 +261,7 @@ static int32_t DasOnFinishToSelf(int64_t requestId, const CJson *authParam, cons
     }
     if ((callback != NULL) && (callback->onFinish != NULL)) {
         LOGD("Group auth call onFinish for account unrelated auth.");
+        UPDATE_PERFORM_DATA_BY_INPUT_INDEX(requestId, ON_FINISH_TIME, HcGetCurTimeInMillis());
         callback->onFinish(requestId, AUTH_FORM_ACCOUNT_UNRELATED, returnStr);
     }
     ClearAndFreeJsonString(returnStr);
