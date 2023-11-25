@@ -586,7 +586,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest001_empty, TestSize.Level2)
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen(reinterpret_cast<char *>(dataStr))   
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -612,7 +612,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest002_msg0, TestSize.Level2)
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen(reinterpret_cast<char *>(dataStr))  
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -641,7 +641,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest003_pake_server1, TestSize.Level
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen(reinterpret_cast<char *>(dataStr))  
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -668,7 +668,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest004_pake_server1error, TestSize.
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen(reinterpret_cast<char *>(dataStr))  
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -696,7 +696,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest005_pake_client1, TestSize.Level
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen(reinterpret_cast<char *>(dataStr))  
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -724,7 +724,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest006_pake_client1error, TestSize.
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen(reinterpret_cast<char *>(dataStr))  
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -753,7 +753,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest007_pake_server2, TestSize.Level
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen(reinterpret_cast<char *>(dataStr))  
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -782,7 +782,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest008_pake_server2error, TestSize.
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen(reinterpret_cast<char *>(dataStr))  
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -809,7 +809,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest009_pake_client2, TestSize.Level
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen(reinterpret_cast<char *>(dataStr))  
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -835,7 +835,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest010_pake_client2error, TestSize.
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen(reinterpret_cast<char *>(dataStr))  
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -862,7 +862,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest011_pake_server3, TestSize.Level
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen(reinterpret_cast<char *>(dataStr))  
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -889,7 +889,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest012_pake_server3error, TestSize.
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen(reinterpret_cast<char *>(dataStr))  
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -917,7 +917,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest013_pake_client3, TestSize.Level
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen(reinterpret_cast<char *>(dataStr))  
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -944,7 +944,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest014_pake_client3error, TestSize.
     uint8_buff data = {
         dataStr,
         sizeof(dataStr),
-        strlen(reinterpret_cast<char *>(dataStr))  
+        strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
     EXPECT_EQ(g_result, END_FAILED);
@@ -952,5 +952,4 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest014_pake_client3error, TestSize.
     destroy(&server);
     LOG("--------ReceiveDataTest014--------");
 }
-
 }
