@@ -18,7 +18,7 @@ import("//base/security/device_auth/services/deviceauth.gni")
 import("//build/config/features.gni")
 import("//build/test.gni")
 THIRD_PATH = "//third_party/bounds_checking_function"
-module_output_path = "device_auth/deviceauth_test"
+module_output_path = "device_auth/device_auth"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("GetInstanceFuzzTest") {
