@@ -61,7 +61,9 @@ static void ClearPerformDataVec(void)
     uint32_t index;
     PerformData **performData;
     FOR_EACH_HC_VECTOR(g_performDataVec, index, performData) {
-        DestroyPerformData(*performData);
+        PerformData *popData;
+        HC_VECTOR_POPELEMENT(&g_performDataVec, &popData, index);
+        DestroyPerformData(popData);
     }
     g_bindClientSessionNum = 0;
     g_bindServerSessionNum = 0;
