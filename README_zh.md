@@ -57,9 +57,11 @@
 └── services                     # 设备互信认证服务层代码
     ├── frameworks               # 设备互信认证框架层代码
     ├── data_manager             # 设备互信群组信息管理模块
-    ├── group_auth               # 设备群组认证服务
-    ├── group_manager            # 设备群组管理服务
-    ├── authenticators           # 认证执行模块（包括帐号无关点对点认证器）
+    ├── identity_manager         # 认证凭据管理模块
+    ├── legacy
+    │   ├── authenticators       # 认证执行模块
+    │   ├── group_auth           # 设备群组认证服务
+    │   ├── group_manager        # 设备群组管理服务
     ├── creds_manager            # 凭据管理模块
     ├── mk_agree                 # 设备级主密钥协商
     ├── cred_manager             # 账号凭据插件管理模块
@@ -73,7 +75,7 @@
 
 ### 接口说明<a name="section1551164914237"></a>
 
-设备互信认证组件中，设备群组管理服务负责将不同业务建立的设备间可信关系抽象成一个个可信群组，对外提供统一的接口，包含群组创建、删除、查询等功能；设备群组认证服务基于已经建立过可信关系的设备群组，提供设备可信认证与端到端会话密钥协商功能。
+设备互信认证组件中，设备群组管理服务负责将不同业务建立的设备间可信关系抽象成一个个可信群组，对外提供统一的接口，包含群组创建、删除、查询等功能；设备群组认证服务基于已经建立过可信关系的设备群组，提供设备可信认证与端到端会话密钥协商功能；同时提供群组无关，基于认证凭据的设备互信认证能力。
 
 **表 1**  设备群组管理服务提供的API接口\(DeviceGroupManager\)功能介绍
 
@@ -149,6 +151,33 @@
 <tr id="row633283153012"><td class="cellrowborder" valign="top" width="57.38999999999999%" headers="mcps1.2.3.1.1 "><p id="p12534111115352"><a name="p12534111115352"></a><a name="p12534111115352"></a>int32_t ProcessData(int64_t authReqId, const uint8_t *data, uint32_t dataLen, const DeviceAuthCallback *gaCallback)</p>
 </td>
 <td class="cellrowborder" valign="top" width="42.61%" headers="mcps1.2.3.1.2 "><p id="p1633173173012"><a name="p1633173173012"></a><a name="p1633173173012"></a>处理认证的数据。</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+**表 3**  基于认证凭据的设备互信认证能力相关API接口功能介绍
+
+<a name="table12330133114309"></a>
+<table><thead align="left"><tr id="row15330631193013"><th class="cellrowborder" valign="top" width="57.38999999999999%" id="mcps1.2.3.1.1"><p id="p73319319303"><a name="p73319319303"></a><a name="p73319319303"></a>接口名</p>
+</th>
+<th class="cellrowborder" valign="top" width="42.61%" id="mcps1.2.3.1.2"><p id="p133312317306"><a name="p133312317306"></a><a name="p133312317306"></a>描述</p>
+</th>
+</tr>
+</thead>
+<tbody><tr id="row15331183193011"><td class="cellrowborder" valign="top" width="57.38999999999999%" headers="mcps1.2.3.1.1 "><p id="p19743328133621"><a name="p19743328133621"></a><a name="p19743328133621"></a>int32_t StartAuthDevice(int64_t requestId, const char* authParams, const DeviceAuthCallback* callbak)</p>
+</td>
+<td class="cellrowborder" valign="top" width="42.61%" headers="mcps1.2.3.1.2 "><p id="p16742028153612"><a name="p16742028153612"></a><a name="p16742028153612"></a>指定认证凭据，触发设备互信认证。</p>
+</td>
+</tr>
+<tr id="row7331133163018"><td class="cellrowborder" valign="top" width="57.38999999999999%" headers="mcps1.2.3.1.1 "><p id="p118111117133515"><a name="p118111117133515"></a><a name="p118111117133515"></a>int32_t ProcessAuthDevice(int64_t requestId, const char* authParams, const DeviceAuthCallback* callbak)</p>
+</td>
+<td class="cellrowborder" valign="top" width="42.61%" headers="mcps1.2.3.1.2 "><p id="p151481335193818"><a name="p151481335193818"></a><a name="p151481335193818"></a>响应认证请求，处理认证数据。</p>
+</td>
+</tr>
+<tr id="row633283153013"><td class="cellrowborder" valign="top" width="57.38999999999999%" headers="mcps1.2.3.1.1 "><p id="p12534111115353"><a name="p12534111115353"></a><a name="p12534111115353"></a> int32_t CancelAuthRequest(int64_t requestId, const char* authParams)</p>
+</td>
+<td class="cellrowborder" valign="top" width="42.61%" headers="mcps1.2.3.1.2 "><p id="p1633173173013"><a name="p1633173173013"></a><a name="p1633173173013"></a>取消认证请求。</p>
 </td>
 </tr>
 </tbody>
