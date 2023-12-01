@@ -51,6 +51,11 @@ const char *GetStorageDirPath(void)
     return AUTH_STORAGE_PATH;
 }
 
+const char *GetAccountStoragePath(void)
+{
+    return AUTH_STORAGE_PATH "/account";
+}
+
 #ifdef __cplusplus
 }
 #endif

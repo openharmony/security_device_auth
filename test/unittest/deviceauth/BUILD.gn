@@ -42,9 +42,10 @@ ohos_unittest("deviceauth_llt") {
   sources = hal_common_files
   sources -= [ "${common_lib_path}/impl/src/json_utils.c" ]
   sources += [
+    "${key_management_adapter_path}/impl/src/huks_adapter.c",
+    "${key_management_adapter_path}/impl/src/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
-    "${key_management_adapter_path}/impl/src/standard/huks_adapter.c",
-    "${key_management_adapter_path}/impl/src/standard/mbedtls_ec_adapter.c",
+    "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
     "${os_adapter_path}/impl/src/hc_log.c",
     "${os_adapter_path}/impl/src/linux/hc_condition.c",
     "${os_adapter_path}/impl/src/linux/hc_file.c",
@@ -162,9 +163,10 @@ ohos_unittest("device_auth_func_test") {
   sources = hal_common_files
   sources -= [ "${common_lib_path}/impl/src/json_utils.c" ]
   sources += [
+    "${key_management_adapter_path}/impl/src/huks_adapter.c",
+    "${key_management_adapter_path}/impl/src/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
-    "${key_management_adapter_path}/impl/src/standard/huks_adapter.c",
-    "${key_management_adapter_path}/impl/src/standard/mbedtls_ec_adapter.c",
+    "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
     "${os_adapter_path}/impl/src/hc_log.c",
     "${os_adapter_path}/impl/src/linux/hc_condition.c",
     "${os_adapter_path}/impl/src/linux/hc_file.c",
@@ -291,9 +293,10 @@ ohos_unittest("deviceauth_unit_test") {
 
   sources = hal_common_files
   sources += [
+    "${key_management_adapter_path}/impl/src/huks_adapter.c",
+    "${key_management_adapter_path}/impl/src/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
-    "${key_management_adapter_path}/impl/src/standard/huks_adapter.c",
-    "${key_management_adapter_path}/impl/src/standard/mbedtls_ec_adapter.c",
+    "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
     "${os_adapter_path}/impl/src/hc_log.c",
     "${os_adapter_path}/impl/src/linux/hc_condition.c",
     "${os_adapter_path}/impl/src/linux/hc_file.c",

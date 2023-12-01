@@ -112,8 +112,8 @@ int32_t GenerateEcdhSharedKey(PakeAuthParams *params)
         .isAlias = true
     };
     KeyBuff publicKeyBuff = {
-        .key = params->pkPeer,
-        .keyLen = sizeof(params->pkPeer),
+        .key = params->pkPeerBuff.val,
+        .keyLen = params->pkPeerBuff.length,
         .isAlias = false
     };
     uint32_t sharedKeyAliasLen = HcStrlen(SHARED_KEY_ALIAS) + 1;
@@ -267,6 +267,38 @@ static int32_t ExtractSelfDevId(PakeAuthParams *params, const CJson *in)
     return HC_SUCCESS;
 }
 
+static int32_t GetPeerPkFromPkInfo(PakeAuthParams *params, const char *pkInfoStr)
+{
+    CJson *info = CreateJsonFromString(pkInfoStr);
+    if (info == NULL) {
+        LOGE("Failed to create json for peer pkInfo.");
+        return HC_ERR_JSON_CREATE;
+    }
+    const char *devicePk = GetStringFromJson(info, FIELD_DEVICE_PK);
+    if (devicePk == NULL) {
+        LOGE("Failed to get peer devicePk!");
+        FreeJson(info);
+        return HC_ERR_JSON_GET;
+    }
+    uint32_t pkSize = HcStrlen(devicePk) / BYTE_TO_HEX_OPER_LENGTH;
+    params->pkPeerBuff.val = (uint8_t *)HcMalloc(pkSize, 0);
+    if (params->pkPeerBuff.val == NULL) {
+        LOGE("Failed to alloc memory for peerPk!");
+        FreeJson(info);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (GetByteFromJson(info, FIELD_DEVICE_PK, params->pkPeerBuff.val, pkSize) != HC_SUCCESS) {
+        LOGE("Failed to get peer public key!");
+        HcFree(params->pkPeerBuff.val);
+        params->pkPeerBuff.val = NULL;
+        FreeJson(info);
+        return HC_ERR_JSON_GET;
+    }
+    FreeJson(info);
+    params->pkPeerBuff.length = pkSize;
+    return HC_SUCCESS;
+}
+
 int32_t ExtractPeerDevId(PakeAuthParams *params, const CJson *in)
 {
     if (params == NULL || in == NULL) {
@@ -314,22 +346,12 @@ int32_t GetPkInfoPeer(PakeAuthParams *params, const CJson *in)
         params->pkInfoPeer.val = NULL;
         return HC_ERR_ALLOC_MEMORY;
     }
-    CJson *info = CreateJsonFromString(pkInfoPeerStr);
-    if (info == NULL) {
-        LOGE("Failed to create json for peer pkInfo.");
+    int32_t res = GetPeerPkFromPkInfo(params, pkInfoPeerStr);
+    if (res != HC_SUCCESS) {
         HcFree(params->pkInfoPeer.val);
         params->pkInfoPeer.val = NULL;
-        return HC_ERR_JSON_CREATE;
     }
-    if (GetByteFromJson(info, FIELD_DEVICE_PK, params->pkPeer, PK_SIZE) != HC_SUCCESS) {
-        LOGE("Failed to get devicePk.");
-        FreeJson(info);
-        HcFree(params->pkInfoPeer.val);
-        params->pkInfoPeer.val = NULL;
-        return HC_ERR_JSON_GET;
-    }
-    FreeJson(info);
-    return HC_SUCCESS;
+    return res;
 }
 
 static int32_t GetAsyPubKeyInfo(PakeAuthParams *params)
@@ -449,6 +471,7 @@ void DestroyPakeAuthParams(PakeAuthParams *params)
     FreeUint8Buff(&params->pkInfoSelf);
     FreeUint8Buff(&params->pkInfoSignPeer);
     FreeUint8Buff(&params->pkInfoSignSelf);
+    FreeUint8Buff(&params->pkPeerBuff);
     DestroyPakeV2BaseParams(&params->pakeParams);
     HcFree(params->deviceIdSelf.val);
     params->deviceIdSelf.val = NULL;

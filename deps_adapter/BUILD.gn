@@ -29,11 +29,14 @@ if (defined(ohos_lite)) {
         "//base/hiviewdfx/hilog_lite/interfaces/native/kits/hilog_lite",
         "//commonlibrary/utils_lite/memory/include",
         "//base/startup/init/interfaces/innerkits/include/syspara",
+        "//third_party/mbedtls/include",
       ]
 
       sources = hal_common_files
       sources += [
-        "${key_management_adapter_path}/impl/src/mini/huks_adapter.c",
+        "${key_management_adapter_path}/impl/src/huks_adapter.c",
+        "${key_management_adapter_path}/impl/src/mbedtls_ec_adapter.c",
+        "${key_management_adapter_path}/impl/src/mini/huks_adapter_diff_impl.c",
         "${os_adapter_path}/impl/src/liteos/hc_condition.c",
         "${os_adapter_path}/impl/src/liteos/hc_dev_info.c",
         "${os_adapter_path}/impl/src/liteos/hc_thread.c",
@@ -61,6 +64,7 @@ if (defined(ohos_lite)) {
         "//base/startup/init/interfaces/innerkits:libbegetutil",
         "//build/lite/config/component/cJSON:cjson_shared",
         "//commonlibrary/utils_lite:utils",
+        "//third_party/mbedtls:mbedtls_shared",
       ]
     }
   } else {
@@ -78,8 +82,9 @@ if (defined(ohos_lite)) {
 
       sources = hal_common_files
       sources += [
-        "${key_management_adapter_path}/impl/src/small/huks_adapter.c",
-        "${key_management_adapter_path}/impl/src/small/mbedtls_ec_adapter.c",
+        "${key_management_adapter_path}/impl/src/huks_adapter.c",
+        "${key_management_adapter_path}/impl/src/mbedtls_ec_adapter.c",
+        "${key_management_adapter_path}/impl/src/small/huks_adapter_diff_impl.c",
         "${os_adapter_path}/impl/src/hc_log.c",
         "${os_adapter_path}/impl/src/linux/hc_condition.c",
         "${os_adapter_path}/impl/src/linux/hc_dev_info.c",
@@ -126,9 +131,10 @@ if (defined(ohos_lite)) {
 
     sources = hal_common_files
     sources += [
+      "${key_management_adapter_path}/impl/src/huks_adapter.c",
+      "${key_management_adapter_path}/impl/src/mbedtls_ec_adapter.c",
       "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
-      "${key_management_adapter_path}/impl/src/standard/huks_adapter.c",
-      "${key_management_adapter_path}/impl/src/standard/mbedtls_ec_adapter.c",
+      "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
       "${os_adapter_path}/impl/src/hc_log.c",
       "${os_adapter_path}/impl/src/linux/hc_condition.c",
       "${os_adapter_path}/impl/src/linux/hc_dev_info.c",

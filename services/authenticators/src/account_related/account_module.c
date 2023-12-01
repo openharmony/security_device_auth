@@ -59,7 +59,7 @@ static bool IsAccountMsgNeedIgnore(const CJson *in)
     return false;
 }
 
-static int32_t CreateAccountTask(int32_t *taskId, const CJson *in, CJson *out)
+static int CreateAccountTask(int32_t *taskId, const CJson *in, CJson *out)
 {
     if (taskId == NULL || in == NULL || out == NULL) {
         LOGE("Params is null in account task.");
@@ -93,7 +93,7 @@ static int32_t CreateAccountTask(int32_t *taskId, const CJson *in, CJson *out)
     return res;
 }
 
-static int32_t ProcessAccountTask(int32_t taskId, const CJson *in, CJson *out, int32_t *status)
+static int ProcessAccountTask(int32_t taskId, const CJson *in, CJson *out, int32_t *status)
 {
     if (HasAccountAuthPlugin() == HC_SUCCESS) {
         return ProcessAuthSession(&taskId, in, out, status);
@@ -112,7 +112,7 @@ static int32_t ProcessAccountTask(int32_t taskId, const CJson *in, CJson *out, i
     return currentTask->processTask(currentTask, in, out, status);
 }
 
-static void DestroyAccountTask(int32_t taskId)
+static void DestroyAccountTask(int taskId)
 {
     if (HasAccountAuthPlugin() == HC_SUCCESS) {
         (void)DestroyAuthSession(taskId);
