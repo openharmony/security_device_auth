@@ -16,7 +16,7 @@
 #ifndef DEV_SESSION_UTIL_H
 #define DEV_SESSION_UTIL_H
 
-#include "creds_manager_defines.h"
+#include "identity_defines.h"
 #include "data_manager.h"
 #include "json_utils.h"
 

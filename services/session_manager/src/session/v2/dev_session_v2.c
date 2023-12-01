@@ -22,7 +22,6 @@
 #include "channel_manager.h"
 #include "common_defs.h"
 #include "creds_manager.h"
-#include "creds_operation_utils.h"
 #include "data_manager.h"
 #include "dev_session_util.h"
 #include "hc_dev_info.h"
@@ -508,6 +507,19 @@ static int32_t GetPreSharedCredInfo(SessionImpl *impl, const CJson *credInfo, Id
         LOGE("get preSharedUrl from json fail.");
         return HC_ERR_JSON_GET;
     }
+    CJson *urlJson = CreateJsonFromString(preSharedUrl);
+    if (urlJson == NULL) {
+        LOGE("Failed to create url json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    bool isDirectAuth = false;
+    (void)GetBoolFromJson(urlJson, FIELD_IS_DIRECT_AUTH, &isDirectAuth);
+    if (AddBoolToJson(impl->context, FIELD_IS_DIRECT_AUTH, isDirectAuth) != HC_SUCCESS) {
+        LOGE("Faild to add isDirectAuth to context");
+        FreeJson(urlJson);
+        return HC_ERR_JSON_ADD;
+    }
+    FreeJson(urlJson);
     Uint8Buff peerSharedUrl = { (uint8_t *)preSharedUrl, HcStrlen(preSharedUrl) + 1 };
     IdentityInfo *info;
     int32_t res = GetCredInfoByPeerUrl(impl->context, &peerSharedUrl, &info);
@@ -714,6 +726,30 @@ static int32_t AddSessionInfoToEventData(SessionImpl *impl, CJson *eventData)
     return HC_SUCCESS;
 }
 
+/**
+ * @brief auth with credentials directly no need for abilities negotiation of two devices,
+ * so we set support commands empty here.
+ *
+ * @param eventData
+ * @return int32_t
+ */
+static int32_t AddSupportCmdsForDirectAuth(CJson *eventData)
+{
+    // added empty spCmds array to eventData
+    CJson *supportCmds = CreateJsonArray();
+    if (supportCmds == NULL) {
+        LOGE("allocate supportCmds memory fail.");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (AddObjToJson(eventData, FIELD_SP_CMDS, supportCmds) != HC_SUCCESS) {
+        LOGE("add supportCmds to json fail.");
+        FreeJson(supportCmds);
+        return HC_ERR_JSON_ADD;
+    }
+    FreeJson(supportCmds);
+    return HC_SUCCESS;
+}
+
 static int32_t AddSupportCmdsToEventData(CJson *eventData)
 {
     CJson *supportCmds = CreateJsonArray();
@@ -750,7 +786,14 @@ static int32_t GenerateHandshakeEventData(SessionImpl *impl, IdentityInfo *cred,
     if (res != HC_SUCCESS) {
         return res;
     }
-    return AddSupportCmdsToEventData(eventData);
+    bool isDirectAuth = false;
+    (void)GetBoolFromJson(impl->context, FIELD_IS_DIRECT_AUTH, &isDirectAuth);
+    if (isDirectAuth) {
+        return AddSupportCmdsForDirectAuth(eventData);
+    } else {
+        return AddSupportCmdsToEventData(eventData);
+    }
+    return HC_SUCCESS;
 }
 
 static int32_t SetAuthProtectedMsg(SessionImpl *impl, const CJson *msgJson, bool isSelf)
@@ -1177,12 +1220,20 @@ static int32_t AddAuthInfoToContextByCred(SessionImpl *impl, IdentityInfo *cred)
         return res;
     }
     PRINT_SENSITIVE_DATA("SelfUdid", selfUdid);
+    bool isDirectAuth = false;
+    (void)GetBoolFromJson(impl->context, FIELD_IS_DIRECT_AUTH, &isDirectAuth);
     if (cred->proofType == CERTIFICATED) {
         if (AddStringToJson(impl->context, FIELD_AUTH_ID, selfUdid) != HC_SUCCESS) {
             LOGE("add selfAuthId to json fail.");
             return HC_ERR_ALLOC_MEMORY;
         }
         return AddAuthInfoToContextByCert(impl);
+    } else if (isDirectAuth) {  // auth with credentials directly
+        if (AddStringToJson(impl->context, FIELD_AUTH_ID, selfUdid) != HC_SUCCESS) {
+            LOGE("add selfAuthId to json fail.");
+            return HC_ERR_ALLOC_MEMORY;
+        }
+        return HC_SUCCESS;
     }
     CJson *urlJson = CreateJsonFromString((const char *)cred->proof.preSharedUrl.val);
     if (urlJson == NULL) {
@@ -1264,6 +1315,11 @@ static int32_t ProcStartEventInner(SessionImpl *impl, CJson *sessionMsg)
     }
     impl->credCurIndex += 1;
     IdentityInfo *curCred = HC_VECTOR_GET(&impl->credList, 0);
+    bool isDirectAuth = curCred->IdInfoType == P2P_DIRECT_AUTH ? true : false;
+    if (AddBoolToJson(impl->context, FIELD_IS_DIRECT_AUTH, isDirectAuth) != HC_SUCCESS) {
+        LOGE("Failed to add isDirectAuth to context!");
+        return HC_ERR_JSON_ADD;
+    }
     res = ClientCreateAuthSubSessionByCred(impl, curCred);
     if (res != HC_SUCCESS) {
         return res;
@@ -1272,7 +1328,8 @@ static int32_t ProcStartEventInner(SessionImpl *impl, CJson *sessionMsg)
     if (res != HC_SUCCESS) {
         return res;
     }
-    return AddAllAuthFirstMsg(impl, sessionMsg, IsP2pAuth(curCred));
+    /* auth with credentail directly no need replace auth id with random number */
+    return AddAllAuthFirstMsg(impl, sessionMsg, (IsP2pAuth(curCred) && !isDirectAuth));
 }
 
 static int32_t GetSessionSaltFromInput(SessionImpl *impl, const CJson *inputData)
@@ -1389,7 +1446,13 @@ static int32_t GenerateHandshakeRspEventData(SessionImpl *impl, IdentityInfo *se
     if (res != HC_SUCCESS) {
         return res;
     }
-    return AddSupportCmdsToEventData(eventData);
+    bool isDirectAuth = false;
+    (void)GetBoolFromJson(impl->context, FIELD_IS_DIRECT_AUTH, &isDirectAuth);
+    if (isDirectAuth) {
+        return AddSupportCmdsForDirectAuth(eventData);
+    } else {
+        return AddSupportCmdsToEventData(eventData);
+    }
 }
 
 static int32_t AddHandshakeRspMsg(SessionImpl *impl, IdentityInfo *selfCred, CJson *sessionMsg)
@@ -1589,6 +1652,11 @@ static int32_t ProcHandshakeReqEventInner(SessionImpl *impl, SessionEvent *input
     }
     CheckAllCredsValidity(impl);
     IdentityInfo *selfCred = HC_VECTOR_GET(&impl->credList, 0);
+    bool isDirectAuth = selfCred->IdInfoType == P2P_DIRECT_AUTH ? true : false;
+    if (AddBoolToJson(impl->context, FIELD_IS_DIRECT_AUTH, isDirectAuth) != HC_SUCCESS) {
+        LOGE("Failed to add isDirectAuth to context!");
+        return HC_ERR_JSON_ADD;
+    }
     res = SetPeerAuthIdToContextIfNeeded(impl->context, selfCred);
     if (res != HC_SUCCESS) {
         return res;
@@ -1644,6 +1712,11 @@ static int32_t RemoveInvalidAuthSubSession(SessionImpl *impl)
 static int32_t ProcHandshakeRspEventInner(SessionImpl *impl, SessionEvent *inputEvent)
 {
     IdentityInfo *selfCred = impl->credList.get(&impl->credList, 0);
+    bool isDirectAuth = selfCred->IdInfoType == P2P_DIRECT_AUTH ? true : false;
+    if (AddBoolToJson(impl->context, FIELD_IS_DIRECT_AUTH, isDirectAuth) != HC_SUCCESS) {
+        LOGE("Failed to add isDirectAuth to context!");
+        return HC_ERR_JSON_ADD;
+    }
     int32_t res = SetPeerAuthIdToContextIfNeeded(impl->context, selfCred);
     if (res != HC_SUCCESS) {
         return res;
@@ -1772,7 +1845,14 @@ static int32_t ProcAuthEventInner(SessionImpl *impl, SessionEvent *inputEvent, C
         return HC_SUCCESS;
     }
     IdentityInfo *selfCred = HC_VECTOR_GET(&impl->credList, 0);
-    if (isServerProcess && IsP2pAuth(selfCred)) {
+    bool isDirectAuth = selfCred->IdInfoType == P2P_DIRECT_AUTH ? true : false;
+    if (AddBoolToJson(impl->context, FIELD_IS_DIRECT_AUTH, isDirectAuth) != HC_SUCCESS) {
+        LOGE("Failed to add isDirectAuth to context!");
+        return HC_ERR_JSON_ADD;
+    }
+    bool isP2pAuth = IsP2pAuth(selfCred);
+    /* auth with credentail directly no need replace auth id with random number*/
+    if (isServerProcess && isP2pAuth && !isDirectAuth) {
         res = ProcAuthSubSessionMsg(curAuthSubSession, inputEvent->data, sessionMsg, true);
     } else {
         res = ProcAuthSubSessionMsg(curAuthSubSession, inputEvent->data, sessionMsg, false);

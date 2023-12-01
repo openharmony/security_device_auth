@@ -34,6 +34,13 @@ using namespace OHOS::Security::AccessToken;
 #define PROC_NAME_SOFT_BUS "softbus_server"
 #define PROC_NAME_DEVICE_SECURITY_LEVEL "dslm_service"
 
+static unordered_map<int32_t, vector<string>> g_apiAccessWhitelist = {
+    { IPC_CALL_ID_PROCESS_CREDENTIAL, { PROC_NAME_DEVICE_MANAGER } },
+    { IPC_CALL_ID_DA_AUTH_DEVICE, { PROC_NAME_DEVICE_MANAGER, PROC_NAME_SOFT_BUS } },
+    { IPC_CALL_ID_DA_PROC_DATA, { PROC_NAME_DEVICE_MANAGER, PROC_NAME_SOFT_BUS } },
+    { IPC_CALL_ID_DA_CANCEL_REQUEST, { PROC_NAME_DEVICE_MANAGER, PROC_NAME_SOFT_BUS } },
+};
+
 static unordered_map<int32_t, vector<string>> g_apiAccessConfig = {
     { IPC_CALL_ID_REG_CB, { PROC_NAME_DEVICE_MANAGER } },
     { IPC_CALL_ID_UNREG_CB, { PROC_NAME_DEVICE_MANAGER } },
@@ -61,6 +68,23 @@ static bool IsProcessAllowAccess(const string &processName, int32_t methodId)
         g_apiAccessConfig[methodId].end();
 }
 
+static bool IsProcessInWhitelist(const string& processName, int32_t methodId)
+{
+    if (g_apiAccessWhitelist.find(methodId) == g_apiAccessWhitelist.end()) {
+        return true;
+    }
+    int32_t ret = find(g_apiAccessWhitelist[methodId].begin(), g_apiAccessWhitelist[methodId].end(), processName) !=
+                  g_apiAccessWhitelist[methodId].end();
+    if (ret) {
+        LOGI("%s %d", processName.c_str(), ret);
+    } else {
+        LOGE("Access Denied: Process(%s) not in access whitlist", processName.c_str());
+        return false;
+    }
+
+    return true;
+}
+
 int32_t CheckPermission(int32_t methodId)
 {
     AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
@@ -78,6 +102,12 @@ int32_t CheckPermission(int32_t methodId)
         LOGE("Check permission(APL3=SYSTEM_CORE or APL2=SYSTEM_BASIC) failed! APL: %d", findInfo.apl);
         return HC_ERROR;
     }
+
+    if (!IsProcessInWhitelist(findInfo.processName, methodId)) {
+        LOGE("Check permission(Access Whitelist) failed!");
+        return HC_ERROR;
+    }
+
     if (!IsProcessAllowAccess(findInfo.processName, methodId)) {
         LOGE("Check permission(Interface Access List) failed!");
         return HC_ERROR;

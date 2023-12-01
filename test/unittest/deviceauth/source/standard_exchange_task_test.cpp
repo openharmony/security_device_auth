@@ -19,6 +19,7 @@
 #include "alg_loader.h"
 #include "device_auth_defines.h"
 #include "securec.h"
+#include "identity_defines.h"
 
 extern "C"{
 #include "common_standard_bind_exchange.h"
@@ -128,7 +129,7 @@ HWTEST_F(StandardExchangeTaskTest, StandardExchangeTaskTest003, TestSize.Level0)
     pakeParams.baseParams.idSelf.val = authId;
     pakeParams.baseParams.idSelf.length = AUTH_ID_LENGTH;
     pakeParams.baseParams.loader = GetLoaderInstance();
-    
+
     StandardBindExchangeParams exchangeParams;
     exchangeParams.exInfoCipher.length = INVALID_CIPHER_LENGTH;
 

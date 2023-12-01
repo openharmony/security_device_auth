@@ -1110,6 +1110,167 @@ static int32_t IpcServiceGaGetPseudonymId(const IpcDataInfo *ipcParams, int32_t 
     return ret;
 }
 
+static int32_t IpcServiceDaProcessCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t ret;
+    int32_t operationCode = 0;
+    const char *reqJsonStr = NULL;
+    char *returnData = NULL;
+
+    LOGI("starting ...");
+    int32_t inOutLen = sizeof(int32_t);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_OPCODE, (uint8_t *)&operationCode, &inOutLen);
+    if ((inOutLen != sizeof(int32_t)) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_OPCODE);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQ_JSON, (uint8_t *)&reqJsonStr, NULL);
+    if ((reqJsonStr == NULL) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_REQ_JSON);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    ret = ProcessCredential(operationCode, reqJsonStr, &returnData);
+    if (ret != HC_SUCCESS) {
+        LOGI("call ProcessCredential failed %d", ret);
+    }
+    if (returnData != NULL) {
+        ret = IpcEncodeCallReplay(
+            outCache, PARAM_TYPE_RETURN_DATA, (const uint8_t *)returnData, strlen(returnData) + 1);
+        HcFree(returnData);
+    } else {
+        ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_RETURN_DATA, NULL, 0);
+    }
+    LOGI("process done, ipc ret %d", ret);
+    return ret;
+}
+
+static int32_t IpcServiceDaProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t callRet;
+    int32_t ret;
+    const DeviceAuthCallback *callback = NULL;
+    int64_t authReqId = 0;
+    const char *authParams = NULL;
+    int32_t inOutLen;
+    int32_t cbObjIdx = -1;
+
+    LOGI("starting ...");
+    inOutLen = sizeof(authReqId);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&authReqId, &inOutLen);
+    if ((inOutLen != sizeof(authReqId)) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_REQID);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_AUTH_PARAMS, (uint8_t *)&authParams, NULL);
+    if ((authParams == NULL) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_AUTH_PARAMS);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&callback, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_DEV_AUTH_CB);
+        return ret;
+    }
+    ret = AddIpcCallBackByReqId(
+        authReqId, (const uint8_t *)callback, sizeof(DeviceAuthCallback), CB_TYPE_TMP_DEV_AUTH);
+    if (ret != HC_SUCCESS) {
+        LOGE("add ipc callback failed");
+        return HC_ERROR;
+    }
+    inOutLen = sizeof(cbObjIdx);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CB_OBJECT, (uint8_t *)&cbObjIdx, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_CB_OBJECT);
+        DelIpcCallBackByReqId(authReqId, CB_TYPE_TMP_DEV_AUTH, true);
+        return ret;
+    }
+    AddIpcCbObjByReqId(authReqId, cbObjIdx, CB_TYPE_TMP_DEV_AUTH);
+    InitDeviceAuthCbCtx(&g_authCbAdt, CB_TYPE_TMP_DEV_AUTH);
+    callRet = ProcessAuthDevice(authReqId, authParams, &g_authCbAdt);
+    if (callRet != HC_SUCCESS) {
+        DelIpcCallBackByReqId(authReqId, CB_TYPE_TMP_DEV_AUTH, true);
+    }
+    ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
+    return ret;
+}
+
+static int32_t IpcServiceDaAuthDevice(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t callRet;
+    int32_t ret;
+    DeviceAuthCallback *callback = NULL;
+    int64_t authReqId = 0;
+    const char *authParams = NULL;
+    int32_t inOutLen;
+    int32_t cbObjIdx = -1;
+
+    LOGI("starting ...");
+    inOutLen = sizeof(authReqId);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&authReqId, &inOutLen);
+    if ((inOutLen != sizeof(authReqId)) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_REQID);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_AUTH_PARAMS, (uint8_t *)&authParams, NULL);
+    if ((authParams == NULL) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_AUTH_PARAMS);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&callback, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_DEV_AUTH_CB);
+        return ret;
+    }
+    ret = AddIpcCallBackByReqId(
+        authReqId, (const uint8_t *)callback, sizeof(DeviceAuthCallback), CB_TYPE_TMP_DEV_AUTH);
+    if (ret != HC_SUCCESS) {
+        LOGE("add ipc callback failed");
+        return HC_ERROR;
+    }
+    inOutLen = sizeof(cbObjIdx);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CB_OBJECT, (uint8_t *)&cbObjIdx, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_CB_OBJECT);
+        DelIpcCallBackByReqId(authReqId, CB_TYPE_TMP_DEV_AUTH, true);
+        return ret;
+    }
+    AddIpcCbObjByReqId(authReqId, cbObjIdx, CB_TYPE_TMP_DEV_AUTH);
+    InitDeviceAuthCbCtx(&g_authCbAdt, CB_TYPE_TMP_DEV_AUTH);
+    callRet = StartAuthDevice(authReqId, authParams, &g_authCbAdt);
+    if (callRet != HC_SUCCESS) {
+        DelIpcCallBackByReqId(authReqId, CB_TYPE_TMP_DEV_AUTH, true);
+    }
+    ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
+    return ret;
+}
+
+static int32_t IpcServiceDaCancelRequest(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t ret;
+    int64_t requestId = 0;
+    const char *authParams = NULL;
+
+    LOGI("starting ...");
+    int32_t inOutLen = sizeof(int64_t);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&requestId, &inOutLen);
+    if ((inOutLen != sizeof(requestId)) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_REQID);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_AUTH_PARAMS, (uint8_t *)&authParams, NULL);
+    if ((authParams == NULL) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_AUTH_PARAMS);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    ret = CancelAuthRequest(requestId, authParams);
+    DelIpcCallBackByReqId(requestId, CB_TYPE_TMP_DEV_AUTH, true);
+    ret = IpcEncodeCallReplay(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&ret, sizeof(int32_t));
+    LOGI("process done, ipc ret %d", ret);
+    return ret;
+}
+
 int32_t AddMethodMap(uintptr_t ipcInstance)
 {
     uint32_t ret;
@@ -1144,6 +1305,12 @@ int32_t AddMethodMap(uintptr_t ipcInstance)
     ret &= SetIpcCallMap(ipcInstance, IpcServiceGaCancelRequest, IPC_CALL_GA_CANCEL_REQUEST);
     ret &= SetIpcCallMap(ipcInstance, IpcServiceGaGetRealInfo, IPC_CALL_ID_GET_REAL_INFO);
     ret &= SetIpcCallMap(ipcInstance, IpcServiceGaGetPseudonymId, IPC_CALL_ID_GET_PSEUDONYM_ID);
+
+    // Direct Auth Interfaces
+    ret &= SetIpcCallMap(ipcInstance, IpcServiceDaProcessCredential, IPC_CALL_ID_PROCESS_CREDENTIAL);
+    ret &= SetIpcCallMap(ipcInstance, IpcServiceDaAuthDevice, IPC_CALL_ID_DA_AUTH_DEVICE);
+    ret &= SetIpcCallMap(ipcInstance, IpcServiceDaProcessData, IPC_CALL_ID_DA_PROC_DATA);
+    ret &= SetIpcCallMap(ipcInstance, IpcServiceDaCancelRequest, IPC_CALL_ID_DA_CANCEL_REQUEST);
     LOGI("process done, ret %u", ret);
     return ret;
 }

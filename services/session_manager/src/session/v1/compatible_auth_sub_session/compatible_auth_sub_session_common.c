@@ -227,7 +227,7 @@ static int32_t GetCandidateAuthInfo(int32_t osAccountId, const char *groupId,
         GetGroupInfoByGroupId(osAccountId, groupId, &vec);
     }
     if (vec.size(&vec) == 0) {
-        LOGE("No satisfied candidate group!");
+        LOGW("No satisfied candidate group!");
         ClearGroupEntryVec(&vec);
         return HC_ERR_NO_CANDIDATE_GROUP;
     }

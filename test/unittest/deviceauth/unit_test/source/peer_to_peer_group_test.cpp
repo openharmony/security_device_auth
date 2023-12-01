@@ -22,7 +22,7 @@
 #include "device_auth_defines.h"
 #include "hc_log.h"
 #include "json_utils.h"
-#include "../../../../../services/group_manager/src/group_operation/peer_to_peer_group/peer_to_peer_group.c"
+#include "../../../../../services/legacy/group_manager/src/group_operation/peer_to_peer_group/peer_to_peer_group.c"
 
 using namespace std;
 using namespace testing::ext;

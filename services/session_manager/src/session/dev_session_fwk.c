@@ -20,11 +20,11 @@
 #include "alg_loader.h"
 #include "callback_manager.h"
 #include "channel_manager.h"
+#include "identity_common.h"
 #include "common_defs.h"
 #include "compatible_sub_session.h"
 #include "compatible_bind_sub_session_util.h"
 #include "compatible_auth_sub_session_util.h"
-#include "creds_operation_utils.h"
 #include "data_manager.h"
 #include "dev_session_v2.h"
 #include "hc_dev_info.h"
@@ -40,12 +40,18 @@
 static int32_t StartV1Session(SessionImpl *impl, CJson **sendMsg)
 {
     bool isBind = true;
+    bool isDeviceLevel = false;
     (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
+    (void)GetBoolFromJson(impl->context, FIELD_IS_DEVICE_LEVEL, &isDeviceLevel);
     SubSessionTypeValue subSessionType = isBind ? TYPE_CLIENT_BIND_SUB_SESSION : TYPE_CLIENT_AUTH_SUB_SESSION;
     int32_t res = CreateCompatibleSubSession(subSessionType, impl->context, &impl->base.callback,
         &impl->compatibleSubSession);
     if (res != HC_SUCCESS) {
-        LOGE("create compatibleSubSession fail. [Res]: %d", res);
+        if (isDeviceLevel && res == HC_ERR_NO_CANDIDATE_GROUP) {
+            LOGI("create compatibleSubSession fail. no candidate group");
+        } else {
+            LOGE("create compatibleSubSession fail. [Res]: %d", res);
+        }
         return res;
     }
     int32_t status;
@@ -224,10 +230,24 @@ static int32_t StartSession(DevSession *self)
     int32_t res;
     do {
         CJson *sendMsg = NULL;
-        res = StartV1Session(impl, &sendMsg);
-        if (res != HC_SUCCESS) {
-            LOGE("start v1 session event fail.");
-            break;
+        /* auth with credentials directly no need to start the v1 session. */
+        bool isDirectAuth = false;
+        bool isDeviceLevel = false;
+        (void)GetBoolFromJson(impl->context, FIELD_IS_DIRECT_AUTH, &isDirectAuth);
+        if (!isDirectAuth) {
+            (void)GetBoolFromJson(impl->context, FIELD_IS_DEVICE_LEVEL, &isDeviceLevel);
+            res = StartV1Session(impl, &sendMsg);
+            if ((res != HC_SUCCESS)
+                && (res != HC_ERR_NO_CANDIDATE_GROUP || !isDeviceLevel)) {
+                // if it's device level auth and no group founded,
+                // we also need try auth with credentails directly.
+                LOGE("start v1 session event fail.");
+                break;
+            }
+        }
+        if (sendMsg == NULL && (sendMsg = CreateJson()) == NULL) {
+            LOGE("allocate sendMsg fail.");
+            return HC_ERR_ALLOC_MEMORY;
         }
         if (IsSupportSessionV2()) {
             res = StartV2Session(impl, sendMsg);

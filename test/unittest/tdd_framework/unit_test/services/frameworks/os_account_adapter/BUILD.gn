@@ -56,6 +56,9 @@ if (support_os_account) {
     sources += account_subscriber_files
     sources += sa_subscriber_files
 
+    include_dirs += identity_manager_inc
+    sources += identity_manager_files
+
     cflags = [ "-DHILOG_ENABLE" ]
     cflags += [
       "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",

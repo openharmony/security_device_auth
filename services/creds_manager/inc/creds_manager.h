@@ -16,7 +16,7 @@
 #ifndef CREDS_MANAGER_H
 #define CREDS_MANAGER_H
 
-#include "creds_manager_defines.h"
+#include "identity_manager.h"
 #include "json_utils.h"
 
 #ifdef __cplusplus
@@ -26,11 +26,11 @@ extern "C" {
 int32_t AddCertInfoToJson(const CertInfo *certInfo, CJson *out);
 int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec);
 int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedUrl, IdentityInfo **returnInfo);
-int32_t GetSharedSecretByUrl(const CJson *in, const Uint8Buff *presharedUrl, ProtocolAlgType protocolType,
-    Uint8Buff *sharedSecret);
+int32_t GetSharedSecretByUrl(
+    const CJson *in, const Uint8Buff *presharedUrl, ProtocolAlgType protocolType, Uint8Buff *sharedSecret);
 int32_t GetCredInfoByPeerCert(const CJson *in, const CertInfo *certInfo, IdentityInfo **returnInfo);
-int32_t GetSharedSecretByPeerCert(const CJson *in, const CertInfo *peerCertInfo, ProtocolAlgType protocolType,
-    Uint8Buff *sharedSecret);
+int32_t GetSharedSecretByPeerCert(
+    const CJson *in, const CertInfo *peerCertInfo, ProtocolAlgType protocolType, Uint8Buff *sharedSecret);
 
 #ifdef __cplusplus
 }

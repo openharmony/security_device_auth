@@ -65,6 +65,9 @@
 #define FIELD_EXPIRE_TIME "expireTime"
 #define FIELD_IS_DELETE_ALL "isDeleteAll"
 #define FIELD_OS_ACCOUNT_ID "osAccountId"
+#define FIELD_ACQURIED_TYPE "acquireType"
+#define FIELD_CRED_OP_FLAG "flag"
+#define FIELD_CRED_OP_RESULT "result"
 #define FIELD_AUTH_CODE "authCode"
 #define FIELD_DEVICE_LIST "deviceList"
 #define FIELD_IS_UDID_HASH "isUdidHash"
@@ -285,9 +288,105 @@ typedef struct {
     void (*destroyInfo)(char **returnInfo);
 } DeviceGroupManager;
 
+/**
+ * @brief This enum provides all the operationCode of interface ProcessCredential.
+ */
+enum {
+    /** invalid operationCode for initialize */
+    CRED_OP_INVALID = -1,
+    /** operationCode for ProcessCredential to query credential */
+    CRED_OP_QUERY,
+    /** operationCode for ProcessCredential to create credential */
+    CRED_OP_CREATE,
+    /** operationCode for ProcessCredential to import credential */
+    CRED_OP_IMPORT,
+    /** operationCode for ProcessCredential to delete credential */
+    CRED_OP_DELETE,
+};
+
+/**
+ * @brief This enum provides all the flag of reqJsion for interface ProcessCredential.
+ */
+enum {
+    /** invalid flag for initialize */
+    RETURN_FLAG_INVALID = -1,
+    /** flag for only return result */
+    RETURN_FLAG_DEFAULT,
+    /** flag for return result and publicKey */
+    RETURN_FLAG_PUBLIC_KEY,
+};
+
+/**
+ * @brief This enum provides all the acquireType of interface StartAuthDevice & ProcessAuthDevice.
+ */
+typedef enum {
+    /** invalid acquireType for initialize */
+    ACQUIRE_TYPE_INVALID = -1,
+    /** acquireType for p2p bind */
+    P2P_BIND,
+} AcquireType;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @brief Process Credential data.
+ *
+ * This API is used to process Credential data.
+ *
+ * @param operationCode: use one of CRED_OP_QUERY|CRED_OP_CREATE|CRED_OP_IMPORT|CRED_OP_DELETE
+ * @param requestParams: json string contains group of osAccountId|deviceId|serviceType|acquireType|flag
+ * @param returnData: json string contains group of result|publicKey
+ *
+ * @return When the ipc call is successful, it returns HC_SUCCESS.
+ * Otherwise, it returns other values.
+ */
+DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(
+    int32_t operationCode, const char *requestParams, char **returnData);
+
+/**
+ * @brief Start to auth device.
+ *
+ * This API is used to start to auth device.
+ *
+ * @param requestId: id of a request
+ * @param authParams: json string contains group of osAccountId|deviceId|serviceType|acquireType|pinCode
+ * @param callbak: callback object
+ *
+ * @return When the ipc call is successful, it returns HC_SUCCESS.
+ * Otherwise, it returns other values.
+ */
+DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
+    int64_t requestId, const char *authParams, const DeviceAuthCallback *callbak);
+
+/**
+ * @brief Process auth device data.
+ *
+ * This API is used to process auth device data.
+ *
+ * @param requestId: id of a request
+ * @param authParams: json string contains group of osAccountId|data
+ * @param callbak: callback object
+ *
+ * @return When the ipc call is successful, it returns HC_SUCCESS.
+ * Otherwise, it returns other values.
+ */
+DEVICE_AUTH_API_PUBLIC int32_t ProcessAuthDevice(
+    int64_t requestId, const char *authParams, const DeviceAuthCallback *callbak);
+
+/**
+ * @brief Cancle auth device request.
+ *
+ * This API is used to cancle auth device request.
+ *
+ * @param requestId: id of a request
+ * @param authParams: json string contains osAccountId or NULL
+ *
+ * @return When the ipc call is successful, it returns HC_SUCCESS.
+ * Otherwise, it returns other values.
+ */
+DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *authParams);
 
 /**
  * @brief Initialize device auth service.

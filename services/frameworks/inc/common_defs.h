@@ -70,8 +70,10 @@
 #define FIELD_IS_BIND "isBind"
 #define FIELD_IS_FORCE_DELETE "isForceDelete"
 #define FIELD_IS_CREDENTIAL_EXISTS "isCredentialExists"
+#define FIELD_IS_DIRECT_AUTH "isDirectAuth"
 #define FIELD_KCF_DATA "kcfData"
 #define FIELD_KEY_TYPE "keyType"
+#define FIELD_TRUST_TYPE "trustType"
 #define FIELD_MESSAGE "message"
 #define FIELD_GROUP_ERROR_MSG "groupErrorMsg"
 #define FIELD_MIN_VERSION "minVersion"
@@ -144,6 +146,9 @@
 #define DEFAULT_REQUEST_ID 0
 #define DEFAULT_CHANNEL_ID (-1)
 #define DEFAULT_EXPIRE_TIME 90
+#define DEFAULT_SERVICE_TYPE "service.type.default"
+#define SERVICE_TYPE_IMPORT "service.type.import"
+#define DEFAULT_PACKAGE_NAME "deviceauth_service"
 #define GROUP_MANAGER_PACKAGE_NAME "com.huawei.devicegroupmanage"
 #define DM_APP_ID "ohos.distributedhardware.devicemanager"
 #define SOFTBUS_APP_ID "softbus_auth"

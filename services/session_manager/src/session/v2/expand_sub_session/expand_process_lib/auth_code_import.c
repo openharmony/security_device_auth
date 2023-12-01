@@ -18,12 +18,7 @@
 #include "alg_loader.h"
 #include "device_auth_defines.h"
 #include "hc_log.h"
-
-#define AUTH_CODE_LEN 32
-#define KEY_ALIAS_LEN 32
-#define KEY_ALIAS_AUTH_TOKEN 7
-#define KEY_TYPE_PAIR_LEN 2
-#define KEY_ALIAS_TYPE_END 8
+#include "identity_defines.h"
 
 #define START_CMD_EVENT_NAME "StartCmd"
 #define GEN_AUTH_CODE_EVENT_NAME "GenAuthCode"
@@ -40,18 +35,6 @@
 #define FIELD_EVENT "event"
 #define FIELD_ERR_CODE "errCode"
 #define FIELD_ERR_MSG "errMsg"
-
-/* in order to expand to uint16_t */
-static const uint8_t KEY_TYPE_PAIRS[KEY_ALIAS_TYPE_END][KEY_TYPE_PAIR_LEN] = {
-    { 0x00, 0x00 }, /* ACCESSOR_PK */
-    { 0x00, 0x01 }, /* CONTROLLER_PK */
-    { 0x00, 0x02 }, /* ed25519 KEYPAIR */
-    { 0x00, 0x03 }, /* KEK, key encryption key, used only by DeviceAuthService */
-    { 0x00, 0x04 }, /* DEK, data encryption key, used only by upper apps */
-    { 0x00, 0x05 }, /* key tmp */
-    { 0x00, 0x06 }, /* PSK, preshared key index */
-    { 0x00, 0x07 }  /* AUTHTOKEN */
-};
 
 typedef struct {
     int32_t userTypeSelf;
@@ -179,7 +162,7 @@ static int32_t GenerateKeyAlias(const CmdParams *params, Uint8Buff *keyAlias)
         LOGE("CombineServiceId failed, res: %x.", res);
         return res;
     }
-    Uint8Buff keyTypeBuff = { (uint8_t *)KEY_TYPE_PAIRS[KEY_ALIAS_AUTH_TOKEN], KEY_TYPE_PAIR_LEN };
+    Uint8Buff keyTypeBuff = { GetKeyTypePair(KEY_ALIAS_AUTH_TOKEN), KEY_TYPE_PAIR_LEN };
     return CalKeyAlias(&serviceId, &keyTypeBuff, &params->authIdPeer, keyAlias);
 }
 

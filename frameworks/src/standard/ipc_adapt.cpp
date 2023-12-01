@@ -33,10 +33,10 @@ using namespace OHOS;
 namespace {
     static const int32_t BUFF_MAX_SZ = 128;
     static const int32_t IPC_CALL_BACK_MAX_NODES = 64;
-    static const int32_t IPC_CALL_BACK_STUB_NODES = 2;
+    static const int32_t IPC_CALL_BACK_STUB_NODES = 3;
 }
 
-static sptr<StubDevAuthCb> g_sdkCbStub[IPC_CALL_BACK_STUB_NODES] = { nullptr, nullptr };
+static sptr<StubDevAuthCb> g_sdkCbStub[IPC_CALL_BACK_STUB_NODES] = { nullptr, nullptr, nullptr };
 
 typedef void (*CallbackStub)(uintptr_t, const IpcDataInfo *, int32_t, MessageParcel &);
 typedef struct {
@@ -1509,6 +1509,7 @@ int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
 bool IsCallbackMethod(int32_t methodId)
 {
     if ((methodId == IPC_CALL_ID_REG_CB) || (methodId == IPC_CALL_ID_REG_LISTENER) ||
+        (methodId == IPC_CALL_ID_DA_AUTH_DEVICE) || (methodId == IPC_CALL_ID_DA_PROC_DATA) ||
         (methodId == IPC_CALL_ID_GA_PROC_DATA) || (methodId == IPC_CALL_ID_AUTH_DEVICE)) {
         return true;
     }
@@ -1519,6 +1520,7 @@ void UnInitProxyAdapt(void)
 {
     g_sdkCbStub[IPC_CALL_BACK_STUB_AUTH_ID] = nullptr;
     g_sdkCbStub[IPC_CALL_BACK_STUB_BIND_ID] = nullptr;
+    g_sdkCbStub[IPC_CALL_BACK_STUB_DIRECT_AUTH_ID] = nullptr;
     return;
 }
 
@@ -1526,7 +1528,9 @@ int32_t InitProxyAdapt(void)
 {
     g_sdkCbStub[IPC_CALL_BACK_STUB_AUTH_ID] = new(std::nothrow) StubDevAuthCb;
     g_sdkCbStub[IPC_CALL_BACK_STUB_BIND_ID] = new(std::nothrow) StubDevAuthCb;
-    if (!g_sdkCbStub[IPC_CALL_BACK_STUB_AUTH_ID] || !g_sdkCbStub[IPC_CALL_BACK_STUB_BIND_ID]) {
+    g_sdkCbStub[IPC_CALL_BACK_STUB_DIRECT_AUTH_ID] = new(std::nothrow) StubDevAuthCb;
+    if (!g_sdkCbStub[IPC_CALL_BACK_STUB_AUTH_ID] || !g_sdkCbStub[IPC_CALL_BACK_STUB_BIND_ID] ||
+        !g_sdkCbStub[IPC_CALL_BACK_STUB_DIRECT_AUTH_ID]) {
         LOGE("alloc callback stub object failed");
         UnInitProxyAdapt();
         return HC_ERR_ALLOC_MEMORY;
