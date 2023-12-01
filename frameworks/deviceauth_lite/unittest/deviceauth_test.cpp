@@ -644,7 +644,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest003_pake_server1, TestSize.Level
         strlen(reinterpret_cast<char *>(dataStr))
     };
     receive_data(server, &data);
-    EXPECT_EQ(g_result, END_FAILED);
+    EXPECT_EQ(g_result, KEY_AGREEMENT_PROCESSING);
 
     destroy(&server);
     LOG("--------ReceiveDataTest003--------");
