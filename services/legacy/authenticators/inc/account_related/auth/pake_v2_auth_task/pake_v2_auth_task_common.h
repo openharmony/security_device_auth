@@ -40,6 +40,7 @@ typedef struct {
     Uint8Buff pkInfoSelf;
     Uint8Buff pkInfoSignSelf;
     uint8_t pkPeer[PK_SIZE];
+    Uint8Buff pkPeerBuff;
     Uint8Buff pkInfoPeer;
     Uint8Buff pkInfoSignPeer;
 } PakeAuthParams;
