@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,7 +14,7 @@
  */
 
 #include "huks_adapter.h"
-#include "crypto_hash_to_point.h"
+#include "huks_adapter_diff_impl.h"
 #include "hc_log.h"
 #include "hks_api.h"
 #include "hks_param.h"
@@ -75,17 +75,6 @@ static int32_t ConstructParamSet(struct HksParamSet **out, const struct HksParam
 
     *out = paramSet;
     return HAL_SUCCESS;
-}
-
-static int32_t InitHks(void)
-{
-    LOGI("[HUKS]: HksInitialize enter.");
-    int32_t res = HksInitialize();
-    LOGI("[HUKS]: HksInitialize quit. [Res]: %d", res);
-    if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksInitialize fail. [Res]: %d", res);
-    }
-    return res;
 }
 
 static int32_t Sha256(const Uint8Buff *message, Uint8Buff *hash)
@@ -442,16 +431,7 @@ static int32_t HashToPoint(const Uint8Buff *hash, Algorithm algo, Uint8Buff *out
     }
 
     CHECK_LEN_EQUAL_RETURN(outEcPoint->length, SHA256_LEN, "outEcPoint->length");
-    struct HksBlob hashBlob = { hash->length, hash->val };
-    struct HksBlob pointBlob = { outEcPoint->length, outEcPoint->val };
-
-    int32_t res = OpensslHashToPoint(&hashBlob, &pointBlob);
-    if (res != HAL_SUCCESS || pointBlob.size != SHA256_LEN) {
-        LOGE("HashToPoint for x25519 failed, res: %d", res);
-        return HAL_FAILED;
-    }
-
-    return HAL_SUCCESS;
+    return HashToPointX25519(hash, outEcPoint);
 }
 
 static int32_t ConstructInitParamsP256(struct HksParamSet **initParamSet)

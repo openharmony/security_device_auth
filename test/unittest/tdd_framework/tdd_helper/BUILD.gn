@@ -32,9 +32,10 @@ ohos_static_library("device_auth_test_hal") {
 
   sources = hal_common_files
   sources += [
+    "${key_management_adapter_path}/impl/src/huks_adapter.c",
+    "${key_management_adapter_path}/impl/src/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
-    "${key_management_adapter_path}/impl/src/standard/huks_adapter.c",
-    "${key_management_adapter_path}/impl/src/standard/mbedtls_ec_adapter.c",
+    "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
     "${os_adapter_path}/impl/src/hc_log.c",
     "${os_adapter_path}/impl/src/linux/hc_condition.c",
     "${os_adapter_path}/impl/src/linux/hc_dev_info.c",
