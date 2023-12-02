@@ -914,6 +914,8 @@ HWTEST_F(CredsManagerTest, CredsManagerTest021, TestSize.Level0)
     CJson *presharedUrlJson = CreateJson();
     ASSERT_NE(presharedUrlJson, nullptr);
     AddIntToJson(presharedUrlJson, PRESHARED_URL_TRUST_TYPE, TRUST_TYPE_PIN);
+    AddIntToJson(presharedUrlJson, PRESHARED_URL_KEY_TYPE, KEY_TYPE_SYM);
+    AddIntToJson(presharedUrlJson, PRESHARED_URL_CREDENTIAL_TYPE, PRE_SHARED);
     char *presharedUrlStr = PackJsonToString(presharedUrlJson);
     FreeJson(presharedUrlJson);
     ASSERT_NE(presharedUrlStr, nullptr);
@@ -1306,6 +1308,7 @@ HWTEST_F(CredsManagerTest, CredsManagerTest038, TestSize.Level0)
     presharedUrlJson = CreateJson();
     ASSERT_NE(presharedUrlJson, nullptr);
     AddIntToJson(presharedUrlJson, PRESHARED_URL_TRUST_TYPE, TRUST_TYPE_PIN);
+    AddIntToJson(presharedUrlJson, PRESHARED_URL_KEY_TYPE, KEY_TYPE_SYM);
     presharedUrlStr = PackJsonToString(presharedUrlJson);
     FreeJson(presharedUrlJson);
     ASSERT_NE(presharedUrlStr, nullptr);
@@ -1373,6 +1376,7 @@ HWTEST_F(CredsManagerTest, CredsManagerTest041, TestSize.Level0)
     CJson *presharedUrlJson = CreateJson();
     ASSERT_NE(presharedUrlJson, nullptr);
     AddIntToJson(presharedUrlJson, PRESHARED_URL_TRUST_TYPE, TRUST_TYPE_PIN);
+    AddIntToJson(presharedUrlJson, PRESHARED_URL_KEY_TYPE, KEY_TYPE_SYM);
     char *presharedUrlStr = PackJsonToString(presharedUrlJson);
     FreeJson(presharedUrlJson);
     ASSERT_NE(presharedUrlStr, nullptr);
