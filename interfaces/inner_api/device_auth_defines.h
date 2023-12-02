@@ -96,6 +96,7 @@ enum {
     HC_ERR_GENERATE_RANDOM = 0x00004011,                                  // 16401
     HC_ERR_STATUS = 0x00004012,                                           // 16402
     HC_ERR_STEP = 0x00004013,                                             // 16403
+    HC_ERR_IDENTITY_DUPLICATED = 0x00004014,                              // 16404
 
     /* error code for group , 0x00005000 ~ 0x00005FFF */
     HC_ERR_ACCESS_DENIED = 0x00005001,                                    // 20481

@@ -44,7 +44,7 @@ static int32_t CreateClientAuthSubSessionInner(int32_t osAccountId, CJson *jsonP
     CreateAuthParamsList(&authParamsVec);
     int32_t res = GetAuthParamsVec(osAccountId, jsonParams, &authParamsVec);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get auth param list!");
+        LOGW("Failed to get auth param list!");
         DestroyAuthParamsList(&authParamsVec);
         return res;
     }

@@ -39,6 +39,7 @@
 #include "pseudonym_manager.h"
 #include "task_manager.h"
 #include "performance_dumper.h"
+#include "identity_manager.h"
 
 static GroupAuthManager *g_groupAuthManager =  NULL;
 static DeviceGroupManager *g_groupManagerInstance = NULL;
@@ -154,7 +155,7 @@ static const char *GetPeerUdidFromJson(int32_t osAccountId, const CJson *in)
 {
     const char *peerConnDeviceId = GetStringFromJson(in, FIELD_PEER_CONN_DEVICE_ID);
     if (peerConnDeviceId == NULL) {
-        LOGE("get peerConnDeviceId from json fail.");
+        LOGI("get peerConnDeviceId from json fail.");
         return NULL;
     }
     bool isUdidHash = false;
@@ -855,6 +856,32 @@ static int32_t BuildClientAuthContext(int32_t osAccountId, int64_t requestId, co
     return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
 }
 
+static int32_t BuildP2PBindContext(CJson *context)
+{
+    int32_t acquireType = -1;
+    if (GetIntFromJson(context, FIELD_ACQURIED_TYPE, &acquireType) != HC_SUCCESS) {
+        LOGE("Failed to get acquireType from reqJsonStr!");
+        return HC_ERR_JSON_FAIL;
+    }
+    if ((acquireType == P2P_BIND) && AddBoolToJson(context, FIELD_IS_DIRECT_AUTH, true) != HC_SUCCESS) {
+        LOGE("add isDirectAuth to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(context, FIELD_OPERATION_CODE, acquireType) != HC_SUCCESS) {
+        LOGE("add opCode to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    const char *serviceType = GetStringFromJson(context, FIELD_SERVICE_TYPE);
+    if (serviceType == NULL) {
+        if ((acquireType == P2P_BIND) &&
+            AddStringToJson(context, FIELD_SERVICE_TYPE, DEFAULT_SERVICE_TYPE) != HC_SUCCESS) {
+            LOGE("add serviceType to context fail.");
+            return HC_ERR_JSON_ADD;
+        }
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *authParams,
     const DeviceAuthCallback *gaCallback)
 {
@@ -967,6 +994,58 @@ static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const c
     return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
 }
 
+static int32_t BuildServerP2PAuthContext(int64_t requestId, int32_t opCode, const char *appId, CJson *context)
+{
+    int32_t osAccountId = ANY_OS_ACCOUNT;
+    (void)GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId);
+    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
+    if (osAccountId == INVALID_OS_ACCOUNT) {
+        return HC_ERR_INVALID_PARAMS;
+    }
+    if (!IsOsAccountUnlocked(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
+    const char *peerUdid = GetStringFromJson(context, FIELD_PEER_CONN_DEVICE_ID);
+    const char *pinCode = GetStringFromJson(context, FIELD_PIN_CODE);
+    if (peerUdid == NULL && pinCode == NULL) {
+        LOGE("need peerConnDeviceId or pinCode!");
+        return HC_ERR_JSON_GET;
+    }
+    if (peerUdid != NULL) {
+        PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
+        if (AddDeviceIdToJson(context, peerUdid) != HC_SUCCESS) {
+            LOGE("add deviceId to context fail.");
+            return HC_ERR_JSON_ADD;
+        }
+    }
+    if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
+        LOGE("add isBind to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddBoolToJson(context, FIELD_IS_CLIENT, false) != HC_SUCCESS) {
+        LOGE("add isClient to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
+        LOGE("add operationCode to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
+        LOGE("add requestId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
+        LOGE("add opCode to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
+}
+
 static int32_t OpenServerAuthSession(int64_t requestId, const CJson *receivedMsg, const DeviceAuthCallback *callback)
 {
     int32_t opCode = AUTH_FORM_ACCOUNT_UNRELATED;
@@ -999,6 +1078,59 @@ static int32_t OpenServerAuthSession(int64_t requestId, const CJson *receivedMsg
         return res;
     }
     res = BuildServerAuthContext(requestId, opCode, appId, context);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+    SessionInitParams params = { context, *callback };
+    res = OpenDevSession(requestId, appId, &params);
+    FreeJson(context);
+    return res;
+}
+
+static int32_t OpenServerAuthSessionForP2P(
+    int64_t requestId, const CJson *receivedMsg, const DeviceAuthCallback *callback)
+{
+    int32_t opCode = P2P_BIND;
+    if (GetIntFromJson(receivedMsg, FIELD_OP_CODE, &opCode) != HC_SUCCESS) {
+        opCode = P2P_BIND;
+        LOGW("use default opCode.");
+    }
+    char *returnDataStr = ProcessRequestCallback(requestId, opCode, NULL, callback);
+    if (returnDataStr == NULL) {
+        LOGE("The OnRequest callback is fail!");
+        return HC_ERR_REQ_REJECTED;
+    }
+    CJson *context = CreateJsonFromString(returnDataStr);
+    FreeJsonString(returnDataStr);
+    if (context == NULL) {
+        LOGE("Failed to create context from string!");
+        return HC_ERR_JSON_FAIL;
+    }
+    if (AddBoolToJson(context, FIELD_IS_DIRECT_AUTH, true) != HC_SUCCESS) {
+        LOGE("Failed to add isDirectAuth to context!");
+        FreeJson(context);
+        return HC_ERR_JSON_ADD;
+    }
+    const char *pkgName = GetStringFromJson(context, FIELD_SERVICE_PKG_NAME);
+    if (pkgName == NULL && AddStringToJson(context, FIELD_SERVICE_PKG_NAME, DEFAULT_PACKAGE_NAME) != HC_SUCCESS) {
+        LOGE("Failed to add default package name to context!");
+        FreeJson(context);
+        return HC_ERR_JSON_ADD;
+    }
+    const char *serviceType = GetStringFromJson(context, FIELD_SERVICE_TYPE);
+    if (serviceType == NULL && AddStringToJson(context, FIELD_SERVICE_TYPE, DEFAULT_SERVICE_TYPE) != HC_SUCCESS) {
+        LOGE("Failed to add default package name to context!");
+        FreeJson(context);
+        return HC_ERR_JSON_ADD;
+    }
+    const char *appId = pkgName != NULL ? pkgName : DEFAULT_PACKAGE_NAME;
+    int32_t res = CheckAcceptRequest(context);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+    res = BuildServerP2PAuthContext(requestId, opCode, appId, context);
     if (res != HC_SUCCESS) {
         FreeJson(context);
         return res;
@@ -1090,6 +1222,145 @@ static int32_t GetPseudonymId(int32_t osAccountId, const char *indexKey, char **
         return HC_ERR_NOT_SUPPORT;
     }
     return pseudonymInstance->getPseudonymId(osAccountId, indexKey, pseudonymId);
+}
+
+DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const char *reqJsonStr, char **returnData)
+{
+    if (reqJsonStr == NULL || returnData == NULL) {
+        LOGE("Invalid params!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+
+    const CredentialOperator *credOperator = GetCredentialOperator();
+    if (credOperator == NULL) {
+        LOGE("credOperator is null!");
+        return HC_ERR_NOT_SUPPORT;
+    }
+
+    int32_t res = HC_ERR_UNSUPPORTED_OPCODE;
+    switch (operationCode) {
+        case CRED_OP_QUERY:
+            res = credOperator->queryCredential(reqJsonStr, returnData);
+            break;
+        case CRED_OP_CREATE:
+            res = credOperator->genarateCredential(reqJsonStr, returnData);
+            break;
+        case CRED_OP_IMPORT:
+            res = credOperator->importCredential(reqJsonStr, returnData);
+            break;
+        case CRED_OP_DELETE:
+            res = credOperator->deleteCredential(reqJsonStr, returnData);
+            break;
+        default:
+            LOGE("invalid opCode: %d", operationCode);
+            break;
+    }
+
+    return res;
+}
+
+DEVICE_AUTH_API_PUBLIC int32_t ProcessAuthDevice(
+    int64_t authReqId, const char *authParams, const DeviceAuthCallback *callback)
+{
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(authReqId);
+    LOGI("[DA] Begin ProcessAuthDevice [ReqId]: %" PRId64, authReqId);
+    if (authParams == NULL) {
+        LOGE("Invalid input for ProcessData!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    CJson *json = CreateJsonFromString(authParams);
+    if (json == NULL) {
+        LOGE("Failed to create json from string!");
+        return HC_ERR_JSON_FAIL;
+    }
+    const char *data = GetStringFromJson(json, "data");
+    if (data == NULL) {
+        LOGE("Failed to get received data from parameter!");
+        FreeJson(json);
+        return HC_ERR_INVALID_PARAMS;
+    }
+    CJson *receivedMsg = CreateJsonFromString(data);
+    FreeJson(json);
+    if (receivedMsg == NULL) {
+        LOGE("Failed to create json from string!");
+        return HC_ERR_JSON_FAIL;
+    }
+    int32_t res;
+    if (!IsSessionExist(authReqId)) {
+        res = OpenServerAuthSessionForP2P(authReqId, receivedMsg, callback);
+        if (res != HC_SUCCESS) {
+            FreeJson(receivedMsg);
+            return res;
+        }
+    }
+    res = PushProcSessionTask(authReqId, receivedMsg);
+    if (res != HC_SUCCESS) {
+        FreeJson(receivedMsg);
+        return res;
+    }
+    return HC_SUCCESS;
+}
+
+DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
+    int64_t authReqId, const char *authParams, const DeviceAuthCallback *callback)
+{
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(authReqId);
+    LOGI("StartAuthDevice. [ReqId]:%" PRId64, authReqId);
+
+    if ((authParams == NULL) || (callback == NULL)) {
+        LOGE("The input auth params is invalid!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    CJson *context = CreateJsonFromString(authParams);
+    if (context == NULL) {
+        LOGE("Failed to create json from string!");
+        return HC_ERR_JSON_FAIL;
+    }
+    int32_t osAccountId = INVALID_OS_ACCOUNT;
+    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId from json!");
+        FreeJson(context);
+        return HC_ERR_JSON_FAIL;
+    }
+
+    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
+    if (osAccountId == INVALID_OS_ACCOUNT) {
+        FreeJson(context);
+        return HC_ERR_INVALID_PARAMS;
+    }
+    int32_t res = BuildClientAuthContext(osAccountId, authReqId, DEFAULT_PACKAGE_NAME, context);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+    res = BuildP2PBindContext(context);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+    SessionInitParams params = { context, *callback };
+    res = OpenDevSession(authReqId, DEFAULT_PACKAGE_NAME, &params);
+    FreeJson(context);
+    if (res != HC_SUCCESS) {
+        LOGE("OpenDevSession fail. [Res]: %d", res);
+        return res;
+    }
+    return PushStartSessionTask(authReqId);
+}
+
+DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *authParams)
+{
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(requestId);
+    if (authParams == NULL) {
+        LOGE("Invalid authParams!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    LOGI("cancel request. [ReqId]: %" PRId64, requestId);
+    CancelDevSession(requestId, DEFAULT_PACKAGE_NAME);
+    return HC_SUCCESS;
 }
 
 static int32_t AllocGmAndGa(void)

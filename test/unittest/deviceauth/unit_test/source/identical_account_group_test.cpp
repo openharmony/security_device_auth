@@ -22,7 +22,7 @@
 #include "device_auth_defines.h"
 #include "hc_log.h"
 #include "json_utils.h"
-#include "../../../../../services/group_manager/src/group_operation/identical_account_group/identical_account_group.c"
+#include "../../../../../services/legacy/group_manager/src/group_operation/identical_account_group/identical_account_group.c"
 
 using namespace std;
 using namespace testing::ext;

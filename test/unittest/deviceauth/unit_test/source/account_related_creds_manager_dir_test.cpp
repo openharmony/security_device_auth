@@ -23,7 +23,7 @@
 #include "hc_log.h"
 #include "json_utils.h"
 #include "securec.h"
-#include "../../../../../services/authenticators/src/account_related/creds_manager/asy_token_manager.c"
+#include "../../../../../services/legacy/authenticators/src/account_related/creds_manager/asy_token_manager.c"
 
 using namespace std;
 using namespace testing::ext;

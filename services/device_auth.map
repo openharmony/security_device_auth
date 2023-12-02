@@ -19,6 +19,10 @@
     DestroyDeviceAuthService;
     GetGaInstance;
     GetGmInstance;
+    ProcessCredential;
+    StartAuthDevice;
+    ProcessAuthDevice;
+    CancelAuthRequest;
   local:
     *;
 };

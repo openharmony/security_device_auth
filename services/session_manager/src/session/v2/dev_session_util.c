@@ -298,6 +298,12 @@ int32_t SetPeerAuthIdToContextIfNeeded(CJson *context, const IdentityInfo *info)
         LOGI("Not p2p auth, no need to set peer authId!");
         return HC_SUCCESS;
     }
+    /* auth with credentials directly no need set peer auth id here */
+    bool isDirectAuth = false;
+    (void)GetBoolFromJson(context, FIELD_IS_DIRECT_AUTH, &isDirectAuth);
+    if (isDirectAuth) {
+        return HC_SUCCESS;
+    }
     CJson *urlJson = CreateJsonFromString((const char *)info->proof.preSharedUrl.val);
     if (urlJson == NULL) {
         LOGE("Failed to create urlJson!");

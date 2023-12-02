@@ -84,6 +84,9 @@ ohos_unittest("deviceauth_llt") {
 
   sources += security_label_adapter_files
 
+  include_dirs += identity_manager_inc
+  sources += identity_manager_files
+
   sources -= [
     "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
     "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
@@ -245,6 +248,10 @@ ohos_unittest("device_auth_func_test") {
     "ENABLE_PSEUDONYM",
   ]
 
+  sources += identity_manager_files
+  include_dirs += identity_manager_inc
+  sources += [ "source/deviceauth_func_test.cpp" ]
+
   cflags = [ "-DHILOG_ENABLE" ]
   cflags += [
     "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",
@@ -303,6 +310,8 @@ ohos_unittest("deviceauth_unit_test") {
     "source/hc_dev_info_mock.c",
   ]
 
+  include_dirs += identity_manager_inc
+  sources += identity_manager_files
   sources += dev_frameworks_files
   sources += deviceauth_common_files
   sources += database_manager_files
@@ -343,10 +352,10 @@ ohos_unittest("deviceauth_unit_test") {
   ]
 
   sources -= [
-    "//base/security/device_auth/services/authenticators/src/account_related/creds_manager/asy_token_manager.c",
-    "//base/security/device_auth/services/group_manager/src/group_operation/across_account_group/across_account_group.c",
-    "//base/security/device_auth/services/group_manager/src/group_operation/identical_account_group/identical_account_group.c",
-    "//base/security/device_auth/services/group_manager/src/group_operation/peer_to_peer_group/peer_to_peer_group.c",
+    "${authenticators_path}/src/account_related/creds_manager/asy_token_manager.c",
+    "${group_manager_path}/src/group_operation/across_account_group/across_account_group.c",
+    "${group_manager_path}/src/group_operation/identical_account_group/identical_account_group.c",
+    "${group_manager_path}/src/group_operation/peer_to_peer_group/peer_to_peer_group.c",
   ]
 
   sources += [
@@ -413,6 +422,8 @@ ohos_unittest("device_auth_ipc_test") {
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
+
+  cflags = [ "-DHILOG_ENABLE" ]
 
   external_deps = [
     "c_utils:utils",

@@ -18,11 +18,7 @@
 #include "alg_loader.h"
 #include "device_auth_defines.h"
 #include "hc_log.h"
-
-#define KEY_TYPE_PAIR_LEN 2
-#define PAKE_KEY_ALIAS_LEN 64
-#define PAKE_ED25519_KEY_PAIR_LEN 32
-#define PAKE_PSK_LEN 32
+#include "identity_defines.h"
 
 #define START_CMD_EVENT_NAME "StartCmd"
 #define FAIL_EVENT_NAME "CmdFail"
@@ -37,31 +33,6 @@
 #define FIELD_EVENT "event"
 #define FIELD_ERR_CODE "errCode"
 #define FIELD_ERR_MSG "errMsg"
-
-typedef enum {
-    KEY_ALIAS_ACCESSOR_PK = 0,
-    KEY_ALIAS_CONTROLLER_PK = 1,
-    KEY_ALIAS_LT_KEY_PAIR = 2,
-    KEY_ALIAS_KEK = 3,
-    KEY_ALIAS_DEK = 4,
-    KEY_ALIAS_TMP = 5,
-    KEY_ALIAS_PSK = 6,
-    KEY_ALIAS_AUTH_TOKEN = 7,
-
-    KEY_ALIAS_TYPE_END
-} KeyAliasType;  // 0 ~ 2^8-1, don't change the order
-
-/* in order to expand to uint16_t */
-static const uint8_t KEY_TYPE_PAIRS[KEY_ALIAS_TYPE_END][KEY_TYPE_PAIR_LEN] = {
-    { 0x00, 0x00 }, /* ACCESSOR_PK */
-    { 0x00, 0x01 }, /* CONTROLLER_PK */
-    { 0x00, 0x02 }, /* ed25519 KEYPAIR */
-    { 0x00, 0x03 }, /* KEK, key encryption key, used only by DeviceAuthService */
-    { 0x00, 0x04 }, /* DEK, data encryption key, used only by upper apps */
-    { 0x00, 0x05 }, /* key tmp */
-    { 0x00, 0x06 }, /* PSK, preshared key index */
-    { 0x00, 0x07 }  /* AUTHTOKEN */
-};
 
 typedef struct {
     int32_t userTypeSelf;
@@ -197,7 +168,7 @@ static int32_t GenerateKeyAlias(const CmdParams *params, bool isSelf, bool isPsk
     int32_t userType = isSelf ? params->userTypeSelf : params->userTypePeer;
 #endif
     KeyAliasType keyAliasType = isPsk ? KEY_ALIAS_PSK : userType;
-    Uint8Buff keyTypeBuff = { (uint8_t *)KEY_TYPE_PAIRS[keyAliasType], KEY_TYPE_PAIR_LEN };
+    Uint8Buff keyTypeBuff = { GetKeyTypePair(keyAliasType), KEY_TYPE_PAIR_LEN };
     uint8_t keyAliasByteVal[SHA256_LEN] = { 0 };
     Uint8Buff keyAliasByte = { keyAliasByteVal, SHA256_LEN };
     res = CalKeyAlias(&serviceId, &keyTypeBuff, authId, &keyAliasByte);

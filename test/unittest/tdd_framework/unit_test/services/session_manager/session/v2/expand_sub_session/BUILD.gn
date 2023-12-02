@@ -37,6 +37,23 @@ ohos_unittest("expand_sub_session_test") {
   sources += pub_key_exchange_files
   sources += [ "expand_sub_session_test.cpp" ]
 
+  include_dirs += identity_manager_inc
+  include_dirs += [
+    "${dev_frameworks_path}/inc",
+    "${group_manager_path}/inc",
+    "${group_auth_path}/inc",
+    "${dev_frameworks_path}/inc/os_account_adapter",
+    "${dev_frameworks_path}/inc/plugin_adapter",
+    "${protocol_path}/inc/pake_protocol",
+    "${data_manager_path}/inc",
+    "${session_manager_path}/inc/session/v1",
+    "${session_manager_path}/inc/session/v1/compatible_auth_sub_session",
+    "${group_auth_path}/inc/account_related_group_auth",
+    "${authenticators_path}/inc/account_unrelated/pake_task",
+    "${authenticators_path}/inc/account_unrelated",
+  ]
+  sources += identity_manager_files
+
   cflags = [ "-DHILOG_ENABLE" ]
 
   defines = [

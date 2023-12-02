@@ -1765,6 +1765,205 @@ static void InitIpcGaMethods(GroupAuthManager *gaMethodObj)
     return;
 }
 
+DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const char *reqJsonStr, char **returnData)
+{
+    uintptr_t callCtx = IPC_CALL_CONTEXT_INIT;
+    int32_t ret;
+    IpcDataInfo replyCache = { 0 };
+
+    LOGI("starting ...");
+    if (IsStrInvalid(reqJsonStr) || (returnData == NULL)) {
+        LOGE("Invalid params.");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    ret = CreateCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("CreateCallCtx failed, ret %d", ret);
+        return HC_ERR_IPC_INIT;
+    }
+    ret = SetCallRequestParamInfo(
+        callCtx, PARAM_TYPE_OPCODE, (const uint8_t *)&operationCode, sizeof(operationCode));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OPCODE);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret =
+        SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQ_JSON, (const uint8_t *)reqJsonStr, strlen(reqJsonStr) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQ_JSON);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = DoBinderCall(callCtx, IPC_CALL_ID_PROCESS_CREDENTIAL, true);
+    if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
+        LOGE("ipc call failed");
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_PROC_FAILED;
+    }
+    DecodeCallReply(callCtx, &replyCache, REPLAY_CACHE_NUM(replyCache));
+    ret = GetIpcReplyByTypeInner(&replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
+    if (ret != HC_SUCCESS) {
+        LOGE("GetIpcReplyByType failed, ret %d", ret);
+    }
+    DestroyCallCtx(&callCtx, NULL);
+    return ret;
+}
+
+DEVICE_AUTH_API_PUBLIC int32_t ProcessAuthDevice(
+    int64_t requestId, const char *authParams, const DeviceAuthCallback *callback)
+{
+    uintptr_t callCtx = IPC_CALL_CONTEXT_INIT;
+    int32_t ret;
+    int32_t inOutLen;
+    IpcDataInfo replyCache = { 0 };
+
+    LOGI("starting ...");
+    if (IsStrInvalid(authParams) || (callback == NULL)) {
+        LOGE("invalid params");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    ret = CreateCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("CreateCallCtx failed, ret %d", ret);
+        return HC_ERR_IPC_INIT;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)(&requestId), sizeof(requestId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_REQID);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(
+        callCtx, PARAM_TYPE_AUTH_PARAMS, (const uint8_t *)authParams, strlen(authParams) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_AUTH_PARAMS);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_DEV_AUTH_CB, (const uint8_t *)callback, sizeof(*callback));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_DEV_AUTH_CB);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_DIRECT_AUTH_ID);
+    ret = DoBinderCall(callCtx, IPC_CALL_ID_DA_PROC_DATA, true);
+    if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
+        LOGE("ipc call failed");
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_PROC_FAILED;
+    }
+    DecodeCallReply(callCtx, &replyCache, REPLAY_CACHE_NUM(replyCache));
+    ret = HC_ERR_IPC_UNKNOW_REPLY;
+    inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(
+        &replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
+    LOGI("process done, ret %d", ret);
+    DestroyCallCtx(&callCtx, NULL);
+    return ret;
+}
+
+DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
+    int64_t authReqId, const char *authParams, const DeviceAuthCallback *callback)
+{
+    uintptr_t callCtx = IPC_CALL_CONTEXT_INIT;
+    int32_t ret;
+    int32_t inOutLen;
+    IpcDataInfo replyCache = { 0 };
+
+    LOGI("starting ...");
+    if (IsStrInvalid(authParams) || (callback == NULL)) {
+        LOGE("invalid params");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    ret = CreateCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("CreateCallCtx failed, ret %d", ret);
+        return HC_ERR_IPC_INIT;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)(&authReqId), sizeof(authReqId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_REQID);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(
+        callCtx, PARAM_TYPE_AUTH_PARAMS, (const uint8_t *)authParams, strlen(authParams) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_AUTH_PARAMS);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_DEV_AUTH_CB, (const uint8_t *)callback, sizeof(*callback));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_DEV_AUTH_CB);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_DIRECT_AUTH_ID);
+    ret = DoBinderCall(callCtx, IPC_CALL_ID_DA_AUTH_DEVICE, true);
+    if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
+        LOGE("ipc call failed");
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_PROC_FAILED;
+    }
+    DecodeCallReply(callCtx, &replyCache, REPLAY_CACHE_NUM(replyCache));
+    ret = HC_ERR_IPC_UNKNOW_REPLY;
+    inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(
+        &replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
+    LOGI("process done, ret %d", ret);
+    DestroyCallCtx(&callCtx, NULL);
+    return ret;
+}
+
+DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *authParams)
+{
+    uintptr_t callCtx = IPC_CALL_CONTEXT_INIT;
+    int32_t ret;
+    int32_t inOutLen;
+    IpcDataInfo replyCache = { 0 };
+
+    LOGI("starting ...");
+    if (IsStrInvalid(authParams)) {
+        LOGE("Invalid params.");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    ret = CreateCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("CreateCallCtx failed, ret %d", ret);
+        return HC_ERR_NULL_PTR;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)(&requestId), sizeof(requestId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_REQID);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_NULL_PTR;
+    }
+    ret = SetCallRequestParamInfo(
+        callCtx, PARAM_TYPE_AUTH_PARAMS, (const uint8_t *)authParams, strlen(authParams) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_AUTH_PARAMS);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_NULL_PTR;
+    }
+    ret = DoBinderCall(callCtx, IPC_CALL_ID_DA_CANCEL_REQUEST, true);
+    if (ret != HC_SUCCESS) {
+        LOGE("ipc call failed");
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_PROC_FAILED;
+    }
+    DecodeCallReply(callCtx, &replyCache, REPLAY_CACHE_NUM(replyCache));
+    ret = HC_ERR_IPC_UNKNOW_REPLY;
+    inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(
+        &replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
+    LOGI("process done, ret %d", ret);
+    DestroyCallCtx(&callCtx, NULL);
+    return ret;
+}
+
 DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 {
     InitHcMutex(&g_ipcMutex);

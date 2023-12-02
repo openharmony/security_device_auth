@@ -22,7 +22,6 @@
 #include "asy_token_manager.h"
 #include "common_defs.h"
 #include "creds_manager.h"
-#include "creds_operation_utils.h"
 #include "device_auth.h"
 #include "device_auth_defines.h"
 #include "hc_dev_info_mock.h"

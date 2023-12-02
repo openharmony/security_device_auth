@@ -19,7 +19,7 @@
 #include "auth_sub_session.h"
 #include "compatible_sub_session.h"
 #include "expand_sub_session.h"
-#include "creds_manager_defines.h"
+#include "identity_defines.h"
 #include "dev_session_fwk.h"
 #include "hc_vector.h"
 

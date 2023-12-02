@@ -34,6 +34,10 @@ if (os_level == "mini" || os_level == "small") {
     sources = deviceauth_files
     defines = [ "HILOG_ENABLE" ]
     defines += deviceauth_defines
+
+    sources += identity_manager_files
+    include_dirs += identity_manager_inc
+
     deps = [
       "${deps_adapter_path}:${hal_module_name}",
       "//build/lite/config/component/cJSON:cjson_shared",
@@ -198,6 +202,9 @@ if (os_level == "mini" || os_level == "small") {
         "${dev_frameworks_path}/src/plugin_adapter/ext_part_proxy.c",
       ]
     }
+
+    sources += identity_manager_files
+    include_dirs += identity_manager_inc
 
     branch_protector_ret = "pac_ret"
     sanitize = {

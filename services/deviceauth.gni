@@ -13,18 +13,18 @@
 
 import("//base/security/device_auth/deviceauth_env.gni")
 
-group_auth_path = "${services_path}/group_auth"
-authenticators_path = "${services_path}/authenticators"
+group_auth_path = "${services_path}/legacy/group_auth"
+authenticators_path = "${services_path}/legacy/authenticators"
 protocol_path = "${services_path}/protocol"
 cred_manager_path = "${services_path}/cred_manager"
 data_manager_path = "${services_path}/data_manager"
 privacy_enhancement_path = "${services_path}/privacy_enhancement"
 dev_frameworks_path = "${services_path}/frameworks"
-group_manager_path = "${services_path}/group_manager"
+group_manager_path = "${services_path}/legacy/group_manager"
 session_manager_path = "${services_path}/session_manager"
 creds_manager_path = "${services_path}/creds_manager"
 mk_agree_path = "${services_path}/mk_agree"
-
+identity_manager_path = "${services_path}/identity_manager"
 enable_broadcast = true
 deviceauth_defines = []
 
@@ -198,11 +198,9 @@ auth_code_import_files = [ "${session_manager_path}/src/session/v2/expand_sub_se
 pub_key_exchange_files = [ "${session_manager_path}/src/session/v2/expand_sub_session/expand_process_lib/pub_key_exchange.c" ]
 save_trusted_info_files = [ "${session_manager_path}/src/session/v2/expand_sub_session/expand_process_lib/save_trusted_info.c" ]
 
-creds_manager_files = [
-  "${creds_manager_path}/src/creds_manager.c",
-  "${creds_manager_path}/src/creds_operation_utils.c",
-]
-account_related_creds_manager_mock_files = [ "${creds_manager_path}/src/account_related_mock/account_related_creds_manager_mock.c" ]
+creds_manager_files = [ "${creds_manager_path}/src/creds_manager.c" ]
+account_related_creds_manager_mock_files =
+    [ "${identity_manager_path}/src/mock/cert_operation_mock.c" ]
 
 group_manager_peer_to_peer_files = [ "${group_manager_path}/src/group_operation/peer_to_peer_group/peer_to_peer_group.c" ]
 group_manager_peer_to_peer_mock_files = [ "${group_manager_path}/src/group_operation/peer_to_peer_group_mock/peer_to_peer_group_mock.c" ]
@@ -447,3 +445,25 @@ deviceauth_ipc_files = [
   "${frameworks_path}/src/${ipc_adapt_path}/ipc_callback_proxy.${ipc_src_suffix}",
   "${frameworks_path}/src/${ipc_adapt_path}/ipc_callback_stub.${ipc_src_suffix}",
 ]
+
+identity_manager_inc = [ "${identity_manager_path}/inc" ]
+
+declare_args() {
+  identity_manager_files = []
+}
+
+if (defined(ohos_lite)) {
+  identity_manager_files = [
+    "${identity_manager_path}/src/mock/identity_manager_mock.c",
+    "${identity_manager_path}/src/mock/identity_common_mock.c",
+  ]
+} else {
+  identity_manager_files = [
+    "${identity_manager_path}/src/identity_manager.c",
+    "${identity_manager_path}/src/credential_operator.c",
+    "${identity_manager_path}/src/identity_common.c",
+    "${identity_manager_path}/src/identity_group.c",
+    "${identity_manager_path}/src/identity_p2p.c",
+    "${identity_manager_path}/src/identity_pin.c",
+  ]
+}
