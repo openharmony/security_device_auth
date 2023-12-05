@@ -29,7 +29,7 @@ void DestroyIdentityInfo(IdentityInfo *info)
 IdentityInfoVec CreateIdentityInfoVec(void)
 {
     IdentityInfoVec v;
-    (void)memset_s(&v, sizeof(IdentityInfo), 0, sizeof(IdentityInfo));
+    (void)memset_s(&v, sizeof(IdentityInfoVec), 0, sizeof(IdentityInfoVec));
     return v;
 }
 
