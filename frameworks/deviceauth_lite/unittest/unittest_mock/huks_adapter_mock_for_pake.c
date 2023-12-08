@@ -30,6 +30,7 @@
 #define HC_PARAM_KEY_LEN 256
 #define BITS_PER_BYTE 8
 #define HC_CCM_NONCE_LEN 7
+#define PLAIN_LENGTH 64
 
 #if (defined(_SUPPORT_SEC_CLONE_) || defined(_SUPPORT_SEC_CLONE_SERVER_))
 static const uint8_t g_factor[] = "hichain_key_enc_key";
@@ -360,14 +361,15 @@ struct random_value generate_random(uint32_t length)
         LOGE("Generate random failed, invalid param length: %d", length);
         return rand;
     }
-
-    struct HksBlob hks_rand = { length, rand.random_value };
-    int32_t status = HksGenerateRandom(NULL, &hks_rand);
-    if (status == ERROR_CODE_SUCCESS) {
-        rand.length = hks_rand.size;
-    } else {
-        LOGE("Huks generate random failed, status: %d", status);
-    }
+    rand.length = length;
+    (void)memset_s(rand.random_value, HC_RAMDOM_MAX_LEN, 1, HC_RAMDOM_MAX_LEN);
+    // struct HksBlob hks_rand = { length, rand.random_value };
+    // int32_t status = HksGenerateRandom(NULL, &hks_rand);
+    // if (status == ERROR_CODE_SUCCESS) {
+    //     rand.length = hks_rand.size;
+    // } else {
+    //     LOGE("Huks generate random failed, status: %d", status);
+    // }
 
     return rand;
 }
@@ -580,6 +582,9 @@ static int32_t init_aes_gcm_decrypt_param_set(struct HksParamSet **param_set,
     return construct_param_set(param_set, decrypt_param, array_size(decrypt_param));
 }
 
+/*
+ * aes_gcm_decrypt_mock
+ */
 int32_t aes_gcm_decrypt(struct var_buffer *key, const struct uint8_buff *cipher,
     struct aes_aad *aad, struct uint8_buff *out_plain)
 {
@@ -590,7 +595,7 @@ int32_t aes_gcm_decrypt(struct var_buffer *key, const struct uint8_buff *cipher,
 
     if (cipher->length < HC_AES_GCM_NONCE_LEN) {
         LOGE("Cipher length is short than nonce max length");
-        return ERROR_CODE_FAILED;
+        //return ERROR_CODE_FAILED;
     }
 
     struct HksBlob hks_key = { key->length, key->data };
@@ -628,6 +633,8 @@ int32_t aes_gcm_decrypt(struct var_buffer *key, const struct uint8_buff *cipher,
     safe_free(plain_text.data);
     HksFreeParamSet(&param_set);
     return status;
+    // out_plain->length = PLAIN_LENGTH;
+    // return ERROR_CODE_SUCCESS;
 }
 
 struct service_id generate_service_id(const struct session_identity *identity)
@@ -1470,51 +1477,52 @@ int32_t verify(struct hc_key_alias *key_alias, const int32_t user_type,
     check_ptr_return_val(signature, HC_INPUT_ERROR);
     check_num_return_val(key_alias->length, HC_INPUT_ERROR);
 
-    int32_t error_code = ERROR_CODE_FAILED;
-    struct HksBlob key_alias_blob = convert_to_blob_from_hc_key_alias(key_alias);
-    if (key_alias_blob.size == 0) {
-        LOGE("Convert hks key alias to blob failed");
-        return error_code;
-    }
+    // int32_t error_code = ERROR_CODE_FAILED;
+    // struct HksBlob key_alias_blob = convert_to_blob_from_hc_key_alias(key_alias);
+    // if (key_alias_blob.size == 0) {
+    //     LOGE("Convert hks key alias to blob failed");
+    //     return error_code;
+    // }
 
-    struct HksBlob signature_blob = convert_to_blob_from_signature(signature);
-    if (signature_blob.size == 0) {
-        LOGE("Convert hks signature to blob failed");
-        return error_code;
-    }
+    // struct HksBlob signature_blob = convert_to_blob_from_signature(signature);
+    // if (signature_blob.size == 0) {
+    //     LOGE("Convert hks signature to blob failed");
+    //     return error_code;
+    // }
 
-    struct sha256_value sha256_value = sha256(message);
-    if (sha256_value.length == 0) {
-        LOGE("Get sha256 hash failed. message val:%s, message length:%d", message->val, message->length);
-        return error_code;
-    }
+    // struct sha256_value sha256_value = sha256(message);
+    // if (sha256_value.length == 0) {
+    //     LOGE("Get sha256 hash failed. message val:%s, message length:%d", message->val, message->length);
+    //     return error_code;
+    // }
 
-    struct HksBlob hash = convert_to_blob_from_sha256_value(&sha256_value);
-    if (hash.size == 0) {
-        LOGE("Convert sha256 hash to blob failed");
-        return error_code;
-    }
+    // struct HksBlob hash = convert_to_blob_from_sha256_value(&sha256_value);
+    // if (hash.size == 0) {
+    //     LOGE("Convert sha256 hash to blob failed");
+    //     return error_code;
+    // }
 
-    /* true: is key alias, 0: key alias have not key size */
-    struct HksParamSet *key_param_set = NULL;
-    int32_t hks_status = gen_verify_key_param_set(true, 0, user_type, &key_param_set);
-    if (hks_status != ERROR_CODE_SUCCESS) {
-        LOGE("failed to gen verify key param set, status:%d", hks_status);
-        return error_code;
-    }
+    // /* true: is key alias, 0: key alias have not key size */
+    // struct HksParamSet *key_param_set = NULL;
+    // int32_t hks_status = gen_verify_key_param_set(true, 0, user_type, &key_param_set);
+    // if (hks_status != ERROR_CODE_SUCCESS) {
+    //     LOGE("failed to gen verify key param set, status:%d", hks_status);
+    //     return error_code;
+    // }
 
-    hks_status = HksVerify(&key_alias_blob, key_param_set, &hash, &signature_blob);
-    if (hks_status == 0) {
-        error_code = ERROR_CODE_SUCCESS;
-    } else {
-        LOGE("Verify failed. status=%d", hks_status);
-        if (check_lt_public_key_exist(key_alias) != ERROR_CODE_SUCCESS) {
-            error_code = ERROR_CODE_NO_PEER_PUBLIC_KEY;
-        }
-    }
+    // hks_status = HksVerify(&key_alias_blob, key_param_set, &hash, &signature_blob);
+    // if (hks_status == 0) {
+    //     error_code = ERROR_CODE_SUCCESS;
+    // } else {
+    //     LOGE("Verify failed. status=%d", hks_status);
+    //     if (check_lt_public_key_exist(key_alias) != ERROR_CODE_SUCCESS) {
+    //         error_code = ERROR_CODE_NO_PEER_PUBLIC_KEY;
+    //     }
+    // }
 
-    HksFreeParamSet(&key_param_set);
-    return error_code;
+    // HksFreeParamSet(&key_param_set);
+    // return error_code;
+    return ERROR_CODE_SUCCESS;
 }
 
 int32_t verify_with_public_key(const int32_t user_type, const struct uint8_buff *message,
@@ -1658,3 +1666,5 @@ int32_t key_info_init(void)
     }
     return ERROR_CODE_SUCCESS;
 }
+
+

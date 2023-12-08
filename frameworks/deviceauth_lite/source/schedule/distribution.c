@@ -23,7 +23,6 @@
 #include "exchange_auth_info_client.h"
 #include "add_auth_info.h"
 #include "remove_auth_info.h"
-#include "add_auth_info_client.h"
 #include "remove_auth_info_client.h"
 
 #ifdef DESC
@@ -31,25 +30,13 @@
 #endif
 #define DESC(...) 1
 
-static int32_t proc_pake_request_message(struct hichain *handle, struct header_analysis *nav,
-    struct message *receive, struct message *send);
 static int32_t proc_pake_response_message(struct hichain *handle, struct header_analysis *nav,
-    struct message *receive, struct message *send);
-static int32_t proc_sts_request_message(struct hichain *handle, struct header_analysis *nav,
-    struct message *receive, struct message *send);
-static int32_t proc_exchange_request_message(struct hichain *handle, struct header_analysis *nav,
     struct message *receive, struct message *send);
 static int32_t proc_exchange_response_message(struct hichain *handle, struct header_analysis *nav,
     struct message *receive, struct message *send);
-static int32_t proc_add_request_message(struct hichain *handle, struct header_analysis *nav,
-    struct message *receive, struct message *send);
 static int32_t proc_remove_request_message(struct hichain *handle, struct header_analysis *nav,
     struct message *receive, struct message *send);
-static int32_t proc_add_response_message(struct hichain *handle, struct header_analysis *nav,
-    struct message *receive, struct message *send);
 static int32_t proc_remove_response_message(struct hichain *handle, struct header_analysis *nav,
-    struct message *receive, struct message *send);
-static int32_t proc_sec_clone_request_message(struct hichain *handle, struct header_analysis *nav,
     struct message *receive, struct message *send);
 static int32_t proc_inform_message(struct hichain *handle, struct header_analysis *nav,
     struct message *receive, struct message *send);
@@ -102,17 +89,11 @@ static const struct message_code_map G_MESSAGE_CODE_MAP[] = {
 };
 
 static const struct distribution_message G_DISTRIBUTION_MESSAGE[] = {
-    { PAKE_MODULAR, true, proc_pake_request_message },
     { PAKE_MODULAR, false, proc_pake_response_message },
-    { STS_MODULAR, true, proc_sts_request_message },
-    { EXCHANGE_MODULAR, true, proc_exchange_request_message },
     { EXCHANGE_MODULAR, false, proc_exchange_response_message },
-    { ADD_MODULAR, true, proc_add_request_message },
     { REMOVE_MODULAR, true, proc_remove_request_message },
-    { SEC_CLONE_MODULAR, true, proc_sec_clone_request_message },
     { INFORM_MODULAR, false, proc_inform_message },
     { STS_MODULAR, false, proc_sts_response_message },
-    { ADD_MODULAR, false, proc_add_response_message },
     { REMOVE_MODULAR, false, proc_remove_response_message },
 };
 
@@ -203,10 +184,6 @@ int32_t connect_message(struct hichain *handle, struct header_analysis *nav, str
         case AUTHENTICATE:
             send->msg_code = INVALID_MESSAGE;
             return HC_OK;
-        case ADD_AUTHINFO:
-            ret = send_add_request(handle, send);
-            LOGI("Client build add auth info request message return value is %d", ret);
-            return ret;
         case REMOVE_AUTHINFO:
             ret = send_remove_request(handle, send);
             LOGI("Client build remove auth info request message return value is %d", ret);
@@ -240,17 +217,10 @@ error:
     return false;
 }
 
-static int32_t get_operation_from_pake(void *payload);
-static int32_t get_operation_from_sts(void *payload);
 static int32_t get_operation_code(const struct header_analysis *nav, const struct message *receive)
 {
     int32_t operation_code = NO_OPERATION_CODE;
 
-    if ((nav->modular == PAKE_MODULAR) && (nav->msg_type == PAKE_START_MSG) && nav->is_request_msg) {
-        operation_code = get_operation_from_pake(receive->payload);
-    } else if ((nav->modular == STS_MODULAR) && (nav->msg_type == STS_START_MSG) && nav->is_request_msg) {
-        operation_code = get_operation_from_sts(receive->payload);
-    }
     LOGI("Receive message had operation code is %d", operation_code);
     return operation_code;
 }
@@ -278,47 +248,6 @@ static bool is_message_illegal(int32_t operation_code, int32_t modular)
     return true;
 }
 
-static int32_t get_operation_from_pake(void *payload)
-#if !(defined(_CUT_PAKE_) || defined(_CUT_PAKE_SERVER_))
-{
-    int32_t permissible_code[] = { BIND, AUTH_KEY_AGREEMENT };
-    struct pake_start_request_data *data = payload;
-
-    for (uint32_t i = 0; i < sizeof(permissible_code) / sizeof(int32_t); i++) {
-        if (permissible_code[i] == data->operation_code) {
-            return data->operation_code;
-        }
-    }
-    LOGE("Receive operation code %d is error", data->operation_code);
-    return INVALID_OPERATION_CODE;
-}
-#else /* _CUT_XXX_ */
-{
-    (void)payload;
-    return HC_UNSUPPORT;
-}
-#endif /* _CUT_XXX_ */
-
-static int32_t get_operation_from_sts(void *payload)
-#if !(defined(_CUT_STS_) || defined(_CUT_STS_SERVER_))
-{
-    int32_t permissible_code[] = { AUTHENTICATE, ADD_AUTHINFO, REMOVE_AUTHINFO, UNBIND, SEC_CLONE_OP };
-    struct sts_start_request_data *data = payload;
-
-    for (uint32_t i = 0; i < sizeof(permissible_code) / sizeof(int32_t); i++) {
-        if (permissible_code[i] == data->operation_code) {
-            return data->operation_code;
-        }
-    }
-    LOGE("Receive operation code %d is error", data->operation_code);
-    return INVALID_OPERATION_CODE;
-}
-#else /* _CUT_XXX_ */
-{
-    (void)payload;
-    return HC_UNSUPPORT;
-}
-#endif /* _CUT_XXX_ */
 
 /* function macro which is not called in functions */
 #define CUT_EMPTY_FUNC(d_name, handle, nav, receive) \
@@ -331,29 +260,6 @@ static int32_t get_operation_from_sts(void *payload)
         return HC_UNSUPPORT; \
     }
 
-static int32_t proc_pake_request_message(struct hichain *handle, struct header_analysis *nav,
-    struct message *receive, struct message *send)
-#if !(defined(_CUT_PAKE_) || defined(_CUT_PAKE_SERVER_))
-{
-    DBG_OUT("Object %u proc pake %d request message", pake_server_sn(handle->pake_server), nav->msg_type);
-    int32_t ret;
-
-    if (nav->msg_type == PAKE_START_MSG) {
-        ret = send_pake_start_response(handle->pake_server, receive, send);
-    } else if (nav->msg_type == PAKE_END_MSG) {
-        ret = send_pake_end_response(handle->pake_server, receive, send);
-        if (ret == HC_OK) {
-            handle->cb.set_session_key(&handle->identity, &handle->pake_server->service_key);
-            (void)memset_s(handle->pake_server->service_key.session_key, HC_SESSION_KEY_LEN, 0, HC_SESSION_KEY_LEN);
-        }
-    } else {
-        return HC_UNKNOW_MESSAGE;
-    }
-    return ret;
-}
-#else /* _CUT_XXX_ */
-CUT_EMPTY_FUNC("pake request", handle, nav, receive);
-#endif /* _CUT_XXX_ */
 
 static int32_t proc_pake_response_message(struct hichain *handle, struct header_analysis *nav,
     struct message *receive, struct message *send)
@@ -379,20 +285,6 @@ static int32_t proc_pake_response_message(struct hichain *handle, struct header_
 CUT_EMPTY_FUNC("pake response", handle, nav, receive);
 #endif /* _CUT_XXX_ */
 
-static int32_t proc_exchange_request_message(struct hichain *handle, struct header_analysis *nav,
-    struct message *receive, struct message *send)
-#if !(defined(_CUT_PAKE_) || defined(_CUT_PAKE_SERVER_) || defined(_CUT_EXCHANGE_) || defined(_CUT_EXCHANGE_SERVER_))
-{
-    DBG_OUT("Object %u proc exchange auth info request message", pake_server_sn(handle->pake_server));
-    (void)nav;
-    int32_t ret = send_exchange_response(handle, receive, send);
-
-    DBG_OUT("Object %u proc exchange message, error code is %d", pake_server_sn(handle->pake_server), ret);
-    return ret;
-}
-#else /* _CUT_XXX_ */
-CUT_EMPTY_FUNC("exchange request", handle, nav, receive);
-#endif /* _CUT_XXX_ */
 
 static int32_t proc_exchange_response_message(struct hichain *handle, struct header_analysis *nav,
     struct message *receive, struct message *send)
@@ -411,29 +303,6 @@ static int32_t proc_exchange_response_message(struct hichain *handle, struct hea
 CUT_EMPTY_FUNC("exchange response", handle, nav, receive);
 #endif /* _CUT_XXX_ */
 
-static int32_t proc_sts_request_message(struct hichain *handle, struct header_analysis *nav,
-    struct message *receive, struct message *send)
-#if !(defined(_CUT_STS_) || defined(_CUT_STS_SERVER_))
-{
-    DBG_OUT("Object %u proc sts %d request message", sts_server_sn(handle->sts_server), nav->msg_type);
-    int32_t ret;
-
-    if (nav->msg_type == STS_START_MSG) {
-        ret = send_sts_start_response(handle->sts_server, receive, send);
-    } else if (nav->msg_type == STS_END_MSG) {
-        ret = send_sts_end_response(handle->sts_server, receive, send);
-        if (ret == HC_OK) {
-            handle->cb.set_session_key(&handle->identity, &handle->sts_server->service_key);
-            (void)memset_s(handle->sts_server->service_key.session_key, HC_SESSION_KEY_LEN, 0, HC_SESSION_KEY_LEN);
-        }
-    } else {
-        return HC_UNKNOW_MESSAGE;
-    }
-    return ret;
-}
-#else /* _CUT_XXX_ */
-CUT_EMPTY_FUNC("sts request", handle, nav, receive);
-#endif /* _CUT_XXX_ */
 
 static int32_t proc_sts_response_message(struct hichain *handle, struct header_analysis *nav,
     struct message *receive, struct message *send)
@@ -458,21 +327,6 @@ static int32_t proc_sts_response_message(struct hichain *handle, struct header_a
 CUT_EMPTY_FUNC("sts request", handle, nav, receive);
 #endif /* _CUT_XXX_ */
 
-static int32_t proc_add_request_message(struct hichain *handle, struct header_analysis *nav,
-    struct message *receive, struct message *send)
-#if !(defined(_CUT_STS_) || defined(_CUT_STS_SERVER_) || defined(_CUT_ADD_) || defined(_CUT_ADD_SERVER_))
-{
-    DBG_OUT("Object %u proc add auth info request message", sts_server_sn(handle->sts_server));
-    (void)nav;
-    int32_t ret = send_add_response(handle, receive, send);
-
-    DBG_OUT("Object %u proc add auth info request message, error code is %d",
-        sts_server_sn(handle->sts_server), ret);
-    return ret;
-}
-#else /* _CUT_XXX_ */
-CUT_EMPTY_FUNC("add auth info request", handle, nav, receive);
-#endif /* _CUT_XXX_ */
 
 static int32_t proc_remove_request_message(struct hichain *handle, struct header_analysis *nav,
     struct message *receive, struct message *send)
@@ -487,25 +341,6 @@ static int32_t proc_remove_request_message(struct hichain *handle, struct header
 }
 #else /* _CUT_XXX_ */
 CUT_EMPTY_FUNC("remove auth info request", handle, nav, receive);
-#endif /* _CUT_XXX_ */
-
-static int32_t proc_add_response_message(struct hichain *handle, struct header_analysis *nav,
-    struct message *receive, struct message *send)
-#if !(defined(_CUT_STS_) || defined(_CUT_STS_CLIENT_) || defined(_CUT_ADD_) || defined(_CUT_ADD_CLIENT_))
-{
-    (void)nav;
-    int32_t ret = receive_add_response(handle, receive);
-    if (ret != HC_OK) {
-        LOGE("Object %u proc add auth info request message, error code is %d",
-             sts_client_sn(handle->sts_client), ret);
-        return ret;
-    }
-    send->msg_code = INVALID_MESSAGE; /* add_auth_info receives data and process ends, does not need to send */
-
-    return HC_OK;
-}
-#else /* _CUT_XXX_ */
-CUT_EMPTY_FUNC("add auth info response", handle, nav, receive);
 #endif /* _CUT_XXX_ */
 
 static int32_t proc_remove_response_message(struct hichain *handle, struct header_analysis *nav,
@@ -527,25 +362,6 @@ static int32_t proc_remove_response_message(struct hichain *handle, struct heade
 CUT_EMPTY_FUNC("remove auth info response", handle, nav, receive);
 #endif /* _CUT_XXX_ */
 
-static int32_t proc_sec_clone_request_message(struct hichain *handle, struct header_analysis *nav,
-    struct message *receive, struct message *send)
-#if (defined(_SUPPORT_SEC_CLONE_) || defined(_SUPPORT_SEC_CLONE_SERVER_))
-{
-    int32_t ret;
-
-    if (nav->msg_type == SEC_CLONE_START_MSG) {
-        ret = send_sec_clone_start_response(handle->sec_clone_server, receive, send);
-    } else if (nav->msg_type == SEC_CLONE_END_MSG) {
-        ret = send_sec_clone_end_response(handle->sec_clone_server, receive, send);
-    } else {
-        return HC_UNKNOW_MESSAGE;
-    }
-
-    return ret;
-}
-#else /* _SUPPORT_SEC_ */
-CUT_EMPTY_FUNC("sec clone request", handle, nav, receive);
-#endif /* _SUPPORT_SEC_ */
 
 static int32_t proc_inform_message(struct hichain *handle, struct header_analysis *nav, struct message *receive,
     struct message *send)

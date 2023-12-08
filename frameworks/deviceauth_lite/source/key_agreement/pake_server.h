@@ -116,8 +116,6 @@ static inline uint32_t pake_server_sn(struct pake_server *server)
     return server->server_info.protocol_base_info.sn;
 }
 
-int32_t send_pake_start_response(struct pake_server *pake_server, struct message *receive, struct message *send);
-int32_t send_pake_end_response(struct pake_server *pake_server, struct message *receive, struct message *send);
 
 #else /* _CUT_XXX_ */
 
@@ -127,8 +125,6 @@ struct pake_server {
 
 #endif /* _CUT_XXX_ */
 
-struct pake_server *build_pake_server(const struct hc_pin *pin, uint32_t key_length, const struct hc_auth_id *client,
-    const struct hc_auth_id *server);
 void destroy_pake_server(struct pake_server *pake_server);
 
 #endif /* __PAKE_SERVER_H__ */

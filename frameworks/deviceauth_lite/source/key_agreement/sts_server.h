@@ -135,13 +135,8 @@ static inline uint32_t sts_server_sn(struct sts_server *server)
     return server->server_info.protocol_base_info.sn;
 }
 
-int32_t send_sts_start_response(struct sts_server *handle, struct message *receive, struct message *send);
-int32_t send_sts_end_response(struct sts_server *handle, struct message *receive, struct message *send);
-
 #endif /* _CUT_XXX_ */
 
-struct sts_server *build_sts_server(const hc_handle hichain_handle, uint32_t key_length,
-    const struct hc_auth_id *client, const struct hc_auth_id *server);
 void destroy_sts_server(struct sts_server *handle);
 
 #endif /* __STS_SERVER_H__ */

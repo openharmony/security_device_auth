@@ -56,54 +56,36 @@ void *parse_payload(const char *payload, enum json_object_data_type data_type);
 void free_payload(char *data, enum json_object_data_type data_type);
 
 /* pake request */
-void *parse_pake_request(const char *payload, enum json_object_data_type data_type);
 void free_pake_request(void *obj);
 char *make_pake_request(void *data);
 
 /* pake response */
 void *parse_pake_response(const char *payload, enum json_object_data_type data_type);
 void free_pake_response(void *obj);
-char *make_pake_response(void *data);
 
 /* pake client confirm */
-void *parse_pake_client_confirm(const char *payload, enum json_object_data_type data_type);
 void free_pake_client_confirm(void *obj);
 char *make_pake_client_confirm(void *data);
 
 /* pake server confirm */
 void *parse_pake_server_confirm(const char *payload, enum json_object_data_type data_type);
 void free_pake_server_confirm(void *obj);
-char *make_pake_server_confirm(void *data);
 
 /* sts auth start request */
-void *parse_auth_start_request(const char *payload, enum json_object_data_type data_type);
 void free_auth_start_request(void *obj);
 char *make_auth_start_request(void *data);
 
 /* sts auth start response */
 void *parse_auth_start_response(const char *payload, enum json_object_data_type data_type);
 void free_auth_start_response(void *obj);
-char *make_auth_start_response(void *data);
 
 /* sts auth ack request */
-void *parse_auth_ack_request(const char *payload, enum json_object_data_type data_type);
 void free_auth_ack_request(void *obj);
 char *make_auth_ack_request(void *data);
 
 /* sts auth ack response */
 void *parse_auth_ack_response(const char *payload, enum json_object_data_type data_type);
 void free_auth_ack_response(void *obj);
-char *make_auth_ack_response(void *data);
-
-/* add auth request */
-void *parse_add_auth_info_request(const char *payload, enum json_object_data_type data_type);
-void free_add_auth_info_request(void *obj);
-char *make_add_auth_info_request(void *data);
-
-/* add auth response */
-void *parse_add_auth_info_response(const char *payload, enum json_object_data_type data_type);
-void free_add_auth_info_response(void *obj);
-char *make_add_auth_info_response(void *data);
 
 /* add auth data */
 void *parse_add_auth_info_data(const char *payload, enum json_object_data_type data_type);
@@ -126,14 +108,12 @@ void free_rmv_auth_info_data(void *obj);
 char *make_rmv_auth_info_data(void *data);
 
 /* exchange request */
-void *parse_exchange_request(const char *payload, enum json_object_data_type data_type);
 void free_exchange_request(void *obj);
 char *make_exchange_request(void *data);
 
 /* exchange response */
 void *parse_exchange_response(const char *payload, enum json_object_data_type data_type);
 void free_exchange_response(void *obj);
-char *make_exchange_response(void *data);
 
 /* exchange authdata */
 void *parse_exchange_data(const char *payload, enum json_object_data_type data_type);

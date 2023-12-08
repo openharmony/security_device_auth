@@ -42,7 +42,6 @@ int32_t build_object(struct hichain *hichain, int32_t modular, bool is_client, c
                                       { PAKE_MODULAR, false, (void **)&hichain->pake_server },
                                       { STS_MODULAR, true, (void **)&hichain->sts_client },
                                       { STS_MODULAR, false, (void **)&hichain->sts_server },
-                                      { ADD_MODULAR, true, (void **)&hichain->auth_info },
                                       { REMOVE_MODULAR, true, (void **)&hichain->auth_info },
                                       { SEC_CLONE_MODULAR, false, (void **)&hichain->sec_clone_server } };
     void **object = get_object(map, sizeof(map) / sizeof(map[0]), modular, is_client);
@@ -169,20 +168,13 @@ struct build_sub_object_map {
 };
 
 static void *build_pake_client_object(struct hichain *hichain, const void *params);
-static void *build_pake_server_object(struct hichain *hichain, const void *params);
 static void *build_sts_client_object(struct hichain *hichain, const void *params);
-static void *build_sts_server_object(struct hichain *hichain, const void *params);
 static void *build_auth_info_client_object(struct hichain *hichain, const void *params);
-static void *build_sec_clone_server_object(struct hichain *hichain, const void *params);
 static void *build_object_by_modular(struct hichain *hichain, int32_t modular, bool is_client, const void *params)
 {
     const struct build_sub_object_map map[] = { { PAKE_MODULAR, true, build_pake_client_object },
-                                                { PAKE_MODULAR, false, build_pake_server_object },
                                                 { STS_MODULAR, true, build_sts_client_object },
-                                                { STS_MODULAR, false, build_sts_server_object },
-                                                { ADD_MODULAR, true, build_auth_info_client_object },
-                                                { REMOVE_MODULAR, true, build_auth_info_client_object },
-                                                { SEC_CLONE_MODULAR, false, build_sec_clone_server_object } };
+                                                { REMOVE_MODULAR, true, build_auth_info_client_object } };
     for (uint32_t i = 0; i < sizeof(map) / sizeof(map[0]); i++) {
         if ((map[i].modular == modular) && (map[i].is_client == is_client)) {
             return map[i].build_func(hichain, params);
@@ -210,46 +202,12 @@ static void *build_pake_client_object(struct hichain *hichain, const void *param
     return build_pake_client(&hichain->identity, &pin, para.key_length, &para.self_auth_id, &para.peer_auth_id);
 }
 
-static void *build_pake_server_object(struct hichain *hichain, const void *params)
-{
-    (void)params;
-    struct hc_pin pin = { 0, {0} };
-    struct operation_parameter para;
-
-    (void)memset_s(&para, sizeof(para), 0, sizeof(para));
-    hichain->cb.get_protocol_params(&hichain->identity, hichain->operation_code, &pin, &para);
-    if (check_param_is_valid(&para) == false) {
-        LOGE("Param invalid");
-        return NULL;
-    }
-    if (pin.length > HC_PIN_BUFF_LEN) {
-        LOGE("PIN invalid");
-        return NULL;
-    }
-    return build_pake_server(&pin, para.key_length, &para.peer_auth_id, &para.self_auth_id);
-}
-
 static void *build_sts_client_object(struct hichain *hichain, const void *params)
 {
     struct operation_parameter *para = (struct operation_parameter *)params;
 
     return build_sts_client(hichain, para->key_length, &para->self_auth_id,
                             &para->peer_auth_id);
-}
-
-static void *build_sts_server_object(struct hichain *hichain, const void *params)
-{
-    (void)params;
-    struct hc_pin pin = { 0, {0} };
-    struct operation_parameter para;
-
-    (void)memset_s(&para, sizeof(para), 0, sizeof(para));
-    hichain->cb.get_protocol_params(&hichain->identity, hichain->operation_code, &pin, &para);
-    if (check_param_is_valid(&para) == false) {
-        LOGE("Protocol param invalid");
-        return NULL;
-    }
-    return build_sts_server(hichain, para.key_length, &para.peer_auth_id, &para.self_auth_id);
 }
 
 static void *build_auth_info_client_object(struct hichain *hichain, const void *params)
@@ -261,11 +219,6 @@ static void *build_auth_info_client_object(struct hichain *hichain, const void *
     return hichain->auth_info;
 }
 
-static void *build_sec_clone_server_object(struct hichain *hichain, const void *params)
-{
-    (void)params;
-    return build_sec_clone_server(hichain);
-}
 
 static bool check_param_is_valid(const struct operation_parameter *para)
 {

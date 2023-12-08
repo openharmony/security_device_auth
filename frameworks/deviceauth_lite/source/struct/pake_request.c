@@ -23,50 +23,6 @@
 #include "key_agreement_version.h"
 #include "parsedata.h"
 
-void *parse_pake_request(const char *payload, enum json_object_data_type data_type)
-{
-    struct pake_start_request_data *pake_request =
-        (struct pake_start_request_data *)MALLOC(sizeof(struct pake_start_request_data));
-    if (pake_request == NULL) {
-        return NULL;
-    }
-    (void)memset_s(pake_request, sizeof(*pake_request), 0, sizeof(*pake_request));
-    json_handle obj = parse_payload(payload, data_type);
-    if (obj == NULL) {
-        LOGE("Parse Pake Request parse payload failed");
-        goto error;
-    }
-    /* op */
-    int32_t op = get_json_int(obj, FIELD_OPERATION_CODE);
-    if (op == -1) {
-        LOGE("Parse Pake Request failed, field is null in operationCode");
-        goto error;
-    }
-    pake_request->operation_code = op;
-    /* version */
-    json_pobject obj_ver = get_json_obj(obj, FIELD_VERSION);
-    bool ret = parse_version(obj_ver, &pake_request->peer_version, &pake_request->peer_support_version);
-    if (!ret) {
-        LOGE("Parse Pake Request failed, field is null in version");
-        goto error;
-    }
-
-    /* support 256 mod */
-    int32_t support_256_mod = get_json_bool(obj, FIELD_SUPPORT_256_MOD);
-    if (support_256_mod == 1) {
-        pake_request->epk_len = HC_BIG_PRIME_MAX_LEN;
-    } else {
-        pake_request->epk_len = HC_BIG_PRIME_MAX_LEN_384;
-    }
-
-    free_payload(obj, data_type);
-    return (void *)pake_request;
-error:
-    free_payload(obj, data_type);
-    FREE(pake_request);
-    return NULL;
-}
-
 void free_pake_request(void *obj)
 {
     if (obj != NULL) {

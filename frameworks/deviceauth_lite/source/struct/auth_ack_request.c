@@ -24,33 +24,6 @@
 #include "add_auth_info.h"
 #include "key_agreement_version.h"
 
-void *parse_auth_ack_request(const char *payload, enum json_object_data_type data_type)
-{
-    struct sts_end_request_data *auth_ack_request =
-        (struct sts_end_request_data *)MALLOC(sizeof(struct sts_end_request_data));
-    if (auth_ack_request == NULL) {
-        return NULL;
-    }
-    (void)memset_s(auth_ack_request, sizeof(*auth_ack_request), 0, sizeof(*auth_ack_request));
-    json_handle obj = parse_payload(payload, data_type);
-    if (obj == NULL) {
-        LOGE("Parse Auth ACK Request parse payload failed");
-        goto error;
-    }
-    /* authData */
-    int32_t result = byte_convert(obj, FIELD_AUTH_DATA, auth_ack_request->auth_data.auth_data,
-                                  (uint32_t *)&auth_ack_request->auth_data.length, HC_AUTH_DATA_BUFF_LEN);
-    if (result != HC_OK) {
-        LOGE("Parse Auth ACK Request Data failed, field is null in addId");
-        goto error;
-    }
-    free_payload(obj, data_type);
-    return (void *)auth_ack_request;
-error:
-    free_payload(obj, data_type);
-    FREE(auth_ack_request);
-    return NULL;
-}
 
 void free_auth_ack_request(void *obj)
 {

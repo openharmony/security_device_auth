@@ -18,31 +18,161 @@ import("//build/test.gni")
 
 module_output_path = "device_auth/deviceauth_test"
 
+hichain_sources = [
+  "../source/auth_info/auth_info.c",
+  "../source/auth_info/exchange_auth_info_client.c",
+  "../source/auth_info/remove_auth_info.c",
+  "../source/auth_info/remove_auth_info_client.c",
+  "../source/hichain.c",
+  "../source/huks_adapter/huks_adapter.c",
+  "../source/json/commonutil.c",
+  "../source/json/jsonutil.c",
+  "../source/key_agreement/key_agreement.c",
+  "../source/key_agreement/key_agreement_client.c",
+  "../source/key_agreement/key_agreement_server.c",
+  "../source/key_agreement/pake_client.c",
+  "../source/key_agreement/pake_server.c",
+  "../source/key_agreement/sec_clone_server.c",
+  "../source/key_agreement/sts_client.c",
+  "../source/key_agreement/sts_server.c",
+  "../source/log/log.c",
+  "../source/schedule/build_object.c",
+  "../source/schedule/distribution.c",
+  "../source/struct/add_auth_info_data.c",
+  "../source/struct/auth_ack_request.c",
+  "../source/struct/auth_ack_response.c",
+  "../source/struct/auth_start_request.c",
+  "../source/struct/auth_start_response.c",
+  "../source/struct/exchange_auth_data.c",
+  "../source/struct/exchange_request.c",
+  "../source/struct/exchange_response.c",
+  "../source/struct/inform_message.c",
+  "../source/struct/key_agreement_version.c",
+  "../source/struct/pake_client_confirm.c",
+  "../source/struct/pake_request.c",
+  "../source/struct/pake_response.c",
+  "../source/struct/pake_server_confirm.c",
+  "../source/struct/parsedata.c",
+  "../source/struct/rmv_auth_info_data.c",
+  "../source/struct/rmv_auth_info_request.c",
+  "../source/struct/rmv_auth_info_response.c",
+  "../source/struct/sec_clone_data.c",
+]
+
 config("standard_config") {
   visibility = [ ":*" ]
-  include_dirs =
-      [ "//base/security/device_auth/interfaces/inner_api/deviceauth_lite" ]
+  include_dirs =[ 
+    "//third_party/cJSON",
+    "//third_party/bounds_checking_function/include",
+    "//base/security/huks/interfaces/inner_api/huks_standard/main/include",
+    "//base/security/device_auth/interfaces/inner_api/deviceauth_lite",
+    "../unittest",
+    "../source/base",
+    "../source/huks_adapter",
+    "../source/json",
+    "../source/key_agreement",
+    "../source/log",
+    "../source/schedule",
+    "../source/struct",
+    "../source/auth_info",
+  ]
+
+  defines = [
+    "_CUT_REMOVE_",
+  ]
 }
 
 ohos_unittest("DeviceAuthTest") {
   module_out_path = module_output_path
   testonly = true
   configs = [ ":standard_config" ]
-
-  cflags_cc = [ "--coverage" ]
-  ldflags = [ "--coverage" ]
-
-  sources = [ "deviceauth_test.cpp" ]
+  sources = hichain_sources
+  sources -= ["../source/huks_adapter/huks_adapter.c",]
+  sources += ["./unittest_mock/huks_adapter_mock.c",
+              "deviceauth_test.cpp",
+  ]
 
   deps = [
-    "//base/security/device_auth/frameworks/deviceauth_lite/source:hichainsdk",
     "//base/security/huks/interfaces/inner_api/huks_standard/main:libhukssdk",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/cJSON:cjson",
   ]
+
+  cflags = [
+    "--coverage",
+    "-Wall",
+    "-fvisibility=hidden",
+  ]
+
+  ldflags = [ "--coverage" ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
   ]
+
+}
+
+
+ohos_unittest("HuksAdapterTest") {
+  module_out_path = module_output_path
+  testonly = true
+  configs = [ ":standard_config" ]
+  sources = hichain_sources
+  sources += ["huks_adapter_test.cpp",]
+
+  deps = [
+    "//base/security/huks/interfaces/inner_api/huks_standard/main:libhukssdk",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/cJSON:cjson",
+  ]
+
+  cflags = [
+    "--coverage",
+    "-fvisibility=hidden",
+  ]
+
+  ldflags = [ "--coverage" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+}
+
+ohos_unittest("PakeTest") {
+  module_out_path = module_output_path
+  testonly = true
+  configs = [ ":standard_config" ]
+  sources = hichain_sources
+  sources -= ["../source/huks_adapter/huks_adapter.c",]
+  sources += ["./unittest_mock/huks_adapter_mock_for_pake.c",
+              "hichain_pake_test.cpp",
+  ]
+
+  deps = [
+    "//base/security/huks/interfaces/inner_api/huks_standard/main:libhukssdk",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/cJSON:cjson",
+  ]
+
+  cflags = [
+    "--coverage",
+    "-fvisibility=hidden",
+  ]
+
+  ldflags = [ "--coverage" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
 }

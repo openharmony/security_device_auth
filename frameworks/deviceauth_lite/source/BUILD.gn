@@ -15,10 +15,7 @@
 import("//build/ohos.gni")
 
 hichian_sources = [
-  "auth_info/add_auth_info.c",
-  "auth_info/add_auth_info_client.c",
   "auth_info/auth_info.c",
-  "auth_info/exchange_auth_info.c",
   "auth_info/exchange_auth_info_client.c",
   "auth_info/remove_auth_info_client.c",
   "hichain.c",
@@ -37,8 +34,6 @@ hichian_sources = [
   "schedule/build_object.c",
   "schedule/distribution.c",
   "struct/add_auth_info_data.c",
-  "struct/add_auth_info_request.c",
-  "struct/add_auth_info_response.c",
   "struct/auth_ack_request.c",
   "struct/auth_ack_response.c",
   "struct/auth_start_request.c",
@@ -140,7 +135,9 @@ if (os_level == "standard") {
       "-flto",
       "-Wall",
       "-fvisibility=hidden",
+      "--coverage",
     ]
+    ldflags = [ "--coverage" ]
   }
 } else {
   if (ohos_kernel_type == "liteos_m") {
