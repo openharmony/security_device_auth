@@ -172,7 +172,7 @@ static HWTEST_F(HichainPakeTest, ReceiveDataTest001, TestSize.Level2)
     };
 
     ret = receive_data(server, &data002);
-    EXPECT_EQ(ret, HC_OK);  
+    EXPECT_EQ(ret, HC_OK);
 
     uint8_t dataStr003[] = {"{\"message\":32771,\"payload\":{\"exAuthInfo\":\"63B2AC76C0645224DA7E395DBCC29D9F"
                         "9AF5E0ABEEC94048962F838D12C501B22193E1B2AD43A7D9443A80EA92C4BD4F53B14C867DD00308167CB2803754"
@@ -190,9 +190,9 @@ static HWTEST_F(HichainPakeTest, ReceiveDataTest001, TestSize.Level2)
     };
     
     ret = receive_data(server, &data003);
-    EXPECT_EQ(ret, HC_OK);   
+    EXPECT_EQ(ret, HC_OK);
     EXPECT_EQ(g_result, END_SUCCESS); 
-    destroy(&server); 
+    destroy(&server);
 }
 
 class HichainStructTest : public testing::Test {
@@ -215,7 +215,7 @@ static HWTEST_F(HichainStructTest, free_auth_start_request_test001, TestSize.Lev
     obj = (void*)MALLOC(sizeof(char));
     free_auth_start_request(obj);
     obj = nullptr;
-    EXPECT_EQ(obj, nullptr);    
+    EXPECT_EQ(obj, nullptr);
 }
 
 
@@ -227,7 +227,7 @@ static HWTEST_F(HichainStructTest, free_exchange_request_test001, TestSize.Level
     (void)memset_s(data, sizeof(*data), 0, sizeof(*data));
     free_exchange_request(data);
     data = nullptr;
-    EXPECT_EQ(data, nullptr);    
+    EXPECT_EQ(data, nullptr);
 }
 
 
@@ -236,13 +236,13 @@ static HWTEST_F(HichainStructTest, parse_header_test001, TestSize.Level2)
     std::string data_str = "{\"message\":1,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
         "\"minVersion\":\"1.0.0\"},\"support256mod\":true,\"operationCode\":1}}";
     int32_t ret = parse_header(data_str.c_str());
-    EXPECT_EQ(ret, 1);    
+    EXPECT_EQ(ret, 1);
 }
 
 static HWTEST_F(HichainStructTest, parse_header_test002, TestSize.Level2)
 {
     int32_t ret = parse_header(nullptr);
-    EXPECT_EQ(ret, -1);    
+    EXPECT_EQ(ret, -1);
 }
 
 
@@ -250,7 +250,7 @@ static HWTEST_F(HichainStructTest, parse_payload_test001, TestSize.Level2)
 {
     std::string data_str = "{\"payload\":{\"support256mod\":true,\"operationCode\":1}}";
     void *ret = parse_payload(data_str.c_str(), JSON_OBJECT_DATA);
-    EXPECT_NE(ret, nullptr);    
+    EXPECT_NE(ret, nullptr);
 }
 
 }

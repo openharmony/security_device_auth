@@ -1836,33 +1836,6 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest008_pake_client_error3, TestSize
     LOG("--------ReceiveDataTest008--------");
 }
 
-// static HWTEST_F(ReceiveDataTest, ReceiveDataTest009_pake_client2, TestSize.Level2)
-// {
-//     LOG("--------ReceiveDataTest009--------");
-//     struct hc_call_back callBack = {
-//         Transmit,
-//         GetProtocolParams,
-//         SetSessionKey,
-//         SetServiceResult,
-//         ConfirmReceiveRequest
-//     };
-//     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-//     ASSERT_TRUE(server != nullptr);
-
-//     uint8_t dataStr[] = "{\"message\":32770,\"payload\":{\""\
-//         "kcfData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55B4F0707345\"}}";
-//     uint8_buff data = {
-//         dataStr,
-//         sizeof(dataStr),
-//         strlen(reinterpret_cast<char *>(dataStr))
-//     };
-//     receive_data(server, &data);
-//     EXPECT_EQ(g_result, END_FAILED);
-
-//     destroy(&server);
-//     LOG("--------ReceiveDataTest009--------");
-// }
-
 static HWTEST_F(ReceiveDataTest, ReceiveDataTest010_pake_client2error, TestSize.Level2)
 {
     LOG("--------ReceiveDataTest010--------");
@@ -1895,88 +1868,6 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest010_pake_client2error, TestSize.
     destroy(&server);
     LOG("--------ReceiveDataTest010--------");
 }
-
-// static HWTEST_F(ReceiveDataTest, ReceiveDataTest011_pake_server3, TestSize.Level2)
-// {
-//     LOG("--------ReceiveDataTest011--------");
-//     struct hc_call_back callBack = {
-//         Transmit,
-//         GetProtocolParams,
-//         SetSessionKey,
-//         SetServiceResult,
-//         ConfirmReceiveRequest
-//     };
-//     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-//     ASSERT_TRUE(server != nullptr);
-
-//     uint8_t dataStr[] = "{\"message\":3,\"payload\":{"\
-//         "\"exAuthInfo\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";
-//     uint8_buff data = {
-//         dataStr,
-//         sizeof(dataStr),
-//         strlen(reinterpret_cast<char *>(dataStr))
-//     };
-//     receive_data(server, &data);
-//     EXPECT_EQ(g_result, END_FAILED);
-
-//     destroy(&server);
-//     LOG("--------ReceiveDataTest011--------");
-// }
-
-// static HWTEST_F(ReceiveDataTest, ReceiveDataTest012_pake_server3error, TestSize.Level2)
-// {
-//     LOG("--------ReceiveDataTest012--------");
-//     struct hc_call_back callBack = {
-//         Transmit,
-//         GetProtocolParams,
-//         SetSessionKey,
-//         SetServiceResult,
-//         ConfirmReceiveRequest
-//     };
-
-//     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-//     ASSERT_TRUE(server != nullptr);
-
-//     uint8_t dataStr[] = "{\"message\":3,\"payload\":{}}";
-//     uint8_buff data = {
-//         dataStr,
-//         sizeof(dataStr),
-//         strlen(reinterpret_cast<char *>(dataStr))
-//     };
-//     receive_data(server, &data);
-//     EXPECT_EQ(g_result, END_FAILED);
-
-//     destroy(&server);
-//     LOG("--------ReceiveDataTest012--------");
-// }
-
-// static HWTEST_F(ReceiveDataTest, ReceiveDataTest013_pake_client3, TestSize.Level2)
-// {
-//     LOG("--------ReceiveDataTest013--------");
-//     struct hc_call_back callBack = {
-//         Transmit,
-//         GetProtocolParams,
-//         SetSessionKey,
-//         SetServiceResult,
-//         ConfirmReceiveRequest
-//     };
-
-//     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-//     ASSERT_TRUE(server != nullptr);
-
-//     uint8_t dataStr[] = "{\"message\":32771,\"payload\":{"\
-//         "\"exAuthInfo\":\"QWERTYUIOPASDFGHJKLZXCVBNM1234567890QWERTYUIOPASDFGHJKLZXCVBNM1234567890\"}}";
-//     uint8_buff data = {
-//         dataStr,
-//         sizeof(dataStr),
-//         strlen(reinterpret_cast<char *>(dataStr))
-//     };
-//     receive_data(server, &data);
-//     EXPECT_EQ(g_result, END_FAILED);
-
-//     destroy(&server);
-//     LOG("--------ReceiveDataTest013--------");
-// }
 
 static HWTEST_F(ReceiveDataTest, ReceiveDataTest014_pake_client3error, TestSize.Level2)
 {
@@ -2524,9 +2415,9 @@ static HWTEST_F(IsTrustPeerTest, IsTrustPeerTest008, TestSize.Level2)
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
     struct hichain *hichainTest = (struct hichain *)server;
-    (void)memset_s(hichainTest->identity.package_name.name, sizeof(hichainTest->identity.package_name.name), 
+    (void)memset_s(hichainTest->identity.package_name.name, sizeof(hichainTest->identity.package_name.name),
         0, sizeof(hichainTest->identity.package_name.name));
-    (void)memset_s(hichainTest->identity.service_type.type, sizeof(hichainTest->identity.service_type.type), 
+    (void)memset_s(hichainTest->identity.service_type.type, sizeof(hichainTest->identity.service_type.type),
         0, sizeof(hichainTest->identity.service_type.type));
     int32_t ret = is_trust_peer(server, &userInfo);
     EXPECT_EQ(ret, HC_NOT_TRUST_PEER);
@@ -2579,9 +2470,9 @@ static HWTEST_F(IsTrustPeerTest, IsTrustPeerTest010, TestSize.Level2)
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
     struct hichain *hichainTest = (struct hichain *)server;
-    (void)memset_s(hichainTest->identity.package_name.name, sizeof(hichainTest->identity.package_name.name), 
+    (void)memset_s(hichainTest->identity.package_name.name, sizeof(hichainTest->identity.package_name.name),
         0, sizeof(hichainTest->identity.package_name.name));
-    (void)memset_s(hichainTest->identity.service_type.type, sizeof(hichainTest->identity.service_type.type), 
+    (void)memset_s(hichainTest->identity.service_type.type, sizeof(hichainTest->identity.service_type.type),
         0, sizeof(hichainTest->identity.service_type.type));
     int32_t ret = is_trust_peer(server, &userInfo);
     EXPECT_EQ(ret, HC_NOT_TRUST_PEER);
@@ -2615,7 +2506,7 @@ void testLogd(const char *tag, const char *func_name, const char *format, ...)
     va_list ap;
     char logBuff[MAX_LOG_BUFF_LENGTH];
     va_start(ap, format);
-    if(vsnprintf_s(logBuff, MAX_LOG_BUFF_LENGTH, MAX_LOG_BUFF_LENGTH - 1, format, ap) == -1)
+    if (vsnprintf_s(logBuff, MAX_LOG_BUFF_LENGTH, MAX_LOG_BUFF_LENGTH - 1, format, ap) == -1)
     {
         va_end(ap);
         return;
@@ -2709,7 +2600,6 @@ void JsonUtilTest::SetUp()
     cJSON_AddItemToArray(root_array, cJSON_CreateNumber(11));
     cJSON_AddItemToArray(root_array, cJSON_CreateString("banana"));
     cJSON_AddItemToArray(root_array, cJSON_CreateTrue());
-
 }
 
 void JsonUtilTest::TearDown() {}
@@ -2720,7 +2610,7 @@ static HWTEST_F(JsonUtilTest, get_json_int_test001, TestSize.Level2)
     json_pobject obj = reinterpret_cast<void *>(root);
     char *temp = nullptr;
     int32_t ret = get_json_int(obj, temp);
-    EXPECT_NE(ret, -1);    
+    EXPECT_NE(ret, -1);
 }
 
 static HWTEST_F(JsonUtilTest, get_json_int_test002, TestSize.Level2)
@@ -2728,7 +2618,7 @@ static HWTEST_F(JsonUtilTest, get_json_int_test002, TestSize.Level2)
     json_pobject obj = nullptr;
     char *temp = nullptr;
     int32_t ret = get_json_int(obj, temp);
-    EXPECT_EQ(ret, -1);    
+    EXPECT_EQ(ret, -1);
 }
 
 static HWTEST_F(JsonUtilTest, get_json_int_test003, TestSize.Level2)
@@ -2736,10 +2626,10 @@ static HWTEST_F(JsonUtilTest, get_json_int_test003, TestSize.Level2)
     json_pobject obj = reinterpret_cast<void *>(root);
     std::string field = "mesage";
     int32_t ret = get_json_int(obj, field.c_str());
-    EXPECT_EQ(ret, -1);   
+    EXPECT_EQ(ret, -1);
     field = "message";
     ret = get_json_int(obj, field.c_str());
-    EXPECT_EQ(ret, 1);    
+    EXPECT_EQ(ret, 1);
 }
 
 
@@ -2748,7 +2638,7 @@ static HWTEST_F(JsonUtilTest, get_json_bool_test001, TestSize.Level2)
     json_pobject obj = reinterpret_cast<void *>(root);
     char *temp = nullptr;
     int32_t ret = get_json_bool(obj, temp);
-    EXPECT_NE(ret, -1);    
+    EXPECT_NE(ret, -1);
 }
 
 static HWTEST_F(JsonUtilTest, get_json_bool_test002, TestSize.Level2)
@@ -2756,7 +2646,7 @@ static HWTEST_F(JsonUtilTest, get_json_bool_test002, TestSize.Level2)
     json_pobject obj = nullptr;
     char *temp = nullptr;
     int32_t ret = get_json_bool(obj, temp);
-    EXPECT_EQ(ret, -1);    
+    EXPECT_EQ(ret, -1);
 }
 
 static HWTEST_F(JsonUtilTest, get_json_bool_test003, TestSize.Level2)
@@ -2764,10 +2654,10 @@ static HWTEST_F(JsonUtilTest, get_json_bool_test003, TestSize.Level2)
     json_pobject obj = reinterpret_cast<void *>(root);
     std::string field = "booll";
     int32_t ret = get_json_bool(obj, field.c_str());
-    EXPECT_EQ(ret, -1);   
+    EXPECT_EQ(ret, -1);
     field = "bool";
     ret = get_json_bool(obj, field.c_str());
-    EXPECT_EQ(ret, 1);     
+    EXPECT_EQ(ret, 1);
 }
 
 
@@ -2775,14 +2665,14 @@ static HWTEST_F(JsonUtilTest, get_array_size_test001, TestSize.Level2)
 {
     json_pobject obj = reinterpret_cast<void *>(root);
     int32_t ret = get_array_size(obj);
-    EXPECT_EQ(ret, -1);    
+    EXPECT_EQ(ret, -1);
 }
 
 static HWTEST_F(JsonUtilTest, get_array_size_test002, TestSize.Level2)
 {
     json_pobject obj = reinterpret_cast<void *>(root_array);
     int32_t ret = get_array_size(obj);
-    EXPECT_NE(ret, -1);      
+    EXPECT_NE(ret, -1);
 }
 
 
@@ -2790,14 +2680,14 @@ static HWTEST_F(JsonUtilTest, get_array_idx_test001, TestSize.Level2)
 {
     json_pobject obj = reinterpret_cast<void *>(root);
     obj = get_array_idx(obj, 1);
-    EXPECT_EQ(obj, nullptr);    
+    EXPECT_EQ(obj, nullptr);
 }
 
 static HWTEST_F(JsonUtilTest, get_array_idx_test002, TestSize.Level2)
 {
     json_pobject obj = reinterpret_cast<void *>(root_array);
     obj = get_array_idx(obj, 1);
-    EXPECT_NE(obj, nullptr);    
+    EXPECT_NE(obj, nullptr);
 }
 
 
@@ -2809,7 +2699,7 @@ static HWTEST_F(JsonUtilTest, add_bool_to_object_test001, TestSize.Level2)
     field = "test_bool_true";
     pobject = add_bool_to_object(obj, field.c_str(), 1);
     int32_t ret = get_json_bool(obj, field.c_str());
-    EXPECT_EQ(ret, 1);    
+    EXPECT_EQ(ret, 1);
 }
 
 
@@ -2821,7 +2711,7 @@ static HWTEST_F(JsonUtilTest, string_convert_test001, TestSize.Level2)
     uint32_t *length = nullptr;
     uint32_t max_len = 10;
     int32_t ret = string_convert(obj, temp, str, length, max_len);
-    EXPECT_EQ(ret, HC_INPUT_ERROR);    
+    EXPECT_EQ(ret, HC_INPUT_ERROR);
 }
 
 static HWTEST_F(JsonUtilTest, string_convert_test002, TestSize.Level2)
@@ -2832,7 +2722,7 @@ static HWTEST_F(JsonUtilTest, string_convert_test002, TestSize.Level2)
     uint32_t *length = nullptr;
     uint32_t max_len = 9;
     int32_t ret = string_convert(obj, temp.c_str(), str, length, max_len);
-    EXPECT_EQ(ret, HC_INPUT_ERROR);    
+    EXPECT_EQ(ret, HC_INPUT_ERROR);
 }
 
 static HWTEST_F(JsonUtilTest, string_convert_test003, TestSize.Level2)
@@ -2843,7 +2733,6 @@ static HWTEST_F(JsonUtilTest, string_convert_test003, TestSize.Level2)
     uint32_t *length = nullptr;
     uint32_t max_len = 11;
     int32_t ret = string_convert(obj, temp.c_str(), str, length, max_len);
-    EXPECT_EQ(ret, HC_MEMCPY_ERROR);    
+    EXPECT_EQ(ret, HC_MEMCPY_ERROR);
 }
-
 }

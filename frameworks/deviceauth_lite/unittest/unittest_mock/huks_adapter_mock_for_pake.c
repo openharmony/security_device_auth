@@ -115,7 +115,7 @@ static const char *g_large_prime_number_hex_256 =
 static int32_t hks_hex_string_to_byte(const char *src, uint8_t *dst, uint32_t dst_size)
 {
     size_t length = strlen(src);
-    if (length % 2 != 0) { /* odd number or not */
+    if (length % 2 != 0) { /* 2 : odd number or not */
         LOGE("Invalid hex_string length: %zu, even num is expected", length);
         return ERROR_CODE_FAILED;
     }
@@ -132,9 +132,9 @@ static int32_t hks_hex_string_to_byte(const char *src, uint8_t *dst, uint32_t ds
         nibble[1] = src[i * BYTE_TO_HEX_OPER_LENGTH + 1];
         for (uint32_t j = 0; j < BYTE_TO_HEX_OPER_LENGTH; j++) { /* iterate through array */
             if ((nibble[j] <= 'F') && (nibble[j] >= 'A')) {
-                nibble[j] = nibble[j] - 'A' + 10; /* hex conversion */
+                nibble[j] = nibble[j] - 'A' + 10; /* 10 : hex conversion */
             } else if ((nibble[j] <= 'f') && (nibble[j] >= 'a')) {
-                nibble[j] = nibble[j] - 'a' + 10; /* hex conversion */
+                nibble[j] = nibble[j] - 'a' + 10; /* 10 : hex conversion */
             } else if ((nibble[j] >= '0') && (nibble[j] <= '9')) {
                 nibble[j] = nibble[j] - '0';
             } else {
@@ -142,7 +142,7 @@ static int32_t hks_hex_string_to_byte(const char *src, uint8_t *dst, uint32_t ds
                 return ERROR_CODE_FAILED;
             }
         }
-        dst[i] = nibble[0] << 4; /* shift left for filling */
+        dst[i] = nibble[0] << 4; /* 4 : shift left for filling */
         dst[i] |= nibble[1];
     }
     return ERROR_CODE_SUCCESS;
@@ -363,14 +363,6 @@ struct random_value generate_random(uint32_t length)
     }
     rand.length = length;
     (void)memset_s(rand.random_value, HC_RAMDOM_MAX_LEN, 1, HC_RAMDOM_MAX_LEN);
-    // struct HksBlob hks_rand = { length, rand.random_value };
-    // int32_t status = HksGenerateRandom(NULL, &hks_rand);
-    // if (status == ERROR_CODE_SUCCESS) {
-    //     rand.length = hks_rand.size;
-    // } else {
-    //     LOGE("Huks generate random failed, status: %d", status);
-    // }
-
     return rand;
 }
 
@@ -633,8 +625,6 @@ int32_t aes_gcm_decrypt(struct var_buffer *key, const struct uint8_buff *cipher,
     safe_free(plain_text.data);
     HksFreeParamSet(&param_set);
     return status;
-    // out_plain->length = PLAIN_LENGTH;
-    // return ERROR_CODE_SUCCESS;
 }
 
 struct service_id generate_service_id(const struct session_identity *identity)
@@ -1476,52 +1466,6 @@ int32_t verify(struct hc_key_alias *key_alias, const int32_t user_type,
     check_ptr_return_val(message, HC_INPUT_ERROR);
     check_ptr_return_val(signature, HC_INPUT_ERROR);
     check_num_return_val(key_alias->length, HC_INPUT_ERROR);
-
-    // int32_t error_code = ERROR_CODE_FAILED;
-    // struct HksBlob key_alias_blob = convert_to_blob_from_hc_key_alias(key_alias);
-    // if (key_alias_blob.size == 0) {
-    //     LOGE("Convert hks key alias to blob failed");
-    //     return error_code;
-    // }
-
-    // struct HksBlob signature_blob = convert_to_blob_from_signature(signature);
-    // if (signature_blob.size == 0) {
-    //     LOGE("Convert hks signature to blob failed");
-    //     return error_code;
-    // }
-
-    // struct sha256_value sha256_value = sha256(message);
-    // if (sha256_value.length == 0) {
-    //     LOGE("Get sha256 hash failed. message val:%s, message length:%d", message->val, message->length);
-    //     return error_code;
-    // }
-
-    // struct HksBlob hash = convert_to_blob_from_sha256_value(&sha256_value);
-    // if (hash.size == 0) {
-    //     LOGE("Convert sha256 hash to blob failed");
-    //     return error_code;
-    // }
-
-    // /* true: is key alias, 0: key alias have not key size */
-    // struct HksParamSet *key_param_set = NULL;
-    // int32_t hks_status = gen_verify_key_param_set(true, 0, user_type, &key_param_set);
-    // if (hks_status != ERROR_CODE_SUCCESS) {
-    //     LOGE("failed to gen verify key param set, status:%d", hks_status);
-    //     return error_code;
-    // }
-
-    // hks_status = HksVerify(&key_alias_blob, key_param_set, &hash, &signature_blob);
-    // if (hks_status == 0) {
-    //     error_code = ERROR_CODE_SUCCESS;
-    // } else {
-    //     LOGE("Verify failed. status=%d", hks_status);
-    //     if (check_lt_public_key_exist(key_alias) != ERROR_CODE_SUCCESS) {
-    //         error_code = ERROR_CODE_NO_PEER_PUBLIC_KEY;
-    //     }
-    // }
-
-    // HksFreeParamSet(&key_param_set);
-    // return error_code;
     return ERROR_CODE_SUCCESS;
 }
 

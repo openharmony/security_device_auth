@@ -571,7 +571,7 @@ static HWTEST_F(HuksAdapterTest, SignTest001, TestSize.Level2)
         SetServiceResult,
         ConfirmReceiveRequest
     };
-    
+
     struct operation_parameter params = {g_test_server_auth_id, g_test_client_auth_id, KEY_LEN};
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     int32_t ret = authenticate_peer(server, &params);
@@ -606,7 +606,7 @@ static HWTEST_F(HuksAdapterTest, SignTest002, TestSize.Level2)
     (void)memset_s(&sign_result, sizeof(struct signature), 0, sizeof(struct signature));
     sign_result.length = HC_SIGNATURE_LEN;
     memcpy_s(sign_result.signature, sizeof(sign_result.signature), dataStr, HC_SIGNATURE_LEN);
-  
+
     struct service_id service_id = generate_service_id(&g_server_identity);
     EXPECT_GT(service_id.length, 0);
     struct hc_key_alias alias = generate_key_alias(&service_id, &g_test_client_auth_id, KEY_ALIAS_ACCESSOR_PK);
@@ -654,7 +654,7 @@ static HWTEST_F(HuksAdapterTest, VerifyTest001, TestSize.Level2)
         SetServiceResult,
         ConfirmReceiveRequest
     };
-    
+
     struct operation_parameter params = {g_test_server_auth_id, g_test_client_auth_id, KEY_LEN};
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     int32_t ret = authenticate_peer(server, &params);
@@ -720,13 +720,13 @@ static HWTEST_F(HuksAdapterTest, VerifyWithPublicKeyTest002, TestSize.Level2)
     struct var_buffer public_key;
     (void)memset_s(&public_key, sizeof(public_key), 0, sizeof(public_key));
     public_key.length = 128;
-    
+
     struct signature sign_result;
     (void)memset_s(&sign_result, sizeof(sign_result), 0, sizeof(sign_result));
     sign_result.length = HC_SIGNATURE_LEN;
 
     struct uint8_buff message;
-    (void)memset_s(&message, sizeof(message), 0, sizeof(message));  
+    (void)memset_s(&message, sizeof(message), 0, sizeof(message));
 
     int32_t ret = verify_with_public_key(user_type, nullptr, &public_key, &sign_result);
     EXPECT_EQ(ret, HC_INPUT_ERROR);
@@ -760,7 +760,7 @@ static HWTEST_F(HuksAdapterTest, CheckDlSpekePublicKeyTest001, TestSize.Level2)
     result = CheckDlSpekePublicKey(&key, HC_BIG_PRIME_MAX_LEN_384);
     EXPECT_EQ(result, HC_MEMCPY_ERROR);
 
-    key.data[0] = 0xFF;  
+    key.data[0] = 0xFF;
     result = CheckDlSpekePublicKey(&key, HC_BIG_PRIME_MAX_LEN_384);
     EXPECT_EQ(result, HC_OK);
     LOG("--------HuksAdapterTest Test039--------");
@@ -911,7 +911,7 @@ static HWTEST_F(HuksAdapterTest, ComputeHkdfTest001, TestSize.Level2)
     struct hc_salt salt = {1, {0}};
     char key_info;
     uint32_t hkdf_len = 1;
-    
+
     struct var_buffer out_hkdf;
     out_hkdf.data[0] = 0;
     out_hkdf.length = 64;
@@ -945,7 +945,7 @@ static HWTEST_F(HuksAdapterTest, AesGcmEncryptTest001, TestSize.Level2)
     struct uint8_buff out_plain;
     out_plain.length = 1;
     out_plain.size = 64;
-    
+
     int32_t result = aes_gcm_encrypt(&key, &message, &aad, &out_plain);
     EXPECT_NE(result, ERROR_CODE_SUCCESS);
     out_plain.length = 64;
@@ -970,7 +970,7 @@ static HWTEST_F(HuksAdapterTest, AesGcmEncryptTest002, TestSize.Level2)
 
     struct uint8_buff out_plain;
     (void)memset_s(&out_plain, sizeof(out_plain), 0, sizeof(out_plain));
-    
+
     int32_t result = aes_gcm_encrypt(nullptr, &message, &aad, &out_plain);
     EXPECT_EQ(result, HC_INPUT_ERROR);
     result = aes_gcm_encrypt(&key, nullptr, &aad, &out_plain);
@@ -1007,7 +1007,7 @@ static HWTEST_F(HuksAdapterTest, AesGcmDecryptTest001, TestSize.Level2)
     (void)memset_s(&out_plain, sizeof(out_plain), 0, sizeof(out_plain));
     out_plain.size = 0;
     out_plain.length = 0;
-    
+
     int32_t result = aes_gcm_decrypt(&key, &message, &aad, &out_plain);
     EXPECT_NE(result, ERROR_CODE_SUCCESS);
     LOG("--------HuksAdapterTest Test049--------");
@@ -1033,7 +1033,7 @@ static HWTEST_F(HuksAdapterTest, AesGcmDecryptTest002, TestSize.Level2)
     (void)memset_s(&out_plain, sizeof(out_plain), 0, sizeof(out_plain));
     out_plain.size = 64;
     out_plain.length = 64;
-    
+
     int32_t result = aes_gcm_decrypt(&key, &cipher, &aad, &out_plain);
     EXPECT_NE(result, ERROR_CODE_SUCCESS);
     LOG("--------HuksAdapterTest Test050--------");
@@ -1059,7 +1059,7 @@ static HWTEST_F(HuksAdapterTest, AesGcmDecryptTest003, TestSize.Level2)
     (void)memset_s(&out_plain, sizeof(out_plain), 0, sizeof(out_plain));
     out_plain.size = 0;
     out_plain.length = 1;
-    
+
     int32_t result = aes_gcm_decrypt(&key, &cipher, &aad, &out_plain);
     EXPECT_NE(result, ERROR_CODE_SUCCESS);
     LOG("--------HuksAdapterTest Test051--------");
@@ -1073,7 +1073,7 @@ static HWTEST_F(HuksAdapterTest, AesGcmDecryptTest004, TestSize.Level2)
     (void)memset_s(&key, sizeof(key), 0, sizeof(key));
     key.length = 16;
 
-    struct uint8_buff cipher; 
+    struct uint8_buff cipher;
     cipher.size = 64;
     cipher.length = 64;
 
@@ -1085,7 +1085,7 @@ static HWTEST_F(HuksAdapterTest, AesGcmDecryptTest004, TestSize.Level2)
     (void)memset_s(&out_plain, sizeof(out_plain), 0, sizeof(out_plain));
     out_plain.size = 64;
     out_plain.length = 64;
-    
+
     int32_t result = aes_gcm_decrypt(nullptr, &cipher, &aad, &out_plain);
     EXPECT_EQ(result, HC_INPUT_ERROR);
     result = aes_gcm_decrypt(&key, nullptr, &aad, &out_plain);
@@ -1108,7 +1108,7 @@ static HWTEST_F(HuksAdapterTest, ReceiveDataTest001, TestSize.Level2)
         SetServiceResult,
         ConfirmReceiveRequest
     };
-    
+
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     struct operation_parameter params = {g_test_server_auth_id, g_test_client_auth_id, KEY_LEN};
     int32_t ret = authenticate_peer(server, &params);
@@ -1130,7 +1130,7 @@ static HWTEST_F(HuksAdapterTest, ReceiveDataTest001, TestSize.Level2)
         sizeof(dataStr001),
         strlen(reinterpret_cast<char *>(dataStr001))
     };
-    
+
     ret = receive_data(server, &data001);
     EXPECT_EQ(ret, HC_OK);
 
@@ -1352,7 +1352,7 @@ static HWTEST_F(AuthInfoTest, get_pake_self_auth_id_test001, TestSize.Level2)
     (void)memset_s(&pake_server, sizeof(pake_server), 0, sizeof(pake_server));
     hichain_test->pake_server = &pake_server;
     const struct hc_auth_id *hc_auth_id = get_pake_self_auth_id(hichain_test);
-    EXPECT_NE(hc_auth_id, nullptr);    
+    EXPECT_NE(hc_auth_id, nullptr);
 }
 
 static HWTEST_F(AuthInfoTest, get_pake_self_auth_id_test002, TestSize.Level2)
@@ -1449,5 +1449,4 @@ static HWTEST_F(AuthInfoTest, destroy_auth_client_test001, TestSize.Level2)
 {
     destroy_auth_client(nullptr);
 }
-
 }
