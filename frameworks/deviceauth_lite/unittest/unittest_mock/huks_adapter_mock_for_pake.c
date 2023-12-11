@@ -587,7 +587,6 @@ int32_t aes_gcm_decrypt(struct var_buffer *key, const struct uint8_buff *cipher,
 
     if (cipher->length < HC_AES_GCM_NONCE_LEN) {
         LOGE("Cipher length is short than nonce max length");
-        //return ERROR_CODE_FAILED;
     }
 
     struct HksBlob hks_key = { key->length, key->data };

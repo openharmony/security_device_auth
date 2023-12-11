@@ -33,7 +33,7 @@ namespace OHOS {
         }
     }
 
-    bool registeLogFuzz(const uint8_t *data, size_t size)
+    bool RegisteLogFuzz(const uint8_t *data, size_t size)
     {
         struct log_func_group logFunc = {
             TestLogd,
@@ -49,6 +49,6 @@ namespace OHOS {
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    OHOS::registeLogFuzz(data, size);
+    OHOS::RegisteLogFuzz(data, size);
     return 0;
 }

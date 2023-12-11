@@ -24,7 +24,7 @@
 using namespace std;
 
 namespace OHOS {
-enum branch {
+enum Branch {
     PAKE_REQUEST = 1,
     PAKE_CLIENT_CONFIRM = 2,
     AUTH_START_REQUEST = 3,
@@ -32,29 +32,29 @@ enum branch {
     EXCHANGE_REQUEST = 5,
 };
 
-static void TransmitCb(const struct session_identity *identity, const void *data, uint32_t length) 
+static void TransmitCb(const struct session_identity *identity, const void *data, uint32_t length)
 {
     return;
 }
 
-static int32_t ConfirmReceiveRequestFunc(const struct session_identity *identity, int32_t operationCode) 
+static int32_t ConfirmReceiveRequestFunc(const struct session_identity *identity, int32_t operationCode)
 {
     return HC_OK;
 }
 
 static void GetProtocolParamsCb(const struct session_identity *identity, int32_t operationCode,
-                                struct hc_pin *pin, struct operation_parameter *para) 
+                                struct hc_pin *pin, struct operation_parameter *para)
 {
     return;
 }
 
 static void SetSessionKeyFunc(const struct session_identity *identity,
-                              const struct hc_session_key *sessionKey) 
+                              const struct hc_session_key *sessionKey)
 {
     return;
 }
 
-static void SetServiceResultFunc(const struct session_identity *identity, int32_t result) 
+static void SetServiceResultFunc(const struct session_identity *identity, int32_t result)
 {
     return;
 }
@@ -74,7 +74,7 @@ static struct session_identity identity = {
     0
 };
 
-std::string MakePakeRequest() 
+std::string MakePakeRequest()
 {
     std::string retStr = "{\"message\":1,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
         "\"minVersion\":\"1.0.0\"},\"support256mod\":\"true\","
@@ -82,7 +82,7 @@ std::string MakePakeRequest()
     return retStr;
 }
 
-std::string MakePakeClientConfirm() 
+std::string MakePakeClientConfirm()
 {
     std::string retStr = "{\"message\":3,\"payload\":{\"kcfData\":\"463853720FFFC312084B9FF288E17C3F3D8B9D8F2A"
         "609D349CAA712AAD926C26\",\"challenge\":\"76539E5634EDA735A94845C3A4F356D6\","
@@ -92,7 +92,7 @@ std::string MakePakeClientConfirm()
     return retStr;
 }
 
-std::string MakeAuthStartRequest() 
+std::string MakeAuthStartRequest()
 {
     std::string retStr = "{\"authForm\":0,\"message\":17,\"payload\":{\"authData\":\"4A4EB6622524CB"
         "BF7DC96412A82BF4CB6022F50226A201DB3B3C55\",\"challenge\":\"A1714848785F27C22B31\",\"epk\":"
@@ -103,20 +103,20 @@ std::string MakeAuthStartRequest()
     return retStr;
 }
 
-std::string MakePakeAckRequest() 
+std::string MakePakeAckRequest()
 {
     std::string retStr = "{\"authForm\":0,\"message\":18,\"payload\":{\"authData\":"
     "\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55\"}}";
     return retStr;
 }
 
-std::string MakeExchangeRequest() 
+std::string MakeExchangeRequest()
 {
     std::string retStr = "{\"message\":3,\"payload\":{\"exAuthInfo\":}}";
     return retStr;
 }
 
-std::string MakeInformMessage() 
+std::string MakeInformMessage()
 {
     std::string retStr = "{\"message\":32786,\"payload\":{\"errorCode\":17}}";
     return retStr;
@@ -132,20 +132,27 @@ bool ReceiveDataFuzz(const uint8_t* data, size_t size)
     int temp = ver % 6; /* 6 : total branch */
     std::string retStr;
     switch (temp) {
-        case PAKE_REQUEST:retStr = MakePakeRequest();
-        break;
-        case PAKE_CLIENT_CONFIRM:retStr = MakePakeClientConfirm();
-        break;
-        case AUTH_START_REQUEST:retStr = MakeAuthStartRequest();
-        break;
-        case PAKE_ACK_REQUEST:retStr = MakePakeAckRequest();
-        break;
-        case EXCHANGE_REQUEST:retStr = MakeExchangeRequest();
-        break;
-        default:retStr = MakeInformMessage();
+        case PAKE_REQUEST:
+            retStr = MakePakeRequest();
+            break;
+        case PAKE_CLIENT_CONFIRM:
+            retStr = MakePakeClientConfirm();
+            break;
+        case AUTH_START_REQUEST:
+            retStr = MakeAuthStartRequest();
+            break;
+        case PAKE_ACK_REQUEST:
+            retStr = MakePakeAckRequest();
+            break;
+        case EXCHANGE_REQUEST:
+            retStr = MakeExchangeRequest();
+            break;
+        default:
+            retStr = MakeInformMessage();
+            break;
     };
     uint8_buff buff = {
-        reinterpret_cast<unsigned char *>(const_cast<char *>(retStr.c_str())),
+        reinterpret_cast<const unsigned char *>(retStr.c_str()),
         sizeof(retStr),
         strlen(retStr.c_str())
     };
