@@ -21,12 +21,8 @@
 #include "hichain.h"
 #include "distribution.h"
 #include "cJSON.h"
-
-extern "C"{
-    #include "huks_adapter.h"
-    #include "jsonutil.h"
-    #include "auth_info.h"
-}
+#include "huks_adapter_test.h"
+#include "auth_info_test.h"
 
 #define LOG(format, ...) (printf(format"\n", ##__VA_ARGS__))
 

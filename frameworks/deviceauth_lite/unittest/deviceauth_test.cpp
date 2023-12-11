@@ -22,14 +22,11 @@
 #include "distribution.h"
 #include "huks_adapter.h"
 #include "log.h"
+#include "auth_info_test.h"
+#include "commonutil_test.h"
+#include "jsonutil_test.h"
+#include "cJSON.h"
 
-extern "C" {
-    #include "auth_info.h"
-    #include "build_object.h"
-    #include "commonutil.h"
-    #include "jsonutil.h"
-    #include "cJSON.h"
-}
 #define LOG(format, ...) (printf(format"\n", ##__VA_ARGS__))
 
 using namespace std;
