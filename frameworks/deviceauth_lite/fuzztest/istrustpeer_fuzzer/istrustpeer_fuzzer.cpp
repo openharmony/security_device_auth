@@ -20,7 +20,6 @@
 #include "securec.h"
 
 namespace OHOS {
-    const unsigned int MAX_LIST_NUM = 20;
     static void TransmitCb(const struct session_identity *identity, const void *data, uint32_t length)
     {
         return;

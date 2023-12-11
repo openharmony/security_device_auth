@@ -22,6 +22,9 @@ group("fuzztest") {
       "getinstance_fuzzer:fuzztest",
       "listtrustpeer_fuzzer:fuzztest",
       "startpake_fuzzer:fuzztest",
+      "istrustpeer_fuzzer:fuzztest",
+      "receivedata_fuzzer:fuzztest",
+      "registelog_fuzzer:fuzztest",
     ]
   }
 }

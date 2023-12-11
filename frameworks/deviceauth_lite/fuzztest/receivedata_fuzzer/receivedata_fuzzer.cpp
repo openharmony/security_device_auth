@@ -152,7 +152,7 @@ bool ReceiveDataFuzz(const uint8_t* data, size_t size)
             break;
     };
     uint8_buff buff = {
-        reinterpret_cast<const unsigned char *>(retStr.c_str()),
+        const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(retStr.c_str())),
         sizeof(retStr),
         strlen(retStr.c_str())
     };
