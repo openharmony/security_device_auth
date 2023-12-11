@@ -31,6 +31,8 @@ group("deviceauth_lite_test_build") {
     deps += [
       "//base/security/device_auth/frameworks/deviceauth_lite/fuzztest:fuzztest",
       "//base/security/device_auth/frameworks/deviceauth_lite/unittest:DeviceAuthTest",
+      "//base/security/device_auth/frameworks/deviceauth_lite/unittest:HuksAdapterTest",
+      "//base/security/device_auth/frameworks/deviceauth_lite/unittest:PakeTest",
     ]
   }
 }

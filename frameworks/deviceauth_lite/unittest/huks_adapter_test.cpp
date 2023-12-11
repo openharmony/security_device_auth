@@ -662,7 +662,7 @@ static HWTEST_F(HuksAdapterTest, VerifyTest001, TestSize.Level2)
     struct service_id service_id = generate_service_id(&g_server_identity);
     EXPECT_GT(service_id.length, 0);
     struct hc_key_alias alias = generate_key_alias(&service_id, &g_test_client_auth_id, KEY_ALIAS_ACCESSOR_PK);
-    ret = verify(&alias, HC_userType_CONTROLLER, &message, &signature);
+    ret = verify(&alias, HC_USER_TYPE_CONTROLLER, &message, &signature);
     EXPECT_NE(ret, ERROR_CODE_SUCCESS);
     FREE(message.val);
     LOG("--------HuksAdapterTest Test036--------");
@@ -1417,7 +1417,7 @@ static HWTEST_F(AuthInfoTest, save_auth_info_test001, TestSize.Level2)
     struct auth_info_cache cache;
     struct ltpk ltpk;
     (void)memset_s(&ltpk, sizeof(ltpk), 0, sizeof(ltpk));
-    cache.userType = HC_userType_ACCESSORY;
+    cache.user_type = HC_USER_TYPE_ACCESSORY;
     cache.auth_id = g_test_server_auth_id;
     cache.ltpk = ltpk;
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
@@ -1432,7 +1432,7 @@ static HWTEST_F(AuthInfoTest, save_auth_info_test002, TestSize.Level2)
     struct auth_info_cache cache;
     struct ltpk ltpk;
     (void)memset_s(&ltpk, sizeof(ltpk), 0, sizeof(ltpk));
-    cache.userType = HC_userType_CONTROLLER;
+    cache.user_type = HC_USER_TYPE_CONTROLLER;
     struct hc_auth_id auth_id;
     (void)memset_s(&auth_id, sizeof(auth_id), 0, sizeof(auth_id));
     cache.auth_id = auth_id;

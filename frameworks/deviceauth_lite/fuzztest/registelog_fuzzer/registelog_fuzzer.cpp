@@ -22,24 +22,24 @@
 
 namespace OHOS {
     const int32_t MAX_LOG_BUFF_LENGTH = 1024;
-    void testLogd(const char *tag, const char *func_name, const char *format,...){
+    void TestLogd(const char *tag, const char *funcName, const char *format,...){
         va_list ap;
         char logBuff[MAX_LOG_BUFF_LENGTH];
-        va_start(ap,format);
-        if(vsnprintf_s(logBuff, MAX_LOG_BUFF_LENGTH, MAX_LOG_BUFF_LENGTH - 1, format, ap) == -1)
+        va_start(ap, format);
+        if (vsnprintf_s(logBuff, MAX_LOG_BUFF_LENGTH, MAX_LOG_BUFF_LENGTH - 1, format, ap) == -1)
         {
             va_end(ap);
             return;
         }
     }
 
-    bool registelogFuzz(const uint8_t *data, size_t size)
+    bool registeLogFuzz(const uint8_t *data, size_t size)
     {
         struct log_func_group logFunc = {
-            testLogd,
-            testLogd,
-            testLogd,
-            testLogd,
+            TestLogd,
+            TestLogd,
+            TestLogd,
+            TestLogd,
         };
         registe_log(&logFunc)
         return true;
@@ -49,6 +49,6 @@ namespace OHOS {
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    OHOS::registelogFuzz(data, size);
+    OHOS::registeLogFuzz(data, size);
     return 0;
 }

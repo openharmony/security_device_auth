@@ -68,18 +68,18 @@ namespace OHOS {
             return false;
         }
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
-        struct hc_auth_id selfId = {sizeof({*data;}),{*data}};
+        struct hc_auth_id selfId = { sizeof( { *data; }), { *data } };
         int32_t type = *reinterpret_cast<const int *>(data);
         struct hc_user_info user_info;
         user_info.auth_id = selfId;
         user_info.user_type = type % 2;
-        is_trust_peer(handle,&user_info);
+        is_trust_peer(handle, &user_info);
         destroy(&handle);
         return true;
     }
 }
 
-/* Fuzzer entry point*/
+/* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     OHOS::IsTrustPeerFuzz(data, size);

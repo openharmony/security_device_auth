@@ -16,7 +16,7 @@
 #include "huks_adapter.h"
 #include <stdio.h>
 #include "securec.h"
-#include "commonutil.h"
+#include "commonutil_test.h"
 #include "hks_api.h"
 #include "hks_param.h"
 #include "log.h"

@@ -16,7 +16,6 @@
 #ifndef JSONUTIL_TEST_H
 #define JSONUTIL_TEST_H
 
-#include <stdint.h>
 
 typedef void *json_handle;
 typedef void *json_pobject;

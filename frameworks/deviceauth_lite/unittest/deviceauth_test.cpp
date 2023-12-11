@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "deviceauth_test.h"
+
 #include <cstdint>
 #include <cstdlib>
 #include "gtest/gtest.h"
@@ -26,6 +26,7 @@
 #include "commonutil_test.h"
 #include "jsonutil_test.h"
 #include "cJSON.h"
+#include "deviceauth_test.h"
 
 #define LOG(format, ...) (printf(format"\n", ##__VA_ARGS__))
 
@@ -1901,6 +1902,24 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest014_pake_client3error, TestSize.
     LOG("--------ReceiveDataTest014--------");
 }
 
+uint8_t g_dataStr0151[] = "{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":"
+                            "\"1.0.0\",\"minVersion\":\"1.0.0\"},"
+                           "\"challenge\":\"EF6768B27F8BB03128195903788D415A\",\"salt\":"
+                           "\"41F4D7096B21DA799A722DA00EB8B030\",\"epk\":\"5F990513D00D2"
+                           "206A5AA4AAF7659A066236DDCD3CB806EE6373B8FA2F15AA72274A20709B"
+                           "350D8CD17358FD123E7393FE12B5CE4D0CAE62854DBC33425"
+                           "F7B49E727F029C5AA724962E221E6095C8ACC6C8AABA5F4A9"
+                           "DCCB8AF1BD6CEA09B6AEBD2058C1BD1572005FE5096F1D840F7C78E83D89"
+                           "A803C6FF49BF98C03FCEA32247816DF3EB39A52BCCB215747E91B9831BDB"
+                           "5E3349C7AA8FCCF121B1CFD2E5CC1861CD85D47AC698E9933"
+                           "30110889C2221D45ECA9515956FEA641B64C5EC81F449DF74D863539AF49"
+                           "23E13220A513E473352CC532F4710DFB199A5C520D19D14C7"
+                           "4EA425721E8EDAFD655E024C99DA1C130EAFB4B420A0B0A85FEB9030546B"
+                           "8B3FC9F307F50ABEDC249AB69BA3442D8A567D2D2F2A001AF"
+                           "A21D6A9F6FD0D4AB2153EB737094692318FC0C4FCD8026D73585FFD2D411"
+                           "CD7703FF9B7B981C42FF4C969E75D846CDFAC54E122A1B073"
+                           "CAD7123E8B06C7B51FFC832942001FA33E3E85BB3DE306BB2AE2BEC7D1AB"
+                           "BD3D466FFD87FCA3CE65254E4D5A97AD29DFAB4F0\"}}";
 static HWTEST_F(ReceiveDataTest, ReceiveDataTest015_pake_client_all, TestSize.Level2)
 {
     LOG("--------ReceiveDataTest015--------");
@@ -1914,19 +1933,10 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest015_pake_client_all, TestSize.Le
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
-    uint8_t dataStr001[] = "{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\",\"minVersion\":\"1.0.0\"},"
-                           "\"challenge\":\"EF6768B27F8BB03128195903788D415A\",\"salt\":\"41F4D7096B21DA799A722DA00EB8B030\",\"epk\":\"5F990513D00D2"
-                           "206A5AA4AAF7659A066236DDCD3CB806EE6373B8FA2F15AA72274A20709B350D8CD17358FD123E7393FE12B5CE4D0CAE62854DBC33425"
-                           "F7B49E727F029C5AA724962E221E6095C8ACC6C8AABA5F4A9DCCB8AF1BD6CEA09B6AEBD2058C1BD1572005FE5096F1D840F7C78E83D89"
-                           "A803C6FF49BF98C03FCEA32247816DF3EB39A52BCCB215747E91B9831BDB5E3349C7AA8FCCF121B1CFD2E5CC1861CD85D47AC698E9933"
-                           "30110889C2221D45ECA9515956FEA641B64C5EC81F449DF74D863539AF4923E13220A513E473352CC532F4710DFB199A5C520D19D14C7"
-                           "4EA425721E8EDAFD655E024C99DA1C130EAFB4B420A0B0A85FEB9030546B8B3FC9F307F50ABEDC249AB69BA3442D8A567D2D2F2A001AF"
-                           "A21D6A9F6FD0D4AB2153EB737094692318FC0C4FCD8026D73585FFD2D411CD7703FF9B7B981C42FF4C969E75D846CDFAC54E122A1B073"
-                           "CAD7123E8B06C7B51FFC832942001FA33E3E85BB3DE306BB2AE2BEC7D1ABBD3D466FFD87FCA3CE65254E4D5A97AD29DFAB4F0\"}}";
     uint8_buff data001 = {
-        dataStr001,
-        sizeof(dataStr001),
-        strlen(reinterpret_cast<char *>(dataStr001))
+        g_dataStr0151,
+        sizeof(g_dataStr0151),
+        strlen(reinterpret_cast<char *>(g_dataStr0151))
     };
     receive_data(server, &data001);
     EXPECT_EQ(g_result, END_FAILED);
@@ -1974,8 +1984,8 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest016_sts_response1_Ok, TestSize.L
     build_object(hcServer, STS_MODULAR, true, &params);
     hcServer->sts_client->client_info.protocol_base_info.state = END_REQUEST;
     hcServer->sts_client->client_info.protocol_base_info.last_state = PROTOCOL_INIT;
-    uint8_t dataStr[] = "{\"authForm\":0,\"message\":32785,\"payload\":{\"authData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55"\
-                        ",\"challenge\":\"A1714848785F27C22B31\","\
+    uint8_t dataStr[] = "{\"authForm\":0,\"message\":32785,\"payload\":{\"authData\":\"4A4EB6622524C"
+                        "BBF7DC96412A82BF4CB6022F50226A201DB3B3C55",\"challenge\":\"A1714848785F27C22B31\","\
                         "\"epk\":\"493CB95DB80320360BE5A3E3000E3E8E67371D6DCC57D1F97937ABABC219\","\
                         "\"salt\":\"93E69DC0D48479316984\",\"version\":{\"currentVersion\":"\
                         "\"1.0.0\",\"minVersion\":\"1.0.0\"},\"peerAuthId\":\"6B5A16BFA24C941F4C1B094D"\
@@ -1992,6 +2002,22 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest016_sts_response1_Ok, TestSize.L
     LOG("--------ReceiveDataTest016--------");
 }
 
+uint8_t g_dataStr0171[] = "{\"authForm\":0,\"message\":32785,\"payload\":"
+                           "{\"authData\":\"0CE64CAFFA6AD1146EDB618E6F"
+                           "1DA15183EFDCAE08F909A6ABA7B9F2676F4E4C2A280A72"
+                           "0C3EBB069858DB473191ED51237E201CC697D3E10130CE"
+                           "8FB86FD57F66214643874AD17FE91EC3ACBC446CA666CD"
+                           "C5BDFB0EB5BE76DF673C\",\"challenge\":\"C591479"
+                           "0E4A81F59F286F2F31415A590\",\"epk\":\"8A870771"
+                           "CA779105041966DC462B3B12D7FF87129446F38D1AC39E"
+                           "1F408FEB0D\",\"salt\":\"C8EA30CAE1C16CCEEB652D"
+                           "AE671A97A3\",\"version\":{\"currentVersion\":"
+                           "\"1.0.0\",\"minVersion\":\"1.0.0\"},\"peerAuthId\":\"643"
+                           "3376364376365623839346634333933613239396566383"
+                           "532623466633335613161306437376334"
+                           "3861356233653062323539396162316436396232336136\","
+                           "\"peerUserType\":\"0\"}}";
+
 static HWTEST_F(ReceiveDataTest, ReceiveDataTest017_STS_fullprocess_success, TestSize.Level2)
 {
     LOG("--------ReceiveDataTest017--------");
@@ -2002,29 +2028,20 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest017_STS_fullprocess_success, Tes
         SetServiceResult,
         ConfirmReceiveRequest
     };
-
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
     struct operation_parameter params = {g_testServerAuthId, g_testClientAuthId, KEY_LEN};
     int32_t ret = authenticate_peer(server, &params);
     EXPECT_EQ(ret, HC_OK);
-    uint8_t dataStr001[] = "{\"authForm\":0,\"message\":32785,\"payload\":{\"authData\":\"0CE64CAFFA6AD1146EDB618E6F"
-                           "1DA15183EFDCAE08F909A6ABA7B9F2676F4E4C2A280A720C3EBB069858DB473191ED51237E201CC"
-                           "697D3E10130CE8FB86FD57F66214643874AD17FE91EC3ACBC446CA666CDC5BDFB0EB5BE76DF673C\","
-                           "\"challenge\":\"C5914790E4A81F59F286F2F31415A590\",\"epk\":\"8A870771CA779105041966DC4"
-                           "62B3B12D7FF87129446F38D1AC39E1F408FEB0D\",\"salt\":\"C8EA30CAE1C16CCEEB652DAE671A97"
-                           "A3\",\"version\":{\"currentVersion\":\"1.0.0\",\"minVersion\":\"1.0.0\"},\"peerAuthId\":\"643"
-                           "3376364376365623839346634333933613239396566383532623466633335613161306437376334"
-                           "3861356233653062323539396162316436396232336136\",\"peerUserType\":\"0\"}}";
     uint8_buff data001 = {
-        dataStr001,
-        sizeof(dataStr001),
-        strlen(reinterpret_cast<char *>(dataStr001))
+        g_dataStr0171,
+        sizeof(g_dataStr0171),
+        strlen(reinterpret_cast<char *>(g_dataStr0171))
     };
     ret = receive_data(server, &data001);
     EXPECT_EQ(ret, HC_OK);
-
-    uint8_t dataStr002[] = "{\"authForm\":0,\"message\":32786,\"payload\":{\"authReturn\":\"57F9D09AA425FB83AB9BE2AF25FC9E5"
+    uint8_t dataStr002[] = "{\"authForm\":0,\"message\":32786,\"payload\":"
+                           "{\"authReturn\":\"57F9D09AA425FB83AB9BE2AF25FC9E5"
                            "B82F630255AC62872447A9E5802\"}}";
     uint8_buff data002 = {
         dataStr002,
@@ -2194,7 +2211,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest020_pake_client_withoutrandom2, 
     const struct operation_parameter params = {g_testServerAuthId, g_testClientAuthId, KEY_LEN};
     hc_handle server4 = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server4 != nullptr);
-    ret = start_pake(server4, &params);
+    int32_t ret = start_pake(server4, &params);
     uint8_buff data004 = {
         g_dataStr0194,
         sizeof(g_dataStr0194),

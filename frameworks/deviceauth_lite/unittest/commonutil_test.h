@@ -16,8 +16,7 @@
 #ifndef COMMONUTIL_TEST_H
 #define COMMONUTIL_TEST_H
 
-#include <stdint.h>
-#include "jsonutil.h"
+#include "jsonutil_test.h"
 
 #define HC_VERSION_DEC 10
 
