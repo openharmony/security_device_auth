@@ -644,14 +644,14 @@ static HWTEST_F(StartPakeTest, StartPakeTest004, TestSize.Level2)
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
-    struct pake_client *pake_client = (struct pake_client *)MALLOC(sizeof(struct pake_client));
-    (void)memset_s(pake_client, sizeof(struct pake_client), 0, sizeof(struct pake_client));
+    struct pake_client *pakeClient = (struct pake_client *)MALLOC(sizeof(struct pake_client));
+    (void)memset_s(pakeClient, sizeof(struct pake_client), 0, sizeof(struct pake_client));
 
     struct operation_parameter *params = (struct operation_parameter *)MALLOC(sizeof(struct operation_parameter));
-    (void)memset_s(pake_client, sizeof(struct operation_parameter), 0, sizeof(struct operation_parameter));
+    (void)memset_s(params, sizeof(struct operation_parameter), 0, sizeof(struct operation_parameter));
 
     struct hichain *hichainTest = static_cast<struct hichain *>(server);
-    hichainTest->pake_client = pake_client;
+    hichainTest->pake_client = pakeClient;
 
     int32_t ret = start_pake(server, params);
     EXPECT_NE(ret, HC_OK);
@@ -978,14 +978,14 @@ static HWTEST_F(AuthenticatePeerTest, AuthenticatePeerTest004, TestSize.Level2)
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
 
-    struct sts_client *sts_client = (struct sts_client *)MALLOC(sizeof(struct sts_client));
-    (void)memset_s(sts_client, sizeof(struct sts_client), 0, sizeof(struct sts_client));
+    struct sts_client *stsClient = (struct sts_client *)MALLOC(sizeof(struct sts_client));
+    (void)memset_s(stsClient, sizeof(struct sts_client), 0, sizeof(struct sts_client));
 
     struct operation_parameter *params = (struct operation_parameter *)MALLOC(sizeof(struct operation_parameter));
     (void)memset_s(params, sizeof(struct operation_parameter), 0, sizeof(struct operation_parameter));
 
     struct hichain *hichainTest = static_cast<struct hichain *>(server);
-    hichainTest->sts_client = sts_client;
+    hichainTest->sts_client = stsClient;
     int32_t ret = authenticate_peer(server, params);
     EXPECT_NE(ret, HC_OK);
     destroy(&server);
@@ -1238,10 +1238,10 @@ static HWTEST_F(DestroyTest, DestroyTest004, TestSize.Level2)
     struct hichain *server = (struct hichain *)MALLOC(sizeof(struct hichain));
     (void)memset_s(server, sizeof(struct hichain), 0, sizeof(struct hichain));
 
-    struct pake_server *pake_server = (struct pake_server *)MALLOC(sizeof(struct pake_server));
-    (void)memset_s(pake_server, sizeof(struct pake_server), 0, sizeof(struct pake_server));
+    struct pake_server *pakeServer = (struct pake_server *)MALLOC(sizeof(struct pake_server));
+    (void)memset_s(pakeServer, sizeof(struct pake_server), 0, sizeof(struct pake_server));
 
-    server->pake_server = pake_server;
+    server->pake_server = pakeServer;
     hc_handle serverTest = static_cast<hc_handle>(server);
     destroy(&serverTest);
     EXPECT_TRUE(serverTest == nullptr);
@@ -1255,10 +1255,10 @@ static HWTEST_F(DestroyTest, DestroyTest005, TestSize.Level2)
     struct hichain *server = (struct hichain *)MALLOC(sizeof(struct hichain));
     (void)memset_s(server, sizeof(struct hichain), 0, sizeof(struct hichain));
 
-    struct sts_server *sts_server = (struct sts_server *)MALLOC(sizeof(struct sts_server));
-    (void)memset_s(sts_server, sizeof(struct sts_server), 0, sizeof(struct sts_server));
+    struct sts_server *stsServer = (struct sts_server *)MALLOC(sizeof(struct sts_server));
+    (void)memset_s(stsServer, sizeof(struct sts_server), 0, sizeof(struct sts_server));
 
-    server->sts_server = sts_server;
+    server->sts_server = stsServer;
     hc_handle serverTest = static_cast<hc_handle>(server);
     destroy(&serverTest);
     EXPECT_TRUE(serverTest == nullptr);
@@ -1272,10 +1272,10 @@ static HWTEST_F(DestroyTest, DestroyTest006, TestSize.Level2)
     struct hichain *server = (struct hichain *)MALLOC(sizeof(struct hichain));
     (void)memset_s(server, sizeof(struct hichain), 0, sizeof(struct hichain));
 
-    struct sts_client *sts_client = (struct sts_client *)MALLOC(sizeof(struct sts_client));
-    (void)memset_s(sts_client, sizeof(struct sts_client), 0, sizeof(struct sts_client));
+    struct sts_client *stsClient = (struct sts_client *)MALLOC(sizeof(struct sts_client));
+    (void)memset_s(stsClient, sizeof(struct sts_client), 0, sizeof(struct sts_client));
 
-    server->sts_client = sts_client;
+    server->sts_client = stsClient;
     hc_handle serverTest = static_cast<hc_handle>(server);
     destroy(&serverTest);
     EXPECT_TRUE(serverTest == nullptr);
@@ -1289,10 +1289,10 @@ static HWTEST_F(DestroyTest, DestroyTest007, TestSize.Level2)
     struct hichain *server = (struct hichain *)MALLOC(sizeof(struct hichain));
     (void)memset_s(server, sizeof(struct hichain), 0, sizeof(struct hichain));
 
-    struct auth_info_cache *auth_info = (struct auth_info_cache *)MALLOC(sizeof(struct auth_info_cache));
-    (void)memset_s(auth_info, sizeof(struct auth_info_cache), 0, sizeof(struct auth_info_cache));
+    struct auth_info_cache *authInfo = (struct auth_info_cache *)MALLOC(sizeof(struct auth_info_cache));
+    (void)memset_s(authInfo, sizeof(struct auth_info_cache), 0, sizeof(struct auth_info_cache));
 
-    server->auth_info = auth_info;
+    server->auth_info = authInfo;
     hc_handle serverTest = static_cast<hc_handle>(server);
     destroy(&serverTest);
     EXPECT_TRUE(serverTest == nullptr);
@@ -1306,10 +1306,10 @@ static HWTEST_F(DestroyTest, DestroyTest008, TestSize.Level2)
     struct hichain *server = (struct hichain *)MALLOC(sizeof(struct hichain));
     (void)memset_s(server, sizeof(struct hichain), 0, sizeof(struct hichain));
 
-    struct sec_clone_server *sec_clone_server = (struct sec_clone_server *)MALLOC(sizeof(struct sec_clone_server));
-    (void)memset_s(sec_clone_server, sizeof(struct sec_clone_server), 0, sizeof(struct sec_clone_server));
+    struct sec_clone_server *secCloneServer = (struct sec_clone_server *)MALLOC(sizeof(struct sec_clone_server));
+    (void)memset_s(secCloneServer, sizeof(struct sec_clone_server), 0, sizeof(struct sec_clone_server));
 
-    server->sec_clone_server = sec_clone_server;
+    server->sec_clone_server = secCloneServer;
     hc_handle serverTest = static_cast<hc_handle>(server);
     destroy(&serverTest);
     EXPECT_TRUE(serverTest == nullptr);
@@ -1504,6 +1504,31 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest002_msg0, TestSize.Level2)
     LOG("--------ReceiveDataTest002--------");
 }
 
+uint8_t g_dataStr031[] = {"{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
+                        "\"minVersion\":\"1.0.0\"},\"challenge\":\"76539E5634EDA735A94845C3A4F356D6\","
+                        "\"salt\":\"025E4B3B2DD3B0E67395C760008A9154\","
+                        "\"epk\":\"24EBF8D727B19E8A43B20D22F744113C8B49B226D834B2E3C9CB5B0378732D6CF7C658BFB468682A6762"
+                        "2D5FE061F4D8102E4D8912377AA785919C529F0C1289F2188E641C6DC626054FC30304DC804FD9F059F5F5D8CEAA29"
+                        "A44814F10CC2A770C5BEB0BE86559E4FA85AD6E480DC2A627F5B28626E23B613EAC21101FF1C1DDA76E35A67A5A70B"
+                        "C24ECFD0C92F4F69A5B73FD67BE3EFC0904709BEC26490E21A4A04E29211DF393559B4A71F7368B68F529806DB90C5"
+                        "8315EDFF0A1738E26E82A54D2030A5B9B270DCF01A2377300135C55B3F6B273CF157246D0DF928D6E3E2886E79ECEB"
+                        "F69F98806C37A6128E4E93C9C43DD01B53963458AF60FA1C0E497F5FD4E807DA4F804EE145967D74792AD9B135C2F3"
+                        "A25FAA3427B3666C9D30539F008915A53D1FE2E2DDDCFCFD0815976332575F9EDBC9F4946A83116C7A29C38AC1A5FD"
+                        "8E5B894DCB4A1A29672D2647D6C734D4EA74E4A077D3403CAD0CA15318D9560FFF163D71B2991D70148F97CD524244"
+                        "7DF2B23C856D734CDD39220EC0\"}}"};
+
+uint8_t g_dataStr032[] = {"{\"message\":32770,\"payload\":{\"kcfData\":\"463853720FFFC312084B9FF288E17"
+                        "C3F3D8B9D8F2A609D349CAA712AAD926C26\"}}"};
+
+uint8_t g_dataStr033[] = {"{\"message\":32771,\"payload\":{\"exAuthInfo\":\"63B2AC76C0645224DA7E395DBCC29D9F"
+                        "9AF5E0ABEEC94048962F838D12C501B22193E1B2AD43A7D9443A80EA92C4BD4F53B14C867DD00308167CB2803754"
+                        "D4A909C0666B231C17736E0C5BE5A21746BE53AF0E72BE30DC56D56752823D9453F025DD3A56904EDBF54FB16667"
+                        "82623DDF7BA29A1FA3CFE34864D4AF958EA616785AB7F06DBC01675ADB19EB12D8CA5CF312AEECE9016CA92BC9A2"
+                        "69FE9BA2C579C7EA69F34855FDF689B3153BBFF618464612C6CC8984167842316A7E6E38813CC901DFBE4BA0767C"
+                        "914B03AD0CF221BC319860A018078F74454DE18B0A144F812A3560D1A3223084A0BE48F737B49840A331B037CC13"
+                        "DF82BFC85C1B95890907972897B827C237071A8D706CE41F9E8B045E3FDD9850BEBB50BFA84721B6E64A23557D0F"
+                        "572B33D18FD8DE25C0B6C57F35AB9931EE02\"}}"};
+
 static HWTEST_F(ReceiveDataTest, ReceiveDataTest003_pake_client, TestSize.Level2)
 {
     LOG("--------ReceiveDataTest003--------");
@@ -1520,50 +1545,26 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest003_pake_client, TestSize.Level2
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
     int32_t ret = start_pake(server, &params);
-    uint8_t dataStr001[] = {"{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
-                        "\"minVersion\":\"1.0.0\"},\"challenge\":\"76539E5634EDA735A94845C3A4F356D6\","
-                        "\"salt\":\"025E4B3B2DD3B0E67395C760008A9154\","
-                        "\"epk\":\"24EBF8D727B19E8A43B20D22F744113C8B49B226D834B2E3C9CB5B0378732D6CF7C658BFB468682A6762"
-                        "2D5FE061F4D8102E4D8912377AA785919C529F0C1289F2188E641C6DC626054FC30304DC804FD9F059F5F5D8CEAA29"
-                        "A44814F10CC2A770C5BEB0BE86559E4FA85AD6E480DC2A627F5B28626E23B613EAC21101FF1C1DDA76E35A67A5A70B"
-                        "C24ECFD0C92F4F69A5B73FD67BE3EFC0904709BEC26490E21A4A04E29211DF393559B4A71F7368B68F529806DB90C5"
-                        "8315EDFF0A1738E26E82A54D2030A5B9B270DCF01A2377300135C55B3F6B273CF157246D0DF928D6E3E2886E79ECEB"
-                        "F69F98806C37A6128E4E93C9C43DD01B53963458AF60FA1C0E497F5FD4E807DA4F804EE145967D74792AD9B135C2F3"
-                        "A25FAA3427B3666C9D30539F008915A53D1FE2E2DDDCFCFD0815976332575F9EDBC9F4946A83116C7A29C38AC1A5FD"
-                        "8E5B894DCB4A1A29672D2647D6C734D4EA74E4A077D3403CAD0CA15318D9560FFF163D71B2991D70148F97CD524244"
-                        "7DF2B23C856D734CDD39220EC0\"}}"};
     uint8_buff data001 = {
-        dataStr001,
-        sizeof(dataStr001),
-        strlen(reinterpret_cast<char *>(dataStr001))
+        g_dataStr031,
+        sizeof(g_dataStr031),
+        strlen(reinterpret_cast<char *>(g_dataStr031))
     };
     ret = receive_data(server, &data001);
     EXPECT_EQ(ret, HC_OK);
     EXPECT_EQ(g_result, KEY_AGREEMENT_PROCESSING);
-
-    uint8_t dataStr002[] = {"{\"message\":32770,\"payload\":{\"kcfData\":\"463853720FFFC312084B9FF288E17"
-                          "C3F3D8B9D8F2A609D349CAA712AAD926C26\"}}"};
     uint8_buff data002 = {
-        dataStr002,
-        sizeof(dataStr002),
-        strlen(reinterpret_cast<char *>(dataStr002))
+        g_dataStr032,
+        sizeof(g_dataStr032),
+        strlen(reinterpret_cast<char *>(g_dataStr032))
     };
     ret = receive_data(server, &data002);
     EXPECT_EQ(ret, HC_OK);
     EXPECT_EQ(g_result, KEY_AGREEMENT_END);
-
-    uint8_t dataStr003[] = {"{\"message\":32771,\"payload\":{\"exAuthInfo\":\"63B2AC76C0645224DA7E395DBCC29D9F"
-                        "9AF5E0ABEEC94048962F838D12C501B22193E1B2AD43A7D9443A80EA92C4BD4F53B14C867DD00308167CB2803754"
-                        "D4A909C0666B231C17736E0C5BE5A21746BE53AF0E72BE30DC56D56752823D9453F025DD3A56904EDBF54FB16667"
-                        "82623DDF7BA29A1FA3CFE34864D4AF958EA616785AB7F06DBC01675ADB19EB12D8CA5CF312AEECE9016CA92BC9A2"
-                        "69FE9BA2C579C7EA69F34855FDF689B3153BBFF618464612C6CC8984167842316A7E6E38813CC901DFBE4BA0767C"
-                        "914B03AD0CF221BC319860A018078F74454DE18B0A144F812A3560D1A3223084A0BE48F737B49840A331B037CC13"
-                        "DF82BFC85C1B95890907972897B827C237071A8D706CE41F9E8B045E3FDD9850BEBB50BFA84721B6E64A23557D0F"
-                        "572B33D18FD8DE25C0B6C57F35AB9931EE02\"}}"};
     uint8_buff data003 = {
-        dataStr003,
-        sizeof(dataStr003),
-        strlen(reinterpret_cast<char *>(dataStr003))
+        g_dataStr033,
+        sizeof(g_dataStr033),
+        strlen(reinterpret_cast<char *>(g_dataStr033))
     };
     ret = receive_data(server, &data003);
     EXPECT_EQ(ret, HC_OK);
@@ -1660,6 +1661,22 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest005_pake_client, TestSize.Level2
     LOG("--------ReceiveDataTest005--------");
 }
 
+uint8_t g_dataStr061[] = {"{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
+                        "\"minVersion\":\"1.0.0\"},\"challenge\":\"76539E5634EDA735A94845C3A4F356D6\","
+                        "\"salt\":\"025E4B3B2DD3B0E67395C760008A9154\","
+                        "\"epk\":""}}"};
+
+uint8_t g_dataStr062[] = {"{\"message\":32770,\"payload\":{\"kcfData\":\"463853720FFFC312084B9FF288E17"
+                          "C3F3D8B9D8F2A609D349CAA712AAD926C26\"}}"};
+
+uint8_t g_dataStr063[] = {"{\"message\":32771,\"payload\":{\"exAuthInfo\":\"63B2AC76C0645224DA7E395DBCC29D9F"
+                        "9AF5E0ABEEC94048962F838D12C501B22193E1B2AD43A7D9443A80EA92C4BD4F53B14C867DD00308167CB2803754"
+                        "D4A909C0666B231C17736E0C5BE5A21746BE53AF0E72BE30DC56D56752823D9453F025DD3A56904EDBF54FB16667"
+                        "82623DDF7BA29A1FA3CFE34864D4AF958EA616785AB7F06DBC01675ADB19EB12D8CA5CF312AEECE9016CA92BC9A2"
+                        "69FE9BA2C579C7EA69F34855FDF689B3153BBFF618464612C6CC8984167842316A7E6E38813CC901DFBE4BA0767C"
+                        "914B03AD0CF221BC319860A018078F74454DE18B0A144F812A3560D1A3223084A0BE48F737B49840A331B037CC13"
+                        "DF82BFC85C1B95890907972897B827C237071A8D706CE41F9E8B045E3FDD9850BEBB50BFA84721B6E64A23557D0F"
+                        "572B33D18FD8DE25C0B6C57F35AB9931EE02\"}}"};
 static HWTEST_F(ReceiveDataTest, ReceiveDataTest006_pake_client_error1, TestSize.Level2)
 {
     LOG("--------ReceiveDataTest006--------");
@@ -1675,41 +1692,24 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest006_pake_client_error1, TestSize
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
     int32_t ret = start_pake(server, &params);
-    uint8_t dataStr001[] = {"{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
-                        "\"minVersion\":\"1.0.0\"},\"challenge\":\"76539E5634EDA735A94845C3A4F356D6\","
-                        "\"salt\":\"025E4B3B2DD3B0E67395C760008A9154\","
-                        "\"epk\":""}}"};
     uint8_buff data001 = {
-        dataStr001,
-        sizeof(dataStr001),
-        strlen(reinterpret_cast<char *>(dataStr001))
+        g_dataStr061,
+        sizeof(g_dataStr061),
+        strlen(reinterpret_cast<char *>(g_dataStr061))
     };
     ret = receive_data(server, &data001);
     EXPECT_EQ(ret, HC_OK);
-
-    uint8_t dataStr002[] = {"{\"message\":32770,\"payload\":{\"kcfData\":\"463853720FFFC312084B9FF288E17"
-                          "C3F3D8B9D8F2A609D349CAA712AAD926C26\"}}"};
     uint8_buff data002 = {
-        dataStr002,
-        sizeof(dataStr002),
-        strlen(reinterpret_cast<char *>(dataStr002))
+        g_dataStr062,
+        sizeof(g_dataStr062),
+        strlen(reinterpret_cast<char *>(g_dataStr062))
     };
     ret = receive_data(server, &data002);
     EXPECT_EQ(ret, HC_OK);
-
-    uint8_t dataStr003[] = {"{\"message\":32771,\"payload\":{\"exAuthInfo\":\"63B2AC76C0645224DA7E395DBCC29D9F"
-                        "9AF5E0ABEEC94048962F838D12C501B22193E1B2AD43A7D9443A80EA92C4BD4F53B14C867DD00308167CB2803754"
-                        "D4A909C0666B231C17736E0C5BE5A21746BE53AF0E72BE30DC56D56752823D9453F025DD3A56904EDBF54FB16667"
-                        "82623DDF7BA29A1FA3CFE34864D4AF958EA616785AB7F06DBC01675ADB19EB12D8CA5CF312AEECE9016CA92BC9A2"
-                        "69FE9BA2C579C7EA69F34855FDF689B3153BBFF618464612C6CC8984167842316A7E6E38813CC901DFBE4BA0767C"
-                        "914B03AD0CF221BC319860A018078F74454DE18B0A144F812A3560D1A3223084A0BE48F737B49840A331B037CC13"
-                        "DF82BFC85C1B95890907972897B827C237071A8D706CE41F9E8B045E3FDD9850BEBB50BFA84721B6E64A23557D0F"
-                        "572B33D18FD8DE25C0B6C57F35AB9931EE02\"}}"};
-
     uint8_buff data003 = {
-        dataStr003,
-        sizeof(dataStr003),
-        strlen(reinterpret_cast<char *>(dataStr003))
+        g_dataStr063,
+        sizeof(g_dataStr063),
+        strlen(reinterpret_cast<char *>(g_dataStr063))
     };
     ret = receive_data(server, &data003);
     EXPECT_EQ(ret, HC_OK);
@@ -1772,6 +1772,31 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest007_pake_client_error2, TestSize
     LOG("--------ReceiveDataTest007--------");
 }
 
+uint8_t g_dataStr081[] = {"{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
+                        "\"minVersion\":\"1.0.0\"},\"challenge\":\"76539E5634EDA735A94845C3A4F356D6\","
+                        "\"salt\":\"025E4B3B2DD3B0E67395C760008A9154\","
+                        "\"epk\":\"24EBF8D727B19E8A43B20D22F744113C8B49B226D834B2E3C9CB5B0378732D6CF7C658BFB468682A6762"
+                        "2D5FE061F4D8102E4D8912377AA785919C529F0C1289F2188E641C6DC626054FC30304DC804FD9F059F5F5D8CEAA29"
+                        "A44814F10CC2A770C5BEB0BE86559E4FA85AD6E480DC2A627F5B28626E23B613EAC21101FF1C1DDA76E35A67A5A70B"
+                        "C24ECFD0C92F4F69A5B73FD67BE3EFC0904709BEC26490E21A4A04E29211DF393559B4A71F7368B68F529806DB90C5"
+                        "8315EDFF0A1738E26E82A54D2030A5B9B270DCF01A2377300135C55B3F6B273CF157246D0DF928D6E3E2886E79ECEB"
+                        "F69F98806C37A6128E4E93C9C43DD01B53963458AF60FA1C0E497F5FD4E807DA4F804EE145967D74792AD9B135C2F3"
+                        "A25FAA3427B3666C9D30539F008915A53D1FE2E2DDDCFCFD0815976332575F9EDBC9F4946A83116C7A29C38AC1A5FD"
+                        "8E5B894DCB4A1A29672D2647D6C734D4EA74E4A077D3403CAD0CA15318D9560FFF163D71B2991D70148F97CD524244"
+                        "7DF2B23C856D734CDD39220EC0\"}}"};
+
+uint8_t g_dataStr082[] = {"{\"message\":0,\"payload\":{\"kcfData\":\"463853720FFFC312084B9FF288E17"
+                        "C3F3D8B9D8F2A609D349CAA712AAD926C26\"}}"};
+
+uint8_t g_dataStr083[] = {"{\"message\":32771,\"payload\":{\"exAuthInfo\":\"63B2AC76C0645224DA7E395DBCC29D9F"
+                        "9AF5E0ABEEC94048962F838D12C501B22193E1B2AD43A7D9443A80EA92C4BD4F53B14C867DD00308167CB2803754"
+                        "D4A909C0666B231C17736E0C5BE5A21746BE53AF0E72BE30DC56D56752823D9453F025DD3A56904EDBF54FB16667"
+                        "82623DDF7BA29A1FA3CFE34864D4AF958EA616785AB7F06DBC01675ADB19EB12D8CA5CF312AEECE9016CA92BC9A2"
+                        "69FE9BA2C579C7EA69F34855FDF689B3153BBFF618464612C6CC8984167842316A7E6E38813CC901DFBE4BA0767C"
+                        "914B03AD0CF221BC319860A018078F74454DE18B0A144F812A3560D1A3223084A0BE48F737B49840A331B037CC13"
+                        "DF82BFC85C1B95890907972897B827C237071A8D706CE41F9E8B045E3FDD9850BEBB50BFA84721B6E64A23557D0F"
+                        "572B33D18FD8DE25C0B6C57F35AB9931EE02\"}}"};
+
 static HWTEST_F(ReceiveDataTest, ReceiveDataTest008_pake_client_error3, TestSize.Level2)
 {
     LOG("--------ReceiveDataTest008--------");
@@ -1787,48 +1812,24 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest008_pake_client_error3, TestSize
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
     int32_t ret = start_pake(server, &params);
-    uint8_t dataStr001[] = {"{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
-                        "\"minVersion\":\"1.0.0\"},\"challenge\":\"76539E5634EDA735A94845C3A4F356D6\","
-                        "\"salt\":\"025E4B3B2DD3B0E67395C760008A9154\","
-                        "\"epk\":\"24EBF8D727B19E8A43B20D22F744113C8B49B226D834B2E3C9CB5B0378732D6CF7C658BFB468682A6762"
-                        "2D5FE061F4D8102E4D8912377AA785919C529F0C1289F2188E641C6DC626054FC30304DC804FD9F059F5F5D8CEAA29"
-                        "A44814F10CC2A770C5BEB0BE86559E4FA85AD6E480DC2A627F5B28626E23B613EAC21101FF1C1DDA76E35A67A5A70B"
-                        "C24ECFD0C92F4F69A5B73FD67BE3EFC0904709BEC26490E21A4A04E29211DF393559B4A71F7368B68F529806DB90C5"
-                        "8315EDFF0A1738E26E82A54D2030A5B9B270DCF01A2377300135C55B3F6B273CF157246D0DF928D6E3E2886E79ECEB"
-                        "F69F98806C37A6128E4E93C9C43DD01B53963458AF60FA1C0E497F5FD4E807DA4F804EE145967D74792AD9B135C2F3"
-                        "A25FAA3427B3666C9D30539F008915A53D1FE2E2DDDCFCFD0815976332575F9EDBC9F4946A83116C7A29C38AC1A5FD"
-                        "8E5B894DCB4A1A29672D2647D6C734D4EA74E4A077D3403CAD0CA15318D9560FFF163D71B2991D70148F97CD524244"
-                        "7DF2B23C856D734CDD39220EC0\"}}"};
     uint8_buff data001 = {
-        dataStr001,
-        sizeof(dataStr001),
-        strlen(reinterpret_cast<char *>(dataStr001))
+        g_dataStr081,
+        sizeof(g_dataStr081),
+        strlen(reinterpret_cast<char *>(g_dataStr081))
     };
     ret = receive_data(server, &data001);
     EXPECT_EQ(ret, HC_OK);
-
-    uint8_t dataStr002[] = {"{\"message\":0,\"payload\":{\"kcfData\":\"463853720FFFC312084B9FF288E17"
-                          "C3F3D8B9D8F2A609D349CAA712AAD926C26\"}}"};
     uint8_buff data002 = {
-        dataStr002,
-        sizeof(dataStr002),
-        strlen(reinterpret_cast<char *>(dataStr002))
+        g_dataStr082,
+        sizeof(g_dataStr082),
+        strlen(reinterpret_cast<char *>(g_dataStr082))
     };
     ret = receive_data(server, &data002);
     EXPECT_EQ(ret, HC_OK);
-
-    uint8_t dataStr003[] = {"{\"message\":32771,\"payload\":{\"exAuthInfo\":\"63B2AC76C0645224DA7E395DBCC29D9F"
-                        "9AF5E0ABEEC94048962F838D12C501B22193E1B2AD43A7D9443A80EA92C4BD4F53B14C867DD00308167CB2803754"
-                        "D4A909C0666B231C17736E0C5BE5A21746BE53AF0E72BE30DC56D56752823D9453F025DD3A56904EDBF54FB16667"
-                        "82623DDF7BA29A1FA3CFE34864D4AF958EA616785AB7F06DBC01675ADB19EB12D8CA5CF312AEECE9016CA92BC9A2"
-                        "69FE9BA2C579C7EA69F34855FDF689B3153BBFF618464612C6CC8984167842316A7E6E38813CC901DFBE4BA0767C"
-                        "914B03AD0CF221BC319860A018078F74454DE18B0A144F812A3560D1A3223084A0BE48F737B49840A331B037CC13"
-                        "DF82BFC85C1B95890907972897B827C237071A8D706CE41F9E8B045E3FDD9850BEBB50BFA84721B6E64A23557D0F"
-                        "572B33D18FD8DE25C0B6C57F35AB9931EE02\"}}"};
     uint8_buff data003 = {
-        dataStr003,
-        sizeof(dataStr003),
-        strlen(reinterpret_cast<char *>(dataStr003))
+        g_dataStr083,
+        sizeof(g_dataStr083),
+        strlen(reinterpret_cast<char *>(g_dataStr083))
     };
     ret = receive_data(server, &data003);
     EXPECT_EQ(ret, HC_OK);
@@ -1848,14 +1849,14 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest010_pake_client2error, TestSize.
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
-    struct hichain *hc_server = static_cast<struct hichain *>(server);
-    hc_server->operation_code = BIND;
-    hc_server->last_state = KEY_AGREEMENT_STATE;
-    hc_server->state = OPERATION_STATE;
+    struct hichain *hcServer = static_cast<struct hichain *>(server);
+    hcServer->operation_code = BIND;
+    hcServer->last_state = KEY_AGREEMENT_STATE;
+    hcServer->state = OPERATION_STATE;
     struct operation_parameter params = {g_testServerAuthId, g_testClientAuthId, KEY_LEN};
-    build_object(hc_server, PAKE_MODULAR, true, &params);
-    hc_server->pake_client->client_info.protocol_base_info.state = START_REQUEST;
-    hc_server->pake_client->client_info.protocol_base_info.last_state = PROTOCOL_INIT;
+    build_object(hcServer, PAKE_MODULAR, true, &params);
+    hcServer->pake_client->client_info.protocol_base_info.state = START_REQUEST;
+    hcServer->pake_client->client_info.protocol_base_info.last_state = PROTOCOL_INIT;
     uint8_t dataStr[] = "{\"message\":32770,\"payload\":{}}";
     uint8_buff data = {
         dataStr,
@@ -1882,14 +1883,14 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest014_pake_client3error, TestSize.
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
-    struct hichain *hc_server = static_cast<struct hichain *>(server);
-    hc_server->operation_code = BIND;
-    hc_server->last_state = OPERATION_STATE;
-    hc_server->state = OVER_STATE;
+    struct hichain *hcServer = static_cast<struct hichain *>(server);
+    hcServer->operation_code = BIND;
+    hcServer->last_state = OPERATION_STATE;
+    hcServer->state = OVER_STATE;
     struct operation_parameter params = {g_testServerAuthId, g_testClientAuthId, KEY_LEN};
-    build_object(hc_server, PAKE_MODULAR, true, &params);
-    hc_server->pake_client->client_info.protocol_base_info.state = END_REQUEST;
-    hc_server->pake_client->client_info.protocol_base_info.last_state = START_REQUEST;
+    build_object(hcServer, PAKE_MODULAR, true, &params);
+    hcServer->pake_client->client_info.protocol_base_info.state = END_REQUEST;
+    hcServer->pake_client->client_info.protocol_base_info.last_state = START_REQUEST;
     uint8_t dataStr[] = {"{\"message\":32771,\"payload\":{}}"};
     uint8_buff data = {
         dataStr,
@@ -1970,12 +1971,12 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest016_sts_response1_Ok, TestSize.L
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
-    struct hichain *hc_server = static_cast<struct hichain *>(server);
-    hc_server->operation_code = AUTHENTICATE;
+    struct hichain *hcServer = static_cast<struct hichain *>(server);
+    hcServer->operation_code = AUTHENTICATE;
     struct operation_parameter params = {g_testServerAuthId, g_testClientAuthId, KEY_LEN};
-    build_object(hc_server, STS_MODULAR, true, &params);
-    hc_server->sts_client->client_info.protocol_base_info.state = END_REQUEST;
-    hc_server->sts_client->client_info.protocol_base_info.last_state = PROTOCOL_INIT;
+    build_object(hcServer, STS_MODULAR, true, &params);
+    hcServer->sts_client->client_info.protocol_base_info.state = END_REQUEST;
+    hcServer->sts_client->client_info.protocol_base_info.last_state = PROTOCOL_INIT;
     uint8_t dataStr[] = "{\"authForm\":0,\"message\":32785,\"payload\":{\"authData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55"\
                         ",\"challenge\":\"A1714848785F27C22B31\","\
                         "\"epk\":\"493CB95DB80320360BE5A3E3000E3E8E67371D6DCC57D1F97937ABABC219\","\
@@ -2083,22 +2084,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest018_STS_auth_ack_error_message, 
     LOG("--------ReceiveDataTest018--------");
 }
 
-static HWTEST_F(ReceiveDataTest, ReceiveDataTest019_pake_client_withoutrandom, TestSize.Level2)
-{
-    LOG("--------ReceiveDataTest019--------");
-    struct hc_call_back callBack = {
-        Transmit,
-        GetProtocolParams,
-        SetSessionKey,
-        SetServiceResult,
-        ConfirmReceiveRequest
-    };
-
-    const struct operation_parameter params = {g_testServerAuthId, g_testClientAuthId, KEY_LEN};
-    hc_handle server1 = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server1 != nullptr);
-    int32_t ret = start_pake(server1, &params);
-    uint8_t dataStr001[] = {"{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
+uint8_t g_dataStr0191[] = {"{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
                         "\"minVersion\":\"1.0.0\"},"
                         "\"salt\":\"025E4B3B2DD3B0E67395C760008A9154\","
                         "\"epk\":\"24EBF8D727B19E8A43B20D22F744113C8B49B226D834B2E3C9CB5B0378732D6CF7C658BFB468682A6762"
@@ -2110,19 +2096,8 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest019_pake_client_withoutrandom, T
                         "A25FAA3427B3666C9D30539F008915A53D1FE2E2DDDCFCFD0815976332575F9EDBC9F4946A83116C7A29C38AC1A5FD"
                         "8E5B894DCB4A1A29672D2647D6C734D4EA74E4A077D3403CAD0CA15318D9560FFF163D71B2991D70148F97CD524244"
                         "7DF2B23C856D734CDD39220EC0\"}}"};
-    uint8_buff data001 = {
-        dataStr001,
-        sizeof(dataStr001),
-        strlen(reinterpret_cast<char *>(dataStr001))
-    };
-    ret = receive_data(server1, &data001);
-    EXPECT_EQ(ret, HC_OK);
-    destroy(&server1);
 
-    hc_handle server2 = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server2 != nullptr);
-    ret = start_pake(server2, &params);
-    uint8_t dataStr002[] = {"{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
+uint8_t g_dataStr0192[] = {"{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
                         "\"minVersion\":\"1.0.0\"},\"challenge\":\"76539E5634EDA735A94845C3A4F356D6\","
                         "\"epk\":\"24EBF8D727B19E8A43B20D22F744113C8B49B226D834B2E3C9CB5B0378732D6CF7C658BFB468682A6762"
                         "2D5FE061F4D8102E4D8912377AA785919C529F0C1289F2188E641C6DC626054FC30304DC804FD9F059F5F5D8CEAA29"
@@ -2133,34 +2108,12 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest019_pake_client_withoutrandom, T
                         "A25FAA3427B3666C9D30539F008915A53D1FE2E2DDDCFCFD0815976332575F9EDBC9F4946A83116C7A29C38AC1A5FD"
                         "8E5B894DCB4A1A29672D2647D6C734D4EA74E4A077D3403CAD0CA15318D9560FFF163D71B2991D70148F97CD524244"
                         "7DF2B23C856D734CDD39220EC0\"}}"};
-    uint8_buff data002 = {
-        dataStr002,
-        sizeof(dataStr002),
-        strlen(reinterpret_cast<char *>(dataStr002))
-    };
-    ret = receive_data(server2, &data002);
-    EXPECT_EQ(ret, HC_OK);
-    destroy(&server2);
 
-    hc_handle server3 = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server3 != nullptr);
-    ret = start_pake(server3, &params);
-    uint8_t dataStr003[] = {"{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
+uint8_t g_dataStr0193[] = {"{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
                         "\"minVersion\":\"1.0.0\"},\"challenge\":\"76539E5634EDA735A94845C3A4F356D6\","
                         "\"salt\":\"025E4B3B2DD3B0E67395C760008A9154\",}}"};
-    uint8_buff data003 = {
-        dataStr003,
-        sizeof(dataStr003),
-        strlen(reinterpret_cast<char *>(dataStr003))
-    };
-    ret = receive_data(server3, &data003);
-    EXPECT_EQ(ret, HC_OK);
-    destroy(&server3);
 
-    hc_handle server4 = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server4 != nullptr);
-    ret = start_pake(server4, &params);
-    uint8_t dataStr004[] = {"{\"message\":32769,\"payload\":{\"challenge\":\"76539E5634EDA735A94845C3A4F356D6\","
+uint8_t g_dataStr0194[] = {"{\"message\":32769,\"payload\":{\"challenge\":\"76539E5634EDA735A94845C3A4F356D6\","
                         "\"salt\":\"025E4B3B2DD3B0E67395C760008A9154\","
                         "\"epk\":\"24EBF8D727B19E8A43B20D22F744113C8B49B226D834B2E3C9CB5B0378732D6CF7C658BFB468682A6762"
                         "2D5FE061F4D8102E4D8912377AA785919C529F0C1289F2188E641C6DC626054FC30304DC804FD9F059F5F5D8CEAA29"
@@ -2171,15 +2124,8 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest019_pake_client_withoutrandom, T
                         "A25FAA3427B3666C9D30539F008915A53D1FE2E2DDDCFCFD0815976332575F9EDBC9F4946A83116C7A29C38AC1A5FD"
                         "8E5B894DCB4A1A29672D2647D6C734D4EA74E4A077D3403CAD0CA15318D9560FFF163D71B2991D70148F97CD524244"
                         "7DF2B23C856D734CDD39220EC0\"}}"};
-    uint8_buff data004 = {
-        dataStr004,
-        sizeof(dataStr004),
-        strlen(reinterpret_cast<char *>(dataStr004))
-    };
-    ret = receive_data(server4, &data004);
-    EXPECT_EQ(ret, HC_OK);
 
-    uint8_t dataStr005[] = {"{\"message\":32769,\"payload\":{\"challenge\":\"76539E5634EDA735A94845C3A4F356D\","
+uint8_t g_dataStr0195[] = {"{\"message\":32769,\"payload\":{\"challenge\":\"76539E5634EDA735A94845C3A4F356D\","
                         "\"salt\":\"025E4B3B2DD3B0E67395C760008A915\","
                         "\"epk\":\"24EBF8D727B19E8A43B20D22F744113C8B49B226D834B2E3C9CB5B0378732D6CF7C658BFB468682A6762"
                         "2D5FE061F4D8102E4D8912377AA785919C529F0C1289F2188E641C6DC626054FC30304DC804FD9F059F5F5D8CEAA29"
@@ -2190,16 +2136,85 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest019_pake_client_withoutrandom, T
                         "A25FAA3427B3666C9D30539F008915A53D1FE2E2DDDCFCFD0815976332575F9EDBC9F4946A83116C7A29C38AC1A5FD"
                         "8E5B894DCB4A1A29672D2647D6C734D4EA74E4A077D3403CAD0CA15318D9560FFF163D71B2991D70148F97CD524244"
                         "7DF2B23C856D734CDD39220EC\"}}"};
+
+static HWTEST_F(ReceiveDataTest, ReceiveDataTest019_pake_client_withoutrandom, TestSize.Level2)
+{
+    LOG("--------ReceiveDataTest019--------");
+    struct hc_call_back callBack = {
+        Transmit,
+        GetProtocolParams,
+        SetSessionKey,
+        SetServiceResult,
+        ConfirmReceiveRequest
+    };
+    const struct operation_parameter params = {g_testServerAuthId, g_testClientAuthId, KEY_LEN};
+    hc_handle server1 = get_instance(&g_server_identity, HC_CENTRE, &callBack);
+    ASSERT_TRUE(server1 != nullptr);
+    int32_t ret = start_pake(server1, &params);
+    uint8_buff data001 = {
+        g_dataStr0191,
+        sizeof(g_dataStr0191),
+        strlen(reinterpret_cast<char *>(g_dataStr0191))
+    };
+    ret = receive_data(server1, &data001);
+    EXPECT_EQ(ret, HC_OK);
+    destroy(&server1);
+    hc_handle server2 = get_instance(&g_server_identity, HC_CENTRE, &callBack);
+    ASSERT_TRUE(server2 != nullptr);
+    ret = start_pake(server2, &params);
+    uint8_buff data002 = {
+        g_dataStr0192,
+        sizeof(g_dataStr0192),
+        strlen(reinterpret_cast<char *>(g_dataStr0192))
+    };
+    ret = receive_data(server2, &data002);
+    EXPECT_EQ(ret, HC_OK);
+    destroy(&server2);
+    hc_handle server3 = get_instance(&g_server_identity, HC_CENTRE, &callBack);
+    ASSERT_TRUE(server3 != nullptr);
+    ret = start_pake(server3, &params);
+    uint8_buff data003 = {
+        g_dataStr0193,
+        sizeof(g_dataStr0193),
+        strlen(reinterpret_cast<char *>(g_dataStr0193))
+    };
+    ret = receive_data(server3, &data003);
+    EXPECT_EQ(ret, HC_OK);
+    destroy(&server3);
+    LOG("--------ReceiveDataTest019--------");
+}
+
+static HWTEST_F(ReceiveDataTest, ReceiveDataTest020_pake_client_withoutrandom2, TestSize.Level2)
+{
+    LOG("--------ReceiveDataTest020--------");
+    struct hc_call_back callBack = {
+        Transmit,
+        GetProtocolParams,
+        SetSessionKey,
+        SetServiceResult,
+        ConfirmReceiveRequest
+    };
+    const struct operation_parameter params = {g_testServerAuthId, g_testClientAuthId, KEY_LEN};
+    hc_handle server4 = get_instance(&g_server_identity, HC_CENTRE, &callBack);
+    ASSERT_TRUE(server4 != nullptr);
+    ret = start_pake(server4, &params);
+    uint8_buff data004 = {
+        g_dataStr0194,
+        sizeof(g_dataStr0194),
+        strlen(reinterpret_cast<char *>(g_dataStr0194))
+    };
+    ret = receive_data(server4, &data004);
+    EXPECT_EQ(ret, HC_OK);
     uint8_buff data005 = {
-        dataStr005,
-        sizeof(dataStr005),
-        strlen(reinterpret_cast<char *>(dataStr005))
+        g_dataStr0195,
+        sizeof(g_dataStr0195),
+        strlen(reinterpret_cast<char *>(g_dataStr0195))
     };
     ret = receive_data(server4, &data005);
     EXPECT_EQ(ret, HC_OK);
     destroy(&server4);
 
-    LOG("--------ReceiveDataTest019--------");
+    LOG("--------ReceiveDataTest020--------");
 }
 
 /*--------------------------IsTrustPeerTest------------------------*/
@@ -2482,7 +2497,7 @@ static HWTEST_F(IsTrustPeerTest, IsTrustPeerTest010, TestSize.Level2)
 
 /*--------------------------registe_log------------------------*/
 
-class registeLogTest : public testing::Test {
+class RegisteLogTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -2490,18 +2505,18 @@ public:
     void TearDown();
 };
 
-void registeLogTest::SetUpTestCase(void) {}
-void registeLogTest::TearDownTestCase(void) {}
-void registeLogTest::SetUp()
+void RegisteLogTest::SetUpTestCase(void) {}
+void RegisteLogTest::TearDownTestCase(void) {}
+void RegisteLogTest::SetUp()
 {
     InitHcAuthId();
 }
 
-void registeLogTest::TearDown() {}
+void RegisteLogTest::TearDown() {}
 
 const int32_t MAX_LOG_BUFF_LENGTH = 1024;
 
-void testLogd(const char *tag, const char *func_name, const char *format, ...)
+void TestLogd(const char *tag, const char *funcName, const char *format, ...)
 {
     va_list ap;
     char logBuff[MAX_LOG_BUFF_LENGTH];
@@ -2513,56 +2528,56 @@ void testLogd(const char *tag, const char *func_name, const char *format, ...)
     }
 }
 
-static HWTEST_F(registeLogTest, registeLogTest001, TestSize.Level2)
+static HWTEST_F(RegisteLogTest, RegisteLogTest001, TestSize.Level2)
 {
     struct log_func_group logFunc = {
-        testLogd,
-        testLogd,
-        testLogd,
-        testLogd
+        TestLogd,
+        TestLogd,
+        TestLogd,
+        TestLogd
     };
     registe_log(&logFunc);
 }
 
-static HWTEST_F(registeLogTest, registeLogTest002, TestSize.Level2)
+static HWTEST_F(RegisteLogTest, RegisteLogTest002, TestSize.Level2)
 {
     struct log_func_group logFunc = {
         nullptr,
-        testLogd,
-        testLogd,
-        testLogd
+        TestLogd,
+        TestLogd,
+        TestLogd
     };
     registe_log(&logFunc);
 }
 
-static HWTEST_F(registeLogTest, registeLogTest003, TestSize.Level2)
+static HWTEST_F(RegisteLogTest, RegisteLogTest003, TestSize.Level2)
 {
     struct log_func_group logFunc = {
-        testLogd,
+        TestLogd,
         nullptr,
-        testLogd,
-        testLogd
+        TestLogd,
+        TestLogd
     };
     registe_log(&logFunc);
 }
 
-static HWTEST_F(registeLogTest, registeLogTest004, TestSize.Level2)
+static HWTEST_F(RegisteLogTest, RegisteLogTest004, TestSize.Level2)
 {
     struct log_func_group logFunc = {
-        testLogd,
-        testLogd,
+        TestLogd,
+        TestLogd,
         nullptr,
-        testLogd
+        TestLogd
     };
     registe_log(&logFunc);
 }
 
-static HWTEST_F(registeLogTest, registeLogTest005, TestSize.Level2)
+static HWTEST_F(RegisteLogTest, RegisteLogTest005, TestSize.Level2)
 {
     struct log_func_group logFunc = {
-        testLogd,
-        testLogd,
-        testLogd,
+        TestLogd,
+        TestLogd,
+        TestLogd,
         nullptr
     };
     registe_log(&logFunc);
@@ -2597,7 +2612,7 @@ void JsonUtilTest::SetUp()
     cJSON_AddItemToObject(root, "payload", payload);
 
     root_array = cJSON_CreateArray();
-    cJSON_AddItemToArray(root_array, cJSON_CreateNumber(11));
+    cJSON_AddItemToArray(root_array, cJSON_CreateNumber(11)); /* 11 : any int for test */
     cJSON_AddItemToArray(root_array, cJSON_CreateString("banana"));
     cJSON_AddItemToArray(root_array, cJSON_CreateTrue());
 }
@@ -2709,8 +2724,8 @@ static HWTEST_F(JsonUtilTest, string_convert_test001, TestSize.Level2)
     char *temp = nullptr;
     uint8_t *str = nullptr;
     uint32_t *length = nullptr;
-    uint32_t max_len = 10;
-    int32_t ret = string_convert(obj, temp, str, length, max_len);
+    uint32_t maxLen = 10;
+    int32_t ret = string_convert(obj, temp, str, length, maxLen);
     EXPECT_EQ(ret, HC_INPUT_ERROR);
 }
 
@@ -2720,8 +2735,8 @@ static HWTEST_F(JsonUtilTest, string_convert_test002, TestSize.Level2)
     std::string temp = "test";
     uint8_t *str = nullptr;
     uint32_t *length = nullptr;
-    uint32_t max_len = 9;
-    int32_t ret = string_convert(obj, temp.c_str(), str, length, max_len);
+    uint32_t maxLen = 9;
+    int32_t ret = string_convert(obj, temp.c_str(), str, length, maxLen);
     EXPECT_EQ(ret, HC_INPUT_ERROR);
 }
 
@@ -2731,8 +2746,8 @@ static HWTEST_F(JsonUtilTest, string_convert_test003, TestSize.Level2)
     std::string temp = "test";
     uint8_t *str = nullptr;
     uint32_t *length = nullptr;
-    uint32_t max_len = 11;
-    int32_t ret = string_convert(obj, temp.c_str(), str, length, max_len);
+    uint32_t maxLen = 11;
+    int32_t ret = string_convert(obj, temp.c_str(), str, length, maxLen);
     EXPECT_EQ(ret, HC_MEMCPY_ERROR);
 }
 }

@@ -40,7 +40,7 @@ const int AUTH_ID_LENGTH = 64;
 const int ERROR_ZERO_LENGTH = 0;
 const int ERROR_LENGTH = 258;
 
-int32_t generateSignMessage(void *handle, struct uint8_buff *message);
+int32_t GenerateSignMessage(hc_handle handle, struct uint8_buff *message);
 
 static struct session_identity g_server_identity = {
     153666603,
@@ -353,9 +353,9 @@ static HWTEST_F(HuksAdapterTest, ImportLtPublicKeyTest001, TestSize.Level2)
     struct service_id service_id = generate_service_id(&g_server_identity);
     EXPECT_GT(service_id.length, 0);
     struct hc_key_alias alias = generate_key_alias(&service_id, &g_test_client_auth_id, KEY_ALIAS_ACCESSOR_PK);
-    int32_t user_type = 1;
-    int32_t pair_type = -1;
-    int32_t ret = import_lt_public_key(&alias, &lt_public_key, user_type, pair_type, &g_test_client_auth_id);
+    int32_t userType = 1;
+    int32_t pairType = -1;
+    int32_t ret = import_lt_public_key(&alias, &lt_public_key, userType, pairType, &g_test_client_auth_id);
     EXPECT_NE(ret, ERROR_CODE_SUCCESS);
     LOG("--------HuksAdapterTest Test017--------");
 }
@@ -367,9 +367,9 @@ static HWTEST_F(HuksAdapterTest, ImportLtPublicKeyTest002, TestSize.Level2)
     struct service_id service_id = generate_service_id(&g_server_identity);
     EXPECT_GT(service_id.length, 0);
     struct hc_key_alias alias = generate_key_alias(&service_id, &g_test_client_auth_id, KEY_ALIAS_ACCESSOR_PK);
-    int32_t user_type = -1;
-    int32_t pair_type = 2;
-    int32_t ret = import_lt_public_key(&alias, &lt_public_key, user_type, pair_type, &g_test_client_auth_id);
+    int32_t userType = -1;
+    int32_t pairType = 2;
+    int32_t ret = import_lt_public_key(&alias, &lt_public_key, userType, pairType, &g_test_client_auth_id);
     EXPECT_NE(ret, ERROR_CODE_SUCCESS);
     LOG("--------HuksAdapterTest Test018--------");
 }
@@ -381,9 +381,9 @@ static HWTEST_F(HuksAdapterTest, ImportLtPublicKeyTest003, TestSize.Level2)
     struct service_id service_id = generate_service_id(&g_server_identity);
     EXPECT_GT(service_id.length, 0);
     struct hc_key_alias alias = generate_key_alias(&service_id, &g_test_client_auth_id, KEY_ALIAS_ACCESSOR_PK);
-    int32_t user_type = 7;
-    int32_t pair_type = 0;
-    int32_t ret = import_lt_public_key(&alias, &lt_public_key, user_type, pair_type, &g_test_client_auth_id);
+    int32_t userType = 7;
+    int32_t pairType = 0;
+    int32_t ret = import_lt_public_key(&alias, &lt_public_key, userType, pairType, &g_test_client_auth_id);
     EXPECT_NE(ret, ERROR_CODE_SUCCESS);
     LOG("--------HuksAdapterTest Test019--------");
 }
@@ -392,9 +392,9 @@ static HWTEST_F(HuksAdapterTest, ImportLtPublicKeyTest004, TestSize.Level2)
 {
     LOG("--------HuksAdapterTest Test020--------");
     LOG("--------import_lt_public_key--------");
-    int32_t user_type = 4;
-    int32_t pair_type = 0;
-    int32_t ret = import_lt_public_key(nullptr, &lt_public_key, user_type, pair_type, &g_test_client_auth_id);
+    int32_t userType = 4;
+    int32_t pairType = 0;
+    int32_t ret = import_lt_public_key(nullptr, &lt_public_key, userType, pairType, &g_test_client_auth_id);
     EXPECT_NE(ret, ERROR_CODE_SUCCESS);
     LOG("--------HuksAdapterTest Test020--------");
 }
@@ -403,12 +403,12 @@ static HWTEST_F(HuksAdapterTest, ImportLtPublicKeyTest005, TestSize.Level2)
 {
     LOG("--------HuksAdapterTest Test021--------");
     LOG("--------import_lt_public_key--------");
-    int32_t user_type = 4;
-    int32_t pair_type = 1;
+    int32_t userType = 4;
+    int32_t pairType = 1;
     struct service_id service_id = generate_service_id(&g_server_identity);
     EXPECT_GT(service_id.length, 0);
     struct hc_key_alias alias = generate_key_alias(&service_id, &g_test_client_auth_id, KEY_ALIAS_ACCESSOR_PK);
-    int32_t ret = import_lt_public_key(&alias, nullptr, user_type, pair_type, &g_test_client_auth_id);
+    int32_t ret = import_lt_public_key(&alias, nullptr, userType, pairType, &g_test_client_auth_id);
     EXPECT_NE(ret, ERROR_CODE_SUCCESS);
     LOG("--------HuksAdapterTest Test021--------");
 }
@@ -417,12 +417,12 @@ static HWTEST_F(HuksAdapterTest, ImportLtPublicKeyTest006, TestSize.Level2)
 {
     LOG("--------HuksAdapterTest Test022--------");
     LOG("--------import_lt_public_key--------");
-    int32_t user_type = 1;
-    int32_t pair_type = 1;
+    int32_t userType = 1;
+    int32_t pairType = 1;
     struct service_id service_id = generate_service_id(&g_server_identity);
     EXPECT_GT(service_id.length, 0);
     struct hc_key_alias alias = generate_key_alias(&service_id, &g_test_client_auth_id, KEY_ALIAS_ACCESSOR_PK);
-    int32_t ret = import_lt_public_key(&alias, &lt_public_key, user_type, pair_type, nullptr);
+    int32_t ret = import_lt_public_key(&alias, &lt_public_key, userType, pairType, nullptr);
     EXPECT_NE(ret, ERROR_CODE_SUCCESS);
     LOG("--------HuksAdapterTest Test022--------");
 }
@@ -575,10 +575,10 @@ static HWTEST_F(HuksAdapterTest, SignTest001, TestSize.Level2)
     struct operation_parameter params = {g_test_server_auth_id, g_test_client_auth_id, KEY_LEN};
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     int32_t ret = authenticate_peer(server, &params);
-    struct hichain *hichain_test = reinterpret_cast<struct hichain *>(server);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
     struct uint8_buff message;
     (void)memset_s(&message, sizeof(message), 0, sizeof(message));
-    ret = generateSignMessage(reinterpret_cast<void *>(hichain_test->sts_client), &message);
+    ret = GenerateSignMessage(reinterpret_cast<void *>(hichainTest->sts_client), &message);
     EXPECT_EQ(ret, HC_OK);
     struct service_id service_id = generate_service_id(&g_server_identity);
     EXPECT_GT(service_id.length, 0);
@@ -658,15 +658,15 @@ static HWTEST_F(HuksAdapterTest, VerifyTest001, TestSize.Level2)
     struct operation_parameter params = {g_test_server_auth_id, g_test_client_auth_id, KEY_LEN};
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     int32_t ret = authenticate_peer(server, &params);
-    struct hichain *hichain_test = reinterpret_cast<struct hichain *>(server);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
     struct uint8_buff message;
     (void)memset_s(&message, sizeof(message), 0, sizeof(message));
-    ret = generateSignMessage(reinterpret_cast<void *>(hichain_test->sts_client), &message);
+    ret = GenerateSignMessage(reinterpret_cast<void *>(hichainTest->sts_client), &message);
     EXPECT_EQ(ret, HC_OK);
     struct service_id service_id = generate_service_id(&g_server_identity);
     EXPECT_GT(service_id.length, 0);
     struct hc_key_alias alias = generate_key_alias(&service_id, &g_test_client_auth_id, KEY_ALIAS_ACCESSOR_PK);
-    ret = verify(&alias, HC_USER_TYPE_CONTROLLER, &message, &signature);
+    ret = verify(&alias, HC_userType_CONTROLLER, &message, &signature);
     EXPECT_NE(ret, ERROR_CODE_SUCCESS);
     FREE(message.val);
     LOG("--------HuksAdapterTest Test036--------");
@@ -683,7 +683,7 @@ static HWTEST_F(HuksAdapterTest, VerifyWithPublicKeyTest001, TestSize.Level2)
         SetServiceResult,
         ConfirmReceiveRequest
     };
-    int32_t user_type = 1;
+    int32_t userType = 1;
     struct var_buffer public_key;
     public_key.length = 128;
     uint8_t dataMsg[] = {"BB4DA8D3B2E76EAF968C67DAFCC6ECD20A72668EA43220C2835AEDD6D84E2A314203E4"
@@ -700,13 +700,13 @@ static HWTEST_F(HuksAdapterTest, VerifyWithPublicKeyTest001, TestSize.Level2)
     sign_result.length = HC_SIGNATURE_LEN;
     memcpy_s(sign_result.signature, sizeof(sign_result.signature), dataStr, HC_SIGNATURE_LEN);
 
-    struct hichain *hichain_test = reinterpret_cast<struct hichain *>(server);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
     struct uint8_buff message;
     (void)memset_s(&message, sizeof(message), 0, sizeof(message));
-    ret = generateSignMessage(reinterpret_cast<void *>(hichain_test->sts_client), &message);
+    ret = GenerateSignMessage(reinterpret_cast<void *>(hichainTest->sts_client), &message);
     EXPECT_EQ(ret, HC_OK);
 
-    ret = verify_with_public_key(user_type, &message, &public_key, &sign_result);
+    ret = verify_with_public_key(userType, &message, &public_key, &sign_result);
     EXPECT_NE(ret, ERROR_CODE_SUCCESS);
     FREE(message.val);
     LOG("--------HuksAdapterTest Test037--------");
@@ -716,7 +716,7 @@ static HWTEST_F(HuksAdapterTest, VerifyWithPublicKeyTest002, TestSize.Level2)
 {
     LOG("--------HuksAdapterTest Test038--------");
     LOG("--------verify_with_public_key--------");
-    int32_t user_type = 1;
+    int32_t userType = 1;
     struct var_buffer public_key;
     (void)memset_s(&public_key, sizeof(public_key), 0, sizeof(public_key));
     public_key.length = 128;
@@ -728,11 +728,11 @@ static HWTEST_F(HuksAdapterTest, VerifyWithPublicKeyTest002, TestSize.Level2)
     struct uint8_buff message;
     (void)memset_s(&message, sizeof(message), 0, sizeof(message));
 
-    int32_t ret = verify_with_public_key(user_type, nullptr, &public_key, &sign_result);
+    int32_t ret = verify_with_public_key(userType, nullptr, &public_key, &sign_result);
     EXPECT_EQ(ret, HC_INPUT_ERROR);
-    ret = verify_with_public_key(user_type, &message, nullptr, &sign_result);
+    ret = verify_with_public_key(userType, &message, nullptr, &sign_result);
     EXPECT_EQ(ret, HC_INPUT_ERROR);
-    ret = verify_with_public_key(user_type, &message, &public_key, nullptr);
+    ret = verify_with_public_key(userType, &message, &public_key, nullptr);
     EXPECT_EQ(ret, HC_INPUT_ERROR);
     LOG("--------HuksAdapterTest Test038--------");
 }
@@ -909,14 +909,14 @@ static HWTEST_F(HuksAdapterTest, ComputeHkdfTest001, TestSize.Level2)
     memcpy_s(shared_secret.data, sizeof(data), data, sizeof(data));
 
     struct hc_salt salt = {1, {0}};
-    char key_info;
-    uint32_t hkdf_len = 1;
+    char keyInfo;
+    uint32_t hkdfLen = 1;
 
     struct var_buffer out_hkdf;
     out_hkdf.data[0] = 0;
     out_hkdf.length = 64;
 
-    int32_t result = compute_hkdf(&shared_secret, &salt, &key_info, hkdf_len, &out_hkdf);
+    int32_t result = compute_hkdf(&shared_secret, &salt, &keyInfo, hkdfLen, &out_hkdf);
     EXPECT_NE(result, ERROR_CODE_SUCCESS);
     LOG("--------HuksAdapterTest Test046--------");
 }
@@ -1179,29 +1179,29 @@ static HWTEST_F(HuksAdapterTest, GenerateRandomTest003, TestSize.Level2)
     LOG("--------HuksAdapterTest Test056--------");
 }
 
-int32_t generateSignMessage(void *handle, struct uint8_buff *message)
+int32_t GenerateSignMessage(hc_handle handle, struct uint8_buff *message)
 {
     LOG("Called generate sign message");
     check_ptr_return_val(handle, HC_INPUT_ERROR);
     check_ptr_return_val(message, HC_INPUT_ERROR);
-    struct sts_client *sts_client = (struct sts_client *)handle;
+    struct sts_client *stsClient = (struct sts_client *)handle;
 
-    int len = sts_client->peer_public_key.length + sts_client->peer_id.length +
-              sts_client->self_public_key.length + sts_client->self_id.length;
-    uint8_t *info = (uint8_t *)MALLOC(len);
+    int len = stsClient->peer_public_key.length + stsClient->peer_id.length +
+              stsClient->self_public_key.length + stsClient->self_id.length;
+    uint8_t *info = static_cast<uint8_t *>(MALLOC(len));
     if (info == nullptr) {
         LOG("Malloc info failed");
         return HC_MALLOC_FAILED;
     }
 
     int32_t pos = 0;
-    (void)memcpy_s(info + pos, len - pos, sts_client->peer_public_key.stpk, sts_client->peer_public_key.length);
-    pos += sts_client->peer_public_key.length;
-    (void)memcpy_s(info + pos, len - pos, sts_client->peer_id.auth_id, sts_client->peer_id.length);
-    pos += sts_client->peer_id.length;
-    (void)memcpy_s(info + pos, len - pos, sts_client->self_public_key.stpk, sts_client->self_public_key.length);
-    pos += sts_client->self_public_key.length;
-    (void)memcpy_s(info + pos, len - pos, sts_client->self_id.auth_id, sts_client->self_id.length);
+    (void)memcpy_s(info + pos, len - pos, stsClient->peer_public_key.stpk, stsClient->peer_public_key.length);
+    pos += stsClient->peer_public_key.length;
+    (void)memcpy_s(info + pos, len - pos, stsClient->peer_id.auth_id, stsClient->peer_id.length);
+    pos += stsClient->peer_id.length;
+    (void)memcpy_s(info + pos, len - pos, stsClient->self_public_key.stpk, stsClient->self_public_key.length);
+    pos += stsClient->self_public_key.length;
+    (void)memcpy_s(info + pos, len - pos, stsClient->self_id.auth_id, stsClient->self_id.length);
 
     message->val = info;
     message->length = len;
@@ -1239,11 +1239,11 @@ static HWTEST_F(AuthInfoTest, get_pake_session_key_test001, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    struct hichain *hichain_test = reinterpret_cast<struct hichain *>(server);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
     struct pake_server pake_server;
     (void)memset_s(&pake_server, sizeof(pake_server), 0, sizeof(pake_server));
-    hichain_test->pake_server = &pake_server;
-    const struct pake_session_key *key = get_pake_session_key(hichain_test);
+    hichainTest->pake_server = &pake_server;
+    const struct pake_session_key *key = get_pake_session_key(hichainTest);
     EXPECT_NE(key, nullptr);
 }
 
@@ -1258,8 +1258,8 @@ static HWTEST_F(AuthInfoTest, get_pake_session_key_test002, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    struct hichain *hichain_test = reinterpret_cast<struct hichain *>(server);
-    const struct pake_session_key *key = get_pake_session_key(hichain_test);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
+    const struct pake_session_key *key = get_pake_session_key(hichainTest);
     EXPECT_EQ(key, nullptr);
 }
 
@@ -1275,11 +1275,11 @@ static HWTEST_F(AuthInfoTest, get_pake_self_challenge_test001, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    struct hichain *hichain_test = reinterpret_cast<struct hichain *>(server);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
     struct pake_server pake_server;
     (void)memset_s(&pake_server, sizeof(pake_server), 0, sizeof(pake_server));
-    hichain_test->pake_server = &pake_server;
-    const struct challenge *challenge = get_pake_self_challenge(hichain_test);
+    hichainTest->pake_server = &pake_server;
+    const struct challenge *challenge = get_pake_self_challenge(hichainTest);
     EXPECT_NE(challenge, nullptr);
 }
 
@@ -1294,8 +1294,8 @@ static HWTEST_F(AuthInfoTest, get_pake_self_challenge_test002, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    struct hichain *hichain_test = reinterpret_cast<struct hichain *>(server);
-    const struct challenge *challenge = get_pake_self_challenge(hichain_test);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
+    const struct challenge *challenge = get_pake_self_challenge(hichainTest);
     EXPECT_EQ(challenge, nullptr);
 }
 
@@ -1311,11 +1311,11 @@ static HWTEST_F(AuthInfoTest, get_pake_peer_challenge_test001, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    struct hichain *hichain_test = reinterpret_cast<struct hichain *>(server);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
     struct pake_server pake_server;
     (void)memset_s(&pake_server, sizeof(pake_server), 0, sizeof(pake_server));
-    hichain_test->pake_server = &pake_server;
-    const struct challenge *challenge = get_pake_peer_challenge(hichain_test);
+    hichainTest->pake_server = &pake_server;
+    const struct challenge *challenge = get_pake_peer_challenge(hichainTest);
     EXPECT_NE(challenge, nullptr);
 }
 
@@ -1330,8 +1330,8 @@ static HWTEST_F(AuthInfoTest, get_pake_peer_challenge_test002, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    struct hichain *hichain_test = reinterpret_cast<struct hichain *>(server);
-    const struct challenge *challenge = get_pake_peer_challenge(hichain_test);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
+    const struct challenge *challenge = get_pake_peer_challenge(hichainTest);
     EXPECT_EQ(challenge, nullptr);
 }
 
@@ -1347,12 +1347,12 @@ static HWTEST_F(AuthInfoTest, get_pake_self_auth_id_test001, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    struct hichain *hichain_test = reinterpret_cast<struct hichain *>(server);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
     struct pake_server pake_server;
     (void)memset_s(&pake_server, sizeof(pake_server), 0, sizeof(pake_server));
-    hichain_test->pake_server = &pake_server;
-    const struct hc_auth_id *hc_auth_id = get_pake_self_auth_id(hichain_test);
-    EXPECT_NE(hc_auth_id, nullptr);
+    hichainTest->pake_server = &pake_server;
+    const struct hc_auth_id *hcAuthId = get_pake_self_auth_id(hichainTest);
+    EXPECT_NE(hcAuthId, nullptr);
 }
 
 static HWTEST_F(AuthInfoTest, get_pake_self_auth_id_test002, TestSize.Level2)
@@ -1366,9 +1366,9 @@ static HWTEST_F(AuthInfoTest, get_pake_self_auth_id_test002, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    struct hichain *hichain_test = reinterpret_cast<struct hichain *>(server);
-    const struct hc_auth_id *hc_auth_id = get_pake_self_auth_id(hichain_test);
-    EXPECT_EQ(hc_auth_id, nullptr);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
+    const struct hc_auth_id *hcAuthId = get_pake_self_auth_id(hichainTest);
+    EXPECT_EQ(hcAuthId, nullptr);
 }
 
 
@@ -1383,11 +1383,11 @@ static HWTEST_F(AuthInfoTest, get_sts_session_key_test001, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    struct hichain *hichain_test = reinterpret_cast<struct hichain *>(server);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
     struct sts_server sts_server;
     (void)memset_s(&sts_server, sizeof(sts_server), 0, sizeof(sts_server));
-    hichain_test->sts_server = &sts_server;
-    const struct sts_session_key *key = get_sts_session_key(hichain_test);
+    hichainTest->sts_server = &sts_server;
+    const struct sts_session_key *key = get_sts_session_key(hichainTest);
     EXPECT_NE(key, nullptr);
 }
 
@@ -1402,8 +1402,8 @@ static HWTEST_F(AuthInfoTest, get_sts_session_key_test002, TestSize.Level2)
     };
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    struct hichain *hichain_test = reinterpret_cast<struct hichain *>(server);
-    const struct sts_session_key *key = get_sts_session_key(hichain_test);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
+    const struct sts_session_key *key = get_sts_session_key(hichainTest);
     EXPECT_EQ(key, nullptr);
 }
 
@@ -1417,31 +1417,31 @@ static HWTEST_F(AuthInfoTest, save_auth_info_test001, TestSize.Level2)
         ConfirmReceiveRequest
     };
 
-    int32_t pair_type = 1;
+    int32_t pairType = 1;
     struct auth_info_cache cache;
     struct ltpk ltpk;
     (void)memset_s(&ltpk, sizeof(ltpk), 0, sizeof(ltpk));
-    cache.user_type = HC_USER_TYPE_ACCESSORY;
+    cache.userType = HC_userType_ACCESSORY;
     cache.auth_id = g_test_server_auth_id;
     cache.ltpk = ltpk;
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    struct hichain *hichain_test = reinterpret_cast<struct hichain *>(server);
-    int32_t ret = save_auth_info(hichain_test, pair_type, &cache);
+    struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
+    int32_t ret = save_auth_info(hichainTest, pairType, &cache);
     EXPECT_EQ(ret, HC_SAVE_LTPK_FAILED);
 }
 
 static HWTEST_F(AuthInfoTest, save_auth_info_test002, TestSize.Level2)
 {
-    int32_t pair_type = 1;
+    int32_t pairType = 1;
     struct auth_info_cache cache;
     struct ltpk ltpk;
     (void)memset_s(&ltpk, sizeof(ltpk), 0, sizeof(ltpk));
-    cache.user_type = HC_USER_TYPE_CONTROLLER;
+    cache.userType = HC_userType_CONTROLLER;
     struct hc_auth_id auth_id;
     (void)memset_s(&auth_id, sizeof(auth_id), 0, sizeof(auth_id));
     cache.auth_id = auth_id;
     cache.ltpk = ltpk;
-    int32_t ret = save_auth_info(nullptr, pair_type, &cache);
+    int32_t ret = save_auth_info(nullptr, pairType, &cache);
     EXPECT_EQ(ret, HC_GEN_SERVICE_ID_FAILED);
 }
 

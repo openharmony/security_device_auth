@@ -45,9 +45,6 @@ void destroy_sts_server(struct sts_server *handle)
     FREE(handle);
     LOGI("FREE sts server object success");
 }
-
-
-
 #else /* _CUT_XXX_ */
 
 #include "mem_stat.h"

@@ -61,7 +61,7 @@ hichain_sources = [
 
 config("standard_config") {
   visibility = [ ":*" ]
-  include_dirs =[ 
+  include_dirs = [
     "//third_party/cJSON",
     "//third_party/bounds_checking_function/include",
     "//base/security/huks/interfaces/inner_api/huks_standard/main/include",
@@ -77,9 +77,7 @@ config("standard_config") {
     "../source/auth_info",
   ]
 
-  defines = [
-    "_CUT_REMOVE_",
-  ]
+  defines = [ "_CUT_REMOVE_" ]
 }
 
 ohos_unittest("DeviceAuthTest") {
@@ -87,17 +85,18 @@ ohos_unittest("DeviceAuthTest") {
   testonly = true
   configs = [ ":standard_config" ]
   sources = hichain_sources
-  sources -= ["../source/huks_adapter/huks_adapter.c",]
-  sources += ["./unittest_mock/huks_adapter_mock.c",
-              "deviceauth_test.cpp",
+  sources -= [ "../source/huks_adapter/huks_adapter.c" ]
+  sources += [
+    "./unittest_mock/huks_adapter_mock.c",
+    "deviceauth_test.cpp",
   ]
 
   deps = [
     "//base/security/huks/interfaces/inner_api/huks_standard/main:libhukssdk",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
     "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/cJSON:cjson",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
   ]
 
   cflags = [
@@ -112,23 +111,21 @@ ohos_unittest("DeviceAuthTest") {
     "c_utils:utils",
     "hilog:libhilog",
   ]
-
 }
-
 
 ohos_unittest("HuksAdapterTest") {
   module_out_path = module_output_path
   testonly = true
   configs = [ ":standard_config" ]
   sources = hichain_sources
-  sources += ["huks_adapter_test.cpp",]
+  sources += [ "huks_adapter_test.cpp" ]
 
   deps = [
     "//base/security/huks/interfaces/inner_api/huks_standard/main:libhukssdk",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
     "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/cJSON:cjson",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
   ]
 
   cflags = [
@@ -142,7 +139,6 @@ ohos_unittest("HuksAdapterTest") {
     "c_utils:utils",
     "hilog:libhilog",
   ]
-
 }
 
 ohos_unittest("PakeTest") {
@@ -150,17 +146,18 @@ ohos_unittest("PakeTest") {
   testonly = true
   configs = [ ":standard_config" ]
   sources = hichain_sources
-  sources -= ["../source/huks_adapter/huks_adapter.c",]
-  sources += ["./unittest_mock/huks_adapter_mock_for_pake.c",
-              "hichain_pake_test.cpp",
+  sources -= [ "../source/huks_adapter/huks_adapter.c" ]
+  sources += [
+    "./unittest_mock/huks_adapter_mock_for_pake.c",
+    "hichain_pake_test.cpp",
   ]
 
   deps = [
     "//base/security/huks/interfaces/inner_api/huks_standard/main:libhukssdk",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
     "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/cJSON:cjson",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
   ]
 
   cflags = [
@@ -174,5 +171,4 @@ ohos_unittest("PakeTest") {
     "c_utils:utils",
     "hilog:libhilog",
   ]
-
 }

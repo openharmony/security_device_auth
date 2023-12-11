@@ -1610,5 +1610,3 @@ int32_t key_info_init(void)
     }
     return ERROR_CODE_SUCCESS;
 }
-
-
