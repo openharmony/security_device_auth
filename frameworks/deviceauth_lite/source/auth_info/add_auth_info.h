@@ -27,7 +27,6 @@ struct add_auth_data {
     bool permission;
 };
 
-int32_t send_add_response(const struct hichain *hichain, struct message *receive, struct message *send);
 
 #endif /* _CUT_XXX_ */
 

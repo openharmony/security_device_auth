@@ -78,30 +78,6 @@ void free_exchange_response(void *obj)
     }
 }
 
-char *make_exchange_response(void *data)
-{
-    exchange_response_data *exchange_response = data;
-    /* authinfo */
-    uint8_t *tmp_data_hex = raw_byte_to_hex_string(exchange_response->cipher.val, exchange_response->cipher.length);
-    if (tmp_data_hex == NULL) {
-        return NULL;
-    }
-    char *ret_str = (char *)MALLOC(RET_STR_LENGTH);
-    if (ret_str == NULL) {
-        FREE(tmp_data_hex);
-        return NULL;
-    }
-    (void)memset_s(ret_str, RET_STR_LENGTH, 0, RET_STR_LENGTH);
-    if (snprintf_s(ret_str, RET_STR_LENGTH, RET_STR_LENGTH - 1, "{\"%s\":%d,\"%s\":{\"%s\":\"%s\"}}", FIELD_MESSAGE,
-        EXCHANGE_RESPONSE, FIELD_PAYLOAD, FIELD_EX_AUTH_INFO, tmp_data_hex) < 0) {
-        LOGE("String generate failed");
-        FREE(ret_str);
-        ret_str = NULL;
-    }
-    FREE(tmp_data_hex);
-    return ret_str;
-}
-
 #else /* _CUT_XXX_ */
 
 #include "parsedata.h"

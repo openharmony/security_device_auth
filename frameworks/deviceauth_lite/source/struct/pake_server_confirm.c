@@ -59,31 +59,6 @@ void free_pake_server_confirm(void *obj)
     }
 }
 
-char *make_pake_server_confirm(void *data)
-{
-    struct pake_end_response_data *pake_server_confirm = data;
-    /* kcfData */
-    uint8_t *tmp_kcf_data_hex = raw_byte_to_hex_string(pake_server_confirm->kcf_data.hmac,
-                                                       pake_server_confirm->kcf_data.length);
-    if (tmp_kcf_data_hex == NULL) {
-        return NULL;
-    }
-    char *ret_str = (char *)MALLOC(RET_STR_LENGTH);
-    if (ret_str == NULL) {
-        FREE(tmp_kcf_data_hex);
-        return NULL;
-    }
-    (void)memset_s(ret_str, RET_STR_LENGTH, 0, RET_STR_LENGTH);
-    if (snprintf_s(ret_str, RET_STR_LENGTH, RET_STR_LENGTH - 1, "{\"%s\":%d,\"%s\":{\"%s\":\"%s\"}}", FIELD_MESSAGE,
-        PAKE_SERVER_CONFIRM_RESPONSE, FIELD_PAYLOAD, FIELD_KCF_DATA, tmp_kcf_data_hex) < 0) {
-        LOGE("String generate failed");
-        FREE(ret_str);
-        ret_str = NULL;
-    }
-    FREE(tmp_kcf_data_hex);
-    return ret_str;
-}
-
 #else /* _CUT_XXX_ */
 
 #include "parsedata.h"

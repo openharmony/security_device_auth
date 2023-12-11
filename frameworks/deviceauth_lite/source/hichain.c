@@ -53,7 +53,6 @@
 
 static void encap_inform_message(int32_t error_code, struct message *send);
 static int32_t deserialize_message(const struct uint8_buff *data, struct message *receive);
-static int32_t deserialize_message_with_json_object(const void *json_object, struct message *receive);
 static int32_t build_send_data_by_struct(const struct message *message, void **send_data, uint32_t *send_data_len);
 static void destroy_receive_data_struct(const struct message *message);
 static void destroy_send_data(struct message *message);
@@ -139,17 +138,6 @@ DLL_API_PUBLIC void destroy(hc_handle *handle)
     LOGI("End destroy");
 }
 
-DLL_API_PUBLIC void set_context(hc_handle handle, void *context)
-{
-    LOGI("Begin set context");
-    check_ptr_return(handle);
-    check_ptr_return(context);
-    struct hichain *hichain = (struct hichain *)handle;
-
-    hichain->identity.context = context;
-    LOGI("End set context");
-}
-
 DLL_API_PUBLIC int32_t receive_data(hc_handle handle, struct uint8_buff *data)
 {
     LOGI("Begin receive data");
@@ -205,102 +193,7 @@ inform:
     return ret; /* hc_error */
 }
 
-DLL_API_PUBLIC int32_t receive_data_with_json_object(hc_handle handle, const void *json_object)
-{
-    LOGI("Begin receive data json object");
-    check_ptr_return_val(handle, HC_INPUT_ERROR);
-    check_ptr_return_val(json_object, HC_INPUT_ERROR);
-
-    LOGI("Receive data from peer");
-    struct hichain *hichain = (struct hichain *)handle;
-    struct message receive = { 0, 0, 0 };
-    struct message send = { INFORM_MESSAGE, 0, 0 };
-    void *send_data = NULL;
-    uint32_t send_data_len = 0;
-    int32_t ret = deserialize_message_with_json_object(json_object, &receive);
-    if (ret != HC_OK) {
-        goto inform;
-    }
-    struct header_analysis nav = navigate_message(receive.msg_code);
-    ret = check_message_support(hichain, &nav, &receive);
-    if (ret != HC_OK) {
-        goto inform;
-    }
-    ret = build_object(hichain, nav.modular, !nav.is_request_msg, NULL);
-    if (ret != HC_OK) {
-        goto inform;
-    }
-    ret = proc_message(hichain, &nav, &receive, &send);
-    if (ret != HC_OK) {
-        goto inform;
-    }
-    ret = connect_message(hichain, &nav, &send);
-
-inform:
-    encap_inform_message(ret, &send);
-
-    /* serialization */
-    ret = build_send_data_by_struct(&send, &send_data, &send_data_len);
-    if (ret == HC_OK) {
-        DBG_OUT("Send data to peer");
-        hichain->cb.transmit(&hichain->identity, send_data, send_data_len);
-        FREE(send_data);
-    } else if (ret == HC_NO_MESSAGE_TO_SEND) {
-        LOGI("Had no message to send");
-        ret = HC_OK;
-    } else {
-        LOGE("build send data failed, error code is %d", ret);
-    }
-    set_result(hichain, receive.msg_code, send.msg_code, ret);
-
-    destroy_receive_data_struct(&receive);
-    destroy_send_data(&send);
-    LOGI("End receive data json object");
-    return ret; /* hc_error */
-}
-
 static int32_t triggered_sts_client(struct hichain *hichain, int32_t operation_code);
-int32_t add_auth_info(hc_handle handle, const struct operation_parameter *params,
-    const struct hc_auth_id *auth_id, int32_t user_type)
-#if (defined(_SUPPORT_SEC_CLONE_) || defined(_SUPPORT_SEC_CLONE_SERVER_))
-{
-    LOGI("Begin add auth info");
-    check_ptr_return_val(handle, HC_INPUT_ERROR);
-    check_ptr_return_val(params, HC_INPUT_ERROR);
-    check_ptr_return_val(auth_id, HC_INPUT_ERROR);
-    struct hichain *hichain = (struct hichain *)handle;
-
-    int32_t ret = build_object(hichain, STS_MODULAR, true, params);
-    if (ret != HC_OK) {
-        LOGE("Build sts client sub object failed, error code is %d", ret);
-        return ret;
-    }
-
-    struct auth_info_cache auth_info = {
-        .user_type = user_type,
-        .auth_id = *auth_id
-    };
-    ret = build_object(hichain, ADD_MODULAR, true, &auth_info);
-    if (ret != HC_OK) {
-        LOGE("Build sts client sub object failed, error code is %d", ret);
-        return ret;
-    }
-
-    ret = triggered_sts_client(hichain, ADD_AUTHINFO);
-    LOGI("Triggered sts client error code is %d", ret);
-    LOGI("End add auth info");
-    return ret;
-}
-#else
-{
-    LOGE("Secclone has been cut, add auth info not support");
-    (void)handle;
-    (void)params;
-    (void)auth_id;
-    (void)user_type;
-    return HC_UNSUPPORT;
-}
-#endif
 
 int32_t remove_auth_info(hc_handle handle, const struct operation_parameter *params,
     const struct hc_auth_id *auth_id, int32_t user_type)
@@ -343,28 +236,6 @@ int32_t remove_auth_info(hc_handle handle, const struct operation_parameter *par
     return HC_UNSUPPORT;
 }
 #endif
-
-DLL_API_PUBLIC void set_self_auth_id(hc_handle handle, struct uint8_buff *data)
-{
-    LOGI("Begin set self auth id");
-    check_ptr_return(handle);
-    check_ptr_return(data);
-    check_ptr_return(data->val);
-    struct hichain *hichain = (struct hichain *)handle;
-
-    if ((hichain->pake_server != NULL) && (hichain->pake_server->self_id.length == 0)) {
-        if (data->length <= 0) {
-            return;
-        }
-        uint32_t copy_len = (data->length < HC_AUTH_ID_BUFF_LEN) ? data->length : HC_AUTH_ID_BUFF_LEN;
-        if (memcpy_s(hichain->pake_server->self_id.auth_id, HC_AUTH_ID_BUFF_LEN, data->val, copy_len) != EOK) {
-            LOGE("memory copy error");
-            return;
-        }
-        hichain->pake_server->self_id.length = copy_len;
-    }
-    LOGI("End set self auth id");
-}
 
 static int32_t triggered_pake_client(struct hichain *hichain, int32_t operation_code);
 DLL_API_PUBLIC int32_t start_pake(hc_handle handle, const struct operation_parameter *params)
@@ -774,31 +645,6 @@ static int32_t deserialize_message(const struct uint8_buff *data, struct message
     return ret;
 }
 
-static int32_t deserialize_message_with_json_object(const void *json_object, struct message *receive)
-{
-    int32_t message_code = get_json_int((void *)json_object, FIELD_MESSAGE);
-    if ((message_code <= 0) || (message_code > (int32_t)INFORM_MESSAGE)) {
-        LOGE("Get message code failed, get message code is %d", message_code);
-        return HC_BUILD_OBJECT_FAILED;
-    }
-    json_pobject obj_value = get_json_obj((void *)json_object, FIELD_PAYLOAD);
-    if (obj_value == NULL) {
-        LOGE("Parse data failed");
-        return HC_BUILD_OBJECT_FAILED;
-    }
-#if (defined(_CUT_EXCHANGE_) || defined(_CUT_EXCHANGE_SERVER_))
-    if (message_code == EXCHANGE_REQUEST) {
-        return HC_UNSUPPORT;
-    }
-#endif
-    /* message payload deserialization */
-    int32_t ret = build_struct_by_receive_data(message_code, obj_value, JSON_OBJECT_DATA, receive);
-    if (ret != HC_OK) {
-        LOGE("Build struct by receive data failed, error code is %d", ret);
-    }
-    return ret;
-}
-
 typedef void *(*parse_message_func)(const char *pay_load, enum json_object_data_type type);
 struct parse_message_map {
     enum message_code msg_code;
@@ -808,19 +654,12 @@ struct parse_message_map {
 static int32_t build_struct_by_receive_data(uint32_t msg_code, const char *payload_data,
     enum json_object_data_type type, struct message *message)
 {
-    const struct parse_message_map map[] = { { PAKE_REQUEST, parse_pake_request },
-                                             { PAKE_RESPONSE, parse_pake_response },
-                                             { PAKE_CLIENT_CONFIRM, parse_pake_client_confirm },
+    const struct parse_message_map map[] = { { PAKE_RESPONSE, parse_pake_response },
                                              { PAKE_SERVER_CONFIRM_RESPONSE, parse_pake_server_confirm },
-                                             { AUTH_START_REQUEST, parse_auth_start_request },
                                              { AUTH_START_RESPONSE, parse_auth_start_response },
-                                             { AUTH_ACK_REQUEST, parse_auth_ack_request },
                                              { AUTH_ACK_RESPONSE, parse_auth_ack_response },
-                                             { ADD_AUTHINFO_REQUEST, parse_add_auth_info_request },
                                              { REMOVE_AUTHINFO_REQUEST, parse_rmv_auth_info_request },
-                                             { ADD_AUTHINFO_RESPONSE, parse_add_auth_info_response },
                                              { REMOVE_AUTHINFO_RESPONSE, parse_rmv_auth_info_response },
-                                             { EXCHANGE_REQUEST, parse_exchange_request },
                                              { EXCHANGE_RESPONSE, parse_exchange_response },
                                              { SEC_CLONE_START_REQUEST, sec_clone_parse_client_request },
                                              { SEC_CLONE_ACK_REQUEST, sec_clone_parse_client_ack } };
@@ -859,9 +698,7 @@ static void destroy_receive_data_struct(const struct message *message)
                                             { AUTH_START_RESPONSE, free_auth_start_response },
                                             { AUTH_ACK_REQUEST, free_auth_ack_request },
                                             { AUTH_ACK_RESPONSE, free_auth_ack_response },
-                                            { ADD_AUTHINFO_REQUEST, free_add_auth_info_request },
                                             { REMOVE_AUTHINFO_REQUEST, free_rmv_auth_info_request },
-                                            { ADD_AUTHINFO_RESPONSE, free_add_auth_info_response },
                                             { REMOVE_AUTHINFO_RESPONSE, free_rmv_auth_info_response },
                                             { EXCHANGE_REQUEST, free_exchange_request },
                                             { EXCHANGE_RESPONSE, free_exchange_response },
@@ -884,19 +721,12 @@ struct make_message_map {
 static int32_t build_send_data_by_struct(const struct message *message, void **send_data, uint32_t *send_data_len)
 {
     const struct make_message_map map[] = { { PAKE_REQUEST, make_pake_request },
-                                            { PAKE_RESPONSE, make_pake_response },
                                             { PAKE_CLIENT_CONFIRM, make_pake_client_confirm },
-                                            { PAKE_SERVER_CONFIRM_RESPONSE, make_pake_server_confirm },
                                             { AUTH_START_REQUEST, make_auth_start_request },
-                                            { AUTH_START_RESPONSE, make_auth_start_response },
                                             { AUTH_ACK_REQUEST, make_auth_ack_request },
-                                            { AUTH_ACK_RESPONSE, make_auth_ack_response },
-                                            { ADD_AUTHINFO_REQUEST, make_add_auth_info_request },
                                             { REMOVE_AUTHINFO_REQUEST, make_rmv_auth_info_request },
-                                            { ADD_AUTHINFO_RESPONSE, make_add_auth_info_response },
                                             { REMOVE_AUTHINFO_RESPONSE, make_rmv_auth_info_response },
                                             { EXCHANGE_REQUEST, make_exchange_request },
-                                            { EXCHANGE_RESPONSE, make_exchange_response },
                                             { SEC_CLONE_START_RESPONSE, sec_clone_make_srv_proof },
                                             { SEC_CLONE_ACK_RESPONSE, sec_clone_make_clone_ret },
                                             { INFORM_MESSAGE, make_inform_message } };

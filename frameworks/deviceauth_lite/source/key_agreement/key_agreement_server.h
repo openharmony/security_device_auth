@@ -32,8 +32,4 @@ struct key_agreement_server {
     struct server_virtual_func_group package_funcs;
 };
 
-void init_server(struct key_agreement_server *handle, const struct server_virtual_func_group *funcs);
-int32_t send_start_response(void *handle, void *receive_data, void *send_data);
-int32_t send_end_response(void *handle, void *receive_data, void *send_data);
-
 #endif /* __KEY_AGREEMENT_SERVER_H__ */

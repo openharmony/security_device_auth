@@ -24,48 +24,6 @@
 #include "parsedata.h"
 #include "key_agreement_version.h"
 
-void *parse_pake_client_confirm(const char *payload, enum json_object_data_type data_type)
-{
-    struct pake_end_request_data *pake_client_confirm =
-        (struct pake_end_request_data *)MALLOC(sizeof(struct pake_end_request_data));
-    if (pake_client_confirm == NULL) {
-        return NULL;
-    }
-    (void)memset_s(pake_client_confirm, sizeof(*pake_client_confirm), 0, sizeof(*pake_client_confirm));
-    json_pobject obj = parse_payload(payload, data_type);
-    if (obj == NULL) {
-        LOGE("Parse Pake Client Confirm parse payload failed");
-        goto error;
-    }
-    /* challenge */
-    int32_t result = byte_convert(obj, FIELD_CHALLENGE, pake_client_confirm->challenge.challenge,
-                                  &pake_client_confirm->challenge.length, CHALLENGE_BUFF_LENGTH);
-    if (result != HC_OK) {
-        LOGE("Parse Pake Client Confirm failed, field is null in challenge");
-        goto error;
-    }
-    /* kcfData */
-    result = byte_convert(obj, FIELD_KCF_DATA, pake_client_confirm->kcf_data.hmac,
-                          &pake_client_confirm->kcf_data.length, HC_HMAC_LEN);
-    if (result != HC_OK) {
-        LOGE("Parse Pake Client Confirm failed, field is null in kcfData");
-        goto error;
-    }
-    /* epk */
-    result = byte_convert(obj, FIELD_EPK, pake_client_confirm->epk.epk,
-                          &pake_client_confirm->epk.length, PAKE_EPK_LENGTH);
-    if (result != HC_OK) {
-        LOGE("Parse Pake Client Confirm failed, field is null in epk");
-        goto error;
-    }
-    free_payload(obj, data_type);
-    return (void *)pake_client_confirm;
-error:
-    free_payload(obj, data_type);
-    FREE(pake_client_confirm);
-    return NULL;
-}
-
 void free_pake_client_confirm(void *obj)
 {
     if (obj != NULL) {

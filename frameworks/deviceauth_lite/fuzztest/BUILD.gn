@@ -20,7 +20,10 @@ group("fuzztest") {
       "dellocalauthinfo_fuzzer:fuzztest",
       "destroy_fuzzer:fuzztest",
       "getinstance_fuzzer:fuzztest",
+      "istrustpeer_fuzzer:fuzztest",
       "listtrustpeer_fuzzer:fuzztest",
+      "receivedata_fuzzer:fuzztest",
+      "registelog_fuzzer:fuzztest",
       "startpake_fuzzer:fuzztest",
     ]
   }

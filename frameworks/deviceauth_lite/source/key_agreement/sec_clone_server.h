@@ -37,11 +37,6 @@ struct sec_clone_server {
     struct hc_key_alias cert_key_alias;
 };
 
-int32_t send_sec_clone_start_response(struct sec_clone_server *sec_clone_server,
-    const struct message *receive, struct message *send);
-int32_t send_sec_clone_end_response(struct sec_clone_server *sec_clone_server,
-    const struct message *receive, struct message *send);
-
 #else
 
 struct sec_clone_server {
@@ -50,7 +45,6 @@ struct sec_clone_server {
 
 #endif
 
-struct sec_clone_server *build_sec_clone_server(hc_handle hichain);
 void destroy_sec_clone_server(struct sec_clone_server *handle);
 
 #endif

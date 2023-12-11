@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2020 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,17 +13,18 @@
  * limitations under the License.
  */
 
-#include "key_agreement_server.h"
-#include "base.h"
-#include "hichain.h"
-#include "log.h"
+#ifndef REGISTELOG_FUZZER_H
+#define REGISTELOG_FUZZER_H
 
-#ifdef DESC
-#undef DESC
+#include <cstddef>
+#include <cstdint>
+#include <unistd.h>
+#include <climits>
+#include <cstdio>
+#include <cstdlib>
+#include <fcntl.h>
+#include <string>
+
+#define FUZZ_PROJECT_NAME "registelog_fuzzer"
+
 #endif
-#define DESC(...) 1
-
-
-#if DESC("interface")
-
-#endif /* DESC */

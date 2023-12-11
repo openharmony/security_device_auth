@@ -20,7 +20,6 @@
 
 #include "auth_info.h"
 
-int32_t send_exchange_response(const struct hichain *hichain, struct message *receive, struct message *send);
 
 #endif /* _CUT_XXX_ */
 
