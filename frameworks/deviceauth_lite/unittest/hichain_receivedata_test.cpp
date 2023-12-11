@@ -36,11 +36,7 @@ using ::testing::Return;
 
 namespace {
 const int KEY_LEN = 16;
-const int KEY_LEN_ERROR = 68;
 const int AUTH_ID_LENGTH = 64;
-const int ERROR_NUM_LENGTH = -1;
-const int ERROR_ZERO_LENGTH = 0;
-const int ERROR_LENGTH = 258;
 
 static struct session_identity g_server_identity = {
     153666603,
