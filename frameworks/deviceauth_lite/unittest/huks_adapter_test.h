@@ -311,6 +311,4 @@ int32_t key_info_init(void);
 }
 #endif
 
-
-
 #endif

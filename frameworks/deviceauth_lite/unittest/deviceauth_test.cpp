@@ -108,7 +108,7 @@ struct hc_auth_id *g_authIdClientList[3] = {
 };
 struct hc_auth_id **g_authIdList = g_authIdClientList;
 
-enum HksErrorCode{
+enum HksErrorCode {
     HKS_SUCCESS = 0,
     HKS_FAILURE = -1,
     HKS_ERROR_INVALID_KEY_FILE = -27,
@@ -1287,7 +1287,7 @@ static HWTEST_F(DestroyTest, DestroyTest007, TestSize.Level2)
     struct hichain *server = (struct hichain *)MALLOC(sizeof(struct hichain));
     (void)memset_s(server, sizeof(struct hichain), 0, sizeof(struct hichain));
 
-    struct auth_info_cache *authInfo = (struct auth_info_cache *)MALLOC(sizeof(struct auth_info_cache));
+    struct auth_info_cache *authInfo = static_cast<struct auth_info_cache *>(MALLOC(sizeof(struct auth_info_cache)));
     (void)memset_s(authInfo, sizeof(struct auth_info_cache), 0, sizeof(struct auth_info_cache));
 
     server->auth_info = authInfo;
@@ -2535,8 +2535,7 @@ void TestLogd(const char *tag, const char *funcName, const char *format, ...)
     va_list ap;
     char logBuff[MAX_LOG_BUFF_LENGTH];
     va_start(ap, format);
-    if (vsnprintf_s(logBuff, MAX_LOG_BUFF_LENGTH, MAX_LOG_BUFF_LENGTH - 1, format, ap) == -1)
-    {
+    if (vsnprintf_s(logBuff, MAX_LOG_BUFF_LENGTH, MAX_LOG_BUFF_LENGTH - 1, format, ap) == -1) {
         va_end(ap);
         return;
     }

@@ -32,25 +32,30 @@ enum branch {
     EXCHANGE_REQUEST = 5,
 };
 
-static void TransmitCb(const struct session_identity *identity, const void *data, uint32_t length) {
+static void TransmitCb(const struct session_identity *identity, const void *data, uint32_t length) 
+{
     return;
 }
 
-static int32_t ConfirmReceiveRequestFunc(const struct session_identity *identity, int32_t operationCode) {
+static int32_t ConfirmReceiveRequestFunc(const struct session_identity *identity, int32_t operationCode) 
+{
     return HC_OK;
 }
 
 static void GetProtocolParamsCb(const struct session_identity *identity, int32_t operationCode,
-                                struct hc_pin *pin, struct operation_parameter *para) {
+                                struct hc_pin *pin, struct operation_parameter *para) 
+{
     return;
 }
 
 static void SetSessionKeyFunc(const struct session_identity *identity,
-                              const struct hc_session_key *sessionKey) {
+                              const struct hc_session_key *sessionKey) 
+{
     return;
 }
 
-static void SetServiceResultFunc(const struct session_identity *identity, int32_t result) {
+static void SetServiceResultFunc(const struct session_identity *identity, int32_t result) 
+{
     return;
 }
 
@@ -69,14 +74,16 @@ static struct session_identity identity = {
     0
 };
 
-std::string MakePakeRequest() {
+std::string MakePakeRequest() 
+{
     std::string retStr = "{\"message\":1,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
         "\"minVersion\":\"1.0.0\"},\"support256mod\":\"true\","
         "\"operationCode\":\"1\",}}";
     return retStr;
 }
 
-std::string MakePakeClientConfirm() {
+std::string MakePakeClientConfirm() 
+{
     std::string retStr = "{\"message\":3,\"payload\":{\"kcfData\":\"463853720FFFC312084B9FF288E17C3F3D8B9D8F2A"
         "609D349CAA712AAD926C26\",\"challenge\":\"76539E5634EDA735A94845C3A4F356D6\","
         "\"epk\":\"24EBF8D727B19E8A43B20D22F744113CB49B226D834B2E3C9CB5B0378732D6CF7C658BFB468682A6762"
@@ -85,27 +92,32 @@ std::string MakePakeClientConfirm() {
     return retStr;
 }
 
-std::string MakeAuthStartRequest() {
-    std::string retStr = "{\"authForm\":0,\"message\":17,\"payload\":{\"authData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A20"
-        "1DB3B3C55\",\"challenge\":\"A1714848785F27C22B31\",\"epk\":\"493CB95DB80320360BE5A3E3000E3E8E67371D6DCC"
+std::string MakeAuthStartRequest() 
+{
+    std::string retStr = "{\"authForm\":0,\"message\":17,\"payload\":{\"authData\":\"4A4EB6622524CB"
+        "BF7DC96412A82BF4CB6022F50226A201DB3B3C55\",\"challenge\":\"A1714848785F27C22B31\",\"epk\":"
+        "\"493CB95DB80320360BE5A3E3000E3E8E67371D6DCC"
         "57D1F97937ABABC219\",\"operationCode\":\"1\",\"version\":{\"currentVersion\":"
         "\"1.0.0\",\"minVersion\":\"1.0.0\"},\"peerAuthId\":\"6B5A16BFA24C941F4C1B094D"
         "6F2FA8DC8A45\",\"peerUserType\":\"0\"}}";
     return retStr;
 }
 
-std::string MakePakeAckRequest() {
-    std::string retStr = "{\"authForm\":0,\"message\":18,\"payload\":{\"authData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022"
-        "F50226A201DB3B3C55\"}}";
+std::string MakePakeAckRequest() 
+{
+    std::string retStr = "{\"authForm\":0,\"message\":18,\"payload\":{\"authData\":"
+    "\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55\"}}";
     return retStr;
 }
 
-std::string MakeExchangeRequest() {
+std::string MakeExchangeRequest() 
+{
     std::string retStr = "{\"message\":3,\"payload\":{\"exAuthInfo\":}}";
     return retStr;
 }
 
-std::string MakeInformMessage() {
+std::string MakeInformMessage() 
+{
     std::string retStr = "{\"message\":32786,\"payload\":{\"errorCode\":17}}";
     return retStr;
 }
@@ -119,7 +131,7 @@ bool ReceiveDataFuzz(const uint8_t* data, size_t size)
     int ver = *reinterpret_cast<const int *>(data);
     int temp = ver % 6; /* 6 : total branch */
     std::string retStr;
-    switch(temp) {
+    switch (temp) {
         case PAKE_REQUEST:retStr = MakePakeRequest();
         break;
         case PAKE_CLIENT_CONFIRM:retStr = MakePakeClientConfirm();
@@ -132,12 +144,10 @@ bool ReceiveDataFuzz(const uint8_t* data, size_t size)
         break;
         default:retStr = MakeInformMessage();
     };
-    char *ret = const_cast<char *>(retStr.c_str());
-    unsigned char *val = reinterpret_cast<unsigned char *>(ret);
     uint8_buff buff = {
-        val,
+        reinterpret_cast<unsigned char *>(const_cast<char *>(retStr.c_str())),
         sizeof(retStr),
-        strlen(retStr.c_str)
+        strlen(retStr.c_str())
     };
     receive_data(handle, &buff);
     destroy(&handle);

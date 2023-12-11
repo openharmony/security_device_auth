@@ -26,6 +26,4 @@ int32_t build_object(struct hichain *hichain, int32_t modular, bool is_client, c
 }
 #endif
 
-
-
 #endif
