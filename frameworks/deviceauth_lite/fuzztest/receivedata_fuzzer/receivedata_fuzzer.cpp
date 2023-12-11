@@ -85,8 +85,9 @@ uint8_t g_retStr2[] = "{\"message\":3,\"payload\":{\"kcfData\":\"463853720FFFC31
     "A44814F10CC2A770C5BEB0BE86559E4FA85AD6E480DC2A627F5B28626E23B613EAC21101FF1C1DDA76E35A67A5A70B\"}}";
 
 
-uint8_t g_retStr3[] = "{\"authForm\":0,\"message\":17,\"payload\":{\"authData\":\"4A4EB6622524CBBF7DC96412A82BF4CB6022F50226A20"
-    "1DB3B3C55\",\"challenge\":\"A1714848785F27C22B31\",\"epk\":\"493CB95DB80320360BE5A3E3000E3E8E67371D6DCC"
+uint8_t g_retStr3[] = "{\"authForm\":0,\"message\":17,\"payload\":{\"authData\":\"4A4EB66225"
+    "24CBBF7DC96412A82BF4CB6022F50226A201DB3B3C55\",\"challenge\":\"A1714848785F27C22B31\","
+    "\"epk\":\"493CB95DB80320360BE5A3E3000E3E8E67371D6DCC"
     "57D1F97937ABABC219\",\"operationCode\":\"1\",\"version\":{\"currentVersion\":"
     "\"1.0.0\",\"minVersion\":\"1.0.0\"},\"peerAuthId\":\"6B5A16BFA24C941F4C1B094D"
     "6F2FA8DC8A45\",\"peerUserType\":\"0\"}}";
@@ -111,32 +112,32 @@ bool ReceiveDataFuzz(const uint8_t* data, size_t size)
         case PAKE_REQUEST:
             buff.val = g_retStr1;
             buff.size = sizeof(g_retStr1);
-            buff.length = strlen((char *)g_retStr1);
+            buff.length = sizeof(g_retStr1);
             break;
         case PAKE_CLIENT_CONFIRM:
             buff.val = g_retStr2;
             buff.size = sizeof(g_retStr2);
-            buff.length = strlen((char *)g_retStr2);
+            buff.length = sizeof(g_retStr2);
             break;
         case AUTH_START_REQUEST:
             buff.val = g_retStr3;
             buff.size = sizeof(g_retStr3);
-            buff.length = strlen((char *)g_retStr3);
+            buff.length = sizeof(g_retStr3);
             break;
         case PAKE_ACK_REQUEST:
             buff.val = g_retStr4;
             buff.size = sizeof(g_retStr4);
-            buff.length = strlen((char *)g_retStr4);
+            buff.length = sizeof(g_retStr4);
             break;
         case EXCHANGE_REQUEST:
             buff.val = g_retStr5;
             buff.size = sizeof(g_retStr5);
-            buff.length = strlen((char *)g_retStr5);
+            buff.length = sizeof(g_retStr5);
             break;
         default:
             buff.val = g_retStr6;
             buff.size = sizeof(g_retStr6);
-            buff.length = strlen((char *)g_retStr6);
+            buff.length = sizeof(g_retStr6);
             break;
     };
     receive_data(handle, &buff);

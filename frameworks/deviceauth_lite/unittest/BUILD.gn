@@ -88,8 +88,8 @@ ohos_unittest("DeviceAuthTest") {
   sources -= [ "../source/huks_adapter/huks_adapter.c" ]
   sources += [
     "./unittest_mock/huks_adapter_mock.c",
-    "hichain_receivedata_test.cpp",
     "deviceauth_test.cpp",
+    "hichain_receivedata_test.cpp",
   ]
 
   deps = [
