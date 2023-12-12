@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 int32_t AddCertInfoToJson(const CertInfo *certInfo, CJson *out);
-int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec);
+int32_t GetCredInfosByPeerIdentity(CJson *in, IdentityInfoVec *vec);
 int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedUrl, IdentityInfo **returnInfo);
 int32_t GetSharedSecretByUrl(
     const CJson *in, const Uint8Buff *presharedUrl, ProtocolAlgType protocolType, Uint8Buff *sharedSecret);
