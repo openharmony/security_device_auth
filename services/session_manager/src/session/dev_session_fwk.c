@@ -475,10 +475,10 @@ static void OnDevSessionFinish(const SessionImpl *impl)
 
     bool isBind = true;
     (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
-    CloseChannel(impl->channelType, impl->channelId);
     if (isBind) {
         NotifyBindResult(impl->channelType, impl->channelId);
     }
+    CloseChannel(impl->channelType, impl->channelId);
 }
 
 static int32_t ProcV2Session(SessionImpl *impl, const CJson *receviedMsg, bool *isFinish)
