@@ -362,6 +362,42 @@ static char *PackResultToJson(CJson *out, int32_t res)
     return PackJsonToString(out);
 }
 
+static int32_t IsKeyExistReturnAliasIfNeeded(CredentialRequestParamT *param, Uint8Buff *outKeyAlias)
+{
+    if (param->acquireType != P2P_BIND) {
+        LOGE("acquireType invalid! only P2P_BIND is allowed now!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    int32_t keyType = KEY_ALIAS_P2P_AUTH;
+    param->osAccountId = DevAuthGetRealOsAccountLocalId(param->osAccountId);
+    if ((param->deviceId == NULL) || (param->osAccountId == INVALID_OS_ACCOUNT)) {
+        LOGE("Invalid input parameters!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
+    Uint8Buff keyAliasBuff = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
+    int32_t res = GenerateKeyAliasInner(DEFAULT_PACKAGE_NAME, param->serviceType, param->deviceId,
+        keyType, &keyAliasBuff);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to generate identity keyPair alias!");
+        return res;
+    }
+    LOGI("KeyPair alias(HEX): %x%x%x%x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
+        keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
+
+    if ((outKeyAlias != NULL) &&
+        (memcpy_s(outKeyAlias->val, outKeyAlias->length, keyAliasBuff.val, keyAliasBuff.length) != EOK)) {
+        LOGE("memcpy outkeyalias failed.");
+        return HC_ERR_MEMORY_COPY;
+    }
+
+    res = GetLoaderInstance()->checkKeyExist(&keyAliasBuff);
+    if (res != HC_SUCCESS) {
+        return HC_ERR_LOCAL_IDENTITY_NOT_EXIST;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t QueryCredential(const char *reqJsonStr, char **returnData)
 {
     int32_t res;
@@ -376,36 +412,19 @@ static int32_t QueryCredential(const char *reqJsonStr, char **returnData)
         res = HC_ERR_JSON_GET;
         goto ERR;
     }
-    int32_t osAccountId = param->osAccountId;
-    int32_t keyType = (param->acquireType == P2P_BIND) ? KEY_ALIAS_P2P_AUTH : param->acquireType;
-    const char *serviceType = param->serviceType;
-    const char *authId = param->deviceId;
-    int32_t flag = param->flag;
-    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    if ((authId == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
-        LOGE("Invalid input parameters!");
+    res = IsKeyExistReturnAliasIfNeeded(param, NULL);
+    if (res != HC_SUCCESS) {
+        LOGD("Key pair not exist.");
+        goto ERR;
+    }
+    if (param->acquireType != P2P_BIND) {
+        LOGE("acquireType invalid! only P2P_BIND is allowed now!");
         res = HC_ERR_INVALID_PARAMS;
         goto ERR;
     }
-    const AlgLoader *loader = GetLoaderInstance();
-    uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff keyAliasBuff = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
-    res = GenerateKeyAliasInner(DEFAULT_PACKAGE_NAME, serviceType, authId, keyType, &keyAliasBuff);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to generate identity keyPair alias!");
-        goto ERR;
-    }
-    LOGI("KeyPair alias(HEX): %x%x%x%x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
-        keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
-
-    res = loader->checkKeyExist(&keyAliasBuff);
-    if (res != HC_SUCCESS) {
-        LOGD("Key pair not exist.");
-        res = HC_ERR_LOCAL_IDENTITY_NOT_EXIST;
-        goto ERR;
-    }
-    if (RETURN_FLAG_PUBLIC_KEY == flag) {
-        res = PackPublicKeyToJson(out, osAccountId, keyType, authId, serviceType);
+    int32_t keyType = KEY_ALIAS_P2P_AUTH;
+    if (RETURN_FLAG_PUBLIC_KEY == param->flag) {
+        res = PackPublicKeyToJson(out, param->osAccountId, keyType, param->deviceId, param->serviceType);
         if (res != HC_SUCCESS) {
             LOGD("PackPublicKeyToJson failed");
             goto ERR;
@@ -434,43 +453,27 @@ static int32_t GenarateCredential(const char *reqJsonStr, char **returnData)
         res = HC_ERR_INVALID_PARAMS;
         goto ERR;
     }
-    int32_t osAccountId = param->osAccountId;
-    int32_t keyType = (param->acquireType == P2P_BIND) ? KEY_ALIAS_P2P_AUTH : param->acquireType;
-    const char *serviceType = param->serviceType;
-    const char *authId = param->deviceId;
-    int32_t flag = param->flag;
-    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    if ((authId == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
-        LOGE("Invalid input parameters!");
-        res = HC_ERR_INVALID_PARAMS;
-        goto ERR;
-    }
-    const AlgLoader *loader = GetLoaderInstance();
-    uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff keyAliasBuff = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
-    res = GenerateKeyAliasInner(DEFAULT_PACKAGE_NAME, serviceType, authId, keyType, &keyAliasBuff);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to generate identity keyPair alias!");
-        goto ERR;
-    }
-    LOGI("KeyPair alias(HEX): %x%x%x%x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
-        keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
-
-    res = loader->checkKeyExist(&keyAliasBuff);
+    res = IsKeyExistReturnAliasIfNeeded(param, NULL);
     if (res == HC_SUCCESS) {
         LOGD("Key pair already exist.");
         res = HC_ERR_IDENTITY_DUPLICATED;
         goto ERR;
     }
-    Uint8Buff authIdBuff = { (uint8_t *)authId, HcStrlen(authId) };
+    Uint8Buff authIdBuff = { (uint8_t *)param->deviceId, HcStrlen(param->deviceId) };
+    if (param->acquireType != P2P_BIND) {
+        LOGE("acquireType invalid! only P2P_BIND is allowed now!");
+        res = HC_ERR_INVALID_PARAMS;
+        goto ERR;
+    }
+    int32_t keyType = KEY_ALIAS_P2P_AUTH;
     res = GetStandardTokenManagerInstance()->registerLocalIdentity(
-        DEFAULT_PACKAGE_NAME, serviceType, &authIdBuff, keyType);
+        DEFAULT_PACKAGE_NAME, param->serviceType, &authIdBuff, keyType);
     if (res != HC_SUCCESS) {
         LOGE("Failed to registerLocalIdentity!");
         goto ERR;
     }
-    if (RETURN_FLAG_PUBLIC_KEY == flag) {
-        res = PackPublicKeyToJson(out, osAccountId, keyType, authId, serviceType);
+    if (RETURN_FLAG_PUBLIC_KEY == param->flag) {
+        res = PackPublicKeyToJson(out, param->osAccountId, keyType, param->deviceId, param->serviceType);
         if (res != HC_SUCCESS) {
             LOGE("PackPublicKeyToJson failed");
             goto ERR;
@@ -482,7 +485,6 @@ ERR:
     }
     FreeJson(out);
     FreeCredParam(param);
-
     return res;
 }
 
@@ -556,40 +558,28 @@ static int32_t ImportCredential(const char *reqJsonStr, char **returnData)
         res = HC_ERR_JSON_GET;
         goto ERR;
     }
-    int32_t osAccountId = param->osAccountId;
-    int32_t keyType = (param->acquireType == P2P_BIND) ? KEY_ALIAS_P2P_AUTH : param->acquireType;
-    const char *serviceType = param->serviceType;
-    const char *authId = param->deviceId;
-    Uint8Buff *publicKey = param->publicKey;
-    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    if ((authId == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
-        LOGE("Invalid input parameters!");
-        return HC_ERR_INVALID_PARAMS;
-    }
-    const AlgLoader *loader = GetLoaderInstance();
     uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAliasBuff = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
-    res = GenerateKeyAliasInner(DEFAULT_PACKAGE_NAME, serviceType, authId, keyType, &keyAliasBuff);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to generate identity keyPair alias!");
-        goto ERR;
-    }
-    LOGI("KeyPair alias(HEX): %x%x%x%x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
-        keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
-    res = loader->checkKeyExist(&keyAliasBuff);
+    res = IsKeyExistReturnAliasIfNeeded(param, &keyAliasBuff);
     if (res == HC_SUCCESS) {
         LOGD("Key pair already exist.");
         res = HC_ERR_IDENTITY_DUPLICATED;
         goto ERR;
     }
-    Uint8Buff authIdBuff = { (uint8_t *)authId, strlen(authId) };
+    Uint8Buff authIdBuff = { (uint8_t *)param->deviceId, strlen(param->deviceId) };
+    if (param->acquireType != P2P_BIND) {
+        LOGE("acquireType invalid! only P2P_BIND is allowed now!");
+        res = HC_ERR_INVALID_PARAMS;
+        goto ERR;
+    }
+    int32_t keyType = KEY_ALIAS_P2P_AUTH;
     ExtraInfo exInfo = { authIdBuff, keyType, PAIR_TYPE_BIND };
-    res = loader->importPublicKey(&keyAliasBuff, publicKey, ED25519, &exInfo);
+    res = GetLoaderInstance()->importPublicKey(&keyAliasBuff, param->publicKey, ED25519, &exInfo);
     if (res != HC_SUCCESS) {
         LOGE("Failed to importPublicKey!");
         goto ERR;
     }
-    res = ComputeAndSavePsk(serviceType, authId, keyType);
+    res = ComputeAndSavePsk(param->serviceType, param->deviceId, keyType);
     if (res != HC_SUCCESS) {
         LOGE("Failed to ComputeAndSavePsk!");
         goto ERR;
@@ -618,32 +608,31 @@ static int32_t DeleteCredential(const char *reqJsonStr, char **returnData)
         res = HC_ERR_JSON_GET;
         goto ERR;
     }
-    int32_t osAccountId = param->osAccountId;
-    int32_t keyType = (param->acquireType == P2P_BIND) ? KEY_ALIAS_P2P_AUTH : param->acquireType;
-    const char *serviceType = param->serviceType;
-    const char *authId = param->deviceId;
-    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    if ((authId == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
+    if (param->acquireType != P2P_BIND) {
+        LOGE("acquireType invalid! only P2P_BIND is allowed now!");
+        res = HC_ERR_INVALID_PARAMS;
+        goto ERR;
+    }
+    int32_t keyType = KEY_ALIAS_P2P_AUTH;
+    param->osAccountId = DevAuthGetRealOsAccountLocalId(param->osAccountId);
+    if ((param->deviceId == NULL) || (param->osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
         res = HC_ERR_INVALID_PARAMS;
         goto ERR;
     }
-    Uint8Buff authIdBuff = { (uint8_t *)authId, strlen(authId) };
+    Uint8Buff authIdBuff = { (uint8_t *)param->deviceId, strlen(param->deviceId) };
     res = GetStandardTokenManagerInstance()->unregisterLocalIdentity(
-        DEFAULT_PACKAGE_NAME, serviceType, &authIdBuff, KEY_ALIAS_PSK);
+        DEFAULT_PACKAGE_NAME, param->serviceType, &authIdBuff, KEY_ALIAS_PSK);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete psk!");
         goto ERR;
     }
-    LOGI("Psk deleted successfully!");
-
     res = GetStandardTokenManagerInstance()->unregisterLocalIdentity(
-        DEFAULT_PACKAGE_NAME, serviceType, &authIdBuff, keyType);
+        DEFAULT_PACKAGE_NAME, param->serviceType, &authIdBuff, keyType);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete identity keyPair!");
         goto ERR;
     }
-    LOGI("PubKey deleted successfully!");
 
 ERR:
     if (returnData) {

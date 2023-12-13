@@ -83,13 +83,12 @@ static const AuthIdentity *getAuthIdentity(const CJson *in, const Uint8Buff *pre
     return GetAuthIdentityByType(identityType);
 }
 
-int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
+int32_t GetCredInfosByPeerIdentity(CJson *in, IdentityInfoVec *vec)
 {
     if (in == NULL || vec == NULL) {
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
-
     AuthIdentityType identityType = AUTH_IDENTITY_TYPE_INVALID;
     const char *pinCode = GetStringFromJson(in, FIELD_PIN_CODE);
     if (pinCode != NULL) {
@@ -105,28 +104,34 @@ int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
         LOGE("invalid AuthIdentityType !");
         return HC_ERR_INVALID_PARAMS;
     }
-
     LOGD("AuthIdentityType: %d", identityType);
     const AuthIdentity *authIdentity = GetAuthIdentityByType(identityType);
     if (authIdentity == NULL) {
         LOGI("getAuthIdentity failed.");
         return HC_ERR_INVALID_PARAMS;
     }
-
     int32_t ret = authIdentity->getCredInfosByPeerIdentity(in, vec);
-    /* Device level auth also need to try auth with the direct auth identityInfo */
-    if (IsDeviceLevelAuth(in) && identityType == AUTH_IDENTITY_TYPE_GROUP) {
-        int32_t identityCount = HC_VECTOR_SIZE(vec);
-        authIdentity = GetAuthIdentityByType(AUTH_IDENTITY_TYPE_P2P);
-        if (authIdentity != NULL) {
-            int32_t res = authIdentity->getCredInfosByPeerIdentity(in, vec);
-            if (res != HC_SUCCESS && (identityCount > 0)) {
-                return HC_SUCCESS;
-            }
-            return res;
-        }
+    if (!IsDeviceLevelAuth(in) || identityType != AUTH_IDENTITY_TYPE_GROUP) {
+        return ret;
     }
-    return ret;
+    // Device level auth also need to try auth with the direct auth identityInfo
+    int32_t identityCount = HC_VECTOR_SIZE(vec);
+    authIdentity = GetAuthIdentityByType(AUTH_IDENTITY_TYPE_P2P);
+    if (authIdentity == NULL) {
+        LOGE("get p2p auth identity failed!");
+        return ret;
+    }
+    // Devie level auth comes from old api: authDevice, it's context
+    // does not contain acquireType, so we need add it into context here.
+    if (AddIntToJson(in, FIELD_ACQURIED_TYPE, P2P_BIND) != HC_SUCCESS) {
+        LOGE("Device level auth, add acquire type to context failed!");
+        return ret;
+    }
+    int32_t res = authIdentity->getCredInfosByPeerIdentity(in, vec);
+    if (res != HC_SUCCESS && (identityCount > 0)) {
+        return HC_SUCCESS;
+    }
+    return res;
 }
 
 int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedUrl, IdentityInfo **returnInfo)

@@ -32,7 +32,7 @@ static int32_t SetProtocolsToIdentityInfo(IdentityInfo *info)
     return HC_SUCCESS;
 }
 
-static int32_t IsPeerDevicePublicKeyExist(const CJson *in)
+static int32_t CombineQueryCredentialParams(const CJson *in, CJson *out)
 {
     int32_t osAccountId = INVALID_OS_ACCOUNT;
     if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
@@ -44,44 +44,62 @@ static int32_t IsPeerDevicePublicKeyExist(const CJson *in)
         LOGE("Failed to get peerConnDeviceId from context, need peerConnDeviceId!");
         return HC_ERR_JSON_GET;
     }
-    int32_t acquireType = P2P_BIND;
+    int32_t acquireType = ACQUIRE_TYPE_INVALID;
     if (GetIntFromJson(in, FIELD_ACQURIED_TYPE, &acquireType) != HC_SUCCESS) {
-        LOGI("Failed to get acquireType from context!");
+        LOGE("Failed to get acquireType from context!");
+        return HC_ERR_JSON_GET;
     }
+    if (acquireType != P2P_BIND) {
+        LOGE("acquireType invalid! only P2P_BIND is allowed now!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    if (AddIntToJson(out, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
+        LOGE("add osAccountId to json error!");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(out, FIELD_ACQURIED_TYPE, acquireType) != HC_SUCCESS) {
+        LOGE("add acquireType to json error!");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(out, FIELD_CRED_OP_FLAG, RETURN_FLAG_DEFAULT) != HC_SUCCESS) {
+        LOGE("add flag to json error!");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(out, FIELD_DEVICE_ID, peerConnDeviceId) != HC_SUCCESS) {
+        LOGE("add device id to json error!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t IsPeerDevicePublicKeyExist(const CJson *in)
+{
     CJson *paramsJson = CreateJson();
     if (paramsJson == NULL) {
         LOGE("alloc memory error!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    if (AddIntToJson(paramsJson, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
-        LOGE("add osAccountId to json error!");
+    int32_t ret = CombineQueryCredentialParams(in, paramsJson);
+    if (ret != HC_SUCCESS) {
+        LOGE("Prepare query credential parmaters return error!");
         FreeJson(paramsJson);
-        return HC_ERR_JSON_ADD;
+        return ret;
     }
-    if (AddIntToJson(paramsJson, FIELD_ACQURIED_TYPE, acquireType) != HC_SUCCESS) {
-        LOGE("add acquireType to json error!");
-        FreeJson(paramsJson);
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddIntToJson(paramsJson, FIELD_CRED_OP_FLAG, RETURN_FLAG_DEFAULT) != HC_SUCCESS) {
-        LOGE("add flag to json error!");
-        FreeJson(paramsJson);
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddStringToJson(paramsJson, FIELD_DEVICE_ID, peerConnDeviceId) != HC_SUCCESS) {
-        LOGE("add device id to json error!");
-        FreeJson(paramsJson);
-        return HC_ERR_JSON_ADD;
-    }
-    const char *requestParams = PackJsonToString(paramsJson);
-    FreeJson(paramsJson);
-
     const CredentialOperator *credOperator = GetCredentialOperator();
     if (credOperator == NULL) {
         LOGE("credOperator is null!");
+        FreeJson(paramsJson);
         return HC_ERR_NOT_SUPPORT;
     }
-    return credOperator->queryCredential(requestParams, NULL);
+    char *requestParams = PackJsonToString(paramsJson);
+    FreeJson(paramsJson);
+    if (requestParams == NULL) {
+        LOGE("Failed to pack url json to string!");
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+    ret = credOperator->queryCredential(requestParams, NULL);
+    FreeJsonString(requestParams);
+    return ret;
 }
 
 static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)

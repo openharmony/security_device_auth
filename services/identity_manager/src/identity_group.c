@@ -333,6 +333,41 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *iden
     return ret;
 }
 
+static int32_t SetIdentityInfoByUrl(const CJson *urlJson, IdentityInfo *info)
+{
+    if (urlJson == NULL || info == NULL) {
+        LOGE("Need urlJson and IdentityInfo is not NULL!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+
+    int32_t keyType = 0;
+    if (GetIntFromJson(urlJson, PRESHARED_URL_KEY_TYPE, &keyType) != HC_SUCCESS) {
+        LOGE("Failed to get trust type!");
+        return HC_ERR_JSON_GET;
+    }
+
+    char *urlStr = PackJsonToString(urlJson);
+    if (urlStr == NULL) {
+        LOGE("Failed to pack url json to string!");
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+    int32_t ret = SetPreSharedUrlForProof(urlStr, &info->proof.preSharedUrl);
+    FreeJsonString(urlStr);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to set preSharedUrl of proof!");
+        return ret;
+    }
+
+    ret = SetProtocolsToIdentityInfo(keyType, info);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to set protocols!");
+        return ret;
+    }
+
+    info->proofType = PRE_SHARED;
+    return ret;
+}
+
 static int32_t CheckAndGetP2pCredInfo(const CJson *in, const CJson *urlJson, IdentityInfo *info)
 {
     int32_t osAccountId = INVALID_OS_ACCOUNT;
@@ -363,32 +398,7 @@ static int32_t CheckAndGetP2pCredInfo(const CJson *in, const CJson *urlJson, Ide
         return ret;
     }
 
-    int32_t keyType = 0;
-    if (GetIntFromJson(urlJson, PRESHARED_URL_KEY_TYPE, &keyType) != HC_SUCCESS) {
-        LOGE("Failed to get trust type!");
-        return HC_ERR_JSON_GET;
-    }
-
-    char *urlStr = PackJsonToString(urlJson);
-    if (urlStr == NULL) {
-        LOGE("Failed to pack url json to string!");
-        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
-    }
-    ret = SetPreSharedUrlForProof(urlStr, &info->proof.preSharedUrl);
-    FreeJsonString(urlStr);
-    if (ret != HC_SUCCESS) {
-        LOGE("Failed to set preSharedUrl of proof!");
-        return ret;
-    }
-
-    ret = SetProtocolsToIdentityInfo(keyType, info);
-    if (ret != HC_SUCCESS) {
-        LOGE("Failed to set protocols!");
-        return ret;
-    }
-
-    info->proofType = PRE_SHARED;
-
+    ret = SetIdentityInfoByUrl(urlJson, info);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to get p2p identity info by key type!");
     }
