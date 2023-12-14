@@ -1159,6 +1159,7 @@ static HWTEST_F(ListTrustPeersTest, ListTrustPeersTest004, TestSize.Level2)
     };
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     int ret = list_trust_peers(server, 0, nullptr, g_authIdList);
+    LOG("--------trust peers num is %d--------", ret);
     EXPECT_TRUE(server != nullptr);
     destroy(&server);
     LOG("--------ListTrustPeersTest ListTrustPeersTest004--------");
