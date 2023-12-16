@@ -94,7 +94,7 @@ static int32_t IsPeerDevicePublicKeyExist(const CJson *in)
     char *requestParams = PackJsonToString(paramsJson);
     FreeJson(paramsJson);
     if (requestParams == NULL) {
-        LOGE("Failed to pack url json to string!");
+        LOGE("Failed to pack query credentail params json to string!");
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     ret = credOperator->queryCredential(requestParams, NULL);

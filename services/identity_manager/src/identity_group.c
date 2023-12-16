@@ -428,6 +428,7 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
     IdentityInfo *info = CreateIdentityInfo();
     if (info == NULL) {
         LOGE("Failed to create identity info!");
+        FreeJson(urlJson);
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t ret;
