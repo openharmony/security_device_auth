@@ -121,7 +121,7 @@ int32_t GetCredInfosByPeerIdentity(CJson *in, IdentityInfoVec *vec)
         LOGE("get p2p auth identity failed!");
         return ret;
     }
-    // Devie level auth comes from old api: authDevice, it's context
+    // Device level auth comes from old api: authDevice, it's context
     // does not contain acquireType, so we need add it into context here.
     if (AddIntToJson(in, FIELD_ACQURIED_TYPE, P2P_BIND) != HC_SUCCESS) {
         LOGE("Device level auth, add acquire type to context failed!");

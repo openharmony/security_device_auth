@@ -368,6 +368,7 @@ static int32_t IsKeyExistReturnAliasIfNeeded(CredentialRequestParamT *param, Uin
         LOGE("acquireType invalid! only P2P_BIND is allowed now!");
         return HC_ERR_INVALID_PARAMS;
     }
+    // Caution: Only acquireType is P2P_BIND, keyType can be set to KEY_ALIAS_P2P_AUTH
     int32_t keyType = KEY_ALIAS_P2P_AUTH;
     param->osAccountId = DevAuthGetRealOsAccountLocalId(param->osAccountId);
     if ((param->deviceId == NULL) || (param->osAccountId == INVALID_OS_ACCOUNT)) {
@@ -422,6 +423,7 @@ static int32_t QueryCredential(const char *reqJsonStr, char **returnData)
         res = HC_ERR_INVALID_PARAMS;
         goto ERR;
     }
+    // Caution: Only acquireType is P2P_BIND, keyType can be set to KEY_ALIAS_P2P_AUTH
     int32_t keyType = KEY_ALIAS_P2P_AUTH;
     if (RETURN_FLAG_PUBLIC_KEY == param->flag) {
         res = PackPublicKeyToJson(out, param->osAccountId, keyType, param->deviceId, param->serviceType);
@@ -465,6 +467,7 @@ static int32_t GenarateCredential(const char *reqJsonStr, char **returnData)
         res = HC_ERR_INVALID_PARAMS;
         goto ERR;
     }
+    // Caution: Only acquireType is P2P_BIND, keyType can be set to KEY_ALIAS_P2P_AUTH
     int32_t keyType = KEY_ALIAS_P2P_AUTH;
     res = GetStandardTokenManagerInstance()->registerLocalIdentity(
         DEFAULT_PACKAGE_NAME, param->serviceType, &authIdBuff, keyType);
@@ -572,6 +575,7 @@ static int32_t ImportCredential(const char *reqJsonStr, char **returnData)
         res = HC_ERR_INVALID_PARAMS;
         goto ERR;
     }
+    // Caution: Only acquireType is P2P_BIND, keyType can be set to KEY_ALIAS_P2P_AUTH
     int32_t keyType = KEY_ALIAS_P2P_AUTH;
     ExtraInfo exInfo = { authIdBuff, keyType, PAIR_TYPE_BIND };
     res = GetLoaderInstance()->importPublicKey(&keyAliasBuff, param->publicKey, ED25519, &exInfo);
@@ -581,10 +585,13 @@ static int32_t ImportCredential(const char *reqJsonStr, char **returnData)
     }
     res = ComputeAndSavePsk(param->serviceType, param->deviceId, keyType);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to ComputeAndSavePsk!");
+        LOGE("Failed to ComputeAndSavePsk, lets delete imported key!");
+        if (GetStandardTokenManagerInstance()->unregisterLocalIdentity(
+            DEFAULT_PACKAGE_NAME, param->serviceType, &authIdBuff, keyType) != HC_SUCCESS) {
+            LOGE("Failed to delete imported PublicKey!");
+        }
         goto ERR;
     }
-
 ERR:
     if (returnData) {
         *returnData = PackResultToJson(out, res);
@@ -613,6 +620,7 @@ static int32_t DeleteCredential(const char *reqJsonStr, char **returnData)
         res = HC_ERR_INVALID_PARAMS;
         goto ERR;
     }
+    // Caution: Only acquireType is P2P_BIND, keyType can be set to KEY_ALIAS_P2P_AUTH
     int32_t keyType = KEY_ALIAS_P2P_AUTH;
     param->osAccountId = DevAuthGetRealOsAccountLocalId(param->osAccountId);
     if ((param->deviceId == NULL) || (param->osAccountId == INVALID_OS_ACCOUNT)) {
@@ -633,7 +641,6 @@ static int32_t DeleteCredential(const char *reqJsonStr, char **returnData)
         LOGE("Failed to delete identity keyPair!");
         goto ERR;
     }
-
 ERR:
     if (returnData) {
         *returnData = PackResultToJson(out, res);
