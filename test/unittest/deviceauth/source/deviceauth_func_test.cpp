@@ -148,13 +148,13 @@ static DeviceAuthCallback g_daLTCallback = { .onTransmit = OnTransmit,
     .onError = OnError,
     .onRequest = OnAuthRequestDirect };
 
-static void AuthDeviceDirectWithPinDemo(void)
+static void AuthDeviceDirectWithPinDemo(const char *startAuthParams, const DeviceAuthCallback *callback)
 {
     g_asyncStatus = ASYNC_STATUS_WAITING;
     bool isClient = true;
     SetDeviceStatus(isClient);
 
-    int32_t ret = StartAuthDevice(TEST_REQ_ID, g_authWithPinParams, &g_daTmpCallback);
+    int32_t ret = StartAuthDevice(TEST_REQ_ID, startAuthParams, callback);
     if (ret != HC_SUCCESS) {
         g_asyncStatus = ASYNC_STATUS_ERROR;
         return;
@@ -169,13 +169,14 @@ static void AuthDeviceDirectWithPinDemo(void)
         CJson *json = CreateJson();
         AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
         AddStringToJson(json, "data", (const char *)g_transmitData);
-        const char *autParams = PackJsonToString(json);
+        char *autParams = PackJsonToString(json);
         FreeJson(json);
         if (isClient) {
-            ret = ProcessAuthDevice(TEST_REQ_ID, autParams, &g_daTmpCallback);
+            ret = ProcessAuthDevice(TEST_REQ_ID, autParams, callback);
         } else {
-            ret = ProcessAuthDevice(TEST_REQ_ID2, autParams, &g_daTmpCallback);
+            ret = ProcessAuthDevice(TEST_REQ_ID2, autParams, callback);
         }
+        FreeJsonString(autParams);
         (void)memset_s(g_transmitData, g_transmitDataMaxLen, 0, g_transmitDataMaxLen);
         g_transmitDataLen = 0;
         if (ret != HC_SUCCESS) {
@@ -195,13 +196,13 @@ static void AuthDeviceDirectWithPinDemo(void)
     SetDeviceStatus(true);
 }
 
-static void AuthDeviceDirectDemo(void)
+static void AuthDeviceDirectDemo(const char *startAuthParams, const DeviceAuthCallback *callback)
 {
     g_asyncStatus = ASYNC_STATUS_WAITING;
     bool isClient = true;
     SetDeviceStatus(isClient);
 
-    int32_t ret = StartAuthDevice(TEST_REQ_ID, g_authDirectParams, &g_daLTCallback);
+    int32_t ret = StartAuthDevice(TEST_REQ_ID, startAuthParams, callback);
     if (ret != HC_SUCCESS) {
         g_asyncStatus = ASYNC_STATUS_ERROR;
         return;
@@ -216,13 +217,14 @@ static void AuthDeviceDirectDemo(void)
         CJson *json = CreateJson();
         AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
         AddStringToJson(json, "data", (const char *)g_transmitData);
-        const char *autParams = PackJsonToString(json);
+        char *autParams = PackJsonToString(json);
         FreeJson(json);
         if (isClient) {
-            ret = ProcessAuthDevice(TEST_REQ_ID, autParams, &g_daLTCallback);
+            ret = ProcessAuthDevice(TEST_REQ_ID, autParams, callback);
         } else {
-            ret = ProcessAuthDevice(TEST_REQ_ID2, autParams, &g_daLTCallback);
+            ret = ProcessAuthDevice(TEST_REQ_ID2, autParams, callback);
         }
+        FreeJsonString(autParams);
         (void)memset_s(g_transmitData, g_transmitDataMaxLen, 0, g_transmitDataMaxLen);
         g_transmitDataLen = 0;
         if (ret != HC_SUCCESS) {
@@ -285,38 +287,35 @@ static void DeviceLevelAuthDemo(void)
     SetDeviceStatus(true);
 }
 
-static const char *CreateCredentialParam(
-    int32_t osAccountId, const char *deviceId, int32_t flag, const char *serviceType, const char *publicKey)
+static void CreateCredentialParamsJson(int32_t osAccountId, const char *deviceId, int32_t flag,
+    const char *serviceType, CJson *out)
 {
-    CJson *json = CreateJson();
-
-    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, osAccountId);
-    AddStringToJson(json, FIELD_DEVICE_ID, deviceId);
-    AddStringToJson(json, FIELD_SERVICE_TYPE, serviceType);
-    AddIntToJson(json, FIELD_ACQURIED_TYPE, P2P_BIND);
+    AddIntToJson(out, FIELD_OS_ACCOUNT_ID, osAccountId);
+    AddStringToJson(out, FIELD_DEVICE_ID, deviceId);
+    AddStringToJson(out, FIELD_SERVICE_TYPE, serviceType);
+    AddIntToJson(out, FIELD_ACQURIED_TYPE, P2P_BIND);
 
     if (flag >= 0) {
-        AddIntToJson(json, FIELD_CRED_OP_FLAG, flag);
+        AddIntToJson(out, FIELD_CRED_OP_FLAG, flag);
     }
-
-    if (publicKey) {
-        AddStringToJson(json, FIELD_PUBLIC_KEY, publicKey);
-    }
-
-    char *returnDataStr = PackJsonToString(json);
-    FreeJson(json);
-    return returnDataStr;
+    return;
 }
 
 static int32_t ProcessCredentiaCreateDemo(const int32_t osAccountId, const bool isClient, const char *udid)
 {
     int32_t flag = RETURN_FLAG_PUBLIC_KEY;
-    const char *requestParams = CreateCredentialParam(osAccountId, udid, flag, DEFAULT_SERVICE_TYPE, nullptr);
+    CJson *json = CreateJson();
+    if (json == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    CreateCredentialParamsJson(osAccountId, udid, flag, DEFAULT_SERVICE_TYPE, json);
+    char *requestParams = PackJsonToString(json);
+    FreeJson(json);
     char *returnData = nullptr;
     SetDeviceStatus(isClient);
 
     int32_t res = ProcessCredential(CRED_OP_CREATE, requestParams, &returnData);
-
+    FreeJsonString(requestParams);
     if (returnData) {
         printf("returnData: %s\n", returnData);
         CJson *in = CreateJsonFromString(returnData);
@@ -347,10 +346,16 @@ static int32_t ProcessCredentialQueryDemo(
 
     char *returnData = nullptr;
     SetDeviceStatus(isClient);
-    const char *requestParams = CreateCredentialParam(osAccountId, udid, flag, DEFAULT_SERVICE_TYPE, nullptr);
+    CJson *json = CreateJson();
+    if (json == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    CreateCredentialParamsJson(osAccountId, udid, flag, DEFAULT_SERVICE_TYPE, json);
+    char *requestParams = PackJsonToString(json);
+    FreeJson(json);
 
     int32_t res = ProcessCredential(CRED_OP_QUERY, requestParams, &returnData);
-
+    FreeJsonString(requestParams);
     if (returnData) {
         printf("returnData: %s\n", returnData);
         CJson *in = CreateJsonFromString(returnData);
@@ -378,13 +383,19 @@ static int32_t ProcessCredentialQueryDemo(
 static int32_t ProcessCredentialDemoImpPubKey(
     const int32_t osAccountId, const bool isClient, const char *udid, const char *publicKey)
 {
-    const char *requestParams =
-        CreateCredentialParam(osAccountId, udid, RETURN_FLAG_INVALID, SERVICE_TYPE_IMPORT, publicKey);
+    CJson *json = CreateJson();
+    if (json == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    CreateCredentialParamsJson(osAccountId, udid, RETURN_FLAG_INVALID, SERVICE_TYPE_IMPORT, json);
+    AddStringToJson(json, FIELD_PUBLIC_KEY, publicKey);
+    char *requestParams = PackJsonToString(json);
+    FreeJson(json);
     char *returnData = nullptr;
     SetDeviceStatus(isClient);
 
     int32_t res = ProcessCredential(CRED_OP_IMPORT, requestParams, &returnData);
-
+    FreeJsonString(requestParams);
     if (returnData) {
         CJson *in = CreateJsonFromString(returnData);
         if (in == nullptr) {
@@ -410,13 +421,19 @@ static int32_t ProcessCredentialDemoImpPubKey(
 static int32_t CreateServerKeyPair()
 {
     SetDeviceStatus(false);
-    const char *requestParams = CreateCredentialParam(
-        TEST_AUTH_OS_ACCOUNT_ID, TEST_UDID_SERVER, RETURN_FLAG_PUBLIC_KEY, DEFAULT_SERVICE_TYPE, nullptr);
+    CJson *json = CreateJson();
+    if (json == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    CreateCredentialParamsJson(TEST_AUTH_OS_ACCOUNT_ID, TEST_UDID_SERVER,
+        RETURN_FLAG_PUBLIC_KEY, DEFAULT_SERVICE_TYPE, json);
+    char *requestParams = PackJsonToString(json);
+    FreeJson(json);
     char *returnData = nullptr;
 
     printf("ProcessCredentialDemo: operationCode=%d\n", CRED_OP_CREATE);
     int32_t res = ProcessCredential(CRED_OP_CREATE, requestParams, &returnData);
-
+    FreeJsonString(requestParams);
     if (returnData) {
         printf("returnData: %s\n", returnData);
         CJson *in = CreateJsonFromString(returnData);
@@ -442,13 +459,19 @@ static int32_t CreateServerKeyPair()
 static int32_t DeleteServerKeyPair()
 {
     SetDeviceStatus(false);
-    const char *requestParams = CreateCredentialParam(
-        TEST_AUTH_OS_ACCOUNT_ID, TEST_UDID_SERVER, RETURN_FLAG_PUBLIC_KEY, DEFAULT_SERVICE_TYPE, nullptr);
+    CJson *json = CreateJson();
+    if (json == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    CreateCredentialParamsJson(TEST_AUTH_OS_ACCOUNT_ID, TEST_UDID_SERVER,
+        RETURN_FLAG_PUBLIC_KEY, DEFAULT_SERVICE_TYPE, json);
+    char *requestParams = PackJsonToString(json);
+    FreeJson(json);
     char *returnData = nullptr;
 
     printf("ProcessCredentialDemo: operationCode=%d\n", CRED_OP_DELETE);
     int32_t res = ProcessCredential(CRED_OP_DELETE, requestParams, &returnData);
-
+    FreeJsonString(requestParams);
     if (returnData) {
         printf("returnData: %s\n", returnData);
         CJson *in = CreateJsonFromString(returnData);
@@ -471,20 +494,57 @@ static int32_t DeleteServerKeyPair()
     return res;
 }
 
+static int32_t DeleteAllCredentails()
+{
+    SetDeviceStatus(false);
+    CJson *json = CreateJson();
+    if (json == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    CreateCredentialParamsJson(TEST_AUTH_OS_ACCOUNT_ID, TEST_UDID_SERVER,
+        RETURN_FLAG_DEFAULT, DEFAULT_SERVICE_TYPE, json);
+    char *requestParams = PackJsonToString(json);
+    FreeJson(json);
+    char *returnData = nullptr;
+    ProcessCredential(CRED_OP_DELETE, requestParams, &returnData);
+    FreeJsonString(requestParams);
+
+    SetDeviceStatus(true);
+    json = CreateJson();
+    if (json == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    CreateCredentialParamsJson(TEST_AUTH_OS_ACCOUNT_ID, TEST_UDID_CLIENT,
+        RETURN_FLAG_DEFAULT, DEFAULT_SERVICE_TYPE, json);
+    requestParams = PackJsonToString(json);
+    FreeJson(json);
+    returnData = nullptr;
+    ProcessCredential(CRED_OP_DELETE, requestParams, &returnData);
+    FreeJsonString(requestParams);
+
+    return HC_SUCCESS;
+}
+
 static int32_t ProcessCredentialDemo(int operationCode, const char *serviceType)
 {
     int32_t flag = RETURN_FLAG_INVALID;
     if (operationCode == CRED_OP_CREATE || operationCode == CRED_OP_QUERY) {
         flag = RETURN_FLAG_PUBLIC_KEY;
     }
-    const char *requestParams = CreateCredentialParam(TEST_AUTH_OS_ACCOUNT_ID, TEST_UDID, flag, serviceType, nullptr);
+    CJson *json = CreateJson();
+    if (json == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    CreateCredentialParamsJson(TEST_AUTH_OS_ACCOUNT_ID, TEST_UDID, flag, serviceType, json);
+    char *requestParams = PackJsonToString(json);
+    FreeJson(json);
     char *returnData = nullptr;
     bool isClient = true;
     SetDeviceStatus(isClient);
 
     printf("ProcessCredentialDemo: operationCode=%d\n", operationCode);
     int32_t res = ProcessCredential(operationCode, requestParams, &returnData);
-
+    FreeJsonString(requestParams);
     if (returnData) {
         printf("returnData: %s\n", returnData);
         CJson *in = CreateJsonFromString(returnData);
@@ -510,15 +570,22 @@ static int32_t ProcessCredentialDemo(int operationCode, const char *serviceType)
 
 static int32_t ProcessCredentialDemoImport(const char *importServiceType)
 {
-    const char *requestParams = CreateCredentialParam(TEST_AUTH_OS_ACCOUNT_ID, TEST_UDID, RETURN_FLAG_INVALID,
-        importServiceType, "CA32A9DFACB944B1F6292C9AE10783F6376A987A9CE30C13300BC866917DFF2E");
+    CJson *json = CreateJson();
+    if (json == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    CreateCredentialParamsJson(TEST_AUTH_OS_ACCOUNT_ID, TEST_UDID, RETURN_FLAG_INVALID, importServiceType, json);
+    AddStringToJson(json, FIELD_PUBLIC_KEY,
+        "CA32A9DFACB944B1F6292C9AE10783F6376A987A9CE30C13300BC866917DFF2E");
+    char *requestParams = PackJsonToString(json);
+    FreeJson(json);
     char *returnData = nullptr;
     bool isClient = false;
     SetDeviceStatus(isClient);
 
     printf("ProcessCredentialDemoImport\n");
     int32_t res = ProcessCredential(CRED_OP_IMPORT, requestParams, &returnData);
-
+    FreeJsonString(requestParams);
     if (returnData) {
         CJson *in = CreateJsonFromString(returnData);
         if (in == nullptr) {
@@ -569,7 +636,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest001, TestSize.Level0)
     SetIsoSupported(false);
     SetPakeV1Supported(true);
     SetDeviceStatus(true);
-    AuthDeviceDirectWithPinDemo();
+    AuthDeviceDirectWithPinDemo(g_authWithPinParams, &g_daTmpCallback);
     ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
 }
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest002, TestSize.Level0)
@@ -577,15 +644,8 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest002, TestSize.Level0)
     SetIsoSupported(false);
     SetPakeV1Supported(true);
     SetDeviceStatus(true);
-    ProcessCredentiaCreateDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT);
-    ProcessCredentiaCreateDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER);
-    char *publicKey = nullptr;
-    ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER, &publicKey);
-    ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_SERVER, publicKey);
-    ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT, &publicKey);
-    ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_CLIENT, publicKey);
-    AuthDeviceDirectDemo();
-    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    AuthDeviceDirectDemo(g_authDirectParams, &g_daLTCallback);
+    ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
 }
 
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest003, TestSize.Level0)
@@ -629,7 +689,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest005, TestSize.Level0)
     SetPakeV1Supported(true);
     SetDeviceStatus(true);
     int32_t res = CreateServerKeyPair();
-    ASSERT_NE(res, HC_SUCCESS);
+    ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemoImport(SERVICE_TYPE_IMPORT);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, SERVICE_TYPE_IMPORT);
@@ -885,5 +945,183 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest018, TestSize.Level0)
 
     res = credentialOperator->deleteCredential(reqJsonStr, &returnData);
     ASSERT_NE(res, HC_SUCCESS);
+}
+
+// auth with pin (Test019 ~ Test027)
+HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest019, TestSize.Level0)
+{
+    SetIsoSupported(false);
+    SetPakeV1Supported(true);
+    SetDeviceStatus(true);
+    AuthDeviceDirectWithPinDemo(g_authWithPinParams, nullptr);
+    ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest020, TestSize.Level0)
+{
+    SetIsoSupported(false);
+    SetPakeV1Supported(true);
+    SetDeviceStatus(true);
+    AuthDeviceDirectWithPinDemo(nullptr, &g_daTmpCallback);
+    ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest021, TestSize.Level0)
+{
+    SetIsoSupported(false);
+    SetPakeV1Supported(true);
+    SetDeviceStatus(true);
+    const char *startAuthParams = "{\"osAccountId\":100,\"acquireType\":1,\"pinCode\":\"123456\"}";
+    AuthDeviceDirectWithPinDemo(startAuthParams, &g_daTmpCallback);
+    ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest022, TestSize.Level0)
+{
+    SetIsoSupported(false);
+    SetPakeV1Supported(true);
+    SetDeviceStatus(true);
+    const char *startAuthParams = "{\"acquireType\":0,\"pinCode\":\"123456\"}";
+    AuthDeviceDirectWithPinDemo(startAuthParams, &g_daTmpCallback);
+    ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest023, TestSize.Level0)
+{
+    SetIsoSupported(false);
+    SetPakeV1Supported(true);
+    SetDeviceStatus(true);
+    const char *startAuthParams = "{\"osAccountId\":-2,\"acquireType\":0,\"pinCode\":\"123456\"}";
+    AuthDeviceDirectWithPinDemo(startAuthParams, &g_daTmpCallback);
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest024, TestSize.Level0)
+{
+    SetIsoSupported(false);
+    SetPakeV1Supported(true);
+    SetDeviceStatus(true);
+    const char *startAuthParams = "{\"osAccountId\":-1,\"acquireType\":0,\"pinCode\":\"123456\"}";
+    AuthDeviceDirectWithPinDemo(startAuthParams, &g_daTmpCallback);
+    ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest025, TestSize.Level0)
+{
+    SetIsoSupported(false);
+    SetPakeV1Supported(true);
+    SetDeviceStatus(true);
+    const char *startAuthParams = "{\"osAccountId\":0,\"acquireType\":0,\"pinCode\":\"654321\"}";
+    AuthDeviceDirectWithPinDemo(startAuthParams, &g_daTmpCallback);
+    ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest026, TestSize.Level0)
+{
+    SetIsoSupported(false);
+    SetPakeV1Supported(true);
+    SetDeviceStatus(true);
+    const char *startAuthParams = "{\"osAccountId\":100,\"acquireType\":0}";
+    AuthDeviceDirectWithPinDemo(startAuthParams, &g_daTmpCallback);
+    ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest027, TestSize.Level0)
+{
+    SetIsoSupported(false);
+    SetPakeV1Supported(true);
+    SetDeviceStatus(true);
+    const char *startAuthParams = "{\"osAccountId\":100,\"pinCode\":\"123456\"}";
+    AuthDeviceDirectWithPinDemo(startAuthParams, &g_daTmpCallback);
+    ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+// auth with key-pair (Test028 ~ Test032)
+HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest028, TestSize.Level0)
+{
+    DeleteAllCredentails();
+    SetIsoSupported(false);
+    SetPakeV1Supported(true);
+    SetDeviceStatus(true);
+    ProcessCredentiaCreateDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT);
+    AuthDeviceDirectDemo(g_authDirectParams, &g_daLTCallback);
+    ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest029, TestSize.Level0)
+{
+    DeleteAllCredentails();
+    SetIsoSupported(false);
+    SetPakeV1Supported(true);
+    SetDeviceStatus(true);
+    ProcessCredentiaCreateDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT);
+    ProcessCredentiaCreateDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER);
+    char *publicKey = nullptr;
+    ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER, &publicKey);
+    ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_SERVER, publicKey);
+    ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT, &publicKey);
+    ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_CLIENT, publicKey);
+    AuthDeviceDirectDemo(g_authDirectParams, &g_daLTCallback);
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest030, TestSize.Level0)
+{
+    DeleteAllCredentails();
+    SetIsoSupported(false);
+    SetPakeV1Supported(true);
+    SetDeviceStatus(true);
+    ProcessCredentiaCreateDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT);
+    ProcessCredentiaCreateDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER);
+    char *publicKey = nullptr;
+    ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER, &publicKey);
+    ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_SERVER, publicKey);
+    ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT, &publicKey);
+    ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_CLIENT, publicKey);
+    const char *statAuthParams =
+    "{\"osAccountId\":100,\"acquireType\":0,\"serviceType\":\"service.type.import\"}";
+    AuthDeviceDirectDemo(statAuthParams, &g_daLTCallback);
+    ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest031, TestSize.Level0)
+{
+    DeleteAllCredentails();
+    SetIsoSupported(false);
+    SetPakeV1Supported(true);
+    SetDeviceStatus(true);
+    ProcessCredentiaCreateDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT);
+    ProcessCredentiaCreateDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER);
+    char *publicKey = nullptr;
+    ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER, &publicKey);
+    ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_SERVER, publicKey);
+    ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT, &publicKey);
+    ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_CLIENT, publicKey);
+    const char *statAuthParams =
+    "{\"osAccountId\":100,\"acquireType\":0,\"serviceType\":\"service.type.import\",\"peerConnDeviceId\":"
+    "\"52E2706717D5C39D736E134CC1\"}";
+    AuthDeviceDirectDemo(statAuthParams, &g_daLTCallback);
+    ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest032, TestSize.Level0)
+{
+    DeleteAllCredentails();
+    SetIsoSupported(false);
+    SetPakeV1Supported(true);
+    SetDeviceStatus(true);
+    ProcessCredentiaCreateDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT);
+    ProcessCredentiaCreateDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER);
+    char *publicKey = nullptr;
+    ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER, &publicKey);
+    ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_SERVER, publicKey);
+    ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT, &publicKey);
+    ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_CLIENT, publicKey);
+    const char *statAuthParams =
+    "{\"osAccountId\":100,\"acquireType\":8,\"serviceType\":\"service.type.import\",\"peerConnDeviceId\":"
+    "\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C"
+    "749558BD2E6492C\"}";
+    AuthDeviceDirectDemo(statAuthParams, &g_daLTCallback);
+    ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
 }
 } // namespace

@@ -142,23 +142,27 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
     CJson *urlJson = CreateCredUrlJson(PRE_SHARED, KEY_TYPE_SYM, TRUST_TYPE_PIN);
     if (!urlJson) {
         LOGE("Failed to create CredUrlJson info!");
+        DestroyIdentityInfo(info);
         return HC_ERR_ALLOC_MEMORY;
     }
     if (IsDirectAuth(in) && AddBoolToJson(urlJson, FIELD_IS_DIRECT_AUTH, true) != HC_SUCCESS) {
         LOGE("Failed to isDirectAuth to preshared url!");
         FreeJson(urlJson);
+        DestroyIdentityInfo(info);
         return HC_ERR_JSON_ADD;
     }
     char *urlStr = PackJsonToString(urlJson);
     FreeJson(urlJson);
     if (urlStr == NULL) {
         LOGE("Failed to pack url json to string!");
+        DestroyIdentityInfo(info);
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     int32_t ret = SetPreSharedUrlForProof(urlStr, &info->proof.preSharedUrl);
     FreeJsonString(urlStr);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to set preSharedUrl of proof!");
+        DestroyIdentityInfo(info);
         return ret;
     }
     if (IsDirectAuth(in)) {
@@ -169,6 +173,7 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
     }
     if (ret != HC_SUCCESS) {
         LOGE("Failed to set protocols!");
+        DestroyIdentityInfo(info);
         return ret;
     }
     info->proofType = PRE_SHARED;
@@ -190,11 +195,13 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
     CJson *urlJson = CreateJsonFromString((const char *)presharedUrl->val);
     if (urlJson == NULL) {
         LOGE("Failed to create url json!");
+        DestroyIdentityInfo(info);
         return HC_ERR_JSON_CREATE;
     }
     int32_t credentialType = PRE_SHARED;
     if (GetIntFromJson(urlJson, PRESHARED_URL_CREDENTIAL_TYPE, &credentialType) != HC_SUCCESS) {
         LOGE("Failed to get credential type!");
+        DestroyIdentityInfo(info);
         FreeJson(urlJson);
         return HC_ERR_JSON_GET;
     }
@@ -202,6 +209,7 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
     int32_t ret = SetPreSharedUrlForProof((const char *)presharedUrl->val, &info->proof.preSharedUrl);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to set preSharedUrl of proof!");
+        DestroyIdentityInfo(info);
         return ret;
     }
     if (IsDirectAuth(in)) {
@@ -212,6 +220,7 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
     }
     if (ret != HC_SUCCESS) {
         LOGE("Failed to set protocols!");
+        DestroyIdentityInfo(info);
         return ret;
     }
     info->proofType = credentialType;

@@ -547,6 +547,63 @@ static int32_t ComputeAndSavePsk(const char *peerServiceType, const char *peerAu
         &selfKeyAliasBuff, &peerKeyAliasBuff, ED25519, PAKE_PSK_LEN, &sharedKeyAlias);
 }
 
+static int32_t IsSelfKeyPairExist(int keyType)
+{
+    if (keyType != KEY_ALIAS_P2P_AUTH) {
+        LOGE("keyType invalid! only KEY_ALIAS_P2P_AUTH is allowed now!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    uint8_t selfKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
+    Uint8Buff selfKeyAlias = { selfKeyAliasVal, PAKE_KEY_ALIAS_LEN };
+    char selfAuthId[INPUT_UDID_LEN] = { 0 };
+    int32_t res = HcGetUdid((uint8_t *)selfAuthId, INPUT_UDID_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get local udid! res: %d", res);
+        return HC_ERR_DB;
+    }
+
+    res = GenerateKeyAliasInner(DEFAULT_PACKAGE_NAME, DEFAULT_SERVICE_TYPE, selfAuthId, keyType, &selfKeyAlias);
+    if (res != HC_SUCCESS) {
+        LOGE("generateKeyAlias self failed");
+        return res;
+    }
+    LOGI("selfKeyAlias(HEX): %x%x%x%x****", selfKeyAliasVal[DEV_AUTH_ZERO], selfKeyAliasVal[DEV_AUTH_ONE],
+        selfKeyAliasVal[DEV_AUTH_TWO], selfKeyAliasVal[DEV_AUTH_THREE]);
+
+    res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias);
+    if (res != HC_SUCCESS) {
+        LOGE("self keypair not exist");
+        return res;
+    }
+
+    return HC_SUCCESS;
+}
+
+static int32_t CheckImportConditions(CredentialRequestParamT *param, Uint8Buff *outKeyAlias)
+{
+    if (param == NULL || outKeyAlias == NULL) {
+        LOGE("invalid param!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    if (param->acquireType != P2P_BIND) {
+        LOGE("acquireType invalid! only P2P_BIND is allowed now!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    int32_t res = IsKeyExistReturnAliasIfNeeded(param, outKeyAlias);
+    if (res == HC_SUCCESS) {
+        LOGD("Key pair already exist.");
+        return HC_ERR_IDENTITY_DUPLICATED;
+    }
+
+    res = IsSelfKeyPairExist(KEY_ALIAS_P2P_AUTH);
+    if (res != HC_SUCCESS) {
+        LOGD("self Key pair not exist.");
+        return HC_ERR_LOCAL_IDENTITY_NOT_EXIST;
+    }
+
+    return HC_SUCCESS;
+}
+
 static int32_t ImportCredential(const char *reqJsonStr, char **returnData)
 {
     int32_t res;
@@ -563,18 +620,12 @@ static int32_t ImportCredential(const char *reqJsonStr, char **returnData)
     }
     uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAliasBuff = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
-    res = IsKeyExistReturnAliasIfNeeded(param, &keyAliasBuff);
-    if (res == HC_SUCCESS) {
-        LOGD("Key pair already exist.");
-        res = HC_ERR_IDENTITY_DUPLICATED;
+    res = CheckImportConditions(param, &keyAliasBuff);
+    if (res != HC_SUCCESS) {
+        LOGE("CheckImportConditions failed.");
         goto ERR;
     }
     Uint8Buff authIdBuff = { (uint8_t *)param->deviceId, strlen(param->deviceId) };
-    if (param->acquireType != P2P_BIND) {
-        LOGE("acquireType invalid! only P2P_BIND is allowed now!");
-        res = HC_ERR_INVALID_PARAMS;
-        goto ERR;
-    }
     // Caution: Only acquireType is P2P_BIND, keyType can be set to KEY_ALIAS_P2P_AUTH
     int32_t keyType = KEY_ALIAS_P2P_AUTH;
     ExtraInfo exInfo = { authIdBuff, keyType, PAIR_TYPE_BIND };

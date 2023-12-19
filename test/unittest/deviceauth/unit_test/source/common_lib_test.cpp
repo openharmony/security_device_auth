@@ -353,6 +353,7 @@ HWTEST_F(CommonLibTest, HcJsonGetTest001, TestSize.Level0)
     EXPECT_EQ(jsonStr, nullptr);
     jsonStr = PackJsonToString(validJson);
     EXPECT_NE(jsonStr, nullptr);
+    FreeJsonString(jsonStr);
     int32_t itemNum = GetItemNum(nullptr);
     EXPECT_EQ(itemNum, 0);
     itemNum = GetItemNum(validJson);
