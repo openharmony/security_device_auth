@@ -287,7 +287,7 @@ static HWTEST_F(HuksAdapterTest, GenerateStKeyPairTest001, TestSize.Level2)
 {
     LOG("--------HuksAdapterTest Test012--------");
     LOG("--------generate_st_key_pair--------");
-    struct st_key_pair *st_key_pair = (struct st_key_pair *)MALLOC(sizeof(struct st_key_pair));
+    struct st_key_pair *st_key_pair = static_cast<struct st_key_pair *>(MALLOC(sizeof(struct st_key_pair)));
     (void)memset_s(st_key_pair, sizeof(*st_key_pair), 0, sizeof(*st_key_pair));
     int32_t status = generate_st_key_pair(st_key_pair);
     EXPECT_EQ(status, ERROR_CODE_SUCCESS);
@@ -571,6 +571,7 @@ static HWTEST_F(HuksAdapterTest, SignTest001, TestSize.Level2)
     struct operation_parameter params = {g_test_server_auth_id, g_test_client_auth_id, KEY_LEN};
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     int32_t ret = authenticate_peer(server, &params);
+    EXPECT_EQ(ret, HC_OK);
     struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
     struct uint8_buff message;
     (void)memset_s(&message, sizeof(message), 0, sizeof(message));
@@ -630,7 +631,7 @@ static HWTEST_F(HuksAdapterTest, SignTest003, TestSize.Level2)
     (void)memset_s(&sign_result, sizeof(struct signature), 0, sizeof(struct signature));
     sign_result.length = HC_SIGNATURE_LEN;
     memcpy_s(sign_result.signature, sizeof(sign_result.signature), dataStr, HC_SIGNATURE_LEN);
-    sign_result.length = 0;
+    //sign_result.length = 0;
     struct service_id service_id = generate_service_id(&g_server_identity);
     EXPECT_GT(service_id.length, 0);
     struct hc_key_alias alias = generate_key_alias(&service_id, &g_test_client_auth_id, KEY_ALIAS_ACCESSOR_PK);
@@ -654,6 +655,7 @@ static HWTEST_F(HuksAdapterTest, VerifyTest001, TestSize.Level2)
     struct operation_parameter params = {g_test_server_auth_id, g_test_client_auth_id, KEY_LEN};
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     int32_t ret = authenticate_peer(server, &params);
+    EXPECT_EQ(ret, HC_OK);
     struct hichain *hichainTest = reinterpret_cast<struct hichain *>(server);
     struct uint8_buff message;
     (void)memset_s(&message, sizeof(message), 0, sizeof(message));
@@ -689,7 +691,7 @@ static HWTEST_F(HuksAdapterTest, VerifyWithPublicKeyTest001, TestSize.Level2)
 
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     int32_t ret = authenticate_peer(server, &params);
-
+    EXPECT_EQ(ret, HC_OK);
     struct signature sign_result = {0, {0}};
     uint8_t dataStr[] = {"9A8781AE9ACFDBFD577DF72949A4731FE73208026B2BBD7822CFE170F01C5C09"};
     (void)memset_s(&sign_result, sizeof(struct signature), 0, sizeof(struct signature));
@@ -1108,7 +1110,7 @@ static HWTEST_F(HuksAdapterTest, ReceiveDataTest001, TestSize.Level2)
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     struct operation_parameter params = {g_test_server_auth_id, g_test_client_auth_id, KEY_LEN};
     int32_t ret = authenticate_peer(server, &params);
-
+    EXPECT_EQ(ret, HC_OK);
     uint8_t dataStr001[] = "{\"authForm\":0,\"message\":32785,\"payload\":{"
 	"\"authData\":\"0CE64CAFFA6AD1146EDB618E6F1DA15183EFDCAE08F909A6ABA7B9F2676F4E"
     "4C2A280A720C3EBB069858DB473191ED51237E201CC697D3E10130CE8FB86FD57F66214643874"
@@ -1180,7 +1182,7 @@ int32_t GenerateSignMessage(hc_handle handle, struct uint8_buff *message)
     LOG("Called generate sign message");
     check_ptr_return_val(handle, HC_INPUT_ERROR);
     check_ptr_return_val(message, HC_INPUT_ERROR);
-    struct sts_client *stsClient = (struct sts_client *)handle;
+    struct sts_client *stsClient = static_cast<struct sts_client *>(handle);
 
     int len = stsClient->peer_public_key.length + stsClient->peer_id.length +
               stsClient->self_public_key.length + stsClient->self_id.length;

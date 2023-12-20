@@ -165,6 +165,7 @@ static HWTEST_F(HichainPakeTest, ReceiveDataTest001, TestSize.Level2)
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
     int32_t ret = start_pake(server, &params);
+    EXPECT_EQ(ret, HC_OK);
     struct uint8_buff data001 = {
         g_dataStr011,
         sizeof(g_dataStr011),
@@ -219,7 +220,7 @@ static HWTEST_F(HichainStructTest, free_exchange_request_test001, TestSize.Level
 {
     void *obj = nullptr;
     free_exchange_request(obj);
-    exchange_request_data *data = (exchange_request_data *)MALLOC(sizeof(exchange_request_data));
+    exchange_request_data *data = static_cast<exchange_request_data *>(MALLOC(sizeof(exchange_request_data)));
     (void)memset_s(data, sizeof(*data), 0, sizeof(*data));
     free_exchange_request(data);
     data = nullptr;
