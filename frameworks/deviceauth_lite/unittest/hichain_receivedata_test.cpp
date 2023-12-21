@@ -154,6 +154,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest001_empty, TestSize.Level2)
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
     int32_t ret = start_pake(server, &params);
+    EXPECT_EQ(ret, HC_OK);
     uint8_t dataStr[] = {""};
     uint8_buff data = {
         dataStr,
@@ -235,6 +236,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest003_pake_client, TestSize.Level2
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
     int32_t ret = start_pake(server, &params);
+    EXPECT_EQ(ret, HC_OK);
     uint8_buff data001 = {
         g_dataStr031,
         sizeof(g_dataStr031),
@@ -278,6 +280,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest004_pake_client, TestSize.Level2
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
     int32_t ret = start_pake(server, &params);
+    EXPECT_EQ(ret, HC_OK);
     uint8_t dataStr001[] = {"{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
                         "\"minVersion\":\"1.0.0\"},\"challenge\":\"76539E5634EDA735A94845C3A4F356D6\","
                         "\"salt\":\"025E4B3B2DD3B0E67395C760008A9154\","
@@ -317,6 +320,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest005_pake_client, TestSize.Level2
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
     int32_t ret = start_pake(server, &params);
+    EXPECT_EQ(ret, HC_OK);
     uint8_t dataStr001[] = {"{\"message\":32769,\"payload\":{\"version\":{\"currentVersion\":\"1.0.0\","
                         "\"minVersion\":\"1.0.0\"},\"challenge\":\"76539E5634EDA735A94845C3A4F356D6\","
                         "\"salt\":\"025E4B3B2DD3B0E67395C760008A9154\","
@@ -382,6 +386,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest006_pake_client_error1, TestSize
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
     int32_t ret = start_pake(server, &params);
+    EXPECT_EQ(ret, HC_OK);
     uint8_buff data001 = {
         g_dataStr061,
         sizeof(g_dataStr061),
@@ -423,6 +428,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest007_pake_client_error2, TestSize
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
     int32_t ret = start_pake(server, &params);
+    EXPECT_EQ(ret, HC_OK);
     uint8_t dataStr001[] = {"{\"message\":32769}"};
     uint8_buff data001 = {
         dataStr001,
@@ -502,6 +508,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest008_pake_client_error3, TestSize
     hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server != nullptr);
     int32_t ret = start_pake(server, &params);
+    EXPECT_EQ(ret, HC_OK);
     uint8_buff data001 = {
         g_dataStr081,
         sizeof(g_dataStr081),
@@ -857,6 +864,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest019_pake_client_withoutrandom, T
     hc_handle server1 = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server1 != nullptr);
     int32_t ret = start_pake(server1, &params);
+    EXPECT_EQ(ret, HC_OK);
     uint8_buff data001 = {
         g_dataStr0191,
         sizeof(g_dataStr0191),
@@ -868,6 +876,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest019_pake_client_withoutrandom, T
     hc_handle server2 = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server2 != nullptr);
     ret = start_pake(server2, &params);
+    EXPECT_EQ(ret, HC_OK);
     uint8_buff data002 = {
         g_dataStr0192,
         sizeof(g_dataStr0192),
@@ -879,6 +888,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest019_pake_client_withoutrandom, T
     hc_handle server3 = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server3 != nullptr);
     ret = start_pake(server3, &params);
+    EXPECT_EQ(ret, HC_OK);
     uint8_buff data003 = {
         g_dataStr0193,
         sizeof(g_dataStr0193),
@@ -904,6 +914,7 @@ static HWTEST_F(ReceiveDataTest, ReceiveDataTest020_pake_client_withoutrandom2, 
     hc_handle server4 = get_instance(&g_server_identity, HC_CENTRE, &callBack);
     ASSERT_TRUE(server4 != nullptr);
     int32_t ret = start_pake(server4, &params);
+    EXPECT_EQ(ret, HC_OK);
     uint8_buff data004 = {
         g_dataStr0194,
         sizeof(g_dataStr0194),
