@@ -133,17 +133,20 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
     IdentityInfo *info = CreateIdentityInfo();
     if (info == NULL) {
         LOGE("Failed to create identity info!");
+        FreeJsonString(urlStr);
         return HC_ERR_ALLOC_MEMORY;
     }
     ret = SetPreSharedUrlForProof(urlStr, &info->proof.preSharedUrl);
     FreeJsonString(urlStr);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to set preSharedUrl of proof!");
+        DestroyIdentityInfo(info);
         return ret;
     }
     ret = SetProtocolsToIdentityInfo(info);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to set protocols!");
+        DestroyIdentityInfo(info);
         return ret;
     }
     info->proofType = PRE_SHARED;
@@ -166,11 +169,13 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
     int32_t ret = SetPreSharedUrlForProof((const char *)presharedUrl->val, &info->proof.preSharedUrl);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to set preSharedUrl of proof!");
+        DestroyIdentityInfo(info);
         return ret;
     }
     ret = SetProtocolsToIdentityInfo(info);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to set protocols!");
+        DestroyIdentityInfo(info);
         return ret;
     }
     info->proofType = PRE_SHARED;
