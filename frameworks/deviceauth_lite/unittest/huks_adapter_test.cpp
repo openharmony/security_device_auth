@@ -631,7 +631,6 @@ static HWTEST_F(HuksAdapterTest, SignTest003, TestSize.Level2)
     (void)memset_s(&sign_result, sizeof(struct signature), 0, sizeof(struct signature));
     sign_result.length = HC_SIGNATURE_LEN;
     memcpy_s(sign_result.signature, sizeof(sign_result.signature), dataStr, HC_SIGNATURE_LEN);
-    //sign_result.length = 0;
     struct service_id service_id = generate_service_id(&g_server_identity);
     EXPECT_GT(service_id.length, 0);
     struct hc_key_alias alias = generate_key_alias(&service_id, &g_test_client_auth_id, KEY_ALIAS_ACCESSOR_PK);
