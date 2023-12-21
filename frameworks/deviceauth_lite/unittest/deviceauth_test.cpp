@@ -645,7 +645,8 @@ static HWTEST_F(StartPakeTest, StartPakeTest004, TestSize.Level2)
     struct pake_client *pakeClient = static_cast<struct pake_client *>(MALLOC(sizeof(struct pake_client)));
     (void)memset_s(pakeClient, sizeof(struct pake_client), 0, sizeof(struct pake_client));
 
-    struct operation_parameter *params = static_cast<struct operation_parameter *>(MALLOC(sizeof(struct operation_parameter)));
+    struct operation_parameter *params = static_cast<struct operation_parameter *>\
+                                         (MALLOC(sizeof(struct operation_parameter)));
     (void)memset_s(params, sizeof(struct operation_parameter), 0, sizeof(struct operation_parameter));
 
     struct hichain *hichainTest = static_cast<struct hichain *>(server);
@@ -979,7 +980,8 @@ static HWTEST_F(AuthenticatePeerTest, AuthenticatePeerTest004, TestSize.Level2)
     struct sts_client *stsClient = static_cast<struct sts_client *>(MALLOC(sizeof(struct sts_client)));
     (void)memset_s(stsClient, sizeof(struct sts_client), 0, sizeof(struct sts_client));
 
-    struct operation_parameter *params = static_cast<struct operation_parameter *>(MALLOC(sizeof(struct operation_parameter)));
+    struct operation_parameter *params = static_cast<struct operation_parameter *>\
+                                         (MALLOC(sizeof(struct operation_parameter)));
     (void)memset_s(params, sizeof(struct operation_parameter), 0, sizeof(struct operation_parameter));
 
     struct hichain *hichainTest = static_cast<struct hichain *>(server);
@@ -1008,7 +1010,8 @@ static HWTEST_F(AuthenticatePeerTest, AuthenticatePeerTest005, TestSize.Level2)
     struct hichain *hichainTest = static_cast<struct hichain *>(server);
     ASSERT_TRUE(hichainTest->sts_client == nullptr);
 
-    struct operation_parameter *params = static_cast<struct operation_parameter *>(MALLOC(sizeof(struct operation_parameter)));
+    struct operation_parameter *params = static_cast<struct operation_parameter *>\
+                                         (MALLOC(sizeof(struct operation_parameter)));
     (void)memset_s(params, sizeof(struct operation_parameter), 0, sizeof(struct operation_parameter));
     int32_t ret = authenticate_peer(server, params);
     EXPECT_EQ(ret, HC_OK);
@@ -1305,7 +1308,8 @@ static HWTEST_F(DestroyTest, DestroyTest008, TestSize.Level2)
     struct hichain *server = static_cast<struct hichain *>(MALLOC(sizeof(struct hichain)));
     (void)memset_s(server, sizeof(struct hichain), 0, sizeof(struct hichain));
 
-    struct sec_clone_server *secCloneServer = static_cast<struct sec_clone_server *>(MALLOC(sizeof(struct sec_clone_server)));
+    struct sec_clone_server *secCloneServer = static_cast<struct sec_clone_server *>\
+                                              (MALLOC(sizeof(struct sec_clone_server)));
     (void)memset_s(secCloneServer, sizeof(struct sec_clone_server), 0, sizeof(struct sec_clone_server));
 
     server->sec_clone_server = secCloneServer;
