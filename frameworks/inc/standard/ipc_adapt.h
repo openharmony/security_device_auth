@@ -52,7 +52,7 @@ enum {
 
 typedef int32_t (*IpcServiceCall)(const IpcDataInfo *, int32_t, uintptr_t);
 
-int32_t IpcEncodeCallReplay(uintptr_t replayCache, int32_t type, const uint8_t *result, int32_t resultSz);
+int32_t IpcEncodeCallReply(uintptr_t replayCache, int32_t type, const uint8_t *result, int32_t resultSz);
 uint32_t SetIpcCallMap(uintptr_t ipcInstance, IpcServiceCall method, int32_t methodId);
 
 void SetCbCtxToDataCtx(uintptr_t callCtx, int32_t cbIdx);

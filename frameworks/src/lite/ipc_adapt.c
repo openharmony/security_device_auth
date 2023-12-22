@@ -646,7 +646,6 @@ void ProcCbHook(int32_t callbackId, uintptr_t cbHook,
     IpcIo *reply = NULL;
 
     reply = (IpcIo *)(replyCtx);
-    LOGI("Process call back hook, callback id %d", callbackId);
     if ((callbackId < CB_ID_ON_TRANS) || (callbackId > CB_ID_ON_TRUST_DEV_NUM_CHANGED)) {
         LOGE("Invalid call back id");
         return;
@@ -655,8 +654,9 @@ void ProcCbHook(int32_t callbackId, uintptr_t cbHook,
         LOGE("Invalid call back hook");
         return;
     }
+    LOGI("call service callback start. CbId: %d", callbackId);
     stubTable[callbackId - 1](cbHook, cbDataCache, cacheNum, reply);
-    LOGI("ProcCbHook done");
+    LOGI("call service callback end");
     return;
 }
 
@@ -1450,7 +1450,7 @@ int32_t AddDevAuthServiceToManager(uintptr_t *serviceCtx)
     return HC_SUCCESS;
 }
 
-int32_t IpcEncodeCallReplay(uintptr_t replayCache, int32_t type, const uint8_t *result, int32_t resultSz)
+int32_t IpcEncodeCallReply(uintptr_t replayCache, int32_t type, const uint8_t *result, int32_t resultSz)
 {
     int32_t ret = HC_SUCCESS;
     IpcIo *replyParcel = NULL;
@@ -1467,9 +1467,9 @@ int32_t IpcEncodeCallReplay(uintptr_t replayCache, int32_t type, const uint8_t *
         value = WriteBuffer(replyParcel, (const void *)(&valZero), sizeof(valZero));
     }
     if (!value) {
+        LOGE("encode call reply fail.");
         return HC_FALSE;
     }
-    LOGI("reply type %d, %s", type, (ret == HC_SUCCESS) ? "success" : "failed");
     return ret;
 }
 
@@ -1495,7 +1495,6 @@ void DecodeCallReply(uintptr_t callCtx, IpcDataInfo *replyCache, int32_t cacheNu
 
     ProxyDevAuthData *dataCache = (ProxyDevAuthData *)(callCtx);
     ReadUint32(dataCache->reply, &replyLen);
-    LOGI("to decode data length %u", replyLen);
     if (replyLen == 0) {
         return;
     }
@@ -1506,7 +1505,6 @@ void DecodeCallReply(uintptr_t callCtx, IpcDataInfo *replyCache, int32_t cacheNu
         if (ret != HC_SUCCESS) {
             return;
         }
-        LOGI("decode success, type %d", replyCache[i].type);
     }
     return;
 }
@@ -1582,7 +1580,6 @@ int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
         }
         break;
     }
-    LOGI("type %d, result 0x%x", type, ret);
     return ret;
 }
 
@@ -1644,7 +1641,6 @@ int32_t InitProxyAdapt(void)
             LOGE("get proxy instance failed");
             return HC_ERR_IPC_INIT;
         }
-        LOGI("get proxy instance success");
     }
 
     if (!g_sdkCbStub.registered) {
@@ -1656,7 +1652,6 @@ int32_t InitProxyAdapt(void)
         g_sdkCbStub.stubIdentity.cookie = (uintptr_t)&g_objectStub;
 
         ShowIpcSvcInfo(&(g_sdkCbStub.stubIdentity));
-        LOGI("register ipc cb success");
         g_sdkCbStub.registered = true;
     }
     return HC_SUCCESS;

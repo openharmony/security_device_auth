@@ -177,7 +177,6 @@ static int32_t GetCurrentActiveOsAccountId(void)
     std::vector<int> activatedOsAccountIds;
     LOGI("[OsAccountAdapter]: QueryActiveOsAccountIds enter.");
     OHOS::ErrCode res = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(activatedOsAccountIds);
-    LOGI("[OsAccountAdapter]: QueryActiveOsAccountIds quit. [Res]: %d", res);
     if ((res != OHOS::ERR_OK) || (activatedOsAccountIds.size() <= 0)) {
         LOGE("[OsAccountAdapter]: QueryActiveOsAccountIds fail. [Res]: %d", res);
         return INVALID_OS_ACCOUNT;
@@ -216,7 +215,6 @@ bool IsOsAccountUnlocked(int32_t osAccountId)
         LOGE("[OsAccountAdapter]: Check account verify status failed, res: %d, accountId: %d", res, osAccountId);
         return false;
     }
-    LOGI("[OsAccountAdapter]: account verified status: %d, accountId: %d", isUnlocked, osAccountId);
     return isUnlocked;
 }
 

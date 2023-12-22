@@ -73,16 +73,12 @@ static bool IsProcessInWhitelist(const string& processName, int32_t methodId)
     if (g_apiAccessWhitelist.find(methodId) == g_apiAccessWhitelist.end()) {
         return true;
     }
-    int32_t ret = find(g_apiAccessWhitelist[methodId].begin(), g_apiAccessWhitelist[methodId].end(), processName) !=
+    bool ret = find(g_apiAccessWhitelist[methodId].begin(), g_apiAccessWhitelist[methodId].end(), processName) !=
                   g_apiAccessWhitelist[methodId].end();
-    if (ret) {
-        LOGI("%s %d", processName.c_str(), ret);
-    } else {
+    if (!ret) {
         LOGE("Access Denied: Process(%s) not in access whitlist", processName.c_str());
-        return false;
     }
-
-    return true;
+    return ret;
 }
 
 int32_t CheckPermission(int32_t methodId)
@@ -112,6 +108,5 @@ int32_t CheckPermission(int32_t methodId)
         LOGE("Check permission(Interface Access List) failed!");
         return HC_ERROR;
     }
-    LOGI("Check permission success! methodId: %d, ProcessName: %s", methodId, findInfo.processName.c_str());
     return HC_SUCCESS;
 }

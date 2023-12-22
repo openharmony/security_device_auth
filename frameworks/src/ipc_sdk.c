@@ -90,15 +90,12 @@ static void GetIpcReplyByType(const IpcDataInfo *ipcData,
     int32_t dataNum, int32_t type, uint8_t *outCache, int32_t *cacheLen)
 {
     int32_t i;
-    int32_t ret = HC_ERR_IPC_BAD_MSG_TYPE;
     errno_t eno;
 
-    LOGI("type %d", type);
     for (i = 0; i < dataNum; i++) {
         if (ipcData[i].type != type) {
             continue;
         }
-        ret = HC_SUCCESS;
         switch (type) {
             case PARAM_TYPE_REG_INFO:
             case PARAM_TYPE_MGR_APPID:
@@ -114,18 +111,15 @@ static void GetIpcReplyByType(const IpcDataInfo *ipcData,
             case PARAM_TYPE_DATA_NUM:
                 eno = memcpy_s(outCache, *cacheLen, ipcData[i].val, ipcData[i].valSz);
                 if (eno != EOK) {
-                    ret = HC_ERR_MEMORY_COPY;
                     break;
                 }
                 *cacheLen = ipcData[i].valSz;
                 break;
             default:
-                ret = HC_ERR_IPC_BAD_MSG_TYPE;
                 LOGE("un-expectation type case");
                 break;
         }
     }
-    LOGI("process done, type %d, result %d", type, ret);
     return;
 }
 
@@ -1168,13 +1162,12 @@ static int32_t IpcGmGetRelatedGroups(int32_t osAccountId, const char *appId, con
     ret = HC_ERR_IPC_UNKNOW_REPLY;
     inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
-    LOGI("process done, ret %d", ret);
     if (ret != HC_SUCCESS) {
+        LOGI("process error, ret %d", ret);
         DestroyCallCtx(&callCtx, NULL);
         return ret;
     }
     ret = RelatedGroupsIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), outGroupVec, groupNum);
-    LOGI("proc result done, ret %d", ret);
     DestroyCallCtx(&callCtx, NULL);
     return ret;
 }
@@ -1459,7 +1452,6 @@ static void IpcGmCancelRequest(int64_t requestId, const char *appId)
 
 static void InitIpcGmMethods(DeviceGroupManager *gmMethodObj)
 {
-    LOGI("starting ...");
     gmMethodObj->regCallback = IpcGmRegCallback;
     gmMethodObj->unRegCallback = IpcGmUnRegCallback;
     gmMethodObj->regDataChangeListener = IpcGmRegDataChangeListener;
@@ -1483,7 +1475,6 @@ static void InitIpcGmMethods(DeviceGroupManager *gmMethodObj)
     gmMethodObj->isDeviceInGroup = IpcGmIsDeviceInGroup;
     gmMethodObj->cancelRequest = IpcGmCancelRequest;
     gmMethodObj->destroyInfo = IpcGmDestroyInfo;
-    LOGI("process done");
     return;
 }
 
@@ -1755,13 +1746,11 @@ static int32_t IpcGaGetPseudonymId(int32_t osAccountId, const char *indexKey, ch
 
 static void InitIpcGaMethods(GroupAuthManager *gaMethodObj)
 {
-    LOGI("entering...");
     gaMethodObj->processData = IpcGaProcessData;
     gaMethodObj->authDevice = IpcGaAuthDevice;
     gaMethodObj->cancelRequest = IpcGaCancelRequest;
     gaMethodObj->getRealInfo = IpcGaGetRealInfo;
     gaMethodObj->getPseudonymId = IpcGaGetPseudonymId;
-    LOGI("process done");
     return;
 }
 
@@ -1981,12 +1970,10 @@ DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
     static GroupAuthManager gaInstCtx = {NULL};
     static GroupAuthManager *gaInstPtr = NULL;
 
-    LOGI("Enter InitIpcMethods...");
     if (gaInstPtr == NULL) {
         InitIpcGaMethods(&gaInstCtx);
         gaInstPtr = &gaInstCtx;
     }
-    LOGI("InitIpcMethods done");
     return (const GroupAuthManager *)(gaInstPtr);
 }
 
@@ -1995,12 +1982,10 @@ DEVICE_AUTH_API_PUBLIC const DeviceGroupManager *GetGmInstance(void)
     static DeviceGroupManager gmInstCtx = {NULL};
     static DeviceGroupManager *gmInstPtr = NULL;
 
-    LOGI("Enter InitIpcMethods...");
     if (gmInstPtr == NULL) {
         InitIpcGmMethods(&gmInstCtx);
         gmInstPtr = &gmInstCtx;
     }
-    LOGI("InitIpcMethods done");
     return (const DeviceGroupManager *)(gmInstPtr);
 }
 
