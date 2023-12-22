@@ -121,7 +121,6 @@ static int32_t DecodeCallRequest(MessageParcel &data, IpcDataInfo *paramsCache, 
         LOGE("param number invalid, inParamNum - %d", inParamNum);
         return HC_ERR_IPC_BAD_PARAM_NUM;
     }
-    LOGI("param number: %d", inParamNum);
 
     for (i = 0; i < inParamNum; i++) {
         ret = DecodeIpcData(reinterpret_cast<uintptr_t>(&data), &(paramsCache[i].type),
@@ -130,7 +129,6 @@ static int32_t DecodeCallRequest(MessageParcel &data, IpcDataInfo *paramsCache, 
             LOGE("decode failed, ret %d", ret);
             return ret;
         }
-        LOGI("decode success, param type %d, val size %d", paramsCache[i].type, paramsCache[i].valSz);
     }
     return HC_SUCCESS;
 }
@@ -202,7 +200,6 @@ int32_t ServiceDevAuth::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
     IpcDataInfo reqParams[MAX_REQUEST_PARAMS_NUM] = { { 0 } };
     IpcServiceCall serviceCall = nullptr;
 
-    LOGI("request code %u", code);
     switch (code) {
         case static_cast<uint32_t>(DevAuthInterfaceCode::DEV_AUTH_CALL_REQUEST):
             ret = GetMethodId(data, methodId);

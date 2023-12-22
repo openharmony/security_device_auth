@@ -91,7 +91,6 @@ static int32_t DecodeCallRequest(IpcIo *data, IpcDataInfo *paramsCache, int32_t 
         LOGE("param number invalid, inParamNum(%d)", *inParamNum);
         return HC_ERR_IPC_BAD_PARAM_NUM;
     }
-    LOGI("request data length(%d), param number: %d", dataLen - sizeof(int32_t), *inParamNum);
 
     uint32_t len = 0;
     ReadUint32(data, &len); /* skip flat object length information */
@@ -101,7 +100,6 @@ static int32_t DecodeCallRequest(IpcIo *data, IpcDataInfo *paramsCache, int32_t 
             LOGE("decode failed, ret %d", ret);
             return ret;
         }
-        LOGI("decode success, param type %d, val size %d", paramsCache[i].type, paramsCache[i].valSz);
     }
     return HC_SUCCESS;
 }
@@ -164,7 +162,6 @@ static int32_t DevAuthRequestCall(void *origin, IpcIo *req, IpcIo *reply)
 
     (void)origin;
     ret = GetMethodId(req, &methodId);
-    LOGI("request method id %d", methodId);
     if (ret != HC_SUCCESS || methodId <= 0) {
         LOGE("GetMethodId failed, ret = %d", ret);
         return HC_ERR_IPC_METHOD_ID_INVALID;

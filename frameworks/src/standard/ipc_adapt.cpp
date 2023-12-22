@@ -636,7 +636,6 @@ void ProcCbHook(int32_t callbackId, uintptr_t cbHook,
     MessageParcel *reply = nullptr;
 
     reply = reinterpret_cast<MessageParcel *>(replyCtx);
-    LOGI("Process call back hook, callback id %d", callbackId);
     if ((callbackId < CB_ID_ON_TRANS) || (callbackId > CB_ID_ON_TRUST_DEV_NUM_CHANGED)) {
         LOGE("Invalid call back id");
         return;
@@ -645,8 +644,9 @@ void ProcCbHook(int32_t callbackId, uintptr_t cbHook,
         LOGE("Invalid call back hook");
         return;
     }
+    LOGI("call service callback start. CbId: %d", callbackId);
     stubTable[callbackId - 1](cbHook, cbDataCache, cacheNum, *reply);
-    LOGI("ProcCbHook done");
+    LOGI("call service callback end");
     return;
 }
 
@@ -1356,7 +1356,7 @@ int32_t AddDevAuthServiceToManager(uintptr_t *serviceCtx)
     return HC_SUCCESS;
 }
 
-int32_t IpcEncodeCallReplay(uintptr_t replayCache, int32_t type, const uint8_t *result, int32_t resultSz)
+int32_t IpcEncodeCallReply(uintptr_t replayCache, int32_t type, const uint8_t *result, int32_t resultSz)
 {
     int32_t errCnt = 0;
     MessageParcel *replyParcel = nullptr;
@@ -1372,8 +1372,11 @@ int32_t IpcEncodeCallReplay(uintptr_t replayCache, int32_t type, const uint8_t *
         errCnt += replyParcel->WriteBuffer(
             reinterpret_cast<const void *>(&valZero), sizeof(unsigned long)) ? 0 : 1;
     }
-    LOGI("reply type %d, %s", type, (errCnt == 0) ? "success" : "failed");
-    return (errCnt == 0) ? HC_SUCCESS : HC_ERROR;
+    if (errCnt != 0) {
+        LOGE("encode call reply fail.");
+        return HC_ERROR;
+    }
+    return HC_SUCCESS;
 }
 
 int32_t DecodeIpcData(uintptr_t data, int32_t *type, uint8_t **val, int32_t *valSz)
@@ -1426,7 +1429,6 @@ void DecodeCallReply(uintptr_t callCtx, IpcDataInfo *replyCache, int32_t cacheNu
         if (ret != HC_SUCCESS) {
             return;
         }
-        LOGI("decode success, type %d", replyCache[i].type);
     }
     return;
 }
@@ -1502,7 +1504,6 @@ int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
         }
         break;
     }
-    LOGI("type %d, result 0x%x", type, ret);
     return ret;
 }
 
@@ -1535,6 +1536,5 @@ int32_t InitProxyAdapt(void)
         UnInitProxyAdapt();
         return HC_ERR_ALLOC_MEMORY;
     }
-    LOGI("init callback stub object success");
     return HC_SUCCESS;
 }

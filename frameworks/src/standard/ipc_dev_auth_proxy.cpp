@@ -67,7 +67,6 @@ bool ProxyDevAuth::ServiceRunning(void)
 
 int32_t ProxyDevAuthData::EncodeCallRequest(int32_t type, const uint8_t *param, int32_t paramSz)
 {
-    LOGI("type %d, paramSz %d", type, paramSz);
     if (tmpDataParcel.WriteInt32(type) && tmpDataParcel.WriteInt32(paramSz) &&
         tmpDataParcel.WriteBuffer(reinterpret_cast<const void *>(param), static_cast<size_t>(paramSz))) {
         paramCnt++;
@@ -96,7 +95,6 @@ int32_t ProxyDevAuthData::FinalCallRequest(int32_t methodId)
         LOGE("[IPC][C->S]: Failed to write interface token!");
         return HC_ERROR;
     }
-    LOGI("method id %d, param num %d, data length %d", methodId, paramCnt, dataLen);
     /* request data length = number of params + params information */
     if (!dataParcel.WriteInt32(methodId) || !dataParcel.WriteInt32(dataLen + sizeof(int32_t)) ||
         !dataParcel.WriteInt32(paramCnt)) {
@@ -109,7 +107,6 @@ int32_t ProxyDevAuthData::FinalCallRequest(int32_t methodId)
         if (!dataParcel.WriteInt32(PARAM_TYPE_CB_OBJECT) || !dataParcel.WriteRemoteObject(cbStub)) {
             return HC_ERROR;
         }
-        LOGI("type %d, cbStub %s", PARAM_TYPE_CB_OBJECT, (cbStub != nullptr) ? "true" : "false");
     }
     cbStub = nullptr;
     withCallback = false;

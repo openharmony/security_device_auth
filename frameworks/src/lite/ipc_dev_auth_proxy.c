@@ -49,7 +49,6 @@ const IClientProxy *GetProxyInstance(const char *serviceName)
 int32_t EncodeCallRequest(ProxyDevAuthData *dataCtx, int32_t type, const uint8_t *param, int32_t paramSz)
 {
     IpcIo *ioPtr = NULL;
-    LOGI("type %d, paramSz %d", type, paramSz);
     ioPtr = dataCtx->tmpData;
     WriteInt32(ioPtr, type);
     WriteUint32(ioPtr, paramSz);
