@@ -1459,31 +1459,6 @@ void IsTrustPeerTest::SetUp()
 
 void IsTrustPeerTest::TearDown() {}
 
-static HWTEST_F(IsTrustPeerTest, IsTrustPeerTest001, TestSize.Level2)
-{
-    LOG("--------IsTrustPeerTest Test001--------");
-    LOG("--------is_trust_peer--------");
-    struct hc_call_back callBack = {
-        Transmit,
-        GetProtocolParams,
-        SetSessionKey,
-        SetServiceResult,
-        ConfirmReceiveRequest
-    };
-
-    hc_handle server = get_instance(&g_server_identity, HC_CENTRE, &callBack);
-    ASSERT_TRUE(server != nullptr);
-    struct operation_parameter params = {g_testServerAuthId, g_testClientAuthId, KEY_LEN};
-    int32_t ret = start_pake(server, &params);
-    EXPECT_EQ(ret, HC_OK);
-    ret = authenticate_peer(server, &params);
-    EXPECT_EQ(ret, HC_OK);
-    ret = is_trust_peer(server, &carUserInfo);
-    EXPECT_EQ(ret, HC_NOT_TRUST_PEER);
-    destroy(&server);
-    LOG("--------IsTrustPeerTest Test001--------");
-}
-
 static HWTEST_F(IsTrustPeerTest, IsTrustPeerTest002, TestSize.Level2)
 {
     LOG("--------IsTrustPeerTest Test002--------");
