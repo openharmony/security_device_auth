@@ -35,6 +35,8 @@ using namespace testing::ext;
 namespace {
 #define TEST_REQ_ID 123
 #define TEST_REQ_ID2 321
+#define TEST_REQ_ID3 132
+#define TEST_REQ_ID4 213
 #define TEST_APP_ID "TestAppId"
 #define TEST_APP_ID2 "TestAppId2"
 #define TEST_GROUP_NAME "TestGroup"
@@ -61,6 +63,7 @@ namespace {
 #define TEST_HKS_DATA_PATH DEVICE_AUTH_TEST_HKS_DATA_PATH "/maindata/+0+0+0+0"
 #define TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN 32
 #define TEST_DEV_AUTH_SLEEP_TIME 50000
+#define TEST_DEV_AUTH_SLEEP_TIME2 60000
 static const int32_t TEST_AUTH_OS_ACCOUNT_ID = 100;
 static const int TEST_DEV_AUTH_BUFFER_SIZE = 128;
 static const char *g_invalidJsonStr = "invalid json format";
@@ -505,7 +508,7 @@ static void AddDemoMember(void)
             g_asyncStatus = ASYNC_STATUS_TRANSMIT;
         }
     }
-    usleep(TEST_DEV_AUTH_SLEEP_TIME);
+    usleep(TEST_DEV_AUTH_SLEEP_TIME2);
     SetDeviceStatus(true);
 }
 
@@ -553,7 +556,7 @@ static void AuthDemoMember(void)
     SetDeviceStatus(isClient);
     const GroupAuthManager *ga = GetGaInstance();
     ASSERT_NE(ga, nullptr);
-    int32_t ret = ga->authDevice(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, g_authParams, &g_gaCallback);
+    int32_t ret = ga->authDevice(DEFAULT_OS_ACCOUNT, TEST_REQ_ID3, g_authParams, &g_gaCallback);
     if (ret != HC_SUCCESS) {
         g_asyncStatus = ASYNC_STATUS_ERROR;
         return;
@@ -566,9 +569,9 @@ static void AuthDemoMember(void)
         SetDeviceStatus(isClient);
         g_asyncStatus = ASYNC_STATUS_WAITING;
         if (isClient) {
-            ret = ga->processData(TEST_REQ_ID, g_transmitData, g_transmitDataLen, &g_gaCallback);
+            ret = ga->processData(TEST_REQ_ID3, g_transmitData, g_transmitDataLen, &g_gaCallback);
         } else {
-            ret = ga->processData(TEST_REQ_ID2, g_transmitData, g_transmitDataLen, &g_gaCallback);
+            ret = ga->processData(TEST_REQ_ID4, g_transmitData, g_transmitDataLen, &g_gaCallback);
         }
         (void)memset_s(g_transmitData, g_transmitDataMaxLen, 0, g_transmitDataMaxLen);
         g_transmitDataLen = 0;
