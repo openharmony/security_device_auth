@@ -39,7 +39,7 @@ typedef struct {
         char **returnGroupVec, uint32_t *groupNum);
     int32_t (*getAccessibleJoinedGroups)(int32_t osAccountId, const char *appId, int groupType,
         char **returnGroupVec, uint32_t *groupNum);
-    int32_t (*getAccessibleRelatedGroups)(int32_t osAccountId, const char *appId, const char *peerDeviceId, bool isUdid,
+    int32_t (*getAccessibleRelatedGroups)(int32_t osAccountId, const char *appId, const char *peerDeviceId,
         char **returnGroupVec, uint32_t *groupNum);
     int32_t (*getAccessibleDeviceInfoById)(int32_t osAccountId, const char *appId, const char *deviceId, bool isUdid,
         const char *groupId, char **returnDeviceInfo);

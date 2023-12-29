@@ -883,7 +883,7 @@ static int32_t GetAccessibleJoinedGroups(int32_t osAccountId, const char *appId,
     return result;
 }
 
-static int32_t GetAccessibleRelatedGroups(int32_t osAccountId, const char *appId, const char *peerDeviceId, bool isUdid,
+static int32_t GetAccessibleRelatedGroups(int32_t osAccountId, const char *appId, const char *peerDeviceId,
     char **returnGroupVec, uint32_t *groupNum)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
@@ -898,10 +898,20 @@ static int32_t GetAccessibleRelatedGroups(int32_t osAccountId, const char *appId
     }
     LOGI("Start to get related groups! [AppId]: %s", appId);
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
-    int32_t result = GetRelatedGroups(osAccountId, peerDeviceId, isUdid, &groupEntryVec);
+    int32_t result = GetRelatedGroups(osAccountId, peerDeviceId, true, &groupEntryVec);
     if (result != HC_SUCCESS) {
+        LOGE("Failed to get related groups by udid!");
         ClearGroupEntryVec(&groupEntryVec);
         return result;
+    }
+    if (groupEntryVec.size(&groupEntryVec) == 0) {
+        LOGI("Group entry not found by udid, try to get by authId!");
+        result = GetRelatedGroups(osAccountId, peerDeviceId, false, &groupEntryVec);
+        if (result != HC_SUCCESS) {
+            LOGE("Failed to get related groups by authId!");
+            ClearGroupEntryVec(&groupEntryVec);
+            return result;
+        }
     }
     RemoveNoPermissionGroup(osAccountId, &groupEntryVec, appId);
     result = GenerateReturnGroupVec(&groupEntryVec, returnGroupVec, groupNum);
