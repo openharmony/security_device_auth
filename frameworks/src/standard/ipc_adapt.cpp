@@ -1294,12 +1294,11 @@ int32_t DoBinderCall(uintptr_t callCtx, int32_t methodId, bool withSync)
 /* ipc service process adapter */
 uint32_t SetIpcCallMap(uintptr_t ipcInstance, IpcServiceCall method, int32_t methodId)
 {
-    sptr<ServiceDevAuth> service = nullptr;
     if ((method == nullptr) || (methodId <= 0)) {
         return static_cast<uint32_t>(HC_ERR_INVALID_PARAMS);
     }
 
-    service = reinterpret_cast<ServiceDevAuth *>(ipcInstance);
+    ServiceDevAuth *service = reinterpret_cast<ServiceDevAuth *>(ipcInstance);
     return static_cast<uint32_t>(service->SetCallMap(method, methodId));
 }
 
@@ -1329,7 +1328,7 @@ void DestroyServiceInstance(uintptr_t *ipcInstance)
     return;
 }
 
-int32_t AddDevAuthServiceToManager(uintptr_t *serviceCtx)
+int32_t AddDevAuthServiceToManager(void)
 {
     int32_t ret = ERR_OK;
     ServiceDevAuth *sPtr = nullptr;
@@ -1345,13 +1344,13 @@ int32_t AddDevAuthServiceToManager(uintptr_t *serviceCtx)
     if (sPtr == nullptr) {
         return HC_ERR_ALLOC_MEMORY;
     }
+    (void)AddMethodMap(reinterpret_cast<uintptr_t>(sPtr));
     ret = sysMgr->AddSystemAbility(DEVICE_AUTH_SERVICE_ID, sPtr);
     if (ret != ERR_OK) {
         LOGE("add service failed");
         delete sPtr;
         return HC_ERROR;
     }
-    *serviceCtx = reinterpret_cast<uintptr_t>(sPtr);
     LOGI("AddSystemAbility to SA manager success");
     return HC_SUCCESS;
 }

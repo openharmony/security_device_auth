@@ -33,6 +33,7 @@ extern "C" {
 
 #define BUFF_MAX_SZ 128
 #define IPC_CALL_BACK_MAX_NODES 64
+#define DEFAULT_SERVICE_CONTEXT 0x0
 
 typedef void (*CallbackStub)(uintptr_t, const IpcDataInfo *, int32_t, IpcIo *);
 typedef struct {
@@ -1441,11 +1442,11 @@ void DestroyServiceInstance(uintptr_t *ipcInstance)
     return;
 }
 
-int32_t AddDevAuthServiceToManager(uintptr_t *serviceCtx)
+int32_t AddDevAuthServiceToManager(void)
 {
-    (void)CreateServiceInstance(serviceCtx);
     SAMGR_Bootstrap();
     InitCbStubTable();
+    (void)AddMethodMap(DEFAULT_SERVICE_CONTEXT);
     LOGI("AddSystemAbility to SA manager success");
     return HC_SUCCESS;
 }
