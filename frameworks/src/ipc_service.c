@@ -1267,6 +1267,16 @@ static int32_t IpcServiceDaCancelRequest(const IpcDataInfo *ipcParams, int32_t p
     return ret;
 }
 
+#ifndef DEV_AUTH_FUZZ_TEST
+static void DeMainRescInit(void)
+{
+    if (g_devGroupMgrMethod.unRegDataChangeListener != NULL) {
+        (void)g_devGroupMgrMethod.unRegDataChangeListener(g_serviceAppId);
+    }
+    DeInitIpcCallBackList();
+}
+#endif
+
 int32_t AddMethodMap(uintptr_t ipcInstance)
 {
     uint32_t ret;
@@ -1311,16 +1321,6 @@ int32_t AddMethodMap(uintptr_t ipcInstance)
     return ret;
 }
 
-void DeMainRescInit(uintptr_t *serviceCtx)
-{
-    if (g_devGroupMgrMethod.unRegDataChangeListener != NULL) {
-        (void)g_devGroupMgrMethod.unRegDataChangeListener(g_serviceAppId);
-    }
-    DeInitIpcCallBackList();
-    DestroyServiceInstance(serviceCtx);
-    return;
-}
-
 int32_t MainRescInit(void)
 {
     int32_t ret;
@@ -1356,7 +1356,6 @@ int32_t MainRescInit(void)
 #ifndef DEV_AUTH_FUZZ_TEST
 int32_t main(int32_t argc, char const *argv[])
 {
-    uintptr_t serviceCtx = 0x0;
     int32_t ret;
     HcCondition cond;
 
@@ -1376,15 +1375,13 @@ int32_t main(int32_t argc, char const *argv[])
         return 1;
     }
 
-    ret = AddDevAuthServiceToManager(&serviceCtx);
+    ret = AddDevAuthServiceToManager();
     if (ret != HC_SUCCESS) {
-        DeMainRescInit(&serviceCtx);
+        DeMainRescInit();
         DestroyDeviceAuthService();
-        serviceCtx = 0x0;
         LOGE("device auth service main, AddDevAuthServiceToManager failed, ret %d", ret);
         return 1;
     }
-    (void)AddMethodMap(serviceCtx);
     LOGI("device authentication service register to IPC manager done, service running...");
     (void)memset_s(&cond, sizeof(cond), 0, sizeof(cond));
     InitHcCond(&cond, NULL);

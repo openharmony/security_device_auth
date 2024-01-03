@@ -72,7 +72,7 @@ int32_t SetCallRequestParamInfo(uintptr_t callCtx, int32_t type, const uint8_t *
 int32_t CreateServiceInstance(uintptr_t *ipcInstance);
 void DestroyServiceInstance(uintptr_t *ipcInstance);
 
-int32_t AddDevAuthServiceToManager(uintptr_t *serviceCtx);
+int32_t AddDevAuthServiceToManager(void);
 void DecodeCallReply(uintptr_t callCtx, IpcDataInfo *replyCache, int32_t cacheNum);
 
 int32_t InitIpcCallBackList(void);
