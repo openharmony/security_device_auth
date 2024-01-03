@@ -113,7 +113,7 @@ int32_t GetRelatedGroupsImpl(int32_t osAccountId, const char *appId, const char 
 {
     SET_LOG_MODE(NORMAL_MODE);
     return IsGroupSupport() ? GetGroupImplInstance()->getAccessibleRelatedGroups(osAccountId, appId, peerDeviceId,
-        false, returnGroupVec, groupNum) : HC_ERR_NOT_SUPPORT;
+        returnGroupVec, groupNum) : HC_ERR_NOT_SUPPORT;
 }
 
 int32_t GetDeviceInfoByIdImpl(int32_t osAccountId, const char *appId, const char *deviceId, const char *groupId,
