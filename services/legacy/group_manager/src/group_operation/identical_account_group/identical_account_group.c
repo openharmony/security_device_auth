@@ -563,7 +563,7 @@ static int32_t DeleteGroup(int32_t osAccountId, CJson *jsonParams, char **return
     return HC_SUCCESS;
 }
 
-static void updateTrustedDeviceForMetaNode(int32_t osAccountId, CJson *jsonParams, CJson *deviceList)
+static void UpdateTrustedDeviceForMetaNode(int32_t osAccountId, CJson *jsonParams, CJson *deviceList)
 {
     const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
     if (groupId == NULL) {
@@ -637,7 +637,7 @@ static int32_t AddMetaNodeDeviceToGroup(int32_t osAccountId, CJson *jsonParams)
         FreeJson(processResult);
         return HC_ERR_JSON_GET;
     }
-    updateTrustedDeviceForMetaNode(osAccountId, jsonParams, deviceList);
+    UpdateTrustedDeviceForMetaNode(osAccountId, jsonParams, deviceList);
     FreeJson(processResult);
 
     res = SaveOsAccountDb(osAccountId);

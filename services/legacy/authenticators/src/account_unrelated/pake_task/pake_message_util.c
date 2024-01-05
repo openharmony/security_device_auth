@@ -70,7 +70,7 @@ int32_t ParsePakeRequestMessage(PakeParams *params, const CJson *in)
      * Therefore, only params->opCode == AUTHENTICATE or AUTH_KEY_AGREEMENT, need to get keyLen from message
      */
     if (params->opCode == AUTHENTICATE || params->opCode == AUTH_KEY_AGREEMENT) {
-        int32_t res = GetAndCheckKeyLenOnServer(in, &(params->returnKey.length));
+        int32_t res = GetAndCheckKeyLenOnServer(in, params->returnKey.length);
         if (res != HC_SUCCESS) {
             LOGE("GetAndCheckKeyLenOnServer failed, res: %d.", res);
             return res;

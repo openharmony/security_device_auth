@@ -133,7 +133,7 @@ int32_t GenerateEcdhSharedKey(PakeAuthParams *params)
 
 static int32_t InitCharStringBuff(Uint8Buff *param, uint32_t len)
 {
-    if (param == NULL || len <= 0) {
+    if (param == NULL || len == 0) {
         LOGE("param is invalid for init.");
         return HC_ERR_NULL_PTR;
     }

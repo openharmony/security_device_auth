@@ -163,36 +163,47 @@ static void CreateCredentialParamsJson(
     return;
 }
 
-static char *GetSelfUdid()
+static int32_t GetSelfUdid(char **selfUdid)
 {
     printf("%s called.\n", __FUNCTION__);
     char udid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
         printf("Failed to get self udid! res: %d", res);
-        return nullptr;
+        return res;
     }
 
     printf("self udid: %s\n", udid);
-    return strdup(udid);
+    *selfUdid = strdup(udid);
+    return HC_SUCCESS;
 }
 
 static int32_t CreateServerKeyPair()
 {
-    char *selfUdid = GetSelfUdid();
+    char *selfUdid = nullptr;
+    int32_t res = GetSelfUdid(&selfUdid);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
     CJson *json = CreateJson();
-    if (json == NULL) {
-        return HC_ERR_ALLOC_MEMORY;
+    if (json == nullptr) {
+        printf("Failed to create json!\n");
+        free(selfUdid);
+        return HC_ERR_JSON_CREATE;
     }
     CreateCredentialParamsJson(TEST_OS_ACCOUNT_ID, selfUdid, RETURN_FLAG_PUBLIC_KEY,
         DEFAULT_SERVICE_TYPE, json);
     char *requestParams = PackJsonToString(json);
     FreeJson(json);
     free(selfUdid);
+    if (requestParams == nullptr) {
+        printf("Failed to pack json to string!\n");
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
     char *returnData = nullptr;
 
     printf("ProcessCredentialDemo: operationCode=%d\n", CRED_OP_CREATE);
-    int32_t res = ProcessCredential(CRED_OP_CREATE, requestParams, &returnData);
+    res = ProcessCredential(CRED_OP_CREATE, requestParams, &returnData);
     FreeJsonString(requestParams);
     if (returnData) {
         printf("returnData: %s\n", returnData);
@@ -217,19 +228,29 @@ static int32_t CreateServerKeyPair()
 
 static int32_t DeleteServerKeyPair()
 {
-    char *selfUdid = GetSelfUdid();
+    char *selfUdid = nullptr;
+    int32_t res = GetSelfUdid(&selfUdid);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
     CJson *json = CreateJson();
-    if (json == NULL) {
+    if (json == nullptr) {
+        printf("Failed to create json!\n");
+        free(selfUdid);
         return HC_ERR_ALLOC_MEMORY;
     }
     CreateCredentialParamsJson(TEST_OS_ACCOUNT_ID, selfUdid, 1, DEFAULT_SERVICE_TYPE, json);
     char *requestParams = PackJsonToString(json);
     FreeJson(json);
     free(selfUdid);
+    if (requestParams == nullptr) {
+        printf("Failed to pack json to string!\n");
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
     char *returnData = nullptr;
 
     printf("ProcessCredentialDemo: operationCode=%d\n", CRED_OP_DELETE);
-    int32_t res = ProcessCredential(CRED_OP_DELETE, requestParams, &returnData);
+    res = ProcessCredential(CRED_OP_DELETE, requestParams, &returnData);
     FreeJsonString(requestParams);
     if (returnData) {
         printf("returnData: %s\n", returnData);
@@ -358,6 +379,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest001, TestSize.Level0)
     res = CancelAuthRequest(TEST_REQ_ID, g_authWithPinParams);
     ASSERT_EQ(res, HC_SUCCESS);
 }
+
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest002, TestSize.Level0)
 {
     int32_t res = StartAuthDevice(TEST_REQ_ID, g_authDirectParams, &g_daLTCallback);
