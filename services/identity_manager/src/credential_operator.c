@@ -221,7 +221,6 @@ static void FreeCredParam(CredentialRequestParamT *param)
         }
 
         HcFree(param);
-        param = NULL;
     }
 }
 

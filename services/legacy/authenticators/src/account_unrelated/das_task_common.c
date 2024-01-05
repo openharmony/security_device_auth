@@ -413,7 +413,7 @@ int32_t GetAuthIdPeerFromPayload(const CJson *in, const Uint8Buff *authIdSelf, U
     return res;
 }
 
-int32_t GetAndCheckKeyLenOnServer(const CJson *in, uint32_t *keyLen)
+int32_t GetAndCheckKeyLenOnServer(const CJson *in, uint32_t keyLen)
 {
     const CJson *payload = GetObjFromJson(in, FIELD_PAYLOAD);
     if (payload == NULL) {
@@ -426,7 +426,7 @@ int32_t GetAndCheckKeyLenOnServer(const CJson *in, uint32_t *keyLen)
         return HC_ERR_JSON_GET;
     }
 
-    if (*keyLen != tmpKeyLen) {
+    if (keyLen != tmpKeyLen) {
         LOGE("Key length is not equal.");
         return HC_ERR_INVALID_PARAMS;
     }
