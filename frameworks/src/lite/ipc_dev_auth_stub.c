@@ -107,7 +107,6 @@ static int32_t DecodeCallRequest(IpcIo *data, IpcDataInfo *paramsCache, int32_t 
 static int32_t GetMethodId(IpcIo *data, int32_t *methodId)
 {
     ReadInt32(data, methodId);
-    LOGI("GetMethodId, id code %d", *methodId);
     return HC_SUCCESS;
 }
 

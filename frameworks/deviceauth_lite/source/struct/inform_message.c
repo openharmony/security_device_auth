@@ -62,8 +62,9 @@ char *make_inform_message(void *data)
         return NULL;
     }
     (void)memset_s(ret_str, RET_STR_LENGTH, 0, RET_STR_LENGTH);
+    int32_t code = (int32_t)(inform_msg->error_code);
     if (snprintf_s(ret_str, RET_STR_LENGTH, RET_STR_LENGTH - 1, "{\"%s\":%d, \"%s\":{\"%s\":%d}}", FIELD_MESSAGE,
-        INFORM_MESSAGE, FIELD_PAYLOAD, FIELD_ERROR_CODE, inform_msg->error_code) < 0) {
+        INFORM_MESSAGE, FIELD_PAYLOAD, FIELD_ERROR_CODE, code) < 0) {
         LOGE("String generate failed");
         FREE(ret_str);
         ret_str = NULL;

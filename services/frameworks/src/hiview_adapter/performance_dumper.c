@@ -552,9 +552,7 @@ void DestroyPerformanceDumper(void)
     ClearPerformDataVec();
     DESTROY_HC_VECTOR(PerformDataVec, &g_performDataVec);
     g_performDataMutex->unlock(g_performDataMutex);
-    if (g_performDataMutex != NULL) {
-        DestroyHcMutex(g_performDataMutex);
-        HcFree(g_performDataMutex);
-        g_performDataMutex = NULL;
-    }
+    DestroyHcMutex(g_performDataMutex);
+    HcFree(g_performDataMutex);
+    g_performDataMutex = NULL;
 }
