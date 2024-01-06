@@ -1411,7 +1411,6 @@ int32_t DoBinderCall(uintptr_t callCtx, int32_t methodId, bool withSync)
     int32_t ret;
     ProxyDevAuthData *dataCache = (ProxyDevAuthData *)(callCtx);
 
-    LOGI("proc method %d", methodId);
     ret = FinalCallRequest(dataCache, methodId);
     if (ret != HC_SUCCESS) {
         return ret;
@@ -1514,8 +1513,7 @@ static bool IsTypeForSettingPtr(int32_t type)
     int32_t typeList[] = {
         PARAM_TYPE_APPID, PARAM_TYPE_DEV_AUTH_CB, PARAM_TYPE_LISTERNER, PARAM_TYPE_CREATE_PARAMS,
         PARAM_TYPE_GROUPID, PARAM_TYPE_UDID, PARAM_TYPE_ADD_PARAMS, PARAM_TYPE_DEL_PARAMS,
-        PARAM_TYPE_BIND, PARAM_TYPE_UNBIND, PARAM_TYPE_MGR_APPID, PARAM_TYPE_FRIEND_APPID,
-        PARAM_TYPE_QUERY_PARAMS, PARAM_TYPE_COMM_DATA, PARAM_TYPE_REQ_CFM, PARAM_TYPE_SESS_KEY,
+        PARAM_TYPE_QUERY_PARAMS, PARAM_TYPE_COMM_DATA, PARAM_TYPE_SESS_KEY,
         PARAM_TYPE_REQ_INFO, PARAM_TYPE_GROUP_INFO, PARAM_TYPE_AUTH_PARAMS, PARAM_TYPE_REQ_JSON,
         PARAM_TYPE_PSEUDONYM_ID, PARAM_TYPE_INDEX_KEY
     };

@@ -72,7 +72,6 @@ static void AddIpcCliCallbackCtx(const char *appId, uintptr_t cbInst, IpcProxyCb
 {
     errno_t eno;
 
-    LOGI("starting ...");
     g_ipcMutex.lock(&g_ipcMutex);
     eno = memcpy_s(cbCache->appId, IPC_APPID_LEN, appId, strlen(appId) + 1);
     if (eno != EOK) {
@@ -82,8 +81,6 @@ static void AddIpcCliCallbackCtx(const char *appId, uintptr_t cbInst, IpcProxyCb
     }
     cbCache->inst = cbInst;
     g_ipcMutex.unlock(&g_ipcMutex);
-    LOGI("success, appid: %s", appId);
-    return;
 }
 
 static void GetIpcReplyByType(const IpcDataInfo *ipcData,
@@ -98,8 +95,6 @@ static void GetIpcReplyByType(const IpcDataInfo *ipcData,
         }
         switch (type) {
             case PARAM_TYPE_REG_INFO:
-            case PARAM_TYPE_MGR_APPID:
-            case PARAM_TYPE_FRIEND_APPID:
             case PARAM_TYPE_DEVICE_INFO:
             case PARAM_TYPE_GROUP_INFO:
             case PARAM_TYPE_RETURN_DATA:
@@ -915,8 +910,8 @@ static int32_t IpcGmGetGroupInfoById(int32_t osAccountId, const char *appId, con
     ret = HC_ERR_IPC_UNKNOW_REPLY;
     inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
-    LOGI("process done, ret %d", ret);
     if (ret != HC_SUCCESS) {
+        LOGE("Service return exception, ret: %d", ret);
         DestroyCallCtx(&callCtx, NULL);
         return ret;
     }
@@ -998,8 +993,8 @@ static int32_t IpcGmGetGroupInfo(int32_t osAccountId, const char *appId, const c
     ret = HC_ERR_IPC_UNKNOW_REPLY;
     inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
-    LOGI("process done, ret %d", ret);
     if (ret != HC_SUCCESS) {
+        LOGE("Service return exception, ret: %d", ret);
         DestroyCallCtx(&callCtx, NULL);
         return ret;
     }
@@ -1080,8 +1075,8 @@ static int32_t IpcGmGetJoinedGroups(int32_t osAccountId, const char *appId, int3
     ret = HC_ERR_IPC_UNKNOW_REPLY;
     inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
-    LOGI("process done, ret %d", ret);
     if (ret != HC_SUCCESS) {
+        LOGE("Service return exception, ret: %d", ret);
         DestroyCallCtx(&callCtx, NULL);
         return ret;
     }
@@ -1123,7 +1118,6 @@ static int32_t IpcGmGetRelatedGroups(int32_t osAccountId, const char *appId, con
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
 
-    LOGI("starting ...");
     if (IsStrInvalid(appId) || IsStrInvalid(peerUdid) || (outGroupVec == NULL) || (groupNum == NULL)) {
         LOGE("Invalid params.");
         return HC_ERR_INVALID_PARAMS;
@@ -1133,8 +1127,7 @@ static int32_t IpcGmGetRelatedGroups(int32_t osAccountId, const char *appId, con
         LOGE("CreateCallCtx failed, ret %d", ret);
         return HC_ERR_IPC_INIT;
     }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
-        sizeof(osAccountId));
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId, sizeof(int32_t));
     if (ret != HC_SUCCESS) {
         LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         DestroyCallCtx(&callCtx, NULL);
@@ -1154,7 +1147,6 @@ static int32_t IpcGmGetRelatedGroups(int32_t osAccountId, const char *appId, con
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_GET_RELATED_GROUPS, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
-        LOGE("ipc call failed");
         DestroyCallCtx(&callCtx, NULL);
         return HC_ERR_IPC_PROC_FAILED;
     }
@@ -1163,7 +1155,7 @@ static int32_t IpcGmGetRelatedGroups(int32_t osAccountId, const char *appId, con
     inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     if (ret != HC_SUCCESS) {
-        LOGI("process error, ret %d", ret);
+        LOGE("Service return exception, ret: %d", ret);
         DestroyCallCtx(&callCtx, NULL);
         return ret;
     }
@@ -1255,8 +1247,8 @@ static int32_t IpcGmGetDeviceInfoById(int32_t osAccountId, const char *appId, co
     ret = HC_ERR_IPC_UNKNOW_REPLY;
     inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
-    LOGI("process done, ret %d", ret);
     if (ret != HC_SUCCESS) {
+        LOGE("Service return exception, ret: %d", ret);
         DestroyCallCtx(&callCtx, NULL);
         return ret;
     }
@@ -1337,8 +1329,8 @@ static int32_t IpcGmGetTrustedDevices(int32_t osAccountId, const char *appId,
     ret = HC_ERR_IPC_UNKNOW_REPLY;
     inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
-    LOGI("process done, ret %d", ret);
     if (ret != HC_SUCCESS) {
+        LOGE("Service return exception, ret: %d", ret);
         DestroyCallCtx(&callCtx, NULL);
         return ret;
     }

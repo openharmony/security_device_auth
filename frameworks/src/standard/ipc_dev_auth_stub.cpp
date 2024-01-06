@@ -140,7 +140,6 @@ static int32_t GetMethodId(MessageParcel &data, int32_t &methodId)
         return HC_ERR_IPC_CALL_DATA_LENGTH;
     }
     methodId = data.ReadInt32();
-    LOGI("GetMethodId, id code %d", methodId);
     return HC_SUCCESS;
 }
 
@@ -233,7 +232,6 @@ int32_t ServiceDevAuth::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
         reply.WriteInt32(dataLen);
         reply.WriteBuffer(reinterpret_cast<const void *>(replyCache.GetData()), dataLen);
     }
-    LOGI("done, request code %u, method id %d, call result %d", code, methodId, ret);
     return 0;
 }
 

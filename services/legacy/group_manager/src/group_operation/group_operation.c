@@ -83,7 +83,6 @@ static int32_t GenerateReturnEmptyArrayStr(char **returnVec)
 static int32_t GenerateReturnGroupVec(GroupEntryVec *groupInfoVec, char **returnGroupVec, uint32_t *groupNum)
 {
     if (HC_VECTOR_SIZE(groupInfoVec) == 0) {
-        LOGI("No group is found based on the query parameters!");
         *groupNum = 0;
         return GenerateReturnEmptyArrayStr(returnGroupVec);
     }
@@ -896,7 +895,6 @@ static int32_t GetAccessibleRelatedGroups(int32_t osAccountId, const char *appId
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("Start to get related groups! [AppId]: %s", appId);
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
     int32_t result = GetRelatedGroups(osAccountId, peerDeviceId, isUdid, &groupEntryVec);
     if (result != HC_SUCCESS) {

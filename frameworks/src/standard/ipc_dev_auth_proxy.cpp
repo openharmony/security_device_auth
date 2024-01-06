@@ -35,7 +35,6 @@ int32_t ProxyDevAuth::DoCallRequest(MessageParcel &dataParcel, MessageParcel &re
     sptr<IRemoteObject> remote = nullptr;
     MessageOption option = { MessageOption::TF_SYNC };
 
-    LOGI("ProxyDevAuth, SendRequest...");
     remote = Remote();
     if (remote == nullptr) {
         LOGE("Proxy DoCallRequest Remote() is null");
@@ -47,8 +46,12 @@ int32_t ProxyDevAuth::DoCallRequest(MessageParcel &dataParcel, MessageParcel &re
     }
     ret = remote->SendRequest(static_cast<uint32_t>(DevAuthInterfaceCode::DEV_AUTH_CALL_REQUEST),
         dataParcel, replyParcel, option);
-    LOGI("SendRequest done, ret %d", ret);
-    (ret == ERR_NONE) ? replyParcel.ReadInt32(ret) : (ret = HC_ERR_IPC_INTERNAL_FAILED);
+    if (ret != ERR_NONE) {
+        LOGE("SendRequest fail.");
+        ret = HC_ERR_IPC_INTERNAL_FAILED;
+    } else {
+        replyParcel.ReadInt32(ret);
+    }
     return ret;
 }
 
