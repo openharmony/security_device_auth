@@ -62,7 +62,6 @@ static bool IsSetLabelNeeded(const char *filePath, const char *labelToSet)
 void SetSecurityLabel(const char *filePath, const char *labelToSet)
 {
     if (!IsSetLabelNeeded(filePath, labelToSet)) {
-        LOGI("Security label already set, no need to set again.");
         return;
     }
     int32_t res = setxattr(filePath, SECURITY_LABEL_XATTR_KEY, labelToSet,

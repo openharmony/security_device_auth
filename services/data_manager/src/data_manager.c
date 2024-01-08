@@ -1004,6 +1004,9 @@ TrustedGroupEntry *CreateGroupEntry(void)
 
 void DestroyGroupEntry(TrustedGroupEntry *groupEntry)
 {
+    if (groupEntry == NULL) {
+        return;
+    }
     DeleteString(&groupEntry->name);
     DeleteString(&groupEntry->id);
     DeleteString(&groupEntry->userId);
@@ -1044,6 +1047,9 @@ TrustedDeviceEntry *CreateDeviceEntry(void)
 
 void DestroyDeviceEntry(TrustedDeviceEntry *deviceEntry)
 {
+    if (deviceEntry == NULL) {
+        return;
+    }
     DeleteString(&deviceEntry->groupId);
     DeleteString(&deviceEntry->udid);
     DeleteString(&deviceEntry->authId);

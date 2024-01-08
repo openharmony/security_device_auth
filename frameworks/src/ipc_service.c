@@ -68,19 +68,20 @@ static int32_t IpcServiceGmRegCallback(const IpcDataInfo *ipcParams, int32_t par
     const char *appId = NULL;
     const DeviceAuthCallback *callback = NULL;
     int32_t cbObjIdx = -1;
-    int32_t idxLen;
+    int32_t inOutLen;
 
     LOGI("starting ...");
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_APPID);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
 
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&callback, NULL);
-    if (ret != HC_SUCCESS) {
+    inOutLen = sizeof(DeviceAuthCallback);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&callback, &inOutLen);
+    if ((ret != HC_SUCCESS) || (inOutLen != sizeof(DeviceAuthCallback))) {
         LOGE("get param error, type %d", PARAM_TYPE_DEV_AUTH_CB);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     ret = AddIpcCallBackByAppId(appId, (const uint8_t *)callback, sizeof(DeviceAuthCallback), CB_TYPE_DEV_AUTH);
     if (ret != HC_SUCCESS) {
@@ -88,12 +89,12 @@ static int32_t IpcServiceGmRegCallback(const IpcDataInfo *ipcParams, int32_t par
         return HC_ERROR;
     }
 
-    idxLen = sizeof(cbObjIdx);
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CB_OBJECT, (uint8_t *)&cbObjIdx, &idxLen);
+    inOutLen = sizeof(int32_t);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CB_OBJECT, (uint8_t *)&cbObjIdx, &inOutLen);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_CB_OBJECT);
         DelIpcCallBackByAppId(appId, CB_TYPE_DEV_AUTH);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     AddIpcCbObjByAppId(appId, cbObjIdx, CB_TYPE_DEV_AUTH);
     InitDeviceAuthCbCtx(&g_bindCbAdt, CB_TYPE_DEV_AUTH);
@@ -116,7 +117,7 @@ static int32_t IpcServiceGmUnRegCallback(const IpcDataInfo *ipcParams, int32_t p
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_APPID);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
 
     DelIpcCallBackByAppId(appId, CB_TYPE_DEV_AUTH);
@@ -133,19 +134,20 @@ static int32_t IpcServiceGmRegDataChangeListener(const IpcDataInfo *ipcParams, i
     const DataChangeListener *callback = NULL;
     static int32_t registered = 0;
     int32_t cbObjIdx = -1;
-    int32_t idxLen;
+    int32_t inOutLen;
 
     LOGI("starting ...");
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_APPID);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
 
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_LISTERNER, (uint8_t *)&callback, NULL);
-    if (ret != HC_SUCCESS) {
+    inOutLen = sizeof(DataChangeListener);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_LISTERNER, (uint8_t *)&callback, &inOutLen);
+    if ((ret != HC_SUCCESS) || (inOutLen != sizeof(DataChangeListener))) {
         LOGE("get param error, type %d", PARAM_TYPE_LISTERNER);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
 
     ret = AddIpcCallBackByAppId(appId, (const uint8_t *)callback, sizeof(DataChangeListener), CB_TYPE_LISTENER);
@@ -154,12 +156,12 @@ static int32_t IpcServiceGmRegDataChangeListener(const IpcDataInfo *ipcParams, i
         return HC_ERROR;
     }
 
-    idxLen = sizeof(cbObjIdx);
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CB_OBJECT, (uint8_t *)&cbObjIdx, &idxLen);
+    inOutLen = sizeof(int32_t);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CB_OBJECT, (uint8_t *)&cbObjIdx, &inOutLen);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_CB_OBJECT);
         DelIpcCallBackByAppId(appId, CB_TYPE_DEV_AUTH);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     AddIpcCbObjByAppId(appId, cbObjIdx, CB_TYPE_LISTENER);
 
@@ -188,7 +190,7 @@ static int32_t IpcServiceGmUnRegDataChangeListener(const IpcDataInfo *ipcParams,
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_APPID);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     DelIpcCallBackByAppId(appId, CB_TYPE_LISTENER);
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
@@ -222,12 +224,12 @@ static int32_t IpcServiceGmCreateGroup(const IpcDataInfo *ipcParams, int32_t par
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_APPID);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CREATE_PARAMS, (uint8_t *)&createParams, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_CREATE_PARAMS);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     ret = AddReqIdByAppId(appId, requestId);
     if (ret != 0) {
@@ -266,12 +268,12 @@ static int32_t IpcServiceGmDelGroup(const IpcDataInfo *ipcParams, int32_t paramN
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_APPID);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEL_PARAMS, (uint8_t *)&delParams, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_DEL_PARAMS);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     ret = AddReqIdByAppId(appId, requestId);
     if (ret != 0) {
@@ -310,12 +312,12 @@ static int32_t IpcServiceGmAddMemberToGroup(const IpcDataInfo *ipcParams, int32_
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_ADD_PARAMS, (uint8_t *)&addParams, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_ADD_PARAMS);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_APPID);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     ret = AddReqIdByAppId(appId, requestId);
     if (ret != HC_SUCCESS) {
@@ -353,12 +355,12 @@ static int32_t IpcServiceGmDelMemberFromGroup(const IpcDataInfo *ipcParams, int3
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_APPID);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEL_PARAMS, (uint8_t *)&delParams, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_DEL_PARAMS);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     ret = AddReqIdByAppId(appId, requestId);
     if (ret != 0) {
@@ -390,12 +392,12 @@ static int32_t IpcServiceGmAddMultiMembersToGroup(const IpcDataInfo *ipcParams, 
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_ADD_PARAMS, (uint8_t *)&addParams, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_ADD_PARAMS);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_APPID);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     callRet = g_devGroupMgrMethod.addMultiMembersToGroup(osAccountId, appId, addParams);
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
@@ -427,7 +429,7 @@ static int32_t IpcServiceGmDelMultiMembersFromGroup(const IpcDataInfo *ipcParams
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEL_PARAMS, (uint8_t *)&delParams, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_DEL_PARAMS);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     callRet = g_devGroupMgrMethod.delMultiMembersFromGroup(osAccountId, appId, delParams);
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
@@ -909,16 +911,16 @@ static int32_t IpcServiceGaProcessData(const IpcDataInfo *ipcParams, int32_t par
     int32_t callRet;
     int32_t ret;
     const DeviceAuthCallback *gaCallback = NULL;
-    int64_t authReqId = 0;
+    int64_t reqId = 0;
     uint8_t *data = NULL;
     uint32_t dataLen = 0;
     int32_t inOutLen;
     int32_t cbObjIdx = -1;
 
     LOGI("starting ...");
-    inOutLen = sizeof(authReqId);
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&authReqId, &inOutLen);
-    if ((inOutLen != sizeof(authReqId)) || (ret != HC_SUCCESS)) {
+    inOutLen = sizeof(int64_t);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&reqId, &inOutLen);
+    if ((inOutLen != sizeof(int64_t)) || (ret != HC_SUCCESS)) {
         LOGE("get param error, type %d", PARAM_TYPE_REQID);
         return HC_ERR_IPC_BAD_PARAM;
     }
@@ -927,94 +929,87 @@ static int32_t IpcServiceGaProcessData(const IpcDataInfo *ipcParams, int32_t par
         LOGE("get param error, type %d", PARAM_TYPE_COMM_DATA);
         return HC_ERR_IPC_BAD_PARAM;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&gaCallback, NULL);
-    if (ret != HC_SUCCESS) {
+    inOutLen = sizeof(DeviceAuthCallback);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&gaCallback, &inOutLen);
+    if ((ret != HC_SUCCESS) || (inOutLen != sizeof(DeviceAuthCallback))) {
         LOGE("get param error, type %d", PARAM_TYPE_DEV_AUTH_CB);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     /* add call back */
-    ret = AddIpcCallBackByReqId(authReqId, (const uint8_t *)gaCallback,
-        sizeof(DeviceAuthCallback), CB_TYPE_TMP_DEV_AUTH);
+    ret = AddIpcCallBackByReqId(reqId, (const uint8_t *)gaCallback, sizeof(DeviceAuthCallback), CB_TYPE_TMP_DEV_AUTH);
     if (ret != HC_SUCCESS) {
         LOGE("add ipc callback failed");
-        return HC_ERROR;
+        return ret;
     }
-    inOutLen = sizeof(cbObjIdx);
+    inOutLen = sizeof(int32_t);
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CB_OBJECT, (uint8_t *)&cbObjIdx, &inOutLen);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_CB_OBJECT);
-        DelIpcCallBackByReqId(authReqId, CB_TYPE_TMP_DEV_AUTH, true);
-        return ret;
+        DelIpcCallBackByReqId(reqId, CB_TYPE_TMP_DEV_AUTH, true);
+        return HC_ERR_IPC_BAD_PARAM;
     }
-    AddIpcCbObjByReqId(authReqId, cbObjIdx, CB_TYPE_TMP_DEV_AUTH);
+    AddIpcCbObjByReqId(reqId, cbObjIdx, CB_TYPE_TMP_DEV_AUTH);
     InitDeviceAuthCbCtx(&g_authCbAdt, CB_TYPE_TMP_DEV_AUTH);
-    callRet = g_groupAuthMgrMethod.processData(authReqId, data, dataLen, &g_authCbAdt);
+    callRet = g_groupAuthMgrMethod.processData(reqId, data, dataLen, &g_authCbAdt);
     if (callRet != HC_SUCCESS) {
-        DelIpcCallBackByReqId(authReqId, CB_TYPE_TMP_DEV_AUTH, true);
+        DelIpcCallBackByReqId(reqId, CB_TYPE_TMP_DEV_AUTH, true);
     }
-    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
-    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
-    return ret;
+    return IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
 }
 
 static int32_t IpcServiceGaAuthDevice(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
 {
-    int32_t callRet;
     int32_t ret;
     DeviceAuthCallback *gaCallback = NULL;
     int32_t osAccountId;
-    int64_t authReqId = 0;
+    int64_t reqId = 0;
     const char *authParams = NULL;
     int32_t inOutLen;
     int32_t cbObjIdx = -1;
 
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if ((inOutLen != sizeof(int32_t)) || (ret != HC_SUCCESS)) {
         LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
         return HC_ERR_IPC_BAD_PARAM;
     }
-    inOutLen = sizeof(authReqId);
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&authReqId, &inOutLen);
-    if ((inOutLen != sizeof(authReqId)) || (ret != HC_SUCCESS)) {
+    inOutLen = sizeof(int64_t);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&reqId, &inOutLen);
+    if ((ret != HC_SUCCESS) || (inOutLen != sizeof(int64_t))) {
         LOGE("get param error, type %d", PARAM_TYPE_REQID);
         return HC_ERR_IPC_BAD_PARAM;
     }
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_AUTH_PARAMS, (uint8_t *)&authParams, NULL);
-    if ((authParams == NULL) || (ret != HC_SUCCESS)) {
+    if ((ret != HC_SUCCESS) || (authParams == NULL)) {
         LOGE("get param error, type %d", PARAM_TYPE_AUTH_PARAMS);
         return HC_ERR_IPC_BAD_PARAM;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&gaCallback, NULL);
-    if (ret != HC_SUCCESS) {
+    inOutLen = sizeof(DeviceAuthCallback);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&gaCallback, &inOutLen);
+    if ((ret != HC_SUCCESS) || (inOutLen != sizeof(DeviceAuthCallback))) {
         LOGE("get param error, type %d", PARAM_TYPE_DEV_AUTH_CB);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
 
     /* add call back */
-    ret = AddIpcCallBackByReqId(authReqId, (const uint8_t *)gaCallback,
-        sizeof(DeviceAuthCallback), CB_TYPE_TMP_DEV_AUTH);
+    ret = AddIpcCallBackByReqId(reqId, (const uint8_t *)gaCallback, sizeof(DeviceAuthCallback), CB_TYPE_TMP_DEV_AUTH);
     if (ret != HC_SUCCESS) {
-        LOGE("add ipc callback failed");
-        return HC_ERROR;
+        return ret;
     }
-    inOutLen = sizeof(cbObjIdx);
+    inOutLen = sizeof(int32_t);
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CB_OBJECT, (uint8_t *)&cbObjIdx, &inOutLen);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_CB_OBJECT);
-        DelIpcCallBackByReqId(authReqId, CB_TYPE_TMP_DEV_AUTH, true);
+        DelIpcCallBackByReqId(reqId, CB_TYPE_TMP_DEV_AUTH, true);
         return ret;
     }
-    AddIpcCbObjByReqId(authReqId, cbObjIdx, CB_TYPE_TMP_DEV_AUTH);
+    AddIpcCbObjByReqId(reqId, cbObjIdx, CB_TYPE_TMP_DEV_AUTH);
     InitDeviceAuthCbCtx(&g_authCbAdt, CB_TYPE_TMP_DEV_AUTH);
-    callRet = g_groupAuthMgrMethod.authDevice(osAccountId, authReqId, authParams, &g_authCbAdt);
-    if (callRet != HC_SUCCESS) {
-        DelIpcCallBackByReqId(authReqId, CB_TYPE_TMP_DEV_AUTH, true);
+    ret = g_groupAuthMgrMethod.authDevice(osAccountId, reqId, authParams, &g_authCbAdt);
+    if (ret != HC_SUCCESS) {
+        DelIpcCallBackByReqId(reqId, CB_TYPE_TMP_DEV_AUTH, true);
     }
-    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
-    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
-    return ret;
+    return IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&ret, sizeof(int32_t));
 }
 
 static int32_t IpcServiceGaCancelRequest(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
@@ -1151,34 +1146,34 @@ static int32_t IpcServiceDaProcessData(const IpcDataInfo *ipcParams, int32_t par
     int32_t cbObjIdx = -1;
 
     LOGI("starting ...");
-    inOutLen = sizeof(authReqId);
+    inOutLen = sizeof(int64_t);
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&authReqId, &inOutLen);
-    if ((inOutLen != sizeof(authReqId)) || (ret != HC_SUCCESS)) {
+    if ((ret != HC_SUCCESS) || (inOutLen != sizeof(authReqId))) {
         LOGE("get param error, type %d", PARAM_TYPE_REQID);
         return HC_ERR_IPC_BAD_PARAM;
     }
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_AUTH_PARAMS, (uint8_t *)&authParams, NULL);
-    if ((authParams == NULL) || (ret != HC_SUCCESS)) {
+    if ((ret != HC_SUCCESS) || (authParams == NULL)) {
         LOGE("get param error, type %d", PARAM_TYPE_AUTH_PARAMS);
         return HC_ERR_IPC_BAD_PARAM;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&callback, NULL);
-    if (ret != HC_SUCCESS) {
+    inOutLen = sizeof(DeviceAuthCallback);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&callback, &inOutLen);
+    if ((ret != HC_SUCCESS) || (inOutLen != sizeof(DeviceAuthCallback))) {
         LOGE("get param error, type %d", PARAM_TYPE_DEV_AUTH_CB);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     ret = AddIpcCallBackByReqId(
         authReqId, (const uint8_t *)callback, sizeof(DeviceAuthCallback), CB_TYPE_TMP_DEV_AUTH);
     if (ret != HC_SUCCESS) {
-        LOGE("add ipc callback failed");
-        return HC_ERROR;
+        return ret;
     }
-    inOutLen = sizeof(cbObjIdx);
+    inOutLen = sizeof(int32_t);
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CB_OBJECT, (uint8_t *)&cbObjIdx, &inOutLen);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_CB_OBJECT);
         DelIpcCallBackByReqId(authReqId, CB_TYPE_TMP_DEV_AUTH, true);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     AddIpcCbObjByReqId(authReqId, cbObjIdx, CB_TYPE_TMP_DEV_AUTH);
     InitDeviceAuthCbCtx(&g_authCbAdt, CB_TYPE_TMP_DEV_AUTH);
@@ -1202,34 +1197,35 @@ static int32_t IpcServiceDaAuthDevice(const IpcDataInfo *ipcParams, int32_t para
     int32_t cbObjIdx = -1;
 
     LOGI("starting ...");
-    inOutLen = sizeof(authReqId);
+    inOutLen = sizeof(int64_t);
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&authReqId, &inOutLen);
-    if ((inOutLen != sizeof(authReqId)) || (ret != HC_SUCCESS)) {
+    if ((ret != HC_SUCCESS) || (inOutLen != sizeof(int64_t))) {
         LOGE("get param error, type %d", PARAM_TYPE_REQID);
         return HC_ERR_IPC_BAD_PARAM;
     }
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_AUTH_PARAMS, (uint8_t *)&authParams, NULL);
-    if ((authParams == NULL) || (ret != HC_SUCCESS)) {
+    if ((ret != HC_SUCCESS) || (authParams == NULL)) {
         LOGE("get param error, type %d", PARAM_TYPE_AUTH_PARAMS);
         return HC_ERR_IPC_BAD_PARAM;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&callback, NULL);
-    if (ret != HC_SUCCESS) {
+    inOutLen = sizeof(DeviceAuthCallback);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&callback, &inOutLen);
+    if ((ret != HC_SUCCESS) || (inOutLen != sizeof(DeviceAuthCallback))) {
         LOGE("get param error, type %d", PARAM_TYPE_DEV_AUTH_CB);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     ret = AddIpcCallBackByReqId(
         authReqId, (const uint8_t *)callback, sizeof(DeviceAuthCallback), CB_TYPE_TMP_DEV_AUTH);
     if (ret != HC_SUCCESS) {
         LOGE("add ipc callback failed");
-        return HC_ERROR;
+        return ret;
     }
-    inOutLen = sizeof(cbObjIdx);
+    inOutLen = sizeof(int32_t);
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CB_OBJECT, (uint8_t *)&cbObjIdx, &inOutLen);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_CB_OBJECT);
         DelIpcCallBackByReqId(authReqId, CB_TYPE_TMP_DEV_AUTH, true);
-        return ret;
+        return HC_ERR_IPC_BAD_PARAM;
     }
     AddIpcCbObjByReqId(authReqId, cbObjIdx, CB_TYPE_TMP_DEV_AUTH);
     InitDeviceAuthCbCtx(&g_authCbAdt, CB_TYPE_TMP_DEV_AUTH);
