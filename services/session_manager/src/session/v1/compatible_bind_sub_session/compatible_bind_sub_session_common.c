@@ -33,6 +33,17 @@ static int32_t AddPinCode(const CJson *jsonParams, CompatibleBindSubSession *ses
     return HC_SUCCESS;
 }
 
+static int32_t AddProtocolExpandVal(const CJson *jsonParams, CompatibleBindSubSession *session)
+{
+    int32_t protocolExpandVal = INVALID_PROTOCOL_EXPAND_VALUE;
+    (void)GetIntFromJson(jsonParams, FIELD_PROTOCOL_EXPAND, &protocolExpandVal);
+    if (AddIntToJson(session->params, FIELD_PROTOCOL_EXPAND, protocolExpandVal) != HC_SUCCESS) {
+        LOGE("Failed to add protocol expand val to params!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t AddGroupId(const char *groupId, CJson *params)
 {
     if (AddStringToJson(params, FIELD_GROUP_ID, groupId) != HC_SUCCESS) {
@@ -433,6 +444,17 @@ static int32_t AddPinCodeToParams(CompatibleBindSubSession *session, CJson *modu
     return HC_SUCCESS;
 }
 
+static int32_t AddProtocolExpandValToParams(CompatibleBindSubSession *session, CJson *moduleParams)
+{
+    int32_t protocolExpandVal = INVALID_PROTOCOL_EXPAND_VALUE;
+    (void)GetIntFromJson(session->params, FIELD_PROTOCOL_EXPAND, &protocolExpandVal);
+    if (AddIntToJson(moduleParams, FIELD_PROTOCOL_EXPAND, protocolExpandVal) != HC_SUCCESS) {
+        LOGE("Failed to add protocol expand val to moduleParams!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t AddGroupInfoToSendData(const CompatibleBindSubSession *session, CJson *data)
 {
     const char *groupId = GetStringFromJson(session->params, FIELD_GROUP_ID);
@@ -583,6 +605,7 @@ int32_t GenerateBaseBindParams(int32_t osAccountId, int isClient, const CJson *j
 
     int32_t result;
     if (((result = AddPinCode(jsonParams, session)) != HC_SUCCESS) ||
+        ((result = AddProtocolExpandVal(jsonParams, session)) != HC_SUCCESS) ||
         ((result = AddGroupAndDevInfo(osAccountId, isClient, jsonParams, session)) != HC_SUCCESS) ||
         ((result = AddPeerAuthIdAndUdidIfExist(jsonParams, session)) != HC_SUCCESS)) {
         return result;
@@ -596,7 +619,8 @@ int32_t GenerateBaseModuleParams(bool isClient, CompatibleBindSubSession *sessio
     int32_t result;
     if (((result = AddGroupAndDevInfoToParams(session, moduleParams)) != HC_SUCCESS) ||
         ((result = AddRequestInfoToParams(isClient, session, moduleParams)) != HC_SUCCESS) ||
-        ((result = AddPinCodeToParams(session, moduleParams)) != HC_SUCCESS)) {
+        ((result = AddPinCodeToParams(session, moduleParams)) != HC_SUCCESS) ||
+        ((result = AddProtocolExpandValToParams(session, moduleParams)) != HC_SUCCESS)) {
         return result;
     }
     return HC_SUCCESS;

@@ -343,6 +343,12 @@ static int32_t CombindServerBindParams(SessionImpl *impl, CJson *receviedMsg)
         LOGE("add osAccountId to receviedMsg fail.");
         return HC_ERR_JSON_ADD;
     }
+    int32_t protocolExpandVal = INVALID_PROTOCOL_EXPAND_VALUE;
+    (void)GetIntFromJson(impl->context, FIELD_PROTOCOL_EXPAND, &protocolExpandVal);
+    if (AddIntToJson(receviedMsg, FIELD_PROTOCOL_EXPAND, protocolExpandVal) != HC_SUCCESS) {
+        LOGE("Failed to add protocol expand val to receviedMsg!");
+        return HC_ERR_JSON_ADD;
+    }
     return CombineConfirmData(impl->opCode, impl->context, receviedMsg);
 }
 
