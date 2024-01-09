@@ -47,7 +47,7 @@ static int32_t CombineServiceId(const Uint8Buff *pkgName, const Uint8Buff *servi
         goto ERR;
     }
     if (memcpy_s(serviceIdPlain.val + pkgName->length, serviceIdPlain.length - pkgName->length, serviceType->val,
-            serviceType->length) != EOK) {
+        serviceType->length) != EOK) {
         LOGE("Copy service id: serviceType failed.");
         res = HC_ERR_MEMORY_COPY;
         goto ERR;
@@ -172,34 +172,21 @@ static int32_t GenerateKeyAliasInner(
         return HC_ERR_INVALID_LEN;
     }
 
-    int32_t res;
-    Uint8Buff serviceId = { NULL, SHA256_LEN };
-    serviceId.val = (uint8_t *)HcMalloc(serviceId.length, 0);
-    if (serviceId.val == NULL) {
-        LOGE("Malloc for serviceId failed.");
-        HcFree(authIdBuff.val);
-        HcFree(serviceId.val);
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    res = CombineServiceId(&pkgNameBuff, &serviceTypeBuff, &serviceId);
+    uint8_t serviceId[SHA256_LEN] = { 0 };
+    Uint8Buff serviceIdBuff = { serviceId, SHA256_LEN };
+    int32_t res = CombineServiceId(&pkgNameBuff, &serviceTypeBuff, &serviceIdBuff);
     if (res != HC_SUCCESS) {
         LOGE("CombineServiceId failed, res: %x.", res);
         HcFree(authIdBuff.val);
-        HcFree(serviceId.val);
         return res;
     }
 
     Uint8Buff keyTypeBuff = { GetKeyTypePair(keyAliasType), KEY_TYPE_PAIR_LEN };
-    res = CombineKeyAliasForPake(&serviceId, &keyTypeBuff, &authIdBuff, outKeyAlias);
+    res = CombineKeyAliasForPake(&serviceIdBuff, &keyTypeBuff, &authIdBuff, outKeyAlias);
+    HcFree(authIdBuff.val);
     if (res != HC_SUCCESS) {
         LOGE("CombineKeyAlias failed, keyType: %d, res: %d", keyAliasType, res);
-        HcFree(authIdBuff.val);
-        HcFree(serviceId.val);
-        return res;
     }
-
-    HcFree(authIdBuff.val);
-    HcFree(serviceId.val);
     return res;
 }
 

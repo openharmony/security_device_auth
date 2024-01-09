@@ -115,7 +115,7 @@ int32_t AddCertInfoToJson(const CertInfo *certInfo, CJson *out)
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(out, FIELD_PK_INFO_SIGNATURE, certInfo->pkInfoSignature.val,
-            certInfo->pkInfoSignature.length) != HC_SUCCESS) {
+        certInfo->pkInfoSignature.length) != HC_SUCCESS) {
         LOGE("add pk info sign to json failed!");
         return HC_ERR_JSON_ADD;
     }
