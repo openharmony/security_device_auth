@@ -38,8 +38,7 @@ static const char *TEST_JSON_STR_ARR = "[{\"name\":\"Tom1\",\"age\":18},{\"name\
 static const char *TEST_STR = "test_str";
 static const char TEST_CHAR = '0';
 
-class CommonLibTest : public testing::Test
-{
+class CommonLibTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();

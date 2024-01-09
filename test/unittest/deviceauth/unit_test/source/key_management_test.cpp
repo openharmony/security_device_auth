@@ -38,8 +38,7 @@ static const int32_t EC_LEN = 64;
 static const int32_t P256_PUBLIC_SIZE = 64;
 static const int32_t BIGNUM_HEX_LEN = 512;
 
-class KeyManagementTest : public testing::Test
-{
+class KeyManagementTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();

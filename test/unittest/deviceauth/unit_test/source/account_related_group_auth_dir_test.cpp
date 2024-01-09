@@ -232,20 +232,8 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0023, TestSize.
 {
     int32_t ret = HC_SUCCESS;
     CJson *authParam = CreateJson();
-    if (authParam == nullptr) {
-        return;
-    }
     CJson *out = CreateJson();
-    if (out == nullptr) {
-        FreeJson(authParam);
-        return;
-    }
     CJson *sendToPeer = CreateJson();
-    if (sendToPeer == nullptr) {
-        FreeJson(authParam);
-        FreeJson(out);
-        return;
-    }
 
     (void)AddObjToJson(out, FIELD_SEND_TO_PEER, sendToPeer);
     (void)AddStringToJson(sendToPeer, "test_key", "test_value"); // For unit test.
@@ -265,12 +253,6 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0023, TestSize.
     (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack); // For unit test.
 
     CJson *sendToSelf = CreateJson();
-    if (sendToPeer == nullptr) {
-        FreeJson(authParam);
-        FreeJson(out);
-        FreeJson(sendToPeer);
-        return;
-    }
 
     (void)AddObjToJson(out, FIELD_SEND_TO_SELF, sendToSelf);
     (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack); // For unit test.
