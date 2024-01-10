@@ -20,18 +20,11 @@
 #include "string_util.h"
 #include "data_manager.h"
 #include "json_utils.h"
+#include "data_manager.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct {
-    int groupType;
-    const char *groupId;
-    const char *groupName;
-    const char *groupOwner;
-} GroupQueryParams;
-
 
 bool IsAccountRelatedGroup(int groupType);
 int32_t GenerateReturnGroupInfo(const TrustedGroupEntry *groupEntry, CJson *returnJson);
@@ -102,7 +95,7 @@ bool IsGroupOwner(int32_t osAccountId, const char *groupId, const char *appId);
 bool IsTrustedDeviceInGroup(int32_t osAccountId, const char *groupId, const char *deviceId, bool isUdid);
 int32_t CheckGroupAccessible(int32_t osAccountId, const char *groupId, const char *appId);
 int32_t CheckGroupEditAllowed(int32_t osAccountId, const char *groupId, const char *appId);
-int32_t GetGroupInfo(int32_t osAccountId, GroupQueryParams *groupQueryParams, GroupEntryVec *returnGroupEntryVec);
+int32_t GetGroupInfo(int32_t osAccountId, const QueryGroupParams *params, GroupEntryVec *returnGroupEntryVec);
 int32_t GetJoinedGroups(int32_t osAccountId, int groupType, GroupEntryVec *returnGroupEntryVec);
 int32_t GetRelatedGroups(int32_t osAccountId, const char *peerDeviceId, bool isUdid,
     GroupEntryVec *returnGroupEntryVec);

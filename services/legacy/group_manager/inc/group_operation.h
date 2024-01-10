@@ -46,8 +46,8 @@ typedef struct {
         char **returnGroupVec, uint32_t *groupNum);
     int32_t (*getAccessibleRelatedGroups)(int32_t osAccountId, const char *appId, const char *peerDeviceId,
         char **returnGroupVec, uint32_t *groupNum);
-    int32_t (*getAccessibleDeviceInfoById)(int32_t osAccountId, const char *appId, DeviceQueryParams *devQueryParams,
-        const char *groupId, char **returnDeviceInfo);
+    int32_t (*getAccessibleDeviceInfoById)(int32_t osAccountId, const char *appId,
+        const DeviceQueryParams *devQueryParams, const char *groupId, char **returnDeviceInfo);
     int32_t (*getAccessibleTrustedDevices)(int32_t osAccountId, const char *appId, const char *groupId,
         char **returnDevInfoVec, uint32_t *deviceNum);
     bool (*isDeviceInAccessibleGroup)(int32_t osAccountId, const char *appId, const char *groupId,

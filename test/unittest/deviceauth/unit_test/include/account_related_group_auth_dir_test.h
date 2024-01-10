@@ -14,6 +14,7 @@
  */
 
 #ifndef ACCOUNT_RELATED_GROUP_AUTH_DIR_TEST_H
+#define ACCOUNT_RELATED_GROUP_AUTH_DIR_TEST_H
 #ifdef __cpluscplus
 extern "C"
 {

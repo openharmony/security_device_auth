@@ -148,17 +148,17 @@ int32_t Base64StringToByte(const char *base64Str, uint8_t *byte, uint32_t *byteL
         IsInvalidBase64Character(base64Str[2])) {
         return CLIB_ERR_INVALID_PARAM;
     }
-    for (uint32_t i = 0, k = 0; i < strLen - 2; k += 3, i += 4) {
-        if (IsInvalidBase64Character(base64Str[i + 3]) && i + 3 < strLen - k) {
+    for (uint32_t i = 0, j = 0; i < strLen - 2; j += 3, i += 4) {
+        if (IsInvalidBase64Character(base64Str[i + 3]) && i + 3 < strLen - j) {
             return CLIB_ERR_INVALID_PARAM;
         }
         /* splice the last 6 bits of the first character's value and the first 2 bits of the second character's value */
-        byte[k] = (g_base64DecodeTable[(int)base64Str[i]] << 2) | (g_base64DecodeTable[(int)base64Str[i + 1]] >> 4);
+        byte[j] = (g_base64DecodeTable[(int)base64Str[i]] << 2) | (g_base64DecodeTable[(int)base64Str[i + 1]] >> 4);
         /* splice the last 4 bits of the second character's value and the first 4 bits of the third character's value */
-        byte[k + 1] = (g_base64DecodeTable[(int)base64Str[i + 1]] << 4) |
+        byte[j + 1] = (g_base64DecodeTable[(int)base64Str[i + 1]] << 4) |
             (g_base64DecodeTable[(int)base64Str[i + 2]] >> 2);
         /* splice the last 2 bits of the third character's value and the first 6 bits of the forth character's value */
-        byte[k + 2] = (g_base64DecodeTable[(int)base64Str[i + 2]] << 6) | (g_base64DecodeTable[(int)base64Str[i + 3]]);
+        byte[j + 2] = (g_base64DecodeTable[(int)base64Str[i + 2]] << 6) | (g_base64DecodeTable[(int)base64Str[i + 3]]);
     }
     return CLIB_SUCCESS;
 }

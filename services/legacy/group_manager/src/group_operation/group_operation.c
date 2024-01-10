@@ -842,8 +842,12 @@ static int32_t GetAccessibleGroupInfo(int32_t osAccountId, const char *appId, co
         return HC_ERR_INVALID_PARAMS;
     }
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
-    GroupQueryParams groupQueryParams = {groupType, groupId, groupName, groupOwner};
-    int32_t result = GetGroupInfo(osAccountId, &groupQueryParams, &groupEntryVec);
+    QueryGroupParams params = InitQueryGroupParams();
+    params.groupId = groupId;
+    params.groupName = groupName;
+    params.ownerName = groupOwner;
+    params.groupType = groupType;
+    int32_t result = GetGroupInfo(osAccountId, &params, &groupEntryVec);
     FreeJson(queryParamsJson);
     if (result != HC_SUCCESS) {
         ClearGroupEntryVec(&groupEntryVec);
@@ -918,12 +922,12 @@ static int32_t GetAccessibleRelatedGroups(int32_t osAccountId, const char *appId
     return result;
 }
 
-static int32_t GetAccessibleDeviceInfoById(int32_t osAccountId, const char *appId, DeviceQueryParams *devQueryParams,
-    const char *groupId, char **returnDeviceInfo)
+static int32_t GetAccessibleDeviceInfoById(int32_t osAccountId, const char *appId,
+    const DeviceQueryParams *devQueryParams, const char *groupId, char **returnDeviceInfo)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    if ((appId == NULL) || (devQueryParams -> deviceId == NULL) || (groupId == NULL) || (returnDeviceInfo == NULL) ||
-        (osAccountId == INVALID_OS_ACCOUNT)) {
+    if ((appId == NULL) || (devQueryParams == NULL) || (devQueryParams->deviceId == NULL) ||
+        (groupId == NULL) || (returnDeviceInfo == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -944,8 +948,8 @@ static int32_t GetAccessibleDeviceInfoById(int32_t osAccountId, const char *appI
         LOGE("Failed to allocate deviceEntry memory!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    if (GetTrustedDevInfoById(osAccountId, devQueryParams -> deviceId,
-        devQueryParams -> isUdid, groupId, deviceEntry) != HC_SUCCESS) {
+    if (GetTrustedDevInfoById(osAccountId, devQueryParams->deviceId,
+        devQueryParams->isUdid, groupId, deviceEntry) != HC_SUCCESS) {
         LOGE("No device is found based on the query parameters!");
         DestroyDeviceEntry(deviceEntry);
         return HC_ERR_DEVICE_NOT_EXIST;

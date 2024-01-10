@@ -14,7 +14,7 @@
  */
 
 #ifndef PAKE_V2_AUTH_TASK_TEST_H
-
+#define PAKE_V2_AUTH_TASK_TEST_H
 #ifdef __cpluscplus
 extern "C"
 {
