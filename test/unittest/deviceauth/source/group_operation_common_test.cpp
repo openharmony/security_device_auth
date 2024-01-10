@@ -31,6 +31,7 @@ namespace {
 
 static const char *g_normalStr = "abc";
 static const Uint8Buff g_normalBuff = { 0, 0 };
+static GroupQueryParams g_groupQueryParams = {PEER_TO_PEER_GROUP, g_normalStr, g_normalStr, g_normalStr};
 
 static int32_t GenerateGroupParams(const CJson *jsonParams, const char *groupId, TrustedGroupEntry *groupParams)
 {
@@ -156,7 +157,7 @@ HWTEST_F(GroupOperationTest, GroupOperationTest014, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest015, TestSize.Level0)
 {
-    int32_t ret = GetGroupInfo(DEFAULT_OS_ACCOUNT, PEER_TO_PEER_GROUP, g_normalStr, g_normalStr, g_normalStr, nullptr);
+    int32_t ret = GetGroupInfo(DEFAULT_OS_ACCOUNT, &g_groupQueryParams, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
