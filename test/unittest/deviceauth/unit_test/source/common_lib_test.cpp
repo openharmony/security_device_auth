@@ -15,11 +15,10 @@
 
 #include "common_lib_test.h"
 #include <gtest/gtest.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stddef.h>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <cstddef>
 #include "securec.h"
 
 using namespace std;
