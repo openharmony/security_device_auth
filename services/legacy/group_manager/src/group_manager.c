@@ -120,8 +120,9 @@ int32_t GetDeviceInfoByIdImpl(int32_t osAccountId, const char *appId, const char
     char **returnDeviceInfo)
 {
     SET_LOG_MODE(NORMAL_MODE);
-    return IsGroupSupport() ? GetGroupImplInstance()->getAccessibleDeviceInfoById(osAccountId, appId, deviceId,
-        false, groupId, returnDeviceInfo) : HC_ERR_NOT_SUPPORT;
+    DeviceQueryParams devQueryParams = { deviceId, false };
+    return IsGroupSupport() ? GetGroupImplInstance()->getAccessibleDeviceInfoById(osAccountId, appId, &devQueryParams,
+        groupId, returnDeviceInfo) : HC_ERR_NOT_SUPPORT;
 }
 
 int32_t GetTrustedDevicesImpl(int32_t osAccountId, const char *appId, const char *groupId,

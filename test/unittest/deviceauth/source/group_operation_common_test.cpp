@@ -23,6 +23,7 @@
 #include "hc_dev_info.h"
 #include "json_utils.h"
 #include "securec.h"
+#include "data_manager.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -31,6 +32,14 @@ namespace {
 
 static const char *g_normalStr = "abc";
 static const Uint8Buff g_normalBuff = { 0, 0 };
+static QueryGroupParams g_queryGroupParams = {
+    .groupId = g_normalStr,
+    .groupName = g_normalStr,
+    .ownerName = g_normalStr,
+    .groupType = PEER_TO_PEER_GROUP,
+    .userId = NULL,
+    .groupVisibility = ALL_GROUP_VISIBILITY
+    };
 
 static int32_t GenerateGroupParams(const CJson *jsonParams, const char *groupId, TrustedGroupEntry *groupParams)
 {
@@ -156,7 +165,7 @@ HWTEST_F(GroupOperationTest, GroupOperationTest014, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest015, TestSize.Level0)
 {
-    int32_t ret = GetGroupInfo(DEFAULT_OS_ACCOUNT, PEER_TO_PEER_GROUP, g_normalStr, g_normalStr, g_normalStr, nullptr);
+    int32_t ret = GetGroupInfo(DEFAULT_OS_ACCOUNT, &g_queryGroupParams, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
