@@ -33,7 +33,7 @@ int32_t CreateAndProcessAuthTask(CompatibleAuthSubSession *session, CJson *param
 void ClearCachedData(CJson *paramInSession);
 int32_t ProcessClientAuthError(CompatibleAuthSubSession *session, const CJson *out);
 void ProcessServerAuthError(CompatibleAuthSubSession *session, const CJson *out);
-int32_t AddGroupAuthTransmitData(const CompatibleAuthSubSession *session, CJson *sendToPeer);
+int32_t AddGroupAuthTransmitData(const CompatibleAuthSubSession *session, bool isClientFirst, CJson *sendToPeer);
 int32_t HandleAuthTaskStatus(const CompatibleAuthSubSession *session, CJson *out, int32_t status);
 void NotifyPeerAuthError(const CJson *authParam, const DeviceAuthCallback *callback);
 int32_t AuthOnNextGroupIfExist(CompatibleAuthSubSession *session);

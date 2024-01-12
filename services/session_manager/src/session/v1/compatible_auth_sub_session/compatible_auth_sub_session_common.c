@@ -409,7 +409,7 @@ static int32_t ReturnTransmitData(const CompatibleAuthSubSession *session, CJson
         return HC_ERR_JSON_GET;
     }
 
-    int32_t ret = AddGroupAuthTransmitData(session, sendToPeer);
+    int32_t ret = AddGroupAuthTransmitData(session, false, sendToPeer);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to add extra data!");
         return ret;
@@ -602,7 +602,7 @@ void ProcessServerAuthError(CompatibleAuthSubSession *session, const CJson *out)
     }
 }
 
-int32_t AddGroupAuthTransmitData(const CompatibleAuthSubSession *session, CJson *sendToPeer)
+int32_t AddGroupAuthTransmitData(const CompatibleAuthSubSession *session, bool isClientFirst, CJson *sendToPeer)
 {
     ParamsVecForAuth list = session->paramsList;
     CJson *authParam = list.get(&list, session->currentIndex);
@@ -611,6 +611,11 @@ int32_t AddGroupAuthTransmitData(const CompatibleAuthSubSession *session, CJson 
         return HC_ERR_NULL_PTR;
     }
     bool isDeviceLevel = false;
+    int32_t authForm = AUTH_FORM_INVALID_TYPE;
+    (void)GetIntFromJson(authParam, FIELD_AUTH_FORM, &authForm);
+    if (isClientFirst && (authForm == AUTH_FORM_IDENTICAL_ACCOUNT || authForm == AUTH_FORM_ACROSS_ACCOUNT)) {
+        (void)GetBoolFromJson(authParam, FIELD_IS_DEVICE_LEVEL, &isDeviceLevel);
+    }
     /* Disable device-level auth. */
     if (AddBoolToJson(sendToPeer, FIELD_IS_DEVICE_LEVEL, isDeviceLevel) != HC_SUCCESS) {
         LOGE("Failed to add device level!");
