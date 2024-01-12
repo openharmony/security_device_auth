@@ -170,7 +170,7 @@ static int32_t GenerateClientFirstMsg(CompatibleAuthSubSession *session, CJson *
         LOGE("The transmit data to peer is null!");
         return HC_ERR_JSON_GET;
     }
-    int32_t res = AddGroupAuthTransmitData(session, *sendData);
+    int32_t res = AddGroupAuthTransmitData(session, true, *sendData);
     if (res != HC_SUCCESS) {
         FreeJson(*sendData);
         *sendData = NULL;
