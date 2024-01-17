@@ -146,7 +146,7 @@ static int32_t generate_sign_message(void *handle, struct uint8_buff *message)
     check_ptr_return_val(message, HC_INPUT_ERROR);
     struct sts_client *sts_client = (struct sts_client *)handle;
 
-    int len = sts_client->peer_public_key.length + sts_client->peer_id.length +
+    uint32_t len = sts_client->peer_public_key.length + sts_client->peer_id.length +
               sts_client->self_public_key.length + sts_client->self_id.length;
     uint8_t *info = (uint8_t *)MALLOC(len);
     if (info == NULL) {
@@ -154,7 +154,7 @@ static int32_t generate_sign_message(void *handle, struct uint8_buff *message)
         return HC_MALLOC_FAILED;
     }
 
-    int32_t pos = 0;
+    uint32_t pos = 0;
     (void)memcpy_s(info + pos, len - pos, sts_client->peer_public_key.stpk, sts_client->peer_public_key.length);
     pos += sts_client->peer_public_key.length;
     (void)memcpy_s(info + pos, len - pos, sts_client->peer_id.auth_id, sts_client->peer_id.length);
@@ -213,7 +213,7 @@ static int32_t generate_sts_request_sign(void *handle, struct signature *signatu
 {
     struct sts_client *sts_client = (struct sts_client *)handle;
 
-    int32_t len = sts_client->self_public_key.length + sts_client->self_id.length +
+    uint32_t len = sts_client->self_public_key.length + sts_client->self_id.length +
                   sts_client->peer_public_key.length + sts_client->peer_id.length;
     uint8_t *info = (uint8_t *)MALLOC(len);
     if (info == NULL) {
@@ -221,7 +221,7 @@ static int32_t generate_sts_request_sign(void *handle, struct signature *signatu
         return HC_MALLOC_FAILED;
     }
 
-    int32_t pos = 0;
+    uint32_t pos = 0;
     (void)memcpy_s(info + pos, len - pos, sts_client->self_public_key.stpk, sts_client->self_public_key.length);
     pos += sts_client->self_public_key.length;
     (void)memcpy_s(info + pos, len - pos, sts_client->self_id.auth_id, sts_client->self_id.length);

@@ -210,9 +210,6 @@ void AddIpcCbObjByAppId(const char *appId, int32_t objIdx, int32_t type)
 
 int32_t AddIpcCallBackByAppId(const char *appId, const uint8_t *cbPtr, int32_t cbSz, int32_t type)
 {
-    IpcCallBackNode *node = NULL;
-    errno_t eno;
-
     if (g_ipcCallBackList.ctx == NULL) {
         LOGE("list not inited");
         return HC_ERROR;
@@ -225,10 +222,9 @@ int32_t AddIpcCallBackByAppId(const char *appId, const uint8_t *cbPtr, int32_t c
         return HC_ERROR;
     }
 
-    node = GetIpcCallBackByAppId(appId, type);
+    IpcCallBackNode *node = GetIpcCallBackByAppId(appId, type);
     if (node != NULL) {
-        eno = memcpy_s(&(node->cbCtx), sizeof(node->cbCtx), cbPtr, cbSz);
-        if (eno != EOK) {
+        if (memcpy_s(&(node->cbCtx), sizeof(node->cbCtx), cbPtr, cbSz) != EOK) {
             UnLockCallbackList();
             LOGE("callback context memory copy failed");
             return HC_ERROR;
@@ -238,11 +234,9 @@ int32_t AddIpcCallBackByAppId(const char *appId, const uint8_t *cbPtr, int32_t c
             node->proxyId = -1;
         }
         UnLockCallbackList();
-        LOGI("callback add success, appid: %s", appId);
         return HC_SUCCESS;
     }
 
-    LOGI("new callback to add, appid: %s", appId);
     node = GetFreeIpcCallBackNode();
     if (node == NULL) {
         UnLockCallbackList();
@@ -250,15 +244,13 @@ int32_t AddIpcCallBackByAppId(const char *appId, const uint8_t *cbPtr, int32_t c
         return HC_ERROR;
     }
     node->cbType = type;
-    eno = memcpy_s(&(node->appId), sizeof(node->appId), appId, strlen(appId) + 1);
-    if (eno != EOK) {
+    if (memcpy_s(&(node->appId), sizeof(node->appId), appId, strlen(appId) + 1) != EOK) {
         ResetIpcCallBackNode(node);
         UnLockCallbackList();
         LOGE("appid memory copy failed");
         return HC_ERROR;
     }
-    eno = memcpy_s(&(node->cbCtx), sizeof(node->cbCtx), cbPtr, cbSz);
-    if (eno != EOK) {
+    if (memcpy_s(&(node->cbCtx), sizeof(node->cbCtx), cbPtr, cbSz) != EOK) {
         ResetIpcCallBackNode(node);
         UnLockCallbackList();
         LOGE("callback context memory copy failed");
@@ -267,7 +259,6 @@ int32_t AddIpcCallBackByAppId(const char *appId, const uint8_t *cbPtr, int32_t c
     node->proxyId = -1;
     g_ipcCallBackList.nodeCnt++;
     UnLockCallbackList();
-    LOGI("callback add success, appid: %s, type %d", node->appId, node->cbType);
     return HC_SUCCESS;
 }
 
@@ -353,7 +344,6 @@ void AddIpcCbObjByReqId(int64_t reqId, int32_t objIdx, int32_t type)
 
 int32_t AddIpcCallBackByReqId(int64_t reqId, const uint8_t *cbPtr, int32_t cbSz, int32_t type)
 {
-    IpcCallBackNode *node = NULL;
     errno_t eno;
 
     if (g_ipcCallBackList.ctx == NULL) {
@@ -368,7 +358,7 @@ int32_t AddIpcCallBackByReqId(int64_t reqId, const uint8_t *cbPtr, int32_t cbSz,
         return HC_ERROR;
     }
 
-    node = GetIpcCallBackByReqId(reqId, type);
+    IpcCallBackNode *node = GetIpcCallBackByReqId(reqId, type);
     if (node != NULL) {
         eno = memcpy_s(&(node->cbCtx), sizeof(node->cbCtx), cbPtr, cbSz);
         if (eno != EOK) {
@@ -381,11 +371,9 @@ int32_t AddIpcCallBackByReqId(int64_t reqId, const uint8_t *cbPtr, int32_t cbSz,
             node->proxyId = -1;
         }
         UnLockCallbackList();
-        LOGI("callback added success, request id %lld, type %d", reqId, type);
         return HC_SUCCESS;
     }
 
-    LOGI("new callback to add, request id %lld, type %d", reqId, type);
     node = GetFreeIpcCallBackNode();
     if (node == NULL) {
         UnLockCallbackList();
@@ -405,7 +393,6 @@ int32_t AddIpcCallBackByReqId(int64_t reqId, const uint8_t *cbPtr, int32_t cbSz,
     node->proxyId = -1;
     g_ipcCallBackList.nodeCnt++;
     UnLockCallbackList();
-    LOGI("callback added success, request id %lld, type %d", reqId, type);
     return HC_SUCCESS;
 }
 

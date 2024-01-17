@@ -48,7 +48,7 @@ void *parse_exchange_response(const char *payload, enum json_object_data_type da
         LOGE("Parse Exchange Response failed, field length is not match in exAuthInfo");
         goto error;
     }
-    exchange_response->cipher.length = len_ex_auth_info / BYTE_TO_HEX_OPER_LENGTH;
+    exchange_response->cipher.length = (uint32_t)(len_ex_auth_info / BYTE_TO_HEX_OPER_LENGTH);
     exchange_response->cipher.size = exchange_response->cipher.length;
     exchange_response->cipher.val = (uint8_t *)MALLOC(exchange_response->cipher.size);
     if (exchange_response->cipher.val == NULL) {

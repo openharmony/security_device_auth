@@ -272,20 +272,18 @@ CLEAN_UP:
 
 static int32_t ComputeSid(const PakeBaseParams *params, Uint8Buff *sid)
 {
-    int32_t res = HC_SUCCESS;
+    int32_t res = HC_ERR_ALLOC_MEMORY;
     Uint8Buff sidSelf = { NULL, SHA256_LEN };
     Uint8Buff sidPeer = { NULL, SHA256_LEN };
 
     sidSelf.val = (uint8_t *)HcMalloc(sidSelf.length, 0);
     if (sidSelf.val == NULL) {
         LOGE("Malloc for sidSelf failed.");
-        res = HC_ERR_ALLOC_MEMORY;
         goto CLEAN_UP;
     }
     sidPeer.val = (uint8_t *)HcMalloc(sidPeer.length, 0);
     if (sidPeer.val == NULL) {
         LOGE("Malloc for sidPeer failed.");
-        res = HC_ERR_ALLOC_MEMORY;
         goto CLEAN_UP;
     }
 

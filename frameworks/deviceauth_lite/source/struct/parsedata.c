@@ -56,7 +56,7 @@ struct pass_through_data *parse_data(const char *data)
         goto error;
     }
     (void)memset_s(msg_data, sizeof(*msg_data), 0, sizeof(*msg_data));
-    msg_data->message_code = message_code;
+    msg_data->message_code = (uint32_t)message_code;
     int32_t len = strlen(payload);
     if (len > 0) {
         ++len; /* add terminator */

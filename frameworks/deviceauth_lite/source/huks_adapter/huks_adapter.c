@@ -770,7 +770,7 @@ struct hc_key_alias generate_key_alias(const struct service_id *service_id,
     if (alias_sha256.length > 0) {
         int32_t length = convert_byte_to_hex_string(alias_sha256.sha256_value, alias_sha256.length,
                                                     key_alias.key_alias, HC_KEY_ALIAS_MAX_LEN);
-        key_alias.length = length;
+        key_alias.length = (uint32_t)length;
     }
     return key_alias;
 }

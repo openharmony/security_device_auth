@@ -20,22 +20,8 @@
 
 #ifndef _HC_DEBUG_
 
-#ifndef _STD_LIB_SOUTH_
-
 #define MALLOC(size) (((size) == 0) ? NULL : malloc(size))
 #define FREE free
-
-#else /* _STD_LIB_SOUTH_ */
-
-#if (defined _HILINK_PRODUCT_)
-
-#include "product_header/hilink_osadapter.h"
-#define MALLOC  hilink_malloc
-#define FREE    hilink_free
-
-#endif /* defined product */
-
-#endif /* _STD_LIB_SOUTH_ */
 
 #else /* _HC_DEBUG_ */
 
