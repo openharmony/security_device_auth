@@ -220,6 +220,11 @@ static int32_t StartV2Session(SessionImpl *impl, CJson *sendMsg)
     return AddSessionInfo(impl, sendMsg);
 }
 
+static bool IsMetaNode(const CJson *context)
+{
+    return GetStringFromJson(context, FIELD_META_NODE_TYPE) != NULL;
+}
+
 static int32_t StartSession(DevSession *self)
 {
     if (self == NULL) {
@@ -249,7 +254,7 @@ static int32_t StartSession(DevSession *self)
             LOGE("allocate sendMsg fail.");
             return HC_ERR_ALLOC_MEMORY;
         }
-        if (IsSupportSessionV2()) {
+        if (IsSupportSessionV2() && !IsMetaNode(impl->context)) {
             res = StartV2Session(impl, sendMsg);
             if (res != HC_SUCCESS) {
                 LOGE("start v2 session event fail.");
