@@ -900,6 +900,7 @@ static int32_t GetAccessibleRelatedGroups(int32_t osAccountId, const char *appId
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
+    PRINT_SENSITIVE_DATA("PeerUdid", peerDeviceId);
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
     int32_t result = GetRelatedGroups(osAccountId, peerDeviceId, true, &groupEntryVec);
     if (result != HC_SUCCESS) {

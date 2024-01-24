@@ -62,7 +62,6 @@ int32_t StubDevAuthCb::OnRemoteRequest(uint32_t code,
     int32_t callbackId;
     uintptr_t cbHook = 0x0;
 
-    LOGI("enter invoking callback...");
     switch (code) {
         case static_cast<uint32_t>(DevAuthCbInterfaceCode::DEV_AUTH_CALLBACK_REQUEST):
             if (data.GetReadableBytes() < sizeof(int32_t)) {
@@ -77,7 +76,6 @@ int32_t StubDevAuthCb::OnRemoteRequest(uint32_t code,
             LOGE("Invoke call back cmd id error, %u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    LOGI("Invoke callback done");
     return 0;
 }
 }

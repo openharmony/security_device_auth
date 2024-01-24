@@ -361,6 +361,9 @@ static bool LoadGroups(HCDataBaseV1 *db, GroupEntryVec *vec)
     uint32_t index;
     TlvGroupElement *group = NULL;
     FOR_EACH_HC_VECTOR(db->groups.data, index, group) {
+        if (group == NULL) {
+            continue;
+        }
         TrustedGroupEntry *entry = CreateGroupEntry();
         if (entry == NULL) {
             LOGE("[DB]: Failed to allocate entry memory!");
@@ -387,6 +390,9 @@ static bool LoadDevices(HCDataBaseV1 *db, DeviceEntryVec *vec)
     uint32_t index;
     TlvDeviceElement *device = NULL;
     FOR_EACH_HC_VECTOR(db->devices.data, index, device) {
+        if (device == NULL) {
+            continue;
+        }
         TrustedDeviceEntry *entry = CreateDeviceEntry();
         if (entry == NULL) {
             LOGE("[DB]: Failed to allocate entry memory!");
@@ -587,7 +593,6 @@ static void LoadOsAccountDbCe(int32_t osAccountId)
 
 static void OnOsAccountUnlocked(int32_t osAccountId)
 {
-    LOGI("[DB]: os account is unlocked, osAccountId: %d", osAccountId);
     g_databaseMutex->lock(g_databaseMutex);
     LoadOsAccountDbCe(osAccountId);
     g_databaseMutex->unlock(g_databaseMutex);
@@ -1459,9 +1464,7 @@ void DestroyDatabase(void)
     }
     DESTROY_HC_VECTOR(DeviceAuthDb, &g_deviceauthDb);
     g_databaseMutex->unlock(g_databaseMutex);
-    if (g_databaseMutex != NULL) {
-        DestroyHcMutex(g_databaseMutex);
-        HcFree(g_databaseMutex);
-        g_databaseMutex = NULL;
-    }
+    DestroyHcMutex(g_databaseMutex);
+    HcFree(g_databaseMutex);
+    g_databaseMutex = NULL;
 }
