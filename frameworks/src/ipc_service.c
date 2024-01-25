@@ -1371,8 +1371,18 @@ int32_t main(int32_t argc, char const *argv[])
         return 1;
     }
 
-    ret = AddDevAuthServiceToManager();
+    uintptr_t serviceInstance = 0x0;
+    ret = CreateServiceInstance(&serviceInstance);
     if (ret != HC_SUCCESS) {
+        LOGE("Failed to create device auth service instance!");
+        DeMainRescInit();
+        DestroyDeviceAuthService();
+        return 1;
+    }
+    (void)AddMethodMap(serviceInstance);
+    ret = AddDevAuthServiceToManager(serviceInstance);
+    if (ret != HC_SUCCESS) {
+        DestroyServiceInstance(serviceInstance);
         DeMainRescInit();
         DestroyDeviceAuthService();
         LOGE("device auth service main, AddDevAuthServiceToManager failed, ret %d", ret);
