@@ -895,7 +895,6 @@ static int32_t IpcGmGetGroupInfoById(int32_t osAccountId, const char *appId, con
     inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     if (ret != HC_SUCCESS) {
-        LOGE("Service return exception, ret: %d", ret);
         DestroyCallCtx(&callCtx, NULL);
         return ret;
     }
@@ -973,7 +972,6 @@ static int32_t IpcGmGetGroupInfo(int32_t osAccountId, const char *appId, const c
     int32_t inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     if (ret != HC_SUCCESS) {
-        LOGE("Service return exception, ret: %d", ret);
         DestroyCallCtx(&callCtx, NULL);
         return ret;
     }
@@ -1051,7 +1049,6 @@ static int32_t IpcGmGetJoinedGroups(int32_t osAccountId, const char *appId, int3
     inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     if (ret != HC_SUCCESS) {
-        LOGE("Service return exception, ret: %d", ret);
         DestroyCallCtx(&callCtx, NULL);
         return ret;
     }
@@ -1300,7 +1297,6 @@ static int32_t IpcGmGetTrustedDevices(int32_t osAccountId, const char *appId,
     inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     if (ret != HC_SUCCESS) {
-        LOGE("Service return exception, ret: %d", ret);
         DestroyCallCtx(&callCtx, NULL);
         return ret;
     }
