@@ -23,6 +23,7 @@
 #include "ipc_dev_auth_stub.h"
 #include "ipc_sdk.h"
 #include "ipc_service.h"
+#include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "securec.h"
 #include "system_ability_definition.h"
@@ -34,6 +35,7 @@ namespace {
     static const int32_t BUFF_MAX_SZ = 128;
     static const int32_t IPC_CALL_BACK_MAX_NODES = 64;
     static const int32_t IPC_CALL_BACK_STUB_NODES = 3;
+    static const uint32_t DEV_AUTH_MAX_THREAD_NUM = 2;
 }
 
 static sptr<StubDevAuthCb> g_sdkCbStub[IPC_CALL_BACK_STUB_NODES] = { nullptr, nullptr, nullptr };
@@ -1322,6 +1324,8 @@ int32_t AddDevAuthServiceToManager(uintptr_t serviceInstance)
 {
     // Wait samgr ready for up to 1 second to ensure adding service to samgr.
     WaitParameter("bootevent.samgr.ready", "true", 1);
+
+    IPCSkeleton::SetMaxWorkThreadNum(DEV_AUTH_MAX_THREAD_NUM);
 
     sptr<ISystemAbilityManager> sysMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sysMgr == nullptr) {
