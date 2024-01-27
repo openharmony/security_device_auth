@@ -487,13 +487,20 @@ static void AddDemoMember(void)
         isClient = !isClient;
         SetDeviceStatus(isClient);
         g_asyncStatus = ASYNC_STATUS_WAITING;
-        if (isClient) {
-            ret = gm->processData(TEST_REQ_ID, g_transmitData, g_transmitDataLen);
-        } else {
-            ret = gm->processData(TEST_REQ_ID2, g_transmitData, g_transmitDataLen);
+        uint8_t tmpTransmitData[2048] = { 0 };
+        uint32_t tmpTransmitDataLen = 0;
+        if (memcpy_s(tmpTransmitData, sizeof(tmpTransmitData), g_transmitData, g_transmitDataLen) != EOK) {
+            g_asyncStatus = ASYNC_STATUS_ERROR;
+            return;
         }
+        tmpTransmitDataLen = g_transmitDataLen;
         (void)memset_s(g_transmitData, g_transmitDataMaxLen, 0, g_transmitDataMaxLen);
         g_transmitDataLen = 0;
+        if (isClient) {
+            ret = gm->processData(TEST_REQ_ID, tmpTransmitData, tmpTransmitDataLen);
+        } else {
+            ret = gm->processData(TEST_REQ_ID2, tmpTransmitData, tmpTransmitDataLen);
+        }
         if (ret != HC_SUCCESS) {
             g_asyncStatus = ASYNC_STATUS_ERROR;
             return;

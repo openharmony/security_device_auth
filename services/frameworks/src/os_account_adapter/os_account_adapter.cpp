@@ -43,6 +43,7 @@ static EventCallbackVec g_callbackVec;
 static bool g_isInitialized = false;
 static bool g_isCommonEventSubscribed = false;
 static bool g_isSaSubscribed = false;
+static const int32_t SYSTEM_DEFAULT_USER = 100;
 static OHOS::DevAuth::OsAccountEventNotifier g_accountEventNotifier;
 static OHOS::DevAuth::SaEventNotifier g_saEventNotifier;
 
@@ -175,14 +176,15 @@ static bool IsCallbackExist(EventCallbackId callbackId)
 static int32_t GetCurrentActiveOsAccountId(void)
 {
     std::vector<int> activatedOsAccountIds;
-    LOGI("[OsAccountAdapter]: QueryActiveOsAccountIds enter.");
     OHOS::ErrCode res = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(activatedOsAccountIds);
     if ((res != OHOS::ERR_OK) || (activatedOsAccountIds.size() <= 0)) {
         LOGE("[OsAccountAdapter]: QueryActiveOsAccountIds fail. [Res]: %d", res);
         return INVALID_OS_ACCOUNT;
     }
     int osAccountId = activatedOsAccountIds[0];
-    LOGI("[OsAccountAdapter]: Current active os accountId: %d", osAccountId);
+    if (osAccountId != SYSTEM_DEFAULT_USER) {
+        LOGI("[OsAccountAdapter]: Current active os accountId: %d", osAccountId);
+    }
     return osAccountId;
 }
 
@@ -248,7 +250,9 @@ int32_t DevAuthGetRealOsAccountLocalId(int32_t inputId)
     if (inputId == ANY_OS_ACCOUNT) {
         return GetCurrentActiveOsAccountId();
     } else if (inputId >= 0) {
-        LOGI("[OsAccountAdapter]: Use input os account! [Id]: %d", inputId);
+        if (inputId != SYSTEM_DEFAULT_USER) {
+            LOGI("[OsAccountAdapter]: Use input os account! [Id]: %d", inputId);
+        }
         return inputId;
     } else {
         LOGE("[OsAccountAdapter]: The input os account is invalid! [Id]: %d", inputId);

@@ -62,9 +62,9 @@ int32_t DoBinderCall(uintptr_t callCtx, int32_t methodId, bool withSync);
 int32_t SetCallRequestParamInfo(uintptr_t callCtx, int32_t type, const uint8_t *param, int32_t paramSz);
 
 int32_t CreateServiceInstance(uintptr_t *ipcInstance);
-void DestroyServiceInstance(uintptr_t *ipcInstance);
+void DestroyServiceInstance(uintptr_t ipcInstance);
 
-int32_t AddDevAuthServiceToManager(void);
+int32_t AddDevAuthServiceToManager(uintptr_t serviceInstance);
 void DecodeCallReply(uintptr_t callCtx, IpcDataInfo *replyCache, int32_t cacheNum);
 
 int32_t InitIpcCallBackList(void);
