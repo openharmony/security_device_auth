@@ -30,6 +30,7 @@ void *StaticThreadFunc(void *args)
         return NULL;
     }
 
+#if defined(SET_THREAD_NAME)
     int res = pthread_setname_np(pthread_self(), StringGet(&thread->name));
     if (res != 0) {
         LOGW("[OS]: pthread_setname_np fail. [Res]: %d", res);
@@ -37,6 +38,7 @@ void *StaticThreadFunc(void *args)
         LOGI("[OS]: pthread_setname_np success. [StackSize]: %zu, [Name]: %s",
             thread->stackSize, StringGet(&thread->name));
     }
+#endif
 
     if (thread->threadFunc) {
         thread->threadFunc(args);

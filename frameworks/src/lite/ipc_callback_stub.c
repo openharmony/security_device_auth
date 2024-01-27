@@ -53,6 +53,7 @@ static void DoCallBack(int32_t callbackId, uintptr_t cbHook, IpcIo *data, IpcIo 
 
 int32_t CbStubOnRemoteRequest(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option)
 {
+    (void)option;
     int32_t callbackId;
     uintptr_t cbHook = 0x0;
 

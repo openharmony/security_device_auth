@@ -119,7 +119,7 @@ static int32_t FillPayload(const CJson *in, IsoAuthParams *params)
     return HC_SUCCESS;
 }
 
-static int32_t SetChallenge(IsoAuthParams *params, const CJson *in)
+static int32_t SetChallenge(IsoAuthParams *params)
 {
     if (((uint32_t)params->credentialType & SYMMETRIC_CRED) == SYMMETRIC_CRED) {
         params->challenge.length = HcStrlen(KEY_INFO_PERSISTENT_TOKEN);
@@ -242,7 +242,7 @@ int32_t InitIsoAuthParams(const CJson *in, IsoAuthParams *params, const AccountV
         goto CLEAN_UP;
     }
     if (params->localDevType == DEVICE_TYPE_ACCESSORY) {
-        res = SetChallenge(params, in);
+        res = SetChallenge(params);
         if (res != HC_SUCCESS) {
             LOGE("SetChallenge failed, res = %d.", res);
             goto CLEAN_UP;

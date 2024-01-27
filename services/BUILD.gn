@@ -295,7 +295,7 @@ if (os_level == "mini" || os_level == "small") {
       "c_utils:utils",
       "hilog:libhilog",
       "init:libbegetutil",
-      "ipc:ipc_core",
+      "ipc:ipc_single",
       "samgr:samgr_proxy",
     ]
   }

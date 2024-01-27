@@ -512,38 +512,6 @@ HWTEST_F(CommonLibTest, HcStringUtilTest001, TestSize.Level0)
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(CommonLibTest, HcStringUtilTest002, TestSize.Level0)
-{
-    const uint8_t byteData[] = "1234";
-    uint32_t byteSize = sizeof(byteData) / sizeof(byteData[0]);
-    uint32_t invalidByteLen = 0;
-    uint8_t byteStrBase64[TEST_BUFFER_SIZE] = { 0 };
-    int32_t ret = Base64StringToByte(nullptr, nullptr, nullptr);
-    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
-    ret = Base64StringToByte("a", byteStrBase64, &byteSize);
-    EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
-    ret = Base64StringToByte("abcd", byteStrBase64, &invalidByteLen);
-    EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
-    ret = Base64StringToByte("****", byteStrBase64, &byteSize);
-    EXPECT_EQ(ret, CLIB_ERR_INVALID_PARAM);
-    ret = Base64StringToByte("abcd", byteStrBase64, &byteSize);
-    EXPECT_EQ(ret, CLIB_SUCCESS);
-    char byte64Str[TEST_BUFFER_SIZE] = { 0 };
-    ret = ByteToBase64String(nullptr, byteSize, nullptr, TEST_BUFFER_SIZE);
-    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
-    ret = ByteToBase64String(byteData, UINT32_MAX, byte64Str, TEST_BUFFER_SIZE);
-    EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
-    ret = ByteToBase64String(byteData, byteSize, byte64Str, TEST_LENGTH_ZERO);
-    EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
-    ret = ByteToBase64String(byteData, byteSize, byte64Str, TEST_BUFFER_SIZE);
-    EXPECT_EQ(ret, CLIB_SUCCESS);
-    char *desStr = nullptr;
-    ret = ToUpperCase(nullptr, &desStr);
-    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
-    ret = ToUpperCase("abcdefg", &desStr);
-    EXPECT_EQ(ret, CLIB_SUCCESS);
-}
-
 HWTEST_F(CommonLibTest, ParseTlvHeadTest001, TestSize.Level0)
 {
     HcParcel parcelWithData = CreateParcel(TEST_BUFFER_SIZE, TEST_BUFFER_SIZE);

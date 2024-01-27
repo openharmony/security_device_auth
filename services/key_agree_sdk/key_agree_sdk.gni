@@ -72,8 +72,6 @@ if (enable_key_agree_pake_ec_prime_x25519 == true) {
   key_agree_defines += [ "P2P_PAKE_EC_PRIME_X25519" ]
 }
 
-build_flags = [ "-Werror" ]
-
 if (target_os == "linux") {
   build_flags += [ "-D__LINUX__" ]
 }

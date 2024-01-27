@@ -50,13 +50,15 @@ if (defined(ohos_lite)) {
         sources += [ "${os_adapter_path}/impl/src/liteos/mini/hc_file.c" ]
       }
 
-      cflags = [ "-DHILOG_ENABLE" ]
+      cflags = build_flags
+      cflags += [ "-DHILOG_ENABLE" ]
       cflags += [ "-DAUTH_STORAGE_PATH=\"${deviceauth_storage_path}\"" ]
       if (board_toolchain_type == "iccarm") {
         cflags += [
           "--diag_suppress",
           "Pe223,Pe226",
           "-DOHOS_MEM",
+          "-DSET_THREAD_NAME",
         ]
       }
       deps = [
@@ -102,7 +104,8 @@ if (defined(ohos_lite)) {
         ]
       }
 
-      cflags = [ "-DHILOG_ENABLE" ]
+      cflags = build_flags
+      cflags += [ "-DHILOG_ENABLE" ]
       defines += [ "LITE_DEVICE" ]
       deps = [
         "//base/hiviewdfx/hilog_lite/frameworks/featured:hilog_shared",
@@ -150,7 +153,11 @@ if (defined(ohos_lite)) {
       sources += [ "${os_adapter_path}/impl/src/linux/dev_auth_dynamic_load.c" ]
     }
 
-    cflags = [ "-DHILOG_ENABLE" ]
+    cflags = build_flags
+    cflags += [
+      "-DHILOG_ENABLE",
+      "-DSET_THREAD_NAME",
+    ]
     branch_protector_ret = "pac_ret"
     sanitize = {
       cfi = true

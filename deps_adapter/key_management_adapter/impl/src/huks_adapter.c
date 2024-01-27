@@ -950,6 +950,7 @@ static int32_t ConstructSignParams(struct HksParamSet **paramSet, Algorithm algo
 static int32_t Sign(const Uint8Buff *keyAlias, const Uint8Buff *message, Algorithm algo,
     Uint8Buff *outSignature, bool isAlias)
 {
+    (void)isAlias;
     struct HksParamSet *paramSet = NULL;
     const Uint8Buff *inParams[] = { keyAlias, message, outSignature };
     const char *paramTags[] = { "keyAlias", "message", "outSignature" };
@@ -1380,7 +1381,9 @@ static const AlgLoader g_huksLoader = {
     .importPublicKey = ImportPublicKey,
     .checkDlPublicKey = CheckDlPublicKey,
     .checkEcPublicKey = CheckEcPublicKey,
-    .bigNumCompare = BigNumCompare
+    .bigNumCompare = BigNumCompare,
+    .base64Encode = MbedtlsBase64Encode,
+    .base64Decode = MbedtlsBase64Decode
 };
 
 const AlgLoader *GetRealLoaderInstance(void)

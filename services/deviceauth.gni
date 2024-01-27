@@ -424,9 +424,6 @@ if (defined(ohos_lite)) {
   deviceauth_files += security_label_adapter_files
 }
 
-#build_flags = [ "-Wrestrict" ]
-build_flags = [ "-Werror" ]
-
 if (target_os == "linux") {
   build_flags += [ "-D__LINUX__" ]
 }

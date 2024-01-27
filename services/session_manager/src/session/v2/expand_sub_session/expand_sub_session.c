@@ -145,19 +145,21 @@ static int32_t GetRecvEncData(const CJson *receviedMsg, Uint8Buff *recvEncData)
         LOGE("get encData from json failed.");
         return HC_ERR_JSON_GET;
     }
-    uint32_t recvEncDataLen = HcStrlen(base64Str) / 4 * 3;
+    uint32_t recvEncDataLen = HcStrlen(base64Str) / BYTE_TO_BASE64_MULTIPLIER * BYTE_TO_BASE64_DIVISOR;
     uint8_t *recvEncDataVal = (uint8_t *)HcMalloc(recvEncDataLen, 0);
     if (recvEncDataVal == NULL) {
         LOGE("allocate recvEncDataVal memory fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
-    if (Base64StringToByte(base64Str, recvEncDataVal, &recvEncDataLen) != HC_SUCCESS) {
+    uint32_t outLen = 0;
+    if (GetLoaderInstance()->base64Decode(base64Str, HcStrlen(base64Str),
+        recvEncDataVal, recvEncDataLen, &outLen) != HC_SUCCESS) {
         LOGE("base64 decode fail.");
         HcFree(recvEncDataVal);
         return HC_ERR_CONVERT_FAILED;
     }
     recvEncData->val = recvEncDataVal;
-    recvEncData->length = recvEncDataLen;
+    recvEncData->length = outLen;
     return HC_SUCCESS;
 }
 
@@ -343,7 +345,8 @@ static int32_t BuildEncData(ExpandSubSessionImpl *impl, CJson *sendCmdList, CJso
         FreeUint8Buff(&sendEncData);
         return HC_ERR_ALLOC_MEMORY;
     }
-    res = ByteToBase64String(sendEncData.val, sendEncData.length, base64Str, base64StrLen);
+    uint32_t outLen = 0;
+    res = GetLoaderInstance()->base64Encode(sendEncData.val, sendEncData.length, base64Str, base64StrLen, &outLen);
     FreeUint8Buff(&sendEncData);
     if (res != HC_SUCCESS) {
         LOGE("base64 encode fail.");

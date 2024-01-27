@@ -325,10 +325,8 @@ void ServiceDevAuth::ActCallback(int32_t objIdx, int32_t callbackId, bool sync,
         return;
     }
     MessageOption option(MessageOption::TF_SYNC);
-    option.SetWaitTime(DEV_AUTH_CALL_WAIT_TIME);
     if (!sync) {
         option.SetFlags(MessageOption::TF_ASYNC);
-        option.SetWaitTime(0);
     }
     std::lock_guard<std::mutex> autoLock(g_cBMutex);
     sptr<ICommIpcCallback> proxy = iface_cast<ICommIpcCallback>(g_cbStub[objIdx].cbStub);

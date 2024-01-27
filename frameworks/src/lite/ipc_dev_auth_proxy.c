@@ -103,6 +103,7 @@ int32_t FinalCallRequest(ProxyDevAuthData *dataCtx, int32_t methodId)
 
 static int32_t CliInvokeRetCallback(IOwner owner, int32_t code, IpcIo *reply)
 {
+    (void)code;
     IpcIo *dstReply = NULL;
     errno_t eno;
 

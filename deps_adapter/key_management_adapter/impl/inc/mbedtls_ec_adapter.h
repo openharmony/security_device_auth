@@ -28,7 +28,10 @@ extern "C" {
 #endif
 
 int32_t MbedtlsHashToPoint(const Uint8Buff *hash, Uint8Buff *outEcPoint);
+int32_t MbedtlsHashToPoint25519(const Uint8Buff *hash, Uint8Buff *outEcPoint);
 int32_t MbedtlsAgreeSharedSecret(const KeyBuff *priKey, const KeyBuff *pubKey, Uint8Buff *sharedKey);
+int32_t MbedtlsBase64Encode(const uint8_t *byte, uint32_t byteLen, char *base64Str, uint32_t strLen, uint32_t *outLen);
+int32_t MbedtlsBase64Decode(const char *base64Str, uint32_t strLen, uint8_t *byte, uint32_t byteLen, uint32_t *outLen);
 
 #ifdef __cplusplus
 }

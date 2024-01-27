@@ -50,7 +50,7 @@ static void DestroyAuthServerAuthTask(TaskBase *task)
     HcFree(innerTask);
 }
 
-static int32_t DealAsyStepOneData(PakeV2AuthServerTask *task, const CJson *in)
+static int32_t DealAsyStepOneData(PakeV2AuthServerTask *task)
 {
     int32_t res = VerifyPkSignPeer(&task->params);
     if (res != HC_SUCCESS) {
@@ -73,7 +73,7 @@ static int32_t DealAsyStepOneData(PakeV2AuthServerTask *task, const CJson *in)
     return HC_SUCCESS;
 }
 
-static int32_t PrepareAsyServerStepOneData(const PakeV2AuthServerTask *innerTask, const CJson *in, CJson *out)
+static int32_t PrepareAsyServerStepOneData(const PakeV2AuthServerTask *innerTask, CJson *out)
 {
     CJson *sendToPeer = CreateJson();
     if (sendToPeer == NULL) {
@@ -141,8 +141,8 @@ static int32_t AsyAuthServerStepOne(TaskBase *task, const CJson *in, CJson *out,
         return HC_ERR_NULL_PTR;
     }
     innerTask->params.pkInfoSignPeer.length = HcStrlen(pkInfoSignPeerStr) / BYTE_TO_HEX_OPER_LENGTH;
-    GOTO_IF_ERR(DealAsyStepOneData(innerTask, in));
-    GOTO_IF_ERR(PrepareAsyServerStepOneData(innerTask, in, out));
+    GOTO_IF_ERR(DealAsyStepOneData(innerTask));
+    GOTO_IF_ERR(PrepareAsyServerStepOneData(innerTask, out));
 
     innerTask->taskBase.taskStatus = TASK_STATUS_PAKE_FOLLOW_STEP_TWO;
     *status = CONTINUE;
