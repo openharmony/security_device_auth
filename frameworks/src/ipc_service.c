@@ -136,7 +136,6 @@ static int32_t IpcServiceGmRegDataChangeListener(const IpcDataInfo *ipcParams, i
     int32_t cbObjIdx = -1;
     int32_t inOutLen;
 
-    LOGI("starting ...");
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_APPID);
@@ -542,7 +541,6 @@ static int32_t IpcServiceGmGetPkInfoList(const IpcDataInfo *ipcParams, int32_t p
     char *returnInfoList = NULL;
     uint32_t returnInfoNum = 0;
 
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if ((inOutLen != sizeof(int32_t)) || (ret != HC_SUCCESS)) {
@@ -1371,8 +1369,18 @@ int32_t main(int32_t argc, char const *argv[])
         return 1;
     }
 
-    ret = AddDevAuthServiceToManager();
+    uintptr_t serviceInstance = 0x0;
+    ret = CreateServiceInstance(&serviceInstance);
     if (ret != HC_SUCCESS) {
+        LOGE("Failed to create device auth service instance!");
+        DeMainRescInit();
+        DestroyDeviceAuthService();
+        return 1;
+    }
+    (void)AddMethodMap(serviceInstance);
+    ret = AddDevAuthServiceToManager(serviceInstance);
+    if (ret != HC_SUCCESS) {
+        DestroyServiceInstance(serviceInstance);
         DeMainRescInit();
         DestroyDeviceAuthService();
         LOGE("device auth service main, AddDevAuthServiceToManager failed, ret %d", ret);

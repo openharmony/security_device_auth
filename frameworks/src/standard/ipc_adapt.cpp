@@ -1309,42 +1309,29 @@ int32_t CreateServiceInstance(uintptr_t *ipcInstance)
     return HC_SUCCESS;
 }
 
-void DestroyServiceInstance(uintptr_t *ipcInstance)
+void DestroyServiceInstance(uintptr_t ipcInstance)
 {
-    sptr<ServiceDevAuth> service = nullptr;
-    if (ipcInstance == nullptr) {
-        return;
-    }
-    service = reinterpret_cast<ServiceDevAuth *>(*ipcInstance);
+    ServiceDevAuth *service = reinterpret_cast<ServiceDevAuth *>(ipcInstance);
     if (service == nullptr) {
         return;
     }
     delete service;
-    *ipcInstance = 0x0;
-    return;
 }
 
-int32_t AddDevAuthServiceToManager(void)
+int32_t AddDevAuthServiceToManager(uintptr_t serviceInstance)
 {
-    int32_t ret = ERR_OK;
-    ServiceDevAuth *sPtr = nullptr;
-
     // Wait samgr ready for up to 1 second to ensure adding service to samgr.
     WaitParameter("bootevent.samgr.ready", "true", 1);
 
     sptr<ISystemAbilityManager> sysMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sysMgr == nullptr) {
+        LOGE("Failed to get system ability manager!");
         return HC_ERR_IPC_GET_SERVICE;
     }
-    sPtr = new(std::nothrow) ServiceDevAuth();
-    if (sPtr == nullptr) {
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    (void)AddMethodMap(reinterpret_cast<uintptr_t>(sPtr));
-    ret = sysMgr->AddSystemAbility(DEVICE_AUTH_SERVICE_ID, sPtr);
+    ServiceDevAuth *servicePtr = reinterpret_cast<ServiceDevAuth *>(serviceInstance);
+    int32_t ret = sysMgr->AddSystemAbility(DEVICE_AUTH_SERVICE_ID, servicePtr);
     if (ret != ERR_OK) {
         LOGE("add service failed");
-        delete sPtr;
         return HC_ERROR;
     }
     LOGI("AddSystemAbility to SA manager success");
