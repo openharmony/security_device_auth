@@ -1913,11 +1913,9 @@ int32_t get_cert_chain(const struct uint8_buff *challenge,
     struct hc_key_alias *sk_alias, struct uint8_buff *out_cert_chain)
 {
     int32_t error_code = HC_INPUT_ERROR;
-
     check_ptr_return_val(challenge, error_code);
     check_ptr_return_val(sk_alias, error_code);
     check_ptr_return_val(out_cert_chain, error_code);
-
     struct HksBlob hks_key_alias = { sk_alias->length, sk_alias->key_alias };
     struct HksParamSet *key_param_set = NULL;
     int32_t hks_status = gen_get_cert_chain_param_set(&key_param_set);
@@ -1925,7 +1923,6 @@ int32_t get_cert_chain(const struct uint8_buff *challenge,
         LOGE("gen get cert chain param set failed, status:%d", hks_status);
         return ERROR_CODE_FAILED;
     }
-
     int8_t malloc_flag = 1; /* malloc ok */
     struct HksBlob cert[g_cert_chain_cnt];
     (void)memset_s(cert, sizeof(cert), 0, sizeof(cert));
@@ -1939,7 +1936,6 @@ int32_t get_cert_chain(const struct uint8_buff *challenge,
         (void)memset_s(cert[i].data, cert_buff_size, 0, cert_buff_size);
         cert[i].size = cert_buff_size;
     }
-
     if (malloc_flag == 0) {
         for (int32_t i = 0; i < g_cert_chain_cnt; ++i) {
             if (cert[i].data != NULL) {
@@ -1949,25 +1945,20 @@ int32_t get_cert_chain(const struct uint8_buff *challenge,
         HksFreeParamSet(&key_param_set);
         return HC_MALLOC_FAILED;
     }
-
     struct HksCertChain hks_cert_chains = { cert, g_cert_chain_cnt };
-
     hks_status = HksGetCertificateChain(&hks_key_alias, key_param_set, &hks_cert_chains);
     if (hks_status != ERROR_CODE_SUCCESS) {
         LOGE("Get cert chain failed, errCode is %d", hks_status);
     }
-
     out_cert_chain->length = hks_cert_chains.certs[0].size;
     (void)memset_s(out_cert_chain->val, out_cert_chain->length, 0, out_cert_chain->length);
     if (memcpy_s(out_cert_chain->val, out_cert_chain->length, hks_cert_chains.certs[0].data,
         hks_cert_chains.certs[0].size) != EOK) {
         LOGE("Copy cert chain failed!");
     }
-
     for (int32_t i = 0; i < g_cert_chain_cnt; ++i) {
         FREE(hks_cert_chains.certs[i].data);
     }
-
     HksFreeParamSet(&key_param_set);
     return hks_status;
 }

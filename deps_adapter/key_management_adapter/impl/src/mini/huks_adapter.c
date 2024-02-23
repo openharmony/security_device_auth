@@ -482,7 +482,6 @@ static int32_t ConstructImportSymmetricKeyParam(struct HksParamSet **paramSet, u
             return HAL_ERR_BAD_ALLOC;
         }
     }
-
     importParam[idx].tag = HKS_TAG_ALGORITHM;
     importParam[idx++].uint32Param = HKS_ALG_AES;
     importParam[idx].tag = HKS_TAG_KEY_SIZE;
@@ -497,12 +496,10 @@ static int32_t ConstructImportSymmetricKeyParam(struct HksParamSet **paramSet, u
     importParam[idx++].uint32Param = HKS_MODE_GCM;
     importParam[idx].tag = HKS_TAG_DIGEST;
     importParam[idx++].uint32Param = HKS_DIGEST_SHA256;
-
     int res = ConstructParamSet(paramSet, importParam, idx);
     if (res != HAL_SUCCESS) {
         LOGE("Construct decrypt param set failed, res = %d.", res);
     }
-
     HcFree(importParam);
     return res;
 }

@@ -90,7 +90,7 @@ HWTEST_F(AsyTokenManagerTest, AsyTokenManagerTest002, TestSize.Level0)
         ret = GetAccountAuthTokenManager()->getToken(DEFAULT_OS_ACCOUNT, &accountToken, nullptr, nullptr);
         EXPECT_NE(ret, HC_SUCCESS);
 
-        ret = GetAccountAuthTokenManager()->getToken(DEFAULT_OS_ACCOUNT, &accountToken, "userId", nullptr); // For unit test.
+        ret = GetAccountAuthTokenManager()->getToken(DEFAULT_OS_ACCOUNT, &accountToken, "userId", nullptr);
         EXPECT_NE(ret, HC_SUCCESS);
     } while (0);
 }
@@ -206,7 +206,7 @@ HWTEST_F(AsyTokenManagerTest, AsyTokenManagerTest007, TestSize.Level0)
         (void)VerifySignature(nullptr);
         (void)SaveOsAccountTokenDb(DEFAULT_OS_ACCOUNT);
         (void)QueryTokenPtrIfMatch(&vec, nullptr, nullptr);
-        (void)QueryTokenPtrIfMatch(&vec, "userId",nullptr); // For unit test.
+        (void)QueryTokenPtrIfMatch(&vec, "userId", nullptr); // For unit test.
         (void)QueryTokenPtrIfMatch(&vec, "userId", "deviceId"); // For unit test.
         (void)GetAccountToken(DEFAULT_OS_ACCOUNT, "userId", "deviceId"); // For unit test.
         (void)DeleteTokenInner(DEFAULT_OS_ACCOUNT, "userId", "deviceId", &vec); // For unit test.

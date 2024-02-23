@@ -15,11 +15,10 @@
 
 #include "common_lib_test.h"
 #include <gtest/gtest.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stddef.h>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <cstddef>
 #include "securec.h"
 
 using namespace std;
@@ -38,8 +37,7 @@ static const char *TEST_JSON_STR_ARR = "[{\"name\":\"Tom1\",\"age\":18},{\"name\
 static const char *TEST_STR = "test_str";
 static const char TEST_CHAR = '0';
 
-class CommonLibTest : public testing::Test
-{
+class CommonLibTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();

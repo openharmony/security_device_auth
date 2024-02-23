@@ -183,12 +183,10 @@ int32_t import_signed_auth_info_hilink(const struct hichain *hichain, const stru
     check_ptr_return_val(hichain, HC_INPUT_ERROR);
     check_ptr_return_val(auth_id, HC_INPUT_ERROR);
     check_ptr_return_val(data, HC_INPUT_ERROR);
-
     if (data->length <= (HC_SIGNATURE_LEN * BYTE_TO_HEX_OPER_LENGTH)) {
         LOGE("Import public key signature info length is %u", data->length);
         return HC_SIGN_TOO_SHORT;
     }
-
     uint32_t len = (data->length / BYTE_TO_HEX_OPER_LENGTH) + 1;
     uint8_t *receive_data = (uint8_t *)MALLOC(len);
     if (receive_data == NULL) {
@@ -200,7 +198,6 @@ int32_t import_signed_auth_info_hilink(const struct hichain *hichain, const stru
         FREE(receive_data);
         return HC_INNER_ERROR;
     }
-
     struct signature sign_result = { 0, {0} };
     if (memcpy_s(sign_result.signature, sizeof(sign_result.signature), receive_data, HC_SIGNATURE_LEN) != EOK) {
         (void)memset_s(receive_data, len, 0, len);
@@ -211,7 +208,6 @@ int32_t import_signed_auth_info_hilink(const struct hichain *hichain, const stru
     struct uint8_buff message = { NULL, 0, 0 };
     message.val = receive_data + HC_SIGNATURE_LEN;
     message.length = (data->length / BYTE_TO_HEX_OPER_LENGTH) - HC_SIGNATURE_LEN;
-
     struct import_auth_data *import_data = (struct import_auth_data *)parse_import_add_auth_data(
         (char *)message.val, JSON_STRING_DATA);
     if (import_data == NULL) {
@@ -220,7 +216,6 @@ int32_t import_signed_auth_info_hilink(const struct hichain *hichain, const stru
         FREE(receive_data);
         return HC_BUILD_OBJECT_FAILED;
     }
-
     int32_t ret = verify_import_auth_info(hichain, import_data, &message, &sign_result);
     if (ret != HC_OK) {
         (void)memset_s(receive_data, len, 0, len);
@@ -229,7 +224,6 @@ int32_t import_signed_auth_info_hilink(const struct hichain *hichain, const stru
         free_import_add_auth_data(import_data);
         return ret;
     }
-
     ret = save_import_auth_info(hichain, auth_id, import_data);
     (void)memset_s(receive_data, len, 0, len);
     (void)memset_s(&import_data->ltpk, sizeof(struct ltpk), 0, sizeof(struct ltpk));
