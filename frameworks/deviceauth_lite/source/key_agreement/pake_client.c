@@ -198,8 +198,7 @@ static int32_t parse_start_response_data(void *handle, void *data)
 
     struct hkdf secret = { 0, {0} };
     int32_t ret = compute_hkdf((struct var_buffer *)&pake_client->pin, &pake_client->salt,
-                               HICHAIN_SPEKE_BASE_INFO, HC_HKDF_SECRET_LEN,
-                               (struct var_buffer *)&secret);
+                               HICHAIN_SPEKE_BASE_INFO, HC_HKDF_SECRET_LEN, (struct var_buffer *)&secret);
     if (ret != HC_OK) {
         LOGE("Object %u generate hkdf failed, error code is %d", pake_client_sn(pake_client), ret);
         return ret;
@@ -227,8 +226,7 @@ static int32_t parse_start_response_data(void *handle, void *data)
     exp.exp[0] = 2; /* square */
     struct epk base = { 0, {0} };
 
-    ret = cal_bignum_exp((struct var_buffer *)&secret, (struct var_buffer *)&exp,
-                         prime_len, (struct big_num *)&base);
+    ret = cal_bignum_exp((struct var_buffer *)&secret, (struct var_buffer *)&exp, prime_len, (struct big_num *)&base);
     (void)memset_s(&secret, sizeof(struct hkdf), 0, sizeof(struct hkdf));
     if (ret != HC_OK) {
         return HC_CAL_BIGNUM_EXP_FAILED;

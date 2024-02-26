@@ -39,8 +39,8 @@ namespace OHOS {
             CJson *json = CreateJsonFromString(authReturn);
             if (json != nullptr) {
                 const char *data = GetStringFromJson(json, FIELD_GROUP_ID);
-                if (data != nullptr) {
-                    (void)memcpy_s(g_groupId, strlen(data), data, strlen(data));
+                if (data != nullptr && strlen(data) < sizeof(g_groupId)) {
+                    (void)memcpy_s(g_groupId, sizeof(g_groupId), data, strlen(data));
                     g_groupId[strlen(data)] = 0;
                 }
                 FreeJson(json);
