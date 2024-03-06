@@ -24,6 +24,11 @@ extern "C" {
 #endif
 
 typedef struct {
+    const char* deviceId;
+    bool isUdid;
+} DeviceQueryParams;
+
+typedef struct {
     int32_t (*createGroup)(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams);
     int32_t (*deleteGroup)(int32_t osAccountId, int64_t requestId, const char *appId, const char *disbandParams);
     int32_t (*deleteMember)(int32_t osAccountId, int64_t requestId, const char *appId, const char *deleteParams);
@@ -41,8 +46,8 @@ typedef struct {
         char **returnGroupVec, uint32_t *groupNum);
     int32_t (*getAccessibleRelatedGroups)(int32_t osAccountId, const char *appId, const char *peerDeviceId, bool isUdid,
         char **returnGroupVec, uint32_t *groupNum);
-    int32_t (*getAccessibleDeviceInfoById)(int32_t osAccountId, const char *appId, const char *deviceId, bool isUdid,
-        const char *groupId, char **returnDeviceInfo);
+    int32_t (*getAccessibleDeviceInfoById)(int32_t osAccountId, const char *appId,
+        const DeviceQueryParams *devQueryParams, const char *groupId, char **returnDeviceInfo);
     int32_t (*getAccessibleTrustedDevices)(int32_t osAccountId, const char *appId, const char *groupId,
         char **returnDevInfoVec, uint32_t *deviceNum);
     bool (*isDeviceInAccessibleGroup)(int32_t osAccountId, const char *appId, const char *groupId,

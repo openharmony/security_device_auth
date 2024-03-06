@@ -33,18 +33,18 @@ using namespace testing::ext;
 namespace {
 #define PSK_SIZE 32
 #define INVALID_CURVE_TYPE 0
-static const uint8_t g_pskVal[PSK_SIZE] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+static const uint8_t PSK_VAL[PSK_SIZE] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
     20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 };
-static const char *g_authIdCVal = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
-static const char *g_authIdSVal = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
-static const char *g_msgCVal = "client send msg";
-static const char *g_msgSVal = "server send msg";
+static const char *AUTH_ID_C_VAL = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
+static const char *AUTH_ID_S_VAL = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
+static const char *MSG_C_VAL = "client send msg";
+static const char *MSG_S_VAL = "server send msg";
 
-static Uint8Buff g_psk = { (uint8_t *)g_pskVal, PSK_SIZE };
-static Uint8Buff g_authIdC = { (uint8_t *)g_authIdCVal, 64 };
-static Uint8Buff g_authIdS = { (uint8_t *)g_authIdSVal, 64 };
-static Uint8Buff g_msgC = { (uint8_t *)g_msgCVal, 16 };
-static Uint8Buff g_msgS = { (uint8_t *)g_msgSVal, 16 };
+static Uint8Buff g_psk = { (uint8_t *)PSK_VAL, PSK_SIZE };
+static Uint8Buff g_authIdC = { (uint8_t *)AUTH_ID_C_VAL, 64 };
+static Uint8Buff g_authIdS = { (uint8_t *)AUTH_ID_S_VAL, 64 };
+static Uint8Buff g_msgC = { (uint8_t *)MSG_C_VAL, 16 };
+static Uint8Buff g_msgS = { (uint8_t *)MSG_S_VAL, 16 };
 static EcSpekeInitParams g_P256ParamsC = { CURVE_TYPE_256, g_authIdC };
 static EcSpekeInitParams g_P256ParamsS = { CURVE_TYPE_256, g_authIdS };
 static EcSpekeInitParams g_X25519ParamsC = { CURVE_TYPE_25519, g_authIdC };
@@ -342,7 +342,7 @@ HWTEST_F(EcSpekeProtocolTest, EcSpekeProtocolTest108, TestSize.Level0)
     ASSERT_EQ(res, HC_SUCCESS);
     ASSERT_NE(self, nullptr);
 
-    Uint8Buff errParams = { (uint8_t *)g_pskVal, 0 };
+    Uint8Buff errParams = { (uint8_t *)PSK_VAL, 0 };
     res = self->setPsk(self, &errParams);
     ASSERT_NE(res, HC_SUCCESS);
 

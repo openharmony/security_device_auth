@@ -32,27 +32,27 @@ using namespace std;
 using namespace testing::ext;
 
 namespace {
-static const char *g_authIdC = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
-static const char *g_authIdS = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
-static const char *g_groupId = "E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21";
-static const char *g_userIdC = "4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4";
-static const char *g_userIdS = "9F207900038F91FEF95DD042FE2874E44269DC28B639681698809A67EDAD08E3";
-static const char *g_groupName = "testGroup";
-static const char *g_owner = "testApp";
+static const char *AUTH_ID_C = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
+static const char *AUTH_ID_S = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
+static const char *GROUP_ID = "E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21";
+static const char *USER_ID_C = "4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4";
+static const char *USER_ID_S = "9F207900038F91FEF95DD042FE2874E44269DC28B639681698809A67EDAD08E3";
+static const char *GROUP_NAME = "testGroup";
+static const char *OWNER = "testApp";
 
 #define TEST_OS_ACCOUNT_ID1 0
 #define TEST_OS_ACCOUNT_ID2 100
 
 static SaveTrustedInfoParams g_paramsC = { TEST_OS_ACCOUNT_ID1, ASYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY,
-    GROUP_VISIBILITY_PUBLIC, g_owner, g_groupId, g_authIdC };
+    GROUP_VISIBILITY_PUBLIC, OWNER, GROUP_ID, AUTH_ID_C };
 static SaveTrustedInfoParams g_paramsS = { TEST_OS_ACCOUNT_ID2, ASYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY,
-    GROUP_VISIBILITY_PUBLIC, g_owner, g_groupId, g_authIdS };
+    GROUP_VISIBILITY_PUBLIC, OWNER, GROUP_ID, AUTH_ID_S };
 
-static const char *g_invalidMsg1 = "{\"errCode\": 1}";
-static const char *g_invalidMsg2 = "{\"event\": -1, \"errCode\": 1}";
-static const char *g_invalidMsg3 = "{\"event\": 10, \"errCode\": 1}";
-static const char *g_errorMsg1 = "{\"event\": 3, \"errCode\": 1}";
-static const char *g_errorMsg2 = "{\"event\": 3}";
+static const char *INVALID_MSG1 = "{\"errCode\": 1}";
+static const char *INVALID_MSG2 = "{\"event\": -1, \"errCode\": 1}";
+static const char *INVALID_MSG3 = "{\"event\": 10, \"errCode\": 1}";
+static const char *ERROR_MSG1 = "{\"event\": 3, \"errCode\": 1}";
+static const char *ERROR_MSG2 = "{\"event\": 3}";
 
 static const int TEST_DEV_AUTH_BUFFER_SIZE = 128;
 
@@ -225,7 +225,7 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest002, TestSize.Level0)
     int32_t res = InitDatabase();
     ASSERT_EQ(res, HC_SUCCESS);
     CreateParams params = { TEST_OS_ACCOUNT_ID1, SYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY, GROUP_VISIBILITY_PUBLIC,
-        g_groupId, g_groupName, g_owner, g_authIdC, g_authIdC, g_userIdC };
+        GROUP_ID, GROUP_NAME, OWNER, AUTH_ID_C, AUTH_ID_C, USER_ID_C };
     res = CreatePeerToPeerGroup(&params);
     ASSERT_EQ(res, HC_SUCCESS);
 
@@ -273,7 +273,7 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest003, TestSize.Level0)
     int32_t res = InitDatabase();
     ASSERT_EQ(res, HC_SUCCESS);
     CreateParams params = { TEST_OS_ACCOUNT_ID2, SYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY, GROUP_VISIBILITY_PUBLIC,
-        g_groupId, g_groupName, g_owner, g_authIdS, g_authIdS, g_userIdS };
+        GROUP_ID, GROUP_NAME, OWNER, AUTH_ID_S, AUTH_ID_S, USER_ID_S };
     res = CreatePeerToPeerGroup(&params);
     ASSERT_EQ(res, HC_SUCCESS);
 
@@ -324,7 +324,7 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest101, TestSize.Level0)
 HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest102, TestSize.Level0)
 {
     SaveTrustedInfoParams errorParams = { 0, ASYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY, GROUP_VISIBILITY_PUBLIC,
-        nullptr, g_groupId, g_authIdC };
+        nullptr, GROUP_ID, AUTH_ID_C };
     BaseCmd *self = CreateSaveTrustedInfoCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
@@ -332,7 +332,7 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest102, TestSize.Level0)
 HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest103, TestSize.Level0)
 {
     SaveTrustedInfoParams errorParams = { 0, ASYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY, GROUP_VISIBILITY_PUBLIC,
-        g_owner, nullptr, g_authIdC };
+        OWNER, nullptr, AUTH_ID_C };
     BaseCmd *self = CreateSaveTrustedInfoCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
@@ -340,7 +340,7 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest103, TestSize.Level0)
 HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest104, TestSize.Level0)
 {
     SaveTrustedInfoParams errorParams = { 0, ASYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY, GROUP_VISIBILITY_PUBLIC,
-        g_owner, g_groupId, nullptr };
+        OWNER, GROUP_ID, nullptr };
     BaseCmd *self = CreateSaveTrustedInfoCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
@@ -380,7 +380,7 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest109, TestSize.Level0)
     int32_t res = InitDatabase();
     ASSERT_EQ(res, HC_SUCCESS);
     CreateParams params = { TEST_OS_ACCOUNT_ID2, SYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY, GROUP_VISIBILITY_PUBLIC,
-        g_groupId, g_groupName, g_owner, g_authIdS, g_authIdS, g_userIdS };
+        GROUP_ID, GROUP_NAME, OWNER, AUTH_ID_S, AUTH_ID_S, USER_ID_S };
     res = CreatePeerToPeerGroup(&params);
     ASSERT_EQ(res, HC_SUCCESS);
 
@@ -493,7 +493,7 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest116, TestSize.Level0)
     BaseCmd *self = CreateSaveTrustedInfoCmd((void *)&g_paramsS, false, ABORT_IF_ERROR);
     ASSERT_NE(self, nullptr);
 
-    CJson *failEvent = CreateJsonFromString(g_errorMsg1);
+    CJson *failEvent = CreateJsonFromString(ERROR_MSG1);
     ASSERT_NE(failEvent, nullptr);
     CJson *out = nullptr;
     CmdState state;
@@ -510,7 +510,7 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest117, TestSize.Level0)
     BaseCmd *self = CreateSaveTrustedInfoCmd((void *)&g_paramsS, false, ABORT_IF_ERROR);
     ASSERT_NE(self, nullptr);
 
-    CJson *failEvent = CreateJsonFromString(g_errorMsg2);
+    CJson *failEvent = CreateJsonFromString(ERROR_MSG2);
     ASSERT_NE(failEvent, nullptr);
     CJson *out = nullptr;
     CmdState state;
@@ -527,7 +527,7 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest118, TestSize.Level0)
     BaseCmd *self = CreateSaveTrustedInfoCmd((void *)&g_paramsS, false, ABORT_IF_ERROR);
     ASSERT_NE(self, nullptr);
 
-    CJson *invalidMsg = CreateJsonFromString(g_invalidMsg1);
+    CJson *invalidMsg = CreateJsonFromString(INVALID_MSG1);
     ASSERT_NE(invalidMsg, nullptr);
     CJson *out = nullptr;
     CmdState state;
@@ -544,7 +544,7 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest119, TestSize.Level0)
     BaseCmd *self = CreateSaveTrustedInfoCmd((void *)&g_paramsS, false, ABORT_IF_ERROR);
     ASSERT_NE(self, nullptr);
 
-    CJson *invalidMsg = CreateJsonFromString(g_invalidMsg2);
+    CJson *invalidMsg = CreateJsonFromString(INVALID_MSG2);
     ASSERT_NE(invalidMsg, nullptr);
     CJson *out = nullptr;
     CmdState state;
@@ -561,7 +561,7 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest120, TestSize.Level0)
     BaseCmd *self = CreateSaveTrustedInfoCmd((void *)&g_paramsS, false, ABORT_IF_ERROR);
     ASSERT_NE(self, nullptr);
 
-    CJson *invalidMsg = CreateJsonFromString(g_invalidMsg3);
+    CJson *invalidMsg = CreateJsonFromString(INVALID_MSG3);
     ASSERT_NE(invalidMsg, nullptr);
     CJson *out = nullptr;
     CmdState state;
@@ -625,7 +625,7 @@ static int32_t TestMemoryException(void)
         return res;
     }
     CreateParams params = { TEST_OS_ACCOUNT_ID1, SYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY, GROUP_VISIBILITY_PUBLIC,
-        g_groupId, g_groupName, g_owner, g_authIdC, g_authIdC, g_userIdC };
+        GROUP_ID, GROUP_NAME, OWNER, AUTH_ID_C, AUTH_ID_C, USER_ID_C };
     res = CreatePeerToPeerGroup(&params);
     if (res != HC_SUCCESS) {
         DestroyDatabase();
@@ -654,7 +654,7 @@ static int32_t TestMemoryException2(void)
         return res;
     }
     CreateParams params = { TEST_OS_ACCOUNT_ID2, SYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY, GROUP_VISIBILITY_PUBLIC,
-        g_groupId, g_groupName, g_owner, g_authIdS, g_authIdS, g_userIdS };
+        GROUP_ID, GROUP_NAME, OWNER, AUTH_ID_S, AUTH_ID_S, USER_ID_S };
     res = CreatePeerToPeerGroup(&params);
     if (res != HC_SUCCESS) {
         DestroyDatabase();

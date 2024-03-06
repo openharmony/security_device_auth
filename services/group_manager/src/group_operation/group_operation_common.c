@@ -233,20 +233,14 @@ int32_t CheckGroupEditAllowed(int32_t osAccountId, const char *groupId, const ch
     return HC_SUCCESS;
 }
 
-int32_t GetGroupInfo(int32_t osAccountId, int groupType, const char *groupId, const char *groupName,
-    const char *groupOwner, GroupEntryVec *returnGroupEntryVec)
+int32_t GetGroupInfo(int32_t osAccountId, const QueryGroupParams *params, GroupEntryVec *returnGroupEntryVec)
 {
     /* Fuzzy query interfaces, so some parameters can be NULL. */
     if (returnGroupEntryVec == NULL) {
         LOGE("The input returnGroupEntryVec is NULL!");
         return HC_ERR_INVALID_PARAMS;
     }
-    QueryGroupParams params = InitQueryGroupParams();
-    params.groupId = groupId;
-    params.groupName = groupName;
-    params.ownerName = groupOwner;
-    params.groupType = groupType;
-    return QueryGroups(osAccountId, &params, returnGroupEntryVec);
+    return QueryGroups(osAccountId, params, returnGroupEntryVec);
 }
 
 int32_t GetJoinedGroups(int32_t osAccountId, int groupType, GroupEntryVec *returnGroupEntryVec)

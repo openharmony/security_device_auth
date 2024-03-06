@@ -31,7 +31,7 @@ extern "C" {
 
 static const int32_t IPC_RESULT_NUM_1 = 1;
 static const int32_t IPC_RESULT_NUM_2 = 2;
-static const char *g_serviceAppId = "deviceauth_service";
+static const char *SERVICE_APP_ID = "deviceauth_service";
 static DeviceGroupManager g_devGroupMgrMethod = {NULL};
 static GroupAuthManager g_groupAuthMgrMethod = {NULL};
 static DeviceAuthCallback g_bindCbAdt = {NULL};
@@ -166,7 +166,7 @@ static int32_t IpcServiceGmRegDataChangeListener(const IpcDataInfo *ipcParams, i
     callRet = HC_SUCCESS;
     if (registered == 0) {
         InitDevAuthListenerCbCtx(&g_listenCbAdt);
-        callRet = g_devGroupMgrMethod.regDataChangeListener(g_serviceAppId, &g_listenCbAdt);
+        callRet = g_devGroupMgrMethod.regDataChangeListener(SERVICE_APP_ID, &g_listenCbAdt);
         if (callRet == HC_SUCCESS) {
             registered = 1;
         } else {
@@ -1142,15 +1142,17 @@ int32_t AddMethodMap(uintptr_t ipcInstance)
     return ret;
 }
 
-void DeMainRescInit(uintptr_t *serviceCtx)
+#ifndef DEV_AUTH_FUZZ_TEST
+static void DeMainRescInit(uintptr_t *serviceCtx)
 {
     if (g_devGroupMgrMethod.unRegDataChangeListener != NULL) {
-        (void)g_devGroupMgrMethod.unRegDataChangeListener(g_serviceAppId);
+        (void)g_devGroupMgrMethod.unRegDataChangeListener(SERVICE_APP_ID);
     }
     DeInitIpcCallBackList();
     DestroyServiceInstance(serviceCtx);
     return;
 }
+#endif
 
 int32_t MainRescInit(void)
 {
@@ -1173,7 +1175,7 @@ int32_t MainRescInit(void)
     g_devGroupMgrMethod = (DeviceGroupManager)(*gmInst);
     g_groupAuthMgrMethod = (GroupAuthManager)(*gaInst);
     InitDevAuthListenerCbCtx(&g_listenCbAdt);
-    ret = gmInst->regDataChangeListener(g_serviceAppId, &g_listenCbAdt);
+    ret = gmInst->regDataChangeListener(SERVICE_APP_ID, &g_listenCbAdt);
     if (ret != HC_SUCCESS) {
         DeInitIpcCallBackList();
         LOGE("MainInit, register ipc listener failed, ret %d", ret);
