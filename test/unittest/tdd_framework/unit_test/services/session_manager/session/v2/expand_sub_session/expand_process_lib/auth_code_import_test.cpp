@@ -31,21 +31,21 @@ using namespace std;
 using namespace testing::ext;
 
 namespace {
-static const char *g_authIdCVal = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
-static const char *g_authIdSVal = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
-static const char *g_groupId = "E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21";
-static const char *g_owner = "testApp";
+static const char *AUTH_ID_C_VAL = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
+static const char *AUTH_ID_S_VAL = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
+static const char *GROUP_ID = "E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21";
+static const char *OWNER = "testApp";
 
-static Uint8Buff g_authIdC = { (uint8_t *)g_authIdCVal, 64 };
-static Uint8Buff g_authIdS = { (uint8_t *)g_authIdSVal, 64 };
-static AuthCodeImportParams g_paramsC = { 0, g_owner, g_groupId, g_authIdC };
-static AuthCodeImportParams g_paramsS = { 0, g_owner, g_groupId, g_authIdS };
+static Uint8Buff g_authIdC = { (uint8_t *)AUTH_ID_C_VAL, 64 };
+static Uint8Buff g_authIdS = { (uint8_t *)AUTH_ID_S_VAL, 64 };
+static AuthCodeImportParams g_paramsC = { 0, OWNER, GROUP_ID, g_authIdC };
+static AuthCodeImportParams g_paramsS = { 0, OWNER, GROUP_ID, g_authIdS };
 
-static const char *g_invalidMsg1 = "{\"errCode\": 1}";
-static const char *g_invalidMsg2 = "{\"event\": -1, \"errCode\": 1}";
-static const char *g_invalidMsg3 = "{\"event\": 10, \"errCode\": 1}";
-static const char *g_errorMsg1 = "{\"event\": 3, \"errCode\": 1}";
-static const char *g_errorMsg2 = "{\"event\": 3}";
+static const char *INVALID_MSG1 = "{\"errCode\": 1}";
+static const char *INVALID_MSG2 = "{\"event\": -1, \"errCode\": 1}";
+static const char *INVALID_MSG3 = "{\"event\": 10, \"errCode\": 1}";
+static const char *ERROR_MSG1 = "{\"event\": 3, \"errCode\": 1}";
+static const char *ERROR_MSG2 = "{\"event\": 3}";
 
 class AuthCodeImportTest : public testing::Test {
 public:
@@ -139,28 +139,28 @@ HWTEST_F(AuthCodeImportTest, AuthCodeImportTest101, TestSize.Level0)
 
 HWTEST_F(AuthCodeImportTest, AuthCodeImportTest102, TestSize.Level0)
 {
-    AuthCodeImportParams errorParams = { 0, nullptr, g_groupId, g_authIdC };
+    AuthCodeImportParams errorParams = { 0, nullptr, GROUP_ID, g_authIdC };
     BaseCmd *self = CreateAuthCodeImportCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
 
 HWTEST_F(AuthCodeImportTest, AuthCodeImportTest103, TestSize.Level0)
 {
-    AuthCodeImportParams errorParams = { 0, g_owner, nullptr, g_authIdC };
+    AuthCodeImportParams errorParams = { 0, OWNER, nullptr, g_authIdC };
     BaseCmd *self = CreateAuthCodeImportCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
 
 HWTEST_F(AuthCodeImportTest, AuthCodeImportTest104, TestSize.Level0)
 {
-    AuthCodeImportParams errorParams = { 0, g_owner, g_groupId, { nullptr, 0 } };
+    AuthCodeImportParams errorParams = { 0, OWNER, GROUP_ID, { nullptr, 0 } };
     BaseCmd *self = CreateAuthCodeImportCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
 
 HWTEST_F(AuthCodeImportTest, AuthCodeImportTest105, TestSize.Level0)
 {
-    AuthCodeImportParams errorParams = { 0, g_owner, g_groupId, { (uint8_t *)g_authIdCVal, 0 } };
+    AuthCodeImportParams errorParams = { 0, OWNER, GROUP_ID, { (uint8_t *)AUTH_ID_C_VAL, 0 } };
     BaseCmd *self = CreateAuthCodeImportCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
@@ -303,7 +303,7 @@ HWTEST_F(AuthCodeImportTest, AuthCodeImportTest116, TestSize.Level0)
     BaseCmd *self = CreateAuthCodeImportCmd((void *)&g_paramsS, false, ABORT_IF_ERROR);
     ASSERT_NE(self, nullptr);
 
-    CJson *failEvent = CreateJsonFromString(g_errorMsg1);
+    CJson *failEvent = CreateJsonFromString(ERROR_MSG1);
     ASSERT_NE(failEvent, nullptr);
     CJson *out = nullptr;
     CmdState state;
@@ -320,7 +320,7 @@ HWTEST_F(AuthCodeImportTest, AuthCodeImportTest117, TestSize.Level0)
     BaseCmd *self = CreateAuthCodeImportCmd((void *)&g_paramsS, false, ABORT_IF_ERROR);
     ASSERT_NE(self, nullptr);
 
-    CJson *failEvent = CreateJsonFromString(g_errorMsg2);
+    CJson *failEvent = CreateJsonFromString(ERROR_MSG2);
     ASSERT_NE(failEvent, nullptr);
     CJson *out = nullptr;
     CmdState state;
@@ -337,7 +337,7 @@ HWTEST_F(AuthCodeImportTest, AuthCodeImportTest118, TestSize.Level0)
     BaseCmd *self = CreateAuthCodeImportCmd((void *)&g_paramsS, false, ABORT_IF_ERROR);
     ASSERT_NE(self, nullptr);
 
-    CJson *invalidMsg = CreateJsonFromString(g_invalidMsg1);
+    CJson *invalidMsg = CreateJsonFromString(INVALID_MSG1);
     ASSERT_NE(invalidMsg, nullptr);
     CJson *out = nullptr;
     CmdState state;
@@ -354,7 +354,7 @@ HWTEST_F(AuthCodeImportTest, AuthCodeImportTest119, TestSize.Level0)
     BaseCmd *self = CreateAuthCodeImportCmd((void *)&g_paramsS, false, ABORT_IF_ERROR);
     ASSERT_NE(self, nullptr);
 
-    CJson *invalidMsg = CreateJsonFromString(g_invalidMsg2);
+    CJson *invalidMsg = CreateJsonFromString(INVALID_MSG2);
     ASSERT_NE(invalidMsg, nullptr);
     CJson *out = nullptr;
     CmdState state;
@@ -371,7 +371,7 @@ HWTEST_F(AuthCodeImportTest, AuthCodeImportTest120, TestSize.Level0)
     BaseCmd *self = CreateAuthCodeImportCmd((void *)&g_paramsS, false, ABORT_IF_ERROR);
     ASSERT_NE(self, nullptr);
 
-    CJson *invalidMsg = CreateJsonFromString(g_invalidMsg3);
+    CJson *invalidMsg = CreateJsonFromString(INVALID_MSG3);
     ASSERT_NE(invalidMsg, nullptr);
     CJson *out = nullptr;
     CmdState state;

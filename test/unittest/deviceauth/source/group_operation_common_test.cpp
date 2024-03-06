@@ -30,12 +30,12 @@ using namespace testing::ext;
 
 namespace {
 
-static const char *g_normalStr = "abc";
-static const Uint8Buff g_normalBuff = { 0, 0 };
+static const char *NORMAL_STR = "abc";
+static const Uint8Buff NORMAL_BUFF = { 0, 0 };
 static QueryGroupParams g_queryGroupParams = {
-    .groupId = g_normalStr,
-    .groupName = g_normalStr,
-    .ownerName = g_normalStr,
+    .groupId = NORMAL_STR,
+    .groupName = NORMAL_STR,
+    .ownerName = NORMAL_STR,
     .groupType = PEER_TO_PEER_GROUP,
     .userId = NULL,
     .groupVisibility = ALL_GROUP_VISIBILITY
@@ -87,37 +87,37 @@ HWTEST_F(GroupOperationTest, GroupOperationTest001, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest002, TestSize.Level0)
 {
-    bool ret = IsTrustedDeviceInGroup(DEFAULT_OS_ACCOUNT, nullptr, g_normalStr, true);
+    bool ret = IsTrustedDeviceInGroup(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, true);
     ASSERT_EQ(ret, false);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest003, TestSize.Level0)
 {
-    bool ret = IsTrustedDeviceInGroup(DEFAULT_OS_ACCOUNT, g_normalStr, nullptr, true);
+    bool ret = IsTrustedDeviceInGroup(DEFAULT_OS_ACCOUNT, NORMAL_STR, nullptr, true);
     ASSERT_EQ(ret, false);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest004, TestSize.Level0)
 {
-    bool ret = IsTrustedDeviceInGroup(DEFAULT_OS_ACCOUNT, g_normalStr, g_normalStr, true);
+    bool ret = IsTrustedDeviceInGroup(DEFAULT_OS_ACCOUNT, NORMAL_STR, NORMAL_STR, true);
     ASSERT_EQ(ret, false);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest005, TestSize.Level0)
 {
-    bool ret = IsGroupOwner(DEFAULT_OS_ACCOUNT, nullptr, g_normalStr);
+    bool ret = IsGroupOwner(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR);
     ASSERT_EQ(ret, false);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest006, TestSize.Level0)
 {
-    bool ret = IsGroupOwner(DEFAULT_OS_ACCOUNT, g_normalStr, nullptr);
+    bool ret = IsGroupOwner(DEFAULT_OS_ACCOUNT, NORMAL_STR, nullptr);
     ASSERT_EQ(ret, false);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest007, TestSize.Level0)
 {
-    bool ret = IsGroupOwner(DEFAULT_OS_ACCOUNT, g_normalStr, g_normalStr);
+    bool ret = IsGroupOwner(DEFAULT_OS_ACCOUNT, NORMAL_STR, NORMAL_STR);
     ASSERT_EQ(ret, false);
 }
 
@@ -129,37 +129,37 @@ HWTEST_F(GroupOperationTest, GroupOperationTest008, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest009, TestSize.Level0)
 {
-    int32_t ret = CheckGroupAccessible(DEFAULT_OS_ACCOUNT, nullptr, g_normalStr);
+    int32_t ret = CheckGroupAccessible(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest010, TestSize.Level0)
 {
-    int32_t ret = CheckGroupAccessible(DEFAULT_OS_ACCOUNT, g_normalStr, nullptr);
+    int32_t ret = CheckGroupAccessible(DEFAULT_OS_ACCOUNT, NORMAL_STR, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest011, TestSize.Level0)
 {
-    int32_t ret = CheckGroupAccessible(DEFAULT_OS_ACCOUNT, g_normalStr, g_normalStr);
+    int32_t ret = CheckGroupAccessible(DEFAULT_OS_ACCOUNT, NORMAL_STR, NORMAL_STR);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest012, TestSize.Level0)
 {
-    int32_t ret = CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, nullptr, g_normalStr);
+    int32_t ret = CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest013, TestSize.Level0)
 {
-    int32_t ret = CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, g_normalStr, nullptr);
+    int32_t ret = CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, NORMAL_STR, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest014, TestSize.Level0)
 {
-    int32_t ret = CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, g_normalStr, g_normalStr);
+    int32_t ret = CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, NORMAL_STR, NORMAL_STR);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
@@ -171,19 +171,19 @@ HWTEST_F(GroupOperationTest, GroupOperationTest015, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest016, TestSize.Level0)
 {
-    int32_t ret = GetTrustedDevInfoById(DEFAULT_OS_ACCOUNT, nullptr, true, g_normalStr, nullptr);
+    int32_t ret = GetTrustedDevInfoById(DEFAULT_OS_ACCOUNT, nullptr, true, NORMAL_STR, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest017, TestSize.Level0)
 {
-    int32_t ret = GetTrustedDevInfoById(DEFAULT_OS_ACCOUNT, g_normalStr, true, nullptr, nullptr);
+    int32_t ret = GetTrustedDevInfoById(DEFAULT_OS_ACCOUNT, NORMAL_STR, true, nullptr, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest018, TestSize.Level0)
 {
-    int32_t ret = GetTrustedDevInfoById(DEFAULT_OS_ACCOUNT, g_normalStr, true, g_normalStr, nullptr);
+    int32_t ret = GetTrustedDevInfoById(DEFAULT_OS_ACCOUNT, NORMAL_STR, true, NORMAL_STR, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
@@ -191,7 +191,7 @@ HWTEST_F(GroupOperationTest, GroupOperationTest019, TestSize.Level0)
 {
     uint8_t *hashMessage = NULL;
     uint32_t messageSize = 0;
-    int32_t ret = GetHashMessage(nullptr, &g_normalBuff, &hashMessage, &messageSize);
+    int32_t ret = GetHashMessage(nullptr, &NORMAL_BUFF, &hashMessage, &messageSize);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
@@ -199,21 +199,21 @@ HWTEST_F(GroupOperationTest, GroupOperationTest020, TestSize.Level0)
 {
     uint8_t *hashMessage = NULL;
     uint32_t messageSize = 0;
-    int32_t ret = GetHashMessage(&g_normalBuff, nullptr, &hashMessage, &messageSize);
+    int32_t ret = GetHashMessage(&NORMAL_BUFF, nullptr, &hashMessage, &messageSize);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest021, TestSize.Level0)
 {
     uint32_t messageSize = 0;
-    int32_t ret = GetHashMessage(&g_normalBuff, &g_normalBuff, nullptr, &messageSize);
+    int32_t ret = GetHashMessage(&NORMAL_BUFF, &NORMAL_BUFF, nullptr, &messageSize);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest022, TestSize.Level0)
 {
     uint8_t *hashMessage = NULL;
-    int32_t ret = GetHashMessage(&g_normalBuff, &g_normalBuff, &hashMessage, nullptr);
+    int32_t ret = GetHashMessage(&NORMAL_BUFF, &NORMAL_BUFF, &hashMessage, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
@@ -246,14 +246,14 @@ HWTEST_F(GroupOperationTest, GroupOperationTest026, TestSize.Level0)
 HWTEST_F(GroupOperationTest, GroupOperationTest027, TestSize.Level0)
 {
     CJson *jsonParams = CreateJson();
-    int32_t ret = AddGroupToDatabaseByJson(DEFAULT_OS_ACCOUNT, nullptr, jsonParams, g_normalStr);
+    int32_t ret = AddGroupToDatabaseByJson(DEFAULT_OS_ACCOUNT, nullptr, jsonParams, NORMAL_STR);
     FreeJson(jsonParams);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest028, TestSize.Level0)
 {
-    int32_t ret = AddGroupToDatabaseByJson(DEFAULT_OS_ACCOUNT, GenerateGroupParams, nullptr, g_normalStr);
+    int32_t ret = AddGroupToDatabaseByJson(DEFAULT_OS_ACCOUNT, GenerateGroupParams, nullptr, NORMAL_STR);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
@@ -268,14 +268,14 @@ HWTEST_F(GroupOperationTest, GroupOperationTest029, TestSize.Level0)
 HWTEST_F(GroupOperationTest, GroupOperationTest030, TestSize.Level0)
 {
     CJson *jsonParams = CreateJson();
-    int32_t ret = AddDeviceToDatabaseByJson(DEFAULT_OS_ACCOUNT, nullptr, jsonParams, g_normalStr);
+    int32_t ret = AddDeviceToDatabaseByJson(DEFAULT_OS_ACCOUNT, nullptr, jsonParams, NORMAL_STR);
     FreeJson(jsonParams);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest031, TestSize.Level0)
 {
-    int32_t ret = AddDeviceToDatabaseByJson(DEFAULT_OS_ACCOUNT, GenerateDevParams, nullptr, g_normalStr);
+    int32_t ret = AddDeviceToDatabaseByJson(DEFAULT_OS_ACCOUNT, GenerateDevParams, nullptr, NORMAL_STR);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
@@ -309,54 +309,54 @@ HWTEST_F(GroupOperationTest, GroupOperationTest035, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest036, TestSize.Level0)
 {
-    int32_t ret = ConvertGroupIdToJsonStr(g_normalStr, nullptr);
+    int32_t ret = ConvertGroupIdToJsonStr(NORMAL_STR, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest037, TestSize.Level0)
 {
     char *returnJsonStr = nullptr;
-    int32_t ret = GenerateBindSuccessData(nullptr, g_normalStr, g_normalStr, &returnJsonStr);
+    int32_t ret = GenerateBindSuccessData(nullptr, NORMAL_STR, NORMAL_STR, &returnJsonStr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest038, TestSize.Level0)
 {
     char *returnJsonStr = nullptr;
-    int32_t ret = GenerateBindSuccessData(g_normalStr, nullptr, g_normalStr, &returnJsonStr);
+    int32_t ret = GenerateBindSuccessData(NORMAL_STR, nullptr, NORMAL_STR, &returnJsonStr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest039, TestSize.Level0)
 {
-    int32_t ret = GenerateBindSuccessData(g_normalStr, g_normalStr, g_normalStr, nullptr);
+    int32_t ret = GenerateBindSuccessData(NORMAL_STR, NORMAL_STR, NORMAL_STR, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest040, TestSize.Level0)
 {
     char *returnJsonStr = nullptr;
-    int32_t ret = GenerateUnbindSuccessData(nullptr, g_normalStr, &returnJsonStr);
+    int32_t ret = GenerateUnbindSuccessData(nullptr, NORMAL_STR, &returnJsonStr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest041, TestSize.Level0)
 {
     char *returnJsonStr = nullptr;
-    int32_t ret = GenerateUnbindSuccessData(g_normalStr, nullptr, &returnJsonStr);
+    int32_t ret = GenerateUnbindSuccessData(NORMAL_STR, nullptr, &returnJsonStr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest042, TestSize.Level0)
 {
-    int32_t ret = GenerateUnbindSuccessData(g_normalStr, g_normalStr, nullptr);
+    int32_t ret = GenerateUnbindSuccessData(NORMAL_STR, NORMAL_STR, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 
 HWTEST_F(GroupOperationTest, GroupOperationTest043, TestSize.Level0)
 {
-    int32_t ret = ProcessKeyPair(CREATE_KEY_PAIR, nullptr, g_normalStr);
+    int32_t ret = ProcessKeyPair(CREATE_KEY_PAIR, nullptr, NORMAL_STR);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
@@ -377,14 +377,14 @@ HWTEST_F(GroupOperationTest, GroupOperationTest045, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest046, TestSize.Level0)
 {
-    int32_t ret = GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, g_normalStr, nullptr);
+    int32_t ret = GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, NORMAL_STR, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest047, TestSize.Level0)
 {
     int32_t groupType;
-    int32_t ret = GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, g_normalStr, &groupType);
+    int32_t ret = GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, NORMAL_STR, &groupType);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 

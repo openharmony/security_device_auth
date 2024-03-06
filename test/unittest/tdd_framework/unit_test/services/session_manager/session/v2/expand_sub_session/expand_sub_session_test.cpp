@@ -37,18 +37,18 @@ namespace {
 #define ENCRYPTION_KEY_LEN 32
 #define INVALID_CMD_TYPE 100
 
-static const char *g_authIdCVal = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
-static const char *g_authIdSVal = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
-static const char *g_groupId = "E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21";
-static const char *g_owner = "testApp";
+static const char *AUTH_ID_C_VAL = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
+static const char *AUTH_ID_S_VAL = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
+static const char *GROUP_ID = "E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21";
+static const char *OWNER = "testApp";
 
-static Uint8Buff g_authIdC = { (uint8_t *)g_authIdCVal, 64 };
-static Uint8Buff g_authIdS = { (uint8_t *)g_authIdSVal, 64 };
+static Uint8Buff g_authIdC = { (uint8_t *)AUTH_ID_C_VAL, 64 };
+static Uint8Buff g_authIdS = { (uint8_t *)AUTH_ID_S_VAL, 64 };
 
-static AuthCodeImportParams g_paramsC = { 0, g_owner, g_groupId, g_authIdC,  };
-static AuthCodeImportParams g_paramsS = { 0, g_owner, g_groupId, g_authIdS };
-static PubKeyExchangeParams g_25519ParamsC = { 0, g_owner, g_groupId, g_authIdC };
-static PubKeyExchangeParams g_25519ParamsS = { 0, g_owner, g_groupId, g_authIdS };
+static AuthCodeImportParams g_paramsC = { 0, OWNER, GROUP_ID, g_authIdC,  };
+static AuthCodeImportParams g_paramsS = { 0, OWNER, GROUP_ID, g_authIdS };
+static PubKeyExchangeParams g_25519ParamsC = { 0, OWNER, GROUP_ID, g_authIdC };
+static PubKeyExchangeParams g_25519ParamsS = { 0, OWNER, GROUP_ID, g_authIdS };
 
 static uint8_t g_nonceVal[NONCE_LEN] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 static Uint8Buff g_nonce = { g_nonceVal, NONCE_LEN };
