@@ -45,14 +45,14 @@ namespace {
 #define TEST_DEV_AUTH_SLEEP_TIME 50000
 static const int32_t TEST_AUTH_OS_ACCOUNT_ID = 100;
 
-static const char *g_authWithPinParams = "{\"osAccountId\":100,\"acquireType\":0,\"pinCode\":\"123456\"}";
+static const char *AUTH_WITH_PIN_PARAMS = "{\"osAccountId\":100,\"acquireType\":0,\"pinCode\":\"123456\"}";
 
-static const char *g_authDirectParams =
+static const char *AUTH_DIRECT_PARAMS =
     "{\"osAccountId\":100,\"acquireType\":0,\"serviceType\":\"service.type.import\",\"peerConnDeviceId\":"
     "\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C"
     "749558BD2E6492C\"}";
 
-static const char *g_deviceLevelAuthParams =
+static const char *DEVICE_LEVEL_AUTH_PARAMS =
     "{\"peerConnDeviceId\":\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C"
     "749558BD2E6492C\",\"servicePkgName\":\"TestAppId\",\"isClient\":true, \"isDeviceLevel\":true}";
 
@@ -251,7 +251,7 @@ static void DeviceLevelAuthDemo(void)
     SetDeviceStatus(isClient);
     const GroupAuthManager *ga = GetGaInstance();
     ASSERT_NE(ga, nullptr);
-    int32_t ret = ga->authDevice(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, g_deviceLevelAuthParams, &g_gaCallback);
+    int32_t ret = ga->authDevice(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, DEVICE_LEVEL_AUTH_PARAMS, &g_gaCallback);
     if (ret != HC_SUCCESS) {
         g_asyncStatus = ASYNC_STATUS_ERROR;
         return;
@@ -636,7 +636,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest001, TestSize.Level0)
     SetIsoSupported(false);
     SetPakeV1Supported(true);
     SetDeviceStatus(true);
-    AuthDeviceDirectWithPinDemo(g_authWithPinParams, &g_daTmpCallback);
+    AuthDeviceDirectWithPinDemo(AUTH_WITH_PIN_PARAMS, &g_daTmpCallback);
     ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
 }
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest002, TestSize.Level0)
@@ -644,7 +644,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest002, TestSize.Level0)
     SetIsoSupported(false);
     SetPakeV1Supported(true);
     SetDeviceStatus(true);
-    AuthDeviceDirectDemo(g_authDirectParams, &g_daLTCallback);
+    AuthDeviceDirectDemo(AUTH_DIRECT_PARAMS, &g_daLTCallback);
     ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
 }
 
@@ -953,7 +953,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest019, TestSize.Level0)
     SetIsoSupported(false);
     SetPakeV1Supported(true);
     SetDeviceStatus(true);
-    AuthDeviceDirectWithPinDemo(g_authWithPinParams, nullptr);
+    AuthDeviceDirectWithPinDemo(AUTH_WITH_PIN_PARAMS, nullptr);
     ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
 }
 
@@ -1044,7 +1044,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest028, TestSize.Level0)
     SetPakeV1Supported(true);
     SetDeviceStatus(true);
     ProcessCredentiaCreateDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT);
-    AuthDeviceDirectDemo(g_authDirectParams, &g_daLTCallback);
+    AuthDeviceDirectDemo(AUTH_DIRECT_PARAMS, &g_daLTCallback);
     ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
 }
 
@@ -1061,7 +1061,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest029, TestSize.Level0)
     ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_SERVER, publicKey);
     ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT, &publicKey);
     ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_CLIENT, publicKey);
-    AuthDeviceDirectDemo(g_authDirectParams, &g_daLTCallback);
+    AuthDeviceDirectDemo(AUTH_DIRECT_PARAMS, &g_daLTCallback);
     ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
 }
 

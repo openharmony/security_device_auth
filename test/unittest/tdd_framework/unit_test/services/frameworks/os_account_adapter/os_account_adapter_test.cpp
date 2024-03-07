@@ -55,12 +55,12 @@ enum AsyncStatus {
 
 static AsyncStatus volatile g_asyncStatus;
 
-static const char *g_createParams = "{\"groupName\":\"TestGroup\",\"deviceId\":\"TestAuthId\",\"groupType\":256,"
+static const char *CREATE_PARAMS = "{\"groupName\":\"TestGroup\",\"deviceId\":\"TestAuthId\",\"groupType\":256,"
     "\"groupVisibility\":-1,\"userType\":0,\"expireTime\":-1}";
-static const char *g_registerParam =
+static const char *REGISTER_PARAM =
     "{\"version\":\"1.0.0\",\"deviceId\":\"TestAuthId\",\"userId\":"
     "\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\"}";
-static const char *g_addMultiParam =
+static const char *ADD_MULTI_PARAM =
     "{\"groupType\":1,\"groupId\":\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\",\"deviceList\":"
     "[{\"deviceId\":\"TestAuthId2\",\"udid\":\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C\","
     "\"userId\":\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\",\"credential\":{\"credentialType"
@@ -365,9 +365,9 @@ HWTEST_F(OsAccountAdapterTest, OsAccountAdapterTest002, TestSize.Level0)
     EXPECT_EQ(res, HC_SUCCESS);
     int32_t osAccountId = DevAuthGetRealOsAccountLocalId(ANY_OS_ACCOUNT);
     EXPECT_NE(osAccountId, INVALID_OS_ACCOUNT);
-    CreateDemoGroup(osAccountId, TEST_REQ_ID, TEST_APP_ID, g_createParams);
-    CreateDemoIdenticalAccountGroup(osAccountId, TEST_USER_ID, g_registerParam);
-    res = gm->addMultiMembersToGroup(osAccountId, TEST_APP_ID, g_addMultiParam);
+    CreateDemoGroup(osAccountId, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS);
+    CreateDemoIdenticalAccountGroup(osAccountId, TEST_USER_ID, REGISTER_PARAM);
+    res = gm->addMultiMembersToGroup(osAccountId, TEST_APP_ID, ADD_MULTI_PARAM);
     EXPECT_EQ(res, HC_SUCCESS);
     res = GetPseudonymInstance()->savePseudonymId(osAccountId, TEST_PDID, TEST_USER_ID, TEST_AUTH_ID, TEST_USER_ID);
     EXPECT_EQ(res, HC_SUCCESS);
