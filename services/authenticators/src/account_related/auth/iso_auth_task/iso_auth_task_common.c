@@ -72,7 +72,6 @@ static int32_t FillPayload(const CJson *in, IsoAuthParams *params)
 {
     int32_t res = InitSingleParam(&params->devIdSelf, DEV_AUTH_DEVICE_ID_SIZE);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for devIdSelf failed, res: %d.", res);
         return res;
     }
     const char *devIdSelf = GetStringFromJson(in, FIELD_SELF_DEV_ID);
@@ -104,7 +103,6 @@ static int32_t FillPayload(const CJson *in, IsoAuthParams *params)
     params->isoBaseParams.authIdSelf.length = params->devIdSelf.length + HcStrlen(params->deviceIdSelf);
     res = InitSingleParam(&params->isoBaseParams.authIdSelf, params->isoBaseParams.authIdSelf.length);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for authIdSelf failed, res: %d.", res);
         return res;
     }
     if (memcpy_s(params->isoBaseParams.authIdSelf.val, params->isoBaseParams.authIdSelf.length,
