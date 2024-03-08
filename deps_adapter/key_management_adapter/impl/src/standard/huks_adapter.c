@@ -1297,21 +1297,22 @@ static int32_t CheckImportSymmetricKeyParam(const Uint8Buff *keyAlias, const Uin
 static int32_t ConstructImportSymmetricKeyParam(struct HksParamSet **paramSet, uint32_t keyLen, KeyPurpose purpose,
     const ExtraInfo *exInfo)
 {
-    struct HksParam *importParam = NULL;
-    struct HksBlob authIdBlob = { 0, NULL };
-    union KeyRoleInfoUnion roleInfoUnion;
-    (void)memset_s(&roleInfoUnion, sizeof(roleInfoUnion), 0, sizeof(roleInfoUnion));
-    uint32_t idx = 0;
     if (exInfo != NULL) {
         CHECK_PTR_RETURN_HAL_ERROR_CODE(exInfo->authId.val, "authId");
         CHECK_LEN_ZERO_RETURN_ERROR_CODE(exInfo->authId.length, "authId");
         CHECK_LEN_HIGHER_RETURN(exInfo->pairType, PAIR_TYPE_END - 1, "pairType");
-        importParam = (struct HksParam *)HcMalloc(sizeof(struct HksParam) *
-            (BASE_IMPORT_PARAMS_LEN + EXT_IMPORT_PARAMS_LEN), 0);
-        if (importParam == NULL) {
-            LOGE("Malloc for importParam failed.");
-            return HAL_ERR_BAD_ALLOC;
-        }
+    }
+    uint32_t len = ((exInfo == NULL) ? BASE_IMPORT_PARAMS_LEN : (BASE_IMPORT_PARAMS_LEN + EXT_IMPORT_PARAMS_LEN));
+    struct HksParam *importParam = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (importParam == NULL) {
+        LOGE("Malloc for importParam failed.");
+        return HAL_ERR_BAD_ALLOC;
+    }
+    uint32_t idx = 0;
+    if (exInfo != NULL) {
+        struct HksBlob authIdBlob = { 0, NULL };
+        union KeyRoleInfoUnion roleInfoUnion;
+        (void)memset_s(&roleInfoUnion, sizeof(roleInfoUnion), 0, sizeof(roleInfoUnion));
         authIdBlob.size = exInfo->authId.length;
         authIdBlob.data = exInfo->authId.val;
         roleInfoUnion.roleInfoStruct.userType = (uint8_t)exInfo->userType;
@@ -1320,12 +1321,6 @@ static int32_t ConstructImportSymmetricKeyParam(struct HksParamSet **paramSet, u
         importParam[idx++].blob = authIdBlob;
         importParam[idx].tag = HKS_TAG_KEY_ROLE;
         importParam[idx++].uint32Param = roleInfoUnion.roleInfo;
-    } else {
-        importParam = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * BASE_IMPORT_PARAMS_LEN, 0);
-        if (importParam == NULL) {
-            LOGE("Malloc for importParam failed.");
-            return HAL_ERR_BAD_ALLOC;
-        }
     }
 
     importParam[idx].tag = HKS_TAG_ALGORITHM;
