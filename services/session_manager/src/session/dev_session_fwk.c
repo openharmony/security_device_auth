@@ -225,6 +225,12 @@ static bool IsMetaNode(const CJson *context)
     return GetStringFromJson(context, FIELD_META_NODE_TYPE) != NULL;
 }
 
+static void OnDevSessionError(const SessionImpl *impl, int32_t errorCode)
+{
+    ProcessErrorCallback(impl->base.id, impl->base.opCode, errorCode, NULL, &impl->base.callback);
+    CloseChannel(impl->channelType, impl->channelId);
+}
+
 static int32_t StartSession(DevSession *self)
 {
     if (self == NULL) {
@@ -270,7 +276,7 @@ static int32_t StartSession(DevSession *self)
         }
     } while (0);
     if (res != HC_SUCCESS) {
-        ProcessErrorCallback(impl->base.id, impl->base.opCode, res, NULL, &impl->base.callback);
+        OnDevSessionError(impl, res);
     }
     return res;
 }
@@ -428,7 +434,7 @@ static void OnV1SessionError(SessionImpl *impl, int32_t errorCode, const CJson *
     if (HasNextAuthGroup(receviedMsg)) {
         return;
     }
-    ProcessErrorCallback(impl->base.id, impl->base.opCode, errorCode, NULL, &impl->base.callback);
+    OnDevSessionError(impl, errorCode);
 }
 
 static int32_t ProcV1Session(SessionImpl *impl, const CJson *receviedMsg, bool *isFinish)
@@ -496,7 +502,7 @@ static int32_t ProcV2Session(SessionImpl *impl, const CJson *receviedMsg, bool *
 {
     if (!IsSupportSessionV2()) {
         LOGE("not suppot session v2.");
-        ProcessErrorCallback(impl->base.id, impl->base.opCode, HC_ERR_NOT_SUPPORT, NULL, &impl->base.callback);
+        OnDevSessionError(impl, HC_ERR_NOT_SUPPORT);
         return HC_ERR_NOT_SUPPORT;
     }
     if (impl->compatibleSubSession != NULL) {
@@ -512,7 +518,7 @@ static int32_t ProcV2Session(SessionImpl *impl, const CJson *receviedMsg, bool *
         res = ProcEventList(impl);
     } while (0);
     if (res != HC_SUCCESS) {
-        ProcessErrorCallback(impl->base.id, impl->base.opCode, res, NULL, &impl->base.callback);
+        OnDevSessionError(impl, res);
         return res;
     }
     if (impl->curState == SESSION_FINISH_STATE) {

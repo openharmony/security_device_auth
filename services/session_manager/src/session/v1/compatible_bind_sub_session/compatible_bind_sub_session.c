@@ -522,6 +522,7 @@ static int32_t OnSessionFinish(const CompatibleBindSubSession *session, CJson *j
     }
     LOGI("The session completed successfully! [ReqId]: %" PRId64, session->reqId);
     NotifyBindResult((ChannelType)session->channelType, session->channelId);
+    CloseChannel((ChannelType)session->channelType, session->channelId);
     return HC_SUCCESS;
 }
 
