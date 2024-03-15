@@ -55,26 +55,6 @@ int32_t ByteToHexString(const uint8_t *byte, uint32_t byteLen, char *hexStr, uin
 int64_t StringToInt64(const char *cp);
 
 /*
- * Convert base64 string to byte.
- * @param base64Str: base64 string
- * @param byte: the converted result, need malloc by caller
- * @param byteLen: the length of byte, must be not shorter than strlen(base64Str) / 4 * 3,
- *                 and update it to the real length of the result written
- * @result success(0), otherwise, failure.
- */
-int32_t Base64StringToByte(const char *base64Str, uint8_t *byte, uint32_t *byteLen);
-
-/*
- * Convert byte to base64 string.
- * @param byte: byte to be converted
- * @param byteLen: the length of byte
- * @param base64Str: the converted result, need malloc by caller, and need malloc for '\0'
- * @param strLen: length of base64Str, must be not shorter than (byteLen / 3 + (byteLen % 3 != 0)) * 4 + 1, with '\0'
- * @result success(0), otherwise, failure.
- */
-int32_t ByteToBase64String(const uint8_t *byte, uint32_t byteLen, char *base64Str, uint32_t strLen);
-
-/*
  * Convert string to upper case.
  * @param oriStr: original string.
  * @param desStr: the converted result. Need free.

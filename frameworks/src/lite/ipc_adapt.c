@@ -1395,6 +1395,7 @@ int32_t SetCallRequestParamInfo(uintptr_t callCtx, int32_t type, const uint8_t *
 
 int32_t DoBinderCall(uintptr_t callCtx, int32_t methodId, bool withSync)
 {
+    (void)withSync;
     int32_t ret;
     ProxyDevAuthData *dataCache = (ProxyDevAuthData *)(callCtx);
 
@@ -1408,6 +1409,7 @@ int32_t DoBinderCall(uintptr_t callCtx, int32_t methodId, bool withSync)
 /* ipc service process adapter */
 uint32_t SetIpcCallMap(uintptr_t ipcInstance, IpcServiceCall method, int32_t methodId)
 {
+    (void)ipcInstance;
     if ((method == NULL) || (methodId <= 0)) {
         return HC_ERR_INVALID_PARAMS;
     }

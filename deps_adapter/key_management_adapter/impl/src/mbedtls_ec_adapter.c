@@ -15,6 +15,7 @@
 
 #include "mbedtls_ec_adapter.h"
 
+#include <mbedtls/base64.h>
 #include <mbedtls/bignum.h>
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
@@ -562,5 +563,62 @@ int32_t MbedtlsAgreeSharedSecret(const KeyBuff *priKey, const KeyBuff *pubKey, U
         LOGE("Agree key failed, ret = %d", ret);
         return HAL_FAILED;
     }
+    return HAL_SUCCESS;
+}
+
+int32_t MbedtlsBase64Encode(const uint8_t *byte, uint32_t byteLen, char *base64Str, uint32_t strLen, uint32_t *outLen)
+{
+    CHECK_PTR_RETURN_HAL_ERROR_CODE(byte, "byte");
+    CHECK_LEN_ZERO_RETURN_ERROR_CODE(byteLen, "byteLen");
+    CHECK_PTR_RETURN_HAL_ERROR_CODE(base64Str, "base64Str");
+    CHECK_LEN_ZERO_RETURN_ERROR_CODE(strLen, "strLen");
+    CHECK_PTR_RETURN_HAL_ERROR_CODE(outLen, "outLen");
+
+    size_t needBuffLen = 0;
+    (void)mbedtls_base64_encode(NULL, 0, &needBuffLen, byte, byteLen);
+    if (needBuffLen > strLen) {
+        LOGE("The content to be written is larger than the input buffer size. Need: %zd, Buffer: %u",
+            needBuffLen, strLen);
+        return HAL_ERR_SHORT_BUFFER;
+    }
+
+    int res = mbedtls_base64_encode((unsigned char *)base64Str, strLen, &needBuffLen, byte, byteLen);
+    if (res != 0) {
+        LOGE("call mbedtls's mbedtls_base64_encode fail. res: %d", res);
+        return HAL_ERR_MBEDTLS;
+    }
+
+    *outLen = needBuffLen;
+    return HAL_SUCCESS;
+}
+
+int32_t MbedtlsBase64Decode(const char *base64Str, uint32_t strLen, uint8_t *byte, uint32_t byteLen, uint32_t *outLen)
+{
+    CHECK_PTR_RETURN_HAL_ERROR_CODE(base64Str, "base64Str");
+    CHECK_LEN_ZERO_RETURN_ERROR_CODE(strLen, "strLen");
+    CHECK_PTR_RETURN_HAL_ERROR_CODE(byte, "byte");
+    CHECK_LEN_ZERO_RETURN_ERROR_CODE(byteLen, "byteLen");
+    CHECK_PTR_RETURN_HAL_ERROR_CODE(outLen, "outLen");
+
+    size_t needBuffLen = 0;
+    int res = mbedtls_base64_decode(NULL, 0, &needBuffLen, (const unsigned char *)base64Str, strLen);
+    if (res == MBEDTLS_ERR_BASE64_INVALID_CHARACTER) {
+        LOGE("The input string is not in base64 encoding format.");
+        return HAL_ERR_BASE64_FORMAT;
+    }
+
+    if (needBuffLen > byteLen) {
+        LOGE("The content to be written is larger than the input buffer size. Need: %zd, Buffer: %u",
+            needBuffLen, byteLen);
+        return HAL_ERR_SHORT_BUFFER;
+    }
+
+    res = mbedtls_base64_decode(byte, byteLen, &needBuffLen, (const unsigned char *)base64Str, strLen);
+    if (res != 0) {
+        LOGE("call mbedtls's mbedtls_base64_decode fail. res: %d", res);
+        return HAL_ERR_MBEDTLS;
+    }
+
+    *outLen = (uint32_t)needBuffLen;
     return HAL_SUCCESS;
 }

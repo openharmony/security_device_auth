@@ -1920,7 +1920,7 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
 
 DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
 {
-    static GroupAuthManager gaInstCtx = {NULL};
+    static GroupAuthManager gaInstCtx;
     static GroupAuthManager *gaInstPtr = NULL;
 
     if (gaInstPtr == NULL) {
@@ -1932,7 +1932,7 @@ DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
 
 DEVICE_AUTH_API_PUBLIC const DeviceGroupManager *GetGmInstance(void)
 {
-    static DeviceGroupManager gmInstCtx = {NULL};
+    static DeviceGroupManager gmInstCtx;
     static DeviceGroupManager *gmInstPtr = NULL;
 
     if (gmInstPtr == NULL) {

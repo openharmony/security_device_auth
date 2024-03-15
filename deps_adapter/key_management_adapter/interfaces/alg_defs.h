@@ -129,6 +129,12 @@ typedef bool (*CheckDlPublicKeyFunc)(const Uint8Buff *key, const char *primeHex)
 
 typedef int32_t (*BigNumCompareFunc)(const Uint8Buff *x, const Uint8Buff *y);
 
+typedef int32_t (*Base64EncodeFunc)(const uint8_t *byte, uint32_t byteLen,
+    char *base64Str, uint32_t strLen, uint32_t *outLen);
+
+typedef int32_t (*Base64DecodeFunc)(const char *base64Str, uint32_t strLen,
+    uint8_t *byte, uint32_t byteLen, uint32_t *outLen);
+
 typedef struct {
     InitAlgFunc initAlg;
     Sha256Func sha256;
@@ -153,6 +159,8 @@ typedef struct {
     CheckDlPublicKeyFunc checkDlPublicKey;
     CheckEcPublicKeyFunc checkEcPublicKey;
     BigNumCompareFunc bigNumCompare;
+    Base64EncodeFunc base64Encode;
+    Base64DecodeFunc base64Decode;
 } AlgLoader;
 
 #endif

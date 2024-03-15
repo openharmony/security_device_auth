@@ -26,10 +26,12 @@ void *StaticThreadFunc(void *args)
         return NULL;
     }
 
+#if defined(SET_THREAD_NAME)
     int res = pthread_setname_np(pthread_self(), StringGet(&thread->name));
     if (res != 0) {
         LOGW("[OS]: pthread_setname_np fail. [Res]: %d", res);
     }
+#endif
 
     if (thread->threadFunc) {
         thread->threadFunc(args);

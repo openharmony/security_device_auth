@@ -559,7 +559,7 @@ static int32_t AccountOnFinishToPeer(int64_t requestId, const CJson *out, const 
 }
 
 static int32_t PrepareTrustedDeviceInfo(const char *peerUdid, const char *groupId,
-    const CJson *authParam, const CJson *out, TrustedDeviceEntry *devEntry)
+    const CJson *out, TrustedDeviceEntry *devEntry)
 {
     devEntry->source = SELF_CREATED;
     const CJson *sendToSelf = GetObjFromJson(out, FIELD_SEND_TO_SELF);
@@ -622,7 +622,7 @@ static int32_t AddTrustedDeviceForAccount(const CJson *authParam, const CJson *o
     }
     int32_t res;
     do {
-        res = PrepareTrustedDeviceInfo(peerUdid, groupId, authParam, out, devEntry);
+        res = PrepareTrustedDeviceInfo(peerUdid, groupId, out, devEntry);
         if (res != HC_SUCCESS) {
             LOGE("Failed to prepare trust device params!");
             break;

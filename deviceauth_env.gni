@@ -27,6 +27,22 @@ declare_args() {
   enable_soft_bus_channel = true
 }
 
+build_flags = [
+  "-O2",
+  "-ftrapv",
+  "-Wall",
+  "-Werror",
+  "-Wextra",
+  "-Wshadow",
+  "-fstack-protector-all",
+  "-FPIC",
+  "-FS",
+  "-D_FORTITY_SOURCE=2",
+  "-Wformat=2",
+  "-Wfloat-equal",
+  "-Wdate-time",
+]
+
 if (defined(ohos_lite)) {
   if (ohos_kernel_type == "liteos_m") {
     import("${deviceauth_feature_config}/mini/config.gni")

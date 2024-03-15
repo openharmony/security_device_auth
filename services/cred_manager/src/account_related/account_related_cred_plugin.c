@@ -54,6 +54,7 @@ static int32_t ProcessAsyTokens(int32_t osAccountId, int32_t cmdId, CJson *in, C
 
 static int32_t ProcessSymTokens(int32_t osAccountId, int32_t cmdId, CJson *in, CJson *out)
 {
+    (void)out;
     switch (cmdId) {
         case IMPORT_SELF_CREDENTIAL:
         case IMPORT_TRUSTED_CREDENTIALS:
