@@ -30,10 +30,6 @@
 /* 1: s1 > s2, -1: s1 <= s2 */
 static int32_t CompareString(const char *s1, const char *s2)
 {
-    if ((s1 == NULL) || (s2 == NULL)) {
-        LOGE("The input string contains NULL value!");
-        return 0;
-    }
     const char *tempChar1 = s1;
     const char *tempChar2 = s2;
     while ((*tempChar1 != '\0') && (*tempChar2 != '\0')) {

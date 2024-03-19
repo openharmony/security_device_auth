@@ -167,7 +167,6 @@ if (os_level == "mini" || os_level == "small") {
     subsystem_name = "security"
     part_name = "device_auth"
     include_dirs += [
-      "//third_party/cJSON",
       "${frameworks_path}/inc/standard",
       "${dev_frameworks_path}/inc/hiview_adapter",
     ]
@@ -216,12 +215,10 @@ if (os_level == "mini" || os_level == "small") {
       debug = false
     }
 
-    deps = [
-      "${deps_adapter_path}:${hal_module_name}",
-      "//third_party/cJSON:cjson",
-    ]
+    deps = [ "${deps_adapter_path}:${hal_module_name}" ]
 
     external_deps = [
+      "cJSON:cjson",
       "c_utils:utils",
       "dsoftbus:softbus_client",
       "hilog:libhilog",
@@ -255,7 +252,6 @@ if (os_level == "mini" || os_level == "small") {
     install_enable = true
 
     include_dirs += [
-      "//third_party/cJSON",
       "${frameworks_path}/inc/standard",
       "${dev_frameworks_path}/inc/permission_adapter",
       "${dev_frameworks_path}/inc/hiview_adapter",
@@ -287,11 +283,11 @@ if (os_level == "mini" || os_level == "small") {
       ":auth_service.rc",
       ":deviceauth",
       "${deps_adapter_path}:${hal_module_name}",
-      "//third_party/cJSON:cjson",
     ]
 
     external_deps = [
       "access_token:libaccesstoken_sdk",
+      "cJSON:cjson",
       "c_utils:utils",
       "hilog:libhilog",
       "init:libbegetutil",
@@ -308,7 +304,6 @@ if (os_level == "mini" || os_level == "small") {
     public_configs = [ ":deviceauth_config" ]
 
     include_dirs += [
-      "//third_party/cJSON",
       "${frameworks_path}/inc/standard",
       "${dev_frameworks_path}/inc/permission_adapter",
       "${dev_frameworks_path}/inc/hiview_adapter",
@@ -339,13 +334,11 @@ if (os_level == "mini" || os_level == "small") {
       blocklist = "../cfi_blocklist.txt"
     }
 
-    deps = [
-      "${deps_adapter_path}:${hal_module_name}",
-      "//third_party/cJSON:cjson",
-    ]
+    deps = [ "${deps_adapter_path}:${hal_module_name}" ]
 
     external_deps = [
       "access_token:libaccesstoken_sdk",
+      "cJSON:cjson",
       "c_utils:utils",
       "hilog:libhilog",
       "hisysevent:libhisysevent",

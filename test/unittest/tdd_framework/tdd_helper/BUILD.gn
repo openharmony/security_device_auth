@@ -18,12 +18,6 @@ ohos_static_library("device_auth_test_hal") {
   part_name = "device_auth"
   include_dirs = hals_inc_path
   include_dirs += [
-    "//third_party/cJSON",
-    "//third_party/openssl/include/",
-    "//third_party/mbedtls/include",
-    "//third_party/mbedtls/include/mbedtls",
-  ]
-  include_dirs += [
     "exception_controller/inc",
     "memory_mock/inc",
     "memory_monitor/inc",
@@ -62,15 +56,14 @@ ohos_static_library("device_auth_test_hal") {
   }
 
   cflags = [ "-DHILOG_ENABLE" ]
-  deps = [
-    "//third_party/cJSON:cjson",
-    "//third_party/mbedtls:mbedtls_shared",
-    "//third_party/openssl:libcrypto_shared",
-  ]
+
   external_deps = [
+    "cJSON:cjson",
     "c_utils:utils",
     "hilog:libhilog",
     "huks:libhukssdk",
     "init:libbegetutil",
+    "mbedtls:mbedtls_shared",
+    "openssl:libcrypto_shared",
   ]
 }

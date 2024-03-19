@@ -29,10 +29,6 @@
 
 static bool IsSameNameGroupExist(int32_t osAccountId, const char *ownerName, const char *groupName)
 {
-    if ((ownerName == NULL) || (groupName == NULL)) {
-        LOGE("The input ownerName or groupName is NULL!");
-        return false;
-    }
     QueryGroupParams queryParams = InitQueryGroupParams();
     queryParams.ownerName = ownerName;
     queryParams.groupName = groupName;

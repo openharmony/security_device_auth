@@ -33,8 +33,6 @@ using namespace std;
 using namespace testing::ext;
 
 namespace {
-#define TEST_HKS_DATA_PATH DEVICE_AUTH_TEST_HKS_DATA_PATH "/maindata/+0+0+0+0"
-
 static const std::string TEST_PIN_CODE = "123456";
 static const std::string TEST_APP_ID = "TestAppId";
 static const std::string TEST_APP_ID2 = "TestAppId2";
@@ -65,6 +63,8 @@ static const std::string TEST_ADD_MULTI_PARAM =
 static const std::string TEST_AUTH_PARAMS = "{\"peerConnDeviceId\":\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C"
     "749558BD2E6492C\",\"servicePkgName\":\"TestAppId\",\"isClient\":true}";
 static const std::string TEST_AUTH_CODE = "1234123412341234123412341234123412341234123412341234123412341234";
+static const std::string TEST_GROUP_DATA_PATH = "/data/service/el1/public/deviceauthMock";
+static const std::string TEST_HKS_DATA_PATH = "/data/service/el1/public/huks_service/maindata/+0+0+0+0";
 
 static const int TEST_DEV_AUTH_BUFFER_SIZE = 128;
 static const int32_t TEST_AUTH_OS_ACCOUNT_ID = 100;
@@ -173,16 +173,10 @@ static void RemoveDir(const char *path)
     system(strBuf);
 }
 
-static void RemoveHuks(void)
-{
-    RemoveDir(TEST_HKS_DATA_PATH);
-}
-
 static void DeleteDatabase()
 {
-    const char *groupPath = "/data/service/el1/public/deviceauthMock";
-    RemoveDir(groupPath);
-    RemoveHuks();
+    RemoveDir(TEST_GROUP_DATA_PATH.c_str());
+    RemoveDir(TEST_HKS_DATA_PATH.c_str());
 }
 
 static void CreateDemoGroup(int32_t osAccountId, int64_t reqId, const char *appId, const char *createParams)
@@ -572,7 +566,7 @@ static void GetCertInfo(int32_t osAccountId, const char *userId, const char *dev
     certInfo->pkInfoSignature.length = token->pkInfoSignature.length;
     (void)memcpy_s(certInfo->pkInfoSignature.val, certInfo->pkInfoSignature.length, token->pkInfoSignature.val,
         token->pkInfoSignature.length);
-    certInfo->signAlg = GetAccountAuthTokenManager()->getAlgVersion(osAccountId, userId, deviceId);
+    certInfo->signAlg = P256;
     DestroyAccountToken(token);
 }
 

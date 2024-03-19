@@ -72,8 +72,6 @@ ohos_unittest("creds_manager_test") {
     "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",
     "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}",
   ]
-  cflags +=
-      [ "-DDEVICE_AUTH_TEST_HKS_DATA_PATH=\"${huks_key_store_standard_path}\"" ]
 
   deps = [
     "//third_party/cJSON:cjson",

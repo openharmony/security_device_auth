@@ -30,8 +30,6 @@ using namespace std;
 using namespace testing::ext;
 
 namespace {
-#define TEST_HKS_DATA_PATH DEVICE_AUTH_TEST_HKS_DATA_PATH "/maindata/+0+0+0+0"
-
 static const std::string TEST_SYM_USER_ID = "1234ABCD";
 static const std::string TEST_SYM_DEVICE_ID = "TestAuthId";
 static const std::string TEST_SYM_AUTH_CODE = "37364761534f454d33567a73424e794f33573330507069434b31676f7254706b";
@@ -40,6 +38,8 @@ static const std::string TEST_SYM_DEVICE_ID2 = "TestAuthId2";
 static const std::string TEST_SYM_AUTH_CODE2 = "2f7562744654535564586e665467546b322b4b506b65626373466f48766a4335";
 static const std::string TEST_SYM_USER_ID3 = "1234ABCDE";
 static const std::string TEST_SYM_DEVICE_ID3 = "TestAuthId3";
+static const std::string TEST_GROUP_DATA_PATH = "/data/service/el1/public/deviceauthMock";
+static const std::string TEST_HKS_DATA_PATH = "/data/service/el1/public/huks_service/maindata/+0+0+0+0";
 
 static const int TEST_DEV_AUTH_BUFFER_SIZE = 128;
 
@@ -66,16 +66,10 @@ static void RemoveDir(const char *path)
     system(strBuf);
 }
 
-static void RemoveHuks(void)
-{
-    RemoveDir(TEST_HKS_DATA_PATH);
-}
-
 static void DeleteDatabase()
 {
-    const char *groupPath = "/data/service/el1/public/deviceauthMock";
-    RemoveDir(groupPath);
-    RemoveHuks();
+    RemoveDir(TEST_GROUP_DATA_PATH.c_str());
+    RemoveDir(TEST_HKS_DATA_PATH.c_str());
 }
 
 void CredsManagerTest::SetUp()
