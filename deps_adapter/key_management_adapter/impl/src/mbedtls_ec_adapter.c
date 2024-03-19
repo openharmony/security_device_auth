@@ -310,8 +310,7 @@ static int32_t Elligator(unsigned char *point, int pointLength, const unsigned c
     status = mbedtls_mpi_exp_mod(&tmpBnE, &tmpBnA, &paraBnSquare, &paraBnP, NULL);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(status, "Elligator error10");
 
-    uint8_t swap = (mbedtls_mpi_cmp_mpi(&paraBnSquare, &tmpBnE) == 1);
-    status = mbedtls_mpi_safe_cond_swap(&tmpBnB, &tmpBnC, swap);
+    status = mbedtls_mpi_safe_cond_swap(&tmpBnB, &tmpBnC, (mbedtls_mpi_cmp_mpi(&paraBnSquare, &tmpBnE) == 1));
     LOG_AND_GOTO_CLEANUP_IF_FAIL(status, "Elligator error11");
 
     status = mbedtls_mpi_write_binary(&tmpBnC, point, pointLength);
