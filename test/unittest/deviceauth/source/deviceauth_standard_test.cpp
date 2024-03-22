@@ -60,7 +60,8 @@ namespace {
 #define TEST_AUTH_TOKEN3 "10F9F0576E61730193D2052B7F771887124A68F1607EFCF7796C1491F834CD92"
 #define TEST_QUERY_PARAMS "bac"
 #define TEST_PIN_CODE "123456"
-#define TEST_HKS_DATA_PATH DEVICE_AUTH_TEST_HKS_DATA_PATH "/maindata/+0+0+0+0"
+#define TEST_GROUP_DATA_PATH "/data/service/el1/public/deviceauthMock"
+#define TEST_HKS_DATA_PATH "/data/service/el1/public/huks_service/maindata/+0+0+0+0"
 #define TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN 32
 #define TEST_DEV_AUTH_SLEEP_TIME 50000
 #define TEST_DEV_AUTH_SLEEP_TIME2 60000
@@ -224,21 +225,12 @@ static void RemoveDir(const char *path)
         return;
     }
     system(strBuf);
-    return;
-}
-
-static void RemoveHuks(void)
-{
-    RemoveDir(TEST_HKS_DATA_PATH);
-    return;
 }
 
 static void DeleteDatabase()
 {
-    const char *groupPath = "/data/service/el1/public/deviceauthMock";
-    RemoveDir(groupPath);
-    RemoveHuks();
-    return;
+    RemoveDir(TEST_GROUP_DATA_PATH);
+    RemoveDir(TEST_HKS_DATA_PATH);
 }
 
 static bool GenerateTempKeyPair(Uint8Buff *keyAlias)

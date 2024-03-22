@@ -43,7 +43,6 @@ typedef struct {
     int32_t (*getRegisterProof)(const CJson *in, CJson *out);
     int32_t (*generateKeyAlias)(const char *userId, const char *deviceId,
         Uint8Buff *keyAlias, bool isServerPkAlias);
-    Algorithm (*getAlgVersion)(int32_t osAccountId, const char *userId, const char *deviceId);
 } AccountAuthTokenManager;
 
 #ifdef __cplusplus

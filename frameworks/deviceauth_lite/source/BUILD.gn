@@ -81,10 +81,7 @@ config("hichain_config") {
 
 config("hichain_standard_config") {
   include_dirs = [
-    "//third_party/bounds_checking_function/include",
     "//base/security/device_auth/interfaces/inner_api/deviceauth_lite",
-    "//base/security/huks/interfaces/inner_api/huks_standard/main/include",
-    "//third_party/cJSON",
     "base",
     "huks_adapter",
     "json",
@@ -110,11 +107,11 @@ if (os_level == "standard") {
     part_name = "device_auth"
     sources = hichian_sources
     public_configs = [ ":hichain_standard_config" ]
-    deps = [
-      "//third_party/bounds_checking_function:libsec_shared",
-      "//third_party/cJSON:cjson",
+    external_deps = [
+      "bounds_checking_function:libsec_shared",
+      "cJSON:cjson",
+      "huks:libhukssdk",
     ]
-    external_deps = [ "huks:libhukssdk" ]
     cflags = [
       "-flto",
       "-Wall",
@@ -126,11 +123,11 @@ if (os_level == "standard") {
     part_name = "device_auth"
     sources = hichian_sources
     public_configs = [ ":hichain_standard_config" ]
-    deps = [
-      "//third_party/bounds_checking_function:libsec_shared",
-      "//third_party/cJSON:cjson",
+    external_deps = [
+      "bounds_checking_function:libsec_shared",
+      "cJSON:cjson",
+      "huks:libhukssdk",
     ]
-    external_deps = [ "huks:libhukssdk" ]
     cflags = [
       "-flto",
       "-Wall",

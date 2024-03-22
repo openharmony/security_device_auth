@@ -13,7 +13,6 @@
 
 import("//base/security/device_auth/deps_adapter/deviceauth_hals.gni")
 import("//base/security/device_auth/services/deviceauth.gni")
-import("//base/security/huks/build/config.gni")
 import("//build/test.gni")
 
 tdd_framework_path = "//base/security/device_auth/test/unittest/tdd_framework"

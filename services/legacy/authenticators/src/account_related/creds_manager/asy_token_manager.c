@@ -179,10 +179,6 @@ static int32_t GenerateTokenFromJson(const CJson *tokenJson, AccountToken *token
 static int32_t CreateTokensFromJson(CJson *tokensJson, AccountTokenVec *vec)
 {
     int32_t tokenNum = GetItemNum(tokensJson);
-    if (tokenNum <= 0) {
-        LOGE("No token found.");
-        return HC_ERR_JSON_GET;
-    }
     int32_t ret;
     for (int32_t i = 0; i < tokenNum; i++) {
         CJson *tokenJson = GetItemFromArray(tokensJson, i);
@@ -216,10 +212,6 @@ static int32_t CreateTokensFromJson(CJson *tokensJson, AccountTokenVec *vec)
 
 static int32_t ReadTokensFromFile(AccountTokenVec *vec, const char *tokenPath)
 {
-    if (vec == NULL) {
-        LOGE("Input token vec is null.");
-        return HC_ERR_NULL_PTR;
-    }
     FileHandle file = { 0 };
     int32_t ret = HcFileOpen(tokenPath, MODE_FILE_READ, &file);
     if (ret != HC_SUCCESS) {
@@ -345,12 +337,6 @@ static int32_t SaveTokensToFile(const AccountTokenVec *vec, const char *tokenPat
     ret = WriteTokensJsonToFile(storeJson, tokenPath);
     FreeJson(storeJson);
     return ret;
-}
-
-static Algorithm GetVerifyAlg(const char *version)
-{
-    (void)version;
-    return P256;
 }
 
 static int32_t GenerateKeyAlias(const char *userId, const char *deviceId, Uint8Buff *alias,
@@ -492,8 +478,7 @@ static int32_t DoImportServerPkAndVerify(const CJson *credJson, uint8_t *signatu
         HcFree(keyAliasValue);
         return HC_ERR_JSON_GET;
     }
-    Algorithm alg = GetVerifyAlg(version);
-    ret = ImportServerPk(credJson, &keyAlias, serverPk, alg);
+    ret = ImportServerPk(credJson, &keyAlias, serverPk, P256);
     if (ret != HAL_SUCCESS) {
         LOGE("Import server public key failed");
         g_accountDbMutex->unlock(g_accountDbMutex);
@@ -501,7 +486,7 @@ static int32_t DoImportServerPkAndVerify(const CJson *credJson, uint8_t *signatu
         return ret;
     }
     LOGI("Import server public key success, start to verify");
-    ret = VerifyPkInfoSignature(credJson, pkInfoJson, signature, &keyAlias, alg);
+    ret = VerifyPkInfoSignature(credJson, pkInfoJson, signature, &keyAlias, P256);
     g_accountDbMutex->unlock(g_accountDbMutex);
     HcFree(keyAliasValue);
     if (ret != HC_SUCCESS) {
@@ -626,10 +611,6 @@ static AccountToken *DeepCopyToken(const AccountToken *token)
 
 static AccountToken **QueryTokenPtrIfMatch(const AccountTokenVec *vec, const char *userId, const char *deviceId)
 {
-    if (userId == NULL || deviceId == NULL) {
-        LOGE("Invalid input param.");
-        return NULL;
-    }
     uint32_t index;
     AccountToken **token;
     FOR_EACH_HC_VECTOR(*vec, index, token) {
@@ -1141,20 +1122,6 @@ ERR:
     return ret;
 }
 
-static Algorithm GetAlgVersion(int32_t osAccountId, const char *userId, const char *deviceId)
-{
-    if (userId == NULL) {
-        LOGE("Invalid input params, return default alg.");
-        return P256;
-    }
-    AccountToken *token = GetAccountToken(osAccountId, userId, deviceId);
-    if (token == NULL) {
-        LOGE("Token not exist, return default alg.");
-        return P256;
-    }
-    return GetVerifyAlg((const char *)token->pkInfo.version.val);
-}
-
 static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, const char *deviceId,
     AccountTokenVec *deleteTokens)
 {
@@ -1340,7 +1307,6 @@ void InitTokenManager(void)
     g_asyTokenManager.deleteToken = DeleteToken;
     g_asyTokenManager.getRegisterProof = GetRegisterProof;
     g_asyTokenManager.generateKeyAlias = GenerateKeyAlias;
-    g_asyTokenManager.getAlgVersion = GetAlgVersion;
     if (!g_isInitial) {
         g_accountTokenDb = CREATE_HC_VECTOR(AccountTokenDb);
         AddOsAccountEventCallback(ASY_TOKEN_DATA_CALLBACK, OnOsAccountUnlocked, OnOsAccountRemoved);
