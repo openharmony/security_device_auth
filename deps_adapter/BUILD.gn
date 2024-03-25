@@ -50,8 +50,7 @@ if (defined(ohos_lite)) {
         sources += [ "${os_adapter_path}/impl/src/liteos/mini/hc_file.c" ]
       }
 
-      cflags = build_flags
-      cflags += [ "-DHILOG_ENABLE" ]
+      cflags = [ "-DHILOG_ENABLE" ]
       cflags += [ "-DAUTH_STORAGE_PATH=\"${deviceauth_storage_path}\"" ]
       if (board_toolchain_type == "iccarm") {
         cflags += [
@@ -60,6 +59,8 @@ if (defined(ohos_lite)) {
           "-DOHOS_MEM",
           "-DSET_THREAD_NAME",
         ]
+      } else {
+        cflags += build_flags
       }
       deps = [
         "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk",

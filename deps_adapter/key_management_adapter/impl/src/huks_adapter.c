@@ -965,33 +965,33 @@ static int32_t Sign(const Uint8Buff *keyAlias, const Uint8Buff *message, Algorit
     messageHash.val = (uint8_t *)HcMalloc(messageHash.length, 0);
     if (messageHash.val == NULL) {
         LOGE("malloc messageHash.data failed.");
-        res = HAL_ERR_BAD_ALLOC;
-        goto ERR;
+        return HAL_ERR_BAD_ALLOC;
     }
-    res = Sha256(message, &messageHash);
-    if (res != HAL_SUCCESS) {
-        LOGE("Sha256 failed.");
-        goto ERR;
-    }
-    struct HksBlob messageBlob = { messageHash.length, messageHash.val };
-    struct HksBlob signatureBlob = { outSignature->length, outSignature->val };
+    do {
+        res = Sha256(message, &messageHash);
+        if (res != HAL_SUCCESS) {
+            LOGE("Sha256 failed.");
+            break;
+        }
+        struct HksBlob messageBlob = { messageHash.length, messageHash.val };
+        struct HksBlob signatureBlob = { outSignature->length, outSignature->val };
 
-    res = ConstructSignParams(&paramSet, algo);
-    if (res != HAL_SUCCESS) {
-        goto ERR;
-    }
+        res = ConstructSignParams(&paramSet, algo);
+        if (res != HAL_SUCCESS) {
+            break;
+        }
 
-    LOGI("[HUKS]: HksSign enter.");
-    res = HksSign(&keyAliasBlob, paramSet, &messageBlob, &signatureBlob);
-    LOGI("[HUKS]: HksSign quit. [Res]: %d", res);
-    if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksSign fail. [Res]: %d", res);
-        res = HAL_FAILED;
-        goto ERR;
-    }
-    outSignature->length = signatureBlob.size;
-    res = HAL_SUCCESS;
-ERR:
+        LOGI("[HUKS]: HksSign enter.");
+        res = HksSign(&keyAliasBlob, paramSet, &messageBlob, &signatureBlob);
+        LOGI("[HUKS]: HksSign quit. [Res]: %d", res);
+        if (res != HKS_SUCCESS) {
+            LOGE("[HUKS]: HksSign fail. [Res]: %d", res);
+            res = HAL_FAILED;
+            break;
+        }
+        outSignature->length = signatureBlob.size;
+        res = HAL_SUCCESS;
+    } while (0);
     HksFreeParamSet(&paramSet);
     HcFree(messageHash.val);
     return res;
@@ -1040,32 +1040,32 @@ static int32_t Verify(const Uint8Buff *key, const Uint8Buff *message, Algorithm 
     messageHash.val = (uint8_t *)HcMalloc(messageHash.length, 0);
     if (messageHash.val == NULL) {
         LOGE("malloc messageHash.data failed.");
-        res = HAL_ERR_BAD_ALLOC;
-        goto ERR;
+        return HAL_ERR_BAD_ALLOC;
     }
-    res = Sha256(message, &messageHash);
-    if (res != HAL_SUCCESS) {
-        LOGE("Sha256 failed.");
-        goto ERR;
-    }
-    struct HksBlob messageBlob = { messageHash.length, messageHash.val };
-    struct HksBlob signatureBlob = { signature->length, signature->val };
+    do {
+        res = Sha256(message, &messageHash);
+        if (res != HAL_SUCCESS) {
+            LOGE("Sha256 failed.");
+            break;
+        }
+        struct HksBlob messageBlob = { messageHash.length, messageHash.val };
+        struct HksBlob signatureBlob = { signature->length, signature->val };
 
-    res = ConstructVerifyParams(&paramSet, algo, isAlias);
-    if (res != HAL_SUCCESS) {
-        goto ERR;
-    }
+        res = ConstructVerifyParams(&paramSet, algo, isAlias);
+        if (res != HAL_SUCCESS) {
+            break;
+        }
 
-    LOGI("[HUKS]: HksVerify enter.");
-    res = HksVerify(&keyAliasBlob, paramSet, &messageBlob, &signatureBlob);
-    LOGI("[HUKS]: HksVerify quit. [Res]: %d", res);
-    if ((res != HKS_SUCCESS)) {
-        LOGE("[HUKS]: HksVerify fail. [Res]: %d", res);
-        res = HAL_FAILED;
-        goto ERR;
-    }
-    res = HAL_SUCCESS;
-ERR:
+        LOGI("[HUKS]: HksVerify enter.");
+        res = HksVerify(&keyAliasBlob, paramSet, &messageBlob, &signatureBlob);
+        LOGI("[HUKS]: HksVerify quit. [Res]: %d", res);
+        if ((res != HKS_SUCCESS)) {
+            LOGE("[HUKS]: HksVerify fail. [Res]: %d", res);
+            res = HAL_FAILED;
+            break;
+        }
+        res = HAL_SUCCESS;
+    } while (0);
     HksFreeParamSet(&paramSet);
     HcFree(messageHash.val);
     return res;

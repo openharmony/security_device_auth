@@ -1,0 +1,156 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/security/device_auth/deps_adapter/deviceauth_hals.gni")
+import("//base/security/device_auth/services/deviceauth.gni")
+
+#####################hydra-fuzz###################
+import("//build/config/features.gni")
+import("//build/ohos.gni")
+import("//build/test.gni")
+module_output_path = "device_auth/device_auth"
+
+##############################fuzztest##########################################
+ohos_fuzztest("DevAuthFuncFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "${deviceauth_path}/test/fuzztest/devauthfunc_fuzzer"
+  include_dirs = inc_path
+  include_dirs += hals_inc_path
+
+  include_dirs += [
+    ".",
+    "../../unittest/deviceauth/include",
+    "../../unittest/deviceauth/unit_test/include",
+    "${dev_frameworks_path}/inc/hiview_adapter",
+  ]
+
+  include_dirs += [
+    "//third_party/cJSON",
+    "//third_party/openssl/include/",
+    "//third_party/mbedtls/include",
+    "//third_party/mbedtls/include/mbedtls",
+  ]
+
+  sources = hal_common_files
+  sources -= [ "${common_lib_path}/impl/src/json_utils.c" ]
+  sources += [
+    "${key_management_adapter_path}/impl/src/huks_adapter.c",
+    "${key_management_adapter_path}/impl/src/mbedtls_ec_adapter.c",
+    "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
+    "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
+    "${os_adapter_path}/impl/src/hc_log.c",
+    "${os_adapter_path}/impl/src/linux/hc_condition.c",
+    "${os_adapter_path}/impl/src/linux/hc_file.c",
+    "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
+    "${os_adapter_path}/impl/src/linux/hc_thread.c",
+    "${os_adapter_path}/impl/src/linux/hc_types.c",
+    "../../unittest/deviceauth/source/hc_dev_info_mock.c",
+    "../../unittest/deviceauth/source/json_utils_mock.c",
+  ]
+
+  sources += dev_frameworks_files
+  sources += deviceauth_common_files
+  sources += database_manager_files
+  sources += cred_manager_files
+  sources += session_manager_files
+  sources += session_v1_files
+  sources += session_v2_files
+  sources += iso_protocol_files
+  sources += ec_speke_protocol_files
+  sources += auth_code_import_files
+  sources += pub_key_exchange_files
+  sources += save_trusted_info_files
+  sources += creds_manager_files
+  sources += broadcast_manager_files
+  sources += soft_bus_channel_mock_files
+
+  sources += group_auth_files
+  sources += group_auth_account_unrelated_files
+
+  sources += group_manager_files
+  sources += group_manager_peer_to_peer_files
+
+  sources += authenticators_p2p_files
+  sources += authenticators_p2p_iso_files
+  sources += authenticators_p2p_pake_files
+  sources += authenticators_standard_exchange_task_files
+
+  sources += account_related_files
+
+  sources += privacy_enhancement_files
+  sources += mk_agree_files
+
+  sources += security_label_adapter_files
+
+  sources -= [
+    "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
+    "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
+  ]
+
+  sources += [
+    "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c",
+    "../../unittest/deviceauth/source/device_auth_ext_mock.c",
+    "../../unittest/deviceauth/source/os_account_adapter_mock.c",
+    "../../unittest/deviceauth/source/protocol_task_main_mock.c",
+  ]
+  defines = [
+    "P2P_PAKE_DL_PRIME_LEN_384",
+    "P2P_PAKE_EC_TYPE",
+    "ENABLE_EC_SPEKE",
+    "ENABLE_ISO",
+    "ENABLE_AUTH_CODE_IMPORT",
+    "ENABLE_PUB_KEY_EXCHANGE",
+    "ENABLE_SAVE_TRUSTED_INFO",
+    "ENABLE_ACCOUNT_AUTH_ISO",
+    "ENABLE_ACCOUNT_AUTH_EC_SPEKE",
+    "ENABLE_P2P_BIND_ISO",
+    "ENABLE_P2P_BIND_EC_SPEKE",
+    "ENABLE_P2P_AUTH_ISO",
+    "ENABLE_P2P_AUTH_EC_SPEKE",
+    "DEV_AUTH_FUNC_TEST",
+    "ENABLE_PSEUDONYM",
+  ]
+
+  sources += identity_manager_files
+  include_dirs += identity_manager_inc
+  sources += [ "devauthfunc_fuzzer.cpp" ]
+
+  cflags = [ "-DHILOG_ENABLE" ]
+  cflags += [
+    "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",
+    "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}",
+  ]
+
+  deps = [
+    "//third_party/cJSON:cjson",
+    "//third_party/mbedtls:mbedtls_shared",
+    "//third_party/openssl:libcrypto_static",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "huks:libhukssdk",
+  ]
+}
+
+###############################################################################
+group("fuzztest") {
+  testonly = true
+  deps = []
+  deps += [
+    # deps file
+    ":DevAuthFuncFuzzTest",
+  ]
+}
+###############################################################################
