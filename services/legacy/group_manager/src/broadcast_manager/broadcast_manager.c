@@ -211,6 +211,7 @@ static int32_t UpdateListenerIfExist(const char *appId, const DataChangeListener
                 return HC_ERR_MEMORY_COPY;
             }
             g_broadcastMutex->unlock(g_broadcastMutex);
+            LOGI("Successfully updated a listener. [AppId]: %s", appId);
             return HC_SUCCESS;
         }
     }
@@ -250,7 +251,7 @@ static int32_t AddListenerIfNotExist(const char *appId, const DataChangeListener
     g_broadcastMutex->lock(g_broadcastMutex);
     g_listenerEntryVec.pushBack(&g_listenerEntryVec, &entry);
     g_broadcastMutex->unlock(g_broadcastMutex);
-    LOGI("[End]: Service register listener successfully!");
+    LOGI("Successfully added a listener. [AppId]: %s", appId);
     return HC_SUCCESS;
 }
 
@@ -336,10 +337,10 @@ int32_t RemoveListener(const char *appId)
             HcFree(entry->listener);
             ListenerEntry tempEntry;
             HC_VECTOR_POPELEMENT(&g_listenerEntryVec, &tempEntry, index);
-            LOGI("[End]: Service deregister listener successfully!");
+            LOGI("Successfully removed a listener. [AppId]: %s", appId);
             return HC_SUCCESS;
         }
     }
-    LOGI("[End]: The listener does not exist!");
+    LOGI("The listener does not exist! [AppId]: %s", appId);
     return HC_SUCCESS;
 }
