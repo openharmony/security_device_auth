@@ -868,7 +868,7 @@ int32_t CheckGroupExist(int32_t osAccountId, const char *groupId)
         return HC_ERR_NULL_PTR;
     }
     if (!IsGroupExistByGroupId(osAccountId, groupId)) {
-        LOGE("The group does not exist!");
+        LOGE("The group does not exist! [GroupId]: %s", groupId);
         return HC_ERR_GROUP_NOT_EXIST;
     }
     return HC_SUCCESS;

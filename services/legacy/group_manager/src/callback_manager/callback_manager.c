@@ -46,6 +46,7 @@ static int32_t UpdateCallbackIfExist(const char *appId, const DeviceAuthCallback
                 return HC_ERR_MEMORY_COPY;
             }
             g_callbackMutex->unlock(g_callbackMutex);
+            LOGI("Successfully updated a callback! [AppId]: %s", appId);
             return HC_SUCCESS;
         }
     }
@@ -90,7 +91,7 @@ static int32_t AddCallbackIfNotExist(const char *appId, const DeviceAuthCallback
         return HC_ERR_MEMORY_COPY;
     }
     g_callbackMutex->unlock(g_callbackMutex);
-    LOGD("[End]: Add callback successfully!");
+    LOGI("Successfully added a callback! [AppId]: %s", appId);
     return HC_SUCCESS;
 }
 
@@ -205,10 +206,12 @@ int32_t UnRegGroupManagerCallback(const char *appId)
             CallbackEntry tempEntry;
             HC_VECTOR_POPELEMENT(&g_callbackVec, &tempEntry, index);
             g_callbackMutex->unlock(g_callbackMutex);
+            LOGI("Successfully removed a callback. [AppId]: %s", appId);
             return HC_SUCCESS;
         }
     }
     g_callbackMutex->unlock(g_callbackMutex);
+    LOGI("The callback does not exist! [AppId]: %s", appId);
     return HC_SUCCESS;
 }
 

@@ -206,6 +206,7 @@ if (os_level == "mini" || os_level == "small") {
     include_dirs += identity_manager_inc
 
     branch_protector_ret = "pac_ret"
+    stack_protector_ret = true
     sanitize = {
       cfi = true
       cfi_cross_dso = true
@@ -269,6 +270,7 @@ if (os_level == "mini" || os_level == "small") {
     }
 
     branch_protector_ret = "pac_ret"
+    stack_protector_ret = true
     sanitize = {
       cfi = true
       cfi_cross_dso = true
@@ -324,6 +326,7 @@ if (os_level == "mini" || os_level == "small") {
     }
 
     branch_protector_ret = "pac_ret"
+    stack_protector_ret = true
     sanitize = {
       cfi = true
       cfi_cross_dso = true

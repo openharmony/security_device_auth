@@ -134,21 +134,20 @@ void LoadExtendPlugin(void)
     do {
         g_handle = DevAuthDlopen("/system/lib64/libdevice_auth_ext.z.so");
         if (g_handle != NULL) {
-            LOGE("[Plugin]: open lib64 dynamic plugin success.");
+            LOGI("[Plugin]: Open lib64 dynamic plugin success.");
             break;
         }
         g_handle = DevAuthDlopen("/system/lib/libdevice_auth_ext.z.so");
     } while (0);
     if (g_handle == NULL) {
-        LOGE("[Plugin]: open lib dynamic plugin failed.");
+        LOGI("[Plugin]: There are no plugin that need to be loaded.");
         return;
     }
+    LOGI("[Plugin]: Open lib32 dynamic plugin success.");
     if (LoadDynamicPlugin(g_handle) != HC_SUCCESS) {
         DevAuthDlclose(g_handle);
         g_handle = NULL;
-        return;
     }
-    LOGI("[Plugin]: load extend plugin success.");
 }
 
 void UnloadExtendPlugin(void)

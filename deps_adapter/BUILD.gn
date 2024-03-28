@@ -153,6 +153,7 @@ if (defined(ohos_lite)) {
       "-DSET_THREAD_NAME",
     ]
     branch_protector_ret = "pac_ret"
+    stack_protector_ret = true
     sanitize = {
       cfi = true
       cfi_cross_dso = true
