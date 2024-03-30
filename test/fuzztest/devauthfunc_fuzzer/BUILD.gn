@@ -127,7 +127,7 @@ ohos_fuzztest("DevAuthFuncFuzzTest") {
 
   cflags = [ "-DHILOG_ENABLE" ]
   cflags += [
-    "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",
+    "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=102400",
     "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}",
   ]
 
