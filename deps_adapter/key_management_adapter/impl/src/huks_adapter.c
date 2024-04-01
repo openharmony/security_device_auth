@@ -26,7 +26,7 @@
 #define EXT_IMPORT_PARAMS_LEN 2
 #define ECDH_COMMON_SIZE_P256 512
 
-static enum HksKeyPurpose g_purposeToHksKeyPurpose[] = {
+static uint32_t g_purposeToHksKeyPurpose[] = {
     HKS_KEY_PURPOSE_MAC,
     HKS_KEY_PURPOSE_DERIVE,
     HKS_KEY_PURPOSE_SIGN | HKS_KEY_PURPOSE_VERIFY,
