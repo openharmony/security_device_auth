@@ -233,7 +233,7 @@ int32_t GetAllOsAccountIds(int32_t **osAccountIds, uint32_t *size)
         LOGE("[OsAccountAdapter]: QueryAllCreatedOsAccounts failed. [Res]: %d", res);
         return HC_ERROR;
     }
-    *osAccountIds = (int32_t *)HcMalloc(accountSize, 0);
+    *osAccountIds = (int32_t *)HcMalloc(accountSize * sizeof(int32_t), 0);
     if (*osAccountIds == nullptr) {
         LOGE("[OsAccountAdapter]: Failed to alloc memory for osAccountIds!");
         return HC_ERR_ALLOC_MEMORY;
