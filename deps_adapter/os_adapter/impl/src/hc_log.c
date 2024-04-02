@@ -34,10 +34,10 @@
 
 #include "hilog/log.h"
 
-#define DEV_AUTH_LOG_DEBUG(buf) HiLogPrint(LOG_CORE, LOG_DEBUG, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
-#define DEV_AUTH_LOG_INFO(buf) HiLogPrint(LOG_CORE, LOG_INFO, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
-#define DEV_AUTH_LOG_WARN(buf) HiLogPrint(LOG_CORE, LOG_WARN, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
-#define DEV_AUTH_LOG_ERROR(buf) HiLogPrint(LOG_CORE, LOG_ERROR, DEV_AUTH_LOG_DOMAIN, "[DEVAUTH]", "%{public}s", buf)
+#define DEV_AUTH_LOG_DEBUG(buf) HILOG_DEBUG(LOG_CORE, "%{public}s", buf)
+#define DEV_AUTH_LOG_INFO(buf) HILOG_INFO(LOG_CORE, "%{public}s", buf)
+#define DEV_AUTH_LOG_WARN(buf) HILOG_WARN(LOG_CORE, "%{public}s", buf)
+#define DEV_AUTH_LOG_ERROR(buf) HILOG_ERROR(LOG_CORE, "%{public}s", buf)
 
 #endif
 
