@@ -36,6 +36,7 @@ ohos_unittest("perform_dumper_test") {
   ]
 
   external_deps = [
+    "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
   ]
