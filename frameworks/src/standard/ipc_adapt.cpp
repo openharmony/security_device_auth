@@ -409,7 +409,8 @@ void DelIpcCallBackByReqId(int64_t reqId, int32_t type, bool withLock)
     return;
 }
 
-static void OnTransmitStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int32_t cacheNum, MessageParcel &reply)
+__attribute__((no_sanitize("cfi"))) static void OnTransmitStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache,
+    int32_t cacheNum, MessageParcel &reply)
 {
     int64_t requestId = 0;
     int32_t inOutLen = 0;
@@ -429,7 +430,8 @@ static void OnTransmitStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int
     return;
 }
 
-static void OnSessKeyStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int32_t cacheNum, MessageParcel &reply)
+__attribute__((no_sanitize("cfi"))) static void OnSessKeyStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache,
+    int32_t cacheNum, MessageParcel &reply)
 {
     int64_t requestId = 0;
     int32_t inOutLen = 0;
@@ -448,7 +450,8 @@ static void OnSessKeyStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int3
     return;
 }
 
-static void OnFinishStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int32_t cacheNum, MessageParcel &reply)
+__attribute__((no_sanitize("cfi"))) static void OnFinishStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache,
+    int32_t cacheNum, MessageParcel &reply)
 {
     int64_t requestId = 0;
     int32_t opCode = 0;
@@ -470,7 +473,8 @@ static void OnFinishStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int32
     return;
 }
 
-static void OnErrorStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int32_t cacheNum, MessageParcel &reply)
+__attribute__((no_sanitize("cfi"))) static void OnErrorStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache,
+    int32_t cacheNum, MessageParcel &reply)
 {
     int64_t requestId = 0;
     int32_t opCode = 0;
@@ -494,7 +498,8 @@ static void OnErrorStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int32_
     return;
 }
 
-static void OnRequestStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int32_t cacheNum, MessageParcel &reply)
+__attribute__((no_sanitize("cfi"))) static void OnRequestStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache,
+    int32_t cacheNum, MessageParcel &reply)
 {
     int64_t requestId = 0;
     int32_t opCode = 0;
@@ -525,7 +530,8 @@ static void OnRequestStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int3
     return;
 }
 
-static void OnGroupCreatedStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int32_t cacheNum, MessageParcel &reply)
+__attribute__((no_sanitize("cfi"))) static void OnGroupCreatedStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache,
+    int32_t cacheNum, MessageParcel &reply)
 {
     const char *groupInfo = nullptr;
     void (*onGroupCreatedHook)(const char *) = nullptr;
@@ -538,7 +544,8 @@ static void OnGroupCreatedStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache,
     return;
 }
 
-static void OnGroupDeletedStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int32_t cacheNum, MessageParcel &reply)
+__attribute__((no_sanitize("cfi"))) static void OnGroupDeletedStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache,
+    int32_t cacheNum, MessageParcel &reply)
 {
     const char *groupInfo = nullptr;
     void (*onDelGroupHook)(const char *) = nullptr;
@@ -551,7 +558,8 @@ static void OnGroupDeletedStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache,
     return;
 }
 
-static void OnDevBoundStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int32_t cacheNum, MessageParcel &reply)
+__attribute__((no_sanitize("cfi"))) static void OnDevBoundStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache,
+    int32_t cacheNum, MessageParcel &reply)
 {
     const char *groupInfo = nullptr;
     const char *udid = nullptr;
@@ -566,7 +574,8 @@ static void OnDevBoundStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int
     return;
 }
 
-static void OnDevUnboundStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int32_t cacheNum, MessageParcel &reply)
+__attribute__((no_sanitize("cfi"))) static void OnDevUnboundStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache,
+    int32_t cacheNum, MessageParcel &reply)
 {
     const char *groupInfo = nullptr;
     const char *udid = nullptr;
@@ -581,7 +590,8 @@ static void OnDevUnboundStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, i
     return;
 }
 
-static void OnDevUnTrustStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int32_t cacheNum, MessageParcel &reply)
+__attribute__((no_sanitize("cfi"))) static void OnDevUnTrustStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache,
+    int32_t cacheNum, MessageParcel &reply)
 {
     const char *udid = nullptr;
     void (*onDevUnTrustHook)(const char *) = nullptr;
@@ -593,7 +603,8 @@ static void OnDevUnTrustStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, i
     return;
 }
 
-static void OnDelLastGroupStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache, int32_t cacheNum, MessageParcel &reply)
+__attribute__((no_sanitize("cfi"))) static void OnDelLastGroupStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache,
+    int32_t cacheNum, MessageParcel &reply)
 {
     const char *udid = nullptr;
     int32_t groupType = 0;
@@ -610,7 +621,7 @@ static void OnDelLastGroupStub(uintptr_t cbHook, const IpcDataInfo *cbDataCache,
     return;
 }
 
-static void OnTrustDevNumChangedStub(uintptr_t cbHook,
+__attribute__((no_sanitize("cfi"))) static void OnTrustDevNumChangedStub(uintptr_t cbHook,
     const IpcDataInfo *cbDataCache, int32_t cacheNum, MessageParcel &reply)
 {
     int32_t devNum = 0;
