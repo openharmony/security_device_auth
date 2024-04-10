@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2023-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -21,9 +21,10 @@ THIRD_PATH = "//third_party/bounds_checking_function"
 module_output_path = "device_auth/device_auth"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("AuthenticatePeerFuzzTest") {
+ohos_fuzztest("RegisteLogFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "${deviceauth_path}/frameworks/deviceauth_lite/fuzztest/authenticatepeer_fuzzer"
+  fuzz_config_file =
+      "${deviceauth_path}/frameworks/deviceauth_lite/test/fuzztest/registelog_fuzzer"
   include_dirs = []
   include_dirs += [
     "${deviceauth_path}/interfaces/inner_api/deviceauth_lite",
@@ -33,18 +34,19 @@ ohos_fuzztest("AuthenticatePeerFuzzTest") {
     "${deviceauth_path}/frameworks/deviceauth_lite/source/struct",
     "$THIRD_PATH/include",
     "${deviceauth_path}/frameworks/deviceauth_lite/source/json",
+    "${deviceauth_path}/frameworks/deviceauth_lite/source/log",
   ]
   cflags = [
     "-g",
     "-O0",
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
+    "--coverage",
   ]
-  cflags_cc = [ "--coverage" ]
 
   ldflags = [ "--coverage" ]
 
-  sources = [ "authenticatepeer_fuzzer.cpp" ]
+  sources = [ "registelog_fuzzer.cpp" ]
   deps = [
     "$THIRD_PATH:libsec_shared",
     "${deviceauth_path}/frameworks/deviceauth_lite/source:hichainsdk",
@@ -57,7 +59,7 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    ":AuthenticatePeerFuzzTest",
+    ":RegisteLogFuzzTest",
   ]
 }
 ###############################################################################

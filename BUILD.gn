@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("deviceauth_env.gni")
 
 group("deviceauth_sdk_build") {
   if (os_level == "standard" || os_level == "small") {
@@ -28,56 +27,4 @@ group("deviceauth_service_build") {
 
 group("deviceauth_build") {
   deps = [ "services:deviceauth" ]
-}
-
-group("deviceauth_test_build") {
-  deps = []
-  if (os_level == "standard") {
-    testonly = true
-    deps += [
-      "test/fuzztest/devauth_fuzzer:fuzztest",
-      "test/fuzztest/devauthcb_fuzzer:fuzztest",
-      "test/fuzztest/devauthfunc_fuzzer:fuzztest",
-      "test/fuzztest/group_auth/authdevice_fuzzer:fuzztest",
-      "test/fuzztest/group_auth/cancelauthrequest_fuzzer:fuzztest",
-      "test/fuzztest/group_auth/getpseudonymid_fuzzer:fuzztest",
-      "test/fuzztest/group_auth/getrealinfo_fuzzer:fuzztest",
-      "test/fuzztest/group_auth/processauthdata_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/addmember_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/cancelbindrequest_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/checkaccess_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/creategroup_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/deletegroup_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/deletemember_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/getdeviceinfobyid_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/getgroupinfo_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/getgroupinfobyid_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/getjoinedgroups_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/getpkinfolist_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/getregisterinfo_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/getrelatedgroups_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/gettrusteddevices_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/isdeviceingroup_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/processbinddata_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/registercallback_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/registerdatachangelistener_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/unregistercallback_fuzzer:fuzztest",
-      "test/fuzztest/group_manage/unregisterdatachangelistener_fuzzer:fuzztest",
-      "test/unittest/deviceauth:device_auth_func_test",
-      "test/unittest/deviceauth:device_auth_ipc_test",
-      "test/unittest/deviceauth:deviceauth_llt",
-      "test/unittest/deviceauth:deviceauth_unit_test",
-      "test/unittest/tdd_framework/unit_test/services/creds_manager:creds_manager_test",
-      "test/unittest/tdd_framework/unit_test/services/frameworks/hiview_adapter:perform_dumper_test",
-      "test/unittest/tdd_framework/unit_test/services/frameworks/os_account_adapter:os_account_adapter_test_group",
-      "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/auth_sub_session:auth_sub_session_test",
-      "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/auth_sub_session/protocol_lib:dl_speke_protocol_test",
-      "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/auth_sub_session/protocol_lib:ec_speke_protocol_test",
-      "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/auth_sub_session/protocol_lib:iso_protocol_test",
-      "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session:expand_sub_session_test",
-      "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session/expand_process_lib:auth_code_import_test",
-      "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session/expand_process_lib:pub_key_exchange_test",
-      "test/unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session/expand_process_lib:save_trusted_info_test",
-    ]
-  }
 }
