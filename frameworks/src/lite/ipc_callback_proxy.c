@@ -65,8 +65,8 @@ void CbProxySendRequest(SvcIdentity sid, int32_t callbackId, uintptr_t cbHook, I
     LOGI("to form callback params data length(%d)", dataSz);
     if (dataSz > 0) {
         WriteUint32(reqData, dataSz);
-        bool value = WriteBuffer(reqData, data->bufferBase + IpcIoBufferOffset(), dataSz);
-        if (!value) {
+        if (!WriteBuffer(reqData, data->bufferBase + IpcIoBufferOffset(), dataSz)) {
+            HcFree((void *)reqData);
             return;
         }
     }
