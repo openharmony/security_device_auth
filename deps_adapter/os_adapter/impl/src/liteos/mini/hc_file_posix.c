@@ -86,7 +86,7 @@ static int HcFileOpenWrite(const char *path)
         }
     }
     LOGI("[OS]: file open enter.");
-    int res = open(path, O_RDWR | O_CREAT | O_TRUNC);
+    int res = open(path, O_RDWR | O_CREAT | O_TRUNC, 0640);
     LOGI("[OS]: file open quit.");
     if (res == -1) {
         LOGE("[OS]: file open fail. [Errno]: %d", errno);
