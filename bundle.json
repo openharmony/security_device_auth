@@ -42,6 +42,7 @@
           "hitrace",
           "huks",
           "init",
+          "json",
           "mbedtls",
           "openssl",
           "os_account",
@@ -70,8 +71,8 @@
           }
         ],
         "test": [
-            "//base/security/device_auth:deviceauth_test_build",
-            "//base/security/device_auth/frameworks/deviceauth_lite:deviceauth_lite_test_build"
+            "//base/security/device_auth/test:deviceauth_test_build",
+            "//base/security/device_auth/frameworks/deviceauth_lite/test:deviceauth_lite_test_build"
         ]
       }
     }

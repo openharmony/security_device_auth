@@ -1,0 +1,66 @@
+# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+
+group("deviceauth_test_build") {
+  deps = []
+  if (os_level == "standard") {
+    testonly = true
+    deps += [
+      "fuzztest/devauth_fuzzer:fuzztest",
+      "fuzztest/devauthcb_fuzzer:fuzztest",
+      "fuzztest/devauthfunc_fuzzer:fuzztest",
+      "fuzztest/group_auth/authdevice_fuzzer:fuzztest",
+      "fuzztest/group_auth/cancelauthrequest_fuzzer:fuzztest",
+      "fuzztest/group_auth/getpseudonymid_fuzzer:fuzztest",
+      "fuzztest/group_auth/getrealinfo_fuzzer:fuzztest",
+      "fuzztest/group_auth/processauthdata_fuzzer:fuzztest",
+      "fuzztest/group_manage/addmember_fuzzer:fuzztest",
+      "fuzztest/group_manage/cancelbindrequest_fuzzer:fuzztest",
+      "fuzztest/group_manage/checkaccess_fuzzer:fuzztest",
+      "fuzztest/group_manage/creategroup_fuzzer:fuzztest",
+      "fuzztest/group_manage/deletegroup_fuzzer:fuzztest",
+      "fuzztest/group_manage/deletemember_fuzzer:fuzztest",
+      "fuzztest/group_manage/getdeviceinfobyid_fuzzer:fuzztest",
+      "fuzztest/group_manage/getgroupinfo_fuzzer:fuzztest",
+      "fuzztest/group_manage/getgroupinfobyid_fuzzer:fuzztest",
+      "fuzztest/group_manage/getjoinedgroups_fuzzer:fuzztest",
+      "fuzztest/group_manage/getpkinfolist_fuzzer:fuzztest",
+      "fuzztest/group_manage/getregisterinfo_fuzzer:fuzztest",
+      "fuzztest/group_manage/getrelatedgroups_fuzzer:fuzztest",
+      "fuzztest/group_manage/gettrusteddevices_fuzzer:fuzztest",
+      "fuzztest/group_manage/isdeviceingroup_fuzzer:fuzztest",
+      "fuzztest/group_manage/processbinddata_fuzzer:fuzztest",
+      "fuzztest/group_manage/registercallback_fuzzer:fuzztest",
+      "fuzztest/group_manage/registerdatachangelistener_fuzzer:fuzztest",
+      "fuzztest/group_manage/unregistercallback_fuzzer:fuzztest",
+      "fuzztest/group_manage/unregisterdatachangelistener_fuzzer:fuzztest",
+      "unittest/deviceauth:device_auth_func_test",
+      "unittest/deviceauth:device_auth_ipc_test",
+      "unittest/deviceauth:deviceauth_llt",
+      "unittest/deviceauth:deviceauth_unit_test",
+      "unittest/tdd_framework/unit_test/services/creds_manager:creds_manager_test",
+      "unittest/tdd_framework/unit_test/services/frameworks/hiview_adapter:perform_dumper_test",
+      "unittest/tdd_framework/unit_test/services/frameworks/os_account_adapter:os_account_adapter_test_group",
+      "unittest/tdd_framework/unit_test/services/session_manager/session/v2/auth_sub_session:auth_sub_session_test",
+      "unittest/tdd_framework/unit_test/services/session_manager/session/v2/auth_sub_session/protocol_lib:dl_speke_protocol_test",
+      "unittest/tdd_framework/unit_test/services/session_manager/session/v2/auth_sub_session/protocol_lib:ec_speke_protocol_test",
+      "unittest/tdd_framework/unit_test/services/session_manager/session/v2/auth_sub_session/protocol_lib:iso_protocol_test",
+      "unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session:expand_sub_session_test",
+      "unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session/expand_process_lib:auth_code_import_test",
+      "unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session/expand_process_lib:pub_key_exchange_test",
+      "unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session/expand_process_lib:save_trusted_info_test",
+    ]
+  }
+}
