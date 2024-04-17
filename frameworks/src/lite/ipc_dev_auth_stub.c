@@ -290,7 +290,7 @@ int32_t SetRemoteObject(const SvcIdentity *object)
 
 static void ClientDeathCallback(void *arg)
 {
-    int32_t callbackIdx = (int32_t)arg;
+    int32_t callbackIdx = (int32_t)(size_t)arg;
 
     LOGI("remote is not actively, to reset local resource");
     ResetIpcCallBackNodeByNodeId(callbackIdx);
@@ -309,7 +309,7 @@ void AddCbDeathRecipient(int32_t cbStubIdx, int32_t cbDataIdx)
         UnLockCbStubTable();
         return;
     }
-    ret = AddDeathRecipient(g_cbStub[cbStubIdx].cbStub, ClientDeathCallback, (void *)cbDataIdx, &cbId);
+    ret = AddDeathRecipient(g_cbStub[cbStubIdx].cbStub, ClientDeathCallback, (void *)(size_t)cbDataIdx, &cbId);
     if (ret == 0) {
         g_cbStub[cbStubIdx].cbDieId = cbId;
     }
