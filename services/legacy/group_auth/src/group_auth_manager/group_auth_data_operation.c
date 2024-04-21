@@ -89,34 +89,6 @@ static bool GaDeepCopyGroupEntry(const TrustedGroupEntry *entry, TrustedGroupEnt
     return true;
 }
 
-static bool GaIsGroupManager(const char *appId, const TrustedGroupEntry *entry)
-{
-    uint32_t index;
-    HcString *manager = NULL;
-    const char *managerStr = NULL;
-    FOR_EACH_HC_VECTOR(entry->managers, index, manager) {
-        managerStr = StringGet(manager);
-        if ((managerStr != NULL) && (strcmp(managerStr, appId) == 0)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-static bool GaIsGroupFriend(const char *appId, const TrustedGroupEntry *entry)
-{
-    uint32_t index;
-    HcString *trustedFriend = NULL;
-    const char *friendStr = NULL;
-    FOR_EACH_HC_VECTOR(entry->friends, index, trustedFriend) {
-        friendStr = StringGet(trustedFriend);
-        if ((friendStr != NULL) && (strcmp(friendStr, appId) == 0)) {
-            return true;
-        }
-    }
-    return false;
-}
-
 static int32_t GetGroupEntryById(int32_t osAccountId, const char *groupId, TrustedGroupEntry *returnEntry)
 {
     if (returnEntry == NULL) {
@@ -162,14 +134,8 @@ bool GaIsGroupAccessible(int32_t osAccountId, const char *groupId, const char *a
         DestroyGroupEntry(entry);
         return false;
     }
-    if ((entry->visibility == GROUP_VISIBILITY_PUBLIC) ||
-        (GaIsGroupManager(appId, entry)) ||
-        (GaIsGroupFriend(appId, entry))) {
-        DestroyGroupEntry(entry);
-        return true;
-    }
     DestroyGroupEntry(entry);
-    return false;
+    return true;
 }
 
 int32_t GaGetTrustedDeviceEntryById(int32_t osAccountId, const char *deviceId,

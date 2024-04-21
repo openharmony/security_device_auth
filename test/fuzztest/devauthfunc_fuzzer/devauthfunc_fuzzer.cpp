@@ -69,8 +69,12 @@ static const int32_t TEST_AUTH_OS_ACCOUNT_ID = 100;
 static const int TEST_DEV_AUTH_BUFFER_SIZE = 128;
 static const char *CREATE_PARAMS = "{\"groupName\":\"TestGroup\",\"deviceId\":\"TestAuthId\",\"groupType\":256,\"group"
     "Visibility\":-1,\"userType\":0,\"expireTime\":-1}";
+static const char *CREATE_PARAMS2 = "{\"groupType\":1282,\"userId\":\"4269DC28B639681698809A67EDAD08E39F20790"
+    "0038F91FEF95DD042FE2874E4\",\"peerUserId\":\"6B7B805962B8EB8275D73128BFDAA7ECD755A2EC304E36543941874A277FA75F\"}";
 static const char *DISBAND_PARAMS =
     "{\"groupId\":\"E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21\"}";
+static const char *DISBAND_PARAMS2 =
+    "{\"groupId\":\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\"}";
 static const char *ADD_PARAMS =
     "{\"groupId\":\"E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21\","
     "\"groupType\":256,\"pinCode\":\"123456\"}";
@@ -86,6 +90,9 @@ static const char *ADD_MULTI_PARAMS =
     "\"userId\":\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\","
     "\"credential\":{\"credentialType\":1,"
     "\"authCode\":\"2f7562744654535564586e665467546b322b4b506b65626373466f48766a4335\"}}]}";
+static const char *DEL_MULTI_PARAMS =
+    "{\"groupType\":1,\"groupId\":\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\","
+    "\"deviceList\":[{\"deviceId\":\"TestAuthId2\"},{\"deviceId\":\"TestAuthId3\"}]}";
 static const char *DELETE_PARAMS =
     "{\"groupId\":\"E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21\",\"deleteId\":\"TestAuthId2\"}";
 static const char *GET_REGISTER_INFO_PARAMS =
@@ -440,6 +447,44 @@ static int32_t DelDemoMember(int32_t osAccountId, int64_t reqId, const char *app
     return g_asyncStatus == ASYNC_STATUS_ERROR ? HC_ERROR : HC_SUCCESS;
 }
 
+static int32_t DevAuthTestCase004(void)
+{
+    DeleteDatabase();
+    int32_t ret = InitDeviceAuthService();
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    do {
+        const DeviceGroupManager *gm = GetGmInstance();
+        ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = gm->unRegCallback(TEST_APP_ID);
+    } while (0);
+    DestroyDeviceAuthService();
+    return ret;
+}
+
+static int32_t DevAuthTestCase005(void)
+{
+    DeleteDatabase();
+    int32_t ret = InitDeviceAuthService();
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    do {
+        const DeviceGroupManager *gm = GetGmInstance();
+        ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS);
+    } while (0);
+    DestroyDeviceAuthService();
+    return ret;
+}
+
 static int32_t DevAuthTestCase006(void)
 {
     DeleteDatabase();
@@ -645,10 +690,89 @@ static int32_t DevAuthTestCase013(void)
     return ret;
 }
 
+static int32_t DevAuthTestCase014(void)
+{
+    DeleteDatabase();
+    int32_t ret = InitDeviceAuthService();
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    do {
+        const DeviceGroupManager *gm = GetGmInstance();
+        ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = CreateDemoIdenticalAccountGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, TEST_USER_ID);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = gm->addMultiMembersToGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID, ADD_MULTI_PARAMS);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = gm->delMultiMembersFromGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID, DEL_MULTI_PARAMS);
+    } while (0);
+    DestroyDeviceAuthService();
+    return ret;
+}
+
+static int32_t DevAuthTestCase015(void)
+{
+    DeleteDatabase();
+    int32_t ret = InitDeviceAuthService();
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    do {
+        const DeviceGroupManager *gm = GetGmInstance();
+        ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = CreateDemoIdenticalAccountGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, TEST_USER_ID);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = gm->addMultiMembersToGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID, ADD_MULTI_PARAMS);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = DeleteDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, DISBAND_PARAMS2);
+    } while (0);
+    DestroyDeviceAuthService();
+    return ret;
+}
+
+static int32_t DevAuthTestCase016(void)
+{
+    DeleteDatabase();
+    int32_t ret = InitDeviceAuthService();
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    do {
+        const DeviceGroupManager *gm = GetGmInstance();
+        ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, TEST_USER_ID);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS2);
+    } while (0);
+    DestroyDeviceAuthService();
+    return ret;
+}
+
 bool FuzzDoDevAuthFuncFuzz(const uint8_t* data, size_t size)
 {
     (void)data;
     (void)size;
+    (void)DevAuthTestCase004();
+    (void)DevAuthTestCase005();
     (void)DevAuthTestCase006();
     (void)DevAuthTestCase007();
     (void)DevAuthTestCase008();
@@ -657,6 +781,9 @@ bool FuzzDoDevAuthFuncFuzz(const uint8_t* data, size_t size)
     (void)DevAuthTestCase011();
     (void)DevAuthTestCase012();
     (void)DevAuthTestCase013();
+    (void)DevAuthTestCase014();
+    (void)DevAuthTestCase015();
+    (void)DevAuthTestCase016();
     return true;
 }
 }
