@@ -126,12 +126,14 @@ int32_t parse_remove_response_data(struct remove_auth_info_client *auth_info_cli
     int32_t ret = decrypt_payload((struct var_buffer *)&auth_info_client->sts_client->session_key,
                                   &receive->cipher, "hichain_remove_info_response", &plain);
     if (ret != HC_OK) {
+        (void)memset_s(plain.val, plain.size, 0, plain.size);
         FREE(plain.val);
         LOGE("Decrypt rm request payload failed");
         return ret;
     }
 
     ret = plain.val[0];
+    (void)memset_s(plain.val, plain.size, 0, plain.size);
     FREE(plain.val);
     if (ret != HC_OK) {
         LOGE("RemoveAuthStartRequest failed, ret: %d", ret);

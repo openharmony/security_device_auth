@@ -107,11 +107,13 @@ static int32_t parse_exchange_response_data(const struct hichain *hichain,
     ret = get_field_from_request_payload(&plain, &sign_result, &cache->auth_id, &cache->ltpk);
     if (ret != HC_OK) {
         LOGE("Get field from exchange response message failed, error code is %d", ret);
+        (void)memset_s(plain.val, plain.size, 0, plain.size);
         FREE(plain.val);
         return ret;
     }
     struct uint8_buff *auth_info = &plain;
     ret = verify_peer_public_key(hichain, auth_info, &sign_result, &cache->ltpk);
+    (void)memset_s(plain.val, plain.size, 0, plain.size);
     FREE(plain.val);
     if (ret != HC_OK) {
         LOGE("Verify exchange request message failed, error code is %d", ret);
