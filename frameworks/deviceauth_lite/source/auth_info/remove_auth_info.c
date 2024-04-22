@@ -83,6 +83,7 @@ static int32_t parse_remove_request_data(const struct hichain *hichain, remove_r
         return ret;
     }
     ret = get_field_from_request_payload(&plain, &cache->user_type, &cache->auth_id);
+    (void)memset_s(plain.val, plain.size, 0, plain.size);
     FREE(plain.val);
     plain.val = NULL;
     if (ret != HC_OK) {
