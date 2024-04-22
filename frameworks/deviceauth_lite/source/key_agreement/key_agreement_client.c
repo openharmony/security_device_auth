@@ -104,7 +104,10 @@ int32_t receive_end_response(void *handle, void *receive_data)
         return PROTOCOL_STATE_ERROR;
     }
     struct client_virtual_func_group *funcs = &client->package_funcs;
-    check_ptr_return_val(funcs, HC_INPUT_ERROR);
+    if (funcs == NULL) {
+        set_state(base, PROTOCOL_ERROR);
+        return HC_INPUT_PTR_NULL;
+    }
     int32_t ret = funcs->parse_end_response_data(handle, receive_data);
     if (ret != HC_OK) {
         set_state(base, PROTOCOL_ERROR);
