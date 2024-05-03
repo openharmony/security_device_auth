@@ -31,7 +31,9 @@ int32_t SessionSwitchState(SessionImpl *impl, SessionEvent *event, CJson *sessio
     return HC_ERR_NOT_SUPPORT;
 }
 
+#ifndef  DEV_AUTH_FUNC_TEST
 bool IsSupportSessionV2(void)
 {
     return false;
 }
+#endif

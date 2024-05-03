@@ -595,7 +595,7 @@ static int32_t AddMemberToGroupInner(int32_t osAccountId, int64_t requestId, con
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("[Start]: [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
+    LOGI("Start to add member to group. [ReqId]: %" PRId64 ", [AppId]: %s", requestId, appId);
     const DeviceAuthCallback *callback = GetGMCallbackByAppId(appId);
     if (callback == NULL) {
         LOGE("Failed to find callback by appId! [AppId]: %s", appId);

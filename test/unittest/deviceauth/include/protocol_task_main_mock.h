@@ -25,6 +25,7 @@ extern "C" {
 
 void SetIsoSupported(bool isSupported);
 void SetPakeV1Supported(bool isSupported);
+void SetSessionV2Supported(bool isSupported);
 
 #ifdef __cplusplus
 }
