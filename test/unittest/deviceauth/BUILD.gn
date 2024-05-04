@@ -371,6 +371,7 @@ ohos_unittest("deviceauth_unit_test") {
     "ENABLE_PUB_KEY_EXCHANGE",
     "ENABLE_SAVE_TRUSTED_INFO",
     "ENABLE_PSEUDONYM",
+    "DEV_AUTH_FUNC_TEST",
   ]
 
   cflags = [ "-DHILOG_ENABLE" ]

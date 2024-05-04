@@ -15,6 +15,7 @@
 
 #include "hc_log.h"
 #include "hc_types.h"
+#include "dev_session_v2.h"
 #include "iso_task_main.h"
 #include "iso_base_cur_task.h"
 #include "iso_client_task.h"
@@ -27,13 +28,14 @@
 
 static bool g_isIsoSupported = true;
 static bool g_isPakeV1Supported = true;
+static bool g_isSessionV2Supported = true;
 
 void SetPakeV1Supported(bool isSupported)
 {
     g_isPakeV1Supported = isSupported;
 }
 
-bool IsSupportPakeV1()
+bool IsSupportPakeV1(void)
 {
     if (g_isPakeV1Supported) {
         LOGI("pake v1 support.");
@@ -84,4 +86,14 @@ SubTaskBase *CreateIsoSubTask(const CJson *in)
     } else {
         return CreateIsoServerTask(in);
     }
+}
+
+void SetSessionV2Supported(bool isSupported)
+{
+    g_isSessionV2Supported = isSupported;
+}
+
+bool IsSupportSessionV2(void)
+{
+    return g_isSessionV2Supported;
 }

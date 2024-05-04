@@ -15,7 +15,7 @@
 
 #include "pake_v1_task_main.h"
 
-bool IsSupportPakeV1()
+bool IsSupportPakeV1(void)
 {
     return false;
 }

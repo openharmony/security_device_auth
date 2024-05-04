@@ -2025,7 +2025,9 @@ int32_t SessionSwitchState(SessionImpl *impl, SessionEvent *event, CJson *sessio
     return HC_SUCCESS;
 }
 
+#ifndef  DEV_AUTH_FUNC_TEST
 bool IsSupportSessionV2(void)
 {
     return true;
 }
+#endif
