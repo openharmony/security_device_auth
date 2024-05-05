@@ -89,7 +89,7 @@ HWTEST_F(MKAgreeTest, GenerateDeviceKeyPairTest001, TestSize.Level0)
 HWTEST_F(MKAgreeTest, GenerateMkTest001, TestSize.Level0)
 {
     uint32_t peerDevPkLen = HcStrlen(TEST_DEV_PK) / BYTE_TO_HEX_OPER_LENGTH;
-    uint8_t *peerDevPkVal = (uint8_t *)HcMalloc(peerDevPkLen, 0);
+    uint8_t *peerDevPkVal = static_cast<uint8_t *>(HcMalloc(peerDevPkLen, 0));
     ASSERT_NE(peerDevPkVal, nullptr);
     int32_t ret = HexStringToByte(TEST_DEV_PK, peerDevPkVal, peerDevPkLen);
     EXPECT_EQ(ret, HC_SUCCESS);
@@ -112,7 +112,7 @@ HWTEST_F(MKAgreeTest, GenerateMkTest002, TestSize.Level0)
 HWTEST_F(MKAgreeTest, GenerateMkTest003, TestSize.Level0)
 {
     uint32_t peerDevPkLen = HcStrlen(TEST_DEV_PK) / BYTE_TO_HEX_OPER_LENGTH;
-    uint8_t *peerDevPkVal = (uint8_t *)HcMalloc(peerDevPkLen, 0);
+    uint8_t *peerDevPkVal = static_cast<uint8_t *>(HcMalloc(peerDevPkLen, 0));
     ASSERT_NE(peerDevPkVal, nullptr);
     int32_t ret = HexStringToByte(TEST_DEV_PK, peerDevPkVal, peerDevPkLen);
     EXPECT_EQ(ret, HC_SUCCESS);
@@ -125,7 +125,7 @@ HWTEST_F(MKAgreeTest, GenerateMkTest003, TestSize.Level0)
 HWTEST_F(MKAgreeTest, GenerateMkTest004, TestSize.Level0)
 {
     uint32_t peerDevPkLen = HcStrlen(TEST_DEV_PK) / BYTE_TO_HEX_OPER_LENGTH;
-    uint8_t *peerDevPkVal = (uint8_t *)HcMalloc(peerDevPkLen, 0);
+    uint8_t *peerDevPkVal = static_cast<uint8_t *>(HcMalloc(peerDevPkLen, 0));
     ASSERT_NE(peerDevPkVal, nullptr);
     int32_t ret = HexStringToByte(TEST_DEV_PK, peerDevPkVal, peerDevPkLen);
     EXPECT_EQ(ret, HC_SUCCESS);
@@ -148,7 +148,7 @@ HWTEST_F(MKAgreeTest, DeleteMkTest001, TestSize.Level0)
 HWTEST_F(MKAgreeTest, GeneratePseudonymPskTest001, TestSize.Level0)
 {
     uint32_t peerDevPkLen = HcStrlen(TEST_DEV_PK) / BYTE_TO_HEX_OPER_LENGTH;
-    uint8_t *peerDevPkVal = (uint8_t *)HcMalloc(peerDevPkLen, 0);
+    uint8_t *peerDevPkVal = static_cast<uint8_t *>(HcMalloc(peerDevPkLen, 0));
     ASSERT_NE(peerDevPkVal, nullptr);
     int32_t ret = HexStringToByte(TEST_DEV_PK, peerDevPkVal, peerDevPkLen);
     EXPECT_EQ(ret, HC_SUCCESS);
@@ -171,7 +171,7 @@ HWTEST_F(MKAgreeTest, GeneratePseudonymPskTest002, TestSize.Level0)
 HWTEST_F(MKAgreeTest, GeneratePseudonymPskTest003, TestSize.Level0)
 {
     uint32_t peerDevPkLen = HcStrlen(TEST_DEV_PK) / BYTE_TO_HEX_OPER_LENGTH;
-    uint8_t *peerDevPkVal = (uint8_t *)HcMalloc(peerDevPkLen, 0);
+    uint8_t *peerDevPkVal = static_cast<uint8_t *>(HcMalloc(peerDevPkLen, 0));
     ASSERT_NE(peerDevPkVal, nullptr);
     int32_t ret = HexStringToByte(TEST_DEV_PK, peerDevPkVal, peerDevPkLen);
     EXPECT_EQ(ret, HC_SUCCESS);
@@ -184,7 +184,7 @@ HWTEST_F(MKAgreeTest, GeneratePseudonymPskTest003, TestSize.Level0)
 HWTEST_F(MKAgreeTest, GenerateAndSavePseudonymIdTest001, TestSize.Level0)
 {
     uint32_t peerDevPkLen = HcStrlen(TEST_DEV_PK) / BYTE_TO_HEX_OPER_LENGTH;
-    uint8_t *peerDevPkVal = (uint8_t *)HcMalloc(peerDevPkLen, 0);
+    uint8_t *peerDevPkVal = static_cast<uint8_t *>(HcMalloc(peerDevPkLen, 0));
     ASSERT_NE(peerDevPkVal, nullptr);
     int32_t ret = HexStringToByte(TEST_DEV_PK, peerDevPkVal, peerDevPkLen);
     EXPECT_EQ(ret, HC_SUCCESS);
@@ -200,7 +200,7 @@ HWTEST_F(MKAgreeTest, GenerateAndSavePseudonymIdTest001, TestSize.Level0)
 HWTEST_F(MKAgreeTest, GenerateAndSavePseudonymIdTest002, TestSize.Level0)
 {
     uint32_t peerDevPkLen = HcStrlen(TEST_DEV_PK) / BYTE_TO_HEX_OPER_LENGTH;
-    uint8_t *peerDevPkVal = (uint8_t *)HcMalloc(peerDevPkLen, 0);
+    uint8_t *peerDevPkVal = static_cast<uint8_t *>(HcMalloc(peerDevPkLen, 0));
     ASSERT_NE(peerDevPkVal, nullptr);
     int32_t ret = HexStringToByte(TEST_DEV_PK, peerDevPkVal, peerDevPkLen);
     EXPECT_EQ(ret, HC_SUCCESS);
@@ -216,7 +216,7 @@ HWTEST_F(MKAgreeTest, GenerateAndSavePseudonymIdTest002, TestSize.Level0)
 HWTEST_F(MKAgreeTest, GenerateAndSavePseudonymIdTest003, TestSize.Level0)
 {
     uint32_t peerDevPkLen = HcStrlen(TEST_DEV_PK) / BYTE_TO_HEX_OPER_LENGTH;
-    uint8_t *peerDevPkVal = (uint8_t *)HcMalloc(peerDevPkLen, 0);
+    uint8_t *peerDevPkVal = static_cast<uint8_t *>(HcMalloc(peerDevPkLen, 0));
     ASSERT_NE(peerDevPkVal, nullptr);
     int32_t ret = HexStringToByte(TEST_DEV_PK, peerDevPkVal, peerDevPkLen);
     EXPECT_EQ(ret, HC_SUCCESS);
@@ -232,7 +232,7 @@ HWTEST_F(MKAgreeTest, GenerateAndSavePseudonymIdTest003, TestSize.Level0)
 HWTEST_F(MKAgreeTest, GenerateAndSavePseudonymIdTest004, TestSize.Level0)
 {
     uint32_t peerDevPkLen = HcStrlen(TEST_DEV_PK) / BYTE_TO_HEX_OPER_LENGTH;
-    uint8_t *peerDevPkVal = (uint8_t *)HcMalloc(peerDevPkLen, 0);
+    uint8_t *peerDevPkVal = static_cast<uint8_t *>(HcMalloc(peerDevPkLen, 0));
     ASSERT_NE(peerDevPkVal, nullptr);
     int32_t ret = HexStringToByte(TEST_DEV_PK, peerDevPkVal, peerDevPkLen);
     EXPECT_EQ(ret, HC_SUCCESS);
