@@ -1134,6 +1134,16 @@ static int32_t DevAuthTestCase052(void)
     return ret;
 }
 
+static int32_t DevAuthTestCase053(void)
+{
+    SetIsoSupported(false);
+    SetPakeV1Supported(false);
+    int32_t ret = DevAuthTestCase007();
+    SetIsoSupported(true);
+    SetPakeV1Supported(true);
+    return ret;
+}
+
 bool FuzzDoDevAuthFuncFuzz(const uint8_t* data, size_t size)
 {
     (void)data;
@@ -1166,6 +1176,7 @@ bool FuzzDoDevAuthFuncFuzz(const uint8_t* data, size_t size)
     (void)DevAuthTestCase050();
     (void)DevAuthTestCase051();
     (void)DevAuthTestCase052();
+    (void)DevAuthTestCase053();
     return true;
 }
 }
