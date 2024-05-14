@@ -143,6 +143,30 @@ HWTEST_F(PrivacyEnhancementTest, GetPseudonymIdTest001, TestSize.Level0)
     EXPECT_EQ(ret, HC_SUCCESS);
 }
 
+HWTEST_F(PrivacyEnhancementTest, GetPseudonymIdTest002, TestSize.Level0)
+{
+    PseudonymManager *manager = GetPseudonymInstance();
+    ASSERT_NE(manager, nullptr);
+
+    char *indexKey1 = nullptr;
+    char *pseudonymId1 = nullptr;
+    int32_t ret = manager->getPseudonymId(DEFAULT_OS_ACCOUNT, indexKey1, &pseudonymId1);
+    EXPECT_NE(ret, HC_SUCCESS);
+
+    ret = manager->savePseudonymId(
+        DEFAULT_OS_ACCOUNT, TEST_PSEUDONYM_ID, TEST_REAL_INFO, TEST_DEVICE_ID, TEST_INDEX_KEY);
+    EXPECT_EQ(ret, HC_SUCCESS);
+
+    char *pseudonymId2 = nullptr;
+    ret = manager->getPseudonymId(DEFAULT_OS_ACCOUNT, TEST_INDEX_KEY, &pseudonymId2);
+    EXPECT_EQ(*pseudonymId2, *(TEST_PSEUDONYM_ID));
+    EXPECT_EQ(ret, HC_SUCCESS);
+    HcFree(pseudonymId2);
+
+    ret = manager->deletePseudonymId(DEFAULT_OS_ACCOUNT, TEST_INDEX_KEY);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
 HWTEST_F(PrivacyEnhancementTest, SavePseudonymIdTest001, TestSize.Level0)
 {
     PseudonymManager *manager = GetPseudonymInstance();
