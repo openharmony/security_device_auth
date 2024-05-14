@@ -218,6 +218,7 @@ if (os_level == "mini" || os_level == "small") {
     deps = [ "${deps_adapter_path}:${hal_module_name}" ]
 
     external_deps = [
+      "bounds_checking_function:libsec_shared",
       "cJSON:cjson",
       "c_utils:utils",
       "dsoftbus:softbus_client",
@@ -288,6 +289,7 @@ if (os_level == "mini" || os_level == "small") {
 
     external_deps = [
       "access_token:libaccesstoken_sdk",
+      "bounds_checking_function:libsec_shared",
       "cJSON:cjson",
       "c_utils:utils",
       "hilog:libhilog",
@@ -338,6 +340,7 @@ if (os_level == "mini" || os_level == "small") {
 
     external_deps = [
       "access_token:libaccesstoken_sdk",
+      "bounds_checking_function:libsec_shared",
       "cJSON:cjson",
       "c_utils:utils",
       "hilog:libhilog",
