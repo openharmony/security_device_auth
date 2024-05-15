@@ -64,6 +64,7 @@ ohos_unittest("auth_code_import_test") {
   ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "hilog:libhilog",
     "huks:libhukssdk",
   ]
@@ -119,6 +120,7 @@ ohos_unittest("pub_key_exchange_test") {
   ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "hilog:libhilog",
     "huks:libhukssdk",
   ]
@@ -172,6 +174,7 @@ ohos_unittest("save_trusted_info_test") {
   ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "hilog:libhilog",
     "huks:libhukssdk",
   ]
