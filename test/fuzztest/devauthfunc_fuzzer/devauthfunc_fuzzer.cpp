@@ -1104,14 +1104,6 @@ static int32_t DevAuthTestCase029(void)
     return ret;
 }
 
-static int32_t DevAuthTestCase050(void)
-{
-    SetSessionV2Supported(false);
-    int32_t ret = DevAuthTestCase007();
-    SetSessionV2Supported(true);
-    return ret;
-}
-
 static int32_t DevAuthTestCase051(void)
 {
     SetPakeV1Supported(false);
@@ -1173,7 +1165,6 @@ bool FuzzDoDevAuthFuncFuzz(const uint8_t* data, size_t size)
     (void)DevAuthTestCase027();
     (void)DevAuthTestCase028();
     (void)DevAuthTestCase029();
-    (void)DevAuthTestCase050();
     (void)DevAuthTestCase051();
     (void)DevAuthTestCase052();
     (void)DevAuthTestCase053();

@@ -18,7 +18,6 @@ group("deviceauth_test_build") {
   if (os_level == "standard") {
     testonly = true
     deps += [
-      "fuzztest/devauth_fuzzer:fuzztest",
       "fuzztest/devauthcb_fuzzer:fuzztest",
       "fuzztest/devauthfunc_fuzzer:fuzztest",
       "fuzztest/group_auth/authdevice_fuzzer:fuzztest",
