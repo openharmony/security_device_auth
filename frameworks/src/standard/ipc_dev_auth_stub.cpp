@@ -38,7 +38,7 @@ struct CbStubInfo {
 static struct CbStubInfo g_cbStub[MAX_CBSTUB_SIZE];
 static bool g_cbStubInited = false;
 
-ServiceDevAuth::ServiceDevAuth()
+ServiceDevAuth::ServiceDevAuth(bool serialInvokeFlag) : IRemoteStub(serialInvokeFlag)
 {}
 
 ServiceDevAuth::~ServiceDevAuth()

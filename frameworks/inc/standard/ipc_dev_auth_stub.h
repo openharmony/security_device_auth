@@ -30,7 +30,7 @@ const int32_t MAX_CBSTUB_SIZE = 64;
 
 class ServiceDevAuth : public IRemoteStub<IMethodsIpcCall> {
 public:
-    ServiceDevAuth();
+    ServiceDevAuth(bool serialInvokeFlag = true);
     ~ServiceDevAuth() override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string>& args) override;
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data,
