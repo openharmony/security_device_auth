@@ -153,7 +153,7 @@ bool IsLocalDevice(const char *udid)
     int32_t res = HcGetUdid((uint8_t *)localUdid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
         LOGE("Failed to get local udid! res: %d", res);
-        return HC_ERR_DB;
+        return true;
     }
     return (strcmp(localUdid, udid) == 0);
 }
