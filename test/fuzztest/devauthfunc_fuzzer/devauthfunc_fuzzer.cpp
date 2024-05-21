@@ -63,7 +63,7 @@ namespace OHOS {
 #define TEST_DEV_AUTH_SLEEP_TIME 50000
 #define TEST_DEV_AUTH_SLEEP_TIME2 600000
 #define TEST_TRANSMIT_DATA_LEN 2048
-#define TEST_HKS_DATA_PATH "/data/service/el1/public/huks_service/maindata/+0+0+0+0"
+#define TEST_HKS_DATA_PATH "/data/service/el1/public/huks_service/tmp/+0+0+0+0"
 #define TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN 32
 static const int32_t TEST_AUTH_OS_ACCOUNT_ID = 100;
 static const int TEST_DEV_AUTH_BUFFER_SIZE = 128;
@@ -1104,14 +1104,6 @@ static int32_t DevAuthTestCase029(void)
     return ret;
 }
 
-static int32_t DevAuthTestCase050(void)
-{
-    SetSessionV2Supported(false);
-    int32_t ret = DevAuthTestCase007();
-    SetSessionV2Supported(true);
-    return ret;
-}
-
 static int32_t DevAuthTestCase051(void)
 {
     SetPakeV1Supported(false);
@@ -1131,6 +1123,16 @@ static int32_t DevAuthTestCase052(void)
     SetIsoSupported(true);
     SetPakeV1Supported(true);
     SetSessionV2Supported(true);
+    return ret;
+}
+
+static int32_t DevAuthTestCase053(void)
+{
+    SetIsoSupported(false);
+    SetPakeV1Supported(false);
+    int32_t ret = DevAuthTestCase007();
+    SetIsoSupported(true);
+    SetPakeV1Supported(true);
     return ret;
 }
 
@@ -1163,9 +1165,9 @@ bool FuzzDoDevAuthFuncFuzz(const uint8_t* data, size_t size)
     (void)DevAuthTestCase027();
     (void)DevAuthTestCase028();
     (void)DevAuthTestCase029();
-    (void)DevAuthTestCase050();
     (void)DevAuthTestCase051();
     (void)DevAuthTestCase052();
+    (void)DevAuthTestCase053();
     return true;
 }
 }
