@@ -40,7 +40,7 @@ namespace {
 #define TEST_AUTH_ID "TestAuthId"
 #define TEST_USER_ID "4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4"
 #define TEST_GROUP_DATA_PATH "/data/service/el1/public/deviceauthMock"
-#define TEST_HKS_DATA_PATH "/data/service/el1/public/huks_service/maindata/+0+0+0+0"
+#define TEST_HKS_DATA_PATH "/data/service/el1/public/huks_service/tmp/+0+0+0+0"
 #define TEST_REQ_ID 123
 #define TEST_OS_ACCOUNT_ID 100
 #define TEST_OS_ACCOUNT_ID2 105

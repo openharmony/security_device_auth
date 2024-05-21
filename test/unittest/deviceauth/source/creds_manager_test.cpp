@@ -39,7 +39,7 @@ static const std::string TEST_SYM_AUTH_CODE2 = "2f7562744654535564586e665467546b
 static const std::string TEST_SYM_USER_ID3 = "1234ABCDE";
 static const std::string TEST_SYM_DEVICE_ID3 = "TestAuthId3";
 static const std::string TEST_GROUP_DATA_PATH = "/data/service/el1/public/deviceauthMock";
-static const std::string TEST_HKS_DATA_PATH = "/data/service/el1/public/huks_service/maindata/+0+0+0+0";
+static const std::string TEST_HKS_DATA_PATH = "/data/service/el1/public/huks_service/tmp/+0+0+0+0";
 
 static const int TEST_DEV_AUTH_BUFFER_SIZE = 128;
 

@@ -28,7 +28,12 @@
 
 static bool g_isIsoSupported = true;
 static bool g_isPakeV1Supported = true;
+
+#ifdef DEFAULT_V2_NOT_SUPPORT
+static bool g_isSessionV2Supported = false;
+#else
 static bool g_isSessionV2Supported = true;
+#endif
 
 void SetPakeV1Supported(bool isSupported)
 {

@@ -118,6 +118,7 @@ ohos_unittest("deviceauth_llt") {
     "ENABLE_P2P_AUTH_EC_SPEKE",
     "DEV_AUTH_FUNC_TEST",
     "ENABLE_PSEUDONYM",
+    "DEFAULT_V2_NOT_SUPPORT",
   ]
 
   cflags = [ "-DHILOG_ENABLE" ]
