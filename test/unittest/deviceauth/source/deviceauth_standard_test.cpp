@@ -61,7 +61,7 @@ namespace {
 #define TEST_QUERY_PARAMS "bac"
 #define TEST_PIN_CODE "123456"
 #define TEST_GROUP_DATA_PATH "/data/service/el1/public/deviceauthMock"
-#define TEST_HKS_DATA_PATH "/data/service/el1/public/huks_service/maindata/+0+0+0+0"
+#define TEST_HKS_DATA_PATH "/data/service/el1/public/huks_service/tmp/+0+0+0+0"
 #define TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN 32
 #define TEST_DEV_AUTH_SLEEP_TIME 50000
 #define TEST_DEV_AUTH_SLEEP_TIME2 60000

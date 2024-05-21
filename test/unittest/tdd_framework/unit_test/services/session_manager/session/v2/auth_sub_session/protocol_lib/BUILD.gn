@@ -47,6 +47,7 @@ ohos_unittest("iso_protocol_test") {
   ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "hilog:libhilog",
     "huks:libhukssdk",
   ]
@@ -84,6 +85,7 @@ ohos_unittest("ec_speke_protocol_test") {
   ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "hilog:libhilog",
     "huks:libhukssdk",
   ]
@@ -122,6 +124,7 @@ ohos_unittest("dl_speke_protocol_test") {
   ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "hilog:libhilog",
     "huks:libhukssdk",
   ]
