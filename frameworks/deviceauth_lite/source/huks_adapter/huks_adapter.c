@@ -1248,7 +1248,7 @@ static int32_t inner_get_lt_info_by_key_alias(struct HksBlob *key_alias,
     }
     union huks_key_type_union key_type_union;
     key_type_union.key_type = key_role->uint32Param;
-    setKeyType(key_type_union, out_key_type);
+    SetKeyType(key_type_union, out_key_type);
     struct HksParam *auth_id = NULL;
     status = HksGetParam(output_param_set, HKS_TAG_KEY_AUTH_ID, &auth_id);
     if (status != ERROR_CODE_SUCCESS) {
