@@ -1225,16 +1225,13 @@ static int32_t inner_get_lt_info_by_key_alias(struct HksBlob *key_alias,
     status = HksGetKeyParamSet(key_alias, paramSet, output_param_set);
     if (status != ERROR_CODE_SUCCESS) {
         LOGE("Get huks key param set failed");
-        HksFreeParamSet(&paramSet);
         goto get_key_info_free;
     }
-    HksFreeParamSet(&paramSet);
     status = HksFreshParamSet(output_param_set, false);
     if (status != ERROR_CODE_SUCCESS) {
         LOGE("fresh param set failed, status:%d", status);
         goto get_key_info_free;
     }
-
     struct HksParam *key_role = NULL;
     status = HksGetParam(output_param_set, HKS_TAG_KEY_ROLE, &key_role);
     if (status != ERROR_CODE_SUCCESS) {
@@ -1262,6 +1259,7 @@ static int32_t inner_get_lt_info_by_key_alias(struct HksBlob *key_alias,
     out_auth_id->length = auth_id->blob.size;
 
 get_key_info_free:
+    HksFreeParamSet(&paramSet);
     safe_free(output_param_set);
     return status;
 }
