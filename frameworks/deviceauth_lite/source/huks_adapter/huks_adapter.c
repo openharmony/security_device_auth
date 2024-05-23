@@ -1205,6 +1205,14 @@ static int32_t inner_get_lt_info_by_key_info(struct HksKeyInfo *key_info,
     return status;
 }
 
+static void setKeyType(union huks_key_type_union key_type_union, struct huks_key_type *out_key_type)
+{
+    out_key_type->user_type = key_type_union.type_struct.user_type;
+    out_key_type->pair_type = key_type_union.type_struct.pair_type;
+    out_key_type->reserved1 = key_type_union.type_struct.reserved1;
+    out_key_type->reserved2 = key_type_union.type_struct.reserved2;
+}
+
 static int32_t inner_get_lt_info_by_key_alias(struct HksBlob *key_alias,
     struct huks_key_type *out_key_type, struct hc_auth_id *out_auth_id)
 {
@@ -1240,11 +1248,7 @@ static int32_t inner_get_lt_info_by_key_alias(struct HksBlob *key_alias,
     }
     union huks_key_type_union key_type_union;
     key_type_union.key_type = key_role->uint32Param;
-    out_key_type->user_type = key_type_union.type_struct.user_type;
-    out_key_type->pair_type = key_type_union.type_struct.pair_type;
-    out_key_type->reserved1 = key_type_union.type_struct.reserved1;
-    out_key_type->reserved2 = key_type_union.type_struct.reserved2;
-
+    setKeyType(key_type_union, out_key_type);
     struct HksParam *auth_id = NULL;
     status = HksGetParam(output_param_set, HKS_TAG_KEY_AUTH_ID, &auth_id);
     if (status != ERROR_CODE_SUCCESS) {
