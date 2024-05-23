@@ -1205,12 +1205,12 @@ static int32_t inner_get_lt_info_by_key_info(struct HksKeyInfo *key_info,
     return status;
 }
 
-static void setKeyType(union huks_key_type_union key_type_union, struct huks_key_type *out_key_type)
+static void SetKeyType(union huks_key_type_union keyTypeUnion, struct huks_key_type *outKeyType)
 {
-    out_key_type->user_type = key_type_union.type_struct.user_type;
-    out_key_type->pair_type = key_type_union.type_struct.pair_type;
-    out_key_type->reserved1 = key_type_union.type_struct.reserved1;
-    out_key_type->reserved2 = key_type_union.type_struct.reserved2;
+    outKeyType->user_type = keyTypeUnion.type_struct.user_type;
+    outKeyType->pair_type = keyTypeUnion.type_struct.pair_type;
+    outKeyType->reserved1 = keyTypeUnion.type_struct.reserved1;
+    outKeyType->reserved2 = keyTypeUnion.type_struct.reserved2;
 }
 
 static int32_t inner_get_lt_info_by_key_alias(struct HksBlob *key_alias,
