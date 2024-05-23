@@ -30,6 +30,7 @@
 #define HC_PARAM_KEY_LEN 256
 #define BITS_PER_BYTE 8
 #define HC_CCM_NONCE_LEN 7
+#define HKS_USER_ID 100
 
 #if (defined(_SUPPORT_SEC_CLONE_) || defined(_SUPPORT_SEC_CLONE_SERVER_))
 static const uint8_t g_factor[] = "hichain_key_enc_key";
@@ -173,6 +174,20 @@ static int32_t construct_param_set(struct HksParamSet **out, const struct HksPar
 
     *out = param_set;
     return ERROR_CODE_SUCCESS;
+}
+
+static int32_t GenerateStorageLevelParamSet(struct HksParamSet **paramSet)
+{
+    struct HksParam genParams[] = {
+        {
+            .tag = HKS_TAG_SPECIFIC_USER_ID,
+            .int32Param = HKS_USER_ID
+        }, {
+            .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
+            .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
+        }
+    };
+    return construct_param_set(paramSet, genParams, array_size(genParams));
 }
 
 static struct sha256_value sha256(const struct uint8_buff *message)
@@ -393,6 +408,12 @@ int32_t compute_hmac(struct var_buffer *key, const struct uint8_buff *message, s
         }, {
             .tag = HKS_TAG_IS_KEY_ALIAS, /* temporary key, is_key_alias is set to false determined using REE for MAC */
             .boolParam = false
+        }, {
+            .tag = HKS_TAG_SPECIFIC_USER_ID,
+            .int32Param = HKS_USER_ID
+        }, {
+            .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
+            .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
         }
     };
     int32_t status = construct_param_set(&param_set, hmac_param, array_size(hmac_param));
@@ -432,25 +453,14 @@ int32_t compute_hkdf(struct var_buffer *shared_secret, struct hc_salt *salt,
     /* derived key param */
     struct HksParamSet *param_set = NULL;
     struct HksParam hkdf_param[] = {
-        {
-            .tag = HKS_TAG_PURPOSE,
-            .uint32Param = HKS_KEY_PURPOSE_DERIVE
-        }, {
-            .tag = HKS_TAG_ALGORITHM,
-            .uint32Param = HKS_ALG_HKDF
-        }, {
-            .tag = HKS_TAG_DIGEST,
-            .uint32Param = HKS_DIGEST_SHA256
-        }, {
-            .tag = HKS_TAG_SALT,
-            .blob = hks_salt
-        }, {
-            .tag = HKS_TAG_INFO,
-            .blob = hks_key_info
-        }, {
-            .tag = HKS_TAG_IS_KEY_ALIAS,
-            .boolParam = false
-        }
+        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_DERIVE },
+        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_HKDF },
+        { .tag = HKS_TAG_DIGEST, .uint32Param = HKS_DIGEST_SHA256 },
+        { .tag = HKS_TAG_SALT, .blob = hks_salt },
+        { .tag = HKS_TAG_INFO, .blob = hks_key_info },
+        { .tag = HKS_TAG_IS_KEY_ALIAS, .boolParam = false },
+        { .tag = HKS_TAG_SPECIFIC_USER_ID, .int32Param = HKS_USER_ID },
+        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE }
     };
     int32_t status = construct_param_set(&param_set, hkdf_param, array_size(hkdf_param));
     if (status != ERROR_CODE_SUCCESS) {
@@ -499,6 +509,12 @@ static int32_t init_aes_gcm_encrypt_param_set(struct HksParamSet **param_set,
         }, {
             .tag = HKS_TAG_KEY_SIZE,
             .uint32Param = key_byte_size * BITS_PER_BYTE
+        }, {
+            .tag = HKS_TAG_SPECIFIC_USER_ID,
+            .int32Param = HKS_USER_ID
+        }, {
+            .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
+            .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
         }
     };
 
@@ -574,6 +590,12 @@ static int32_t init_aes_gcm_decrypt_param_set(struct HksParamSet **param_set,
         }, {
             .tag = HKS_TAG_KEY_SIZE,
             .uint32Param = key_byte_size * BITS_PER_BYTE
+        }, {
+            .tag = HKS_TAG_SPECIFIC_USER_ID,
+            .int32Param = HKS_USER_ID
+        }, {
+            .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
+            .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
         }
     };
 
@@ -793,6 +815,12 @@ static int32_t init_x25519_generate_key_input_param_set(struct HksParamSet **inp
         }, {
             .tag = HKS_TAG_IS_ALLOWED_WRAP,
             .boolParam = true
+        }, {
+            .tag = HKS_TAG_SPECIFIC_USER_ID,
+            .int32Param = HKS_USER_ID
+        }, {
+            .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
+            .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
         }
     };
 
@@ -898,31 +926,16 @@ int32_t generate_lt_key_pair(struct hc_key_alias *key_alias, const struct hc_aut
     struct hc_auth_id tmp_id = *auth_id;
     struct HksParamSet *param_set = NULL;
     struct HksParam key_param[] = {
-        {
-            .tag = HKS_TAG_ALGORITHM,
-            .uint32Param = HKS_ALG_ED25519
-        }, {
-            .tag = HKS_TAG_KEY_STORAGE_FLAG,
-            .uint32Param = HKS_STORAGE_PERSISTENT
-        }, {
-            .tag = HKS_TAG_PURPOSE,
-            .uint32Param = HKS_KEY_PURPOSE_SIGN | HKS_KEY_PURPOSE_VERIFY
-        }, {
-            .tag = HKS_TAG_KEY_SIZE,
-            .uint32Param = ED25519_KEY_LEN
-        }, {
-            .tag = HKS_TAG_PADDING,
-            .uint32Param = HKS_PADDING_NONE
-        }, {
-            .tag = HKS_TAG_DIGEST,
-            .uint32Param = HKS_DIGEST_SHA256
-        }, {
-            .tag = HKS_TAG_KEY_AUTH_ID,
-            .blob = convert_to_blob_from_hc_auth_id(&tmp_id)
-        }, {
-            .tag = HKS_TAG_IS_ALLOWED_WRAP,
-            .boolParam = true
-        }
+        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_ED25519 },
+        { .tag = HKS_TAG_KEY_STORAGE_FLAG, .uint32Param = HKS_STORAGE_PERSISTENT },
+        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_SIGN | HKS_KEY_PURPOSE_VERIFY },
+        { .tag = HKS_TAG_KEY_SIZE, .uint32Param = ED25519_KEY_LEN },
+        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
+        { .tag = HKS_TAG_DIGEST, .uint32Param = HKS_DIGEST_SHA256 },
+        { .tag = HKS_TAG_KEY_AUTH_ID, .blob = convert_to_blob_from_hc_auth_id(&tmp_id) },
+        { .tag = HKS_TAG_IS_ALLOWED_WRAP, .boolParam = true },
+        { .tag = HKS_TAG_SPECIFIC_USER_ID, .int32Param = HKS_USER_ID },
+        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE }
     };
 
     int32_t status = construct_param_set(&param_set, key_param, array_size(key_param));
@@ -951,13 +964,22 @@ int32_t export_lt_public_key(struct hc_key_alias *key_alias, struct ltpk *out_pu
     check_num_return_val(key_alias_blob.size, ERROR_CODE_FAILED);
 
     struct HksBlob key = { HC_LT_PUBLIC_KEY_LEN, out_public_key->ltpk };
-    int32_t hks_status = HksExportPublicKey(&key_alias_blob, NULL, &key);
+    struct HksParamSet *paramSet = NULL;
+
+    int32_t status = GenerateStorageLevelParamSet(&paramSet);
+    if (status != ERROR_CODE_SUCCESS) {
+        LOGE("generate storage level param set failed, status = %d", status);
+        return status;
+    }
+
+    int32_t hks_status = HksExportPublicKey(&key_alias_blob, paramSet, &key);
     if (hks_status != ERROR_CODE_SUCCESS) {
         LOGE("Export public key failed, status=%d", hks_status);
+        HksFreeParamSet(&paramSet);
         return ERROR_CODE_FAILED;
     }
     out_public_key->length = key.size;
-
+    HksFreeParamSet(&paramSet);
     return ERROR_CODE_SUCCESS;
 }
 
@@ -968,12 +990,21 @@ int32_t delete_key(struct hc_key_alias *key_alias)
     struct HksBlob key_alias_blob = convert_to_blob_from_hc_key_alias(key_alias);
     check_num_return_val(key_alias_blob.size, ERROR_CODE_FAILED);
 
-    int32_t hks_status = HksDeleteKey(&key_alias_blob, NULL);
+    struct HksParamSet *paramSet = NULL;
+    int32_t status = GenerateStorageLevelParamSet(&paramSet);
+    if (status != ERROR_CODE_SUCCESS) {
+        LOGE("generate storage level param set failed, status = %d", status);
+        return status;
+    }
+
+    int32_t hks_status = HksDeleteKey(&key_alias_blob, paramSet);
     if (hks_status != ERROR_CODE_SUCCESS) {
         LOGE("Delete key failed, status=%d", hks_status);
+        HksFreeParamSet(&paramSet);
         return ERROR_CODE_FAILED;
     }
 
+    HksFreeParamSet(&paramSet);
     return ERROR_CODE_SUCCESS;
 }
 
@@ -1006,41 +1037,20 @@ static int32_t init_import_lt_public_key_param_set(struct HksParamSet **param_se
 
     (void)pair_type;
     struct HksParam key_param[] = {
-        {
-            .tag = HKS_TAG_ALGORITHM,
-            .uint32Param = HKS_ALG_ED25519
-        }, {
-            .tag = HKS_TAG_KEY_SIZE,
-            .uint32Param = ED25519_KEY_LEN
-        }, {
-            .tag = HKS_TAG_PADDING,
-            .uint32Param = HKS_PADDING_NONE
-        }, {
-            .tag = HKS_TAG_DIGEST,
-            .uint32Param = HKS_DIGEST_SHA256
-        }, {
-            .tag = HKS_TAG_KEY_AUTH_ID,
-            .blob = convert_to_blob_from_hc_auth_id(auth_id)
-        }, {
-            .tag = HKS_TAG_IS_ALLOWED_WRAP,
-            .boolParam = true
-        },
+        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_ED25519 },
+        { .tag = HKS_TAG_KEY_SIZE, .uint32Param = ED25519_KEY_LEN },
+        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
+        { .tag = HKS_TAG_DIGEST, .uint32Param = HKS_DIGEST_SHA256 },
+        { .tag = HKS_TAG_KEY_AUTH_ID, .blob = convert_to_blob_from_hc_auth_id(auth_id) },
+        { .tag = HKS_TAG_IS_ALLOWED_WRAP, .boolParam = true },
+        { .tag = HKS_TAG_SPECIFIC_USER_ID, .int32Param = HKS_USER_ID },
+        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE },
 #if (defined(_SUPPORT_SEC_CLONE_) || defined(_SUPPORT_SEC_CLONE_SERVER_))
-        {
-            .tag = HKS_TAG_PURPOSE,
-            .uint32Param = HKS_KEY_PURPOSE_VERIFY
-        }, {
-            .tag = HKS_TAG_KEY_ROLE,
-            .uint32Param = user_type
-        }
+        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_VERIFY },
+        { .tag = HKS_TAG_KEY_ROLE, .uint32Param = user_type }
 #else
-        {
-            .tag = HKS_TAG_PURPOSE,
-            .uint32Param = HKS_KEY_PURPOSE_VERIFY
-        }, {
-            .tag = HKS_TAG_KEY_ROLE,
-            .uint32Param = (uint32_t)huks_key_type.key_type
-        }
+        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_VERIFY },
+        { .tag = HKS_TAG_KEY_ROLE, .uint32Param = (uint32_t)huks_key_type.key_type }
 #endif
     };
 
@@ -1090,11 +1100,21 @@ int32_t check_lt_public_key_exist(struct hc_key_alias *key_alias)
     check_ptr_return_val(key_alias, HC_INPUT_ERROR);
     check_num_return_val(key_alias->length, HC_INPUT_ERROR);
     struct HksBlob key_alias_blob = convert_to_blob_from_hc_key_alias(key_alias);
-    int32_t hks_status = HksKeyExist(&key_alias_blob, NULL);
+    struct HksParamSet *paramSet = NULL;
+
+    int32_t status = GenerateStorageLevelParamSet(&paramSet);
+    if (status != ERROR_CODE_SUCCESS) {
+        LOGE("generate storage level param set failed, status = %d", status);
+        return status;
+    }
+
+    int32_t hks_status = HksKeyExist(&key_alias_blob, paramSet);
     if (hks_status == 0) {
+        HksFreeParamSet(&paramSet);
         return ERROR_CODE_SUCCESS;
     } else {
         LOGI("Check lt public key exist failed, status = %d", hks_status);
+        HksFreeParamSet(&paramSet);
         return ERROR_CODE_FAILED;
     }
 }
@@ -1104,11 +1124,20 @@ int32_t check_key_exist(struct hc_key_alias *key_alias)
     check_ptr_return_val(key_alias, HC_INPUT_ERROR);
     check_num_return_val(key_alias->length, HC_INPUT_ERROR);
     struct HksBlob key_alias_blob = convert_to_blob_from_hc_key_alias(key_alias);
-    int32_t hks_status = HksKeyExist(&key_alias_blob, NULL);
+    struct HksParamSet *paramSet = NULL;
+
+    int32_t status = GenerateStorageLevelParamSet(&paramSet);
+    if (status != ERROR_CODE_SUCCESS) {
+        LOGE("generate storage level param set failed, status = %d", status);
+        return status;
+    }
+    int32_t hks_status = HksKeyExist(&key_alias_blob, paramSet);
     if (hks_status == 0) {
+        HksFreeParamSet(&paramSet);
         return ERROR_CODE_SUCCESS;
     } else {
         LOGI("Check key exist failed, status = %d", hks_status);
+        HksFreeParamSet(&paramSet);
         return ERROR_CODE_FAILED;
     }
 }
@@ -1187,12 +1216,19 @@ static int32_t inner_get_lt_info_by_key_alias(struct HksBlob *key_alias,
     (void)memset_s(output_param_set, DEFAULT_PARAM_SET_OUT_SIZE, 0, DEFAULT_PARAM_SET_OUT_SIZE);
     output_param_set->paramSetSize = DEFAULT_PARAM_SET_OUT_SIZE;
 
-    int32_t status = HksGetKeyParamSet(key_alias, NULL, output_param_set);
+    struct HksParamSet *paramSet = NULL;
+    int32_t status = GenerateStorageLevelParamSet(&paramSet);
+    if (status != ERROR_CODE_SUCCESS) {
+        LOGE("generate storage level param set failed, status = %d", status);
+        return status;
+    }
+    status = HksGetKeyParamSet(key_alias, paramSet, output_param_set);
     if (status != ERROR_CODE_SUCCESS) {
         LOGE("Get huks key param set failed");
+        HksFreeParamSet(&paramSet);
         goto get_key_info_free;
     }
-
+    HksFreeParamSet(&paramSet);
     status = HksFreshParamSet(output_param_set, false);
     if (status != ERROR_CODE_SUCCESS) {
         LOGE("fresh param set failed, status:%d", status);
@@ -1205,7 +1241,6 @@ static int32_t inner_get_lt_info_by_key_alias(struct HksBlob *key_alias,
         LOGE("get key role from param set failed, status:%d", status);
         goto get_key_info_free;
     }
-
     union huks_key_type_union key_type_union;
     key_type_union.key_type = key_role->uint32Param;
     out_key_type->user_type = key_type_union.type_struct.user_type;
@@ -1370,6 +1405,12 @@ static int32_t gen_sign_key_param_set(struct HksParamSet **param_set)
         }, {
             .tag = HKS_TAG_DIGEST,
             .uint32Param = HKS_DIGEST_SHA256
+        }, {
+            .tag = HKS_TAG_SPECIFIC_USER_ID,
+            .int32Param = HKS_USER_ID
+        }, {
+            .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
+            .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
         }
     };
 
@@ -1451,6 +1492,12 @@ static int gen_verify_key_param_set(const bool is_keyalias, const uint32_t key_s
         }, {
             .tag = HKS_TAG_KEY_SIZE,
             .uint32Param = (is_keyalias ? 0 : key_size)
+        }, {
+            .tag = HKS_TAG_SPECIFIC_USER_ID,
+            .int32Param = HKS_USER_ID
+        }, {
+            .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
+            .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
         }
     };
 
@@ -1579,6 +1626,12 @@ static int32_t gen_agreed_key_param_set(struct HksParamSet **param_set)
         }, {
             .tag = HKS_TAG_IS_KEY_ALIAS,
             .boolParam = false
+        }, {
+            .tag = HKS_TAG_SPECIFIC_USER_ID,
+            .int32Param = HKS_USER_ID
+        }, {
+            .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
+            .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
         }
     };
 
