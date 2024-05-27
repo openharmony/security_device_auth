@@ -21,6 +21,7 @@
 #include "hks_param.h"
 #include "log.h"
 #include "mem_stat.h"
+#include "os_account_adapter.h"
 
 #define X25519_KEY_LEN 256
 #define ED25519_KEY_LEN 256
@@ -30,7 +31,6 @@
 #define HC_PARAM_KEY_LEN 256
 #define BITS_PER_BYTE 8
 #define HC_CCM_NONCE_LEN 7
-#define HKS_USER_ID 100
 
 #if (defined(_SUPPORT_SEC_CLONE_) || defined(_SUPPORT_SEC_CLONE_SERVER_))
 static const uint8_t g_factor[] = "hichain_key_enc_key";
@@ -178,10 +178,16 @@ static int32_t construct_param_set(struct HksParamSet **out, const struct HksPar
 
 static int32_t GenerateStorageLevelParamSet(struct HksParamSet **paramSet)
 {
+    int32_t userId;
+    int32_t ret = GetFrontUserId(&userId);
+    if (ret != ERROR_CODE_SUCCESS) {
+        LOGE("GetFrontUserId failed");
+        return ERROR_CODE_FAILED;
+    }
     struct HksParam genParams[] = {
         {
             .tag = HKS_TAG_SPECIFIC_USER_ID,
-            .int32Param = HKS_USER_ID
+            .int32Param = userId
         }, {
             .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
             .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
@@ -398,6 +404,12 @@ int32_t compute_hmac(struct var_buffer *key, const struct uint8_buff *message, s
     struct HksBlob output = { HC_HMAC_LEN, out_hmac->hmac };
     struct HksParamSet *param_set = NULL;
 
+    int32_t userId;
+    int32_t ret = GetFrontUserId(&userId);
+    if (ret != ERROR_CODE_SUCCESS) {
+        LOGE("GetFrontUserId failed");
+        return ERROR_CODE_FAILED;
+    }
     struct HksParam hmac_param[] = {
         {
             .tag = HKS_TAG_PURPOSE,
@@ -410,7 +422,7 @@ int32_t compute_hmac(struct var_buffer *key, const struct uint8_buff *message, s
             .boolParam = false
         }, {
             .tag = HKS_TAG_SPECIFIC_USER_ID,
-            .int32Param = HKS_USER_ID
+            .int32Param = userId
         }, {
             .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
             .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
@@ -450,6 +462,12 @@ int32_t compute_hkdf(struct var_buffer *shared_secret, struct hc_salt *salt,
     /* original key */
     struct HksBlob kdf_key = { shared_secret->length, shared_secret->data };
 
+    int32_t userId;
+    int32_t ret = GetFrontUserId(&userId);
+    if (ret != ERROR_CODE_SUCCESS) {
+        LOGE("GetFrontUserId failed");
+        return ERROR_CODE_FAILED;
+    }
     /* derived key param */
     struct HksParamSet *param_set = NULL;
     struct HksParam hkdf_param[] = {
@@ -459,7 +477,7 @@ int32_t compute_hkdf(struct var_buffer *shared_secret, struct hc_salt *salt,
         { .tag = HKS_TAG_SALT, .blob = hks_salt },
         { .tag = HKS_TAG_INFO, .blob = hks_key_info },
         { .tag = HKS_TAG_IS_KEY_ALIAS, .boolParam = false },
-        { .tag = HKS_TAG_SPECIFIC_USER_ID, .int32Param = HKS_USER_ID },
+        { .tag = HKS_TAG_SPECIFIC_USER_ID, .int32Param = userId },
         { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE }
     };
     int32_t status = construct_param_set(&param_set, hkdf_param, array_size(hkdf_param));
@@ -484,6 +502,12 @@ int32_t compute_hkdf(struct var_buffer *shared_secret, struct hc_salt *salt,
 static int32_t init_aes_gcm_encrypt_param_set(struct HksParamSet **param_set,
     struct random_value *nonce, struct aes_aad *aad, uint32_t key_byte_size)
 {
+    int32_t userId;
+    int32_t ret = GetFrontUserId(&userId);
+    if (ret != ERROR_CODE_SUCCESS) {
+        LOGE("GetFrontUserId failed");
+        return ERROR_CODE_FAILED;
+    }
     struct HksParam encrypt_param[] = {
         {
             .tag = HKS_TAG_PURPOSE,
@@ -511,7 +535,7 @@ static int32_t init_aes_gcm_encrypt_param_set(struct HksParamSet **param_set,
             .uint32Param = key_byte_size * BITS_PER_BYTE
         }, {
             .tag = HKS_TAG_SPECIFIC_USER_ID,
-            .int32Param = HKS_USER_ID
+            .int32Param = userId
         }, {
             .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
             .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
@@ -565,6 +589,12 @@ int32_t aes_gcm_encrypt(struct var_buffer *key, const struct uint8_buff *plain,
 static int32_t init_aes_gcm_decrypt_param_set(struct HksParamSet **param_set,
     const struct uint8_buff *cipher, struct aes_aad *aad, uint32_t key_byte_size)
 {
+    int32_t userId;
+    int32_t ret = GetFrontUserId(&userId);
+    if (ret != ERROR_CODE_SUCCESS) {
+        LOGE("GetFrontUserId failed");
+        return ERROR_CODE_FAILED;
+    }
     struct HksParam decrypt_param[] = {
         {
             .tag = HKS_TAG_PURPOSE,
@@ -592,7 +622,7 @@ static int32_t init_aes_gcm_decrypt_param_set(struct HksParamSet **param_set,
             .uint32Param = key_byte_size * BITS_PER_BYTE
         }, {
             .tag = HKS_TAG_SPECIFIC_USER_ID,
-            .int32Param = HKS_USER_ID
+            .int32Param = userId
         }, {
             .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
             .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
@@ -799,6 +829,12 @@ struct hc_key_alias generate_key_alias(const struct service_id *service_id,
 
 static int32_t init_x25519_generate_key_input_param_set(struct HksParamSet **input_param_set)
 {
+    int32_t userId;
+    int32_t ret = GetFrontUserId(&userId);
+    if (ret != ERROR_CODE_SUCCESS) {
+        LOGE("GetFrontUserId failed");
+        return ERROR_CODE_FAILED;
+    }
     struct HksParam key_param[] = {
         {
             .tag = HKS_TAG_KEY_STORAGE_FLAG,
@@ -817,7 +853,7 @@ static int32_t init_x25519_generate_key_input_param_set(struct HksParamSet **inp
             .boolParam = true
         }, {
             .tag = HKS_TAG_SPECIFIC_USER_ID,
-            .int32Param = HKS_USER_ID
+            .int32Param = userId
         }, {
             .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
             .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
@@ -923,6 +959,13 @@ int32_t generate_lt_key_pair(struct hc_key_alias *key_alias, const struct hc_aut
     struct HksBlob key_alias_blob = convert_to_blob_from_hc_key_alias(key_alias);
     check_num_return_val(key_alias_blob.size, ERROR_CODE_FAILED);
 
+    int32_t userId;
+    int32_t ret = GetFrontUserId(&userId);
+    if (ret != ERROR_CODE_SUCCESS) {
+        LOGE("GetFrontUserId failed");
+        return ERROR_CODE_FAILED;
+    }
+
     struct hc_auth_id tmp_id = *auth_id;
     struct HksParamSet *param_set = NULL;
     struct HksParam key_param[] = {
@@ -934,7 +977,7 @@ int32_t generate_lt_key_pair(struct hc_key_alias *key_alias, const struct hc_aut
         { .tag = HKS_TAG_DIGEST, .uint32Param = HKS_DIGEST_SHA256 },
         { .tag = HKS_TAG_KEY_AUTH_ID, .blob = convert_to_blob_from_hc_auth_id(&tmp_id) },
         { .tag = HKS_TAG_IS_ALLOWED_WRAP, .boolParam = true },
-        { .tag = HKS_TAG_SPECIFIC_USER_ID, .int32Param = HKS_USER_ID },
+        { .tag = HKS_TAG_SPECIFIC_USER_ID, .int32Param = userId },
         { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE }
     };
 
@@ -1035,6 +1078,12 @@ static int32_t init_import_lt_public_key_param_set(struct HksParamSet **param_se
     huks_key_type.type_struct.reserved2 = (uint8_t)0;
 #endif
 
+    int32_t userId;
+    int32_t ret = GetFrontUserId(&userId);
+    if (ret != ERROR_CODE_SUCCESS) {
+        LOGE("GetFrontUserId failed");
+        return ERROR_CODE_FAILED;
+    }
     (void)pair_type;
     struct HksParam key_param[] = {
         { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_ED25519 },
@@ -1043,7 +1092,7 @@ static int32_t init_import_lt_public_key_param_set(struct HksParamSet **param_se
         { .tag = HKS_TAG_DIGEST, .uint32Param = HKS_DIGEST_SHA256 },
         { .tag = HKS_TAG_KEY_AUTH_ID, .blob = convert_to_blob_from_hc_auth_id(auth_id) },
         { .tag = HKS_TAG_IS_ALLOWED_WRAP, .boolParam = true },
-        { .tag = HKS_TAG_SPECIFIC_USER_ID, .int32Param = HKS_USER_ID },
+        { .tag = HKS_TAG_SPECIFIC_USER_ID, .int32Param = userId },
         { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE },
 #if (defined(_SUPPORT_SEC_CLONE_) || defined(_SUPPORT_SEC_CLONE_SERVER_))
         { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_VERIFY },
@@ -1394,6 +1443,12 @@ exit:
 
 static int32_t gen_sign_key_param_set(struct HksParamSet **param_set)
 {
+    int32_t userId;
+    int32_t ret = GetFrontUserId(&userId);
+    if (ret != ERROR_CODE_SUCCESS) {
+        LOGE("GetFrontUserId failed");
+        return ERROR_CODE_FAILED;
+    }
     struct HksParam params[] = {
         {
             .tag = HKS_TAG_PURPOSE,
@@ -1409,7 +1464,7 @@ static int32_t gen_sign_key_param_set(struct HksParamSet **param_set)
             .uint32Param = HKS_DIGEST_SHA256
         }, {
             .tag = HKS_TAG_SPECIFIC_USER_ID,
-            .int32Param = HKS_USER_ID
+            .int32Param = userId
         }, {
             .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
             .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
@@ -1472,6 +1527,12 @@ int32_t sign(struct hc_key_alias *key_alias, const struct uint8_buff *message, s
 static int gen_verify_key_param_set(const bool is_keyalias, const uint32_t key_size,
     const int32_t user_type, struct HksParamSet **param_set)
 {
+    int32_t userId;
+    int32_t ret = GetFrontUserId(&userId);
+    if (ret != ERROR_CODE_SUCCESS) {
+        LOGE("GetFrontUserId failed");
+        return ERROR_CODE_FAILED;
+    }
     struct HksParam params[] = {
         {
             .tag = HKS_TAG_PURPOSE,
@@ -1496,7 +1557,7 @@ static int gen_verify_key_param_set(const bool is_keyalias, const uint32_t key_s
             .uint32Param = (is_keyalias ? 0 : key_size)
         }, {
             .tag = HKS_TAG_SPECIFIC_USER_ID,
-            .int32Param = HKS_USER_ID
+            .int32Param = userId
         }, {
             .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
             .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
@@ -1615,6 +1676,12 @@ int32_t verify_with_public_key(const int32_t user_type, const struct uint8_buff 
 
 static int32_t gen_agreed_key_param_set(struct HksParamSet **param_set)
 {
+    int32_t userId;
+    int32_t ret = GetFrontUserId(&userId);
+    if (ret != ERROR_CODE_SUCCESS) {
+        LOGE("GetFrontUserId failed");
+        return ERROR_CODE_FAILED;
+    }
     struct HksParam params[] = {
         {
             .tag = HKS_TAG_PURPOSE,
@@ -1630,7 +1697,7 @@ static int32_t gen_agreed_key_param_set(struct HksParamSet **param_set)
             .boolParam = false
         }, {
             .tag = HKS_TAG_SPECIFIC_USER_ID,
-            .int32Param = HKS_USER_ID
+            .int32Param = userId
         }, {
             .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
             .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE

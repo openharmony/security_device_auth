@@ -31,6 +31,7 @@ hichian_sources = [
   "key_agreement/sts_client.c",
   "key_agreement/sts_server.c",
   "log/log.c",
+  "os_account_adapter/os_account_adapter.cpp",
   "schedule/build_object.c",
   "schedule/distribution.c",
   "struct/add_auth_info_data.c",
@@ -65,6 +66,7 @@ config("hichain_config") {
     "json",
     "key_agreement",
     "log",
+    "os_account_adapter",
     "schedule",
     "struct",
     "auth_info",
@@ -87,6 +89,7 @@ config("hichain_standard_config") {
     "json",
     "key_agreement",
     "log",
+    "os_account_adapter",
     "schedule",
     "struct",
     "auth_info",
@@ -111,6 +114,7 @@ if (os_level == "standard") {
       "bounds_checking_function:libsec_shared",
       "cJSON:cjson",
       "huks:libhukssdk",
+      "os_account:os_account_innerkits",
     ]
     cflags = [
       "-flto",
@@ -127,6 +131,7 @@ if (os_level == "standard") {
       "bounds_checking_function:libsec_shared",
       "cJSON:cjson",
       "huks:libhukssdk",
+      "os_account:os_account_innerkits",
     ]
     cflags = [
       "-flto",
