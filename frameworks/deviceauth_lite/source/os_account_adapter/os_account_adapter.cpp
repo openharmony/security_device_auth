@@ -15,26 +15,14 @@
 
 #include "os_account_manager.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "log.h"
-#include "hichain.h"
-
-#ifdef __cplusplus
-}
-#endif
-
 #include "os_account_adapter.h"
 
 int32_t GetFrontUserId(int32_t *userId) {
     std::vector<int32_t> ids;
     int32_t errCode = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
-    if(errCode != HC_OK || ids.empty()) {
-        LOGE("QueryActiveOsAccountIds failed, errcode = %d", errCode);
-        return HC_INNER_ERROR;
+    if(!errCode || ids.empty()) {
+        return errCode;
     }
     *userId = ids[0];
-    return HC_OK;
+    return errCode;
 }

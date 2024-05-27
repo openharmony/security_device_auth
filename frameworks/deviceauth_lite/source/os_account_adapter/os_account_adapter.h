@@ -16,7 +16,7 @@
 #ifndef __OS_ACCOUNT_ADAPTER_H__
 #define __OS_ACCOUNT_ADAPTER_H__
 
-#include <stdint.h>
+#include <cstdint.h>
 
 #ifdef __cplusplus
 extern "C" {
