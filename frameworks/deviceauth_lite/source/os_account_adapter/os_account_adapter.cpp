@@ -17,10 +17,11 @@
 
 #include "os_account_adapter.h"
 
-int32_t GetFrontUserId(int32_t *userId) {
+int32_t GetFrontUserId(int32_t *userId)
+{
     std::vector<int32_t> ids;
     int32_t errCode = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
-    if(!errCode || ids.empty()) {
+    if (!errCode || ids.empty()) {
         return errCode;
     }
     *userId = ids[0];

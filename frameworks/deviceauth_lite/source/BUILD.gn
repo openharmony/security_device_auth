@@ -148,7 +148,6 @@ if (os_level == "standard") {
       public_configs = [ ":hichain_config" ]
       deps =
           [ "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk" ]
-      external_deps = [ "os_account:os_account_innerkits" ]
       if (board_toolchain_type == "iccarm") {
         cflags = [
           "--diag_suppress",
@@ -165,7 +164,6 @@ if (os_level == "standard") {
         "//build/lite/config/component/cJSON:cjson_shared",
         "//third_party/bounds_checking_function:libsec_shared",
       ]
-      external_deps = [ "os_account:os_account_innerkits" ]
       cflags = [
         "-flto",
         "-Wall",
