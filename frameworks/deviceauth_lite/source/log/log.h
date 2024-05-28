@@ -25,10 +25,16 @@ struct log_f_group {
     log_f log_e;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 log_f get_logd(void);
 log_f get_logi(void);
 log_f get_logw(void);
 log_f get_loge(void);
+#ifdef __cplusplus
+}
+#endif
 
 #if !(defined(_CUT_LOG_))
 #define DBG_OUT(...) get_logd()("[HiChain]", __func__, __VA_ARGS__)

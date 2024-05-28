@@ -14,6 +14,13 @@
 #
 import("//build/ohos.gni")
 
+if (!defined(global_parts_info) ||
+    defined(global_parts_info.account_os_account)) {
+  has_os_account_part = true
+} else {
+  has_os_account_part = false
+}
+
 hichian_sources = [
   "auth_info/auth_info.c",
   "auth_info/exchange_auth_info_client.c",
@@ -79,6 +86,9 @@ config("hichain_config") {
     "_CUT_ADD_",
     "_CUT_LOG_",
   ]
+  if (has_os_account_part) {
+    defines += [ "HAS_OS_ACCOUNT_PART" ]
+  }
 }
 
 config("hichain_standard_config") {
@@ -102,6 +112,9 @@ config("hichain_standard_config") {
     #    "_CUT_ADD_",
     #    "_CUT_LOG_",
   ]
+  if (has_os_account_part) {
+    defines += [ "HAS_OS_ACCOUNT_PART" ]
+  }
 }
 
 if (os_level == "standard") {
@@ -114,8 +127,10 @@ if (os_level == "standard") {
       "bounds_checking_function:libsec_shared",
       "cJSON:cjson",
       "huks:libhukssdk",
-      "os_account:os_account_innerkits",
     ]
+    if (has_os_account_part) {
+      external_deps += [ "os_account:os_account_innerkits" ]
+    }
     cflags = [
       "-flto",
       "-Wall",
@@ -131,8 +146,10 @@ if (os_level == "standard") {
       "bounds_checking_function:libsec_shared",
       "cJSON:cjson",
       "huks:libhukssdk",
-      "os_account:os_account_innerkits",
     ]
+    if (has_os_account_part) {
+      external_deps += [ "os_account:os_account_innerkits" ]
+    }
     cflags = [
       "-flto",
       "-Wall",

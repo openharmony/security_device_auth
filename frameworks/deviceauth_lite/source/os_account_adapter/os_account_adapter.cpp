@@ -13,17 +13,30 @@
  * limitations under the License.
  */
 
+#ifdef HAS_OS_ACCOUNT_PART
 #include "os_account_manager.h"
+#endif
 
+#include "log.h"
+#include "hichain.h"
 #include "os_account_adapter.h"
+
+#define DEFAULT_USER
 
 int32_t GetFrontUserId(int32_t *userId)
 {
+#ifdef HAS_OS_ACCOUNT_PART
     std::vector<int32_t> ids;
     int32_t errCode = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
     if (!errCode || ids.empty()) {
-        return errCode;
+    LOGE("QueryActiveOsAccountIds failed");
+        return HC_INNER_ERROR;
     }
+    LOGI("QueryActiveOsAccountIds success");
     *userId = ids[0];
+#else
+    LOGI("no os account part, set default user");
+    *userId = DEFAULT_USER;
+#endif
     return errCode;
 }
