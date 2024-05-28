@@ -28,7 +28,7 @@ int32_t GetFrontUserId(int32_t *userId)
 #ifdef HAS_OS_ACCOUNT_PART
     std::vector<int32_t> ids;
     int32_t errCode = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
-    if (!errCode || ids.empty()) {
+    if (errCode != HC_OK || ids.empty()) {
         LOGE("QueryActiveOsAccountIds failed");
         return HC_INNER_ERROR;
     }
