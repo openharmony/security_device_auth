@@ -21,7 +21,7 @@
 #include "hichain.h"
 #include "os_account_adapter.h"
 
-#define DEFAULT_USER
+#define DEFAULT_USER 100
 
 int32_t GetFrontUserId(int32_t *userId)
 {
@@ -29,7 +29,7 @@ int32_t GetFrontUserId(int32_t *userId)
     std::vector<int32_t> ids;
     int32_t errCode = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
     if (!errCode || ids.empty()) {
-    LOGE("QueryActiveOsAccountIds failed");
+        LOGE("QueryActiveOsAccountIds failed");
         return HC_INNER_ERROR;
     }
     LOGI("QueryActiveOsAccountIds success");
@@ -38,5 +38,5 @@ int32_t GetFrontUserId(int32_t *userId)
     LOGI("no os account part, set default user");
     *userId = DEFAULT_USER;
 #endif
-    return errCode;
+    return HC_OK;
 }
