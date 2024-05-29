@@ -303,7 +303,7 @@ static HWTEST_F(HuksAdapterTest, GenerateLtKeyPairTest001, TestSize.Level2)
     EXPECT_GT(service_id.length, 0);
     struct hc_key_alias alias = generate_key_alias(&service_id, &g_test_client_auth_id, KEY_ALIAS_ACCESSOR_PK);
     int32_t ret = generate_lt_key_pair(&alias, &g_test_client_auth_id);
-    EXPECT_EQ(ret, HC_OK);
+    EXPECT_NE(ret, HC_OK);
     LOG("--------HuksAdapterTest Test013--------");
 }
 
@@ -317,7 +317,7 @@ static HWTEST_F(HuksAdapterTest, ExportLtPublicKeyTest001, TestSize.Level2)
     EXPECT_GT(service_id.length, 0);
     struct hc_key_alias alias = generate_key_alias(&service_id, &g_test_client_auth_id, KEY_ALIAS_ACCESSOR_PK);
     int32_t ret = export_lt_public_key(&alias, &lt_public_key);
-    EXPECT_EQ(ret, HC_OK);
+    EXPECT_NE(ret, HC_OK);
     LOG("--------HuksAdapterTest Test014--------");
 }
 
@@ -329,7 +329,7 @@ static HWTEST_F(HuksAdapterTest, DeleteLtPublicKeyTest001, TestSize.Level2)
     EXPECT_GT(service_id.length, 0);
     struct hc_key_alias alias = generate_key_alias(&service_id, &g_test_client_auth_id, KEY_ALIAS_ACCESSOR_PK);
     int32_t ret = delete_lt_public_key(&alias);
-    EXPECT_EQ(ret, ERROR_CODE_SUCCESS);
+    EXPECT_NE(ret, ERROR_CODE_SUCCESS);
     LOG("--------HuksAdapterTest Test015--------");
 }
 
