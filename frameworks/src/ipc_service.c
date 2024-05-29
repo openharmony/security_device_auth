@@ -46,7 +46,7 @@ static int32_t BindRequestIdWithAppId(const char *data)
     CJson *dataJson = CreateJsonFromString(data);
     if (dataJson == NULL) {
         LOGE("failed to create json from string!");
-        return HC_ERROR;
+        return HC_ERR_JSON_CREATE;
     }
 
     appId = GetStringFromJson(dataJson, FIELD_APP_ID);
