@@ -226,7 +226,7 @@ int32_t AddIpcCallBackByAppId(const char *appId, const uint8_t *cbPtr, int32_t c
         if (memcpy_s(&(node->cbCtx), sizeof(node->cbCtx), cbPtr, cbSz) != EOK) {
             UnLockCallbackList();
             LOGE("callback context memory copy failed");
-            return HC_ERROR;
+            return HC_ERR_MEMORY_COPY;
         }
         if (node->proxyId >= 0) {
             ResetRemoteObject(node->proxyId);
