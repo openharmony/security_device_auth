@@ -101,6 +101,10 @@ static const char *GET_REGISTER_INFO_PARAMS =
     "{\"version\":\"1.0.0\",\"deviceId\":\"TestAuthId\","
     "\"userId\":\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\"}";
 static const char *QUERY_PARAMS = "{\"groupOwner\":\"TestAppId\"}";
+static const char *QUERY_PK_PARAMS = "{\"udid\":\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD"
+    "2E6492C\",\"isSelfPk\":true}";
+static const char *QUERY_PK_PARAMS2 = "{\"udid\":\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD"
+    "2E6492C\",\"isSelfPk\":false}";
 
 enum AsyncStatus {
     ASYNC_STATUS_WAITING = 0,
@@ -335,6 +339,39 @@ static int32_t CreateDemoIdenticalAccountGroup(int32_t osAccountId, int64_t reqI
     FreeJson(json);
     gm->destroyInfo(&returnData);
     ret = gm->createGroup(osAccountId, reqId, appId, jsonStr);
+    FreeJsonString(jsonStr);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    while (g_asyncStatus == ASYNC_STATUS_WAITING) {
+        usleep(TEST_DEV_AUTH_SLEEP_TIME);
+    }
+    return g_asyncStatus == ASYNC_STATUS_ERROR ? HC_ERROR : HC_SUCCESS;
+}
+
+static int32_t CreateDemoSymIdenticalAccountGroup(int32_t osAccountId, int64_t reqId,
+    const char *appId, const char *userId)
+{
+    g_asyncStatus = ASYNC_STATUS_WAITING;
+    const DeviceGroupManager *gm = GetGmInstance();
+    if (gm == nullptr) {
+        return HC_ERR_NULL_PTR;
+    }
+
+    CJson *credJson = CreateJson();
+    (void)AddIntToJson(credJson, FIELD_CREDENTIAL_TYPE, SYMMETRIC_CRED);
+    (void)AddStringToJson(credJson, FIELD_AUTH_CODE, TEST_AUTH_CODE);
+    CJson *json = CreateJson();
+    AddIntToJson(json, FIELD_GROUP_TYPE, IDENTICAL_ACCOUNT_GROUP);
+    AddStringToJson(json, FIELD_USER_ID, userId);
+    AddObjToJson(json, FIELD_CREDENTIAL, credJson);
+    char *jsonStr = PackJsonToString(json);
+    FreeJson(credJson);
+    FreeJson(json);
+    if (jsonStr == nullptr) {
+        return HC_ERR_NULL_PTR;
+    }
+    int32_t ret = gm->createGroup(osAccountId, reqId, appId, jsonStr);
     FreeJsonString(jsonStr);
     if (ret != HC_SUCCESS) {
         return ret;
@@ -1104,6 +1141,168 @@ static int32_t DevAuthTestCase029(void)
     return ret;
 }
 
+static int32_t DevAuthTestCase030(void)
+{
+    DeleteDatabase();
+    int32_t ret = InitDeviceAuthService();
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    do {
+        const DeviceGroupManager *gm = GetGmInstance();
+        ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        g_asyncStatus = ASYNC_STATUS_WAITING;
+        bool isClient = true;
+        SetDeviceStatus(isClient);
+        ret = gm->addMemberToGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, ADD_PARAMS);
+        if (ret != HC_SUCCESS) {
+            g_asyncStatus = ASYNC_STATUS_WAITING;
+            return ret;
+        }
+        while (g_asyncStatus == ASYNC_STATUS_WAITING) {
+            usleep(TEST_DEV_AUTH_SLEEP_TIME);
+        }
+        (void)memset_s(g_transmitData, TEST_TRANSMIT_DATA_LEN, 0, TEST_TRANSMIT_DATA_LEN);
+        g_transmitDataLen = 0;
+        g_asyncStatus = ASYNC_STATUS_WAITING;
+        gm->cancelRequest(TEST_REQ_ID, TEST_APP_ID);
+    } while (0);
+    DestroyDeviceAuthService();
+    return HC_SUCCESS;
+}
+
+static int32_t DevAuthTestCase031(void)
+{
+    DeleteDatabase();
+    int32_t ret = InitDeviceAuthService();
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    do {
+        const DeviceGroupManager *gm = GetGmInstance();
+        ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        gm->cancelRequest(TEST_REQ_ID, TEST_APP_ID);
+    } while (0);
+    DestroyDeviceAuthService();
+    return HC_SUCCESS;
+}
+
+static int32_t DevAuthTestCase032(void)
+{
+    DeleteDatabase();
+    int32_t ret = InitDeviceAuthService();
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    do {
+        const DeviceGroupManager *gm = GetGmInstance();
+        ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = AddDemoMember();
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        uint32_t returnNum = 0;
+        char *returnRes = nullptr;
+        ret = gm->getPkInfoList(DEFAULT_OS_ACCOUNT, TEST_APP_ID, QUERY_PK_PARAMS, &returnRes, &returnNum);
+        if (ret != HC_SUCCESS || returnNum == 0 || returnRes == nullptr) {
+            ret = HC_ERROR;
+        }
+    } while (0);
+    DestroyDeviceAuthService();
+    return ret;
+}
+
+static int32_t DevAuthTestCase033(void)
+{
+    DeleteDatabase();
+    int32_t ret = InitDeviceAuthService();
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    do {
+        const DeviceGroupManager *gm = GetGmInstance();
+        ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = AddDemoMember();
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        uint32_t returnNum = 0;
+        char *returnRes = nullptr;
+        ret = gm->getPkInfoList(DEFAULT_OS_ACCOUNT, TEST_APP_ID, QUERY_PK_PARAMS2, &returnRes, &returnNum);
+        if (ret != HC_SUCCESS || returnNum == 0 || returnRes == nullptr) {
+            ret = HC_ERROR;
+        }
+    } while (0);
+    DestroyDeviceAuthService();
+    return ret;
+}
+
+static int32_t DevAuthTestCase034(void)
+{
+    DeleteDatabase();
+    SetDeviceStatus(true);
+    int32_t ret = InitDeviceAuthService();
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    DestroyDeviceAuthService();
+    SetDeviceStatus(false);
+    ret = InitDeviceAuthService();
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    DestroyDeviceAuthService();
+    SetDeviceStatus(true);
+    ret = InitDeviceAuthService();
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    do {
+        const DeviceGroupManager *gm = GetGmInstance();
+        ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        SetDeviceStatus(true);
+        ret = CreateDemoSymIdenticalAccountGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, TEST_USER_ID);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        SetDeviceStatus(false);
+        ret = CreateDemoSymIdenticalAccountGroup(TEST_AUTH_OS_ACCOUNT_ID, TEST_REQ_ID, TEST_APP_ID, TEST_USER_ID);
+        if (ret != HC_SUCCESS) {
+            break;
+        }
+        ret = AuthDemoMember();
+    } while (0);
+    DestroyDeviceAuthService();
+    return ret;
+}
+
 static int32_t DevAuthTestCase051(void)
 {
     SetPakeV1Supported(false);
@@ -1165,6 +1364,11 @@ bool FuzzDoDevAuthFuncFuzz(const uint8_t* data, size_t size)
     (void)DevAuthTestCase027();
     (void)DevAuthTestCase028();
     (void)DevAuthTestCase029();
+    (void)DevAuthTestCase030();
+    (void)DevAuthTestCase031();
+    (void)DevAuthTestCase032();
+    (void)DevAuthTestCase033();
+    (void)DevAuthTestCase034();
     (void)DevAuthTestCase051();
     (void)DevAuthTestCase052();
     (void)DevAuthTestCase053();
