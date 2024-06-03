@@ -214,6 +214,8 @@ ohos_unittest("device_auth_func_test") {
 
   sources += security_label_adapter_files
 
+  sources += hiview_adapter_files
+
   sources -= [
     "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
     "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
@@ -248,6 +250,7 @@ ohos_unittest("device_auth_func_test") {
     "ENABLE_P2P_AUTH_EC_SPEKE",
     "DEV_AUTH_FUNC_TEST",
     "ENABLE_PSEUDONYM",
+    "DEV_AUTH_HIVIEW_ENABLE",
   ]
 
   sources += identity_manager_files
@@ -271,6 +274,8 @@ ohos_unittest("device_auth_func_test") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "huks:libhukssdk",
   ]
 }
