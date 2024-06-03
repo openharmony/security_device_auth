@@ -35,6 +35,7 @@ namespace {
 #define TEST_REQ_ID2 321
 #define TEST_REQ_ID3 322
 #define TEST_REQ_ID4 323
+#define TEST_REQ_ID5 1234
 #define TEST_OS_ACCOUNT_ID 100
 #define TEST_APP_ID "TestAppId"
 #define TEST_APP_ID2 "TestAppId2"
@@ -80,6 +81,9 @@ static const char *g_addParams2 =
     "{\"deviceId\":\"TestAuthId3\",\"udid\":\"TestUdid2\",\"userId\":"
     "\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\",\"credential\":{\"credentialType\":1,"
     "\"authCode\":\"2f7562744654535564586e665467546b322b4b506b65626373466f48766a4335\"}}]}";
+static const char *TEST_ADD_PARAMS3 =
+    "{\"groupId\":\"F2AA208B1E010542B20A34B03B4B6289EA7C7F6DFE97DA2E370348B826682D3D\","
+    "\"groupType\":256,\"pinCode\":\"123456\",\"protocolExpand\":2}";
 static const char *g_deleteParams =
     "{\"groupId\":\"E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21\",\"deleteId\":\"TestAuthId2\"}";
 static const char *g_deleteParams2 =
@@ -1504,6 +1508,16 @@ HWTEST_F(GmAddMemberToGroupTest, GmAddMemberToGroupTest004, TestSize.Level0)
     ASSERT_EQ(ret, HC_SUCCESS);
     ret = gm->addMemberToGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID3, TEST_APP_ID, g_addParams);
     ASSERT_NE(ret, HC_SUCCESS);
+}
+
+HWTEST_F(GmAddMemberToGroupTest, GmAddMemberToGroupTest005, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->addMemberToGroup(TEST_OS_ACCOUNT_ID, TEST_REQ_ID5, TEST_APP_ID, TEST_ADD_PARAMS3);
+    ASSERT_EQ(ret, HC_SUCCESS);
 }
 
 class GmDeleteMemberFromGroupTest : public testing::Test {

@@ -47,6 +47,12 @@ namespace {
 #define TEST_PIN_CODE "123456"
 #define TEST_USER_ID "4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4"
 #define TEST_AUTH_ID "TestAuthId"
+#define TEST_GROUP_ID "E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21"
+#define TEST_PSEUDONYM_ID "TestPseudonymId"
+#define TEST_INDEX_KEY "TestIndexKey"
+#define TEST_REQUEST_JSON_STR "TestRequestJsonStr"
+#define TEST_INVALID_AUTH_PARAMS "TestInvalidAuthParams"
+#define TEST_INVALID_ADD_PARAMS "TestInvalidAddParams"
 #define TEST_GROUP_DATA_PATH "/data/service/el1/public/deviceauthMock"
 #define TEST_HKS_DATA_PATH "/data/service/el1/public/huks_service/tmp/+0+0+0+0"
 #define TEST_DEV_AUTH_SLEEP_TIME 50000
@@ -128,12 +134,100 @@ static char *OnBindRequest(int64_t requestId, int operationCode, const char* req
     return returnDataStr;
 }
 
+static char *OnBindRequest1(int64_t requestId, int operationCode, const char* reqParam)
+{
+    CJson *json = CreateJson();
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
+    AddStringToJson(json, FIELD_PIN_CODE, TEST_PIN_CODE);
+    AddStringToJson(json, FIELD_DEVICE_ID, TEST_AUTH_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
+static char *OnBindRequest2(int64_t requestId, int operationCode, const char* reqParam)
+{
+    CJson *json = CreateJson();
+    AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, INVALID_OS_ACCOUNT);
+    AddStringToJson(json, FIELD_PIN_CODE, TEST_PIN_CODE);
+    AddStringToJson(json, FIELD_DEVICE_ID, TEST_AUTH_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
 static char *OnAuthRequest(int64_t requestId, int operationCode, const char *reqParam)
 {
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
     AddStringToJson(json, FIELD_PEER_CONN_DEVICE_ID, TEST_UDID_CLIENT);
+    AddStringToJson(json, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
+static char *OnRejectRequest(int64_t requestId, int operationCode, const char *reqParam)
+{
+    CJson *json = CreateJson();
+    AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_REJECTED);
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
+    AddStringToJson(json, FIELD_PEER_CONN_DEVICE_ID, TEST_UDID_CLIENT);
+    AddStringToJson(json, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
+static char *OnInvalidRequest(int64_t requestId, int operationCode, const char *reqParam)
+{
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
+    return nullptr;
+}
+
+static char *OnInvalidRequest1(int64_t requestId, int operationCode, const char *reqParam)
+{
+    CJson *json = CreateJson();
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
+    AddStringToJson(json, FIELD_PEER_CONN_DEVICE_ID, TEST_UDID_CLIENT);
+    AddStringToJson(json, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
+static char *OnInvalidRequest2(int64_t requestId, int operationCode, const char *reqParam)
+{
+    CJson *json = CreateJson();
+    AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, INVALID_OS_ACCOUNT);
+    AddStringToJson(json, FIELD_PEER_CONN_DEVICE_ID, TEST_UDID_CLIENT);
+    AddStringToJson(json, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
+static char *OnInvalidRequest3(int64_t requestId, int operationCode, const char *reqParam)
+{
+    CJson *json = CreateJson();
+    AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
+    AddStringToJson(json, FIELD_PEER_CONN_DEVICE_ID, TEST_UDID_CLIENT);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
+static char *OnInvalidRequest4(int64_t requestId, int operationCode, const char *reqParam)
+{
+    CJson *json = CreateJson();
+    AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
     AddStringToJson(json, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
     char *returnDataStr = PackJsonToString(json);
     FreeJson(json);
@@ -170,24 +264,91 @@ static DeviceAuthCallback g_gmCallback = {
     .onRequest = OnBindRequest
 };
 
+static DeviceAuthCallback g_invalidBindCallback = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnBindRequest1
+};
+
+static DeviceAuthCallback g_invalidBindCallback1 = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnBindRequest2
+};
+
 static DeviceAuthCallback g_gaCallback = {
     .onTransmit = OnTransmit,
     .onSessionKeyReturned = OnSessionKeyReturned,
     .onFinish = OnFinish,
     .onError = OnError,
-    .onRequest = OnAuthRequest };
+    .onRequest = OnAuthRequest
+};
+
+static DeviceAuthCallback g_rejectCallback = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnRejectRequest
+};
+
+static DeviceAuthCallback g_invalidCallback = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnInvalidRequest
+};
+
+static DeviceAuthCallback g_invalidCallback1 = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnInvalidRequest1
+};
+
+static DeviceAuthCallback g_invalidCallback2 = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnInvalidRequest2
+};
+
+static DeviceAuthCallback g_invalidCallback3 = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnInvalidRequest3
+};
+
+static DeviceAuthCallback g_invalidCallback4 = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnInvalidRequest4
+};
 
 static DeviceAuthCallback g_daTmpCallback = { .onTransmit = OnTransmit,
     .onSessionKeyReturned = OnSessionKeyReturned,
     .onFinish = OnFinish,
     .onError = OnError,
-    .onRequest = OnAuthRequestDirectTmp };
+    .onRequest = OnAuthRequestDirectTmp
+};
 
 static DeviceAuthCallback g_daLTCallback = { .onTransmit = OnTransmit,
     .onSessionKeyReturned = OnSessionKeyReturned,
     .onFinish = OnFinish,
     .onError = OnError,
-    .onRequest = OnAuthRequestDirect };
+    .onRequest = OnAuthRequestDirect
+};
 
 static void AuthDeviceDirectWithPinDemo(const char *startAuthParams, const DeviceAuthCallback *callback)
 {
@@ -1400,5 +1561,215 @@ HWTEST_F(AsymAccountAuthTest, AsymAccountAuthTest001, TestSize.Level0)
     CreateClientIdenticalAccountGroup();
     CreateServerIdenticalAccountGroup();
     AuthAsymAccount();
+}
+
+class DeviceAuthFuncTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+void DeviceAuthFuncTest::SetUpTestCase() {}
+void DeviceAuthFuncTest::TearDownTestCase() {}
+
+void DeviceAuthFuncTest::SetUp()
+{
+    DeleteDatabase();
+    int ret = InitDeviceAuthService();
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+void DeviceAuthFuncTest::TearDown()
+{
+    DestroyDeviceAuthService();
+}
+
+HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest001, TestSize.Level0)
+{
+    const GroupAuthManager *ga = GetGaInstance();
+    ASSERT_NE(ga, nullptr);
+    int32_t ret = ga->getRealInfo(DEFAULT_OS_ACCOUNT, nullptr, nullptr);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = ga->getRealInfo(DEFAULT_OS_ACCOUNT, TEST_PSEUDONYM_ID, nullptr);
+    EXPECT_NE(ret, HC_SUCCESS);
+    char *realInfo = nullptr;
+    ret = ga->getRealInfo(DEFAULT_OS_ACCOUNT, TEST_PSEUDONYM_ID, &realInfo);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest002, TestSize.Level0)
+{
+    const GroupAuthManager *ga = GetGaInstance();
+    ASSERT_NE(ga, nullptr);
+    int32_t ret = ga->getPseudonymId(DEFAULT_OS_ACCOUNT, nullptr, nullptr);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = ga->getPseudonymId(DEFAULT_OS_ACCOUNT, TEST_INDEX_KEY, nullptr);
+    EXPECT_NE(ret, HC_SUCCESS);
+    char *pseudonymId = nullptr;
+    ret = ga->getPseudonymId(DEFAULT_OS_ACCOUNT, TEST_INDEX_KEY, &pseudonymId);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest003, TestSize.Level0)
+{
+    int32_t ret = ProcessCredential(CRED_OP_QUERY, nullptr, nullptr);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = ProcessCredential(CRED_OP_QUERY, TEST_REQUEST_JSON_STR, nullptr);
+    EXPECT_NE(ret, HC_SUCCESS);
+    char *returnData = nullptr;
+    ret = ProcessCredential(CRED_OP_QUERY, TEST_REQUEST_JSON_STR, &returnData);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = ProcessCredential(CRED_OP_INVALID, TEST_REQUEST_JSON_STR, &returnData);
+    EXPECT_NE(ret, HC_SUCCESS);
+}
+
+HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest004, TestSize.Level0)
+{
+    int32_t ret = ProcessAuthDevice(TEST_REQ_ID, nullptr, &g_gaCallback);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = ProcessAuthDevice(TEST_REQ_ID, TEST_INVALID_AUTH_PARAMS, &g_gaCallback);
+    EXPECT_NE(ret, HC_SUCCESS);
+    CJson *authParams = CreateJson();
+    ASSERT_NE(authParams, nullptr);
+    char *authParamsStr = PackJsonToString(authParams);
+    ASSERT_NE(authParamsStr, nullptr);
+    ret = ProcessAuthDevice(TEST_REQ_ID, authParamsStr, &g_gaCallback);
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJsonString(authParamsStr);
+    (void)AddStringToJson(authParams, "data", "testParams");
+    authParamsStr = PackJsonToString(authParams);
+    ASSERT_NE(authParamsStr, nullptr);
+    ret = ProcessAuthDevice(TEST_REQ_ID, authParamsStr, &g_gaCallback);
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJsonString(authParamsStr);
+    CJson *dataJson = CreateJson();
+    ASSERT_NE(dataJson, nullptr);
+    char *dataStr = PackJsonToString(dataJson);
+    FreeJson(dataJson);
+    ASSERT_NE(dataStr, nullptr);
+    (void)AddStringToJson(authParams, "data", dataStr);
+    FreeJsonString(dataStr);
+    authParamsStr = PackJsonToString(authParams);
+    ASSERT_NE(authParamsStr, nullptr);
+    ret = ProcessAuthDevice(TEST_REQ_ID, authParamsStr, &g_rejectCallback);
+    EXPECT_EQ(ret, HC_SUCCESS);
+    ret = ProcessAuthDevice(TEST_REQ_ID2, authParamsStr, &g_invalidCallback);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = ProcessAuthDevice(TEST_REQ_ID2, authParamsStr, &g_invalidCallback1);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = ProcessAuthDevice(TEST_REQ_ID2, authParamsStr, &g_invalidCallback2);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = ProcessAuthDevice(TEST_REQ_ID2, authParamsStr, &g_invalidCallback4);
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJsonString(authParamsStr);
+    FreeJson(authParams);
+    DestroyDeviceAuthService();
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_EQ(gm, nullptr);
+    const GroupAuthManager *ga = GetGaInstance();
+    ASSERT_EQ(ga, nullptr);
+}
+
+HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest005, TestSize.Level0)
+{
+    int32_t ret = StartAuthDevice(TEST_REQ_ID2, TEST_INVALID_AUTH_PARAMS, &g_gaCallback);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = CancelAuthRequest(TEST_REQ_ID3, nullptr);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = CancelAuthRequest(TEST_REQ_ID3, TEST_INVALID_AUTH_PARAMS);
+    EXPECT_EQ(ret, HC_SUCCESS);
+    const GroupAuthManager *ga = GetGaInstance();
+    ASSERT_NE(ga, nullptr);
+    ret = ga->processData(TEST_REQ_ID4, (const uint8_t *)TEST_INVALID_AUTH_PARAMS,
+        HcStrlen(TEST_INVALID_AUTH_PARAMS), &g_gaCallback);
+    EXPECT_NE(ret, HC_SUCCESS);
+    CJson *dataJson = CreateJson();
+    ASSERT_NE(dataJson, nullptr);
+    char *dataStr = PackJsonToString(dataJson);
+    FreeJson(dataJson);
+    ASSERT_NE(dataStr, nullptr);
+    ret = ga->processData(TEST_REQ_ID4, (const uint8_t *)dataStr, HcStrlen(dataStr), nullptr);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = ga->processData(TEST_REQ_ID4, (const uint8_t *)dataStr, HcStrlen(dataStr), &g_invalidCallback3);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = ga->processData(TEST_REQ_ID4, (const uint8_t *)dataStr, HcStrlen(dataStr), &g_invalidCallback1);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = ga->processData(TEST_REQ_ID4, (const uint8_t *)dataStr, HcStrlen(dataStr), &g_invalidCallback2);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = ga->processData(TEST_REQ_ID4, (const uint8_t *)dataStr, HcStrlen(dataStr), &g_invalidCallback4);
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJsonString(dataStr);
+}
+
+HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest006, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    CJson *dataJson = CreateJson();
+    ASSERT_NE(dataJson, nullptr);
+    char *dataStr = PackJsonToString(dataJson);
+    ASSERT_NE(dataStr, nullptr);
+    int32_t ret = gm->processData(TEST_REQ_ID, (const uint8_t *)dataStr, HcStrlen(dataStr));
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJsonString(dataStr);
+    (void)AddStringToJson(dataJson, FIELD_APP_ID, TEST_APP_ID);
+    dataStr = PackJsonToString(dataJson);
+    ASSERT_NE(dataStr, nullptr);
+    ret = gm->regCallback(TEST_APP_ID, &g_invalidBindCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->processData(TEST_REQ_ID, (const uint8_t *)dataStr, HcStrlen(dataStr));
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJsonString(dataStr);
+    (void)AddStringToJson(dataJson, FIELD_GROUP_ID, TEST_GROUP_ID);
+    dataStr = PackJsonToString(dataJson);
+    ASSERT_NE(dataStr, nullptr);
+    ret = gm->unRegCallback(TEST_APP_ID);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->regCallback(TEST_APP_ID, &g_invalidBindCallback1);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->processData(TEST_REQ_ID, (const uint8_t *)dataStr, HcStrlen(dataStr));
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = gm->unRegCallback(TEST_APP_ID);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->processData(TEST_REQ_ID, (const uint8_t *)dataStr, HcStrlen(dataStr));
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJsonString(dataStr);
+    (void)AddIntToJson(dataJson, FIELD_OP_CODE, MEMBER_INVITE);
+    dataStr = PackJsonToString(dataJson);
+    ASSERT_NE(dataStr, nullptr);
+    ret = gm->processData(TEST_REQ_ID, (const uint8_t *)dataStr, HcStrlen(dataStr));
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJson(dataJson);
+    FreeJsonString(dataStr);
+}
+
+HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest007, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->addMemberToGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, nullptr);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = gm->addMemberToGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, TEST_INVALID_ADD_PARAMS);
+    EXPECT_NE(ret, HC_SUCCESS);
+    CJson *addParamsJson = CreateJson();
+    ASSERT_NE(addParamsJson, nullptr);
+    (void)AddIntToJson(addParamsJson, FIELD_PROTOCOL_EXPAND, LITE_PROTOCOL_STANDARD_MODE);
+    char *addParamsStr = PackJsonToString(addParamsJson);
+    ASSERT_NE(addParamsStr, nullptr);
+    ret = gm->addMemberToGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, addParamsStr);
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJsonString(addParamsStr);
+    (void)AddIntToJson(addParamsJson, FIELD_PROTOCOL_EXPAND, LITE_PROTOCOL_COMPATIBILITY_MODE);
+    ASSERT_NE(addParamsJson, nullptr);
+    addParamsStr = PackJsonToString(addParamsJson);
+    ASSERT_NE(addParamsStr, nullptr);
+    ret = gm->addMemberToGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, addParamsStr);
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJson(addParamsJson);
+    FreeJsonString(addParamsStr);
 }
 } // namespace
