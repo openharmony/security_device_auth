@@ -18,9 +18,7 @@
 #include "device_auth_defines.h"
 #include "securec.h"
 #include "identity_defines.h"
-extern "C"{
 #include "common_standard_bind_exchange.h"
-}
 
 namespace OHOS {
 static const std::string TEST_APP_ID = "TestAppId";
