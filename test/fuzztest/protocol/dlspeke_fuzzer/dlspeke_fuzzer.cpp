@@ -34,7 +34,7 @@ static const uint8_t g_pskVal[PSK_SIZE] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 1
     20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 };
 static const char *AUTH_ID_D_VAL = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
 static const char *AUTH_ID_S_VAL = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
-static const char *MSG_C_VAL= "client send msg";
+static const char *MSG_C_VAL = "client send msg";
 static const char *MSG_S_VAL = "server send msg";
 
 static Uint8Buff g_psk = { (uint8_t *)g_pskVal, PSK_SIZE };
