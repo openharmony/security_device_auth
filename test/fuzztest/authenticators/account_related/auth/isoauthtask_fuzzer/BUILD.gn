@@ -75,7 +75,6 @@ ohos_fuzztest("IsoAuthTaskFuzzTest") {
   }
   deps = [
     "${deps_adapter_path}:${hal_module_name}",
-    "${services_path}:deviceauth",
     "//third_party/cJSON:cjson",
   ]
   external_deps = [
