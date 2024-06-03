@@ -45,8 +45,9 @@ namespace {
 #define TEST_UDID_CLIENT "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930"
 #define TEST_UDID_SERVER "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C"
 #define TEST_PIN_CODE "123456"
+#define TEST_PIN_CODE1 "654321"
 #define TEST_USER_ID "4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4"
-#define TEST_AUTH_ID "TestAuthId"
+#define TEST_AUTH_ID2 "TestAuthId2"
 #define TEST_GROUP_ID "E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21"
 #define TEST_PSEUDONYM_ID "TestPseudonymId"
 #define TEST_INDEX_KEY "TestIndexKey"
@@ -56,6 +57,7 @@ namespace {
 #define TEST_GROUP_DATA_PATH "/data/service/el1/public/deviceauthMock"
 #define TEST_HKS_DATA_PATH "/data/service/el1/public/huks_service/tmp/+0+0+0+0"
 #define TEST_DEV_AUTH_SLEEP_TIME 50000
+#define TEST_DEV_AUTH_SLEEP_TIME2 60000
 #define TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN 32
 static const int32_t TEST_AUTH_OS_ACCOUNT_ID = 100;
 static const int TEST_DEV_AUTH_BUFFER_SIZE = 128;
@@ -81,6 +83,16 @@ static const char *GET_REGISTER_INFO_PARAMS1 =
 
 static const char *AUTH_PARAMS = "{\"peerConnDeviceId\":\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C"
     "749558BD2E6492C\",\"servicePkgName\":\"TestAppId\",\"isClient\":true}";
+
+static const char *CREATE_PARAMS = "{\"groupName\":\"TestGroup\",\"deviceId\":\"TestAuthId\",\"groupType\":256,\"group"
+    "Visibility\":-1,\"userType\":0,\"expireTime\":-1}";
+
+static const char *ADD_PARAMS =
+    "{\"groupId\":\"E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21\","
+    "\"groupType\":256,\"pinCode\":\"123456\"}";
+
+static const char *DISBAND_PARAMS =
+    "{\"groupId\":\"E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21\"}";
 
 enum AsyncStatus {
     ASYNC_STATUS_WAITING = 0,
@@ -128,7 +140,19 @@ static char *OnBindRequest(int64_t requestId, int operationCode, const char* req
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
     AddStringToJson(json, FIELD_PIN_CODE, TEST_PIN_CODE);
-    AddStringToJson(json, FIELD_DEVICE_ID, TEST_AUTH_ID);
+    AddStringToJson(json, FIELD_DEVICE_ID, TEST_AUTH_ID2);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
+static char *OnBindRequestMismatch(int64_t requestId, int operationCode, const char* reqParam)
+{
+    CJson *json = CreateJson();
+    AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
+    AddStringToJson(json, FIELD_PIN_CODE, TEST_PIN_CODE1);
+    AddStringToJson(json, FIELD_DEVICE_ID, TEST_AUTH_ID2);
     char *returnDataStr = PackJsonToString(json);
     FreeJson(json);
     return returnDataStr;
@@ -139,7 +163,7 @@ static char *OnBindRequest1(int64_t requestId, int operationCode, const char* re
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
     AddStringToJson(json, FIELD_PIN_CODE, TEST_PIN_CODE);
-    AddStringToJson(json, FIELD_DEVICE_ID, TEST_AUTH_ID);
+    AddStringToJson(json, FIELD_DEVICE_ID, TEST_AUTH_ID2);
     char *returnDataStr = PackJsonToString(json);
     FreeJson(json);
     return returnDataStr;
@@ -151,7 +175,7 @@ static char *OnBindRequest2(int64_t requestId, int operationCode, const char* re
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, INVALID_OS_ACCOUNT);
     AddStringToJson(json, FIELD_PIN_CODE, TEST_PIN_CODE);
-    AddStringToJson(json, FIELD_DEVICE_ID, TEST_AUTH_ID);
+    AddStringToJson(json, FIELD_DEVICE_ID, TEST_AUTH_ID2);
     char *returnDataStr = PackJsonToString(json);
     FreeJson(json);
     return returnDataStr;
@@ -262,6 +286,14 @@ static DeviceAuthCallback g_gmCallback = {
     .onFinish = OnFinish,
     .onError = OnError,
     .onRequest = OnBindRequest
+};
+
+static DeviceAuthCallback g_gmMismatchCallback = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnBindRequestMismatch
 };
 
 static DeviceAuthCallback g_invalidBindCallback = {
@@ -810,6 +842,87 @@ static int32_t ProcessCredentialDemoImport(const char *importServiceType)
     return res;
 }
 
+static void CreateDemoGroup(int32_t osAccountId, int64_t reqId, const char *appId, const char *createParams)
+{
+    SetDeviceStatus(true);
+    g_asyncStatus = ASYNC_STATUS_WAITING;
+    const DeviceGroupManager *gm = GetGmInstance();
+    int32_t ret = gm->createGroup(osAccountId, reqId, appId, createParams);
+    if (ret != HC_SUCCESS) {
+        g_asyncStatus = ASYNC_STATUS_ERROR;
+        return;
+    }
+    while (g_asyncStatus == ASYNC_STATUS_WAITING) {
+        usleep(TEST_DEV_AUTH_SLEEP_TIME);
+    }
+    usleep(TEST_DEV_AUTH_SLEEP_TIME);
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+static void DeleteDemoGroup(int32_t osAccountId, int64_t reqId, const char *appId,
+    const char *disbandParams)
+{
+    g_asyncStatus = ASYNC_STATUS_WAITING;
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->deleteGroup(osAccountId, reqId, appId, disbandParams);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    while (g_asyncStatus == ASYNC_STATUS_WAITING) {
+        usleep(TEST_DEV_AUTH_SLEEP_TIME);
+    }
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+static void AddDemoMember(void)
+{
+    g_asyncStatus = ASYNC_STATUS_WAITING;
+    bool isClient = true;
+    SetDeviceStatus(isClient);
+    const DeviceGroupManager *gm = GetGmInstance();
+    int32_t ret = gm->addMemberToGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, ADD_PARAMS);
+    if (ret != HC_SUCCESS) {
+        g_asyncStatus = ASYNC_STATUS_ERROR;
+        return;
+    }
+    while (g_asyncStatus == ASYNC_STATUS_WAITING) {
+        usleep(TEST_DEV_AUTH_SLEEP_TIME);
+    }
+    while (g_asyncStatus == ASYNC_STATUS_TRANSMIT) {
+        isClient = !isClient;
+        SetDeviceStatus(isClient);
+        g_asyncStatus = ASYNC_STATUS_WAITING;
+        uint8_t tmpTransmitData[2048] = { 0 };
+        uint32_t tmpTransmitDataLen = 0;
+        if (memcpy_s(tmpTransmitData, sizeof(tmpTransmitData), g_transmitData, g_transmitDataLen) != EOK) {
+            g_asyncStatus = ASYNC_STATUS_ERROR;
+            return;
+        }
+        tmpTransmitDataLen = g_transmitDataLen;
+        (void)memset_s(g_transmitData, TRANSMIT_DATA_MAX_LEN, 0, TRANSMIT_DATA_MAX_LEN);
+        g_transmitDataLen = 0;
+        if (isClient) {
+            ret = gm->processData(TEST_REQ_ID, tmpTransmitData, tmpTransmitDataLen);
+        } else {
+            ret = gm->processData(TEST_REQ_ID2, tmpTransmitData, tmpTransmitDataLen);
+        }
+        if (ret != HC_SUCCESS) {
+            g_asyncStatus = ASYNC_STATUS_ERROR;
+            return;
+        }
+        while (g_asyncStatus == ASYNC_STATUS_WAITING) {
+            usleep(TEST_DEV_AUTH_SLEEP_TIME);
+        }
+        if (g_asyncStatus == ASYNC_STATUS_ERROR) {
+            break;
+        }
+        if (g_transmitDataLen > 0) {
+            g_asyncStatus = ASYNC_STATUS_TRANSMIT;
+        }
+    }
+    usleep(TEST_DEV_AUTH_SLEEP_TIME2);
+    SetDeviceStatus(true);
+}
+
 static bool GenerateTempKeyPair(Uint8Buff *keyAlias)
 {
     int ret = GetLoaderInstance()->checkKeyExist(keyAlias);
@@ -884,7 +997,7 @@ static CJson *GetAsyCredentialJson(string registerInfo)
     return credentialJson;
 }
 
-static void CreateClientIdenticalAccountGroup()
+static void CreateClientIdenticalAccountGroup(void)
 {
     SetDeviceStatus(true);
     GenerateDeviceKeyPair();
@@ -917,7 +1030,7 @@ static void CreateClientIdenticalAccountGroup()
     ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
 }
 
-static void CreateServerIdenticalAccountGroup()
+static void CreateServerIdenticalAccountGroup(void)
 {
     SetDeviceStatus(false);
     GenerateDeviceKeyPair();
@@ -950,7 +1063,7 @@ static void CreateServerIdenticalAccountGroup()
     ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
 }
 
-static void AuthAsymAccount(void)
+static void AuthDemoMember(void)
 {
     g_asyncStatus = ASYNC_STATUS_WAITING;
     bool isClient = true;
@@ -991,7 +1104,6 @@ static void AuthAsymAccount(void)
         }
     }
     SetDeviceStatus(true);
-    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
 }
 
 static void RemoveDir(const char *path)
@@ -1560,7 +1672,38 @@ HWTEST_F(AsymAccountAuthTest, AsymAccountAuthTest001, TestSize.Level0)
     ASSERT_EQ(ret, HC_SUCCESS);
     CreateClientIdenticalAccountGroup();
     CreateServerIdenticalAccountGroup();
-    AuthAsymAccount();
+    AuthDemoMember();
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+}
+
+HWTEST_F(AsymAccountAuthTest, AsymAccountAuthTest002, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    CreateClientIdenticalAccountGroup();
+    CreateServerIdenticalAccountGroup();
+    SetSessionV2Supported(false);
+    AuthDemoMember();
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    SetSessionV2Supported(true);
+}
+
+HWTEST_F(AsymAccountAuthTest, AsymAccountAuthTest003, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS);
+    AddDemoMember();
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    CreateClientIdenticalAccountGroup();
+    SetSessionV2Supported(false);
+    AuthDemoMember();
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    SetSessionV2Supported(true);
 }
 
 class DeviceAuthFuncTest : public testing::Test {
@@ -1771,5 +1914,50 @@ HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest007, TestSize.Level0)
     EXPECT_NE(ret, HC_SUCCESS);
     FreeJson(addParamsJson);
     FreeJsonString(addParamsStr);
+}
+
+HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest008, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS);
+    AddDemoMember();
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    SetDeviceStatus(false);
+    DeleteDemoGroup(TEST_AUTH_OS_ACCOUNT_ID, TEST_REQ_ID, TEST_APP_ID, DISBAND_PARAMS);
+    SetDeviceStatus(true);
+    SetSessionV2Supported(false);
+    AuthDemoMember();
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_ERROR);
+    SetSessionV2Supported(true);
+}
+
+HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest009, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS);
+    AddDemoMember();
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    SetDeviceStatus(false);
+    DeleteDemoGroup(TEST_AUTH_OS_ACCOUNT_ID, TEST_REQ_ID, TEST_APP_ID, DISBAND_PARAMS);
+    SetDeviceStatus(true);
+    AuthDemoMember();
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_ERROR);
+}
+
+HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest010, TestSize.Level0)
+{
+    const DeviceGroupManager *gm = GetGmInstance();
+    ASSERT_NE(gm, nullptr);
+    int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmMismatchCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS);
+    AddDemoMember();
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_ERROR);
 }
 } // namespace
