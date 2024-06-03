@@ -152,7 +152,7 @@ static int32_t GetSelfUserId(int32_t osAccountId, char *userId, uint32_t userIdL
     return HC_SUCCESS;
 }
 
-static void GetLocalIdenticalGroup(int32_t osAccountId, CJson *param, GroupEntryVec *groupEntryVec, QueryGroupParams *queryParams)
+static void GetLocalIdenticalGroup(int32_t osAccountId, CJson *param, QueryGroupParams *queryParams, GroupEntryVec *groupEntryVec)
 {
     char selfUserId[USER_ID_LEN] = { 0 };
     int32_t ret = GetSelfUserId(osAccountId, selfUserId, USER_ID_LEN);
@@ -175,7 +175,7 @@ static void GetLocalIdenticalGroup(int32_t osAccountId, CJson *param, GroupEntry
 
     ((AccountRelatedGroupAuth *)groupAuth)
         ->getAccountCandidateGroup(osAccountId, param, queryParams, groupEntryVec);
-    if (groupEntryVec.size(&groupEntryVec) == 0) {
+    if (groupEntryVec->size(groupEntryVec) == 0) {
         LOGE("group not found by self user id!");
     }
 }
@@ -218,7 +218,7 @@ static TrustedGroupEntry *GetSelfGroupEntryByPeerCert(int32_t osAccountId, const
         ->getAccountCandidateGroup(osAccountId, param, &queryParams, &groupEntryVec);
     if (groupEntryVec.size(&groupEntryVec) == 0) {
         LOGE("group not found by peer user id!");
-        GetLocalIdenticalGroup(osAccountId, param, &queryParams, &groupEntryVec);
+        (void)GetLocalIdenticalGroup(osAccountId, param, &queryParams, &groupEntryVec);
         if (groupEntryVec.size(&groupEntryVec) == 0) {
             LOGE("can not find group");
             ClearGroupEntryVec(&groupEntryVec);
@@ -662,7 +662,7 @@ static int32_t GetSharedSecretByPeerCertFromPlugin(
         LOGE("Create output results json failed!");
         FreeJson(input);
         FreeJson(output);
-        reutrn HC_ERR_JSON_ADD;
+        return HC_ERR_JSON_ADD;
     }
     int32_t res;
     GOTO_ERR_AND_SET_RET(AddCertInfoToJson(peerCertInfo, input), res);
