@@ -20,7 +20,6 @@ group("deviceauth_test_build") {
     deps += [
       "fuzztest/authenticators/account_related/auth/isoauthtask_fuzzer:fuzztest",
       "fuzztest/authenticators/account_unrelated/pake/standardexchangetask_fuzzer:fuzztest",
-      "fuzztest/protocol/dlspeke_fuzzer:fuzztest",
       "fuzztest/devauth_fuzzer:fuzztest",
       "fuzztest/devauthcb_fuzzer:fuzztest",
       "fuzztest/devauthfunc_fuzzer:fuzztest",
@@ -49,6 +48,7 @@ group("deviceauth_test_build") {
       "fuzztest/group_manage/registerdatachangelistener_fuzzer:fuzztest",
       "fuzztest/group_manage/unregistercallback_fuzzer:fuzztest",
       "fuzztest/group_manage/unregisterdatachangelistener_fuzzer:fuzztest",
+      "fuzztest/protocol/dlspeke_fuzzer:fuzztest",
       "unittest/deviceauth:device_auth_func_test",
       "unittest/deviceauth:device_auth_ipc_test",
       "unittest/deviceauth:deviceauth_llt",

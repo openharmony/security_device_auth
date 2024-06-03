@@ -32,29 +32,29 @@ namespace OHOS {
 #define INVALID_CURVE_TYPE 0
 static const uint8_t g_pskVal[PSK_SIZE] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
     20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 };
-static const char *g_authIdCVal = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
-static const char *g_authIdSVal = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
-static const char *g_msgCVal = "client send msg";
-static const char *g_msgSVal = "server send msg";
+static const char *AUTH_ID_D_VAL = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
+static const char *AUTH_ID_S_VAL = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
+static const char *MSG_C_VAL= "client send msg";
+static const char *MSG_S_VAL = "server send msg";
 
 static Uint8Buff g_psk = { (uint8_t *)g_pskVal, PSK_SIZE };
-static Uint8Buff g_authIdC = { (uint8_t *)g_authIdCVal, 64 };
-static Uint8Buff g_authIdS = { (uint8_t *)g_authIdSVal, 64 };
-static Uint8Buff g_msgC = { (uint8_t *)g_msgCVal, 16 };
-static Uint8Buff g_msgS = { (uint8_t *)g_msgSVal, 16 };
+static Uint8Buff g_authIdC = { (uint8_t *)AUTH_ID_D_VAL, 64 };
+static Uint8Buff g_authIdS = { (uint8_t *)AUTH_ID_S_VAL, 64 };
+static Uint8Buff g_msgC = { (uint8_t *)MSG_C_VAL, 16 };
+static Uint8Buff g_msgS = { (uint8_t *)MSG_S_VAL, 16 };
 static DlSpekeInitParams g_prime384ParamsC = { DL_SPEKE_PRIME_MOD_384, g_authIdC };
 static DlSpekeInitParams g_prime384ParamsS = { DL_SPEKE_PRIME_MOD_384, g_authIdS };
 static DlSpekeInitParams g_prime256ParamsC = { DL_SPEKE_PRIME_MOD_256, g_authIdC };
 static DlSpekeInitParams g_prime256ParamsS = { DL_SPEKE_PRIME_MOD_256, g_authIdS };
 
-static void dlSpekeTest01(void)
+static void DlSpekeTest01(void)
 {
     BaseProtocol *self;
     CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
     self->destroy(self);
 }
 
-static void dlSpekeTest02(void)
+static void DlSpekeTest02(void)
 {
     BaseProtocol *client;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &client);
@@ -97,7 +97,7 @@ static void dlSpekeTest02(void)
     server->destroy(server);
 }
 
-static void dlSpekeTest03(void)
+static void DlSpekeTest03(void)
 {
     BaseProtocol *client;
     int32_t res = CreateDlSpekeProtocol(&g_prime256ParamsC, true, &client);
@@ -140,7 +140,7 @@ static void dlSpekeTest03(void)
     server->destroy(server);
 }
 
-static void dlSpekeTest04(void)
+static void DlSpekeTest04(void)
 {
     BaseProtocol *client;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &client);
@@ -178,25 +178,25 @@ static void dlSpekeTest04(void)
     server->destroy(server);
 }
 
-static void dlSpekeTest05(void)
+static void DlSpekeTest05(void)
 {
     BaseProtocol *self;
     CreateDlSpekeProtocol(nullptr, true, &self);
 }
 
-static void dlSpekeTest06(void)
+static void DlSpekeTest06(void)
 {
     CreateDlSpekeProtocol(&g_prime384ParamsC, true, nullptr);
 }
 
-static void dlSpekeTest07(void)
+static void DlSpekeTest07(void)
 {
     DlSpekeInitParams errParams = { DL_SPEKE_PRIME_MOD_384, { nullptr, 0 } };
     BaseProtocol *self;
     CreateDlSpekeProtocol(&errParams, true, &self);
 }
 
-static void dlSpekeTest08(void)
+static void DlSpekeTest08(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -206,7 +206,7 @@ static void dlSpekeTest08(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest09(void)
+static void DlSpekeTest09(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -216,7 +216,7 @@ static void dlSpekeTest09(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest10(void)
+static void DlSpekeTest10(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -227,7 +227,7 @@ static void dlSpekeTest10(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest11(void)
+static void DlSpekeTest11(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -238,7 +238,7 @@ static void dlSpekeTest11(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest12(void)
+static void DlSpekeTest12(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -249,7 +249,7 @@ static void dlSpekeTest12(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest13(void)
+static void DlSpekeTest13(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -259,7 +259,7 @@ static void dlSpekeTest13(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest14(void)
+static void DlSpekeTest14(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -272,7 +272,7 @@ static void dlSpekeTest14(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest15(void)
+static void DlSpekeTest15(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -285,7 +285,7 @@ static void dlSpekeTest15(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest16(void)
+static void DlSpekeTest16(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -297,7 +297,7 @@ static void dlSpekeTest16(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest17(void)
+static void DlSpekeTest17(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -308,7 +308,7 @@ static void dlSpekeTest17(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest18(void)
+static void DlSpekeTest18(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -319,7 +319,7 @@ static void dlSpekeTest18(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest19(void)
+static void DlSpekeTest19(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -333,7 +333,7 @@ static void dlSpekeTest19(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest20(void)
+static void DlSpekeTest20(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -347,7 +347,7 @@ static void dlSpekeTest20(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest21(void)
+static void DlSpekeTest21(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -357,7 +357,7 @@ static void dlSpekeTest21(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest22(void)
+static void DlSpekeTest22(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -367,7 +367,7 @@ static void dlSpekeTest22(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest23(void)
+static void DlSpekeTest23(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -377,7 +377,7 @@ static void dlSpekeTest23(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest24(void)
+static void DlSpekeTest24(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -387,7 +387,7 @@ static void dlSpekeTest24(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest25(void)
+static void DlSpekeTest25(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -398,7 +398,7 @@ static void dlSpekeTest25(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest26(void)
+static void DlSpekeTest26(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -408,7 +408,7 @@ static void dlSpekeTest26(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest27(void)
+static void DlSpekeTest27(void)
 {
     BaseProtocol *self;
     int32_t res = CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -419,7 +419,7 @@ static void dlSpekeTest27(void)
     self->destroy(self);
 }
 
-static void dlSpekeTest28(void)
+static void DlSpekeTest28(void)
 {
     BaseProtocol *self;
     CreateDlSpekeProtocol(&g_prime384ParamsC, true, &self);
@@ -432,34 +432,34 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
     (void)data;
     (void)size;
-    (void)dlSpekeTest01();
-    (void)dlSpekeTest02();
-    (void)dlSpekeTest03();
-    (void)dlSpekeTest04();
-    (void)dlSpekeTest05();
-    (void)dlSpekeTest06();
-    (void)dlSpekeTest07();
-    (void)dlSpekeTest08();
-    (void)dlSpekeTest09();
-    (void)dlSpekeTest10();
-    (void)dlSpekeTest11();
-    (void)dlSpekeTest12();
-    (void)dlSpekeTest13();
-    (void)dlSpekeTest14();
-    (void)dlSpekeTest15();
-    (void)dlSpekeTest16();
-    (void)dlSpekeTest17();
-    (void)dlSpekeTest18();
-    (void)dlSpekeTest19();
-    (void)dlSpekeTest20();
-    (void)dlSpekeTest21();
-    (void)dlSpekeTest22();
-    (void)dlSpekeTest23();
-    (void)dlSpekeTest24();
-    (void)dlSpekeTest25();
-    (void)dlSpekeTest26();
-    (void)dlSpekeTest27();
-    (void)dlSpekeTest28();
+    (void)DlSpekeTest01();
+    (void)DlSpekeTest02();
+    (void)DlSpekeTest03();
+    (void)DlSpekeTest04();
+    (void)DlSpekeTest05();
+    (void)DlSpekeTest06();
+    (void)DlSpekeTest07();
+    (void)DlSpekeTest08();
+    (void)DlSpekeTest09();
+    (void)DlSpekeTest10();
+    (void)DlSpekeTest11();
+    (void)DlSpekeTest12();
+    (void)DlSpekeTest13();
+    (void)DlSpekeTest14();
+    (void)DlSpekeTest15();
+    (void)DlSpekeTest16();
+    (void)DlSpekeTest17();
+    (void)DlSpekeTest18();
+    (void)DlSpekeTest19();
+    (void)DlSpekeTest20();
+    (void)DlSpekeTest21();
+    (void)DlSpekeTest22();
+    (void)DlSpekeTest23();
+    (void)DlSpekeTest24();
+    (void)DlSpekeTest25();
+    (void)DlSpekeTest26();
+    (void)DlSpekeTest27();
+    (void)DlSpekeTest28();
     return true;
 }
 }
