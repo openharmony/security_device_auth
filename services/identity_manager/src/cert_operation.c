@@ -122,6 +122,64 @@ int32_t AddCertInfoToJson(const CertInfo *certInfo, CJson *out)
     return HC_SUCCESS;
 }
 
+static int32_t GetSelfUserId(int32_t osAccountId, char *userId, uint32_t userIdLen)
+{
+    GroupEntryVec accountVec = CreateGroupEntryVec();
+    QueryGroupParams queryParams = InitQueryGroupParams();
+    queryParams.groupType = IDENTICAL_ACCOUNT_GROUP;
+    do {
+        if (QueryGroups(osAccountId, &queryParams, &accountVec) != HC_SUCCESS) {
+            LOGD("No identical-account group in db, no identical-account auth!");
+            break;
+        }
+        uint32_t index = 0;
+        TrustedGroupEntry **ptr = NULL;
+        while (index < accountVec.size(&accountVec)) {
+            ptr = accountVec.getp(&accountVec, index);
+            if ((ptr == NULL) || (*ptr == NULL)) {
+                index++;
+                continue;
+            }
+            if (memcpy_s(userId, userIdLen, StringGet(&(*ptr)->userId), StringLength(&(*ptr)->userId)) != EOK) {
+                LOGE("copy fail");
+                ClearGroupEntryVec(&accountVec);
+                return HC_ERROR;
+            }
+            index++;
+        }
+    } while (0);
+    ClearGroupEntryVec(&accountVec);
+    return HC_SUCCESS;
+}
+
+static void GetLocalIdenticalGroup(int32_t osAccountId, CJson *param, GroupEntryVec *groupEntryVec, QueryGroupParams *queryParams)
+{
+    char selfUserId[USER_ID_LEN] = { 0 };
+    int32_t ret = GetSelfUserId(osAccountId, selfUserId, USER_ID_LEN);
+    if (ret != HC_SUCCESS) {
+        LOGE("Get user id fail");
+        return;
+    }
+
+    ret = AddStringToJson(param, FIELD_USER_ID, selfUserId);
+    if (ret != HC_SUCCESS) {
+        LOGE("add self userId to params fail");
+        return;
+    }
+
+    BaseGroupAuth *groupAuth = GetAccountRelatedGroupAuth();
+    if (groupAuth == NULL) {
+        LOGE("Failed to get account group auth!");
+        return;
+    }
+
+    ((AccountRelatedGroupAuth *)groupAuth)
+        ->getAccountCandidateGroup(osAccountId, param, queryParams, groupEntryVec);
+    if (groupEntryVec.size(&groupEntryVec) == 0) {
+        LOGE("group not found by self user id!");
+    }
+}
+
 static TrustedGroupEntry *GetSelfGroupEntryByPeerCert(int32_t osAccountId, const CertInfo *certInfo)
 {
     CJson *peerPkInfoJson = CreateJsonFromString((const char *)certInfo->pkInfoStr.val);
@@ -158,12 +216,17 @@ static TrustedGroupEntry *GetSelfGroupEntryByPeerCert(int32_t osAccountId, const
     QueryGroupParams queryParams = InitQueryGroupParams();
     ((AccountRelatedGroupAuth *)groupAuth)
         ->getAccountCandidateGroup(osAccountId, param, &queryParams, &groupEntryVec);
-    FreeJson(param);
     if (groupEntryVec.size(&groupEntryVec) == 0) {
         LOGE("group not found by peer user id!");
-        ClearGroupEntryVec(&groupEntryVec);
-        return NULL;
+        GetLocalIdenticalGroup(osAccountId, param, &queryParams, &groupEntryVec);
+        if (groupEntryVec.size(&groupEntryVec) == 0) {
+            LOGE("can not find group");
+            ClearGroupEntryVec(&groupEntryVec);
+            FreeJson(param);
+            return NULL;
+        }
     }
+    FreeJson(param);
     TrustedGroupEntry *returnEntry = DeepCopyGroupEntry(groupEntryVec.get(&groupEntryVec, 0));
     ClearGroupEntryVec(&groupEntryVec);
     return returnEntry;
@@ -582,7 +645,7 @@ int32_t GetAccountRelatedCredInfo(
 }
 
 static int32_t GetSharedSecretByPeerCertFromPlugin(
-    int32_t osAccountId, const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
+    int32_t osAccountId, const char *peerUserId, const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
 {
     CJson *input = CreateJson();
     if (input == NULL) {
@@ -594,6 +657,12 @@ static int32_t GetSharedSecretByPeerCertFromPlugin(
         LOGE("Create output results json failed!");
         FreeJson(input);
         return HC_ERR_JSON_CREATE;
+    }
+    if (AddStringToJson(input, FIELD_PEER_USER_ID, peerUserId) != HC_SUCCESS) {
+        LOGE("Create output results json failed!");
+        FreeJson(input);
+        FreeJson(output);
+        reutrn HC_ERR_JSON_ADD;
     }
     int32_t res;
     GOTO_ERR_AND_SET_RET(AddCertInfoToJson(peerCertInfo, input), res);
@@ -622,14 +691,14 @@ ERR:
     return res;
 }
 
-int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
+int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *peerUserId, const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
 {
     if (peerCertInfo == NULL || sharedSecret == NULL) {
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
     if (HasAccountAuthPlugin() == HC_SUCCESS) {
-        return GetSharedSecretByPeerCertFromPlugin(osAccountId, peerCertInfo, sharedSecret);
+        return GetSharedSecretByPeerCertFromPlugin(osAccountId, peerUserId, peerCertInfo, sharedSecret);
     }
     TrustedDeviceEntry *deviceEntry = CreateDeviceEntry();
     if (deviceEntry == NULL) {

@@ -45,6 +45,7 @@
 #define PACKAGE_NAME_MAX_LEN 256
 #define SERVICE_TYPE_MAX_LEN 256
 #define AUTH_ID_MAX_LEN 64
+#define USER_ID_LEN 65
 
 #ifdef __cplusplus
 extern "C" {

@@ -61,6 +61,7 @@
 #define FIELD_CMD_EVENT "cmdEvent"
 #define FIELD_SESSION_FAIL_EVENT "failEvent"
 
+#define USER_ID_LEN 65
 #define DEV_SESSION_SALT_LEN 32
 #define VERSION_2_0_0 "2.0.0"
 
@@ -615,6 +616,36 @@ static int32_t GetCertCredInfo(SessionImpl *impl, const CJson *credInfo, Identit
     return HC_SUCCESS;
 }
 
+static int32_t GetSelfUserId(int32_t osAccountId, char *userId, uint32_t userIdLen)
+{
+    GroupEntryVec accountVec = CreateGroupEntryVec();
+    QueryGroupParams queryParams = InitQueryGroupParams();
+    queryParams.groupType = IDENTICAL_ACCOUNT_GROUP;
+    do {
+        if (QueryGroups(osAccountId, &queryParams, &accountVec) != HC_SUCCESS) {
+            LOGD("No identical-account group in db, no identical-account auth!");
+            break;
+        }
+        uint32_t index = 0;
+        TrustedGroupEntry **ptr = NULL;
+        while (index < accountVec.size(&accountVec)) {
+            ptr = accountVec.getp(&accountVec, index);
+            if ((ptr == NULL) || (*ptr == NULL)) {
+                index++;
+                continue;
+            }
+            if (memcpy_s(userId, userIdLen, StringGet(&(*ptr)->userId), StringLength(&(*ptr)->userId)) != EOK) {
+                LOGE("copy fail");
+                ClearGroupEntryVec(&accountVec);
+                return HC_ERROR;
+            }
+            index++;
+        }
+    } while (0);
+    ClearGroupEntryVec(&accountVec);
+    return HC_SUCCESS;
+}
+
 static int32_t GetSelfCredByInput(SessionImpl *impl, const CJson *inputData)
 {
     int32_t credType;
@@ -1150,14 +1181,20 @@ static int32_t AddAcrossAccountAuthInfoToContext(SessionImpl *impl, int32_t osAc
     queryParams.sharedUserId = peerUserId;
     if (QueryGroups(osAccountId, &queryParams, &groupVec) != HC_SUCCESS || groupVec.size(&groupVec) <= 0) {
         LOGE("get across account group from db by peerUserId fail.");
-        ClearGroupEntryVec(&groupVec);
-        return HC_ERR_GROUP_NOT_EXIST;
-    }
-    TrustedGroupEntry *groupEntry = groupVec.get(&groupVec, 0);
-    if (AddStringToJson(impl->context, FIELD_GROUP_ID, StringGet(&groupEntry->id)) != HC_SUCCESS) {
-        LOGE("add groupId to context fail.");
-        ClearGroupEntryVec(&groupVec);
-        return HC_ERR_JSON_ADD;
+        char selfUserId[USER_ID_LEN] = { 0 };
+        (void)GetSelfUserId(osAccountId, selfUserId, USER_ID_LEN);
+        if (AddStringToJson(impl->context, FIELD_GROUP_ID, selfUserId) != HC_SUCCESS) {
+            LOGE("add groupId to context fail");
+            ClearGroupEntryVec(&groupVec);
+            return HC_ERR_JSON_ADD;
+        }
+    } else {
+        TrustedGroupEntry *groupEntry = groupVec.get(&groupVec, 0);
+        if (AddStringToJson(impl->context, FIELD_GROUP_ID, StringGet(&groupEntry->id)) != HC_SUCCESS) {
+            LOGE("add groupId to context fail.");
+            ClearGroupEntryVec(&groupVec);
+            return HC_ERR_JSON_ADD;
+        }
     }
     if (AddIntToJson(impl->context, FIELD_OPERATION_CODE, AUTH_FORM_IDENTICAL_ACCOUNT) != HC_SUCCESS) {
         LOGE("add operationCode to context fail.");
