@@ -39,6 +39,9 @@ namespace OHOS {
 #define TEST_TIME_INTERVAL9 9
 #define TEST_TIME_INTERVAL10 10
 #define MAX_SESSION_NUM 10
+#define COUNT_TWO_NUM 2
+#define COUNT_THREE_NUM 3
+#define COUNT_FOUR_NUM 4
 #define ENABLE_PERFORMANCE_DUMPER "--enable"
 #define DISABLE_PERFORMANCE_DUMPER "--disable"
 #define INVALID_DUMPER_ARG "--test"
@@ -159,7 +162,7 @@ static void HiviewAdapterTest01(void)
     UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTimeInMillis + TEST_TIME_INTERVAL8);
     UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_SESSION_KEY_RETURN_TIME, curTimeInMillis + TEST_TIME_INTERVAL9);
     UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_FINISH_TIME, curTimeInMillis + TEST_TIME_INTERVAL10);
-    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, FIRST_START_TIME, curTimeInMillis + 10);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, FIRST_START_TIME, curTimeInMillis + TEST_TIME_INTERVAL10);
     ADD_PERFORM_DATA(TEST_REQ_ID1, true, false, curTimeInMillis);
     ADD_PERFORM_DATA(TEST_REQ_ID1, true, false, curTimeInMillis); // remove existed request
     ADD_PERFORM_DATA(TEST_REQ_ID2, false, true, curTimeInMillis);
@@ -184,15 +187,15 @@ static void HiviewAdapterTest02(void)
         ADD_PERFORM_DATA(i, true, true, curTimeInMillis + i);
     }
 
-    for (uint32_t i = MAX_SESSION_NUM; i <= MAX_SESSION_NUM * 2; i++) {
+    for (uint32_t i = MAX_SESSION_NUM; i <= MAX_SESSION_NUM * COUNT_TWO_NUM; i++) {
         ADD_PERFORM_DATA(i, true, false, curTimeInMillis + i);
     }
 
-    for (uint32_t i = MAX_SESSION_NUM * 2; i <= MAX_SESSION_NUM * 3; i++) {
+    for (uint32_t i = MAX_SESSION_NUM * COUNT_TWO_NUM; i <= MAX_SESSION_NUM * COUNT_THREE_NUM; i++) {
         ADD_PERFORM_DATA(i, false, true, curTimeInMillis + i);
     }
 
-    for (uint32_t i = MAX_SESSION_NUM * 3; i <= MAX_SESSION_NUM * 4; i++) {
+    for (uint32_t i = MAX_SESSION_NUM * COUNT_THREE_NUM; i <= MAX_SESSION_NUM * COUNT_FOUR_NUM; i++) {
         ADD_PERFORM_DATA(i, false, false, curTimeInMillis + i);
     }
 
