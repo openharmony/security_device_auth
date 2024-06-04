@@ -27,9 +27,11 @@ int32_t GetAccountRelatedCredInfo(
     return HC_ERR_NOT_SUPPORT;
 }
 
-int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
+int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *peerUserId, const CertInfo *peerCertInfo,
+    Uint8Buff *sharedSecret)
 {
     (void)osAccountId;
+    (void)peerUserId;
     (void)peerCertInfo;
     (void)sharedSecret;
     return HC_ERR_NOT_SUPPORT;

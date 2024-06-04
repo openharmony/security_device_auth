@@ -802,7 +802,11 @@ static int32_t GetSharedSecretByPeerCert(
         LOGE("Failed to get osAccountId!");
         return HC_ERR_JSON_GET;
     }
-    return GetAccountAsymSharedSecret(osAccountId, peerCertInfo, sharedSecret);
+    const char *peerUserId = GetStringFromJson(in, FIELD_PEER_USER_ID);
+    if (peerUserId != NULL) {
+        LOGE("peerUserId exists.");
+    }
+    return GetAccountAsymSharedSecret(osAccountId, peerUserId, peerCertInfo, sharedSecret);
 }
 
 static const AuthIdentity g_authIdentity = {
