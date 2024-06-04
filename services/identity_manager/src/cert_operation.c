@@ -152,7 +152,8 @@ static int32_t GetSelfUserId(int32_t osAccountId, char *userId, uint32_t userIdL
     return HC_SUCCESS;
 }
 
-static void GetLocalIdenticalGroup(int32_t osAccountId, CJson *param, QueryGroupParams *queryParams, GroupEntryVec *groupEntryVec)
+static void GetLocalIdenticalGroup(int32_t osAccountId, CJson *param, QueryGroupParams *queryParams,
+    GroupEntryVec *groupEntryVec)
 {
     char selfUserId[USER_ID_LEN] = { 0 };
     int32_t ret = GetSelfUserId(osAccountId, selfUserId, USER_ID_LEN);
@@ -689,7 +690,8 @@ ERR:
     return res;
 }
 
-int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *peerUserId, const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
+int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *peerUserId, const CertInfo *peerCertInfo,
+    Uint8Buff *sharedSecret)
 {
     if (peerCertInfo == NULL || sharedSecret == NULL) {
         LOGE("Invalid input params!");
