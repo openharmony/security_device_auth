@@ -23,7 +23,8 @@ module_output_path = "device_auth/device_auth"
 ##############################fuzztest##########################################
 ohos_fuzztest("HiviewAdapterFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "${deviceauth_path}/test/fuzztest/framework/hiviewadapter_fuzzer"
+  fuzz_config_file =
+      "${deviceauth_path}/test/fuzztest/framework/hiviewadapter_fuzzer"
   include_dirs = inc_path + hals_inc_path
   include_dirs += [
     ".",
@@ -46,9 +47,7 @@ ohos_fuzztest("HiviewAdapterFuzzTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = [
-    "${deps_adapter_path}:${hal_module_name}",
-  ]
+  deps = [ "${deps_adapter_path}:${hal_module_name}" ]
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "hilog:libhilog",
