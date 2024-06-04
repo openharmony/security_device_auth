@@ -39,8 +39,8 @@ namespace {
 #define TEST_UDID_SERVER "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C"
 #define TEST_PIN_CODE "123456"
 
-static const char* g_authWithPinParams = "{\"osAccountId\":100,\"acquireType\":0,\"pinCode\":\"123456\"}";
-static const char* g_authDirectParams =
+static const char* AUTH_WITH_PIN_PARAMS = "{\"osAccountId\":100,\"acquireType\":0,\"pinCode\":\"123456\"}";
+static const char* AUTH_DIRECT_PARAMS =
     "{\"osAccountId\":100,\"acquireType\":0,\"serviceType\":\"service.type.import\",\"peerConnDeviceId\":"
     "\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C\"}";
 #define FIELD_PUBLIC_KEY "publicKey"
@@ -374,17 +374,17 @@ void DaAuthDeviceTest::TearDown()
 
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest001, TestSize.Level0)
 {
-    int32_t res = StartAuthDevice(TEST_REQ_ID, g_authWithPinParams, &g_daTmpCallback);
+    int32_t res = StartAuthDevice(TEST_REQ_ID, AUTH_WITH_PIN_PARAMS, &g_daTmpCallback);
     ASSERT_EQ(res, HC_SUCCESS);
-    res = CancelAuthRequest(TEST_REQ_ID, g_authWithPinParams);
+    res = CancelAuthRequest(TEST_REQ_ID, AUTH_WITH_PIN_PARAMS);
     ASSERT_EQ(res, HC_SUCCESS);
 }
 
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest002, TestSize.Level0)
 {
-    int32_t res = StartAuthDevice(TEST_REQ_ID, g_authDirectParams, &g_daLTCallback);
+    int32_t res = StartAuthDevice(TEST_REQ_ID, AUTH_DIRECT_PARAMS, &g_daLTCallback);
     ASSERT_EQ(res, HC_SUCCESS);
-    res = CancelAuthRequest(TEST_REQ_ID, g_authDirectParams);
+    res = CancelAuthRequest(TEST_REQ_ID, AUTH_DIRECT_PARAMS);
     ASSERT_EQ(res, HC_SUCCESS);
 }
 
