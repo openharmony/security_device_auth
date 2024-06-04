@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef DL_SPEKE_FUZZER_H
-#define DL_SPEKE_FUZZER_H
+#ifndef HIVIEW_ADAPTER_FUZZER_H
+#define HIVIEW_ADAPTER_FUZZER_H
 
 #include <cstdint>
 #include <cstddef>
 #include <string>
 
-#define FUZZ_PROJECT_NAME "dlspeke_fuzzer"
+#define FUZZ_PROJECT_NAME "hiviewadapter_fuzzer"
 #endif
