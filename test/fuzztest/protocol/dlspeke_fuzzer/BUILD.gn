@@ -21,33 +21,31 @@ import("//build/test.gni")
 module_output_path = "device_auth/device_auth"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("StandardExchangeTaskFuzzTest") {
+ohos_fuzztest("DLSpekeFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "${deviceauth_path}/test/fuzztest/authenticators/account_unrelated/pake/standardexchangetask_fuzzer"
+  fuzz_config_file = "${deviceauth_path}/test/fuzztest/protocol/dlspeke_fuzzer"
   include_dirs = inc_path + hals_inc_path
-  include_dirs += identity_manager_inc
   include_dirs += [
     ".",
     "//third_party/cJSON",
+    "${inner_api_path}",
     "${frameworks_path}/inc/standard",
     "${dev_frameworks_path}/inc/hiview_adapter",
     "${dev_frameworks_path}/inc/permission_adapter",
+    "${dev_frameworks_path}/inc",
+    "${session_manager_path}/inc/session/v2/auth_sub_session/protocol_lib",
   ]
-  if (support_os_account) {
-    include_dirs += [ "${dev_frameworks_path}/inc/account_subscriber" ]
-    include_dirs += [ "${dev_frameworks_path}/inc/sa_subscriber" ]
-  }
-  include_dirs += identity_manager_inc
-
-  sources = [ "standardexchangetask_fuzzer.cpp" ]
+  sources = [ "dlspeke_fuzzer.cpp" ]
   sources += deviceauth_ipc_files
-  sources += deviceauth_files
-  sources += identity_manager_files
   sources += permission_adapter_files
-  if (support_os_account) {
-    sources += account_subscriber_files
-    sources += sa_subscriber_files
-  }
+  sources += [ "${frameworks_path}/src/ipc_service.c" ]
+  sources += dl_speke_protocol_files
+  sources += hiview_adapter_files
+
+  defines = [ "ENABLE_P2P_BIND_DL_SPEKE" ]
+  defines += [ "HILOG_ENABLE" ]
+  defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
+  defines += [ "DEV_AUTH_FUZZ_TEST" ]
   cflags = [
     "-g",
     "-O0",
@@ -59,10 +57,6 @@ ohos_fuzztest("StandardExchangeTaskFuzzTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  cflags += [
-    "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",
-    "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}",
-  ]
   deps = [
     "${deps_adapter_path}:${hal_module_name}",
     "//third_party/cJSON:cjson",
@@ -72,24 +66,14 @@ ohos_fuzztest("StandardExchangeTaskFuzzTest") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "c_utils:utils",
-    "dsoftbus:softbus_client",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
+    "huks:libhukssdk",
     "init:libbegetutil",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
-  if (support_os_account) {
-    external_deps += [
-      "ability_base:want",
-      "common_event_service:cesfwk_innerkits",
-      "ipc:ipc_single",
-      "json:nlohmann_json_static",
-      "os_account:os_account_innerkits",
-      "samgr:samgr_proxy",
-    ]
-  }
 }
 
 ###############################################################################
@@ -98,7 +82,7 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    ":StandardExchangeTaskFuzzTest",
+    ":DLSpekeFuzzTest",
   ]
 }
 ###############################################################################
