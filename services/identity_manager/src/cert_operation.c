@@ -658,13 +658,11 @@ static int32_t GetSharedSecretByPeerCertFromPlugin(
         FreeJson(input);
         return HC_ERR_JSON_CREATE;
     }
-    if (AddStringToJson(input, FIELD_PEER_USER_ID, peerUserId) != HC_SUCCESS) {
-        LOGE("Create output results json failed!");
-        FreeJson(input);
-        FreeJson(output);
-        return HC_ERR_JSON_ADD;
+    int32_t res = HC_ERR_JSON_ADD;
+    if ((peerUserId != NULL) && (AddStringToJson(input, FIELD_PEER_USER_ID, peerUserId) != HC_SUCCESS)) {
+        LOGE("peer user id eixsts, but add peer user id to json failed!");
+        goto ERR;
     }
-    int32_t res;
     GOTO_ERR_AND_SET_RET(AddCertInfoToJson(peerCertInfo, input), res);
     GOTO_ERR_AND_SET_RET(ExcuteCredMgrCmd(osAccountId, GET_SHARED_SECRET_BY_PEER_CERT, input, output), res);
     res = HC_ERR_JSON_GET;
