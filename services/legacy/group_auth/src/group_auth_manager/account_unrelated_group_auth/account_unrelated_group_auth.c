@@ -209,10 +209,14 @@ static int32_t PrepareDasReturnToSelfData(const CJson *authParam, const CJson *s
 static int32_t DasOnFinishToPeer(int64_t requestId, const CJson *out, const DeviceAuthCallback *callback)
 {
     int32_t res = HC_SUCCESS;
-    const CJson *sendToPeer = GetObjFromJson(out, FIELD_SEND_TO_PEER);
+    CJson *sendToPeer = GetObjFromJson(out, FIELD_SEND_TO_PEER);
     if (sendToPeer == NULL) {
         LOGI("No need to transmit data to peer.");
         return res;
+    }
+    if (AddBoolToJson(sendToPeer, FIELD_IS_DEVICE_LEVEL, false) != HC_SUCCESS) {
+        LOGE("Failed to add device level flag!");
+        return HC_ERR_JSON_ADD;
     }
     char *sendToPeerStr = PackJsonToString(sendToPeer);
     if (sendToPeerStr == NULL) {
