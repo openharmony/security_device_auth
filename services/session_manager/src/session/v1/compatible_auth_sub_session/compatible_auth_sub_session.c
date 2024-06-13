@@ -121,7 +121,7 @@ static int32_t ProcessClientAuthTaskInner(CompatibleAuthSubSession *session, int
         DestroyTask(session->base.curTaskId, moduleType);
         return ProcessClientAuthError(session, out);
     }
-    return HandleAuthTaskStatus(session, out, *status);
+    return HandleAuthTaskStatus(session, out, *status, false);
 }
 
 static void ProcessDeviceLevel(const CJson *receiveData, CJson *authParam)
@@ -218,7 +218,7 @@ static int32_t ProcessServerAuthTaskInner(CompatibleAuthSubSession *session, int
         ProcessServerAuthError(session, out);
         return res;
     }
-    return HandleAuthTaskStatus(session, out, *status);
+    return HandleAuthTaskStatus(session, out, *status, false);
 }
 
 static int32_t ProcessServerAuthTask(CompatibleAuthSubSession *session, CJson *receivedData, int32_t *status)
@@ -267,7 +267,7 @@ static int32_t CreateAndProcessServerAuthTask(CompatibleAuthSubSession *session,
         FreeJson(out);
         return res;
     }
-    res = HandleAuthTaskStatus(session, out, *status);
+    res = HandleAuthTaskStatus(session, out, *status, false);
     FreeJson(out);
     return res;
 }

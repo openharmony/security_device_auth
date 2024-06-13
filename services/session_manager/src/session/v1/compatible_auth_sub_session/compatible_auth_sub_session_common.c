@@ -391,7 +391,7 @@ static int32_t ReturnErrorToPeerByTask(CJson *sendToPeer, const CJson *authParam
     return HC_SUCCESS;
 }
 
-static int32_t ReturnTransmitData(const CompatibleAuthSubSession *session, CJson *out)
+static int32_t ReturnTransmitData(const CompatibleAuthSubSession *session, CJson *out, bool isClientFirst)
 {
     CJson *sendToPeer = GetObjFromJson(out, FIELD_SEND_TO_PEER);
     if (sendToPeer == NULL) {
@@ -409,7 +409,7 @@ static int32_t ReturnTransmitData(const CompatibleAuthSubSession *session, CJson
         return HC_ERR_JSON_GET;
     }
 
-    int32_t ret = AddGroupAuthTransmitData(session, false, sendToPeer);
+    int32_t ret = AddGroupAuthTransmitData(session, isClientFirst, sendToPeer);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to add extra data!");
         return ret;
@@ -496,7 +496,7 @@ int32_t AuthOnNextGroupIfExist(CompatibleAuthSubSession *session)
         if (res != HC_SUCCESS) {
             break;
         }
-        res = HandleAuthTaskStatus(session, outNext, status);
+        res = HandleAuthTaskStatus(session, outNext, status, true);
     } while (0);
     if (res != HC_SUCCESS) {
         LOGW("Failed to auth on current group, try to auth on next group!");
@@ -611,12 +611,9 @@ int32_t AddGroupAuthTransmitData(const CompatibleAuthSubSession *session, bool i
         return HC_ERR_NULL_PTR;
     }
     bool isDeviceLevel = false;
-    int32_t authForm = AUTH_FORM_INVALID_TYPE;
-    (void)GetIntFromJson(authParam, FIELD_AUTH_FORM, &authForm);
-    if (isClientFirst && (authForm == AUTH_FORM_IDENTICAL_ACCOUNT || authForm == AUTH_FORM_ACROSS_ACCOUNT)) {
+    if (isClientFirst) {
         (void)GetBoolFromJson(authParam, FIELD_IS_DEVICE_LEVEL, &isDeviceLevel);
     }
-    /* Disable device-level auth. */
     if (AddBoolToJson(sendToPeer, FIELD_IS_DEVICE_LEVEL, isDeviceLevel) != HC_SUCCESS) {
         LOGE("Failed to add device level!");
         return HC_ERR_JSON_ADD;
@@ -641,7 +638,7 @@ int32_t AddGroupAuthTransmitData(const CompatibleAuthSubSession *session, bool i
     return HC_SUCCESS;
 }
 
-int32_t HandleAuthTaskStatus(const CompatibleAuthSubSession *session, CJson *out, int32_t status)
+int32_t HandleAuthTaskStatus(const CompatibleAuthSubSession *session, CJson *out, int32_t status, bool isClientFirst)
 {
     int32_t res = HC_SUCCESS;
     switch (status) {
@@ -649,7 +646,7 @@ int32_t HandleAuthTaskStatus(const CompatibleAuthSubSession *session, CJson *out
             LOGI("Ignore this msg.");
             break;
         case CONTINUE:
-            res = ReturnTransmitData(session, out);
+            res = ReturnTransmitData(session, out, isClientFirst);
             if (res != HC_SUCCESS) {
                 LOGE("Failed to transmit data to peer!");
             }
