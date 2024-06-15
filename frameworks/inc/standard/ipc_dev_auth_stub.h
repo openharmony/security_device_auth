@@ -48,6 +48,8 @@ private:
     IpcServiceCallMap *callMapTable = nullptr;
     int32_t callMapElemNum = 0;
     IpcServiceCall GetCallMethodByMethodId(int32_t methodId);
+    int32_t HandleDeviceAuthCall(uint32_t code, MessageParcel &data,
+        MessageParcel &reply, MessageOption &option);
 };
 
 class DevAuthDeathRecipient : public IRemoteObject::DeathRecipient {
