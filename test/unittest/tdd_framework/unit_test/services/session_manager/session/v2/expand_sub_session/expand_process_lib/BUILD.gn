@@ -48,9 +48,34 @@ ohos_unittest("auth_code_import_test") {
     "${group_auth_path}/inc/account_related_group_auth",
     "${authenticators_path}/inc/account_unrelated/pake_task",
     "${authenticators_path}/inc/account_unrelated",
+    "${authenticators_path}/inc/account_related",
+    "${authenticators_path}/inc/account_related/creds_manager",
+    "${dev_frameworks_path}/inc/hiview_adapter",
+    "${dev_frameworks_path}/inc/module",
+    "${dev_frameworks_path}/inc/security_label_adapter",
+    "${group_manager_path}/inc/broadcast_manager",
+    "${privacy_enhancement_path}/inc",
+    "${mk_agree_path}/inc",
+    "${services_path}/cred_manager/inc/account_related",
+    "${services_path}/cred_manager/inc",
+    "${protocol_path}/inc",
   ]
   sources += identity_manager_files
-
+  sources += [
+    "${authenticators_path}/src/account_related/creds_manager/asy_token_manager.c",
+    "${authenticators_path}/src/account_related/creds_manager/sym_token_manager.c",
+    "${authenticators_path}/src/account_unrelated/das_task_common.c",
+    "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/das_standard_token_manager.c",
+    "${data_manager_path}/src/data_manager.c",
+    "${dev_frameworks_path}/src/os_account_adapter_mock/os_account_adapter_mock.cpp",
+    "${dev_frameworks_path}/src/plugin_adapter/account_auth_plugin_proxy.c",
+    "${dev_frameworks_path}/src/security_label_adapter_mock/security_label_adapter_mock.c",
+    "${deviceauth_account_group_auth_path}/src/group_auth_manager/account_related_group_auth/account_related_group_auth.c",
+    "${group_auth_path}/src/group_auth_manager/group_auth_data_operation.c",
+    "${group_manager_path}/src/broadcast_manager_mock/broadcast_manager_mock.c",
+    "${group_manager_path}/src/group_operation/group_operation_common.c",
+    "${identity_manager_path}/src/cert_operation.c",
+  ]
   defines = [
     "DEV_AUTH_MEMORY_DEBUG",
     "ENABLE_AUTH_CODE_IMPORT",
@@ -84,11 +109,36 @@ ohos_unittest("pub_key_exchange_test") {
     "${tdd_framework_path}/tdd_helper/exception_controller/inc",
     "${tdd_framework_path}/tdd_helper/memory_mock/inc",
     "${tdd_framework_path}/tdd_helper/memory_monitor/inc",
+    "${authenticators_path}/inc/account_related",
+    "${authenticators_path}/inc/account_related/creds_manager",
+    "${dev_frameworks_path}/inc/hiview_adapter",
+    "${dev_frameworks_path}/inc/module",
+    "${dev_frameworks_path}/inc/security_label_adapter",
+    "${group_manager_path}/inc/broadcast_manager",
+    "${privacy_enhancement_path}/inc",
+    "${mk_agree_path}/inc",
+    "${services_path}/cred_manager/inc/account_related",
+    "${services_path}/cred_manager/inc",
+    "${protocol_path}/inc",
   ]
 
   sources = pub_key_exchange_files
   sources += [ "pub_key_exchange_test.cpp" ]
-
+  sources += [
+    "${authenticators_path}/src/account_related/creds_manager/asy_token_manager.c",
+    "${authenticators_path}/src/account_related/creds_manager/sym_token_manager.c",
+    "${authenticators_path}/src/account_unrelated/das_task_common.c",
+    "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/das_standard_token_manager.c",
+    "${data_manager_path}/src/data_manager.c",
+    "${dev_frameworks_path}/src/os_account_adapter_mock/os_account_adapter_mock.cpp",
+    "${dev_frameworks_path}/src/plugin_adapter/account_auth_plugin_proxy.c",
+    "${dev_frameworks_path}/src/security_label_adapter_mock/security_label_adapter_mock.c",
+    "${deviceauth_account_group_auth_path}/src/group_auth_manager/account_related_group_auth/account_related_group_auth.c",
+    "${group_auth_path}/src/group_auth_manager/group_auth_data_operation.c",
+    "${group_manager_path}/src/broadcast_manager_mock/broadcast_manager_mock.c",
+    "${group_manager_path}/src/group_operation/group_operation_common.c",
+    "${identity_manager_path}/src/cert_operation.c",
+  ]
   include_dirs += identity_manager_inc
   include_dirs += [
     "${dev_frameworks_path}/inc",
