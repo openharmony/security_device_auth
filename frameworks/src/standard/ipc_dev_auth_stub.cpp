@@ -37,6 +37,7 @@ struct CbStubInfo {
 };
 static struct CbStubInfo g_cbStub[MAX_CBSTUB_SIZE];
 static bool g_cbStubInited = false;
+static const uint32_t RESTORE_CODE = 14701;
 
 ServiceDevAuth::ServiceDevAuth(bool serialInvokeFlag) : IRemoteStub(serialInvokeFlag)
 {}
@@ -184,12 +185,18 @@ static void InitCbStubTable()
     return;
 }
 
-int32_t ServiceDevAuth::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+static int32_t HandleRestoreCall(MessageParcel &data, MessageParcel &reply)
 {
-    if (data.ReadInterfaceToken() != GetDescriptor()) {
-        LOGE("[IPC][C->S]: The proxy interface token is invalid!");
-        return -1;
-    }
+    int32_t osAccountId = 0;
+    data.ReadInt32(osAccountId);
+    LOGI("Begin to restore deviceauth data for user: %d.", osAccountId);
+    reply.WriteInt32(0);
+    return 0;
+}
+
+int32_t ServiceDevAuth::HandleDeviceAuthCall(uint32_t code, MessageParcel &data, MessageParcel &reply,
+    MessageOption &option)
+{
     SET_LOG_MODE(NORMAL_MODE);
     int32_t ret = HC_ERR_IPC_UNKNOW_OPCODE;
     int32_t dataLen;
@@ -233,6 +240,22 @@ int32_t ServiceDevAuth::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
         reply.WriteBuffer(reinterpret_cast<const void *>(replyCache.GetData()), dataLen);
     }
     return 0;
+}
+
+int32_t ServiceDevAuth::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
+    MessageOption &option)
+{
+    std::u16string readToken = data.ReadInterfaceToken();
+    bool isRestoreCall = ((code == RESTORE_CODE) && (readToken == std::u16string(u"OHOS.Updater.RestoreData")));
+    if (readToken != GetDescriptor() && !isRestoreCall) {
+        LOGE("[IPC][C->S]: The proxy interface token is invalid!");
+        return -1;
+    }
+    if (isRestoreCall) {
+        return HandleRestoreCall(data, reply);
+    } else {
+        return HandleDeviceAuthCall(code, data, reply, option);
+    }
 }
 
 int32_t ServiceDevAuth::SetCallMap(IpcServiceCall method, int32_t methodId)
