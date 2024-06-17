@@ -43,6 +43,7 @@ typedef struct {
     Uint8Buff authIdPeer;
     Uint8Buff pkSelf;
     Uint8Buff pkPeer;
+    bool isSelfFromUpgrade;
 } CmdParams;
 
 typedef struct {
@@ -168,6 +169,9 @@ static int32_t GenerateKeyAlias(const CmdParams *params, bool isSelf, bool isPsk
     int32_t userType = isSelf ? params->userTypeSelf : params->userTypePeer;
 #endif
     KeyAliasType keyAliasType = isPsk ? KEY_ALIAS_PSK : userType;
+    if (isSelf && !isPsk && params->isSelfFromUpgrade) {
+        keyAliasType = KEY_ALIAS_LT_KEY_PAIR;
+    }
     Uint8Buff keyTypeBuff = { GetKeyTypePair(keyAliasType), KEY_TYPE_PAIR_LEN };
     uint8_t keyAliasByteVal[SHA256_LEN] = { 0 };
     Uint8Buff keyAliasByte = { keyAliasByteVal, SHA256_LEN };
@@ -198,8 +202,19 @@ static int32_t ExportSelfPubKey(CmdParams *params)
         LOGE("generateKeyAlias failed");
         return res;
     }
+    if (params->isSelfFromUpgrade) {
+        res = ToLowerCase(&keyAlias);
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to convert self key alias to lower case!");
+            return res;
+        }
+    }
     res = GetLoaderInstance()->checkKeyExist(&keyAlias);
     if (res != HC_SUCCESS) {
+        if (params->isSelfFromUpgrade) {
+            LOGE("Self device is from upgrade, key pair not exist!");
+            return res;
+        }
         LOGI("The local identity key pair does not exist, generate it.");
         Algorithm alg = ED25519;
         /* UserType and pairType are not required when generating key. */
@@ -309,15 +324,31 @@ static int32_t ServerSendPkInfoParseEvent(const CJson *inputEvent, CmdParams *pa
     return HC_SUCCESS;
 }
 
+static int32_t GenerateSelfKeyAlias(const CmdParams *params, Uint8Buff *selfKeyAlias)
+{
+    int32_t res = GenerateKeyAlias(params, true, false, selfKeyAlias);
+    if (res != HC_SUCCESS) {
+        LOGE("generate self keyAlias failed");
+        return res;
+    }
+    if (params->isSelfFromUpgrade) {
+        res = ToLowerCase(selfKeyAlias);
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to convert self key alias to lower case!");
+            return res;
+        }
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t ComputeAndSavePsk(const CmdParams *params)
 {
     uint8_t selfKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff selfKeyAlias = { selfKeyAliasVal, PAKE_KEY_ALIAS_LEN };
     uint8_t peerKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff peerKeyAlias = { peerKeyAliasVal, PAKE_KEY_ALIAS_LEN };
-    int32_t res = GenerateKeyAlias(params, true, false, &selfKeyAlias);
+    int32_t res = GenerateSelfKeyAlias(params, &selfKeyAlias);
     if (res != HC_SUCCESS) {
-        LOGE("generate self keyAlias failed");
         return res;
     }
     res = GenerateKeyAlias(params, false, false, &peerKeyAlias);
@@ -647,6 +678,7 @@ static int32_t InitPubkeyExchangeCmd(PubKeyExchangeCmd *instance, const PubKeyEx
         return HC_ERR_ALLOC_MEMORY;
     }
     instance->params.userTypeSelf = params->userType;
+    instance->params.isSelfFromUpgrade = params->isSelfFromUpgrade;
     instance->base.type = PUB_KEY_EXCHANGE_CMD_TYPE;
     instance->base.strategy = strategy;
     instance->base.isCaller = isCaller;

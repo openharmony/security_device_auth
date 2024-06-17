@@ -64,7 +64,8 @@ static const std::string TEST_AUTH_PARAMS = "{\"peerConnDeviceId\":\"52E2706717D
     "749558BD2E6492C\",\"servicePkgName\":\"TestAppId\",\"isClient\":true}";
 static const std::string TEST_AUTH_CODE = "1234123412341234123412341234123412341234123412341234123412341234";
 static const std::string TEST_GROUP_DATA_PATH = "/data/service/el1/public/deviceauthMock";
-static const std::string TEST_HKS_DATA_PATH = "/data/service/el1/public/huks_service/tmp/+0+0+0+0";
+static const std::string TEST_HKS_MAIN_DATA_PATH = "/data/service/el1/public/huks_service/maindata/0/0";
+static const std::string TEST_HKS_BAK_DATA_PATH = "/data/service/el1/public/huks_service/bakdata/0/0";
 
 static const int TEST_DEV_AUTH_BUFFER_SIZE = 128;
 static const int32_t TEST_AUTH_OS_ACCOUNT_ID = 100;
@@ -176,7 +177,8 @@ static void RemoveDir(const char *path)
 static void DeleteDatabase()
 {
     RemoveDir(TEST_GROUP_DATA_PATH.c_str());
-    RemoveDir(TEST_HKS_DATA_PATH.c_str());
+    RemoveDir(TEST_HKS_MAIN_DATA_PATH.c_str());
+    RemoveDir(TEST_HKS_BAK_DATA_PATH.c_str());
 }
 
 static void CreateDemoGroup(int32_t osAccountId, int64_t reqId, const char *appId, const char *createParams)

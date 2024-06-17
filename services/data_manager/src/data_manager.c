@@ -33,7 +33,7 @@
 #include "security_label_adapter.h"
 
 typedef struct {
-    DECLARE_TLV_STRUCT(9)
+    DECLARE_TLV_STRUCT(10)
     TlvString name;
     TlvString id;
     TlvUint32 type;
@@ -43,6 +43,7 @@ typedef struct {
     TlvString sharedUserId;
     TlvBuffer managers;
     TlvBuffer friends;
+    TlvUint8 upgradeFlag;
 } TlvGroupElement;
 DECLEAR_INIT_FUNC(TlvGroupElement)
 DECLARE_TLV_VECTOR(TlvGroupVec, TlvGroupElement)
@@ -53,6 +54,7 @@ typedef struct {
     uint8_t source;
     int64_t userId;
     uint64_t lastTm;
+    uint8_t upgradeFlag;
 } DevAuthFixedLenInfo;
 DECLARE_TLV_FIX_LENGTH_TYPE(TlvDevAuthFixedLenInfo, DevAuthFixedLenInfo)
 DECLEAR_INIT_FUNC(TlvDevAuthFixedLenInfo)
@@ -90,6 +92,7 @@ BEGIN_TLV_STRUCT_DEFINE(TlvGroupElement, 0x0001)
     TLV_MEMBER(TlvString, sharedUserId, 0x4007)
     TLV_MEMBER(TlvBuffer, managers, 0x4008)
     TLV_MEMBER(TlvBuffer, friends, 0x4009)
+    TLV_MEMBER(TlvUint8, upgradeFlag, 0x400A)
 END_TLV_STRUCT_DEFINE()
 IMPLEMENT_TLV_VECTOR(TlvGroupVec, TlvGroupElement, 1)
 
@@ -245,6 +248,7 @@ bool GenerateGroupEntryFromEntry(const TrustedGroupEntry *entry, TrustedGroupEnt
     }
     returnEntry->type = entry->type;
     returnEntry->visibility = entry->visibility;
+    returnEntry->upgradeFlag = entry->upgradeFlag;
     returnEntry->expireTime = entry->expireTime;
     HcString ownerName = CreateString();
     if (!StringSet(&ownerName, entryOwner)) {
@@ -285,6 +289,7 @@ bool GenerateDeviceEntryFromEntry(const TrustedDeviceEntry *entry, TrustedDevice
     }
     returnEntry->credential = entry->credential;
     returnEntry->devType = entry->devType;
+    returnEntry->upgradeFlag = entry->upgradeFlag;
     returnEntry->source = entry->source;
     returnEntry->lastTm = entry->lastTm;
     return true;
@@ -318,6 +323,7 @@ static bool GenerateGroupEntryFromTlv(TlvGroupElement *group, TrustedGroupEntry 
     }
     entry->type = group->type.data;
     entry->visibility = group->visibility.data;
+    entry->upgradeFlag = group->upgradeFlag.data;
     entry->expireTime = group->expireTime.data;
     return true;
 }
@@ -351,6 +357,7 @@ static bool GenerateDeviceEntryFromTlv(TlvDeviceElement *device, TrustedDeviceEn
     }
     deviceEntry->credential = device->info.data.credential;
     deviceEntry->devType = device->info.data.devType;
+    deviceEntry->upgradeFlag = device->info.data.upgradeFlag;
     deviceEntry->source = device->info.data.source;
     deviceEntry->lastTm = device->info.data.lastTm;
     return true;
@@ -699,6 +706,7 @@ static bool SetGroupElement(TlvGroupElement *element, TrustedGroupEntry *entry)
     }
     element->type.data = entry->type;
     element->visibility.data = entry->visibility;
+    element->upgradeFlag.data = entry->upgradeFlag;
     element->expireTime.data = entry->expireTime;
     if (!SaveStringVectorToParcel(&entry->managers, &element->managers.data)) {
         LOGE("[DB]: Failed to copy managers!");
@@ -739,6 +747,7 @@ static bool SetDeviceElement(TlvDeviceElement *element, TrustedDeviceEntry *entr
     }
     element->info.data.credential = entry->credential;
     element->info.data.devType = entry->devType;
+    element->info.data.upgradeFlag = entry->upgradeFlag;
     element->info.data.source = entry->source;
     element->info.data.lastTm = entry->lastTm;
     return true;
@@ -1345,6 +1354,17 @@ int32_t SaveOsAccountDb(int32_t osAccountId)
     return HC_SUCCESS;
 }
 
+void ReloadOsAccountDb(int32_t osAccountId)
+{
+    if (g_databaseMutex == NULL) {
+        LOGE("[DB]: not initialized!");
+        return;
+    }
+    g_databaseMutex->lock(g_databaseMutex);
+    LoadOsAccountDbCe(osAccountId);
+    g_databaseMutex->unlock(g_databaseMutex);
+}
+
 #ifdef DEV_AUTH_HIVIEW_ENABLE
 static void DumpGroup(int fd, const TrustedGroupEntry *group)
 {
@@ -1353,6 +1373,7 @@ static void DumpGroup(int fd, const TrustedGroupEntry *group)
     dprintf(fd, "||%-12s = %-46.8s|                   |\n", "id", StringGet(&group->id));
     dprintf(fd, "||%-12s = %-46d|                   |\n", "type", group->type);
     dprintf(fd, "||%-12s = %-46d|                   |\n", "visibility", group->visibility);
+    dprintf(fd, "||%-12s = %-46d|                   |\n", "upgradeFlag", group->upgradeFlag);
     dprintf(fd, "||%-12s = %-46d|                   |\n", "expireTime", group->expireTime);
     HcString entryOwner = HC_VECTOR_GET(&group->managers, 0);
     dprintf(fd, "||%-12s = %-46.8s|                   |\n", "ownerName", StringGet(&entryOwner));
@@ -1372,6 +1393,7 @@ static void DumpDevice(int fd, const TrustedDeviceEntry *device)
         StringGet(&device->serviceType));
     dprintf(fd, "|||%-12s = %-28d|                                    |\n", "credential", device->credential);
     dprintf(fd, "|||%-12s = %-28d|                                    |\n", "devType", device->devType);
+    dprintf(fd, "|||%-12s = %-28d|                                    |\n", "upgradeFlag", device->upgradeFlag);
     dprintf(fd, "|||%-12s = %-28d|                                    |\n", "credSource", device->source);
     dprintf(fd, "|||--------------------DEV--------------------|                                    |\n");
 }

@@ -25,7 +25,10 @@
 #include "system_ability_definition.h"
 #include "hc_string_vector.h"
 #include "hidump_adapter.h"
+#include "hisysevent_adapter.h"
 #include "string_ex.h"
+#include "account_auth_plugin_proxy.h"
+#include "data_manager.h"
 
 using namespace std;
 namespace OHOS {
@@ -38,6 +41,7 @@ struct CbStubInfo {
 static struct CbStubInfo g_cbStub[MAX_CBSTUB_SIZE];
 static bool g_cbStubInited = false;
 static const uint32_t RESTORE_CODE = 14701;
+static const uint32_t DEFAULT_UPGRADE_OS_ACCOUNT_ID = 100;
 
 ServiceDevAuth::ServiceDevAuth(bool serialInvokeFlag) : IRemoteStub(serialInvokeFlag)
 {}
@@ -187,10 +191,16 @@ static void InitCbStubTable()
 
 static int32_t HandleRestoreCall(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t osAccountId = 0;
+    int32_t osAccountId = DEFAULT_UPGRADE_OS_ACCOUNT_ID;
     data.ReadInt32(osAccountId);
-    LOGI("Begin to restore deviceauth data for user: %d.", osAccountId);
-    reply.WriteInt32(0);
+    LOGI("Begin to upgrade data for osAccountId: %d.", osAccountId);
+    int32_t res = ExcuteCredMgrCmd(osAccountId, UPGRADE_DATA, nullptr, nullptr);
+    ReloadOsAccountDb(osAccountId);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to upgrade data!");
+        DEV_AUTH_REPORT_FAULT_EVENT(UPGRADE_DATA_EVENT, res, 0, 0, nullptr);
+    }
+    reply.WriteInt32(res);
     return 0;
 }
 

@@ -35,7 +35,8 @@ namespace {
 #define TEST_DEV_PK "87364761534f454d33567a73424e794f"
 #define BYTE_TO_HEX_OPER_LENGTH 2
 
-static const std::string TEST_HKS_DATA_PATH = "/data/service/el1/public/huks_service/tmp/+0+0+0+0";
+static const std::string TEST_HKS_MAIN_DATA_PATH = "/data/service/el1/public/huks_service/maindata/0/0";
+static const std::string TEST_HKS_BAK_DATA_PATH = "/data/service/el1/public/huks_service/bakdata/0/0";
 static const std::string TEST_GROUP_DATA_PATH = "/data/service/el1/public/deviceauthMock";
 static const int TEST_DEV_AUTH_BUFFER_SIZE = 128;
 
@@ -65,7 +66,8 @@ static void RemoveDir(const char *path)
 static void DeleteDatabase()
 {
     RemoveDir(TEST_GROUP_DATA_PATH.c_str());
-    RemoveDir(TEST_HKS_DATA_PATH.c_str());
+    RemoveDir(TEST_HKS_MAIN_DATA_PATH.c_str());
+    RemoveDir(TEST_HKS_BAK_DATA_PATH.c_str());
 }
 
 void MKAgreeTest::SetUp()

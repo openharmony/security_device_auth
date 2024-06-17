@@ -79,8 +79,15 @@ typedef int32_t (*GenerateRandomFunc)(Uint8Buff *rand);
 
 typedef int32_t (*ComputeHmacFunc)(const Uint8Buff *key, const Uint8Buff *message, Uint8Buff *outHmac, bool isAlias);
 
+typedef int32_t (*ComputePseudonymHmacFunc)(const Uint8Buff *key, const Uint8Buff *message, Uint8Buff *outHmac);
+
 typedef int32_t (*ComputeHkdfFunc)(const Uint8Buff *baseKey, const Uint8Buff *salt, const Uint8Buff *keyInfo,
     Uint8Buff *outHkdf, bool isAlias);
+
+typedef int32_t (*ComputePseudonymPskFunc)(const Uint8Buff *baseKeyAlias, const Uint8Buff *pskKeyAlias,
+    const Uint8Buff *extInfo, Uint8Buff *outPsk);
+
+typedef int32_t (*GetKeyExtInfoFunc)(const Uint8Buff *keyAlias, Uint8Buff *outExtInfo);
 
 typedef int32_t (*ImportSymmetricKeyFunc)(const Uint8Buff *keyAlias, const Uint8Buff *authToken, KeyPurpose purpose,
     const ExtraInfo *exInfo);
@@ -140,7 +147,10 @@ typedef struct {
     Sha256Func sha256;
     GenerateRandomFunc generateRandom;
     ComputeHmacFunc computeHmac;
+    ComputePseudonymHmacFunc computePseudonymHmac;
     ComputeHkdfFunc computeHkdf;
+    ComputePseudonymPskFunc computePseudonymPsk;
+    GetKeyExtInfoFunc getKeyExtInfo;
     ImportSymmetricKeyFunc importSymmetricKey;
     CheckKeyExistFunc checkKeyExist;
     DeleteKeyFunc deleteKey;

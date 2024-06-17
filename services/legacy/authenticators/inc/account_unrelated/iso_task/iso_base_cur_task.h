@@ -50,6 +50,7 @@ typedef struct IsoParamsT {
     int32_t opCode;
     uint32_t keyLen;
     bool isClient;
+    bool isPeerFromUpgrade;
 } IsoParams;
 
 typedef struct SymBaseCurTaskT {

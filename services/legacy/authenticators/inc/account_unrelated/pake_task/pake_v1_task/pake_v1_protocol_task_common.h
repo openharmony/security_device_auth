@@ -26,6 +26,10 @@ extern "C" {
 int32_t InitDasPakeV1Params(PakeParams *params, const CJson *in);
 void DestroyDasPakeV1Params(PakeParams *params);
 int32_t FillPskWithDerivedKeyHex(PakeParams *params);
+int32_t LoadPseudonymExtInfoIfNeed(PakeParams *params);
+int32_t AddPseudonymIdAndChallenge(PakeParams *params, CJson *payload);
+int32_t CheckPseudonymId(PakeParams *params, const CJson *in);
+int32_t SaveNextPseudonymIdAndChallenge(PakeParams *params);
 
 #ifdef __cplusplus
 }

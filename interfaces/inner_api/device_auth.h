@@ -72,6 +72,8 @@
 #define FIELD_DEVICE_LIST "deviceList"
 #define FIELD_IS_UDID_HASH "isUdidHash"
 #define FIELD_PROTOCOL_EXPAND "protocolExpand"
+#define FIELD_IS_SELF_FROM_UPGRADE "isSelfFromUpgrade"
+#define FIELD_IS_PEER_FROM_UPGRADE "isPeerFromUpgrade"
 
 /**
  * @brief protocol expand value for bind

@@ -64,8 +64,12 @@ static int PakeRequest(AsyBaseCurTask *task, PakeParams *params, CJson *out, int
     }
     // package differentiated data
     if (params->opCode == AUTHENTICATE || params->opCode == OP_UNBIND) {
-        res = AddByteToJson(payload, FIELD_PEER_AUTH_ID, params->baseParams.idSelf.val,
-            params->baseParams.idSelf.length);
+        if (params->opCode == AUTHENTICATE && params->isPseudonym) {
+            res = AddPseudonymIdAndChallenge(params, payload);
+        } else {
+            res = AddByteToJson(payload, FIELD_PEER_AUTH_ID, params->baseParams.idSelf.val,
+                params->baseParams.idSelf.length);
+        }
         if (res != HC_SUCCESS) {
             LOGE("Add idSelf failed, res: %d.", res);
             return res;
@@ -99,7 +103,11 @@ static int ParseMsgForClientConfirm(PakeParams *params, const CJson *in)
         return res;
     }
     if (params->opCode == AUTHENTICATE || params->opCode == OP_UNBIND) {
-        res = GetAndCheckAuthIdPeer(in, &(params->baseParams.idSelf), &(params->baseParams.idPeer));
+        if (params->opCode == AUTHENTICATE && params->isPseudonym) {
+            res = CheckPseudonymId(params, in);
+        } else {
+            res = GetAndCheckAuthIdPeer(in, &(params->baseParams.idSelf), &(params->baseParams.idPeer));
+        }
         if (res != HC_SUCCESS) {
             LOGE("GetAndCheckAuthIdPeer failed, res: %d.", res);
             return res;

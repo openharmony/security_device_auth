@@ -23,11 +23,27 @@
 
 #define HICHAIN_RETURN_KEY "hichain_return_key"
 #define TMP_AUTH_KEY_FACTOR "hichain_tmp_auth_enc_key"
+#define FIELD_P2P_PSEUDONYM_ID "pdId"
+#define FIELD_PSEUDONYM_CHALLENGE "pdChlg"
+#define FIELD_IS_PSEUDONYM_SUPPORTED "isPdSupported"
+#define FIELD_SELF_NEXT_PSEUDONYM_ID "selfNextPseudonymId"
+#define FIELD_PEER_NEXT_PSEUDONYM_ID "peerNextPseudonymId"
+#define FIELD_SELF_NEXT_PSEUDONYM_CHALLENGE "selfNextPseudonymChallenge"
 
 #define PAKE_KEY_ALIAS_LEN 64
 #define PAKE_ED25519_KEY_PAIR_LEN 32
 #define PAKE_NONCE_LEN 32
 #define PAKE_PSK_LEN 32
+#define PSEUDONYM_CHALLENGE_LEN 16
+#define PSEUDONYM_ID_LEN 32
+#define PSEUDONYM_COMBINE_CHALLENGE_LEN 32
+
+typedef struct {
+    Uint8Buff selfNextPseudonymId;
+    Uint8Buff selfNextPseudonymChallenge;
+    Uint8Buff peerNextPseudonymId;
+} PseudonymPskExtInfo;
+
 
 typedef struct PakeParamsT {
     PakeBaseParams baseParams;
@@ -40,6 +56,12 @@ typedef struct PakeParamsT {
     int32_t userTypePeer;
     char *packageName;
     char *serviceType;
+    bool isPseudonym;
+    PseudonymPskExtInfo pseudonymExtInfo;
+    uint8_t selfNextPseudonymChallenge[PSEUDONYM_CHALLENGE_LEN];
+    uint8_t peerNextPseudonymChallenge[PSEUDONYM_CHALLENGE_LEN];
+    bool isSelfFromUpgrade;
+    bool isPeerFromUpgrade;
 } PakeParams;
 
 typedef struct AsyBaseCurTaskT {

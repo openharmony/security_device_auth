@@ -269,6 +269,7 @@ typedef enum {
     QUERY_TRUSTED_CREDENTIALS = 5,
     REQUEST_SIGNATURE = 6,
     GET_SHARED_SECRET_BY_PEER_CERT = 8,
+    UPGRADE_DATA = 10,
 } CredentialCode;
 
 #endif
