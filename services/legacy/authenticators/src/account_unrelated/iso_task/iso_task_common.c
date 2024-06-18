@@ -449,8 +449,9 @@ static int GetUserType(IsoParams *params, const CJson *in)
     return res;
 }
 
-static int32_t GetKeyLength(IsoParams *params, const CJson *in)
+static int32_t GetUpgradeFlagAndKeyLength(IsoParams *params, const CJson *in)
 {
+    (void)GetBoolFromJson(in, FIELD_IS_PEER_FROM_UPGRADE, &params->isPeerFromUpgrade);
     if (params->opCode == OP_UNBIND || params->opCode == OP_BIND) {
         params->keyLen = 0;
         return HC_SUCCESS;
@@ -489,7 +490,7 @@ int InitIsoParams(IsoParams *params, const CJson *in)
         LOGE("InitIsoBaseParams failed, res: %x.", res);
         goto ERR;
     }
-    res = GetKeyLength(params, in);
+    res = GetUpgradeFlagAndKeyLength(params, in);
     if (res != HC_SUCCESS) {
         goto ERR;
     }
@@ -522,15 +523,36 @@ ERR:
 static int AuthGeneratePsk(const Uint8Buff *seed, IsoParams *params)
 {
     uint8_t keyAlias[ISO_KEY_ALIAS_LEN] = { 0 };
-    int res = GenerateKeyAliasInIso(params, keyAlias, sizeof(keyAlias), true);
+    uint8_t upgradeKeyAlias[ISO_UPGRADE_KEY_ALIAS_LEN] = { 0 };
+    Uint8Buff pkgName = { (uint8_t *)params->packageName, (uint32_t)strlen(params->packageName) };
+    Uint8Buff serviceType = { (uint8_t *)params->serviceType, (uint32_t)strlen(params->serviceType) };
+    Uint8Buff keyAliasBuff = { keyAlias, ISO_KEY_ALIAS_LEN };
+    int32_t res;
+    if (params->isPeerFromUpgrade) {
+        keyAliasBuff.val = upgradeKeyAlias;
+        keyAliasBuff.length = ISO_UPGRADE_KEY_ALIAS_LEN;
+        res = GenerateKeyAlias(&pkgName, &serviceType, params->peerUserType, &params->baseParams.authIdPeer,
+            &keyAliasBuff);
+    } else {
+        res = GenerateKeyAlias(&pkgName, &serviceType, KEY_ALIAS_AUTH_TOKEN, &params->baseParams.authIdPeer,
+            &keyAliasBuff);
+    }
     if (res != 0) {
+        LOGE("Failed to generate iso key alias!");
         return res;
     }
+    if (params->isPeerFromUpgrade) {
+        res = ToLowerCase(&keyAliasBuff);
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to convert psk alias to lower case!");
+            return res;
+        }
+    }
 
-    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias[0], keyAlias[1], keyAlias[2], keyAlias[3]);
-    Uint8Buff keyAliasBuf = { keyAlias, sizeof(keyAlias) };
+    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAliasBuff.val[DEV_AUTH_ZERO], keyAliasBuff.val[DEV_AUTH_ONE],
+        keyAliasBuff.val[DEV_AUTH_TWO], keyAliasBuff.val[DEV_AUTH_THREE]);
     Uint8Buff pskBuf = { params->baseParams.psk, sizeof(params->baseParams.psk) };
-    return params->baseParams.loader->computeHmac(&keyAliasBuf, seed, &pskBuf, true);
+    return params->baseParams.loader->computeHmac(&keyAliasBuff, seed, &pskBuf, true);
 }
 
 static int AuthGeneratePskUsePin(const Uint8Buff *seed, IsoParams *params, const char *pinString)

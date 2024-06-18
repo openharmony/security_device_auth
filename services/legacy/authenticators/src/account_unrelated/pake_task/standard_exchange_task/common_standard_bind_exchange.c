@@ -93,6 +93,10 @@ static int32_t PackageAuthInfo(const PakeParams *pakeParams, StandardBindExchang
 {
     int32_t res = pakeParams->baseParams.loader->checkKeyExist(keyAlias);
     if (res != HC_SUCCESS) {
+        if (pakeParams->isSelfFromUpgrade) {
+            LOGE("Self data is from upgrade, self authInfo not exist!");
+            return res;
+        }
         LOGI("The local identity key pair does not exist, generate it.");
         Algorithm alg = (pakeParams->baseParams.curveType == CURVE_256) ? P256 : ED25519;
         /* UserType and pairType are not required when generating key. */
@@ -395,12 +399,23 @@ int32_t ClientRequestStandardBindExchange(const PakeParams *pakeParams, Standard
     uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAlias = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
     KeyAliasType keyType = pakeParams->userType;
+    // if self data is from upgrade, key type should be key-pair.
+    if (pakeParams->isSelfFromUpgrade) {
+        keyType = KEY_ALIAS_LT_KEY_PAIR;
+    }
     Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, strlen(pakeParams->packageName) };
     Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, strlen(pakeParams->serviceType) };
     int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(pakeParams->baseParams.idSelf), &keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generateKeyAlias failed");
         return res;
+    }
+    if (pakeParams->isSelfFromUpgrade) {
+        res = ToLowerCase(&keyAlias);
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to convert self key alias to lower case!");
+            return res;
+        }
     }
 
     res = PackageAuthInfo(pakeParams, exchangeParams, &keyAlias);
@@ -426,16 +441,36 @@ int32_t ClientRequestStandardBindExchange(const PakeParams *pakeParams, Standard
     return res;
 }
 
+static int32_t GenerateSelfKeyAlias(const PakeParams *pakeParams, Uint8Buff *keyAlias)
+{
+    KeyAliasType keyType = pakeParams->userType;
+    // if self data is from upgrade, key type should be key-pair.
+    if (pakeParams->isSelfFromUpgrade) {
+        keyType = KEY_ALIAS_LT_KEY_PAIR;
+    }
+    Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, strlen(pakeParams->packageName) };
+    Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, strlen(pakeParams->serviceType) };
+    int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(pakeParams->baseParams.idSelf), keyAlias);
+    if (res != HC_SUCCESS) {
+        LOGE("generateKeyAlias failed");
+        return res;
+    }
+    if (pakeParams->isSelfFromUpgrade) {
+        res = ToLowerCase(keyAlias);
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to convert self key alias to lower case!");
+            return res;
+        }
+    }
+    return HC_SUCCESS;
+}
+
 int32_t ServerResponseStandardBindExchange(PakeParams *pakeParams, StandardBindExchangeParams *exchangeParams)
 {
     uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAlias = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
-    KeyAliasType keyType = pakeParams->userType;
-    Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, strlen(pakeParams->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, strlen(pakeParams->serviceType) };
-    int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(pakeParams->baseParams.idSelf), &keyAlias);
+    int32_t res = GenerateSelfKeyAlias(pakeParams, &keyAlias);
     if (res != HC_SUCCESS) {
-        LOGE("generateKeyAlias failed");
         return res;
     }
 

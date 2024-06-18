@@ -18,6 +18,7 @@
 #include "securec.h"
 #include "clib_error.h"
 #include "hc_types.h"
+#include "ctype.h"
 
 int32_t InitUint8Buff(Uint8Buff *buff, uint32_t buffLen)
 {
@@ -77,4 +78,20 @@ void ClearFreeUint8Buff(Uint8Buff *buff)
 bool IsUint8BuffValid(const Uint8Buff *buff, uint32_t maxLen)
 {
     return ((buff != NULL) && (buff->val != NULL) && (0 < buff->length) && (buff->length <= maxLen));
+}
+
+int32_t ToLowerCase(Uint8Buff *buff)
+{
+    uint32_t buffLen = buff->length;
+    char *buffStr = (char *)HcMalloc(buffLen + 1, 0);
+    if (buffStr == NULL) {
+        return CLIB_ERR_BAD_ALLOC;
+    }
+    (void)memcpy_s(buffStr, buffLen + 1, buff->val, buffLen);
+    for (uint32_t i = 0; i < buffLen; i++) {
+        buffStr[i] = tolower(buffStr[i]);
+    }
+    (void)memcpy_s(buff->val, buffLen, buffStr, buffLen);
+    HcFree(buffStr);
+    return CLIB_SUCCESS;
 }

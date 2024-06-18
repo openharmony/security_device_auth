@@ -38,8 +38,8 @@ static const char *GROUP_OWNER = "testApp";
 
 static Uint8Buff g_authIdC = { (uint8_t *)AUTH_ID_C_VAL, 64 };
 static Uint8Buff g_authIdS = { (uint8_t *)AUTH_ID_S_VAL, 64 };
-static PubKeyExchangeParams g_paramsC = { 0, GROUP_OWNER, GROUP_ID, g_authIdC };
-static PubKeyExchangeParams g_paramsS = { 0, GROUP_OWNER, GROUP_ID, g_authIdS };
+static PubKeyExchangeParams g_paramsC = { 0, GROUP_OWNER, GROUP_ID, g_authIdC, false };
+static PubKeyExchangeParams g_paramsS = { 0, GROUP_OWNER, GROUP_ID, g_authIdS, false };
 
 static const char *INVALID_MSG1 = "{\"errCode\": 1}";
 static const char *INVALID_MSG2 = "{\"event\": -1, \"errCode\": 1}";
@@ -139,28 +139,28 @@ HWTEST_F(PubKeyExchangeTest, PubKeyExchangeTest101, TestSize.Level0)
 
 HWTEST_F(PubKeyExchangeTest, PubKeyExchangeTest102, TestSize.Level0)
 {
-    PubKeyExchangeParams errorParams = { 0, nullptr, GROUP_ID, g_authIdC };
+    PubKeyExchangeParams errorParams = { 0, nullptr, GROUP_ID, g_authIdC, false };
     BaseCmd *self = CreatePubKeyExchangeCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
 
 HWTEST_F(PubKeyExchangeTest, PubKeyExchangeTest103, TestSize.Level0)
 {
-    PubKeyExchangeParams errorParams = { 0, GROUP_OWNER, nullptr, g_authIdC };
+    PubKeyExchangeParams errorParams = { 0, GROUP_OWNER, nullptr, g_authIdC, false };
     BaseCmd *self = CreatePubKeyExchangeCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
 
 HWTEST_F(PubKeyExchangeTest, PubKeyExchangeTest104, TestSize.Level0)
 {
-    PubKeyExchangeParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { nullptr, 0 } };
+    PubKeyExchangeParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { nullptr, 0 }, false };
     BaseCmd *self = CreatePubKeyExchangeCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
 
 HWTEST_F(PubKeyExchangeTest, PubKeyExchangeTest105, TestSize.Level0)
 {
-    PubKeyExchangeParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { (uint8_t *)AUTH_ID_C_VAL, 0 } };
+    PubKeyExchangeParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { (uint8_t *)AUTH_ID_C_VAL, 0 }, false };
     BaseCmd *self = CreatePubKeyExchangeCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }

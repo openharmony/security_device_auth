@@ -63,7 +63,8 @@ namespace OHOS {
 #define TEST_DEV_AUTH_SLEEP_TIME 50000
 #define TEST_DEV_AUTH_SLEEP_TIME2 600000
 #define TEST_TRANSMIT_DATA_LEN 2048
-#define TEST_HKS_DATA_PATH "/data/service/el1/public/huks_service/tmp/+0+0+0+0"
+#define TEST_HKS_MAIN_DATA_PATH "/data/service/el1/public/huks_service/maindata/0/0"
+#define TEST_HKS_BAK_DATA_PATH "/data/service/el1/public/huks_service/bakdata/0/0"
 #define TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN 32
 static const int32_t TEST_AUTH_OS_ACCOUNT_ID = 100;
 static const int TEST_DEV_AUTH_BUFFER_SIZE = 128;
@@ -226,7 +227,8 @@ static void DeleteDatabase()
 {
     const char *groupPath = "/data/service/el1/public/deviceauthMock";
     RemoveDir(groupPath);
-    RemoveDir(TEST_HKS_DATA_PATH);
+    RemoveDir(TEST_HKS_MAIN_DATA_PATH);
+    RemoveDir(TEST_HKS_BAK_DATA_PATH);
     return;
 }
 

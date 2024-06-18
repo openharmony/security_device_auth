@@ -16,6 +16,7 @@
 #include "compatible_bind_sub_session_common.h"
 
 #include "group_operation_common.h"
+#include "group_auth_data_operation.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
 
@@ -344,6 +345,34 @@ static int32_t GenerateParamsByDatabase(int32_t osAccountId, const char *groupId
     return AddDevInfoByDatabase(osAccountId, groupId, params);
 }
 
+static int32_t AddSelfUpgradeFlag(CJson *params, bool isClient, int32_t osAccountId, const char *groupId,
+    int32_t operationCode)
+{
+    bool isNeeded = (operationCode == MEMBER_INVITE && isClient) || (operationCode == MEMBER_JOIN && !isClient);
+    if (!isNeeded) {
+        LOGI("No need to add self upgrade flag.");
+        return HC_SUCCESS;
+    }
+    TrustedDeviceEntry *selfDeviceEntry = CreateDeviceEntry();
+    if (selfDeviceEntry == NULL) {
+        LOGE("Failed to create self device entry!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    int32_t res = GaGetLocalDeviceInfo(osAccountId, groupId, selfDeviceEntry);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get self device entry!");
+        DestroyDeviceEntry(selfDeviceEntry);
+        return res;
+    }
+    bool isSelfFromUpgrade = selfDeviceEntry->upgradeFlag == 1;
+    DestroyDeviceEntry(selfDeviceEntry);
+    if (AddBoolToJson(params, FIELD_IS_SELF_FROM_UPGRADE, isSelfFromUpgrade) != HC_SUCCESS) {
+        LOGE("Failed to add self upgrade flag!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t AddGroupAndDevInfo(int32_t osAccountId, int isClient, const CJson *jsonParams,
     CompatibleBindSubSession *session)
 {
@@ -351,6 +380,11 @@ static int32_t AddGroupAndDevInfo(int32_t osAccountId, int isClient, const CJson
     if (groupId == NULL) {
         LOGE("Failed to get groupId from jsonParams!");
         return HC_ERR_JSON_GET;
+    }
+    int32_t res = AddSelfUpgradeFlag(session->params, (isClient == CLIENT), osAccountId, groupId, session->opCode);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to add self upgrade flag!");
+        return res;
     }
     if (IsCreateGroupNeeded(isClient, session->opCode)) {
         return GenerateParamsByInput(osAccountId, groupId, jsonParams, session->params);

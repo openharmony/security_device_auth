@@ -172,6 +172,53 @@ static int32_t ExtractAndAddParams(int32_t osAccountId, const char *groupId,
     return res;
 }
 
+static int32_t AddUpgradeFlagToParams(CJson *paramsData, int32_t osAccountId, const char *peerUdid,
+    const char *peerAuthId, const char *groupId)
+{
+    TrustedDeviceEntry *peerDeviceEntry = CreateDeviceEntry();
+    if (peerDeviceEntry == NULL) {
+        LOGE("Failed to allocate memory for deviceEntry!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    int32_t res;
+    if (peerUdid != NULL) {
+        res = GaGetTrustedDeviceEntryById(osAccountId, peerUdid, true, groupId, peerDeviceEntry);
+    } else if (peerAuthId != NULL) {
+        res = GaGetTrustedDeviceEntryById(osAccountId, peerAuthId, false, groupId, peerDeviceEntry);
+    } else {
+        LOGE("Both the input udid and authId is null!");
+        res = HC_ERROR;
+    }
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get peer device entry!");
+        DestroyDeviceEntry(peerDeviceEntry);
+        return res;
+    }
+    bool isPeerFromUpgrade = peerDeviceEntry->upgradeFlag == 1;
+    DestroyDeviceEntry(peerDeviceEntry);
+    if (AddBoolToJson(paramsData, FIELD_IS_PEER_FROM_UPGRADE, isPeerFromUpgrade) != HC_SUCCESS) {
+        LOGE("Failed to add peer upgrade flag!");
+        return HC_ERR_JSON_ADD;
+    }
+    TrustedDeviceEntry *selfDeviceEntry = CreateDeviceEntry();
+    if (selfDeviceEntry == NULL) {
+        LOGE("Failed to allocate memory for selfDeviceEntry!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    res = GaGetLocalDeviceInfo(osAccountId, groupId, selfDeviceEntry);
+    if (res != HC_SUCCESS) {
+        DestroyDeviceEntry(selfDeviceEntry);
+        return res;
+    }
+    bool isSelfFromUpgrade = selfDeviceEntry->upgradeFlag == 1;
+    DestroyDeviceEntry(selfDeviceEntry);
+    if (AddBoolToJson(paramsData, FIELD_IS_SELF_FROM_UPGRADE, isSelfFromUpgrade) != HC_SUCCESS) {
+        LOGE("Failed to add self upgrade flag!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t FillAuthParams(int32_t osAccountId, const CJson *param,
     const GroupEntryVec *vec, ParamsVecForAuth *paramsVec)
 {
@@ -203,6 +250,12 @@ static int32_t FillAuthParams(int32_t osAccountId, const CJson *param,
         if (paramsData == NULL) {
             LOGE("Failed to duplicate auth param data!");
             return HC_ERR_JSON_FAIL;
+        }
+        if (groupInfo->type == PEER_TO_PEER_GROUP &&
+            AddUpgradeFlagToParams(paramsData, osAccountId, peerUdid, peerAuthId, groupId) != HC_SUCCESS) {
+            LOGE("Failed to add upgrade flag!");
+            FreeJson(paramsData);
+            continue;
         }
         if (ExtractAndAddParams(osAccountId, groupId, groupInfo, paramsData) != HC_SUCCESS) {
             LOGE("Failed to extract and add param!");

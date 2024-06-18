@@ -55,7 +55,8 @@ namespace {
 #define TEST_INVALID_AUTH_PARAMS "TestInvalidAuthParams"
 #define TEST_INVALID_ADD_PARAMS "TestInvalidAddParams"
 #define TEST_GROUP_DATA_PATH "/data/service/el1/public/deviceauthMock"
-#define TEST_HKS_DATA_PATH "/data/service/el1/public/huks_service/tmp/+0+0+0+0"
+#define TEST_HKS_MAIN_DATA_PATH "/data/service/el1/public/huks_service/maindata/0/0"
+#define TEST_HKS_BAK_DATA_PATH "/data/service/el1/public/huks_service/bakdata/0/0"
 #define TEST_DEV_AUTH_SLEEP_TIME 50000
 #define TEST_DEV_AUTH_SLEEP_TIME2 60000
 #define TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN 32
@@ -1121,7 +1122,8 @@ static void RemoveDir(const char *path)
 static void DeleteDatabase()
 {
     RemoveDir(TEST_GROUP_DATA_PATH);
-    RemoveDir(TEST_HKS_DATA_PATH);
+    RemoveDir(TEST_HKS_MAIN_DATA_PATH);
+    RemoveDir(TEST_HKS_BAK_DATA_PATH);
 }
 
 class DaAuthDeviceTest : public testing::Test {

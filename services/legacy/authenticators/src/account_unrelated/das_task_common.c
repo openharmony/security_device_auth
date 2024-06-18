@@ -227,6 +227,50 @@ ERR:
     return res;
 }
 
+static int32_t CombineKeyAliasForPseudonymPsk(const Uint8Buff *serviceType, const Uint8Buff *peerAuthId,
+    const Uint8Buff *keyType, Uint8Buff *keyAliasHash)
+{
+    Uint8Buff keyAliasBuff = { NULL, 0 };
+    keyAliasBuff.length = serviceType->length + peerAuthId->length + keyType->length;
+    keyAliasBuff.val = (uint8_t *)HcMalloc(keyAliasBuff.length, 0);
+    if (keyAliasBuff.val == NULL) {
+        LOGE("Malloc mem failed.");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+
+    uint32_t totalLen = keyAliasBuff.length;
+    uint32_t usedLen = 0;
+    int32_t res = HC_SUCCESS;
+    do {
+        if (memcpy_s(keyAliasBuff.val, totalLen, serviceType->val, serviceType->length) != EOK) {
+            LOGE("Copy serviceType failed.");
+            res = HC_ERR_MEMORY_COPY;
+            break;
+        }
+        usedLen = usedLen + serviceType->length;
+
+        if (memcpy_s(keyAliasBuff.val + usedLen, totalLen - usedLen, peerAuthId->val, peerAuthId->length) != EOK) {
+            LOGE("Copy peerAuthId failed.");
+            res = HC_ERR_MEMORY_COPY;
+            break;
+        }
+        usedLen = usedLen + peerAuthId->length;
+
+        if (memcpy_s(keyAliasBuff.val + usedLen, totalLen - usedLen, keyType->val, keyType->length) != EOK) {
+            LOGE("Copy keyType failed.");
+            res = HC_ERR_MEMORY_COPY;
+            break;
+        }
+
+        res = GetLoaderInstance()->sha256(&keyAliasBuff, keyAliasHash);
+        if (res != HC_SUCCESS) {
+            LOGE("Sha256 failed.");
+        }
+    } while (0);
+    HcFree(keyAliasBuff.val);
+    return res;
+}
+
 static int32_t CombineKeyAliasForIso(const Uint8Buff *serviceId, const Uint8Buff *keyType,
     const Uint8Buff *authId, Uint8Buff *outKeyAlias)
 {
@@ -326,6 +370,74 @@ int32_t GenerateKeyAlias(const Uint8Buff *pkgName, const Uint8Buff *serviceType,
 ERR:
     HcFree(serviceId.val);
     return res;
+}
+
+static int32_t CheckGeneratePskParams(const Uint8Buff *serviceType, const Uint8Buff *peerAuthId,
+    const Uint8Buff *outKeyAlias)
+{
+    CHECK_PTR_RETURN_ERROR_CODE(serviceType, "serviceType");
+    CHECK_PTR_RETURN_ERROR_CODE(serviceType->val, "serviceType->val");
+    CHECK_PTR_RETURN_ERROR_CODE(peerAuthId, "peerAuthId");
+    CHECK_PTR_RETURN_ERROR_CODE(peerAuthId->val, "peerAuthId->val");
+    CHECK_PTR_RETURN_ERROR_CODE(outKeyAlias, "outKeyAlias");
+    CHECK_PTR_RETURN_ERROR_CODE(outKeyAlias->val, "outKeyAlias->val");
+    if (serviceType->length == 0 || peerAuthId->length == 0 || outKeyAlias->length == 0) {
+        LOGE("Invalid param len!");
+        return HC_ERR_INVALID_LEN;
+    }
+    if (serviceType->length > SERVICE_TYPE_MAX_LEN || peerAuthId->length > AUTH_ID_MAX_LEN) {
+        LOGE("Param len exceed the limit!");
+        return HC_ERR_INVALID_LEN;
+    }
+    if (outKeyAlias->length != SHA256_LEN * BYTE_TO_HEX_OPER_LENGTH) {
+        LOGE("Invalid out key len!");
+        return HC_ERR_INVALID_LEN;
+    }
+    return HC_SUCCESS;
+}
+
+int32_t GeneratePseudonymPskAlias(const Uint8Buff *serviceType, const Uint8Buff *peerAuthId, Uint8Buff *outKeyAlias)
+{
+    int32_t res = CheckGeneratePskParams(serviceType, peerAuthId, outKeyAlias);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+
+    Uint8Buff keyAliasHash = { NULL, SHA256_LEN };
+    keyAliasHash.val = (uint8_t *)HcMalloc(keyAliasHash.length, 0);
+    if (keyAliasHash.val == NULL) {
+        LOGE("Malloc keyAliasHash failed");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    Uint8Buff keyTypeBuff = { GetKeyTypePair(KEY_ALIAS_AUTH_TOKEN), KEY_TYPE_PAIR_LEN };
+    res = CombineKeyAliasForPseudonymPsk(serviceType, peerAuthId, &keyTypeBuff, &keyAliasHash);
+    if (res != HC_SUCCESS) {
+        LOGE("CombineKeyAlias for pseudonym psk failed!");
+        HcFree(keyAliasHash.val);
+        return res;
+    }
+    uint32_t outKeyAliasHexLen = keyAliasHash.length * BYTE_TO_HEX_OPER_LENGTH + 1;
+    char *outKeyAliasHex = (char *)HcMalloc(outKeyAliasHexLen, 0);
+    if (outKeyAliasHex == NULL) {
+        LOGE("Failed to alloc memory for outKeyAliasHex!");
+        HcFree(keyAliasHash.val);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    res = ByteToHexString(keyAliasHash.val, keyAliasHash.length, outKeyAliasHex, outKeyAliasHexLen);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to convert key alias hash to byte string!");
+        HcFree(keyAliasHash.val);
+        HcFree(outKeyAliasHex);
+        return res;
+    }
+    HcFree(keyAliasHash.val);
+    if (memcpy_s(outKeyAlias->val, outKeyAlias->length, outKeyAliasHex, strlen(outKeyAliasHex)) != EOK) {
+        LOGE("Failed to copy out key alias!");
+        HcFree(outKeyAliasHex);
+        return HC_ERR_MEMORY_COPY;
+    }
+    HcFree(outKeyAliasHex);
+    return HC_SUCCESS;
 }
 
 int32_t GetIdPeer(const CJson *in, const char *peerIdKey, const Uint8Buff *authIdSelf, Uint8Buff *authIdPeer)

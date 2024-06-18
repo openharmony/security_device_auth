@@ -40,6 +40,7 @@
 #include "pseudonym_manager.h"
 #include "pub_key_exchange.h"
 #include "save_trusted_info.h"
+#include "group_auth_data_operation.h"
 
 #define FIELD_DATA "data"
 #define FIELD_VR "vr"
@@ -83,6 +84,44 @@ typedef struct {
 
 typedef bool (*CmdInterceptor)(SessionImpl *impl, CmdProcessor processor);
 
+static int32_t GetSelfUpgradeFlag(const CJson *context, const char *groupId, bool *isSelfFromUpgrade)
+{
+    int32_t operationCode;
+    if (GetIntFromJson(context, FIELD_OPERATION_CODE, &operationCode) != HC_SUCCESS) {
+        LOGE("Failed to get operation code!");
+        return HC_ERR_JSON_GET;
+    }
+    bool isClient = true;
+    if (GetBoolFromJson(context, FIELD_IS_CLIENT, &isClient) != HC_SUCCESS) {
+        LOGE("Failed to get isClient!");
+        return HC_ERR_JSON_GET;
+    }
+    bool isNeeded = (operationCode == MEMBER_INVITE && isClient) || (operationCode == MEMBER_JOIN && !isClient);
+    if (!isNeeded) {
+        LOGI("No need to get self upgrade flag.");
+        return HC_SUCCESS;
+    }
+    int32_t osAccountId;
+    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
+    TrustedDeviceEntry *selfDeviceEntry = CreateDeviceEntry();
+    if (selfDeviceEntry == NULL) {
+        LOGE("Failed to create self device entry!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    int32_t res = GaGetLocalDeviceInfo(osAccountId, groupId, selfDeviceEntry);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get self device entry!");
+        DestroyDeviceEntry(selfDeviceEntry);
+        return res;
+    }
+    *isSelfFromUpgrade = selfDeviceEntry->upgradeFlag == 1;
+    DestroyDeviceEntry(selfDeviceEntry);
+    return HC_SUCCESS;
+}
+
 static int32_t CmdExchangePkGenerator(SessionImpl *impl)
 {
     int32_t userType;
@@ -101,7 +140,13 @@ static int32_t CmdExchangePkGenerator(SessionImpl *impl)
         return HC_ERR_JSON_GET;
     }
     Uint8Buff authIdBuf = { (uint8_t *)authId, HcStrlen(authId) };
-    PubKeyExchangeParams params = { userType, GROUP_MANAGER_PACKAGE_NAME, groupId, authIdBuf };
+    bool isSelfFromUpgrade = false;
+    int32_t res = GetSelfUpgradeFlag(impl->context, groupId, &isSelfFromUpgrade);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get self upgrade flag!");
+        return res;
+    }
+    PubKeyExchangeParams params = { userType, GROUP_MANAGER_PACKAGE_NAME, groupId, authIdBuf, isSelfFromUpgrade };
     return impl->expandSubSession->addCmd(impl->expandSubSession, PUB_KEY_EXCHANGE_CMD_TYPE, (void *)&params,
         (!impl->isClient), ABORT_IF_ERROR);
 }

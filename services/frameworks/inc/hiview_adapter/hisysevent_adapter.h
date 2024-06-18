@@ -25,6 +25,7 @@
 #define AUTH_DEV_EVENT "AuthDevice"
 #define ADD_MEMBER_WITH_LITE_COMPATIBILITY "AddMemberWithLiteCompatibility"
 #define ADD_MEMBER_WITH_LITE_STANDARD "AddMemberWithLiteStandard"
+#define UPGRADE_DATA_EVENT "UpgradeData"
 
 #ifndef DEV_AUTH_HIVIEW_ENABLE
 

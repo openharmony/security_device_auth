@@ -47,8 +47,8 @@ static Uint8Buff g_authIdS = { (uint8_t *)AUTH_ID_S_VAL, 64 };
 
 static AuthCodeImportParams g_paramsC = { 0, GROUP_OWNER, GROUP_ID, g_authIdC,  };
 static AuthCodeImportParams g_paramsS = { 0, GROUP_OWNER, GROUP_ID, g_authIdS };
-static PubKeyExchangeParams g_25519ParamsC = { 0, GROUP_OWNER, GROUP_ID, g_authIdC };
-static PubKeyExchangeParams g_25519ParamsS = { 0, GROUP_OWNER, GROUP_ID, g_authIdS };
+static PubKeyExchangeParams g_25519ParamsC = { 0, GROUP_OWNER, GROUP_ID, g_authIdC, false };
+static PubKeyExchangeParams g_25519ParamsS = { 0, GROUP_OWNER, GROUP_ID, g_authIdS, false };
 
 static uint8_t g_nonceVal[NONCE_LEN] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 static Uint8Buff g_nonce = { g_nonceVal, NONCE_LEN };

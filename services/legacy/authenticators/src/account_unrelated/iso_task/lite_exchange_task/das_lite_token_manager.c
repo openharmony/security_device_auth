@@ -47,7 +47,6 @@ static int32_t UnregisterLocalIdentity(const char *pkgName, const char *serviceT
 
 static int32_t DeletePeerAuthInfo(const char *pkgName, const char *serviceType, Uint8Buff *authIdPeer, int userTypePeer)
 {
-    (void)userTypePeer;
     const AlgLoader *loader = GetLoaderInstance();
     Uint8Buff pkgNameBuff = { (uint8_t *)pkgName, HcStrlen(pkgName)};
     Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, HcStrlen(serviceType) };
@@ -67,6 +66,29 @@ static int32_t DeletePeerAuthInfo(const char *pkgName, const char *serviceType, 
         return res;
     }
     LOGI("AuthCode deleted successfully!");
+
+    // try to delete upgrade auth token if exist.
+    uint8_t isoUpgradeKeyAliasVal[ISO_UPGRADE_KEY_ALIAS_LEN] = { 0 };
+    Uint8Buff isoUpgradeKeyAliasBuff = { isoUpgradeKeyAliasVal, ISO_UPGRADE_KEY_ALIAS_LEN };
+    res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, userTypePeer, authIdPeer, &isoUpgradeKeyAliasBuff);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to generate upgrade auth token alias!");
+        return res;
+    }
+    res = ToLowerCase(&isoUpgradeKeyAliasBuff);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to convert peer key alias to lower case!");
+        return res;
+    }
+    LOGI("Upgrade auth code alias(HEX): %x%x%x%x****.", isoUpgradeKeyAliasVal[DEV_AUTH_ZERO],
+        isoUpgradeKeyAliasVal[DEV_AUTH_ONE], isoUpgradeKeyAliasVal[DEV_AUTH_TWO],
+        isoUpgradeKeyAliasVal[DEV_AUTH_THREE]);
+    res = loader->deleteKey(&isoUpgradeKeyAliasBuff);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to delete upgrade auth token!");
+        return res;
+    }
+    LOGI("Upgrade auth code deleted successfully!");
 
     return HC_SUCCESS;
 }

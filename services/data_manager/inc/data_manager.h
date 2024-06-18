@@ -37,6 +37,7 @@ typedef struct {
     HcString sharedUserId; /* the shared user account id */
     StringVector managers; /* group manager vector, group manager can add and delete members, index 0 is the owner */
     StringVector friends; /* group friend vector, group friend can query group information */
+    uint8_t upgradeFlag;
 } TrustedGroupEntry;
 DECLARE_HC_VECTOR(GroupEntryVec, TrustedGroupEntry*)
 
@@ -52,6 +53,7 @@ typedef struct {
     uint8_t devType; /* 0 - accessory, 1 - controller, 2 - proxy */
     uint8_t source; /* the tursted relationship source. 0: self-created, 1: imported from the cloud */
     uint64_t lastTm; /* accessed time of the device of the auth information, absolute time */
+    uint8_t upgradeFlag;
 } TrustedDeviceEntry;
 DECLARE_HC_VECTOR(DeviceEntryVec, TrustedDeviceEntry*)
 
@@ -79,6 +81,7 @@ extern "C" {
 int32_t InitDatabase(void);
 void DestroyDatabase(void);
 
+void ReloadOsAccountDb(int32_t osAccountId);
 int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry);
 int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params);
 int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEntry);
