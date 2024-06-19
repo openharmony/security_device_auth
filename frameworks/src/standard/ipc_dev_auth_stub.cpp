@@ -25,10 +25,13 @@
 #include "system_ability_definition.h"
 #include "hc_string_vector.h"
 #include "hidump_adapter.h"
-#include "hisysevent_adapter.h"
 #include "string_ex.h"
+
+#ifdef DEV_AUTH_SERVICE_BUILD
 #include "account_auth_plugin_proxy.h"
 #include "data_manager.h"
+#include "hisysevent_adapter.h"
+#endif
 
 using namespace std;
 namespace OHOS {
@@ -41,7 +44,10 @@ struct CbStubInfo {
 static struct CbStubInfo g_cbStub[MAX_CBSTUB_SIZE];
 static bool g_cbStubInited = false;
 static const uint32_t RESTORE_CODE = 14701;
+
+#ifdef DEV_AUTH_SERVICE_BUILD
 static const uint32_t DEFAULT_UPGRADE_OS_ACCOUNT_ID = 100;
+#endif
 
 ServiceDevAuth::ServiceDevAuth(bool serialInvokeFlag) : IRemoteStub(serialInvokeFlag)
 {}
@@ -191,6 +197,7 @@ static void InitCbStubTable()
 
 static int32_t HandleRestoreCall(MessageParcel &data, MessageParcel &reply)
 {
+#ifdef DEV_AUTH_SERVICE_BUILD
     int32_t osAccountId = DEFAULT_UPGRADE_OS_ACCOUNT_ID;
     data.ReadInt32(osAccountId);
     LOGI("Begin to upgrade data for osAccountId: %d.", osAccountId);
@@ -201,6 +208,10 @@ static int32_t HandleRestoreCall(MessageParcel &data, MessageParcel &reply)
         DEV_AUTH_REPORT_FAULT_EVENT(UPGRADE_DATA_EVENT, res, 0, 0, nullptr);
     }
     reply.WriteInt32(res);
+#else
+    (void)data;
+    (void)reply;
+#endif
     return 0;
 }
 
