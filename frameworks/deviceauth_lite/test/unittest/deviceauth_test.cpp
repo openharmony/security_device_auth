@@ -1731,6 +1731,7 @@ static HWTEST_F(RegisteLogTest, RegisteLogTest001, TestSize.Level2)
         TestLogd
     };
     registe_log(&logFunc);
+    ASSERT_TRUE(get_logd() != nullptr);
 }
 
 static HWTEST_F(RegisteLogTest, RegisteLogTest002, TestSize.Level2)
@@ -1742,6 +1743,7 @@ static HWTEST_F(RegisteLogTest, RegisteLogTest002, TestSize.Level2)
         TestLogd
     };
     registe_log(&logFunc);
+    ASSERT_TRUE(get_logd() != nullptr);
 }
 
 static HWTEST_F(RegisteLogTest, RegisteLogTest003, TestSize.Level2)
@@ -1753,6 +1755,7 @@ static HWTEST_F(RegisteLogTest, RegisteLogTest003, TestSize.Level2)
         TestLogd
     };
     registe_log(&logFunc);
+    ASSERT_TRUE(get_logi() != nullptr);
 }
 
 static HWTEST_F(RegisteLogTest, RegisteLogTest004, TestSize.Level2)
@@ -1764,6 +1767,7 @@ static HWTEST_F(RegisteLogTest, RegisteLogTest004, TestSize.Level2)
         TestLogd
     };
     registe_log(&logFunc);
+    ASSERT_TRUE(get_logw() != nullptr);
 }
 
 static HWTEST_F(RegisteLogTest, RegisteLogTest005, TestSize.Level2)
@@ -1775,6 +1779,7 @@ static HWTEST_F(RegisteLogTest, RegisteLogTest005, TestSize.Level2)
         nullptr
     };
     registe_log(&logFunc);
+    ASSERT_TRUE(get_loge() != nullptr);
 }
 
 /*--------------------------get_json_test------------------------*/
