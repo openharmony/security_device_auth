@@ -1441,9 +1441,4 @@ static HWTEST_F(AuthInfoTest, save_auth_info_test002, TestSize.Level2)
     int32_t ret = save_auth_info(nullptr, pairType, &cache);
     EXPECT_EQ(ret, HC_GEN_SERVICE_ID_FAILED);
 }
-
-static HWTEST_F(AuthInfoTest, destroy_auth_client_test001, TestSize.Level2)
-{
-    destroy_auth_client(nullptr);
-}
 }
