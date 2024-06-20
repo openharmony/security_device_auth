@@ -77,7 +77,7 @@ typedef struct {
 } SessionStateNode;
 
 typedef struct {
-    int32_t id;
+    uint32_t id;
     int32_t strategy;
     int32_t (*cmdGenerator)(SessionImpl *impl);
 } CmdProcessor;
@@ -432,7 +432,7 @@ static int32_t AddTodoCmdsToAbility(SessionImpl *impl, ProtocolEntity *entity, C
         return HC_ERR_ALLOC_MEMORY;
     }
     for (uint32_t i = 0; i < sizeof(CMDS_LIB) / sizeof(CMDS_LIB[0]); i++) {
-        if (((entity->expandProcessCmds & (uint32_t)CMDS_LIB[i].id) == 0) || (IsCmdIntercepted(impl, CMDS_LIB[i]))) {
+        if (((entity->expandProcessCmds & CMDS_LIB[i].id) == 0) || (IsCmdIntercepted(impl, CMDS_LIB[i]))) {
             continue;
         }
         int32_t res = AddCmdInfoToJsonArray(&CMDS_LIB[i], todoCmds, true);
@@ -1584,15 +1584,15 @@ static int32_t SelfCmdsNegotiate(SessionImpl *impl, const CJson *supportCmds, co
 {
     uint32_t selfCmds = 0;
     for (uint32_t i = 0; i < sizeof(CMDS_LIB) / sizeof(CMDS_LIB[0]); i++) {
-        if (!IsCmdSupport(CMDS_LIB[i].id) || ((selfProtocolEntity->expandProcessCmds & (uint32_t)CMDS_LIB[i].id) == 0)) {
+        if (!IsCmdSupport(CMDS_LIB[i].id) || ((selfProtocolEntity->expandProcessCmds & CMDS_LIB[i].id) == 0)) {
             continue;
         }
         if (IsPeerSupportCmd(CMDS_LIB[i].id, supportCmds)) {
-            selfCmds |= (uint32_t)CMDS_LIB[i].id;
+            selfCmds |= CMDS_LIB[i].id;
             continue;
         }
         if (CMDS_LIB[i].strategy == ABORT_IF_ERROR) {
-            LOGW("The peer device does not support this cmd and it is not optional. [Cmd]: %d", CMDS_LIB[i].id);
+            LOGW("The peer device does not support this cmd and it is not optional. [Cmd]: %u", CMDS_LIB[i].id);
             return HC_ERR_NOT_SUPPORT;
         }
     }
@@ -1822,7 +1822,7 @@ static int32_t AddAllCmds(SessionImpl *impl)
 {
     uint32_t cmds = impl->protocolEntity.expandProcessCmds;
     for (uint32_t i = 0; i < sizeof(CMDS_LIB) / sizeof(CMDS_LIB[0]); i++) {
-        if (((uint32_t)CMDS_LIB[i].id & cmds) != 0) {
+        if ((CMDS_LIB[i].id & cmds) != 0) {
             int32_t res = CMDS_LIB[i].cmdGenerator(impl);
             if (res != HC_SUCCESS) {
                 LOGE("add cmd fail. [CmdId]: %u", CMDS_LIB[i].id);
