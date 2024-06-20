@@ -432,7 +432,7 @@ static int32_t AddTodoCmdsToAbility(SessionImpl *impl, ProtocolEntity *entity, C
         return HC_ERR_ALLOC_MEMORY;
     }
     for (uint32_t i = 0; i < sizeof(CMDS_LIB) / sizeof(CMDS_LIB[0]); i++) {
-        if (((entity->expandProcessCmds & CMDS_LIB[i].id) == 0) || (IsCmdIntercepted(impl, CMDS_LIB[i]))) {
+        if (((entity->expandProcessCmds & (uint32_t)CMDS_LIB[i].id) == 0) || (IsCmdIntercepted(impl, CMDS_LIB[i]))) {
             continue;
         }
         int32_t res = AddCmdInfoToJsonArray(&CMDS_LIB[i], todoCmds, true);
@@ -1513,8 +1513,8 @@ static int32_t SyncCredState(SessionImpl *impl, const CJson *inputData)
         LOGE("get credNum from inputData fail.");
         return HC_ERR_JSON_GET;
     }
-    impl->credCurIndex = credIndex;
-    impl->credTotalNum = credNum;
+    impl->credCurIndex = (uint32_t)credIndex;
+    impl->credTotalNum = (uint32_t)credNum;
     return HC_SUCCESS;
 }
 
@@ -1561,8 +1561,8 @@ static int32_t AddHandshakeRspMsg(SessionImpl *impl, IdentityInfo *selfCred, CJs
 
 static bool IsPeerSupportCmd(int32_t cmdId, const CJson *supportCmds)
 {
-    uint32_t supportCmdsNum = GetItemNum(supportCmds);
-    for (uint32_t i = 0; i < supportCmdsNum; i++) {
+    int32_t supportCmdsNum = GetItemNum(supportCmds);
+    for (int32_t i = 0; i < supportCmdsNum; i++) {
         CJson *cmd = GetItemFromArray(supportCmds, i);
         if (cmd == NULL) {
             LOGE("get cmd from supportCmds fail.");
@@ -1584,11 +1584,11 @@ static int32_t SelfCmdsNegotiate(SessionImpl *impl, const CJson *supportCmds, co
 {
     uint32_t selfCmds = 0;
     for (uint32_t i = 0; i < sizeof(CMDS_LIB) / sizeof(CMDS_LIB[0]); i++) {
-        if (!IsCmdSupport(CMDS_LIB[i].id) || ((selfProtocolEntity->expandProcessCmds & CMDS_LIB[i].id) == 0)) {
+        if (!IsCmdSupport(CMDS_LIB[i].id) || ((selfProtocolEntity->expandProcessCmds & (uint32_t)CMDS_LIB[i].id) == 0)) {
             continue;
         }
         if (IsPeerSupportCmd(CMDS_LIB[i].id, supportCmds)) {
-            selfCmds |= CMDS_LIB[i].id;
+            selfCmds |= (uint32_t)CMDS_LIB[i].id;
             continue;
         }
         if (CMDS_LIB[i].strategy == ABORT_IF_ERROR) {
@@ -1609,8 +1609,8 @@ static int32_t PeerCmdsNegotiate(SessionImpl *impl, const CJson *credAbility)
         return HC_ERR_JSON_GET;
     }
     uint32_t peerCmds = 0;
-    uint32_t todoCmdsNum = GetItemNum(todoCmds);
-    for (uint32_t i = 0; i < todoCmdsNum; i++) {
+    int32_t todoCmdsNum = GetItemNum(todoCmds);
+    for (int32_t i = 0; i < todoCmdsNum; i++) {
         CJson *cmd = GetItemFromArray(todoCmds, i);
         if (cmd == NULL) {
             LOGE("get cmd from todoCmds fail.");
@@ -1643,8 +1643,8 @@ static int32_t PeerCmdsNegotiate(SessionImpl *impl, const CJson *credAbility)
 static int32_t ProtocolEntityNegotiate(SessionImpl *impl, const CJson *abilityArray, const CJson *supportCmds,
     ProtocolEntity *selfProtocolEntity)
 {
-    uint32_t abilityNum = GetItemNum(abilityArray);
-    for (uint32_t i = 0; i < abilityNum; i++) {
+    int32_t abilityNum = GetItemNum(abilityArray);
+    for (int32_t i = 0; i < abilityNum; i++) {
         CJson *credAbility = GetItemFromArray(abilityArray, i);
         if (credAbility == NULL) {
             LOGE("get cred ability from abilityArray fail.");
@@ -1822,7 +1822,7 @@ static int32_t AddAllCmds(SessionImpl *impl)
 {
     uint32_t cmds = impl->protocolEntity.expandProcessCmds;
     for (uint32_t i = 0; i < sizeof(CMDS_LIB) / sizeof(CMDS_LIB[0]); i++) {
-        if ((CMDS_LIB[i].id & cmds) != 0) {
+        if (((uint32_t)CMDS_LIB[i].id & cmds) != 0) {
             int32_t res = CMDS_LIB[i].cmdGenerator(impl);
             if (res != HC_SUCCESS) {
                 LOGE("add cmd fail. [CmdId]: %u", CMDS_LIB[i].id);

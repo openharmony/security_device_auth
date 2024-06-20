@@ -207,7 +207,7 @@ static int32_t IsoCombineHkdfSalt(IsoParams *params, Uint8Buff *hkdfSaltBuf, boo
 
 static int32_t IsoGenSessionKey(IsoProtocol *impl, bool isClient)
 {
-    int32_t hkdfSaltLen = impl->params.randPeer.length + impl->params.randSelf.length;
+    uint32_t hkdfSaltLen = impl->params.randPeer.length + impl->params.randSelf.length;
     uint8_t *hkdfSalt = (uint8_t *)HcMalloc(hkdfSaltLen, 0);
     if (hkdfSalt == NULL) {
         LOGE("Malloc for hkdfSalt failed.");

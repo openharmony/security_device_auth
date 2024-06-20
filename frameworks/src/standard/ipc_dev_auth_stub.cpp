@@ -68,9 +68,9 @@ int32_t ServiceDevAuth::Dump(int32_t fd, const std::vector<std::u16string>& args
     for (auto arg : args) {
         strArgs.emplace_back(Str16ToStr8(arg));
     }
-    int argc = strArgs.size();
+    uint32_t argc = strArgs.size();
     StringVector strArgVec = CreateStrVector();
-    for (int i = 0; i < argc; i++) {
+    for (uint32_t i = 0; i < argc; i++) {
         HcString strArg = CreateString();
         if (!StringSetPointer(&strArg, strArgs[i].c_str())) {
             LOGE("Failed to set strArg!");
