@@ -412,6 +412,10 @@ static int32_t DeleteGroup(int32_t osAccountId, CJson *jsonParams, char **return
         return result;
     }
     BaseGroup *instance = GetGroupInstance(groupType);
+    if (instance == NULL) {
+        LOGE("The group instance is NULL or its function ptr is NULL!");
+        return HC_ERR_NULL_PTR;
+    }
     return instance->deleteGroup(osAccountId, jsonParams, returnJsonStr);
 }
 

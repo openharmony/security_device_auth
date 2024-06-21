@@ -87,11 +87,17 @@ int32_t ToLowerCase(Uint8Buff *buff)
     if (buffStr == NULL) {
         return CLIB_ERR_BAD_ALLOC;
     }
-    (void)memcpy_s(buffStr, buffLen + 1, buff->val, buffLen);
+    if(memcpy_s(buffStr, buffLen + 1, buff->val, buffLen) != EOK) {
+        HcFree(buffStr);
+        return CLIB_FAILED;
+    }
     for (uint32_t i = 0; i < buffLen; i++) {
         buffStr[i] = tolower(buffStr[i]);
     }
-    (void)memcpy_s(buff->val, buffLen, buffStr, buffLen);
+    if(memcpy_s(buff->val, buffLen, buffStr, buffLen) != EOK) {
+        HcFree(buffStr);
+        return CLIB_FAILED;
+    }
     HcFree(buffStr);
     return CLIB_SUCCESS;
 }

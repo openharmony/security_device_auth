@@ -125,6 +125,11 @@ static int32_t CombineKeyAliasForPake(
     }
     uint32_t outKeyAliasHexLen = keyAliasHash.length * BYTE_TO_HEX_OPER_LENGTH + 1;
     outKeyAliasHex = (char *)HcMalloc(outKeyAliasHexLen, 0);
+    if (outKeyAliasHex == NULL) {
+        LOGE("Malloc outKeyAliasHex failed");
+        res = HC_ERR_ALLOC_MEMORY;
+        goto ERR;
+    }
     res = ByteToHexString(keyAliasHash.val, keyAliasHash.length, outKeyAliasHex, outKeyAliasHexLen);
     if (res != HC_SUCCESS) {
         LOGE("ByteToHexString failed");

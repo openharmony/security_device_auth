@@ -1277,6 +1277,7 @@ static int32_t inner_get_lt_info_by_key_alias(struct HksBlob *key_alias,
     int32_t status = GenerateStorageLevelParamSet(&paramSet);
     if (status != ERROR_CODE_SUCCESS) {
         LOGE("generate storage level param set failed, status = %d", status);
+        safe_free(output_param_set);
         return status;
     }
     status = HksGetKeyParamSet(key_alias, paramSet, output_param_set);

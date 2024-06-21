@@ -23,7 +23,7 @@ static int32_t RegisterLocalIdentity(const char *pkgName, const char *serviceTyp
     const AlgLoader *loader = GetLoaderInstance();
     Uint8Buff pkgNameBuff = { (uint8_t *)pkgName, strlen(pkgName)};
     Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, strlen(serviceType) };
-    KeyAliasType keyType = userType;
+    KeyAliasType keyType = (KeyAliasType)userType;
     uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAliasBuff = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
     int32_t res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, keyType, authId, &keyAliasBuff);
@@ -54,7 +54,7 @@ static int32_t UnregisterLocalIdentity(const char *pkgName, const char *serviceT
     const AlgLoader *loader = GetLoaderInstance();
     Uint8Buff pkgNameBuff = { (uint8_t *)pkgName, strlen(pkgName)};
     Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, strlen(serviceType) };
-    KeyAliasType keyType = userType;
+    KeyAliasType keyType = (KeyAliasType)userType;
     uint8_t pakeKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff pakeKeyAliasBuff = { pakeKeyAliasVal, PAKE_KEY_ALIAS_LEN };
     int32_t res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, keyType, authId, &pakeKeyAliasBuff);
@@ -202,7 +202,7 @@ static int32_t DeletePeerAuthInfo(const char *pkgName, const char *serviceType, 
 
 static int32_t GenerateSelfKeyAlias(const PakeParams *params, Uint8Buff *selfKeyAlias)
 {
-    KeyAliasType keyType = params->userType;
+    KeyAliasType keyType = (KeyAliasType)params->userType;
     // if self data is from upgrade, key type should be key-pair.
     if (params->isSelfFromUpgrade) {
         keyType = KEY_ALIAS_LT_KEY_PAIR;
@@ -319,7 +319,7 @@ static int32_t GetPublicKey(const char *pkgName, const char *serviceType, Uint8B
     const AlgLoader *loader = GetLoaderInstance();
     Uint8Buff pkgNameBuff = { (uint8_t *)pkgName, strlen(pkgName) };
     Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, strlen(serviceType) };
-    KeyAliasType keyType = userType;
+    KeyAliasType keyType = (KeyAliasType)userType;
     uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAliasBuff = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
     int32_t res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, keyType, authId, &keyAliasBuff);

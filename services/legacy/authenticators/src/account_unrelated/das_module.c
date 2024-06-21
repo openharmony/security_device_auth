@@ -56,7 +56,7 @@ static bool IsDasMsgNeedIgnore(const CJson *in)
         LOGD("There is no message code."); // There is no message code in the client's createTask request params
         return false;
     }
-    if ((message & DAS_CLIENT_STEP_MASK) == DAS_CLIENT_FIRST_MESSAGE) {
+    if (((uint32_t)message & DAS_CLIENT_STEP_MASK) == DAS_CLIENT_FIRST_MESSAGE) {
         return false;
     }
 

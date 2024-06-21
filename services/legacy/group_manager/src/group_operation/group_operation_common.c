@@ -49,13 +49,13 @@ static bool IsGroupFriend(const char *appId, const TrustedGroupEntry *entry)
     return false;
 }
 
-static int32_t GetGroupNumByOwner(int32_t osAccountId, const char *ownerName)
+static uint32_t GetGroupNumByOwner(int32_t osAccountId, const char *ownerName)
 {
     if (ownerName == NULL) {
         LOGE("The input ownerName is NULL!");
         return 0;
     }
-    int count = 0;
+    uint32_t count = 0;
     QueryGroupParams queryParams = InitQueryGroupParams();
     queryParams.ownerName = ownerName;
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
@@ -513,13 +513,13 @@ int32_t GetHashMessage(const Uint8Buff *first, const Uint8Buff *second, uint8_t 
     return HC_SUCCESS;
 }
 
-int32_t GetCurDeviceNumByGroupId(int32_t osAccountId, const char *groupId)
+uint32_t GetCurDeviceNumByGroupId(int32_t osAccountId, const char *groupId)
 {
     if (groupId == NULL) {
         LOGE("The input groupId is NULL!");
         return 0;
     }
-    int count = 0;
+    uint32_t count = 0;
     QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
     queryDeviceParams.groupId = groupId;
     DeviceEntryVec deviceEntryVec = CreateDeviceEntryVec();

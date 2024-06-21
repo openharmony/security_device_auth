@@ -321,7 +321,7 @@ static bool GenerateGroupEntryFromTlv(TlvGroupElement *group, TrustedGroupEntry 
         LOGE("[DB]: Failed to load friends from tlv!");
         return false;
     }
-    entry->type = group->type.data;
+    entry->type = (int32_t)group->type.data;
     entry->visibility = group->visibility.data;
     entry->upgradeFlag = group->upgradeFlag.data;
     entry->expireTime = group->expireTime.data;
@@ -704,7 +704,7 @@ static bool SetGroupElement(TlvGroupElement *element, TrustedGroupEntry *entry)
         LOGE("[DB]: Failed to copy sharedUserId!");
         return false;
     }
-    element->type.data = entry->type;
+    element->type.data = (uint32_t)entry->type;
     element->visibility.data = entry->visibility;
     element->upgradeFlag.data = entry->upgradeFlag;
     element->expireTime.data = entry->expireTime;

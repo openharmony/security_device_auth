@@ -192,7 +192,7 @@ int32_t ParseAndSkipTlvUnknownNode(HcParcel *parcel)
 
 int32_t ParseTlvStruct(TlvBase *tlv, HcParcel *parcel, HcBool strict)
 {
-    uint32_t childTotalLength = 0;
+    int32_t childTotalLength = 0;
     do {
         uint16_t tag = 0;
         if (!ParcelReadWithoutPopData(parcel, &tag, sizeof(tag))) {
@@ -264,7 +264,7 @@ int32_t GetLenTlvStruct(TlvBase *tlv)
     unsigned int index;
     unsigned int memberCount = *(unsigned int *)((char *)tlv + offsetof(TlvOffsetExample, offsetCount));
     unsigned int *offset = (unsigned int *)((char *)tlv + offsetof(TlvOffsetExample, offset));
-    uint32_t childTotalLength = 0;
+    int32_t childTotalLength = 0;
 
     for (index = 0; index < memberCount; ++index) {
         TlvBase *tlvChild = (TlvBase *)(((char *)tlv) + offset[index]);

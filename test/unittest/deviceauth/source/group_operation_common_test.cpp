@@ -219,7 +219,7 @@ HWTEST_F(GroupOperationTest, GroupOperationTest022, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest023, TestSize.Level0)
 {
-    int32_t num = GetCurDeviceNumByGroupId(DEFAULT_OS_ACCOUNT, nullptr);
+    uint32_t num = GetCurDeviceNumByGroupId(DEFAULT_OS_ACCOUNT, nullptr);
     ASSERT_EQ(num, 0);
 }
 
