@@ -132,7 +132,7 @@ static void WithObject(int32_t methodId, IpcIo *data, IpcDataInfo *ipcData, int3
     }
 }
 
-void InitCbStubTable()
+void InitCbStubTable(void)
 {
     (void)InitHcMutex(&g_cBMutex);
     (void)memset_s(g_cbStub, sizeof(g_cbStub), 0, sizeof(g_cbStub));

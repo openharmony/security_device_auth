@@ -250,13 +250,13 @@ static bool is_message_illegal(int32_t operation_code, int32_t modular)
 
 
 /* function macro which is not called in functions */
-#define CUT_EMPTY_FUNC(d_name, handle, nav, receive) \
+#define CUT_EMPTY_FUNC(d_name, handle, nav, receive, send) \
     { \
-        LOGE("Receive %s message, but do not support %s", d_name, d_name); \
-        (void)handle; \
-        (void)nav; \
-        (void)receive; \
-        send->msg_code = INVALID_MESSAGE; \
+        LOGE("Receive %s message, but do not support %s", (d_name), (d_name)); \
+        (void)(handle); \
+        (void)(nav); \
+        (void)(receive); \
+        (send)->msg_code = INVALID_MESSAGE; \
         return HC_UNSUPPORT; \
     }
 
@@ -282,7 +282,7 @@ static int32_t proc_pake_response_message(struct hichain *handle, struct header_
     return ret;
 }
 #else /* _CUT_XXX_ */
-CUT_EMPTY_FUNC("pake response", handle, nav, receive);
+CUT_EMPTY_FUNC("pake response", handle, nav, receive, send);
 #endif /* _CUT_XXX_ */
 
 
@@ -300,7 +300,7 @@ static int32_t proc_exchange_response_message(struct hichain *handle, struct hea
     return ret;
 }
 #else /* _CUT_XXX_ */
-CUT_EMPTY_FUNC("exchange response", handle, nav, receive);
+CUT_EMPTY_FUNC("exchange response", handle, nav, receive, send);
 #endif /* _CUT_XXX_ */
 
 
@@ -324,7 +324,7 @@ static int32_t proc_sts_response_message(struct hichain *handle, struct header_a
     return ret;
 }
 #else /* _CUT_XXX_ */
-CUT_EMPTY_FUNC("sts request", handle, nav, receive);
+CUT_EMPTY_FUNC("sts request", handle, nav, receive, send);
 #endif /* _CUT_XXX_ */
 
 
@@ -340,7 +340,7 @@ static int32_t proc_remove_request_message(struct hichain *handle, struct header
     return ret;
 }
 #else /* _CUT_XXX_ */
-CUT_EMPTY_FUNC("remove auth info request", handle, nav, receive);
+CUT_EMPTY_FUNC("remove auth info request", handle, nav, receive, send);
 #endif /* _CUT_XXX_ */
 
 static int32_t proc_remove_response_message(struct hichain *handle, struct header_analysis *nav,
@@ -359,7 +359,7 @@ static int32_t proc_remove_response_message(struct hichain *handle, struct heade
     return HC_OK;
 }
 #else /* _CUT_XXX_ */
-CUT_EMPTY_FUNC("remove auth info response", handle, nav, receive);
+CUT_EMPTY_FUNC("remove auth info response", handle, nav, receive, send);
 #endif /* _CUT_XXX_ */
 
 

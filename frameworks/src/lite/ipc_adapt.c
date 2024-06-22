@@ -1461,7 +1461,7 @@ int32_t IpcEncodeCallReply(uintptr_t replayCache, int32_t type, const uint8_t *r
 {
     int32_t ret = HC_SUCCESS;
     IpcIo *replyParcel = NULL;
-    unsigned long valZero = 0ul;
+    unsigned long valZero = 0uL;
 
     replyParcel = (IpcIo *)(replayCache);
     WriteInt32(replyParcel, type);

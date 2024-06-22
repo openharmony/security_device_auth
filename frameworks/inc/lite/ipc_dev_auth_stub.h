@@ -34,7 +34,7 @@ typedef struct {
 
 typedef LiteIpcCallService DevAuthService;
 
-void InitCbStubTable();
+void InitCbStubTable(void);
 void ResetCallMap(void);
 int32_t SetCallMap(IpcServiceCall method, int32_t methodId);
 int32_t SetRemoteObject(const SvcIdentity *object);
