@@ -274,6 +274,7 @@ static void ResetSessionState(SessionImpl *impl)
         impl->expandSubSession->destroy(impl->expandSubSession);
         impl->expandSubSession = NULL;
     }
+    impl->protocolEntity.expandProcessCmds = 0;
 }
 
 static int32_t RestartSession(SessionImpl *impl, JumpPolicy *policy)
