@@ -54,13 +54,12 @@ typedef struct {
     uint8_t source;
     int64_t userId;
     uint64_t lastTm;
-    uint8_t upgradeFlag;
 } DevAuthFixedLenInfo;
 DECLARE_TLV_FIX_LENGTH_TYPE(TlvDevAuthFixedLenInfo, DevAuthFixedLenInfo)
 DECLEAR_INIT_FUNC(TlvDevAuthFixedLenInfo)
 
 typedef struct {
-    DECLARE_TLV_STRUCT(7)
+    DECLARE_TLV_STRUCT(8)
     TlvString groupId;
     TlvString udid;
     TlvString authId;
@@ -68,6 +67,7 @@ typedef struct {
     TlvString serviceType;
     TlvBuffer ext;
     TlvDevAuthFixedLenInfo info;
+    TlvUint8 upgradeFlag;
 } TlvDeviceElement;
 DECLEAR_INIT_FUNC(TlvDeviceElement)
 DECLARE_TLV_VECTOR(TlvDeviceVec, TlvDeviceElement)
@@ -104,6 +104,7 @@ BEGIN_TLV_STRUCT_DEFINE(TlvDeviceElement, 0x0002)
     TLV_MEMBER(TlvString, serviceType, 0x4104)
     TLV_MEMBER(TlvBuffer, ext, 0x4105)
     TLV_MEMBER(TlvDevAuthFixedLenInfo, info, 0x4106)
+    TLV_MEMBER(TlvUint8, upgradeFlag, 0x4108)
 END_TLV_STRUCT_DEFINE()
 IMPLEMENT_TLV_VECTOR(TlvDeviceVec, TlvDeviceElement, 1)
 
@@ -357,7 +358,7 @@ static bool GenerateDeviceEntryFromTlv(TlvDeviceElement *device, TrustedDeviceEn
     }
     deviceEntry->credential = device->info.data.credential;
     deviceEntry->devType = device->info.data.devType;
-    deviceEntry->upgradeFlag = device->info.data.upgradeFlag;
+    deviceEntry->upgradeFlag = device->upgradeFlag.data;
     deviceEntry->source = device->info.data.source;
     deviceEntry->lastTm = device->info.data.lastTm;
     return true;
@@ -747,7 +748,7 @@ static bool SetDeviceElement(TlvDeviceElement *element, TrustedDeviceEntry *entr
     }
     element->info.data.credential = entry->credential;
     element->info.data.devType = entry->devType;
-    element->info.data.upgradeFlag = entry->upgradeFlag;
+    element->upgradeFlag.data = entry->upgradeFlag;
     element->info.data.source = entry->source;
     element->info.data.lastTm = entry->lastTm;
     return true;
