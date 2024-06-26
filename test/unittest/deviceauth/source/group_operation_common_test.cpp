@@ -370,7 +370,7 @@ HWTEST_F(GroupOperationTest, GroupOperationTest044, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest045, TestSize.Level0)
 {
-    int32_t groupType;
+    uint32_t groupType;
     int32_t ret = GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, nullptr, &groupType);
     ASSERT_NE(ret, HC_SUCCESS);
 }
@@ -383,7 +383,7 @@ HWTEST_F(GroupOperationTest, GroupOperationTest046, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest047, TestSize.Level0)
 {
-    int32_t groupType;
+    uint32_t groupType;
     int32_t ret = GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, NORMAL_STR, &groupType);
     ASSERT_NE(ret, HC_SUCCESS);
 }

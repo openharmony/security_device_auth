@@ -277,7 +277,7 @@ int32_t GetLenTlv##TlvVecName(TlvBase *tlv) \
     TlvVecName *realTlv = (TlvVecName *)(tlv); \
     uint32_t index = 0; \
     TlvElementName *element = NULL; \
-    int32_t totalLen = sizeof(uint32_t); \
+    int32_t totalLen = sizeof(int32_t); \
     FOR_EACH_HC_VECTOR(realTlv->data, index, element) { \
         if (element != NULL) { \
             totalLen += GetlenTlvNode((TlvBase *)element); \

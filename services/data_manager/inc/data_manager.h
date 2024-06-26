@@ -30,7 +30,7 @@
 typedef struct {
     HcString name; /* group name */
     HcString id; /* group id */
-    int32_t type; /* including identical account group(1), peer to peer group(256), across account group(1282) */
+    uint32_t type; /* including identical account group(1), peer to peer group(256), across account group(1282) */
     int32_t visibility; /* visibility of the group */
     int32_t expireTime; /* the time of group expired, unit day, user config */
     HcString userId; /* the user account id */
@@ -63,7 +63,7 @@ typedef struct {
     const char *ownerName;
     const char *userId;
     const char *sharedUserId;
-    int32_t groupType;
+    uint32_t groupType;
     int32_t groupVisibility;
 } QueryGroupParams;
 

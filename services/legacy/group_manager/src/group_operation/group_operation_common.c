@@ -1091,7 +1091,7 @@ int32_t ProcessKeyPair(int action, const CJson *jsonParams, const char *groupId)
     return result;
 }
 
-int32_t GetGroupTypeFromDb(int32_t osAccountId, const char *groupId, int32_t *returnGroupType)
+int32_t GetGroupTypeFromDb(int32_t osAccountId, const char *groupId, uint32_t *returnGroupType)
 {
     if ((groupId == NULL) || (returnGroupType == NULL)) {
         LOGE("The input parameters contains NULL value!");

@@ -321,7 +321,7 @@ static bool GenerateGroupEntryFromTlv(TlvGroupElement *group, TrustedGroupEntry 
         LOGE("[DB]: Failed to load friends from tlv!");
         return false;
     }
-    entry->type = (int32_t)group->type.data;
+    entry->type = group->type.data;
     entry->visibility = group->visibility.data;
     entry->upgradeFlag = group->upgradeFlag.data;
     entry->expireTime = group->expireTime.data;
@@ -704,7 +704,7 @@ static bool SetGroupElement(TlvGroupElement *element, TrustedGroupEntry *entry)
         LOGE("[DB]: Failed to copy sharedUserId!");
         return false;
     }
-    element->type.data = (uint32_t)entry->type;
+    element->type.data = entry->type;
     element->visibility.data = entry->visibility;
     element->upgradeFlag.data = entry->upgradeFlag;
     element->expireTime.data = entry->expireTime;
@@ -1135,7 +1135,7 @@ int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
         *oldEntryPtr = newEntry;
         PostGroupCreatedMsg(newEntry);
         g_databaseMutex->unlock(g_databaseMutex);
-        LOGI("[DB]: Replace an old group successfully! [GroupType]: %d", groupEntry->type);
+        LOGI("[DB]: Replace an old group successfully! [GroupType]: %u", groupEntry->type);
         return HC_SUCCESS;
     }
     if (info->groups.pushBackT(&info->groups, newEntry) == NULL) {
@@ -1146,7 +1146,7 @@ int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
     }
     PostGroupCreatedMsg(newEntry);
     g_databaseMutex->unlock(g_databaseMutex);
-    LOGI("[DB]: Add a group to database successfully! [GroupType]: %d", groupEntry->type);
+    LOGI("[DB]: Add a group to database successfully! [GroupType]: %u", groupEntry->type);
     return HC_SUCCESS;
 }
 
@@ -1217,7 +1217,7 @@ int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params)
         TrustedGroupEntry *popEntry;
         HC_VECTOR_POPELEMENT(&info->groups, &popEntry, index);
         PostGroupDeletedMsg(popEntry);
-        LOGI("[DB]: Delete a group from database successfully! [GroupType]: %d", popEntry->type);
+        LOGI("[DB]: Delete a group from database successfully! [GroupType]: %u", popEntry->type);
         DestroyGroupEntry(popEntry);
         count++;
     }

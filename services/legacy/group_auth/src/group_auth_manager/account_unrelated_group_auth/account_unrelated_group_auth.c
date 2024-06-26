@@ -274,7 +274,7 @@ static int32_t DasOnFinishToSelf(int64_t requestId, const CJson *authParam, cons
 
 static int32_t AddNonAccountPkgName(const TrustedGroupEntry *entry, CJson *paramsData)
 {
-    int32_t groupType = entry->type;
+    uint32_t groupType = entry->type;
     if (groupType == COMPATIBLE_GROUP) {
         if ((entry->managers).size(&(entry->managers)) == 0) {
             LOGE("The manager size is 0!");

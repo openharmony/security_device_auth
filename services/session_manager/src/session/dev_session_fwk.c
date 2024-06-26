@@ -256,9 +256,11 @@ static int32_t StartSession(DevSession *self)
                 break;
             }
         }
-        if (sendMsg == NULL && (sendMsg = CreateJson()) == NULL) {
-            LOGE("allocate sendMsg fail.");
-            return HC_ERR_ALLOC_MEMORY;
+        if (sendMsg == NULL) {
+            if ((sendMsg = CreateJson()) == NULL) {
+                LOGE("allocate sendMsg fail.");
+                return HC_ERR_ALLOC_MEMORY;
+            }
         }
         if (IsSupportSessionV2() && !IsMetaNode(impl->context)) {
             res = StartV2Session(impl, sendMsg);

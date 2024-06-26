@@ -342,7 +342,7 @@ static int32_t CheckChangeParams(int32_t osAccountId, const char *appId, CJson *
         LOGE("Failed to get groupId from json!");
         return HC_ERR_JSON_GET;
     }
-    int32_t groupType;
+    uint32_t groupType;
     int32_t result;
     if (((result = CheckGroupExist(osAccountId, groupId)) != HC_SUCCESS) ||
         ((result = GetGroupTypeFromDb(osAccountId, groupId, &groupType)) != HC_SUCCESS) ||

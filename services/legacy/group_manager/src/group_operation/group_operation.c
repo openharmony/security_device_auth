@@ -403,7 +403,7 @@ static int32_t DeleteGroup(int32_t osAccountId, CJson *jsonParams, char **return
     int32_t result;
     const char *groupId = NULL;
     const char *appId = NULL;
-    int32_t groupType = PEER_TO_PEER_GROUP;
+    uint32_t groupType = PEER_TO_PEER_GROUP;
     if (((result = GetGroupIdFromJson(jsonParams, &groupId)) != HC_SUCCESS) ||
         ((result = GetAppIdFromJson(jsonParams, &appId)) != HC_SUCCESS) ||
         ((result = CheckGroupExist(osAccountId, groupId)) != HC_SUCCESS) ||

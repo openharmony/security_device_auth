@@ -47,7 +47,7 @@ static int32_t CheckInvitePeer(const CJson *jsonParams)
         return HC_ERR_JSON_GET;
     }
 
-    int32_t groupType = PEER_TO_PEER_GROUP;
+    uint32_t groupType = PEER_TO_PEER_GROUP;
     int32_t result;
     if (((result = CheckGroupExist(osAccountId, groupId)) != HC_SUCCESS) ||
         ((result = GetGroupTypeFromDb(osAccountId, groupId, &groupType)) != HC_SUCCESS) ||
