@@ -17,7 +17,17 @@
       "name": "device_auth",
       "subsystem": "security",
       "syscap": [ "SystemCapability.Security.DeviceAuth" ],
-      "features": [],
+      "features": [
+        "device_auth_session_v1_enabled",
+        "device_auth_session_v2_enabled",
+        "device_auth_account_enabled",
+        "device_auth_pseudonym_enabled",
+        "device_auth_p2p_lite_protocol_enabled",
+        "device_auth_p2p_standard_protocol_enabled",
+        "device_auth_p2p_lite_protocol_legacy_enabled",
+        "device_auth_account_lite_protocol_enabled",
+        "device_auth_account_standard_protocol_enabled"
+      ],
       "hisysevent_config": [
           "//base/security/device_auth/hisysevent.yaml"
       ],
