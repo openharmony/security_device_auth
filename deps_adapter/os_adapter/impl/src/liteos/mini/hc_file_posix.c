@@ -35,7 +35,7 @@ static int32_t CreateDirectory(const char *filePath)
     chPtr = (char *)filePath;
     while ((chPtr = strchr(chPtr, '/')) != NULL) {
         unsigned long len = (unsigned long)((uintptr_t)chPtr - (uintptr_t)filePath);
-        if (len == 0ul) {
+        if (len == 0uL) {
             chPtr++;
             continue;
         }

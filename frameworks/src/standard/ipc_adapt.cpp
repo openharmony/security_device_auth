@@ -919,6 +919,7 @@ static char *TmpIpcGaCbOnRequest(int64_t requestId, int32_t operationCode, const
     return GaCbOnRequestWithType(requestId, operationCode, reqParams, CB_TYPE_TMP_DEV_AUTH);
 }
 
+namespace {
 void IpcOnGroupCreated(const char *groupInfo)
 {
     int32_t i;
@@ -1192,6 +1193,7 @@ void IpcOnTrustedDeviceNumChanged(int32_t curTrustedDeviceNum)
     }
     return;
 }
+};
 
 void InitDeviceAuthCbCtx(DeviceAuthCallback *ctx, int32_t type)
 {
@@ -1347,7 +1349,7 @@ int32_t IpcEncodeCallReply(uintptr_t replayCache, int32_t type, const uint8_t *r
 {
     int32_t errCnt = 0;
     MessageParcel *replyParcel = nullptr;
-    unsigned long valZero = 0ul;
+    unsigned long valZero = 0uL;
 
     replyParcel = reinterpret_cast<MessageParcel *>(replayCache);
     errCnt += replyParcel->WriteInt32(type) ? 0 : 1;
