@@ -24,7 +24,7 @@
 
 static int GenerateReturnKey(IsoParams *params, uint8_t *returnKey, uint32_t returnKeyLen)
 {
-    int hkdfSaltLen = params->baseParams.randPeer.length + params->baseParams.randPeer.length;
+    uint32_t hkdfSaltLen = params->baseParams.randPeer.length + params->baseParams.randPeer.length;
     int res;
     uint8_t *hkdfSalt = (uint8_t *)HcMalloc(hkdfSaltLen, 0);
     if (hkdfSalt == NULL) {

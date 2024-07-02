@@ -256,7 +256,8 @@ static int32_t StartSession(DevSession *self)
                 break;
             }
         }
-        if (sendMsg == NULL && (sendMsg = CreateJson()) == NULL) {
+        sendMsg = (sendMsg == NULL ? CreateJson() : sendMsg);
+        if (sendMsg == NULL) {
             LOGE("allocate sendMsg fail.");
             return HC_ERR_ALLOC_MEMORY;
         }

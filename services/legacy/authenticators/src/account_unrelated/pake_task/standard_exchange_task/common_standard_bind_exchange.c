@@ -398,7 +398,7 @@ int32_t ClientRequestStandardBindExchange(const PakeParams *pakeParams, Standard
 {
     uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAlias = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
-    KeyAliasType keyType = pakeParams->userType;
+    KeyAliasType keyType = (KeyAliasType)pakeParams->userType;
     // if self data is from upgrade, key type should be key-pair.
     if (pakeParams->isSelfFromUpgrade) {
         keyType = KEY_ALIAS_LT_KEY_PAIR;
@@ -443,7 +443,7 @@ int32_t ClientRequestStandardBindExchange(const PakeParams *pakeParams, Standard
 
 static int32_t GenerateSelfKeyAlias(const PakeParams *pakeParams, Uint8Buff *keyAlias)
 {
-    KeyAliasType keyType = pakeParams->userType;
+    KeyAliasType keyType = (KeyAliasType)pakeParams->userType;
     // if self data is from upgrade, key type should be key-pair.
     if (pakeParams->isSelfFromUpgrade) {
         keyType = KEY_ALIAS_LT_KEY_PAIR;
@@ -525,7 +525,7 @@ int32_t ClientConfirmStandardBindExchange(PakeParams *pakeParams, StandardBindEx
 {
     uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAlias = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
-    KeyAliasType keyType = pakeParams->userType;
+    KeyAliasType keyType = (KeyAliasType)pakeParams->userType;
     Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, strlen(pakeParams->packageName) };
     Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, strlen(pakeParams->serviceType) };
     int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(pakeParams->baseParams.idSelf), &keyAlias);

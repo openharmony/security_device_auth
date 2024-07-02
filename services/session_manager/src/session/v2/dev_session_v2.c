@@ -77,7 +77,7 @@ typedef struct {
 } SessionStateNode;
 
 typedef struct {
-    int32_t id;
+    uint32_t id;
     int32_t strategy;
     int32_t (*cmdGenerator)(SessionImpl *impl);
 } CmdProcessor;
@@ -1514,8 +1514,8 @@ static int32_t SyncCredState(SessionImpl *impl, const CJson *inputData)
         LOGE("get credNum from inputData fail.");
         return HC_ERR_JSON_GET;
     }
-    impl->credCurIndex = credIndex;
-    impl->credTotalNum = credNum;
+    impl->credCurIndex = (uint32_t)credIndex;
+    impl->credTotalNum = (uint32_t)credNum;
     return HC_SUCCESS;
 }
 
@@ -1562,8 +1562,8 @@ static int32_t AddHandshakeRspMsg(SessionImpl *impl, IdentityInfo *selfCred, CJs
 
 static bool IsPeerSupportCmd(int32_t cmdId, const CJson *supportCmds)
 {
-    uint32_t supportCmdsNum = GetItemNum(supportCmds);
-    for (uint32_t i = 0; i < supportCmdsNum; i++) {
+    int32_t supportCmdsNum = GetItemNum(supportCmds);
+    for (int32_t i = 0; i < supportCmdsNum; i++) {
         CJson *cmd = GetItemFromArray(supportCmds, i);
         if (cmd == NULL) {
             LOGE("get cmd from supportCmds fail.");
@@ -1593,7 +1593,7 @@ static int32_t SelfCmdsNegotiate(SessionImpl *impl, const CJson *supportCmds, co
             continue;
         }
         if (CMDS_LIB[i].strategy == ABORT_IF_ERROR) {
-            LOGW("The peer device does not support this cmd and it is not optional. [Cmd]: %d", CMDS_LIB[i].id);
+            LOGW("The peer device does not support this cmd and it is not optional. [Cmd]: %u", CMDS_LIB[i].id);
             return HC_ERR_NOT_SUPPORT;
         }
     }
@@ -1610,8 +1610,8 @@ static int32_t PeerCmdsNegotiate(SessionImpl *impl, const CJson *credAbility)
         return HC_ERR_JSON_GET;
     }
     uint32_t peerCmds = 0;
-    uint32_t todoCmdsNum = GetItemNum(todoCmds);
-    for (uint32_t i = 0; i < todoCmdsNum; i++) {
+    int32_t todoCmdsNum = GetItemNum(todoCmds);
+    for (int32_t i = 0; i < todoCmdsNum; i++) {
         CJson *cmd = GetItemFromArray(todoCmds, i);
         if (cmd == NULL) {
             LOGE("get cmd from todoCmds fail.");
@@ -1644,8 +1644,8 @@ static int32_t PeerCmdsNegotiate(SessionImpl *impl, const CJson *credAbility)
 static int32_t ProtocolEntityNegotiate(SessionImpl *impl, const CJson *abilityArray, const CJson *supportCmds,
     ProtocolEntity *selfProtocolEntity)
 {
-    uint32_t abilityNum = GetItemNum(abilityArray);
-    for (uint32_t i = 0; i < abilityNum; i++) {
+    int32_t abilityNum = GetItemNum(abilityArray);
+    for (int32_t i = 0; i < abilityNum; i++) {
         CJson *credAbility = GetItemFromArray(abilityArray, i);
         if (credAbility == NULL) {
             LOGE("get cred ability from abilityArray fail.");

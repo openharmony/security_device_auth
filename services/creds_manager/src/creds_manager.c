@@ -115,7 +115,7 @@ int32_t GetCredInfosByPeerIdentity(CJson *in, IdentityInfoVec *vec)
         return ret;
     }
     // Device level auth also need to try auth with the direct auth identityInfo
-    int32_t identityCount = HC_VECTOR_SIZE(vec);
+    uint32_t identityCount = HC_VECTOR_SIZE(vec);
     authIdentity = GetAuthIdentityByType(AUTH_IDENTITY_TYPE_P2P);
     if (authIdentity == NULL) {
         LOGE("get p2p auth identity failed!");

@@ -255,7 +255,7 @@ int32_t EncodeTlv##TlvVecName(TlvBase *tlv, HcParcel *parcel) \
     TlvVecName *realTlv = (TlvVecName *)(tlv); \
     uint32_t index = 0; \
     TlvElementName *element = NULL; \
-    uint32_t totalLen = 4; \
+    int32_t totalLen = 4; \
     uint32_t count = realTlv->data.size(&realTlv->data); \
     if (!ParcelWriteUint32(parcel, count)) { \
         return TLV_FAIL; \
@@ -263,7 +263,7 @@ int32_t EncodeTlv##TlvVecName(TlvBase *tlv, HcParcel *parcel) \
 \
     FOR_EACH_HC_VECTOR(realTlv->data, index, element) { \
         if (element != NULL) { \
-            uint32_t len = EncodeTlvNode((TlvBase *)element, parcel, HC_FALSE); \
+            int32_t len = EncodeTlvNode((TlvBase *)element, parcel, HC_FALSE); \
             totalLen += len; \
             if (totalLen >= MAX_TOTOL_LEN) { \
                 return TLV_FAIL; \
@@ -277,7 +277,7 @@ int32_t GetLenTlv##TlvVecName(TlvBase *tlv) \
     TlvVecName *realTlv = (TlvVecName *)(tlv); \
     uint32_t index = 0; \
     TlvElementName *element = NULL; \
-    uint32_t totalLen = sizeof(uint32_t); \
+    int32_t totalLen = sizeof(int32_t); \
     FOR_EACH_HC_VECTOR(realTlv->data, index, element) { \
         if (element != NULL) { \
             totalLen += GetlenTlvNode((TlvBase *)element); \

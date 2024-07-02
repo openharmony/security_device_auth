@@ -259,7 +259,7 @@ static const char *GetAverageTimeTag(bool isBind, bool isClient)
 
 static void DumpAverageConsumeTime(int fd, bool isBind, bool isClient)
 {
-    uint32_t sessionSize = 0;
+    int32_t sessionSize = 0;
     int64_t totalFirstConsume = 0;
     int64_t totalSecondConsume = 0;
     int64_t totalThirdConsume = 0;

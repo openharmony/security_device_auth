@@ -80,8 +80,8 @@ int32_t GenerateBindSuccessData(const char *peerAuthId, const char *peerUdid, co
     char **returnDataStr);
 int32_t GenerateUnbindSuccessData(const char *peerAuthId, const char *groupId, char **returnDataStr);
 
-int32_t GetCurDeviceNumByGroupId(int32_t osAccountId, const char *groupId);
-int32_t GetGroupTypeFromDb(int32_t osAccountId, const char *groupId, int32_t *returnGroupType);
+uint32_t GetCurDeviceNumByGroupId(int32_t osAccountId, const char *groupId);
+int32_t GetGroupTypeFromDb(int32_t osAccountId, const char *groupId, uint32_t *returnGroupType);
 int32_t GetUserIdFromJson(const CJson *jsonParams, char **userId);
 int32_t GetSharedUserIdFromJson(const CJson *jsonParams, char **sharedUserId);
 int32_t GetGroupIdFromJson(const CJson *jsonParams, const char **groupId);

@@ -94,7 +94,7 @@ uint32_t ProtocolMessageIn(const CJson *in)
     if (message == ERR_MESSAGE) {
         return ERR_MESSAGE;
     }
-    return message & 0x000F; /* get lower 8 bit */
+    return (uint32_t)message & 0x000F; /* get lower 8 bit */
 }
 
 int ClientProtocolMessageOut(CJson *out, int opCode, uint32_t step)
@@ -308,6 +308,11 @@ static int32_t CombineKeyAliasForPake(const Uint8Buff *serviceId, const Uint8Buf
     }
     uint32_t outKeyAliasHexLen = keyAliasHash.length * BYTE_TO_HEX_OPER_LENGTH + 1;
     outKeyAliasHex = (char *)HcMalloc(outKeyAliasHexLen, 0);
+    if (outKeyAliasHex == NULL) {
+        LOGE("Malloc outKeyAliasHex failed");
+        res = HC_ERR_ALLOC_MEMORY;
+        goto ERR;
+    }
     res = ByteToHexString(keyAliasHash.val, keyAliasHash.length, outKeyAliasHex, outKeyAliasHexLen);
     if (res != HC_SUCCESS) {
         LOGE("ByteToHexString failed");

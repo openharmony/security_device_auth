@@ -168,7 +168,7 @@ static int32_t GenerateKeyAlias(const CmdParams *params, bool isSelf, bool isPsk
 #else
     int32_t userType = isSelf ? params->userTypeSelf : params->userTypePeer;
 #endif
-    KeyAliasType keyAliasType = isPsk ? KEY_ALIAS_PSK : userType;
+    KeyAliasType keyAliasType = isPsk ? KEY_ALIAS_PSK : (uint32_t)userType;
     if (isSelf && !isPsk && params->isSelfFromUpgrade) {
         keyAliasType = KEY_ALIAS_LT_KEY_PAIR;
     }

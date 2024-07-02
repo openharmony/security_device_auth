@@ -313,13 +313,13 @@ ERR:
 
 static int32_t EndianSwap(struct HksBlob *data)
 {
-    int32_t end = data->size - 1;
-    const int32_t start = 0;
+    uint32_t end = data->size - 1;
+    const uint32_t start = 0;
 
     /* count the middle index of array */
-    int32_t cnt = data->size / 2; // 2 used to calculate half of the data size
+    uint32_t cnt = data->size / 2; // 2 used to calculate half of the data size
 
-    for (int32_t i = 0; i < cnt; i++) {
+    for (uint32_t i = 0; i < cnt; i++) {
         uint8_t tmp;
         tmp = data->data[start + i];
         data->data[start + i] = data->data[end - i];
