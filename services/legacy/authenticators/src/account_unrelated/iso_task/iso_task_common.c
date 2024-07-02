@@ -524,17 +524,18 @@ static int AuthGeneratePsk(const Uint8Buff *seed, IsoParams *params)
 {
     uint8_t keyAlias[ISO_KEY_ALIAS_LEN] = { 0 };
     uint8_t upgradeKeyAlias[ISO_UPGRADE_KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff pkgName = { (uint8_t *)params->packageName, (uint32_t)strlen(params->packageName) };
     Uint8Buff serviceType = { (uint8_t *)params->serviceType, (uint32_t)strlen(params->serviceType) };
     Uint8Buff keyAliasBuff = { keyAlias, ISO_KEY_ALIAS_LEN };
     int32_t res;
     if (params->isPeerFromUpgrade) {
         keyAliasBuff.val = upgradeKeyAlias;
         keyAliasBuff.length = ISO_UPGRADE_KEY_ALIAS_LEN;
-        res = GenerateKeyAlias(&pkgName, &serviceType, params->peerUserType, &params->baseParams.authIdPeer,
+        Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, strlen(GROUP_MANAGER_PACKAGE_NAME) };
+        res = GenerateKeyAlias(&pkgNameBuff, &serviceType, params->peerUserType, &params->baseParams.authIdPeer,
             &keyAliasBuff);
     } else {
-        res = GenerateKeyAlias(&pkgName, &serviceType, KEY_ALIAS_AUTH_TOKEN, &params->baseParams.authIdPeer,
+        Uint8Buff pkgNameBuff = { (uint8_t *)params->packageName, (uint32_t)strlen(params->packageName) };
+        res = GenerateKeyAlias(&pkgNameBuff, &serviceType, KEY_ALIAS_AUTH_TOKEN, &params->baseParams.authIdPeer,
             &keyAliasBuff);
     }
     if (res != 0) {
@@ -552,7 +553,11 @@ static int AuthGeneratePsk(const Uint8Buff *seed, IsoParams *params)
     LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAliasBuff.val[DEV_AUTH_ZERO], keyAliasBuff.val[DEV_AUTH_ONE],
         keyAliasBuff.val[DEV_AUTH_TWO], keyAliasBuff.val[DEV_AUTH_THREE]);
     Uint8Buff pskBuf = { params->baseParams.psk, sizeof(params->baseParams.psk) };
-    return params->baseParams.loader->computeHmac(&keyAliasBuff, seed, &pskBuf, true);
+    if (params->isPeerFromUpgrade) {
+        return params->baseParams.loader->computeHmacWithThreeStage(&keyAliasBuff, seed, &pskBuf);
+    } else {
+        return params->baseParams.loader->computeHmac(&keyAliasBuff, seed, &pskBuf, true);
+    }
 }
 
 static int AuthGeneratePskUsePin(const Uint8Buff *seed, IsoParams *params, const char *pinString)

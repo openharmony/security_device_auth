@@ -79,7 +79,7 @@ typedef int32_t (*GenerateRandomFunc)(Uint8Buff *rand);
 
 typedef int32_t (*ComputeHmacFunc)(const Uint8Buff *key, const Uint8Buff *message, Uint8Buff *outHmac, bool isAlias);
 
-typedef int32_t (*ComputePseudonymHmacFunc)(const Uint8Buff *key, const Uint8Buff *message, Uint8Buff *outHmac);
+typedef int32_t (*ComputeHmacWithThreeStageFunc)(const Uint8Buff *key, const Uint8Buff *message, Uint8Buff *outHmac);
 
 typedef int32_t (*ComputeHkdfFunc)(const Uint8Buff *baseKey, const Uint8Buff *salt, const Uint8Buff *keyInfo,
     Uint8Buff *outHkdf, bool isAlias);
@@ -147,7 +147,7 @@ typedef struct {
     Sha256Func sha256;
     GenerateRandomFunc generateRandom;
     ComputeHmacFunc computeHmac;
-    ComputePseudonymHmacFunc computePseudonymHmac;
+    ComputeHmacWithThreeStageFunc computeHmacWithThreeStage;
     ComputeHkdfFunc computeHkdf;
     ComputePseudonymPskFunc computePseudonymPsk;
     GetKeyExtInfoFunc getKeyExtInfo;

@@ -485,10 +485,20 @@ static int32_t CheckGroupVisibility(const CJson *context)
         LOGE("Failed to get groupId!");
         return HC_ERR_JSON_GET;
     }
+    const char *appId = GetStringFromJson(context, FIELD_APP_ID);
+    if (appId == NULL) {
+        LOGE("Failed to get appId!");
+        return HC_ERR_JSON_GET;
+    }
     TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
     if (entry == NULL) {
         LOGE("Failed to get group entry!");
         return HC_ERR_GROUP_NOT_EXIST;
+    }
+    if (strcmp(appId, "com.huawei.health") == 0 && entry->upgradeFlag == 1) {
+        LOGI("Group is from upgrade, no need to check visibility.");
+        DestroyGroupEntry(entry);
+        return HC_SUCCESS;
     }
     if (entry->visibility != GROUP_VISIBILITY_PRIVATE) {
         LOGE("Group is not private, can not bind old version wearable device!");

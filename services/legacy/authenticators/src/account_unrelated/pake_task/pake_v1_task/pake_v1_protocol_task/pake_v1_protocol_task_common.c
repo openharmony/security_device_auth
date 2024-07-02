@@ -572,7 +572,7 @@ static int32_t GenerateSelfPseudonymChlgAndId(const PakeParams *params, Uint8Buf
         LOGE("Failed to convert pseudonym psk alias to lower case!");
         return res;
     }
-    res = params->baseParams.loader->computePseudonymHmac(&pskAliasBuff, pseudonymChlgBuff, pseudonymIdBuff);
+    res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasBuff, pseudonymChlgBuff, pseudonymIdBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate pseudonym id!");
     }
@@ -666,7 +666,7 @@ static int32_t CheckPseudonymIdByCompute(const PakeParams *params, const Uint8Bu
     }
     uint8_t computePeerPseudonymId[PSEUDONYM_ID_LEN] = { 0 };
     Uint8Buff computePeerPseudonymIdBuff = { computePeerPseudonymId, PSEUDONYM_ID_LEN };
-    res = params->baseParams.loader->computePseudonymHmac(&pskAliasBuff, peerPseudonymChallengeBuff,
+    res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasBuff, peerPseudonymChallengeBuff,
         &computePeerPseudonymIdBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate peer pseudonym id!");
@@ -821,7 +821,7 @@ int32_t SaveNextPseudonymIdAndChallenge(PakeParams *params)
     uint8_t selfNextPseudonymId[PSEUDONYM_ID_LEN] = { 0 };
     Uint8Buff selfNextPseudonymIdBuff = { selfNextPseudonymId, PSEUDONYM_ID_LEN };
     Uint8Buff selfNextPseudonymChallengeBuff = { params->selfNextPseudonymChallenge, PSEUDONYM_CHALLENGE_LEN };
-    res = params->baseParams.loader->computePseudonymHmac(&pskAliasBuff, &selfNextPseudonymChallengeBuff,
+    res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasBuff, &selfNextPseudonymChallengeBuff,
         &selfNextPseudonymIdBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to compute next self pseudonym id!");
@@ -830,7 +830,7 @@ int32_t SaveNextPseudonymIdAndChallenge(PakeParams *params)
     uint8_t peerNextPseudonymId[PSEUDONYM_ID_LEN] = { 0 };
     Uint8Buff peerNextPseudonymIdBuff = { peerNextPseudonymId, PSEUDONYM_ID_LEN };
     Uint8Buff peerNextPseudonymChallengeBuff = { params->peerNextPseudonymChallenge, PSEUDONYM_CHALLENGE_LEN };
-    res = params->baseParams.loader->computePseudonymHmac(&pskAliasBuff, &peerNextPseudonymChallengeBuff,
+    res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasBuff, &peerNextPseudonymChallengeBuff,
         &peerNextPseudonymIdBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to compute next peer pseudonym id!");
