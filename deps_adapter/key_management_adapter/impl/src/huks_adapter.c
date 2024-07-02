@@ -298,7 +298,7 @@ static int32_t ConstructFinishParamSet(struct HksParamSet **finishParamSet)
     return res;
 }
 
-static int32_t ComputePseudonymHmac(const Uint8Buff *keyAlias, const Uint8Buff *message, Uint8Buff *outHmac)
+static int32_t ComputeHmacWithThreeStage(const Uint8Buff *keyAlias, const Uint8Buff *message, Uint8Buff *outHmac)
 {
     const Uint8Buff *inParams[] = { keyAlias, message, outHmac };
     const char *paramTags[] = { "keyAlias", "message", "outHmac" };
@@ -344,7 +344,7 @@ static int32_t ComputePseudonymHmac(const Uint8Buff *keyAlias, const Uint8Buff *
     res = HksFinish(&handleDerive, finishParamSet, &inData, &hmacBlob);
     HksFreeParamSet(&finishParamSet);
     if (res != HKS_SUCCESS || hmacBlob.size != HMAC_LEN) {
-        LOGE("Compute pseudonym hmac failed! [Res]: %d, [size]: %d", res, hmacBlob.size);
+        LOGE("Compute hmac with three stage failed! [Res]: %d, [size]: %d", res, hmacBlob.size);
         return HAL_FAILED;
     }
     return HAL_SUCCESS;
@@ -1729,7 +1729,7 @@ static const AlgLoader g_huksLoader = {
     .sha256 = Sha256,
     .generateRandom = GenerateRandom,
     .computeHmac = ComputeHmac,
-    .computePseudonymHmac = ComputePseudonymHmac,
+    .computeHmacWithThreeStage = ComputeHmacWithThreeStage,
     .computeHkdf = ComputeHkdf,
     .computePseudonymPsk = ComputePseudonymPsk,
     .getKeyExtInfo = GetKeyExtInfo,
