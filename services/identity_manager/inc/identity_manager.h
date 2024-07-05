@@ -68,6 +68,8 @@ const AuthIdentity *GetAuthIdentityByType(AuthIdentityType type);
 const CredentialOperator *GetCredentialOperator(void);
 const AuthIdentityManager *GetAuthIdentityManager(void);
 
+uint8_t *GetKeyTypePair(KeyAliasType keyAliasType);
+
 #ifdef __cplusplus
 }
 #endif

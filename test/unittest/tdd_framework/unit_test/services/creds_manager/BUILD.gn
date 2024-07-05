@@ -44,8 +44,8 @@ ohos_unittest("creds_manager_test") {
   sources -= soft_bus_channel_files
   sources += soft_bus_channel_mock_files
   sources += [
+    "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/huks_adapter.c",
-    "${key_management_adapter_path}/impl/src/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
     "${os_adapter_path}/impl/src/hc_log.c",

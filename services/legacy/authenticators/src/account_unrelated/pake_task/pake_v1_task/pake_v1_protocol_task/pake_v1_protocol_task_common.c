@@ -235,7 +235,7 @@ static void UpperToLowercase(Uint8Buff *hex)
     }
 }
 
-static int32_t ConvertPsk(const Uint8Buff *srcPsk, PakeParams *params)
+static int32_t ConvertPakeV1Psk(const Uint8Buff *srcPsk, PakeParams *params)
 {
     int res = InitSingleParam(&(params->baseParams.psk), PAKE_PSK_LEN * BYTE_TO_HEX_OPER_LENGTH + 1);
     if (res != HC_SUCCESS) {
@@ -312,9 +312,9 @@ int32_t FillPskWithDerivedKeyHex(PakeParams *params)
         goto ERR;
     }
 
-    res = ConvertPsk(&pskByte, params);
+    res = ConvertPakeV1Psk(&pskByte, params);
     if (res != HC_SUCCESS) {
-        LOGE("ConvertPsk failed, res: %d.", res);
+        LOGE("ConvertPakeV1Psk failed, res: %d.", res);
         goto ERR;
     }
     goto OUT;

@@ -34,8 +34,8 @@ if (defined(ohos_lite)) {
 
       sources = hal_common_files
       sources += [
+        "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
         "${key_management_adapter_path}/impl/src/huks_adapter.c",
-        "${key_management_adapter_path}/impl/src/mbedtls_ec_adapter.c",
         "${key_management_adapter_path}/impl/src/mini/huks_adapter_diff_impl.c",
         "${os_adapter_path}/impl/src/liteos/hc_condition.c",
         "${os_adapter_path}/impl/src/liteos/hc_dev_info.c",
@@ -85,8 +85,8 @@ if (defined(ohos_lite)) {
 
       sources = hal_common_files
       sources += [
+        "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
         "${key_management_adapter_path}/impl/src/huks_adapter.c",
-        "${key_management_adapter_path}/impl/src/mbedtls_ec_adapter.c",
         "${key_management_adapter_path}/impl/src/small/huks_adapter_diff_impl.c",
         "${os_adapter_path}/impl/src/hc_log.c",
         "${os_adapter_path}/impl/src/linux/hc_condition.c",
@@ -128,8 +128,8 @@ if (defined(ohos_lite)) {
 
     sources = hal_common_files
     sources += [
+      "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
       "${key_management_adapter_path}/impl/src/huks_adapter.c",
-      "${key_management_adapter_path}/impl/src/mbedtls_ec_adapter.c",
       "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
       "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
       "${os_adapter_path}/impl/src/hc_log.c",

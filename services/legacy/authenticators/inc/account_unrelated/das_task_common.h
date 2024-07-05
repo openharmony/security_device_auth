@@ -18,7 +18,6 @@
 
 #include "das_module_defines.h"
 #include "identity_defines.h"
-#include "hc_types.h"
 #include "json_utils.h"
 #include "string_util.h"
 

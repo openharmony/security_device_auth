@@ -33,36 +33,10 @@ IMPLEMENT_HC_VECTOR(ListenerEntryVec, ListenerEntry, 1);
 static ListenerEntryVec g_listenerEntryVec;
 static HcMutex *g_broadcastMutex = NULL;
 
-static int32_t GenerateMessage(const TrustedGroupEntry *groupEntry, char **returnGroupInfo)
+static void PostOnGroupCreated(const char *messageStr)
 {
-    CJson *message = CreateJson();
-    if (message == NULL) {
-        LOGE("Failed to allocate message memory!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    int32_t result = GenerateReturnGroupInfo(groupEntry, message);
-    if (result != HC_SUCCESS) {
-        FreeJson(message);
-        return result;
-    }
-    char *messageStr = PackJsonToString(message);
-    FreeJson(message);
     if (messageStr == NULL) {
-        LOGE("Failed to convert json to string!");
-        return HC_ERR_JSON_FAIL;
-    }
-    *returnGroupInfo = messageStr;
-    return HC_SUCCESS;
-}
-
-static void PostOnGroupCreated(const TrustedGroupEntry *groupEntry)
-{
-    if (groupEntry == NULL) {
-        LOGE("The groupEntry is NULL!");
-        return;
-    }
-    char *messageStr = NULL;
-    if (GenerateMessage(groupEntry, &messageStr) != HC_SUCCESS) {
+        LOGE("The messageStr is NULL!");
         return;
     }
     uint32_t index;
@@ -74,18 +48,13 @@ static void PostOnGroupCreated(const TrustedGroupEntry *groupEntry)
             entry->listener->onGroupCreated(messageStr);
         }
     }
-    FreeJsonString(messageStr);
     g_broadcastMutex->unlock(g_broadcastMutex);
 }
 
-static void PostOnGroupDeleted(const TrustedGroupEntry *groupEntry)
+static void PostOnGroupDeleted(const char *messageStr)
 {
-    if (groupEntry == NULL) {
-        LOGE("The groupEntry is NULL!");
-        return;
-    }
-    char *messageStr = NULL;
-    if (GenerateMessage(groupEntry, &messageStr) != HC_SUCCESS) {
+    if (messageStr == NULL) {
+        LOGE("The messageStr is NULL!");
         return;
     }
     uint32_t index;
@@ -97,18 +66,13 @@ static void PostOnGroupDeleted(const TrustedGroupEntry *groupEntry)
             entry->listener->onGroupDeleted(messageStr);
         }
     }
-    FreeJsonString(messageStr);
     g_broadcastMutex->unlock(g_broadcastMutex);
 }
 
-static void PostOnDeviceBound(const char *peerUdid, const TrustedGroupEntry *groupEntry)
+static void PostOnDeviceBound(const char *peerUdid, const char *messageStr)
 {
-    if ((peerUdid == NULL) || (groupEntry == NULL)) {
-        LOGE("The peerUdid or groupEntry is NULL!");
-        return;
-    }
-    char *messageStr = NULL;
-    if (GenerateMessage(groupEntry, &messageStr) != HC_SUCCESS) {
+    if ((peerUdid == NULL) || (messageStr == NULL)) {
+        LOGE("The peerUdid or messageStr is NULL!");
         return;
     }
     uint32_t index;
@@ -120,18 +84,13 @@ static void PostOnDeviceBound(const char *peerUdid, const TrustedGroupEntry *gro
             entry->listener->onDeviceBound(peerUdid, messageStr);
         }
     }
-    FreeJsonString(messageStr);
     g_broadcastMutex->unlock(g_broadcastMutex);
 }
 
-static void PostOnDeviceUnBound(const char *peerUdid, const TrustedGroupEntry *groupEntry)
+static void PostOnDeviceUnBound(const char *peerUdid, const char *messageStr)
 {
-    if ((peerUdid == NULL) || (groupEntry == NULL)) {
-        LOGE("The peerUdid or groupEntry is NULL!");
-        return;
-    }
-    char *messageStr = NULL;
-    if (GenerateMessage(groupEntry, &messageStr) != HC_SUCCESS) {
+    if ((peerUdid == NULL) || (messageStr == NULL)) {
+        LOGE("The peerUdid or messageStr is NULL!");
         return;
     }
     uint32_t index;
@@ -143,7 +102,6 @@ static void PostOnDeviceUnBound(const char *peerUdid, const TrustedGroupEntry *g
             entry->listener->onDeviceUnBound(peerUdid, messageStr);
         }
     }
-    FreeJsonString(messageStr);
     g_broadcastMutex->unlock(g_broadcastMutex);
 }
 

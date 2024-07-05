@@ -16,14 +16,29 @@
 #include "das_task_common.h"
 #include "alg_defs.h"
 #include "alg_loader.h"
-#include "device_auth_defines.h"
 #include "hc_log.h"
-#include "hc_types.h"
 #include "protocol_common.h"
-#include "string_util.h"
 
 #define MESSAGE_RETURN 0x8000
 #define MESSAGE_PREFIX 0x0010
+
+/* in order to expand to uint16_t */
+static const uint8_t KEY_TYPE_PAIRS[KEY_ALIAS_TYPE_END][KEY_TYPE_PAIR_LEN] = {
+    { 0x00, 0x00 }, /* ACCESSOR_PK */
+    { 0x00, 0x01 }, /* CONTROLLER_PK */
+    { 0x00, 0x02 }, /* ed25519 KEYPAIR */
+    { 0x00, 0x03 }, /* KEK, key encryption key, used only by DeviceAuthService */
+    { 0x00, 0x04 }, /* DEK, data encryption key, used only by upper apps */
+    { 0x00, 0x05 }, /* key tmp */
+    { 0x00, 0x06 }, /* PSK, preshared key index */
+    { 0x00, 0x07 }, /* AUTHTOKEN */
+    { 0x00, 0x08 }  /* P2P_AUTH */
+};
+
+static uint8_t *GetKeyTypePair(KeyAliasType keyAliasType)
+{
+    return (uint8_t *)KEY_TYPE_PAIRS[keyAliasType];
+}
 
 void DasSendErrorToOut(CJson *out, int errCode)
 {
