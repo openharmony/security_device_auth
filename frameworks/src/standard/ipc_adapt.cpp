@@ -132,10 +132,16 @@ void ResetIpcCallBackNodeByNodeId(int32_t nodeIdx)
 {
     LOGI("starting..., index %d", nodeIdx);
     if ((nodeIdx < 0) || (nodeIdx >= IPC_CALL_BACK_MAX_NODES)) {
+        LOGW("Invalid node index: %d", nodeIdx);
         return;
     }
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     if (g_ipcCallBackList.ctx == nullptr) {
+        LOGW("Callback node list is null!");
+        return;
+    }
+    if (g_ipcCallBackList.ctx[nodeIdx].proxyId < 0) {
+        LOGW("Invalid node proxy id: %d", g_ipcCallBackList.ctx[nodeIdx].proxyId);
         return;
     }
     ResetIpcCallBackNode(g_ipcCallBackList.ctx[nodeIdx]);
