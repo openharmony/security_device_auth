@@ -74,8 +74,6 @@ typedef enum {
     KEY_ALIAS_TYPE_END
 } KeyAliasType; // 0 ~ 2^8-1, don't change the order
 
-uint8_t *GetKeyTypePair(KeyAliasType keyAliasType);
-
 typedef enum {
     CMD_EXCHANGE_PK = 0x0001,
     CMD_IMPORT_AUTH_CODE = 0x0002,

@@ -253,7 +253,8 @@ void DeleteAuthCode(const IsoParams *params)
         LOGE("GenerateKeyAliasInIso failed, res:%d", res);
         goto ERR;
     }
-    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias[0], keyAlias[1], keyAlias[2], keyAlias[3]);
+    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias[DEV_AUTH_ZERO], keyAlias[DEV_AUTH_ONE],
+        keyAlias[DEV_AUTH_TWO], keyAlias[DEV_AUTH_THREE]);
     Uint8Buff outKeyAlias = { keyAlias, ISO_KEY_ALIAS_LEN };
     params->baseParams.loader->deleteKey(&outKeyAlias);
 ERR:

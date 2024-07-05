@@ -885,12 +885,173 @@ static TrustedDeviceEntry **QueryDeviceEntryPtrIfMatch(const DeviceEntryVec *vec
     return NULL;
 }
 
+static int32_t AddGroupNameToReturn(const TrustedGroupEntry *groupInfo, CJson *json)
+{
+    const char *groupName = StringGet(&groupInfo->name);
+    if (groupName == NULL) {
+        LOGE("Failed to get groupName from groupInfo!");
+        return HC_ERR_NULL_PTR;
+    }
+    if (AddStringToJson(json, FIELD_GROUP_NAME, groupName) != HC_SUCCESS) {
+        LOGE("Failed to add groupName to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t AddGroupIdToReturn(const TrustedGroupEntry *groupInfo, CJson *json)
+{
+    const char *groupId = StringGet(&groupInfo->id);
+    if (groupId == NULL) {
+        LOGE("Failed to get groupId from groupInfo!");
+        return HC_ERR_NULL_PTR;
+    }
+    if (AddStringToJson(json, FIELD_GROUP_ID, groupId) != HC_SUCCESS) {
+        LOGE("Failed to add groupId to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t AddGroupOwnerToReturn(const TrustedGroupEntry *groupInfo, CJson *json)
+{
+    HcString entryManager = HC_VECTOR_GET(&groupInfo->managers, 0);
+    const char *groupOwner = StringGet(&entryManager);
+    if (groupOwner == NULL) {
+        LOGE("Failed to get groupOwner from groupInfo!");
+        return HC_ERR_NULL_PTR;
+    }
+    if (AddStringToJson(json, FIELD_GROUP_OWNER, groupOwner) != HC_SUCCESS) {
+        LOGE("Failed to add groupOwner to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t AddGroupTypeToReturn(const TrustedGroupEntry *groupInfo, CJson *json)
+{
+    int32_t groupType = groupInfo->type;
+    if (AddIntToJson(json, FIELD_GROUP_TYPE, groupType) != HC_SUCCESS) {
+        LOGE("Failed to add groupType to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t AddGroupVisibilityToReturn(const TrustedGroupEntry *groupInfo, CJson *json)
+{
+    int groupVisibility = groupInfo->visibility;
+    if (AddIntToJson(json, FIELD_GROUP_VISIBILITY, groupVisibility) != HC_SUCCESS) {
+        LOGE("Failed to add groupType to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t AddUserIdToReturnIfAccountGroup(const TrustedGroupEntry *groupInfo, CJson *json)
+{
+    if ((groupInfo->type != ACROSS_ACCOUNT_AUTHORIZE_GROUP) && (groupInfo->type != IDENTICAL_ACCOUNT_GROUP)) {
+        return HC_SUCCESS;
+    }
+    const char *userId = StringGet(&groupInfo->userId);
+    if (userId == NULL) {
+        LOGE("Failed to get userId from groupInfo!");
+        return HC_ERR_NULL_PTR;
+    }
+    if (AddStringToJson(json, FIELD_USER_ID, userId) != HC_SUCCESS) {
+        LOGE("Failed to add userId to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t AddSharedUserIdToReturnIfAcrossAccountGroup(const TrustedGroupEntry *groupInfo, CJson *json)
+{
+    if (groupInfo->type != ACROSS_ACCOUNT_AUTHORIZE_GROUP) {
+        return HC_SUCCESS;
+    }
+    const char *sharedUserId = StringGet(&groupInfo->sharedUserId);
+    if (sharedUserId == NULL) {
+        LOGE("Failed to get sharedUserId from groupInfo!");
+        return HC_ERR_NULL_PTR;
+    }
+    if (AddStringToJson(json, FIELD_SHARED_USER_ID, sharedUserId) != HC_SUCCESS) {
+        LOGE("Failed to add sharedUserId to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t AddAuthIdToReturn(const TrustedDeviceEntry *deviceInfo, CJson *json)
+{
+    const char *authId = StringGet(&deviceInfo->authId);
+    if (authId == NULL) {
+        LOGE("Failed to get authId from deviceInfo!");
+        return HC_ERR_NULL_PTR;
+    }
+    if (AddStringToJson(json, FIELD_AUTH_ID, authId) != HC_SUCCESS) {
+        LOGE("Failed to add authId to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t AddCredentialTypeToReturn(const TrustedDeviceEntry *deviceInfo, CJson *json)
+{
+    int credentialType = deviceInfo->credential;
+    if (AddIntToJson(json, FIELD_CREDENTIAL_TYPE, credentialType) != HC_SUCCESS) {
+        LOGE("Failed to add credentialType to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t AddUserTypeToReturn(const TrustedDeviceEntry *deviceInfo, CJson *json)
+{
+    int userType = deviceInfo->devType;
+    if (AddIntToJson(json, FIELD_USER_TYPE, userType) != HC_SUCCESS) {
+        LOGE("Failed to add userType to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t GenerateMessage(const TrustedGroupEntry *groupEntry, char **returnGroupInfo)
+{
+    if (groupEntry == NULL) {
+        return HC_ERR_NULL_PTR;
+    }
+    CJson *message = CreateJson();
+    if (message == NULL) {
+        LOGE("Failed to allocate message memory!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    int32_t result = GenerateReturnGroupInfo(groupEntry, message);
+    if (result != HC_SUCCESS) {
+        FreeJson(message);
+        return result;
+    }
+    char *messageStr = PackJsonToString(message);
+    FreeJson(message);
+    if (messageStr == NULL) {
+        LOGE("Failed to convert json to string!");
+        return HC_ERR_JSON_FAIL;
+    }
+    *returnGroupInfo = messageStr;
+    return HC_SUCCESS;
+}
+
 static void PostGroupCreatedMsg(const TrustedGroupEntry *groupEntry)
 {
     if (!IsBroadcastSupported()) {
         return;
     }
-    GetBroadcaster()->postOnGroupCreated(groupEntry);
+    char *messageStr = NULL;
+    if (GenerateMessage(groupEntry, &messageStr) != HC_SUCCESS) {
+        return;
+    }
+    GetBroadcaster()->postOnGroupCreated(messageStr);
+    FreeJsonString(messageStr);
 }
 
 static void PostGroupDeletedMsg(const TrustedGroupEntry *groupEntry)
@@ -898,7 +1059,12 @@ static void PostGroupDeletedMsg(const TrustedGroupEntry *groupEntry)
     if (!IsBroadcastSupported()) {
         return;
     }
-    GetBroadcaster()->postOnGroupDeleted(groupEntry);
+    char *messageStr = NULL;
+    if (GenerateMessage(groupEntry, &messageStr) != HC_SUCCESS) {
+        return;
+    }
+    GetBroadcaster()->postOnGroupDeleted(messageStr);
+    FreeJsonString(messageStr);
 }
 
 static void PostDeviceBoundMsg(OsAccountTrustedInfo *info, const TrustedDeviceEntry *deviceEntry)
@@ -910,7 +1076,12 @@ static void PostDeviceBoundMsg(OsAccountTrustedInfo *info, const TrustedDeviceEn
     groupParams.groupId = StringGet(&deviceEntry->groupId);
     TrustedGroupEntry **groupEntryPtr = QueryGroupEntryPtrIfMatch(&info->groups, &groupParams);
     if (groupEntryPtr != NULL) {
-        GetBroadcaster()->postOnDeviceBound(StringGet(&deviceEntry->udid), *groupEntryPtr);
+        char *messageStr = NULL;
+        if (GenerateMessage(*groupEntryPtr, &messageStr) != HC_SUCCESS) {
+            return;
+        }
+        GetBroadcaster()->postOnDeviceBound(StringGet(&deviceEntry->udid), messageStr);
+        FreeJsonString(messageStr);
     }
 }
 
@@ -937,7 +1108,12 @@ static void PostDeviceUnBoundMsg(OsAccountTrustedInfo *info, const TrustedDevice
     groupParams.groupId = groupId;
     TrustedGroupEntry **groupEntryPtr = QueryGroupEntryPtrIfMatch(&info->groups, &groupParams);
     if (groupEntryPtr != NULL) {
-        GetBroadcaster()->postOnDeviceUnBound(udid, *groupEntryPtr);
+        char *messageStr = NULL;
+        if (GenerateMessage(*groupEntryPtr, &messageStr) != HC_SUCCESS) {
+            return;
+        }
+        GetBroadcaster()->postOnDeviceUnBound(udid, messageStr);
+        FreeJsonString(messageStr);
     }
     QueryDeviceParams deviceParams = InitQueryDeviceParams();
     deviceParams.udid = udid;
@@ -1108,6 +1284,32 @@ void ClearDeviceEntryVec(DeviceEntryVec *vec)
         DestroyDeviceEntry(*entry);
     }
     DESTROY_HC_VECTOR(DeviceEntryVec, vec);
+}
+
+int32_t GenerateReturnGroupInfo(const TrustedGroupEntry *groupEntry, CJson *returnJson)
+{
+    int32_t result;
+    if (((result = AddGroupNameToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
+        ((result = AddGroupIdToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
+        ((result = AddGroupOwnerToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
+        ((result = AddGroupTypeToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
+        ((result = AddGroupVisibilityToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
+        ((result = AddUserIdToReturnIfAccountGroup(groupEntry, returnJson)) != HC_SUCCESS) ||
+        ((result = AddSharedUserIdToReturnIfAcrossAccountGroup(groupEntry, returnJson)) != HC_SUCCESS)) {
+        return result;
+    }
+    return HC_SUCCESS;
+}
+
+int32_t GenerateReturnDevInfo(const TrustedDeviceEntry *deviceEntry, CJson *returnJson)
+{
+    int32_t result;
+    if (((result = AddAuthIdToReturn(deviceEntry, returnJson)) != HC_SUCCESS) ||
+        ((result = AddCredentialTypeToReturn(deviceEntry, returnJson)) != HC_SUCCESS) ||
+        ((result = AddUserTypeToReturn(deviceEntry, returnJson)) != HC_SUCCESS)) {
+        return result;
+    }
+    return HC_SUCCESS;
 }
 
 int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)

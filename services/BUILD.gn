@@ -54,9 +54,9 @@ if (os_level == "mini" || os_level == "small") {
         ]
       } else {
         sources += [
-          "${dev_frameworks_path}/src/plugin_adapter/account_lifecycle_plugin_proxy.c",
           "${dev_frameworks_path}/src/plugin_adapter/dynamic_plugin_adapter.c",
-          "${dev_frameworks_path}/src/plugin_adapter/ext_part_proxy.c",
+          "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_lifecycle_plugin_proxy.c",
+          "${dev_frameworks_path}/src/plugin_adapter/ext_part/ext_part_proxy.c",
         ]
       }
     }
@@ -196,9 +196,9 @@ if (os_level == "mini" || os_level == "small") {
     if (enable_extend_plugin) {
       defines += [ "DEV_AUTH_PLUGIN_ENABLE" ]
       sources += [
-        "${dev_frameworks_path}/src/plugin_adapter/account_lifecycle_plugin_proxy.c",
         "${dev_frameworks_path}/src/plugin_adapter/dynamic_plugin_adapter.c",
-        "${dev_frameworks_path}/src/plugin_adapter/ext_part_proxy.c",
+        "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_lifecycle_plugin_proxy.c",
+        "${dev_frameworks_path}/src/plugin_adapter/ext_part/ext_part_proxy.c",
       ]
     }
 

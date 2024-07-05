@@ -17,10 +17,14 @@
 #define DAS_VERSION_UTIL_H
 
 #include "pake_defs.h"
-#include "version_util.h"
+#include "common_defs.h"
+#include "protocol_common.h"
 
 #define ALG_OFFSET_FOR_PAKE_V1 0
 #define ALG_OFFSET_FOR_PAKE_V2 5
+
+#define MAJOR_VERSION_NO 2
+#define TMP_VERSION_STR_LEN 15
 
 typedef enum {
     UNSUPPORTED_ALG = 0x0000,
@@ -39,6 +43,12 @@ typedef enum {
     VERSION_DECIDED,
 } VersionAgreementStatus;
 
+typedef struct {
+    uint32_t first;
+    uint32_t second;
+    uint32_t third;
+} VersionStruct;
+
 typedef struct VersionInfoT {
     int32_t opCode;
     VersionAgreementStatus versionStatus;
@@ -49,6 +59,13 @@ typedef struct VersionInfoT {
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+int32_t VersionToString(const VersionStruct *version, char *verStr, uint32_t len);
+int32_t StringToVersion(const char* verStr, VersionStruct* version);
+
+int32_t AddSingleVersionToJson(CJson *jsonObj, const VersionStruct *version);
+int32_t GetSingleVersionFromJson(const CJson* jsonObj, VersionStruct *version);
+void InitGroupAndModuleVersion(VersionStruct *version);
 
 int32_t GetVersionFromJson(const CJson *jsonObj, VersionStruct *minVer, VersionStruct *maxVer);
 int32_t AddVersionToJson(CJson *jsonObj, const VersionStruct *minVer, const VersionStruct *maxVer);

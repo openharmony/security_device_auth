@@ -19,16 +19,12 @@
 #include "common_defs.h"
 #include "string_util.h"
 #include "data_manager.h"
-#include "json_utils.h"
-#include "data_manager.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 bool IsAccountRelatedGroup(int groupType);
-int32_t GenerateReturnGroupInfo(const TrustedGroupEntry *groupEntry, CJson *returnJson);
-int32_t GenerateReturnDevInfo(const TrustedDeviceEntry *deviceEntry, CJson *returnJson);
 
 bool IsUserTypeValid(int userType);
 bool IsExpireTimeValid(int expireTime);

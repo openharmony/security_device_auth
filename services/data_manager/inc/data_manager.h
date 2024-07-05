@@ -21,6 +21,7 @@
 #include "hc_string_vector.h"
 #include "hc_tlv_parser.h"
 #include "hc_vector.h"
+#include "json_utils.h"
 
 #define MAX_STRING_LEN 256
 #define MAX_EXPIRE_TIME 90
@@ -97,6 +98,9 @@ TrustedDeviceEntry *DeepCopyDeviceEntry(const TrustedDeviceEntry *entry);
 
 QueryGroupParams InitQueryGroupParams(void);
 QueryDeviceParams InitQueryDeviceParams(void);
+
+int32_t GenerateReturnGroupInfo(const TrustedGroupEntry *groupEntry, CJson *returnJson);
+int32_t GenerateReturnDevInfo(const TrustedDeviceEntry *deviceEntry, CJson *returnJson);
 
 TrustedGroupEntry *CreateGroupEntry(void);
 TrustedDeviceEntry *CreateDeviceEntry(void);

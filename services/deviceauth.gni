@@ -97,7 +97,6 @@ deviceauth_common_files = [
 
 dev_frameworks_files = [
   "${dev_frameworks_path}/src/module/dev_auth_module_manager.c",
-  "${dev_frameworks_path}/src/module/version_util.c",
   "${dev_frameworks_path}/src/task_manager/task_manager.c",
 ]
 
@@ -137,8 +136,7 @@ group_auth_account_related_mock_files = [ "${group_auth_path}/src/group_auth_man
 
 account_related_cred_plugin_mock_files = [ "${cred_manager_path}/src/account_related_mock/account_related_cred_plugin_mock.c" ]
 
-account_auth_plugin_files =
-    [ "${dev_frameworks_path}/src/plugin_adapter/account_auth_plugin_proxy.c" ]
+account_auth_plugin_files = [ "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin_proxy.c" ]
 account_auth_plugin_mock_files = [ "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c" ]
 
 cred_manager_files = [ "${cred_manager_path}/src/cred_manager.c" ]
@@ -163,7 +161,7 @@ mk_agree_mock_files = [
 
 group_manager_files = [
   "${group_manager_path}/src/group_operation/group_operation.c",
-  "${group_manager_path}/src/group_operation/group_operation_common.c",
+  "${group_manager_path}/src/group_operation/group_operation_common/group_operation_common.c",
 ]
 
 session_manager_files = [
@@ -208,9 +206,9 @@ group_manager_identical_account_mock_files = [ "${group_manager_path}/src/group_
 group_manager_across_account_mock_files = [ "${group_manager_path}/src/group_operation/across_account_group_mock/across_account_group_mock.c" ]
 
 authenticators_p2p_files = [
-  "${authenticators_path}/src/account_unrelated/das_task_common.c",
+  "${authenticators_path}/src/account_unrelated/common/das_task_common.c",
   "${authenticators_path}/src/account_unrelated/das_module.c",
-  "${authenticators_path}/src/account_unrelated/das_version_util.c",
+  "${authenticators_path}/src/account_unrelated/common/das_version_util.c",
   "${authenticators_path}/src/account_unrelated/das_task_main.c",
   "${authenticators_path}/src/account_unrelated/pake_task/pake_task_common.c",
   "${authenticators_path}/src/account_unrelated/pake_task/pake_message_util.c",
@@ -222,11 +220,11 @@ authenticators_account_related_mock_files =
 authenticators_p2p_iso_files = [
   "${authenticators_path}/src/account_unrelated/iso_task/iso_client_task.c",
   "${authenticators_path}/src/account_unrelated/iso_task/iso_server_task.c",
-  "${authenticators_path}/src/account_unrelated/iso_task/iso_task_common.c",
+  "${authenticators_path}/src/account_unrelated/iso_task/iso_task_common/iso_task_common.c",
   "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
   "${authenticators_path}/src/account_unrelated/iso_task/iso_protocol_task/iso_client_protocol_task.c",
   "${authenticators_path}/src/account_unrelated/iso_task/iso_protocol_task/iso_server_protocol_task.c",
-  "${authenticators_path}/src/account_unrelated/iso_task/lite_exchange_task/das_lite_token_manager.c",
+  "${authenticators_path}/src/account_unrelated/creds_manager/das_lite_token_manager.c",
   "${authenticators_path}/src/account_unrelated/iso_task/lite_exchange_task/iso_client_bind_exchange_task.c",
   "${authenticators_path}/src/account_unrelated/iso_task/lite_exchange_task/iso_server_bind_exchange_task.c",
 ]
@@ -250,7 +248,7 @@ authenticators_standard_exchange_task_files = [
   "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/common_standard_bind_exchange.c",
   "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/standard_client_bind_exchange_task.c",
   "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/standard_server_bind_exchange_task.c",
-  "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/das_standard_token_manager.c",
+  "${authenticators_path}/src/account_unrelated/creds_manager/das_standard_token_manager.c",
   "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task/standard_exchange_message_util.c",
 ]
 authenticators_standard_exchange_task_mock_files = [ "${authenticators_path}/src/account_unrelated/pake_task/standard_exchange_task_mock/standard_exchange_task_mock.c" ]

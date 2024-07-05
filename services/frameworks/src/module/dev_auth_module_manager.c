@@ -20,7 +20,7 @@
 #include "hc_types.h"
 #include "hc_vector.h"
 #include "account_module.h"
-#include "version_util.h"
+#include "das_version_util.h"
 #include "hitrace_adapter.h"
 
 DECLARE_HC_VECTOR(AuthModuleVec, AuthModuleBase *);

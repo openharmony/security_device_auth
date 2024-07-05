@@ -78,6 +78,24 @@ typedef struct {
     int32_t nextState;
 } CmdStateNode;
 
+/* in order to expand to uint16_t */
+static const uint8_t KEY_TYPE_PAIRS[KEY_ALIAS_TYPE_END][KEY_TYPE_PAIR_LEN] = {
+    { 0x00, 0x00 }, /* ACCESSOR_PK */
+    { 0x00, 0x01 }, /* CONTROLLER_PK */
+    { 0x00, 0x02 }, /* ed25519 KEYPAIR */
+    { 0x00, 0x03 }, /* KEK, key encryption key, used only by DeviceAuthService */
+    { 0x00, 0x04 }, /* DEK, data encryption key, used only by upper apps */
+    { 0x00, 0x05 }, /* key tmp */
+    { 0x00, 0x06 }, /* PSK, preshared key index */
+    { 0x00, 0x07 }, /* AUTHTOKEN */
+    { 0x00, 0x08 }  /* P2P_AUTH */
+};
+
+static uint8_t *GetKeyTypePair(KeyAliasType keyAliasType)
+{
+    return (uint8_t *)KEY_TYPE_PAIRS[keyAliasType];
+}
+
 static int32_t BuildKeyAliasMsg(const Uint8Buff *serviceId, const Uint8Buff *keyType,
     const Uint8Buff *authId, Uint8Buff *keyAliasMsg)
 {

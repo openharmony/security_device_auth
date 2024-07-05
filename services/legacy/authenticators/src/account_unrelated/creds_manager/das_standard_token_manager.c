@@ -62,8 +62,8 @@ static int32_t UnregisterLocalIdentity(const char *pkgName, const char *serviceT
         LOGE("Failed to generate identity keyPair alias!");
         return res;
     }
-    LOGI("KeyPair alias(HEX): %x%x%x%x****.", pakeKeyAliasVal[0], pakeKeyAliasVal[1],
-        pakeKeyAliasVal[2], pakeKeyAliasVal[3]);
+    LOGI("KeyPair alias(HEX): %x%x%x%x****.", pakeKeyAliasVal[DEV_AUTH_ZERO], pakeKeyAliasVal[DEV_AUTH_ONE],
+        pakeKeyAliasVal[DEV_AUTH_TWO], pakeKeyAliasVal[DEV_AUTH_THREE]);
     res = loader->deleteKey(&pakeKeyAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete key pair!");
@@ -84,8 +84,8 @@ static int32_t UnregisterLocalIdentity(const char *pkgName, const char *serviceT
             LOGE("Failed to convert self key alias to lower case!");
             return res;
         }
-        LOGI("Upgrade key pair alias(HEX): %x%x%x%x****.", pakeKeyAliasVal[0], pakeKeyAliasVal[1],
-            pakeKeyAliasVal[2], pakeKeyAliasVal[3]);
+        LOGI("Upgrade key pair alias(HEX): %x%x%x%x****.", pakeKeyAliasVal[DEV_AUTH_ZERO],
+            pakeKeyAliasVal[DEV_AUTH_ONE], pakeKeyAliasVal[DEV_AUTH_TWO], pakeKeyAliasVal[DEV_AUTH_THREE]);
         res = loader->deleteKey(&pakeKeyAliasBuff);
         if (res != HC_SUCCESS) {
             LOGE("Failed to delete upgrade key pair!");
@@ -303,9 +303,12 @@ static int32_t ComputeAndSavePsk(const PakeParams *params)
     }
 
     LOGI("PubKey alias(HEX): %x%x%x%x****, priKey alias(HEX): %x%x%x%x****, psk alias(HEX): %x%x%x%x****.",
-        peerKeyAliasVal[0], peerKeyAliasVal[1], peerKeyAliasVal[2], peerKeyAliasVal[3],
-        selfKeyAliasVal[0], selfKeyAliasVal[1], selfKeyAliasVal[2], selfKeyAliasVal[3],
-        sharedKeyAliasVal[0], sharedKeyAliasVal[1], sharedKeyAliasVal[2], sharedKeyAliasVal[3]);
+        peerKeyAliasVal[DEV_AUTH_ZERO], peerKeyAliasVal[DEV_AUTH_ONE],
+        peerKeyAliasVal[DEV_AUTH_TWO], peerKeyAliasVal[DEV_AUTH_THREE],
+        selfKeyAliasVal[DEV_AUTH_ZERO], selfKeyAliasVal[DEV_AUTH_ONE],
+        selfKeyAliasVal[DEV_AUTH_TWO], selfKeyAliasVal[DEV_AUTH_THREE],
+        sharedKeyAliasVal[DEV_AUTH_ZERO], sharedKeyAliasVal[DEV_AUTH_ONE],
+        sharedKeyAliasVal[DEV_AUTH_TWO], sharedKeyAliasVal[DEV_AUTH_THREE]);
     KeyBuff selfKeyAliasBuff = { selfKeyAlias.val, selfKeyAlias.length, true };
     KeyBuff peerKeyAliasBuff = { peerKeyAlias.val, peerKeyAlias.length, true };
     Algorithm alg = (params->baseParams.curveType == CURVE_256) ? P256 : ED25519;

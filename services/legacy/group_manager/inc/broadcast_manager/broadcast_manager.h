@@ -24,10 +24,10 @@ extern "C" {
 #endif
 
 typedef struct {
-    void (*postOnGroupCreated)(const TrustedGroupEntry *groupEntry);
-    void (*postOnGroupDeleted)(const TrustedGroupEntry *groupEntry);
-    void (*postOnDeviceBound)(const char *peerUdid, const TrustedGroupEntry *groupEntry);
-    void (*postOnDeviceUnBound)(const char *peerUdid, const TrustedGroupEntry *groupEntry);
+    void (*postOnGroupCreated)(const char *messageStr);
+    void (*postOnGroupDeleted)(const char *messageStr);
+    void (*postOnDeviceBound)(const char *peerUdid, const char *messageStr);
+    void (*postOnDeviceUnBound)(const char *peerUdid, const char *messageStr);
     void (*postOnDeviceNotTrusted)(const char *peerUdid);
     void (*postOnLastGroupDeleted)(const char *peerUdid, int groupType);
     void (*postOnTrustedDeviceNumChanged)(int curTrustedDeviceNum);
