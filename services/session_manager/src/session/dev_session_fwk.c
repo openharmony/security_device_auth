@@ -377,9 +377,24 @@ static int32_t CombindServerAuthParams(SessionImpl *impl, CJson *receviedMsg)
     return CombineAuthConfirmData(impl->context, receviedMsg);
 }
 
+static int32_t AddConfirmationToParams(const CJson *context, CJson *receviedMsg)
+{
+    uint32_t confirmation = REQUEST_REJECTED;
+    (void)GetUnsignedIntFromJson(context, FIELD_CONFIRMATION, &confirmation);
+    if (AddIntToJson(receviedMsg, FIELD_CONFIRMATION, (int32_t)confirmation) != HC_SUCCESS) {
+        LOGE("add confirmation to receviedMsg fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t CombineServerParams(SessionImpl *impl, bool isBind, CJson *receviedMsg)
 {
     int32_t res = AddChannelInfoToParams(impl, receviedMsg);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    res = AddConfirmationToParams(impl->context, receviedMsg);
     if (res != HC_SUCCESS) {
         return res;
     }

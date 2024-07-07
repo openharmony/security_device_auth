@@ -70,8 +70,24 @@ static int32_t CreateClientAuthSubSessionInner(int32_t osAccountId, CJson *jsonP
     return HC_SUCCESS;
 }
 
+static int32_t CheckAcceptRequest(const CJson *context)
+{
+    uint32_t confirmation = REQUEST_REJECTED;
+    (void)GetUnsignedIntFromJson(context, FIELD_CONFIRMATION, &confirmation);
+    if (confirmation != REQUEST_ACCEPTED) {
+        LOGE("The service rejects this request!");
+        return HC_ERR_REQ_REJECTED;
+    }
+    LOGI("The service accepts this request!");
+    return HC_SUCCESS;
+}
+
 static int32_t GetAuthInfoForServer(CJson *dataFromClient, ParamsVecForAuth *authParamsVec)
 {
+    int32_t res = CheckAcceptRequest(dataFromClient);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
     int32_t authForm = AUTH_FORM_INVALID_TYPE;
     if (GetIntFromJson(dataFromClient, FIELD_AUTH_FORM, &authForm) != HC_SUCCESS) {
         LOGE("Failed to get auth form!");

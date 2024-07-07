@@ -1717,9 +1717,25 @@ static int32_t SetAuthPsk(SessionImpl *impl, const CJson *inputData, IdentityInf
     return HC_SUCCESS;
 }
 
+static int32_t CheckAcceptRequest(const CJson *context)
+{
+    uint32_t confirmation = REQUEST_REJECTED;
+    (void)GetUnsignedIntFromJson(context, FIELD_CONFIRMATION, &confirmation);
+    if (confirmation != REQUEST_ACCEPTED) {
+        LOGE("The service rejects this request!");
+        return HC_ERR_REQ_REJECTED;
+    }
+    LOGI("The service accepts this request!");
+    return HC_SUCCESS;
+}
+
 static int32_t ProcHandshakeReqEventInner(SessionImpl *impl, SessionEvent *inputEvent, CJson *sessionMsg)
 {
-    int32_t res = SyncCredState(impl, inputEvent->data);
+    int32_t res = CheckAcceptRequest(impl->context);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    res = SyncCredState(impl, inputEvent->data);
     if (res != HC_SUCCESS) {
         return res;
     }
