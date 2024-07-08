@@ -227,7 +227,7 @@ static int32_t ExportSelfPubKey(CmdParams *params)
             return res;
         }
     }
-    res = GetLoaderInstance()->checkKeyExist(&keyAlias);
+    res = GetLoaderInstance()->checkKeyExist(&keyAlias, params->isSelfFromUpgrade);
     if (res != HC_SUCCESS) {
         if (params->isSelfFromUpgrade) {
             LOGE("Self device is from upgrade, key pair not exist!");
@@ -249,7 +249,7 @@ static int32_t ExportSelfPubKey(CmdParams *params)
         LOGE("allocate pkSelf memory fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
-    res = GetLoaderInstance()->exportPublicKey(&keyAlias, &params->pkSelf);
+    res = GetLoaderInstance()->exportPublicKey(&keyAlias, params->isSelfFromUpgrade, &params->pkSelf);
     if (res != HC_SUCCESS) {
         LOGE("exportPublicKey failed");
         return res;
@@ -359,6 +359,26 @@ static int32_t GenerateSelfKeyAlias(const CmdParams *params, Uint8Buff *selfKeyA
     return HC_SUCCESS;
 }
 
+static int32_t ComputeAndSavePskInner(const Uint8Buff *selfKeyAlias, const Uint8Buff *peerKeyAlias,
+    bool isSelfFromUpgrade, Uint8Buff *sharedKeyAlias)
+{
+    KeyParams selfKeyParams = { { selfKeyAlias->val, selfKeyAlias->length, true }, isSelfFromUpgrade };
+    uint8_t peerPubKeyVal[PAKE_ED25519_KEY_PAIR_LEN] = { 0 };
+    Uint8Buff peerPubKeyBuff = { peerPubKeyVal, PAKE_ED25519_KEY_PAIR_LEN };
+    int32_t res = GetLoaderInstance()->exportPublicKey(peerKeyAlias, false, &peerPubKeyBuff);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to export peer public key!");
+        return res;
+    }
+    KeyBuff peerKeyBuff = { peerPubKeyBuff.val, peerPubKeyBuff.length, false };
+    res = GetLoaderInstance()->agreeSharedSecretWithStorage(&selfKeyParams, &peerKeyBuff, ED25519,
+        PAKE_PSK_LEN, sharedKeyAlias);
+    if (res != HC_SUCCESS) {
+        LOGE("Agree psk failed.");
+    }
+    return res;
+}
+
 static int32_t ComputeAndSavePsk(const CmdParams *params)
 {
     uint8_t selfKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
@@ -374,12 +394,12 @@ static int32_t ComputeAndSavePsk(const CmdParams *params)
         LOGE("generate peer keyAlias failed");
         return res;
     }
-    res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias);
+    res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, params->isSelfFromUpgrade);
     if (res != HC_SUCCESS) {
         LOGE("self auth keyPair not exist");
         return res;
     }
-    res = GetLoaderInstance()->checkKeyExist(&peerKeyAlias);
+    res = GetLoaderInstance()->checkKeyExist(&peerKeyAlias, false);
     if (res != HC_SUCCESS) {
         LOGE("peer auth pubKey not exist");
         return res;
@@ -397,15 +417,7 @@ static int32_t ComputeAndSavePsk(const CmdParams *params)
         selfKeyAliasVal[DEV_AUTH_TWO], selfKeyAliasVal[DEV_AUTH_THREE]);
     LOGI("psk alias: %x %x %x %x****", sharedKeyAliasVal[DEV_AUTH_ZERO], sharedKeyAliasVal[DEV_AUTH_ONE],
         sharedKeyAliasVal[DEV_AUTH_TWO], sharedKeyAliasVal[DEV_AUTH_THREE]);
-    KeyBuff selfKeyAliasBuff = { selfKeyAlias.val, selfKeyAlias.length, true };
-    KeyBuff peerKeyAliasBuff = { peerKeyAlias.val, peerKeyAlias.length, true };
-    res = GetLoaderInstance()->agreeSharedSecretWithStorage(&selfKeyAliasBuff, &peerKeyAliasBuff, ED25519,
-        PAKE_PSK_LEN, &sharedKeyAlias);
-    if (res != HC_SUCCESS) {
-        LOGE("Agree psk failed.");
-        return res;
-    }
-    return HC_SUCCESS;
+    return ComputeAndSavePskInner(&selfKeyAlias, &peerKeyAlias, params->isSelfFromUpgrade, &sharedKeyAlias);
 }
 
 static int32_t SavePeerPubKey(const CmdParams *params)

@@ -65,8 +65,9 @@ ERR:
 static int32_t GenerateOutputKey(PakeParams *params)
 {
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_RETURN_KEY, strlen(HICHAIN_RETURN_KEY) };
-    int32_t res = params->baseParams.loader->computeHkdf(&(params->baseParams.sessionKey), &(params->baseParams.salt),
-        &keyInfo, &(params->returnKey), false);
+    KeyParams keyParam = { { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false }, false };
+    int32_t res = params->baseParams.loader->computeHkdf(&keyParam, &(params->baseParams.salt),
+        &keyInfo, &(params->returnKey));
     if (res != HC_SUCCESS) {
         LOGE("Generate returnKey failed.");
         FreeAndCleanKey(&(params->returnKey));

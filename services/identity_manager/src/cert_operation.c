@@ -315,14 +315,12 @@ static int32_t GetSharedSecretForAccountInPake(
         HcFree(priAliasVal);
         return ret;
     }
-    KeyBuff priAliasKeyBuff = { .key = aliasBuff.val, .keyLen = aliasBuff.length, .isAlias = true };
     Uint8Buff peerPkBuff = { 0 };
     ret = GetPeerPubKeyFromCert(peerCertInfo, &peerPkBuff);
     if (ret != HC_SUCCESS) {
         HcFree(priAliasVal);
         return ret;
     }
-    KeyBuff publicKeyBuff = { .key = peerPkBuff.val, .keyLen = peerPkBuff.length, .isAlias = false };
 
     uint32_t sharedKeyAliasLen = HcStrlen(SHARED_KEY_ALIAS) + 1;
     sharedSecret->val = (uint8_t *)HcMalloc(sharedKeyAliasLen, 0);
@@ -334,8 +332,10 @@ static int32_t GetSharedSecretForAccountInPake(
     }
     sharedSecret->length = sharedKeyAliasLen;
     (void)memcpy_s(sharedSecret->val, sharedKeyAliasLen, SHARED_KEY_ALIAS, sharedKeyAliasLen);
+    KeyParams privKeyParams = { { aliasBuff.val, aliasBuff.length, true }, false };
+    KeyBuff pubKeyBuff = { peerPkBuff.val, peerPkBuff.length, false };
     ret = GetLoaderInstance()->agreeSharedSecretWithStorage(
-        &priAliasKeyBuff, &publicKeyBuff, P256, P256_SHARED_SECRET_KEY_SIZE, sharedSecret);
+        &privKeyParams, &pubKeyBuff, P256, P256_SHARED_SECRET_KEY_SIZE, sharedSecret);
     HcFree(priAliasVal);
     ClearFreeUint8Buff(&peerPkBuff);
     if (ret != HC_SUCCESS) {
@@ -488,7 +488,8 @@ static int32_t GenerateAuthTokenForAccessory(int32_t osAccountId, const char *gr
     authToken->length = AUTH_TOKEN_SIZE;
     Uint8Buff userIdBuff = { (uint8_t *)userIdSelf, HcStrlen(userIdSelf) };
     Uint8Buff challenge = { (uint8_t *)KEY_INFO_PERSISTENT_TOKEN, HcStrlen(KEY_INFO_PERSISTENT_TOKEN) };
-    ret = GetLoaderInstance()->computeHkdf(&keyAlias, &userIdBuff, &challenge, authToken, true);
+    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false };
+    ret = GetLoaderInstance()->computeHkdf(&keyAliasParams, &userIdBuff, &challenge, authToken);
     DestroyDeviceEntry(deviceEntry);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to computeHkdf from authCode to authToken!");

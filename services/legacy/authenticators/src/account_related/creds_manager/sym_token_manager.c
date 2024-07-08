@@ -413,7 +413,7 @@ static int32_t DeleteSymTokenFromKeyManager(const SymToken *token)
         HcFree(keyAliasVal);
         return res;
     }
-    res = GetLoaderInstance()->deleteKey(&keyAlias);
+    res = GetLoaderInstance()->deleteKey(&keyAlias, false);
     HcFree(keyAliasVal);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete sym token! res: %d", res);

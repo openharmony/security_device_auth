@@ -153,7 +153,7 @@ static int32_t LoadPseudonymFlagIfNeed(PakeParams *params)
         return res;
     }
     Uint8Buff extInfoBuff = { NULL, 0 };
-    res = params->baseParams.loader->getKeyExtInfo(&peerKeyAlias, &extInfoBuff);
+    res = params->baseParams.loader->getKeyExtInfo(&peerKeyAlias, &extInfoBuff, true);
     if (res != HC_SUCCESS) {
         LOGE("Failed to get public key extInfo!");
         return res;
@@ -291,7 +291,8 @@ int32_t FillPskWithDerivedKeyHex(PakeParams *params)
     }
 
     LOGI("Psk alias(HEX): %x%x%x%x****.", pskKeyAliasVal[0], pskKeyAliasVal[1], pskKeyAliasVal[2], pskKeyAliasVal[3]);
-    if (params->baseParams.loader->checkKeyExist(&pskKeyAlias) != HC_SUCCESS) {
+    bool isDeStorage = params->isSelfFromUpgrade;
+    if (params->baseParams.loader->checkKeyExist(&pskKeyAlias, isDeStorage) != HC_SUCCESS) {
         res = GetStandardTokenManagerInstance()->computeAndSavePsk(params);
         if (res != HC_SUCCESS) {
             LOGE("ComputeAndSavePsk failed, res: %d.", res);
@@ -306,7 +307,8 @@ int32_t FillPskWithDerivedKeyHex(PakeParams *params)
         return HC_ERR_ALLOC_MEMORY;
     }
     Uint8Buff keyInfo = { (uint8_t *)TMP_AUTH_KEY_FACTOR, strlen(TMP_AUTH_KEY_FACTOR) };
-    res = params->baseParams.loader->computeHkdf(&pskKeyAlias, &(params->nonce), &keyInfo, &pskByte, true);
+    KeyParams keyAliasParams = { { pskKeyAlias.val, pskKeyAlias.length, true }, isDeStorage };
+    res = params->baseParams.loader->computeHkdf(&keyAliasParams, &(params->nonce), &keyInfo, &pskByte);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHkdf for psk failed, res: %d.", res);
         goto ERR;
@@ -393,7 +395,7 @@ int32_t LoadPseudonymExtInfoIfNeed(PakeParams *params)
         return res;
     }
     Uint8Buff extInfoBuff = { NULL, 0 };
-    res = params->baseParams.loader->getKeyExtInfo(&pskAliasBuff, &extInfoBuff);
+    res = params->baseParams.loader->getKeyExtInfo(&pskAliasBuff, &extInfoBuff, true);
     if (res != HC_SUCCESS) {
         LOGE("Failed to get pseudonym psk extInfo!");
         return res;
@@ -468,13 +470,14 @@ static int32_t GeneratePseudonymPskIfNotExist(const PakeParams *params)
         LOGE("Failed to convert pseudonym psk alias to lower case!");
         return res;
     }
-    if (params->baseParams.loader->checkKeyExist(&pskAliasBuff) == HC_SUCCESS) {
+    if (params->baseParams.loader->checkKeyExist(&pskAliasBuff, true) == HC_SUCCESS) {
         LOGI("Pseudonym psk already exist.");
         return HC_SUCCESS;
     }
     uint8_t outKeyVal[PAKE_PSK_LEN] = { 0 };
     Uint8Buff outKeyBuff = { outKeyVal, PAKE_PSK_LEN };
-    res = params->baseParams.loader->computePseudonymPsk(&baseKeyAliasBuff, &pskAliasBuff, NULL, &outKeyBuff);
+    KeyParams baseKeyParams = { { baseKeyAliasBuff.val, baseKeyAliasBuff.length, true }, true };
+    res = params->baseParams.loader->computePseudonymPsk(&baseKeyParams, &pskAliasBuff, NULL, &outKeyBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to compute pseudonym psk!");
     }
@@ -572,7 +575,8 @@ static int32_t GenerateSelfPseudonymChlgAndId(const PakeParams *params, Uint8Buf
         LOGE("Failed to convert pseudonym psk alias to lower case!");
         return res;
     }
-    res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasBuff, pseudonymChlgBuff, pseudonymIdBuff);
+    KeyParams pskAliasParams = { { pskAliasBuff.val, pskAliasBuff.length, true }, true };
+    res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasParams, pseudonymChlgBuff, pseudonymIdBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate pseudonym id!");
     }
@@ -666,7 +670,8 @@ static int32_t CheckPseudonymIdByCompute(const PakeParams *params, const Uint8Bu
     }
     uint8_t computePeerPseudonymId[PSEUDONYM_ID_LEN] = { 0 };
     Uint8Buff computePeerPseudonymIdBuff = { computePeerPseudonymId, PSEUDONYM_ID_LEN };
-    res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasBuff, peerPseudonymChallengeBuff,
+    KeyParams pskAliasParams = { { pskAliasBuff.val, pskAliasBuff.length, true }, true };
+    res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasParams, peerPseudonymChallengeBuff,
         &computePeerPseudonymIdBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate peer pseudonym id!");
@@ -789,9 +794,15 @@ static int32_t SaveExtInfoToPseudonymPsk(const PakeParams *params, const Uint8Bu
         LOGE("Failed to generate psk alias!");
         return res;
     }
+    res = ToLowerCase(&baseKeyAliasBuff);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to convert psk alias to lower case!");
+        return res;
+    }
     uint8_t outKeyVal[PAKE_PSK_LEN] = { 0 };
     Uint8Buff outKeyBuff = { outKeyVal, PAKE_PSK_LEN };
-    res = params->baseParams.loader->computePseudonymPsk(&baseKeyAliasBuff, pskAliasBuff, extInfoStrBuff,
+    KeyParams baseKeyParams = { { baseKeyAliasBuff.val, baseKeyAliasBuff.length, true }, true };
+    res = params->baseParams.loader->computePseudonymPsk(&baseKeyParams, pskAliasBuff, extInfoStrBuff,
         &outKeyBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to save extInfo to pseudonym psk!");
@@ -821,7 +832,8 @@ int32_t SaveNextPseudonymIdAndChallenge(PakeParams *params)
     uint8_t selfNextPseudonymId[PSEUDONYM_ID_LEN] = { 0 };
     Uint8Buff selfNextPseudonymIdBuff = { selfNextPseudonymId, PSEUDONYM_ID_LEN };
     Uint8Buff selfNextPseudonymChallengeBuff = { params->selfNextPseudonymChallenge, PSEUDONYM_CHALLENGE_LEN };
-    res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasBuff, &selfNextPseudonymChallengeBuff,
+    KeyParams pskAliasParams = { { pskAliasBuff.val, pskAliasBuff.length, true }, true };
+    res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasParams, &selfNextPseudonymChallengeBuff,
         &selfNextPseudonymIdBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to compute next self pseudonym id!");
@@ -830,7 +842,7 @@ int32_t SaveNextPseudonymIdAndChallenge(PakeParams *params)
     uint8_t peerNextPseudonymId[PSEUDONYM_ID_LEN] = { 0 };
     Uint8Buff peerNextPseudonymIdBuff = { peerNextPseudonymId, PSEUDONYM_ID_LEN };
     Uint8Buff peerNextPseudonymChallengeBuff = { params->peerNextPseudonymChallenge, PSEUDONYM_CHALLENGE_LEN };
-    res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasBuff, &peerNextPseudonymChallengeBuff,
+    res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasParams, &peerNextPseudonymChallengeBuff,
         &peerNextPseudonymIdBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to compute next peer pseudonym id!");

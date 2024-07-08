@@ -32,7 +32,7 @@ static int32_t RegisterLocalIdentity(const char *pkgName, const char *serviceTyp
         return res;
     }
 
-    res = loader->checkKeyExist(&keyAliasBuff);
+    res = loader->checkKeyExist(&keyAliasBuff, false);
     if (res == HC_SUCCESS) {
         LOGD("Key pair is exist.");
         return HC_SUCCESS;
@@ -64,7 +64,7 @@ static int32_t UnregisterLocalIdentity(const char *pkgName, const char *serviceT
     }
     LOGI("KeyPair alias(HEX): %x%x%x%x****.", pakeKeyAliasVal[DEV_AUTH_ZERO], pakeKeyAliasVal[DEV_AUTH_ONE],
         pakeKeyAliasVal[DEV_AUTH_TWO], pakeKeyAliasVal[DEV_AUTH_THREE]);
-    res = loader->deleteKey(&pakeKeyAliasBuff);
+    res = loader->deleteKey(&pakeKeyAliasBuff, false);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete key pair!");
         return res;
@@ -86,7 +86,7 @@ static int32_t UnregisterLocalIdentity(const char *pkgName, const char *serviceT
         }
         LOGI("Upgrade key pair alias(HEX): %x%x%x%x****.", pakeKeyAliasVal[DEV_AUTH_ZERO],
             pakeKeyAliasVal[DEV_AUTH_ONE], pakeKeyAliasVal[DEV_AUTH_TWO], pakeKeyAliasVal[DEV_AUTH_THREE]);
-        res = loader->deleteKey(&pakeKeyAliasBuff);
+        res = loader->deleteKey(&pakeKeyAliasBuff, true);
         if (res != HC_SUCCESS) {
             LOGE("Failed to delete upgrade key pair!");
             return res;
@@ -108,7 +108,7 @@ static int32_t DeletePeerPubKey(const Uint8Buff *pkgNameBuff, const Uint8Buff *s
     LOGI("PubKey alias(HEX): %x%x%x%x****.", pakeKeyAliasBuff->val[DEV_AUTH_ZERO], pakeKeyAliasBuff->val[DEV_AUTH_ONE],
         pakeKeyAliasBuff->val[DEV_AUTH_TWO], pakeKeyAliasBuff->val[DEV_AUTH_THREE]);
     const AlgLoader *loader = GetLoaderInstance();
-    res = loader->deleteKey(pakeKeyAliasBuff);
+    res = loader->deleteKey(pakeKeyAliasBuff, false);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete peer public key!");
         return res;
@@ -120,7 +120,7 @@ static int32_t DeletePeerPubKey(const Uint8Buff *pkgNameBuff, const Uint8Buff *s
         LOGE("Failed to convert peer key alias to lower case!");
         return res;
     }
-    res = loader->deleteKey(pakeKeyAliasBuff);
+    res = loader->deleteKey(pakeKeyAliasBuff, true);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete peer public key by lower case alias!");
     }
@@ -138,7 +138,12 @@ static int32_t DeleteAuthPsk(const Uint8Buff *pkgNameBuff, const Uint8Buff *serv
     LOGI("Psk alias(HEX): %x%x%x%x****.", pakeKeyAliasBuff->val[DEV_AUTH_ZERO], pakeKeyAliasBuff->val[DEV_AUTH_ONE],
         pakeKeyAliasBuff->val[DEV_AUTH_TWO], pakeKeyAliasBuff->val[DEV_AUTH_THREE]);
     const AlgLoader *loader = GetLoaderInstance();
-    res = loader->deleteKey(pakeKeyAliasBuff);
+    res = loader->deleteKey(pakeKeyAliasBuff, false);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to delete psk!");
+        return res;
+    }
+    res = loader->deleteKey(pakeKeyAliasBuff, true);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete psk!");
         return res;
@@ -150,7 +155,7 @@ static int32_t DeleteAuthPsk(const Uint8Buff *pkgNameBuff, const Uint8Buff *serv
         LOGE("Failed to convert psk alias to lower case!");
         return res;
     }
-    res = loader->deleteKey(pakeKeyAliasBuff);
+    res = loader->deleteKey(pakeKeyAliasBuff, true);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete psk by lower case alias!");
     }
@@ -190,7 +195,7 @@ static int32_t DeletePeerAuthInfo(const char *pkgName, const char *serviceType, 
         LOGE("Failed to convert pseudonym psk alias to lower case!");
         return res;
     }
-    res = loader->deleteKey(&pakeKeyAliasBuff);
+    res = loader->deleteKey(&pakeKeyAliasBuff, true);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete pseudonym psk!");
         return res;
@@ -268,6 +273,33 @@ static int32_t GenerateSharedKeyAlias(const PakeParams *params, Uint8Buff *share
     return HC_SUCCESS;
 }
 
+static int32_t ComputeAndSavePskInner(const PakeParams *params, const Uint8Buff *selfKeyAlias,
+    const Uint8Buff *peerKeyAlias, Uint8Buff *sharedKeyAlias)
+{
+    KeyParams selfKeyParams = { { selfKeyAlias->val, selfKeyAlias->length, true }, params->isSelfFromUpgrade };
+    KeyBuff peerKeyBuff = { peerKeyAlias->val, peerKeyAlias->length, true };
+    int32_t res;
+    Algorithm alg = (params->baseParams.curveType == CURVE_256) ? P256 : ED25519;
+    if (alg == ED25519) {
+        uint8_t peerPubKeyVal[PAKE_ED25519_KEY_PAIR_LEN] = { 0 };
+        Uint8Buff peerPubKeyBuff = { peerPubKeyVal, PAKE_ED25519_KEY_PAIR_LEN };
+        res = params->baseParams.loader->exportPublicKey(peerKeyAlias, params->isPeerFromUpgrade, &peerPubKeyBuff);
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to export peer public key!");
+            return res;
+        }
+        peerKeyBuff.key = peerPubKeyBuff.val;
+        peerKeyBuff.keyLen = peerPubKeyBuff.length;
+        peerKeyBuff.isAlias = false;
+    }
+    res = params->baseParams.loader->agreeSharedSecretWithStorage(&selfKeyParams, &peerKeyBuff, alg,
+        PAKE_PSK_LEN, sharedKeyAlias);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to agree psk!");
+    }
+    return res;
+}
+
 static int32_t ComputeAndSavePsk(const PakeParams *params)
 {
     uint8_t selfKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
@@ -284,12 +316,12 @@ static int32_t ComputeAndSavePsk(const PakeParams *params)
         return res;
     }
 
-    res = params->baseParams.loader->checkKeyExist(&selfKeyAlias);
+    res = params->baseParams.loader->checkKeyExist(&selfKeyAlias, params->isSelfFromUpgrade);
     if (res != HC_SUCCESS) {
         LOGE("self auth keyPair not exist");
         return res;
     }
-    res = params->baseParams.loader->checkKeyExist(&peerKeyAlias);
+    res = params->baseParams.loader->checkKeyExist(&peerKeyAlias, params->isPeerFromUpgrade);
     if (res != HC_SUCCESS) {
         LOGE("peer auth pubKey not exist");
         return res;
@@ -309,11 +341,7 @@ static int32_t ComputeAndSavePsk(const PakeParams *params)
         selfKeyAliasVal[DEV_AUTH_TWO], selfKeyAliasVal[DEV_AUTH_THREE],
         sharedKeyAliasVal[DEV_AUTH_ZERO], sharedKeyAliasVal[DEV_AUTH_ONE],
         sharedKeyAliasVal[DEV_AUTH_TWO], sharedKeyAliasVal[DEV_AUTH_THREE]);
-    KeyBuff selfKeyAliasBuff = { selfKeyAlias.val, selfKeyAlias.length, true };
-    KeyBuff peerKeyAliasBuff = { peerKeyAlias.val, peerKeyAlias.length, true };
-    Algorithm alg = (params->baseParams.curveType == CURVE_256) ? P256 : ED25519;
-    return params->baseParams.loader->agreeSharedSecretWithStorage(&selfKeyAliasBuff, &peerKeyAliasBuff, alg,
-        PAKE_PSK_LEN, &sharedKeyAlias);
+    return ComputeAndSavePskInner(params, &selfKeyAlias, &peerKeyAlias, &sharedKeyAlias);
 }
 
 static int32_t GetPublicKey(const char *pkgName, const char *serviceType, Uint8Buff *authId, int userType,
@@ -331,22 +359,26 @@ static int32_t GetPublicKey(const char *pkgName, const char *serviceType, Uint8B
         return res;
     }
 
-    res = loader->checkKeyExist(&keyAliasBuff);
+    bool isDeStorage = false;
+    res = loader->checkKeyExist(&keyAliasBuff, false);
     if (res != HC_SUCCESS) {
-        LOGE("Key pair is not exist!");
-        res = ToLowerCase(&keyAliasBuff);
+        isDeStorage = true;
+        res = loader->checkKeyExist(&keyAliasBuff, true);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to convert key alias to lower case!");
-            return res;
-        }
-        res = loader->checkKeyExist(&keyAliasBuff);
-        if (res != HC_SUCCESS) {
-            LOGE("Key not exist by lower case alias!");
-            return res;
+            res = ToLowerCase(&keyAliasBuff);
+            if (res != HC_SUCCESS) {
+                LOGE("Failed to convert key alias to lower case!");
+                return res;
+            }
+            res = loader->checkKeyExist(&keyAliasBuff, true);
+            if (res != HC_SUCCESS) {
+                LOGE("Key not exist!");
+                return res;
+            }
         }
     }
 
-    res = loader->exportPublicKey(&keyAliasBuff, returnPk);
+    res = loader->exportPublicKey(&keyAliasBuff, isDeStorage, returnPk);
     if (res != HC_SUCCESS) {
         LOGE("Failed to export public key!");
         return res;

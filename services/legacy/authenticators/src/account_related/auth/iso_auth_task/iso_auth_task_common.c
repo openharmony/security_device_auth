@@ -158,7 +158,8 @@ static int32_t GenerateAuthTokenForAccessory(const IsoAuthParams *params, Uint8B
         .val = (uint8_t *)(params->userIdSelf),
         .length = HcStrlen(params->userIdSelf)
     };
-    res = params->isoBaseParams.loader->computeHkdf(&keyAlias, &userIdSelfBuff, &params->challenge, outKey, true);
+    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false };
+    res = params->isoBaseParams.loader->computeHkdf(&keyAliasParams, &userIdSelfBuff, &params->challenge, outKey);
     if (res != HC_SUCCESS) {
         LOGE("Failed to computeHkdf from authCode to authToken.");
         FreeAndCleanKey(outKey);

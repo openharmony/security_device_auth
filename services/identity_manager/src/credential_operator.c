@@ -383,7 +383,7 @@ static int32_t IsKeyExistReturnAliasIfNeeded(CredentialRequestParamT *param, Uin
         return HC_ERR_MEMORY_COPY;
     }
 
-    res = GetLoaderInstance()->checkKeyExist(&keyAliasBuff);
+    res = GetLoaderInstance()->checkKeyExist(&keyAliasBuff, false);
     if (res != HC_SUCCESS) {
         return HC_ERR_LOCAL_IDENTITY_NOT_EXIST;
     }
@@ -511,12 +511,12 @@ static int32_t ComputeAndSavePsk(const char *peerServiceType, const char *peerAu
     }
     LOGI("peerKeyAlias(HEX): %x%x%x%x****", peerKeyAliasVal[DEV_AUTH_ZERO], peerKeyAliasVal[DEV_AUTH_ONE],
         peerKeyAliasVal[DEV_AUTH_TWO], peerKeyAliasVal[DEV_AUTH_THREE]);
-    res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias);
+    res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, false);
     if (res != HC_SUCCESS) {
         LOGE("self auth keyPair not exist .");
         return res;
     }
-    res = GetLoaderInstance()->checkKeyExist(&peerKeyAlias);
+    res = GetLoaderInstance()->checkKeyExist(&peerKeyAlias, false);
     if (res != HC_SUCCESS) {
         LOGE("peer auth pubKey not exist");
         return res;
@@ -532,10 +532,10 @@ static int32_t ComputeAndSavePsk(const char *peerServiceType, const char *peerAu
     LOGI("psk alias(HEX): %x%x%x%x****", sharedKeyAliasVal[DEV_AUTH_ZERO], sharedKeyAliasVal[DEV_AUTH_ONE],
         sharedKeyAliasVal[DEV_AUTH_TWO], sharedKeyAliasVal[DEV_AUTH_THREE]);
 
-    KeyBuff selfKeyAliasBuff = { selfKeyAlias.val, selfKeyAlias.length, true };
-    KeyBuff peerKeyAliasBuff = { peerKeyAlias.val, peerKeyAlias.length, true };
+    KeyParams selfKeyParams = { { selfKeyAlias.val, selfKeyAlias.length, true }, false };
+    KeyBuff peerKeyBuff = { peerKeyAlias.val, peerKeyAlias.length, true };
     return GetLoaderInstance()->agreeSharedSecretWithStorage(
-        &selfKeyAliasBuff, &peerKeyAliasBuff, ED25519, PAKE_PSK_LEN, &sharedKeyAlias);
+        &selfKeyParams, &peerKeyBuff, ED25519, PAKE_PSK_LEN, &sharedKeyAlias);
 }
 
 static int32_t IsSelfKeyPairExist(int keyType)
@@ -561,7 +561,7 @@ static int32_t IsSelfKeyPairExist(int keyType)
     LOGI("selfKeyAlias(HEX): %x%x%x%x****", selfKeyAliasVal[DEV_AUTH_ZERO], selfKeyAliasVal[DEV_AUTH_ONE],
         selfKeyAliasVal[DEV_AUTH_TWO], selfKeyAliasVal[DEV_AUTH_THREE]);
 
-    res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias);
+    res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, false);
     if (res != HC_SUCCESS) {
         LOGE("self keypair not exist");
         return res;

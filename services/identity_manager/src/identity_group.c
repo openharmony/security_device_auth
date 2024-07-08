@@ -152,7 +152,7 @@ static bool IsP2pAuthTokenExist(const TrustedDeviceEntry *deviceEntry)
         return false;
     }
 
-    ret = GetLoaderInstance()->checkKeyExist(&keyAlias);
+    ret = GetLoaderInstance()->checkKeyExist(&keyAlias, false);
     if (ret != HC_SUCCESS) {
         LOGE("auth token not exist!");
         return false;
@@ -450,8 +450,33 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
     return ret;
 }
 
-static int32_t AuthGeneratePsk(
-    const CJson *in, const char *groupId, const Uint8Buff *seed, Uint8Buff *sharedSecret)
+static int32_t GenerateKeyAliasForIso(const TrustedDeviceEntry *deviceEntry, Uint8Buff *keyAliasBuff)
+{
+    Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, (uint32_t)strlen(GROUP_MANAGER_PACKAGE_NAME) };
+    const char *serviceType = StringGet(&deviceEntry->serviceType);
+    Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, (uint32_t)strlen(serviceType) };
+    const char *peerAuthId = StringGet(&deviceEntry->authId);
+    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, (uint32_t)strlen(peerAuthId) };
+    KeyAliasType keyType = KEY_ALIAS_AUTH_TOKEN;
+    if (deviceEntry->upgradeFlag == 1) {
+        keyType = deviceEntry->devType;
+    }
+    int32_t ret = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, keyType, &peerAuthIdBuff, keyAliasBuff);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to generate key alias for iso!");
+        return ret;
+    }
+    if (deviceEntry->upgradeFlag == 1) {
+        ret = ToLowerCase(keyAliasBuff);
+        if (ret != HC_SUCCESS) {
+            LOGE("Failed to convert psk alias to lower case!");
+            return ret;
+        }
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t AuthGeneratePsk(const CJson *in, const char *groupId, const Uint8Buff *seed, Uint8Buff *sharedSecret)
 {
     int32_t osAccountId = INVALID_OS_ACCOUNT;
     if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
@@ -476,23 +501,20 @@ static int32_t AuthGeneratePsk(
         keyAliasBuf.val = upgradeKeyAlias;
         keyAliasBuf.length = ISO_UPGRADE_KEY_ALIAS_LEN;
     }
-    Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME,
-        (uint32_t)strlen(GROUP_MANAGER_PACKAGE_NAME) };
-    const char *serviceType = StringGet(&deviceEntry->serviceType);
-    Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, (uint32_t)strlen(serviceType) };
-    const char *peerAuthId = StringGet(&deviceEntry->authId);
-    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, (uint32_t)strlen(peerAuthId) };
-    KeyAliasType keyType = KEY_ALIAS_AUTH_TOKEN;
-    if (deviceEntry->upgradeFlag == 1) {
-        keyType = deviceEntry->devType;
-    }
-    ret = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, keyType, &peerAuthIdBuff, &keyAliasBuf);
-    DestroyDeviceEntry(deviceEntry);
+    ret = GenerateKeyAliasForIso(deviceEntry, &keyAliasBuf);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to generate key alias in iso!");
+        DestroyDeviceEntry(deviceEntry);
         return ret;
     }
-    return GetLoaderInstance()->computeHmac(&keyAliasBuf, seed, sharedSecret, true);
+    if (deviceEntry->upgradeFlag == 1) {
+        KeyParams keyAliasParams = { { keyAliasBuf.val, keyAliasBuf.length, true }, true };
+        ret = GetLoaderInstance()->computeHmacWithThreeStage(&keyAliasParams, seed, sharedSecret);
+    } else {
+        ret = GetLoaderInstance()->computeHmac(&keyAliasBuf, seed, sharedSecret, true);
+    }
+    DestroyDeviceEntry(deviceEntry);
+    return ret;
 }
 
 static int32_t GetSharedSecretForP2pInIso(const CJson *in, const char *groupId, Uint8Buff *sharedSecret)
@@ -643,21 +665,28 @@ static int32_t ComputeAndSavePsk(int32_t osAccountId, const char *groupId,
         return ret;
     }
 
-    ret = GetLoaderInstance()->checkKeyExist(&selfKeyAlias);
+    ret = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, isSelfFromUpgrade);
     if (ret != HC_SUCCESS) {
         LOGE("self auth keyPair not exist!");
         return ret;
     }
-    ret = GetLoaderInstance()->checkKeyExist(&peerKeyAlias);
+    bool isPeerFromUpgrade = peerDeviceEntry->upgradeFlag == 1;
+    ret = GetLoaderInstance()->checkKeyExist(&peerKeyAlias, isPeerFromUpgrade);
     if (ret != HC_SUCCESS) {
         LOGE("peer auth pubKey not exist!");
         return ret;
     }
-
-    KeyBuff selfKeyAliasBuff = { selfKeyAlias.val, selfKeyAlias.length, true };
-    KeyBuff peerKeyAliasBuff = { peerKeyAlias.val, peerKeyAlias.length, true };
+    uint8_t peerPubKeyVal[PAKE_ED25519_KEY_PAIR_LEN] = { 0 };
+    Uint8Buff peerPubKeyBuff = { peerPubKeyVal, PAKE_ED25519_KEY_PAIR_LEN };
+    ret = GetLoaderInstance()->exportPublicKey(&peerKeyAlias, isPeerFromUpgrade, &peerPubKeyBuff);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to export peer public key!");
+        return ret;
+    }
+    KeyParams selfKeyAliasParams = { { selfKeyAlias.val, selfKeyAlias.length, true }, isSelfFromUpgrade };
+    KeyBuff peerKeyBuff = { peerPubKeyBuff.val, peerPubKeyBuff.length, false };
     return GetLoaderInstance()->agreeSharedSecretWithStorage(
-        &selfKeyAliasBuff, &peerKeyAliasBuff, ED25519, PAKE_PSK_LEN, sharedKeyAlias);
+        &selfKeyAliasParams, &peerKeyBuff, ED25519, PAKE_PSK_LEN, sharedKeyAlias);
 }
 
 static int32_t GeneratePskAliasAndCheckExist(const CJson *in, const char *groupId, Uint8Buff *pskKeyAlias)
@@ -689,7 +718,8 @@ static int32_t GeneratePskAliasAndCheckExist(const CJson *in, const char *groupI
         DestroyDeviceEntry(deviceEntry);
         return ret;
     }
-    if (deviceEntry->upgradeFlag == 1) {
+    bool isPeerFromUpgrade = deviceEntry->upgradeFlag == 1;
+    if (isPeerFromUpgrade) {
         ret = ToLowerCase(pskKeyAlias);
         if (ret != HC_SUCCESS) {
             LOGE("Failed to convert psk alias to lower case!");
@@ -699,7 +729,7 @@ static int32_t GeneratePskAliasAndCheckExist(const CJson *in, const char *groupI
     }
     LOGI("psk alias: %x %x %x %x****.", pskKeyAlias->val[DEV_AUTH_ZERO], pskKeyAlias->val[DEV_AUTH_ONE],
         pskKeyAlias->val[DEV_AUTH_TWO], pskKeyAlias->val[DEV_AUTH_THREE]);
-    if (GetLoaderInstance()->checkKeyExist(pskKeyAlias) != HC_SUCCESS) {
+    if (GetLoaderInstance()->checkKeyExist(pskKeyAlias, isPeerFromUpgrade) != HC_SUCCESS) {
         ret = ComputeAndSavePsk(osAccountId, groupId, deviceEntry, pskKeyAlias);
     }
     DestroyDeviceEntry(deviceEntry);
@@ -736,7 +766,8 @@ static int32_t GetSharedSecretForP2pInPake(const CJson *in, const char *groupId,
         return HC_ERR_JSON_GET;
     }
     Uint8Buff keyInfo = { (uint8_t *)TMP_AUTH_KEY_FACTOR, strlen(TMP_AUTH_KEY_FACTOR) };
-    ret = GetLoaderInstance()->computeHkdf(&pskKeyAlias, &nonceBuff, &keyInfo, &pskBuff, true);
+    KeyParams keyAliasParams = { { pskKeyAlias.val, pskKeyAlias.length, true }, false };
+    ret = GetLoaderInstance()->computeHkdf(&keyAliasParams, &nonceBuff, &keyInfo, &pskBuff);
     HcFree(nonceVal);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to compute hkdf for psk!");

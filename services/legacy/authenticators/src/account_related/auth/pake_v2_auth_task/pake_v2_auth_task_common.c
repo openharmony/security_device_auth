@@ -106,16 +106,6 @@ int32_t GenerateEcdhSharedKey(PakeAuthParams *params)
         HcFree(priAliasVal);
         return res;
     }
-    KeyBuff priAliasKeyBuff = {
-        .key = aliasBuff.val,
-        .keyLen = aliasBuff.length,
-        .isAlias = true
-    };
-    KeyBuff publicKeyBuff = {
-        .key = params->pkPeerBuff.val,
-        .keyLen = params->pkPeerBuff.length,
-        .isAlias = false
-    };
     uint32_t sharedKeyAliasLen = HcStrlen(SHARED_KEY_ALIAS) + 1;
     params->pakeParams.psk.val = (uint8_t *)HcMalloc(sharedKeyAliasLen, 0);
     if (params->pakeParams.psk.val == NULL) {
@@ -125,7 +115,9 @@ int32_t GenerateEcdhSharedKey(PakeAuthParams *params)
     }
     params->pakeParams.psk.length = sharedKeyAliasLen;
     (void)memcpy_s(params->pakeParams.psk.val, sharedKeyAliasLen, SHARED_KEY_ALIAS, sharedKeyAliasLen);
-    res = params->pakeParams.loader->agreeSharedSecretWithStorage(&priAliasKeyBuff, &publicKeyBuff,
+    KeyParams privKeyParams = { { aliasBuff.val, aliasBuff.length, true }, false };
+    KeyBuff pubKeyBuff = { params->pkPeerBuff.val, params->pkPeerBuff.length, false };
+    res = params->pakeParams.loader->agreeSharedSecretWithStorage(&privKeyParams, &pubKeyBuff,
         P256, P256_SHARED_SECRET_KEY_SIZE, &(params->pakeParams.psk));
     HcFree(priAliasVal);
     return res;
