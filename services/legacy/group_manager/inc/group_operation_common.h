@@ -52,7 +52,7 @@ int32_t CheckPermForGroup(int32_t osAccountId, int actionType, const char *calle
 int32_t AddGroupNameToParams(const char *groupName, TrustedGroupEntry *groupParams);
 int32_t AddGroupIdToParams(const char *groupId, TrustedGroupEntry *groupParams);
 int32_t AddGroupOwnerToParams(const char *owner, TrustedGroupEntry *groupParams);
-int32_t AddGroupTypeToParams(int groupType, TrustedGroupEntry *groupParams);
+int32_t AddGroupTypeToParams(uint32_t groupType, TrustedGroupEntry *groupParams);
 int32_t AddGroupVisibilityOrDefault(const CJson *jsonParams, TrustedGroupEntry *groupParams);
 int32_t AddExpireTimeOrDefault(const CJson *jsonParams, TrustedGroupEntry *groupParams);
 int32_t AddUserIdToGroupParams(const CJson *jsonParams, TrustedGroupEntry *groupParams);

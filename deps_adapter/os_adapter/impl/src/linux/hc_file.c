@@ -119,7 +119,7 @@ int HcFileRead(FileHandle file, void *dst, int dstSize)
     int total = 0;
     LOGI("[OS]: file read enter. [OriSize]: %d", dstSize);
     while (total < dstSize) {
-        int readCount = fread(dstBuffer + total, 1, dstSize - total, fp);
+        int readCount = (int)fread(dstBuffer + total, 1, dstSize - total, fp);
         if (ferror(fp) != 0) {
             LOGE("read file error!");
         }
@@ -147,7 +147,7 @@ int HcFileWrite(FileHandle file, const void *src, int srcSize)
     int total = 0;
     LOGI("[OS]: file write enter. [OriSize]: %d", srcSize);
     while (total < srcSize) {
-        int writeCount = fwrite(srcBuffer + total, 1, srcSize - total, fp);
+        int writeCount = (int)fwrite(srcBuffer + total, 1, srcSize - total, fp);
         if (ferror(fp) != 0) {
             LOGE("write file error!");
         }

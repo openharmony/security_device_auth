@@ -375,8 +375,8 @@ static int32_t QueryAuthGroupForServer(int32_t osAccountId, GroupEntryVec *accou
         return HC_ERR_INVALID_PARAMS;
     }
     QueryGroupParams queryParams = InitQueryGroupParams();
-    queryParams.groupType = groupType;
-    if (groupType == IDENTICAL_ACCOUNT_GROUP) {
+    queryParams.groupType = (uint32_t)groupType;
+    if (queryParams.groupType == IDENTICAL_ACCOUNT_GROUP) {
         queryParams.userId = peerUserId;
     } else {
         queryParams.sharedUserId = peerUserId;
