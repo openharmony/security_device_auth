@@ -850,7 +850,7 @@ static int32_t GetAccessibleGroupInfo(int32_t osAccountId, const char *appId, co
     params.groupId = groupId;
     params.groupName = groupName;
     params.ownerName = groupOwner;
-    params.groupType = groupType;
+    params.groupType = (uint32_t)groupType;
     int32_t result = GetGroupInfo(osAccountId, &params, &groupEntryVec);
     FreeJson(queryParamsJson);
     if (result != HC_SUCCESS) {

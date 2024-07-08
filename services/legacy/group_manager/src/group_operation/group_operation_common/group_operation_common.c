@@ -246,7 +246,7 @@ int32_t GetGroupInfo(int32_t osAccountId, const QueryGroupParams *params, GroupE
 int32_t GetJoinedGroups(int32_t osAccountId, int groupType, GroupEntryVec *returnGroupEntryVec)
 {
     QueryGroupParams params = InitQueryGroupParams();
-    params.groupType = groupType;
+    params.groupType = (uint32_t)groupType;
     return QueryGroups(osAccountId, &params, returnGroupEntryVec);
 }
 
@@ -489,7 +489,7 @@ int32_t AddGroupOwnerToParams(const char *owner, TrustedGroupEntry *groupParams)
     return HC_SUCCESS;
 }
 
-int32_t AddGroupTypeToParams(int groupType, TrustedGroupEntry *groupParams)
+int32_t AddGroupTypeToParams(uint32_t groupType, TrustedGroupEntry *groupParams)
 {
     groupParams->type = groupType;
     return HC_SUCCESS;
