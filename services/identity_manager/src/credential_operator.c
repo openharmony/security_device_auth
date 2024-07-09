@@ -229,7 +229,11 @@ static int32_t DecodeServiceTypeAndPublicKey(CredentialRequestParamT *param, CJs
     } else {
         param->serviceType = strdup(serviceType);
     }
-
+    if (param->serviceType == NULL) {
+        LOGE("strdup serviceType fail!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    
     const char *publicKeyStr = GetStringFromJson(reqJson, FIELD_PUBLIC_KEY);
     if (publicKeyStr != NULL && HcStrlen(publicKeyStr) > 0) {
         if (HcStrlen(publicKeyStr) > PAKE_ED25519_KEY_STR_LEN) {
@@ -271,19 +275,14 @@ static CredentialRequestParamT *DecodeRequestParam(const char *reqJsonStr)
     if (json == NULL) {
         LOGE("Failed to create json from string!");
         FreeCredParam(param);
-        param = NULL;
-        goto ERR;
+        return NULL;
     }
     if (GetIntFromJson(json, FIELD_OS_ACCOUNT_ID, &param->osAccountId) != HC_SUCCESS) {
         LOGE("Failed to get osAccountId from reqJsonStr!");
-        FreeCredParam(param);
-        param = NULL;
         goto ERR;
     }
     if (GetIntFromJson(json, FIELD_ACQURIED_TYPE, &param->acquireType) != HC_SUCCESS) {
         LOGE("Failed to get acquireType from reqJsonStr!");
-        FreeCredParam(param);
-        param = NULL;
         goto ERR;
     }
     if (GetIntFromJson(json, FIELD_CRED_OP_FLAG, &param->flag) != HC_SUCCESS) {
@@ -292,19 +291,22 @@ static CredentialRequestParamT *DecodeRequestParam(const char *reqJsonStr)
     const char *deviceId = GetStringFromJson(json, FIELD_DEVICE_ID);
     if (deviceId == NULL) {
         LOGE("Failed to get deviceId from reqJsonStr!");
-        FreeCredParam(param);
-        param = NULL;
         goto ERR;
-    } else {
-        param->deviceId = strdup(deviceId);
+    }
+    param->deviceId = strdup(deviceId);
+    if (param->deviceId == NULL) {
+        LOGE("Failed to strdup deviceId!");
+        goto ERR;
     }
     if (DecodeServiceTypeAndPublicKey(param, json) != HC_SUCCESS) {
         LOGE("Failed to DecodeServiceTypeAndPublicKey from reqJsonStr!");
-        goto ERR;
     }
-ERR:
     FreeJson(json);
     return param;
+ERR:
+    FreeCredParam(param);
+    FreeJson(json);
+    return NULL;
 }
 
 static int32_t PackPublicKeyToJson(
