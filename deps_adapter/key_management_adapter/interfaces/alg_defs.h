@@ -71,6 +71,11 @@ typedef struct {
     bool isAlias;
 } KeyBuff;
 
+typedef struct {
+    KeyBuff keyBuff;
+    bool isDeStorage;
+} KeyParams;
+
 typedef int32_t (*InitAlgFunc)(void);
 
 typedef int32_t (*Sha256Func)(const Uint8Buff *message, Uint8Buff *hash);
@@ -79,21 +84,22 @@ typedef int32_t (*GenerateRandomFunc)(Uint8Buff *rand);
 
 typedef int32_t (*ComputeHmacFunc)(const Uint8Buff *key, const Uint8Buff *message, Uint8Buff *outHmac, bool isAlias);
 
-typedef int32_t (*ComputeHmacWithThreeStageFunc)(const Uint8Buff *key, const Uint8Buff *message, Uint8Buff *outHmac);
+typedef int32_t (*ComputeHmacWithThreeStageFunc)(const KeyParams *keyParams, const Uint8Buff *message,
+    Uint8Buff *outHmac);
 
-typedef int32_t (*ComputeHkdfFunc)(const Uint8Buff *baseKey, const Uint8Buff *salt, const Uint8Buff *keyInfo,
-    Uint8Buff *outHkdf, bool isAlias);
+typedef int32_t (*ComputeHkdfFunc)(const KeyParams *keyParams, const Uint8Buff *salt, const Uint8Buff *keyInfo,
+    Uint8Buff *outHkdf);
 
-typedef int32_t (*ComputePseudonymPskFunc)(const Uint8Buff *baseKeyAlias, const Uint8Buff *pskKeyAlias,
+typedef int32_t (*ComputePseudonymPskFunc)(const KeyParams *keyParams, const Uint8Buff *pskKeyAlias,
     const Uint8Buff *extInfo, Uint8Buff *outPsk);
 
-typedef int32_t (*GetKeyExtInfoFunc)(const Uint8Buff *keyAlias, Uint8Buff *outExtInfo);
+typedef int32_t (*GetKeyExtInfoFunc)(const Uint8Buff *keyAlias, Uint8Buff *outExtInfo, bool isDeStorage);
 
 typedef int32_t (*ImportSymmetricKeyFunc)(const Uint8Buff *keyAlias, const Uint8Buff *authToken, KeyPurpose purpose,
     const ExtraInfo *exInfo);
 
-typedef int32_t (*CheckKeyExistFunc)(const Uint8Buff *keyAlias);
-typedef int32_t (*DeleteKeyFunc)(const Uint8Buff *keyAlias);
+typedef int32_t (*CheckKeyExistFunc)(const Uint8Buff *keyAlias, bool isDeStorage);
+typedef int32_t (*DeleteKeyFunc)(const Uint8Buff *keyAlias, bool isDeStorage);
 
 typedef int32_t (*AesGcmEncryptFunc)(const Uint8Buff *key, const Uint8Buff *plain,
     const GcmParam *encryptInfo, bool isAlias, Uint8Buff *outCipher);
@@ -105,8 +111,8 @@ typedef int32_t (*GetTrustAuthIdListFunc)(const Uint8Buff *ownerAuthId, int32_t 
 
 typedef int32_t (*HashToPointFunc)(const Uint8Buff *hash, Algorithm algo, Uint8Buff *outEcPoint);
 
-typedef int32_t (*AgreeSharedSecretWithStorageFunc)(const KeyBuff *priKey, const KeyBuff *pubKey, Algorithm algo,
-    uint32_t sharedKeyLen, const Uint8Buff *sharedKeyAlias);
+typedef int32_t (*AgreeSharedSecretWithStorageFunc)(const KeyParams *priKeyParams, const KeyBuff *pubKeyBuff,
+    Algorithm algo, uint32_t sharedKeyLen, const Uint8Buff *sharedKeyAlias);
 
 typedef int32_t (*AgreeSharedSecretFunc)(const KeyBuff *priKey, const KeyBuff *pubKey, Algorithm algo,
     Uint8Buff *sharedKey);
@@ -119,10 +125,10 @@ typedef int32_t (*GenerateKeyPairWithStorageFunc)(const Uint8Buff *keyAlias, uin
 
 typedef int32_t (*GenerateKeyPairFunc)(Algorithm algo, Uint8Buff *outPriKey, Uint8Buff *outPubKey);
 
-typedef int32_t (*ExportPublicKeyFunc)(const Uint8Buff *keyAlias, Uint8Buff *outPubKey);
+typedef int32_t (*ExportPublicKeyFunc)(const Uint8Buff *keyAlias, bool isDeStorage, Uint8Buff *outPubKey);
 
-typedef int32_t (*SignFunc)(const Uint8Buff *keyAlias, const Uint8Buff *message, Algorithm algo,
-    Uint8Buff *outSignature, bool isAlias);
+typedef int32_t (*SignFunc)(const KeyParams *keyParams, const Uint8Buff *message, Algorithm algo,
+    Uint8Buff *outSignature);
 
 typedef int32_t (*VerifyFunc)(const Uint8Buff *key, const Uint8Buff *message, Algorithm algo,
     const Uint8Buff *signature, bool isAlias);

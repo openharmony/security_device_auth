@@ -63,8 +63,7 @@ namespace OHOS {
 #define TEST_DEV_AUTH_SLEEP_TIME 50000
 #define TEST_DEV_AUTH_SLEEP_TIME2 600000
 #define TEST_TRANSMIT_DATA_LEN 2048
-#define TEST_HKS_MAIN_DATA_PATH "/data/service/el1/public/huks_service/maindata/0/0"
-#define TEST_HKS_BAK_DATA_PATH "/data/service/el1/public/huks_service/bakdata/0/0"
+#define TEST_HKS_MAIN_DATA_PATH "/data/service/el1/public/huks_service/tmp/+0+0+0+0"
 #define TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN 32
 static const int32_t TEST_AUTH_OS_ACCOUNT_ID = 100;
 static const int TEST_DEV_AUTH_BUFFER_SIZE = 128;
@@ -228,13 +227,12 @@ static void DeleteDatabase()
     const char *groupPath = "/data/service/el1/public/deviceauthMock";
     RemoveDir(groupPath);
     RemoveDir(TEST_HKS_MAIN_DATA_PATH);
-    RemoveDir(TEST_HKS_BAK_DATA_PATH);
     return;
 }
 
 static int32_t GenerateTempKeyPair(const Uint8Buff *keyAlias)
 {
-    int32_t ret = GetLoaderInstance()->checkKeyExist(keyAlias);
+    int32_t ret = GetLoaderInstance()->checkKeyExist(keyAlias, false);
     if (ret != HC_SUCCESS) {
         int32_t authId = 0;
         Uint8Buff authIdBuff = { reinterpret_cast<uint8_t *>(&authId), sizeof(int32_t)};
@@ -262,7 +260,7 @@ static CJson *GetAsyCredentialJson(const std::string registerInfo)
         .length = SERVER_PK_SIZE
     };
 
-    int32_t ret = GetLoaderInstance()->exportPublicKey(&keyAlias, &serverPk);
+    int32_t ret = GetLoaderInstance()->exportPublicKey(&keyAlias, false, &serverPk);
     if (ret != HC_SUCCESS) {
         HcFree(serverPkVal);
         return nullptr;
@@ -277,7 +275,8 @@ static CJson *GetAsyCredentialJson(const std::string registerInfo)
         .val = signatureValue,
         .length = SIGNATURE_SIZE
     };
-    ret = GetLoaderInstance()->sign(&keyAlias, &messageBuff, P256, &signature, true);
+    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false };
+    ret = GetLoaderInstance()->sign(&keyAliasParams, &messageBuff, P256, &signature);
     if (ret != HC_SUCCESS) {
         HcFree(serverPkVal);
         HcFree(signatureValue);

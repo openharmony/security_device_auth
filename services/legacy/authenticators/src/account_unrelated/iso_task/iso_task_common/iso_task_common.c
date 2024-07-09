@@ -60,8 +60,8 @@ static int GenerateReturnKey(IsoParams *params, uint8_t *returnKey, uint32_t ret
     Uint8Buff hkdfSaltBuf = { hkdfSalt, hkdfSaltLen };
     Uint8Buff keyInfoBuf = { (uint8_t *)GENERATE_RETURN_KEY_STR, (uint32_t)strlen(GENERATE_RETURN_KEY_STR) };
     Uint8Buff returnKeyBuf = { returnKey, returnKeyLen };
-    res = params->baseParams.loader->computeHkdf(&(params->baseParams.sessionKey), &hkdfSaltBuf, &keyInfoBuf,
-        &returnKeyBuf, false);
+    KeyParams keyParam = { { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false }, false };
+    res = params->baseParams.loader->computeHkdf(&keyParam, &hkdfSaltBuf, &keyInfoBuf, &returnKeyBuf);
     if (res != HC_SUCCESS) {
         LOGE("computeHkdf for returnKey failed.");
         goto ERR;
@@ -242,24 +242,53 @@ ERR:
     return res;
 }
 
+static int32_t GenerateKeyAliasForIso(const IsoParams *params, Uint8Buff *keyAliasBuff)
+{
+    int32_t res;
+    Uint8Buff serviceType = { (uint8_t *)params->serviceType, (uint32_t)strlen(params->serviceType) };
+    if (params->isPeerFromUpgrade) {
+        Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, strlen(GROUP_MANAGER_PACKAGE_NAME) };
+        res = GenerateKeyAlias(&pkgNameBuff, &serviceType, params->peerUserType, &params->baseParams.authIdPeer,
+            keyAliasBuff);
+    } else {
+        Uint8Buff pkgNameBuff = { (uint8_t *)params->packageName, (uint32_t)strlen(params->packageName) };
+        res = GenerateKeyAlias(&pkgNameBuff, &serviceType, KEY_ALIAS_AUTH_TOKEN, &params->baseParams.authIdPeer,
+            keyAliasBuff);
+    }
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to generate iso key alias!");
+        return res;
+    }
+    if (params->isPeerFromUpgrade) {
+        res = ToLowerCase(keyAliasBuff);
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to convert psk alias to lower case!");
+            return res;
+        }
+    }
+    return HC_SUCCESS;
+}
+
 void DeleteAuthCode(const IsoParams *params)
 {
-    uint8_t *keyAlias = (uint8_t *)HcMalloc(ISO_KEY_ALIAS_LEN, 0);
-    if (keyAlias == NULL) {
+    uint8_t keyAlias[ISO_KEY_ALIAS_LEN] = { 0 };
+    uint8_t upgradeKeyAlias[ISO_UPGRADE_KEY_ALIAS_LEN] = { 0 };
+    Uint8Buff keyAliasBuff = { keyAlias, ISO_KEY_ALIAS_LEN };
+    if (params->isPeerFromUpgrade) {
+        keyAliasBuff.val = upgradeKeyAlias;
+        keyAliasBuff.length = ISO_UPGRADE_KEY_ALIAS_LEN;
+    }
+    int32_t res = GenerateKeyAliasForIso(params, &keyAliasBuff);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to generate iso key alias!");
         return;
     }
-    int res = GenerateKeyAliasInIso(params, keyAlias, ISO_KEY_ALIAS_LEN, true);
-    if (res != 0) {
-        LOGE("GenerateKeyAliasInIso failed, res:%d", res);
-        goto ERR;
+    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAliasBuff.val[DEV_AUTH_ZERO], keyAliasBuff.val[DEV_AUTH_ONE],
+        keyAliasBuff.val[DEV_AUTH_TWO], keyAliasBuff.val[DEV_AUTH_THREE]);
+    res = params->baseParams.loader->deleteKey(&keyAliasBuff, params->isPeerFromUpgrade);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to delete auth code!");
     }
-    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias[DEV_AUTH_ZERO], keyAlias[DEV_AUTH_ONE],
-        keyAlias[DEV_AUTH_TWO], keyAlias[DEV_AUTH_THREE]);
-    Uint8Buff outKeyAlias = { keyAlias, ISO_KEY_ALIAS_LEN };
-    params->baseParams.loader->deleteKey(&outKeyAlias);
-ERR:
-    HcFree(keyAlias);
-    return;
 }
 
 void DestroyIsoParams(IsoParams *params)
@@ -525,37 +554,23 @@ static int AuthGeneratePsk(const Uint8Buff *seed, IsoParams *params)
 {
     uint8_t keyAlias[ISO_KEY_ALIAS_LEN] = { 0 };
     uint8_t upgradeKeyAlias[ISO_UPGRADE_KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, (uint32_t)strlen(params->serviceType) };
     Uint8Buff keyAliasBuff = { keyAlias, ISO_KEY_ALIAS_LEN };
-    int32_t res;
     if (params->isPeerFromUpgrade) {
         keyAliasBuff.val = upgradeKeyAlias;
         keyAliasBuff.length = ISO_UPGRADE_KEY_ALIAS_LEN;
-        Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, strlen(GROUP_MANAGER_PACKAGE_NAME) };
-        res = GenerateKeyAlias(&pkgNameBuff, &serviceType, params->peerUserType, &params->baseParams.authIdPeer,
-            &keyAliasBuff);
-    } else {
-        Uint8Buff pkgNameBuff = { (uint8_t *)params->packageName, (uint32_t)strlen(params->packageName) };
-        res = GenerateKeyAlias(&pkgNameBuff, &serviceType, KEY_ALIAS_AUTH_TOKEN, &params->baseParams.authIdPeer,
-            &keyAliasBuff);
     }
-    if (res != 0) {
+    int32_t res = GenerateKeyAliasForIso(params, &keyAliasBuff);
+    if (res != HC_SUCCESS) {
         LOGE("Failed to generate iso key alias!");
         return res;
-    }
-    if (params->isPeerFromUpgrade) {
-        res = ToLowerCase(&keyAliasBuff);
-        if (res != HC_SUCCESS) {
-            LOGE("Failed to convert psk alias to lower case!");
-            return res;
-        }
     }
 
     LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAliasBuff.val[DEV_AUTH_ZERO], keyAliasBuff.val[DEV_AUTH_ONE],
         keyAliasBuff.val[DEV_AUTH_TWO], keyAliasBuff.val[DEV_AUTH_THREE]);
     Uint8Buff pskBuf = { params->baseParams.psk, sizeof(params->baseParams.psk) };
     if (params->isPeerFromUpgrade) {
-        return params->baseParams.loader->computeHmacWithThreeStage(&keyAliasBuff, seed, &pskBuf);
+        KeyParams keyAliasParams = { { keyAliasBuff.val, keyAliasBuff.length, true }, true };
+        return params->baseParams.loader->computeHmacWithThreeStage(&keyAliasParams, seed, &pskBuf);
     } else {
         return params->baseParams.loader->computeHmac(&keyAliasBuff, seed, &pskBuf, true);
     }

@@ -660,7 +660,7 @@ static int32_t DoExportPkAndCompare(const char *userId, const char *deviceId,
         g_accountDbMutex->unlock(g_accountDbMutex);
         return ret;
     }
-    ret = g_algLoader->checkKeyExist(keyAlias);
+    ret = g_algLoader->checkKeyExist(keyAlias, false);
     if (ret != HAL_SUCCESS) {
         LOGE("Key pair not exist.");
         g_accountDbMutex->unlock(g_accountDbMutex);
@@ -676,7 +676,7 @@ static int32_t DoExportPkAndCompare(const char *userId, const char *deviceId,
         .val = publicKeyVal,
         .length = PK_SIZE
     };
-    ret = g_algLoader->exportPublicKey(keyAlias, &publicKey);
+    ret = g_algLoader->exportPublicKey(keyAlias, false, &publicKey);
     if (ret != HAL_SUCCESS) {
         LOGE("Failed to export public key");
         HcFree(publicKeyVal);
@@ -795,7 +795,7 @@ static int32_t DoGenerateAndExportPk(const char *userId, const char *deviceId,
         g_accountDbMutex->unlock(g_accountDbMutex);
         return ret;
     }
-    ret = g_algLoader->checkKeyExist(keyAlias);
+    ret = g_algLoader->checkKeyExist(keyAlias, false);
     if (ret != HAL_SUCCESS) {
         LOGI("Key pair not exist, start to generate");
         int32_t authId = 0;
@@ -811,7 +811,7 @@ static int32_t DoGenerateAndExportPk(const char *userId, const char *deviceId,
         g_accountDbMutex->unlock(g_accountDbMutex);
         return ret;
     }
-    ret = g_algLoader->exportPublicKey(keyAlias, publicKey);
+    ret = g_algLoader->exportPublicKey(keyAlias, false, publicKey);
     g_accountDbMutex->unlock(g_accountDbMutex);
     return ret;
 }
@@ -887,7 +887,7 @@ static void DeleteKeyPair(AccountToken *token)
         g_accountDbMutex->unlock(g_accountDbMutex);
         return;
     }
-    if (g_algLoader->deleteKey(&keyAlias) != HAL_SUCCESS) {
+    if (g_algLoader->deleteKey(&keyAlias, false) != HAL_SUCCESS) {
         LOGE("Failed to delete key pair");
     } else {
         LOGI("Delete key pair success");

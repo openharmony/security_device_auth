@@ -35,7 +35,7 @@ static int32_t UnregisterLocalIdentity(const char *pkgName, const char *serviceT
     }
     LOGI("AuthCode alias(HEX): %x%x%x%x****.", isoKeyAliasVal[DEV_AUTH_ZERO], isoKeyAliasVal[DEV_AUTH_ONE],
         isoKeyAliasVal[DEV_AUTH_TWO], isoKeyAliasVal[DEV_AUTH_THREE]);
-    res = loader->deleteKey(&isoKeyAliasBuff);
+    res = loader->deleteKey(&isoKeyAliasBuff, false);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete authtoken!");
         return res;
@@ -60,7 +60,7 @@ static int32_t DeletePeerAuthInfo(const char *pkgName, const char *serviceType, 
     }
     LOGI("AuthCode alias(HEX): %x%x%x%x****.", isoKeyAliasVal[DEV_AUTH_ZERO], isoKeyAliasVal[DEV_AUTH_ONE],
         isoKeyAliasVal[DEV_AUTH_TWO], isoKeyAliasVal[DEV_AUTH_THREE]);
-    res = loader->deleteKey(&isoKeyAliasBuff);
+    res = loader->deleteKey(&isoKeyAliasBuff, false);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete authtoken!");
         return res;
@@ -83,7 +83,7 @@ static int32_t DeletePeerAuthInfo(const char *pkgName, const char *serviceType, 
     LOGI("Upgrade auth code alias(HEX): %x%x%x%x****.", isoUpgradeKeyAliasVal[DEV_AUTH_ZERO],
         isoUpgradeKeyAliasVal[DEV_AUTH_ONE], isoUpgradeKeyAliasVal[DEV_AUTH_TWO],
         isoUpgradeKeyAliasVal[DEV_AUTH_THREE]);
-    res = loader->deleteKey(&isoUpgradeKeyAliasBuff);
+    res = loader->deleteKey(&isoUpgradeKeyAliasBuff, true);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete upgrade auth token!");
         return res;

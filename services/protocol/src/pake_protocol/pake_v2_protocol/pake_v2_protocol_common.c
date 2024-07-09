@@ -180,7 +180,8 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
     }
 
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_BASE_INFO, HcStrlen(HICHAIN_SPEKE_BASE_INFO) };
-    res = params->loader->computeHkdf(&(params->psk), &(params->salt), &keyInfo, &secret, false);
+    KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false };
+    res = params->loader->computeHkdf(&keyParams, &(params->salt), &keyInfo, &secret);
     if (res != HC_SUCCESS) {
         LOGE("Derive secret from psk failed, res: %x.", res);
         goto CLEAN_UP;
@@ -564,7 +565,8 @@ OUT:
 static int32_t GenerateSessionKey(PakeBaseParams *params)
 {
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_SESSIONKEY_INFO, HcStrlen(HICHAIN_SPEKE_SESSIONKEY_INFO) };
-    int res = params->loader->computeHkdf(&params->sharedSecret, &params->salt, &keyInfo, &params->sessionKey, false);
+    KeyParams keyParams = { { params->sharedSecret.val, params->sharedSecret.length, false }, false };
+    int res = params->loader->computeHkdf(&keyParams, &params->salt, &keyInfo, &params->sessionKey);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHkdf for sessionKey failed, res: %x.", res);
         CleanPakeSensitiveKeys(params);

@@ -88,10 +88,9 @@ void DestroyStandardBindExchangeParams(StandardBindExchangeParams *params)
     }
 }
 
-static int32_t PackageAuthInfo(const PakeParams *pakeParams, StandardBindExchangeParams *exchangeParams,
-    const Uint8Buff *keyAlias)
+static int32_t GenerateKeyPairIfNotExist(const PakeParams *pakeParams, const Uint8Buff *keyAlias)
 {
-    int32_t res = pakeParams->baseParams.loader->checkKeyExist(keyAlias);
+    int32_t res = pakeParams->baseParams.loader->checkKeyExist(keyAlias, pakeParams->isSelfFromUpgrade);
     if (res != HC_SUCCESS) {
         if (pakeParams->isSelfFromUpgrade) {
             LOGE("Self data is from upgrade, self authInfo not exist!");
@@ -105,11 +104,23 @@ static int32_t PackageAuthInfo(const PakeParams *pakeParams, StandardBindExchang
             KEY_PURPOSE_SIGN_VERIFY, &exInfo);
         if (res != HC_SUCCESS) {
             LOGE("generate self auth keyPair failed.");
-            return res;
         }
+        return res;
+    } else {
+        return HC_SUCCESS;
+    }
+}
+
+static int32_t PackageAuthInfo(const PakeParams *pakeParams, StandardBindExchangeParams *exchangeParams,
+    const Uint8Buff *keyAlias)
+{
+    int32_t res = GenerateKeyPairIfNotExist(pakeParams, keyAlias);
+    if (res != HC_SUCCESS) {
+        return res;
     }
 
-    res = pakeParams->baseParams.loader->exportPublicKey(keyAlias, &(exchangeParams->pubKeySelf));
+    res = pakeParams->baseParams.loader->exportPublicKey(keyAlias, pakeParams->isSelfFromUpgrade,
+        &(exchangeParams->pubKeySelf));
     if (res != HC_SUCCESS) {
         LOGE("exportPublicKey failed");
         return res;
@@ -183,7 +194,8 @@ static int32_t GenerateSignInfo(const PakeParams *pakeParams, const StandardBind
     }
 
     Algorithm alg = (pakeParams->baseParams.curveType == CURVE_256) ? P256 : ED25519;
-    res = pakeParams->baseParams.loader->sign(keyAlias, &msgInfo, alg, signInfo, true);
+    KeyParams keyAliasParams = { { keyAlias->val, keyAlias->length, true }, pakeParams->isSelfFromUpgrade };
+    res = pakeParams->baseParams.loader->sign(&keyAliasParams, &msgInfo, alg, signInfo);
     if (res != HC_SUCCESS) {
         LOGE("sign failed");
         goto ERR;

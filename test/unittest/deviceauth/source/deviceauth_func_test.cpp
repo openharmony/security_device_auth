@@ -55,8 +55,7 @@ namespace {
 #define TEST_INVALID_AUTH_PARAMS "TestInvalidAuthParams"
 #define TEST_INVALID_ADD_PARAMS "TestInvalidAddParams"
 #define TEST_GROUP_DATA_PATH "/data/service/el1/public/deviceauthMock"
-#define TEST_HKS_MAIN_DATA_PATH "/data/service/el1/public/huks_service/maindata/0/0"
-#define TEST_HKS_BAK_DATA_PATH "/data/service/el1/public/huks_service/bakdata/0/0"
+#define TEST_HKS_MAIN_DATA_PATH "/data/service/el1/public/huks_service/tmp/+0+0+0+0"
 #define TEST_DEV_AUTH_SLEEP_TIME 50000
 #define TEST_DEV_AUTH_SLEEP_TIME2 60000
 #define TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN 32
@@ -926,7 +925,7 @@ static void AddDemoMember(void)
 
 static bool GenerateTempKeyPair(Uint8Buff *keyAlias)
 {
-    int ret = GetLoaderInstance()->checkKeyExist(keyAlias);
+    int ret = GetLoaderInstance()->checkKeyExist(keyAlias, false);
     if (ret != HC_SUCCESS) {
         printf("Key pair not exist, start to generate\n");
         int32_t authId = 0;
@@ -964,7 +963,7 @@ static CJson *GetAsyCredentialJson(string registerInfo)
         .length = SERVER_PK_SIZE
     };
 
-    int32_t ret = GetLoaderInstance()->exportPublicKey(&keyAlias, &serverPk);
+    int32_t ret = GetLoaderInstance()->exportPublicKey(&keyAlias, false, &serverPk);
     if (ret != HC_SUCCESS) {
         printf("export PublicKey failed\n");
         HcFree(serverPkVal);
@@ -980,7 +979,8 @@ static CJson *GetAsyCredentialJson(string registerInfo)
         .val = signatureValue,
         .length = SIGNATURE_SIZE
     };
-    ret = GetLoaderInstance()->sign(&keyAlias, &messageBuff, P256, &signature, true);
+    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false };
+    ret = GetLoaderInstance()->sign(&keyAliasParams, &messageBuff, P256, &signature);
     if (ret != HC_SUCCESS) {
         printf("Sign pkInfo failed.\n");
         HcFree(serverPkVal);
@@ -1123,7 +1123,6 @@ static void DeleteDatabase()
 {
     RemoveDir(TEST_GROUP_DATA_PATH);
     RemoveDir(TEST_HKS_MAIN_DATA_PATH);
-    RemoveDir(TEST_HKS_BAK_DATA_PATH);
 }
 
 class DaAuthDeviceTest : public testing::Test {

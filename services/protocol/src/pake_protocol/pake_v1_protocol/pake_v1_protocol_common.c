@@ -192,7 +192,8 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
     }
 
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_BASE_INFO, HcStrlen(HICHAIN_SPEKE_BASE_INFO) };
-    res = params->loader->computeHkdf(&(params->psk), &(params->salt), &keyInfo, &secret, false);
+    KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false };
+    res = params->loader->computeHkdf(&keyParams, &(params->salt), &keyInfo, &secret);
     if (res != HC_SUCCESS) {
         LOGE("Derive secret from psk failed, res: %x.", res);
         goto CLEAN_UP;
@@ -232,7 +233,8 @@ static int32_t DeriveKeyFromSharedSecret(PakeBaseParams *params)
         goto CLEAN_UP;
     }
 
-    res = params->loader->computeHkdf(&(params->sharedSecret), &(params->salt), &keyInfo, &unionKey, false);
+    KeyParams keyParams = { { params->sharedSecret.val, params->sharedSecret.length, false }, false };
+    res = params->loader->computeHkdf(&keyParams, &(params->salt), &keyInfo, &unionKey);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHkdf for unionKey failed, res: %x.", res);
         goto CLEAN_UP;

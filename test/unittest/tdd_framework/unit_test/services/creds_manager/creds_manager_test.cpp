@@ -64,8 +64,7 @@ static const std::string TEST_AUTH_PARAMS = "{\"peerConnDeviceId\":\"52E2706717D
     "749558BD2E6492C\",\"servicePkgName\":\"TestAppId\",\"isClient\":true}";
 static const std::string TEST_AUTH_CODE = "1234123412341234123412341234123412341234123412341234123412341234";
 static const std::string TEST_GROUP_DATA_PATH = "/data/service/el1/public/deviceauthMock";
-static const std::string TEST_HKS_MAIN_DATA_PATH = "/data/service/el1/public/huks_service/maindata/0/0";
-static const std::string TEST_HKS_BAK_DATA_PATH = "/data/service/el1/public/huks_service/bakdata/0/0";
+static const std::string TEST_HKS_MAIN_DATA_PATH = "/data/service/el1/public/huks_service/tmp/+0+0+0+0";
 
 static const int TEST_DEV_AUTH_BUFFER_SIZE = 128;
 static const int32_t TEST_AUTH_OS_ACCOUNT_ID = 100;
@@ -178,7 +177,6 @@ static void DeleteDatabase()
 {
     RemoveDir(TEST_GROUP_DATA_PATH.c_str());
     RemoveDir(TEST_HKS_MAIN_DATA_PATH.c_str());
-    RemoveDir(TEST_HKS_BAK_DATA_PATH.c_str());
 }
 
 static void CreateDemoGroup(int32_t osAccountId, int64_t reqId, const char *appId, const char *createParams)
@@ -285,7 +283,7 @@ static void AuthDemoMember(void)
 
 static bool GenerateTempKeyPair(Uint8Buff *keyAlias)
 {
-    int res = GetLoaderInstance()->checkKeyExist(keyAlias);
+    int res = GetLoaderInstance()->checkKeyExist(keyAlias, false);
     if (res == HC_SUCCESS) {
         printf("Server key pair already exists\n");
         return true;
@@ -320,7 +318,7 @@ static CJson *GetAsyCredentialJson(string registerInfo)
         .length = SERVER_PK_SIZE
     };
 
-    int32_t ret = GetLoaderInstance()->exportPublicKey(&keyAlias, &serverPk);
+    int32_t ret = GetLoaderInstance()->exportPublicKey(&keyAlias, false, &serverPk);
     if (ret != HC_SUCCESS) {
         printf("export PublicKey failed\n");
         HcFree(serverPkVal);
@@ -336,7 +334,8 @@ static CJson *GetAsyCredentialJson(string registerInfo)
         .val = signatureValue,
         .length = SIGNATURE_SIZE
     };
-    ret = GetLoaderInstance()->sign(&keyAlias, &messageBuff, P256, &signature, true);
+    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false };
+    ret = GetLoaderInstance()->sign(&keyAliasParams, &messageBuff, P256, &signature);
     if (ret != HC_SUCCESS) {
         printf("Sign pkInfo failed.\n");
         HcFree(serverPkVal);

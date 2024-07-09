@@ -154,7 +154,8 @@ static int32_t KeyDerivation(const Uint8Buff *baseAlias, const Uint8Buff *salt, 
     Uint8Buff *returnKey)
 {
     Uint8Buff keyInfo = { (uint8_t *)MK_DERIVE_INFO, HcStrlen(MK_DERIVE_INFO) };
-    int32_t res = GetLoaderInstance()->computeHkdf(baseAlias, salt, &keyInfo, returnKey, isAlias);
+    KeyParams keyAliasParams = { { baseAlias->val, baseAlias->length, isAlias }, false };
+    int32_t res = GetLoaderInstance()->computeHkdf(&keyAliasParams, salt, &keyInfo, returnKey);
     if (res != HC_SUCCESS) {
         LOGE("Failed to compute hkdf!");
     }
@@ -170,7 +171,7 @@ int32_t GenerateDeviceKeyPair(void)
         LOGE("Failed to generate device key alias!");
         return res;
     }
-    if (GetLoaderInstance()->checkKeyExist(&keyAliasBuff) == HC_SUCCESS) {
+    if (GetLoaderInstance()->checkKeyExist(&keyAliasBuff, false) == HC_SUCCESS) {
         LOGI("Device Key pair already exists!");
         return HC_SUCCESS;
     }
@@ -213,9 +214,9 @@ int32_t GenerateMk(const char *peerDeviceId, const Uint8Buff *peerPubKey)
         LOGE("Failed to generate device key alias!");
         return res;
     }
-    KeyBuff selfKeyAliasBuff = { devKeyAliasBuff.val, devKeyAliasBuff.length, true };
-    KeyBuff peerPubKeyBuff = { peerPubKey->val, peerPubKey->length, false };
-    res = GetLoaderInstance()->agreeSharedSecretWithStorage(&selfKeyAliasBuff, &peerPubKeyBuff, X25519,
+    KeyParams selfKeyParams = { { devKeyAliasBuff.val, devKeyAliasBuff.length, true }, false };
+    KeyBuff peerKeyBuff = { peerPubKey->val, peerPubKey->length, false };
+    res = GetLoaderInstance()->agreeSharedSecretWithStorage(&selfKeyParams, &peerKeyBuff, X25519,
         MK_LEN, &mkAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to agree sharedSecret!");
@@ -238,11 +239,11 @@ int32_t DeleteMk(const char *peerDeviceId)
         LOGE("Failed to generate mk alias!");
         return res;
     }
-    if (GetLoaderInstance()->checkKeyExist(&mkAliasBuff) != HC_SUCCESS) {
+    if (GetLoaderInstance()->checkKeyExist(&mkAliasBuff, false) != HC_SUCCESS) {
         LOGI("mk does not exist, no need to delete!");
         return HC_SUCCESS;
     }
-    res = GetLoaderInstance()->deleteKey(&mkAliasBuff);
+    res = GetLoaderInstance()->deleteKey(&mkAliasBuff, false);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete mk!");
         return res;
@@ -305,11 +306,11 @@ int32_t DeletePseudonymPsk(const char *peerDeviceId)
         LOGE("Failed to generate psk alias!");
         return res;
     }
-    if (GetLoaderInstance()->checkKeyExist(&pskAliasBuff) != HC_SUCCESS) {
+    if (GetLoaderInstance()->checkKeyExist(&pskAliasBuff, false) != HC_SUCCESS) {
         LOGI("Pseudonym psk does not exist, no need to delete!");
         return HC_SUCCESS;
     }
-    res = GetLoaderInstance()->deleteKey(&pskAliasBuff);
+    res = GetLoaderInstance()->deleteKey(&pskAliasBuff, false);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete pseudonym psk!");
         return res;
@@ -381,7 +382,7 @@ int32_t GetDevicePubKey(Uint8Buff *devicePk)
         LOGE("Failed to generate device key alias!");
         return res;
     }
-    res = GetLoaderInstance()->exportPublicKey(&keyAliasBuff, devicePk);
+    res = GetLoaderInstance()->exportPublicKey(&keyAliasBuff, false, devicePk);
     if (res != HC_SUCCESS) {
         LOGE("Failed to export device pk!");
     }

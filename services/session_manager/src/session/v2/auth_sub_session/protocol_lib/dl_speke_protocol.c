@@ -255,7 +255,8 @@ static int32_t CalSalt(DlSpekeParams *params)
 static int32_t CalSecret(DlSpekeParams *params, Uint8Buff *secret)
 {
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_BASE_INFO, HcStrlen(HICHAIN_SPEKE_BASE_INFO) };
-    int32_t res = GetLoaderInstance()->computeHkdf(&(params->psk), &(params->salt), &keyInfo, secret, false);
+    KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false };
+    int32_t res = GetLoaderInstance()->computeHkdf(&keyParams, &(params->salt), &keyInfo, secret);
     if (res != HC_SUCCESS) {
         LOGE("Derive secret from psk failed, res: %x.", res);
         return res;
@@ -651,8 +652,9 @@ static int32_t CalSessionKey(DlSpekeProtocol *impl)
         return HC_ERR_ALLOC_MEMORY;
     }
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_SESSIONKEY_INFO, HcStrlen(HICHAIN_SPEKE_SESSIONKEY_INFO) };
-    int32_t res = GetLoaderInstance()->computeHkdf(&impl->params.sharedSecret, &impl->params.salt, &keyInfo,
-        &impl->base.sessionKey, false);
+    KeyParams keyParams = { { impl->params.sharedSecret.val, impl->params.sharedSecret.length, false }, false };
+    int32_t res = GetLoaderInstance()->computeHkdf(&keyParams, &impl->params.salt, &keyInfo,
+        &impl->base.sessionKey);
     ClearFreeUint8Buff(&impl->params.salt);
     ClearFreeUint8Buff(&impl->params.sharedSecret);
     if (res != HC_SUCCESS) {

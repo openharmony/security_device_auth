@@ -223,21 +223,21 @@ static int32_t ComputeAndSaveDirectAuthPsk(int32_t osAccountId, const char *self
     LOGI("peerKeyAlias: %x %x %x %x****.", peerKeyAlias.val[DEV_AUTH_ZERO], peerKeyAlias.val[DEV_AUTH_ONE],
         peerKeyAlias.val[DEV_AUTH_TWO], peerKeyAlias.val[DEV_AUTH_THREE]);
 
-    ret = GetLoaderInstance()->checkKeyExist(&selfKeyAlias);
+    ret = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, false);
     if (ret != HC_SUCCESS) {
         LOGE("self auth keyPair not exist!");
         return ret;
     }
-    ret = GetLoaderInstance()->checkKeyExist(&peerKeyAlias);
+    ret = GetLoaderInstance()->checkKeyExist(&peerKeyAlias, false);
     if (ret != HC_SUCCESS) {
         LOGE("peer auth pubKey not exist!");
         return ret;
     }
 
-    KeyBuff selfKeyAliasBuff = { selfKeyAlias.val, selfKeyAlias.length, true };
-    KeyBuff peerKeyAliasBuff = { peerKeyAlias.val, peerKeyAlias.length, true };
+    KeyParams selfKeyParams = { { selfKeyAlias.val, selfKeyAlias.length, true }, false };
+    KeyBuff peerKeyBuff = { peerKeyAlias.val, peerKeyAlias.length, true };
     return GetLoaderInstance()->agreeSharedSecretWithStorage(
-        &selfKeyAliasBuff, &peerKeyAliasBuff, ED25519, PAKE_PSK_LEN, sharedKeyAlias);
+        &selfKeyParams, &peerKeyBuff, ED25519, PAKE_PSK_LEN, sharedKeyAlias);
 }
 
 static int32_t GetDirectAuthPskAliasCreateIfNeeded(const CJson *in, Uint8Buff *pskKeyAlias)
@@ -272,7 +272,7 @@ static int32_t GetDirectAuthPskAliasCreateIfNeeded(const CJson *in, Uint8Buff *p
     }
     LOGI("psk alias: %x %x %x %x****.", pskKeyAlias->val[DEV_AUTH_ZERO], pskKeyAlias->val[DEV_AUTH_ONE],
         pskKeyAlias->val[DEV_AUTH_TWO], pskKeyAlias->val[DEV_AUTH_THREE]);
-    ret = GetLoaderInstance()->checkKeyExist(pskKeyAlias);
+    ret = GetLoaderInstance()->checkKeyExist(pskKeyAlias, false);
     if (ret != HC_SUCCESS) {
         ret = ComputeAndSaveDirectAuthPsk(osAccountId, selfAuthId, peerAuthId, peerServieType, pskKeyAlias);
     }
@@ -314,7 +314,8 @@ static int32_t GetSharedSecretByUrl(
         return HC_ERR_JSON_GET;
     }
     Uint8Buff keyInfo = { (uint8_t *)TMP_AUTH_KEY_FACTOR, strlen(TMP_AUTH_KEY_FACTOR) };
-    ret = GetLoaderInstance()->computeHkdf(&pskKeyAlias, &nonceBuff, &keyInfo, &pskBuff, true);
+    KeyParams keyAliasParams = { { pskKeyAlias.val, pskKeyAlias.length, true }, false };
+    ret = GetLoaderInstance()->computeHkdf(&keyAliasParams, &nonceBuff, &keyInfo, &pskBuff);
     HcFree(nonceVal);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to compute hkdf for psk!");

@@ -220,7 +220,8 @@ static int IsoGenSessionKey(IsoBaseParams *params, Uint8Buff *pskBuf, bool isCli
     }
 
     Uint8Buff keyInfoBuf = { (uint8_t *)GENERATE_SESSION_KEY_STR, HcStrlen(GENERATE_SESSION_KEY_STR) };
-    res = params->loader->computeHkdf(pskBuf, &hkdfSaltBuf, &keyInfoBuf, &params->sessionKey, false);
+    KeyParams keyParams = { { pskBuf->val, pskBuf->length, false }, false };
+    res = params->loader->computeHkdf(&keyParams, &hkdfSaltBuf, &keyInfoBuf, &params->sessionKey);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHkdf for sessionKey failed, res: %x.", res);
         FreeAndCleanKey(&params->sessionKey);

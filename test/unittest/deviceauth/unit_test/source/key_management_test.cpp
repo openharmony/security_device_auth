@@ -129,10 +129,11 @@ HWTEST_F(KeyManagementTest, HuksAdapterTest003, TestSize.Level0)
     int32_t ret = GetLoaderInstance()->initAlg();
     EXPECT_EQ(ret, HAL_SUCCESS);
     uint8_t keyData[P256_PUBLIC_SIZE] = { 0 };
-    KeyBuff priKey = { keyData, P256_PUBLIC_SIZE, false };
-    KeyBuff pubKey = { keyData, P256_PUBLIC_SIZE, false };
     Uint8Buff sharedKey = { keyData, P256_PUBLIC_SIZE };
-    ret = GetLoaderInstance()->agreeSharedSecretWithStorage(&priKey, &pubKey, P256, P256_PUBLIC_SIZE, &sharedKey);
+    KeyParams privKeyParams = { { keyData, P256_PUBLIC_SIZE, false }, false };
+    KeyBuff pubKeyBuff = { keyData, P256_PUBLIC_SIZE, false };
+    ret = GetLoaderInstance()->agreeSharedSecretWithStorage(&privKeyParams, &pubKeyBuff, P256, P256_PUBLIC_SIZE,
+        &sharedKey);
     EXPECT_EQ(ret, HAL_ERR_HUKS);
 }
 

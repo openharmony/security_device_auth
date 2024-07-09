@@ -223,7 +223,8 @@ static int32_t IsoGenSessionKey(IsoProtocol *impl, bool isClient)
     Uint8Buff keyInfoBuf = { (uint8_t *)GENERATE_SESSION_KEY_STR, HcStrlen(GENERATE_SESSION_KEY_STR) };
     uint8_t sessionKeyVal[ISO_SESSION_KEY_LEN] = { 0 };
     Uint8Buff sessionKey = { sessionKeyVal, ISO_SESSION_KEY_LEN };
-    res = GetLoaderInstance()->computeHkdf(&impl->params.psk, &hkdfSaltBuf, &keyInfoBuf, &sessionKey, false);
+    KeyParams keyParams = { { impl->params.psk.val, impl->params.psk.length, false }, false };
+    res = GetLoaderInstance()->computeHkdf(&keyParams, &hkdfSaltBuf, &keyInfoBuf, &sessionKey);
     HcFree(hkdfSalt);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHkdf for sessionKey failed, res: %d", res);

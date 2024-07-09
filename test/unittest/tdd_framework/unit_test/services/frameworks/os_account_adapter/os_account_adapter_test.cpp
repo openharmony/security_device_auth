@@ -40,8 +40,7 @@ namespace {
 #define TEST_AUTH_ID "TestAuthId"
 #define TEST_USER_ID "4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4"
 #define TEST_GROUP_DATA_PATH "/data/service/el1/public/deviceauthMock"
-#define TEST_HKS_MAIN_DATA_PATH "/data/service/el1/public/huks_service/maindata/0/0"
-#define TEST_HKS_BAK_DATA_PATH "/data/service/el1/public/huks_service/bakdata/0/0"
+#define TEST_HKS_MAIN_DATA_PATH "/data/service/el1/public/huks_service/tmp/+0+0+0+0"
 #define TEST_REQ_ID 123
 #define TEST_OS_ACCOUNT_ID 100
 #define TEST_OS_ACCOUNT_ID2 105
@@ -136,7 +135,7 @@ static void CreateDemoGroup(int32_t osAccountId, int64_t reqId, const char *appI
 
 static bool GenerateTempKeyPair(Uint8Buff *keyAlias)
 {
-    int res = GetLoaderInstance()->checkKeyExist(keyAlias);
+    int res = GetLoaderInstance()->checkKeyExist(keyAlias, false);
     if (res == HC_SUCCESS) {
         printf("Server key pair already exists\n");
         return true;
@@ -171,7 +170,7 @@ static CJson *GetAsyCredentialJson(string registerInfo)
         .length = SERVER_PK_SIZE
     };
 
-    int32_t ret = GetLoaderInstance()->exportPublicKey(&keyAlias, &serverPk);
+    int32_t ret = GetLoaderInstance()->exportPublicKey(&keyAlias, false, &serverPk);
     if (ret != HC_SUCCESS) {
         printf("export PublicKey failed\n");
         HcFree(serverPkVal);
@@ -187,7 +186,8 @@ static CJson *GetAsyCredentialJson(string registerInfo)
         .val = signatureValue,
         .length = SIGNATURE_SIZE
     };
-    ret = GetLoaderInstance()->sign(&keyAlias, &messageBuff, P256, &signature, true);
+    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false };
+    ret = GetLoaderInstance()->sign(&keyAliasParams, &messageBuff, P256, &signature);
     if (ret != HC_SUCCESS) {
         printf("Sign pkInfo failed.\n");
         HcFree(serverPkVal);
@@ -278,7 +278,6 @@ static void DeleteDatabase(void)
 {
     RemoveDir(TEST_GROUP_DATA_PATH);
     RemoveDir(TEST_HKS_MAIN_DATA_PATH);
-    RemoveDir(TEST_HKS_BAK_DATA_PATH);
 }
 
 static void OnOsAccountUnlocked(int32_t osAccountId)
