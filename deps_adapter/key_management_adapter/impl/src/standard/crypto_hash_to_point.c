@@ -83,28 +83,75 @@ static const uint8_t g_curveParamQ[KEY_BYTES_CURVE25519] = {
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf6
 };
 
-static void CurveInitConstPara(struct CurveConstPara *para)
+static void HcBnFree(BIGNUM *p)
 {
-    para->p = BN_new();
-    para->one = BN_new();
-    para->d = BN_new();
-    para->k = BN_new();
-    para->capitalA = BN_new();
-    para->minusA = BN_new();
-    para->u = BN_new();
-    para->q = BN_new();
+    if (p == NULL) {
+        return;
+    }
+    BN_free(p);
+}
+
+static void HcBnCTXFree(BN_CTX *ctx)
+{
+    if (ctx == NULL) {
+        return;
+    }
+    BN_CTX_free(ctx);
 }
 
 static void CurveFreeConstPara(struct CurveConstPara *para)
 {
-    BN_free(para->p);
-    BN_free(para->one);
-    BN_free(para->d);
-    BN_free(para->k);
-    BN_free(para->capitalA);
-    BN_free(para->minusA);
-    BN_free(para->u);
-    BN_free(para->q);
+    HcBnFree(para->p);
+    HcBnFree(para->one);
+    HcBnFree(para->d);
+    HcBnFree(para->k);
+    HcBnFree(para->capitalA);
+    HcBnFree(para->minusA);
+    HcBnFree(para->u);
+    HcBnFree(para->q);
+}
+
+static int32_t CurveInitConstPara(struct CurveConstPara *para)
+{
+    do {
+        para->p = BN_new();
+        if (para->p == NULL) {
+            break;
+        }
+        para->one = BN_new();
+        if (para->one == NULL) {
+            break;
+        }
+        para->d = BN_new();
+        if (para->d == NULL) {
+            break;
+        }
+        para->k = BN_new();
+        if (para->k == NULL) {
+            break;
+        }
+        para->capitalA = BN_new();
+        if (para->capitalA == NULL) {
+            break;
+        }
+        para->minusA = BN_new();
+        if (para->minusA == NULL) {
+            break;
+        }
+        para->u = BN_new();
+        if (para->u == NULL) {
+            break;
+        }
+        para->q = BN_new();
+        if (para->q == NULL) {
+            break;
+        }
+        return HAL_SUCCESS;
+    } while (0);
+
+    CurveFreeConstPara(para);
+    
+    return HAL_FAILED;
 }
 
 /* b := -A / (1 + u * a ^ 2) */
@@ -112,6 +159,10 @@ static int32_t CurveHashToPointCalcB(const struct HksBlob *hash,
     const struct CurveConstPara *curvePara, BIGNUM *b, BN_CTX *ctx)
 {
     BIGNUM *swap = BN_new();
+    if (swap == NULL) {
+        return HAL_FAILED;
+    }
+    
     int32_t ret = HAL_FAILED;
     do {
         if (BN_bin2bn(hash->data, hash->size, swap) == NULL) {
@@ -146,7 +197,7 @@ static int32_t CurveHashToPointCalcB(const struct HksBlob *hash,
         }
         ret = HAL_SUCCESS;
     } while (0);
-    BN_free(swap);
+    HcBnFree(swap);
     return ret;
 }
 
@@ -154,9 +205,17 @@ static int32_t CurveHashToPointCalcA(const BIGNUM *b,
     const struct CurveConstPara *curvePara, BIGNUM *a, BN_CTX *ctx)
 {
     BIGNUM *swap = BN_new();
-    BIGNUM *result = BN_new();
-    int32_t ret = HAL_FAILED;
+    if (swap == NULL) {
+        return HAL_FAILED;
+    }
 
+    BIGNUM *result = BN_new();
+    if (result == NULL) {
+        HcBnFree(swap);
+        return HAL_FAILED;
+    }
+
+    int32_t ret = HAL_FAILED;
     do {
         if (BN_mul(result, b, b, ctx) <= 0) {
             break;
@@ -191,8 +250,8 @@ static int32_t CurveHashToPointCalcA(const BIGNUM *b,
         ret = HAL_SUCCESS;
     } while (0);
 
-    BN_free(swap);
-    BN_free(result);
+    HcBnFree(swap);
+    HcBnFree(result);
     return ret;
 }
 
@@ -200,8 +259,11 @@ static int32_t CurveHashToPointCalcC(const BIGNUM *a, BIGNUM *b,
     const struct CurveConstPara *curvePara, BIGNUM *c, BN_CTX *ctx)
 {
     BIGNUM *result = BN_new();
-    int32_t ret = HAL_FAILED;
+    if (result == NULL) {
+        return HAL_FAILED;
+    }
 
+    int32_t ret = HAL_FAILED;
     do {
         /* If a is a quadratic residue modulo p, c := b and high_y := 1 Otherwise c := -b - A and high_y := 0 */
         if (BN_sub(c, curvePara->p, b) <= 0) {
@@ -226,7 +288,7 @@ static int32_t CurveHashToPointCalcC(const BIGNUM *a, BIGNUM *b,
         ret = HAL_SUCCESS;
     } while (0);
 
-    BN_free(result);
+    HcBnFree(result);
     return ret;
 }
 
@@ -266,19 +328,21 @@ static int32_t CurveSetConstPara(struct CurveConstPara *para)
 
 static int32_t CurveHashToPoint(const struct HksBlob *hash, struct HksBlob *point)
 {
+    struct CurveConstPara curvePara;
+    (void)memset_s(&curvePara, sizeof(curvePara), 0, sizeof(curvePara));
+    int32_t ret = CurveInitConstPara(&curvePara);
+    if (ret != HAL_SUCCESS) {
+        return HAL_ERR_BAD_ALLOC;
+    }
     BIGNUM *a = BN_new();
     BIGNUM *b = BN_new();
     BIGNUM *c = BN_new();
-    struct CurveConstPara curvePara;
-    (void)memset_s(&curvePara, sizeof(curvePara), 0, sizeof(curvePara));
-    CurveInitConstPara(&curvePara);
-    int32_t ret;
     BN_CTX *ctx = BN_CTX_new();
-    if (ctx == NULL) {
-        ret = HAL_ERR_BAD_ALLOC;
-        goto ERR;
-    }
     do {
+        if (a == NULL || b == NULL || c == NULL || ctx == NULL) {
+            ret = HAL_ERR_BAD_ALLOC;
+            break;
+        }
         ret = CurveSetConstPara(&curvePara);
         if (ret != HAL_SUCCESS) {
             break;
@@ -287,27 +351,25 @@ static int32_t CurveHashToPoint(const struct HksBlob *hash, struct HksBlob *poin
         if (ret != HAL_SUCCESS) {
             break;
         }
-
         ret = CurveHashToPointCalcA(b, &curvePara, a, ctx);
         if (ret != HAL_SUCCESS) {
             break;
         }
-
         ret = CurveHashToPointCalcC(a, b, &curvePara, c, ctx);
         if (ret != HAL_SUCCESS) {
             break;
         }
-
         if (BN_bn2bin(c, point->data) <= 0) {
             ret = HAL_FAILED;
+            break;
         }
+        ret = HAL_SUCCESS;
     } while (0);
-ERR:
     CurveFreeConstPara(&curvePara);
-    BN_free(a);
-    BN_free(b);
-    BN_free(c);
-    BN_CTX_free(ctx);
+    HcBnFree(a);
+    HcBnFree(b);
+    HcBnFree(c);
+    HcBnCTXFree(ctx);
     return ret;
 }
 
