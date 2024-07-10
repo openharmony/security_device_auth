@@ -14,12 +14,11 @@
  */
 
 #include "compatible_auth_sub_session_util.h"
-
-#include "account_unrelated_group_auth.h"
-#include "account_related_group_auth.h"
 #include "hc_log.h"
 #include "hc_types.h"
 #include "os_account_adapter.h"
+
+static GetGroupAuthFunc g_groupAuthFunc;
 
 static int32_t AuthFormToModuleType(int32_t authForm)
 {
@@ -113,15 +112,10 @@ int32_t GetAuthType(int32_t authForm)
 
 BaseGroupAuth *GetGroupAuth(int32_t groupAuthType)
 {
-    switch (groupAuthType) {
-        case ACCOUNT_UNRELATED_GROUP_AUTH_TYPE:
-            LOGI("Non-account auth type.");
-            return GetAccountUnrelatedGroupAuth();
-        case ACCOUNT_RELATED_GROUP_AUTH_TYPE:
-            LOGI("Account-related auth type.");
-            return GetAccountRelatedGroupAuth();
-        default:
-            LOGE("Invalid auth type!");
-    }
-    return NULL;
+    return g_groupAuthFunc(groupAuthType);
+}
+
+void RegisterGroupAuth(GetGroupAuthFunc getGroupAuthFunc)
+{
+    g_groupAuthFunc = getGroupAuthFunc;
 }

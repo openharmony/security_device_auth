@@ -82,7 +82,6 @@ inc_path = [
 
 deviceauth_common_files = [
   "${services_path}/device_auth.c",
-  "${group_manager_path}/src/group_manager_common.c",
   "${group_manager_path}/src/group_manager.c",
   "${group_manager_path}/src/channel_manager/channel_manager.c",
   "${group_manager_path}/src/callback_manager/callback_manager.c",
@@ -127,8 +126,10 @@ account_subscriber_files =
 sa_subscriber_files =
     [ "${dev_frameworks_path}/src/sa_subscriber/sa_subscriber.cpp" ]
 
-group_auth_files =
-    [ "${group_auth_path}/src/group_auth_manager/group_auth_data_operation.c" ]
+group_auth_files = [
+  "${group_auth_path}/src/group_auth_manager/group_auth_common/group_auth_data_operation.c",
+  "${group_auth_path}/src/group_auth_manager/group_auth_manager.c",
+]
 
 group_auth_account_unrelated_files = [ "${group_auth_path}/src/group_auth_manager/account_unrelated_group_auth/account_unrelated_group_auth.c" ]
 group_auth_account_unrelated_mock_files = [ "${group_auth_path}/src/group_auth_manager/account_unrelated_group_auth_mock/account_unrelated_group_auth_mock.c" ]

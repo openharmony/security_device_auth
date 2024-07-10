@@ -18,8 +18,9 @@
 #include <stddef.h>
 #include "device_auth_defines.h"
 
-int32_t InitSoftBusChannelModule(void)
+int32_t InitSoftBusChannelModule(ChannelProxy *proxy)
 {
+    (void)proxy;
     return HC_SUCCESS;
 }
 

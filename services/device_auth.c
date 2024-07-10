@@ -40,6 +40,7 @@
 #include "task_manager.h"
 #include "performance_dumper.h"
 #include "identity_manager.h"
+#include "group_auth_manager.h"
 
 static GroupAuthManager *g_groupAuthManager =  NULL;
 static DeviceGroupManager *g_groupManagerInstance = NULL;
@@ -54,6 +55,11 @@ typedef struct {
     int64_t sessionId;
     CJson *receivedMsg;
 } ProcSessionTask;
+
+typedef struct {
+    HcTaskBase base;
+    int64_t requestId;
+} SoftBusTask;
 
 static int32_t IsDeviceIdHashMatch(const char *udid, const char *subUdidHash)
 {
@@ -1436,6 +1442,7 @@ static int32_t InitAllModules(void)
     if (res != HC_SUCCESS) {
         goto CLEAN_GROUP_MANAGER;
     }
+    (void)InitGroupAuthManager();
     res = InitTaskManager();
     if (res != HC_SUCCESS) {
         LOGE("[End]: [Service]: Failed to init worker thread!");
@@ -1463,6 +1470,88 @@ static void InitPseudonymModule(void)
         return;
     }
     manager->loadPseudonymData();
+}
+
+static void DoOnChannelOpened(HcTaskBase *baseTask)
+{
+    if (baseTask == NULL) {
+        LOGE("The input task is NULL!");
+        return;
+    }
+    SoftBusTask *task = (SoftBusTask *)baseTask;
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(task->requestId);
+    LOGI("[Start]: DoOnChannelOpened!");
+    int32_t res = StartDevSession(task->requestId);
+    if (res != HC_SUCCESS) {
+        LOGE("start session fail.[Res]: %d", res);
+        CloseDevSession(task->requestId);
+    }
+}
+
+static void InitSoftBusTask(SoftBusTask *task, int64_t requestId)
+{
+    task->base.doAction = DoOnChannelOpened;
+    task->base.destroy = NULL;
+    task->requestId = requestId;
+}
+
+static int OnChannelOpenedCb(int64_t requestId, int result)
+{
+    if (result != HC_SUCCESS) {
+        LOGE("[SoftBus][Out]: Failed to open channel! res: %d", result);
+        CloseDevSession(requestId);
+        return HC_ERR_SOFT_BUS;
+    }
+    LOGI("[Start]: OnChannelOpened! [ReqId]: %" PRId64, requestId);
+    SoftBusTask *task = (SoftBusTask *)HcMalloc(sizeof(SoftBusTask), 0);
+    if (task == NULL) {
+        LOGE("Failed to allocate task memory!");
+        CloseDevSession(requestId);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    InitSoftBusTask(task, requestId);
+    if (PushTask((HcTaskBase *)task) != HC_SUCCESS) {
+        HcFree(task);
+        CloseDevSession(requestId);
+        return HC_ERR_INIT_TASK_FAIL;
+    }
+    LOGI("[End]: OnChannelOpened!");
+    return HC_SUCCESS;
+}
+
+static void OnChannelClosedCb(void)
+{
+    return;
+}
+
+static void OnBytesReceivedCb(int64_t requestId, uint8_t *data, uint32_t dataLen)
+{
+    if ((data == NULL) || (dataLen == 0) || (dataLen > MAX_DATA_BUFFER_SIZE)) {
+        LOGE("Invalid input params!");
+        return;
+    }
+    (void)GetGmInstance()->processData(requestId, data, dataLen);
+}
+
+static int32_t RegCallback(const char *appId, const DeviceAuthCallback *callback)
+{
+    SET_LOG_MODE(NORMAL_MODE);
+    if ((appId == NULL) || (callback == NULL)) {
+        LOGE("The input parameters contains NULL value!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    ChannelProxy proxy = {
+        .onChannelOpened = OnChannelOpenedCb,
+        .onChannelClosed = OnChannelClosedCb,
+        .onBytesReceived = OnBytesReceivedCb
+    };
+    int32_t res = InitChannelManager(&proxy);
+    if (res != HC_SUCCESS) {
+        LOGE("[End]: [Service]: Failed to init channel manage module!");
+        return res;
+    }
+    return RegGroupManagerCallback(appId, callback);
 }
 
 DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
@@ -1521,7 +1610,7 @@ DEVICE_AUTH_API_PUBLIC const DeviceGroupManager *GetGmInstance(void)
         return NULL;
     }
 
-    g_groupManagerInstance->regCallback = RegGroupManagerCallback;
+    g_groupManagerInstance->regCallback = RegCallback;
     g_groupManagerInstance->unRegCallback = UnRegGroupManagerCallback;
     g_groupManagerInstance->regDataChangeListener = RegListenerImpl;
     g_groupManagerInstance->unRegDataChangeListener = UnRegListenerImpl;

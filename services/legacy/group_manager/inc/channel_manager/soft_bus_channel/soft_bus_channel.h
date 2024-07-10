@@ -30,7 +30,17 @@ typedef struct {
     void (*notifyResult)(int64_t channelId);
 } SoftBus;
 
-int32_t InitSoftBusChannelModule(void);
+typedef int (*OnChannelOpened)(int64_t requestId, int result);
+typedef void (*OnChannelClosed)(void);
+typedef void (*OnBytesReceived)(int64_t requestId, uint8_t *data, uint32_t dataLen);
+
+typedef struct {
+    OnChannelOpened onChannelOpened;
+    OnChannelClosed onChannelClosed;
+    OnBytesReceived onBytesReceived;
+} ChannelProxy;
+
+int32_t InitSoftBusChannelModule(ChannelProxy *proxy);
 void DestroySoftBusChannelModule(void);
 SoftBus *GetSoftBusInstance(void);
 bool IsSoftBusChannelSupported(void);

@@ -23,12 +23,12 @@
 
 static bool g_initialized = false;
 
-int32_t InitChannelManager(void)
+int32_t InitChannelManager(ChannelProxy *proxy)
 {
     if (g_initialized || !IsSoftBusChannelSupported()) {
         return HC_SUCCESS;
     }
-    int32_t res = InitSoftBusChannelModule();
+    int32_t res = InitSoftBusChannelModule(proxy);
     if (res == HC_SUCCESS) {
         g_initialized = true;
     }

@@ -29,6 +29,8 @@ int32_t CombineAuthConfirmData(const CJson *confirmationJson, CJson *dataFromCli
 int32_t GetAuthType(int32_t authForm);
 BaseGroupAuth *GetGroupAuth(int32_t groupAuthType);
 
+typedef BaseGroupAuth* (*GetGroupAuthFunc)(int32_t groupAuthType);
+void RegisterGroupAuth(GetGroupAuthFunc getGroupAuth);
 #ifdef __cplusplus
 }
 #endif

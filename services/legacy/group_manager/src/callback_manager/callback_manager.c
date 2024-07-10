@@ -173,15 +173,9 @@ const DeviceAuthCallback *GetGMCallbackByAppId(const char *appId)
 
 int32_t RegGroupManagerCallback(const char *appId, const DeviceAuthCallback *callback)
 {
-    SET_LOG_MODE(NORMAL_MODE);
     if ((appId == NULL) || (callback == NULL)) {
         LOGE("The input parameters contains NULL value!");
         return HC_ERR_INVALID_PARAMS;
-    }
-    int32_t res = InitChannelManager();
-    if (res != HC_SUCCESS) {
-        LOGE("[End]: [Service]: Failed to init channel manage module!");
-        return res;
     }
     if (UpdateCallbackIfExist(appId, callback) == HC_SUCCESS) {
         return HC_SUCCESS;

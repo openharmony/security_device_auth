@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,23 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef GROUP_MANAGER_COMMON_H
-#define GROUP_MANAGER_COMMON_H
+#ifndef GROUP_AUTH_MANAGER_H
+#define GROUP_AUTH_MANAGER_H
 
-#include "base_group_manager_task.h"
+#include "base_group_auth.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef void (*TaskFunc)(HcTaskBase *task);
-
-void DestroyGroupManagerTask(HcTaskBase *task);
-
-int32_t BindCallbackToTask(GroupManagerTask *task, const CJson *jsonParams);
-int32_t AddReqInfoToJson(int64_t requestId, const char *appId, CJson *jsonParams);
-int32_t AddBindParamsToJson(int operationCode, int64_t requestId, const char *appId, CJson *jsonParams);
-int32_t InitAndPushGMTask(int32_t osAccountId, int32_t opCode, int64_t reqId, CJson *params, TaskFunc func);
+int32_t InitGroupAuthManager(void);
 
 #ifdef __cplusplus
 }

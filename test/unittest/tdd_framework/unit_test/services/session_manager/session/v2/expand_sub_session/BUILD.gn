@@ -57,7 +57,7 @@ ohos_unittest("expand_sub_session_test") {
     "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin_proxy.c",
     "${dev_frameworks_path}/src/security_label_adapter_mock/security_label_adapter_mock.c",
     "${deviceauth_account_group_auth_path}/src/group_auth_manager/account_related_group_auth/account_related_group_auth.c",
-    "${group_auth_path}/src/group_auth_manager/group_auth_data_operation.c",
+    "${group_auth_path}/src/group_auth_manager/group_auth_common/group_auth_data_operation.c",
     "${group_manager_path}/src/broadcast_manager_mock/broadcast_manager_mock.c",
     "${group_manager_path}/src/group_operation/group_operation_common/group_operation_common.c",
     "${identity_manager_path}/src/cert_operation.c",
