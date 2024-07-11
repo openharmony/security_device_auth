@@ -68,15 +68,15 @@ config("hichain_config") {
     "//third_party/bounds_checking_function/include",
     "//base/security/device_auth/interfaces/inner_api/deviceauth_lite",
     "//third_party/cJSON",
-    "base",
-    "huks_adapter",
-    "json",
-    "key_agreement",
-    "log",
-    "os_account_adapter",
-    "schedule",
-    "struct",
-    "auth_info",
+    "../inc/base",
+    "../inc/huks_adapter",
+    "../inc/json",
+    "../inc/key_agreement",
+    "../inc/log",
+    "../inc/os_account_adapter",
+    "../inc/schedule",
+    "../inc/struct",
+    "../inc/auth_info",
   ]
 
   defines = [
@@ -94,15 +94,15 @@ config("hichain_config") {
 config("hichain_standard_config") {
   include_dirs = [
     "//base/security/device_auth/interfaces/inner_api/deviceauth_lite",
-    "base",
-    "huks_adapter",
-    "json",
-    "key_agreement",
-    "log",
-    "os_account_adapter",
-    "schedule",
-    "struct",
-    "auth_info",
+    "../inc/base",
+    "../inc/huks_adapter",
+    "../inc/json",
+    "../inc/key_agreement",
+    "../inc/log",
+    "../inc/os_account_adapter",
+    "../inc/schedule",
+    "../inc/struct",
+    "../inc/auth_info",
   ]
 
   defines = [

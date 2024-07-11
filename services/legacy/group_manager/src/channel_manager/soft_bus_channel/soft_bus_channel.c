@@ -26,11 +26,6 @@
 #include "task_manager.h"
 
 typedef struct {
-    HcTaskBase base;
-    int64_t requestId;
-} SoftBusTask;
-
-typedef struct {
     int64_t requestId;
     int64_t channelId;
 } ChannelEntry;
@@ -39,6 +34,7 @@ DECLARE_HC_VECTOR(ChannelEntryVec, ChannelEntry);
 IMPLEMENT_HC_VECTOR(ChannelEntryVec, ChannelEntry, 1)
 static ChannelEntryVec g_channelVec;
 static HcMutex *g_channelMutex = NULL;
+static ChannelProxy *proxy = NULL;
 
 static int32_t GetReqIdByChannelId(int64_t channelId, int64_t *returnReqId)
 {
@@ -87,30 +83,6 @@ static void RemoveChannelEntry(int64_t channelId)
         }
     }
     g_channelMutex->unlock(g_channelMutex);
-}
-
-static void DoOnChannelOpened(HcTaskBase *baseTask)
-{
-    if (baseTask == NULL) {
-        LOGE("The input task is NULL!");
-        return;
-    }
-    SoftBusTask *task = (SoftBusTask *)baseTask;
-    SET_LOG_MODE(TRACE_MODE);
-    SET_TRACE_ID(task->requestId);
-    LOGI("[Start]: DoOnChannelOpened!");
-    int32_t res = StartDevSession(task->requestId);
-    if (res != HC_SUCCESS) {
-        LOGE("start session fail.[Res]: %d", res);
-        CloseDevSession(task->requestId);
-    }
-}
-
-static void InitSoftBusTask(SoftBusTask *task, int64_t requestId)
-{
-    task->base.doAction = DoOnChannelOpened;
-    task->base.destroy = NULL;
-    task->requestId = requestId;
 }
 
 static char *GenRecvData(int64_t channelId, const void *data, uint32_t dataLen, int64_t *requestId)
@@ -166,25 +138,10 @@ static int OnChannelOpenedCb(int sessionId, int result)
         LOGE("The request corresponding to the channel is not found!");
         return HC_ERR_REQUEST_NOT_FOUND;
     }
-    if (result != HC_SUCCESS) {
-        LOGE("[SoftBus][Out]: Failed to open channel! res: %d", result);
-        CloseDevSession(requestId);
-        return HC_ERR_SOFT_BUS;
+    int ret = proxy->onChannelOpened(requestId, result);
+    if (ret != HC_SUCCESS) {
+        return ret;
     }
-    LOGI("[Start]: OnChannelOpened! [ChannelId]: %d, [ReqId]: %" PRId64, sessionId, requestId);
-    SoftBusTask *task = (SoftBusTask *)HcMalloc(sizeof(SoftBusTask), 0);
-    if (task == NULL) {
-        LOGE("Failed to allocate task memory!");
-        CloseDevSession(requestId);
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    InitSoftBusTask(task, requestId);
-    if (PushTask((HcTaskBase *)task) != HC_SUCCESS) {
-        HcFree(task);
-        CloseDevSession(requestId);
-        return HC_ERR_INIT_TASK_FAIL;
-    }
-    LOGI("[End]: OnChannelOpened!");
     return HC_SUCCESS;
 }
 
@@ -195,6 +152,7 @@ static void OnChannelClosedCb(int sessionId)
         return;
     }
     RemoveChannelEntry(sessionId);
+    proxy->onChannelClosed();
 }
 
 static void OnBytesReceivedCb(int sessionId, const void *data, unsigned int dataLen)
@@ -209,7 +167,7 @@ static void OnBytesReceivedCb(int sessionId, const void *data, unsigned int data
     if (recvDataStr == NULL) {
         return;
     }
-    (void)GetGmInstance()->processData(requestId, (uint8_t *)recvDataStr, HcStrlen(recvDataStr) + 1);
+    proxy->onBytesReceived(requestId, (uint8_t *)recvDataStr, HcStrlen(recvDataStr) + 1);
     FreeJsonString(recvDataStr);
 }
 
@@ -272,7 +230,7 @@ SoftBus g_softBus = {
     .notifyResult = NotifySoftBusBindResult
 };
 
-int32_t InitSoftBusChannelModule(void)
+int32_t InitSoftBusChannelModule(ChannelProxy *channelProxy)
 {
     if (g_channelMutex == NULL) {
         g_channelMutex = (HcMutex *)HcMalloc(sizeof(HcMutex), 0);
@@ -287,6 +245,7 @@ int32_t InitSoftBusChannelModule(void)
             return HC_ERR_INIT_FAILED;
         }
     }
+    proxy = channelProxy;
     g_channelVec = CREATE_HC_VECTOR(ChannelEntryVec);
     ISessionListener softBusListener = {
         .OnSessionOpened = OnChannelOpenedCb,

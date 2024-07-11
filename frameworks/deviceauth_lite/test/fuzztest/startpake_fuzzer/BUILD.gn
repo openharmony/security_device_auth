@@ -23,17 +23,16 @@ module_output_path = "device_auth/device_auth"
 ##############################fuzztest##########################################
 ohos_fuzztest("StartPakeFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file =
-      "${deviceauth_path}/frameworks/deviceauth_lite/test/fuzztest/startpake_fuzzer"
+  fuzz_config_file = "${deviceauth_path}/frameworks/deviceauth_lite/test/fuzztest/startpake_fuzzer"
   include_dirs = []
   include_dirs += [
     "${deviceauth_path}/interfaces/inner_api/deviceauth_lite",
-    "${deviceauth_path}/frameworks/deviceauth_lite/source/schdeule",
-    "${deviceauth_path}/frameworks/deviceauth_lite/source/key_agreement",
-    "${deviceauth_path}/frameworks/deviceauth_lite/source/base",
-    "${deviceauth_path}/frameworks/deviceauth_lite/source/struct",
+    "${deviceauth_path}/frameworks/deviceauth_lite/inc/schdeule",
+    "${deviceauth_path}/frameworks/deviceauth_lite/inc/key_agreement",
+    "${deviceauth_path}/frameworks/deviceauth_lite/inc/base",
+    "${deviceauth_path}/frameworks/deviceauth_lite/inc/struct",
     "$THIRD_PATH/include",
-    "${deviceauth_path}/frameworks/deviceauth_lite/source/json",
+    "${deviceauth_path}/frameworks/deviceauth_lite/inc/json",
   ]
   cflags = [
     "-g",

@@ -27,12 +27,12 @@ ohos_fuzztest("AuthenticatePeerFuzzTest") {
   include_dirs = []
   include_dirs += [
     "${deviceauth_path}/interfaces/inner_api/deviceauth_lite",
-    "${deviceauth_path}/frameworks/deviceauth_lite/source/schdeule",
-    "${deviceauth_path}/frameworks/deviceauth_lite/source/key_agreement",
-    "${deviceauth_path}/frameworks/deviceauth_lite/source/base",
-    "${deviceauth_path}/frameworks/deviceauth_lite/source/struct",
+    "${deviceauth_path}/frameworks/deviceauth_lite/inc/schdeule",
+    "${deviceauth_path}/frameworks/deviceauth_lite/inc/key_agreement",
+    "${deviceauth_path}/frameworks/deviceauth_lite/inc/base",
+    "${deviceauth_path}/frameworks/deviceauth_lite/inc/struct",
     "$THIRD_PATH/include",
-    "${deviceauth_path}/frameworks/deviceauth_lite/source/json",
+    "${deviceauth_path}/frameworks/deviceauth_lite/inc/json",
   ]
   cflags = [
     "-g",

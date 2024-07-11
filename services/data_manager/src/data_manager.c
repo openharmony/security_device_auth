@@ -1019,6 +1019,7 @@ static int32_t AddUserTypeToReturn(const TrustedDeviceEntry *deviceInfo, CJson *
 static int32_t GenerateMessage(const TrustedGroupEntry *groupEntry, char **returnGroupInfo)
 {
     if (groupEntry == NULL) {
+        LOGE("groupEntry is null!");
         return HC_ERR_NULL_PTR;
     }
     CJson *message = CreateJson();

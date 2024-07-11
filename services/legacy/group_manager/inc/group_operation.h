@@ -17,7 +17,7 @@
 #define GROUP_OPERATION_H
 
 #include "device_auth.h"
-#include "json_utils.h"
+#include "base_group_manager_task.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,6 +61,15 @@ int32_t InitGroupRelatedModule(void);
 void DestroyGroupRelatedModule(void);
 const GroupImpl *GetGroupImplInstance(void);
 bool IsGroupSupport(void);
+
+typedef void (*TaskFunc)(HcTaskBase *task);
+
+void DestroyGroupManagerTask(HcTaskBase *task);
+
+int32_t BindCallbackToTask(GroupManagerTask *task, const CJson *jsonParams);
+int32_t AddReqInfoToJson(int64_t requestId, const char *appId, CJson *jsonParams);
+int32_t AddBindParamsToJson(int operationCode, int64_t requestId, const char *appId, CJson *jsonParams);
+int32_t InitAndPushGMTask(int32_t osAccountId, int32_t opCode, int64_t reqId, CJson *params, TaskFunc func);
 
 #ifdef __cplusplus
 }

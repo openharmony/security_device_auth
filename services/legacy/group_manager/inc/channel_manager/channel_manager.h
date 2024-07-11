@@ -19,12 +19,13 @@
 #include "device_auth.h"
 #include "common_defs.h"
 #include "json_utils.h"
+#include "soft_bus_channel.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t InitChannelManager(void);
+int32_t InitChannelManager(ChannelProxy *proxy);
 void DestroyChannelManager(void);
 
 /* Channel operation interfaces */
