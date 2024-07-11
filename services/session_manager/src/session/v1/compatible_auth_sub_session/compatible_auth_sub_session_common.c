@@ -300,7 +300,11 @@ static int32_t AddInfoToErrorData(CJson *sendToPeer, const CJson *authParam)
         LOGE("Failed to add authForm for peer!");
         return HC_ERR_JSON_ADD;
     }
-    if ((authForm == AUTH_FORM_IDENTICAL_ACCOUNT) && (AddIntToJson(sendToPeer, FIELD_STEP, ERR_MSG) != HC_SUCCESS)) {
+    int32_t step = ERR_MSG;
+    if (GetIntFromJson(sendToPeer, FIELD_STEP, &step) != HC_SUCCESS) {
+        LOGI("Not has step in json, use default step value!");
+    }
+    if ((authForm == AUTH_FORM_IDENTICAL_ACCOUNT) && (AddIntToJson(sendToPeer, FIELD_STEP, step) != HC_SUCCESS)) {
         LOGE("Failed to add step for peer!");
         return HC_ERR_JSON_ADD;
     }
