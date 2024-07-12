@@ -34,7 +34,7 @@ DECLARE_HC_VECTOR(ChannelEntryVec, ChannelEntry);
 IMPLEMENT_HC_VECTOR(ChannelEntryVec, ChannelEntry, 1)
 static ChannelEntryVec g_channelVec;
 static HcMutex *g_channelMutex = NULL;
-static ChannelProxy *proxy = NULL;
+static ChannelProxy proxy = { 0 };
 
 static int32_t GetReqIdByChannelId(int64_t channelId, int64_t *returnReqId)
 {
@@ -138,7 +138,7 @@ static int OnChannelOpenedCb(int sessionId, int result)
         LOGE("The request corresponding to the channel is not found!");
         return HC_ERR_REQUEST_NOT_FOUND;
     }
-    int ret = proxy->onChannelOpened(requestId, result);
+    int ret = proxy.onChannelOpened(requestId, result);
     if (ret != HC_SUCCESS) {
         return ret;
     }
@@ -152,7 +152,7 @@ static void OnChannelClosedCb(int sessionId)
         return;
     }
     RemoveChannelEntry(sessionId);
-    proxy->onChannelClosed();
+    proxy.onChannelClosed();
 }
 
 static void OnBytesReceivedCb(int sessionId, const void *data, unsigned int dataLen)
@@ -167,7 +167,7 @@ static void OnBytesReceivedCb(int sessionId, const void *data, unsigned int data
     if (recvDataStr == NULL) {
         return;
     }
-    proxy->onBytesReceived(requestId, (uint8_t *)recvDataStr, HcStrlen(recvDataStr) + 1);
+    proxy.onBytesReceived(requestId, (uint8_t *)recvDataStr, HcStrlen(recvDataStr) + 1);
     FreeJsonString(recvDataStr);
 }
 
@@ -245,7 +245,9 @@ int32_t InitSoftBusChannelModule(ChannelProxy *channelProxy)
             return HC_ERR_INIT_FAILED;
         }
     }
-    proxy = channelProxy;
+    proxy.onBytesReceived = channelProxy->onBytesReceived;
+    proxy.onChannelOpened = channelProxy->onChannelOpened;
+    proxy.onChannelClosed = channelProxy->onChannelClosed;
     g_channelVec = CREATE_HC_VECTOR(ChannelEntryVec);
     ISessionListener softBusListener = {
         .OnSessionOpened = OnChannelOpenedCb,
