@@ -32,6 +32,10 @@
 #include "pseudonym_manager.h"
 #include "security_label_adapter.h"
 
+#ifdef DEV_AUTH_SUPPORT_OS_ACCOUNT
+#include "account_auth_plugin_proxy.h"
+#endif
+
 typedef struct {
     DECLARE_TLV_STRUCT(10)
     TlvString name;
@@ -127,6 +131,11 @@ DECLARE_HC_VECTOR(DeviceAuthDb, OsAccountTrustedInfo)
 IMPLEMENT_HC_VECTOR(DeviceAuthDb, OsAccountTrustedInfo, 1)
 
 #define MAX_DB_PATH_LEN 256
+
+#ifdef DEV_AUTH_SUPPORT_OS_ACCOUNT
+#define MAIN_OS_ACCOUNT_ID 100
+#define UPGRADE_DB_FILE_PATH "/data/service/el2/100/deviceauth/backup/deviceInfo.db"
+#endif
 
 static HcMutex *g_databaseMutex = NULL;
 static DeviceAuthDb g_deviceauthDb;
@@ -626,12 +635,34 @@ static bool IsOsAccountDataLoaded(int32_t osAccountId)
     return false;
 }
 
+#ifdef DEV_AUTH_SUPPORT_OS_ACCOUNT
+static void LoadUpgradeDataIfExist(int32_t osAccountId)
+{
+    if (osAccountId != MAIN_OS_ACCOUNT_ID) {
+        return;
+    }
+    if (!HcFileExist(UPGRADE_DB_FILE_PATH)) {
+        return;
+    }
+    LOGI("Upgrade file exist, try to load it!");
+    int32_t res = ExcuteCredMgrCmd(MAIN_OS_ACCOUNT_ID, UPGRADE_DATA, NULL, NULL);
+    if (res == HC_SUCCESS) {
+        LOGI("Load upgrade data successfully.");
+    } else {
+        LOGE("Load upgrade data failed!");
+    }
+}
+#endif
+
 static void LoadDataIfNotLoaded(int32_t osAccountId)
 {
     if (IsOsAccountDataLoaded(osAccountId)) {
         return;
     }
     LOGI("[DB]: data has not been loaded, load it, osAccountId: %d", osAccountId);
+#ifdef DEV_AUTH_SUPPORT_OS_ACCOUNT
+    LoadUpgradeDataIfExist(osAccountId);
+#endif
     LoadOsAccountDbCe(osAccountId);
 }
 

@@ -227,6 +227,7 @@ if (os_level == "mini" || os_level == "small") {
       "hitrace:hitrace_meter",
     ]
     if (support_os_account) {
+      defines += [ "DEV_AUTH_SUPPORT_OS_ACCOUNT" ]
       external_deps += [
         "ability_base:want",
         "common_event_service:cesfwk_innerkits",
