@@ -39,10 +39,10 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
     "//third_party/mbedtls/include",
     "//third_party/mbedtls/include/mbedtls",
   ]
-
-  include_dirs += [ "${dev_frameworks_path}/inc/account_subscriber" ]
-  include_dirs += [ "${dev_frameworks_path}/inc/sa_subscriber" ]
-
+  if (support_os_account) {
+    include_dirs += [ "${dev_frameworks_path}/inc/account_subscriber" ]
+    include_dirs += [ "${dev_frameworks_path}/inc/sa_subscriber" ]
+  }
   sources += hal_common_files
   sources += [
     "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
@@ -75,7 +75,7 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
   sources += creds_manager_files
   sources += broadcast_manager_files
   sources += soft_bus_channel_mock_files
-  sources += os_account_adapter_files
+  sources += os_account_adapter_mock_files
 
   sources += group_auth_files
   sources += group_auth_account_unrelated_files
@@ -94,6 +94,7 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
   sources += mk_agree_files
 
   sources += security_label_adapter_files
+  sources += hiview_adapter_files
   if (support_os_account) {
     sources += account_subscriber_files
     sources += sa_subscriber_files
@@ -108,8 +109,10 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
     "ENABLE_PUB_KEY_EXCHANGE",
     "ENABLE_SAVE_TRUSTED_INFO",
     "ENABLE_PSEUDONYM",
-    "DEV_AUTH_FUNC_TEST",
   ]
+  defines += [ "HILOG_ENABLE" ]
+  defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
+  defines += [ "DEV_AUTH_FUZZ_TEST" ]
 
   cflags = [ "-DHILOG_ENABLE" ]
   cflags += [
@@ -127,10 +130,12 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
     "cJSON:cjson",
     "c_utils:utils",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "huks:libhukssdk",
     "init:libbegetutil",
-    "os_account:os_account_innerkits",
   ]
+
   if (support_os_account) {
     external_deps += [
       "ability_base:want",
