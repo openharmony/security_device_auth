@@ -201,17 +201,32 @@ static int32_t CheckServerStatusIfNotInvite(int32_t osAccountId, int operationCo
     return result;
 }
 
+static int32_t CheckAcceptRequest(const CJson *context)
+{
+    uint32_t confirmation = REQUEST_REJECTED;
+    (void)GetUnsignedIntFromJson(context, FIELD_CONFIRMATION, &confirmation);
+    if (confirmation != REQUEST_ACCEPTED) {
+        LOGE("The service rejects this request!");
+        return HC_ERR_REQ_REJECTED;
+    }
+    LOGI("The service accepts this request!");
+    return HC_SUCCESS;
+}
+
 static int32_t GenerateServerBindParams(CompatibleBindSubSession *session, CJson *jsonParams)
 {
-    int32_t result = CheckServerStatusIfNotInvite(session->osAccountId, session->opCode, jsonParams);
-    if (result != HC_SUCCESS) {
-        return result;
+    int32_t res = CheckAcceptRequest(jsonParams);
+    if (res != HC_SUCCESS) {
+        return res;
     }
-    result = GenerateBaseBindParams(session->osAccountId, SERVER, jsonParams, session);
-    if (result != HC_SUCCESS) {
-        return result;
+    res = CheckServerStatusIfNotInvite(session->osAccountId, session->opCode, jsonParams);
+    if (res != HC_SUCCESS) {
+        return res;
     }
-
+    res = GenerateBaseBindParams(session->osAccountId, SERVER, jsonParams, session);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
     return GenerateKeyPairIfNeeded(SERVER, session->opCode, jsonParams);
 }
 
