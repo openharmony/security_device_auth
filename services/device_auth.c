@@ -1508,7 +1508,7 @@ static void OnBytesReceivedCb(int64_t requestId, uint8_t *data, uint32_t dataLen
         LOGE("Invalid input params!");
         return;
     }
-    (void)GetGmInstance()->processData(requestId, data, dataLen);
+    (void)ProcessBindData(requestId, data, dataLen);
 }
 
 static int32_t RegCallback(const char *appId, const DeviceAuthCallback *callback)
