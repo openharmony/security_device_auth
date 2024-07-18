@@ -32,7 +32,7 @@ static QueryGroupParams g_queryGroupParams = {
     .groupName = NORMAL_STR,
     .ownerName = NORMAL_STR,
     .groupType = PEER_TO_PEER_GROUP,
-    .userId = NULL,
+    .userId = nullptr,
     .groupVisibility = ALL_GROUP_VISIBILITY
     };
 
@@ -144,14 +144,14 @@ static void GroupOperationTest18(void)
 
 static void GroupOperationTest19(void)
 {
-    uint8_t *hashMessage = NULL;
+    uint8_t *hashMessage = nullptr;
     uint32_t messageSize = 0;
     (void)GetHashMessage(nullptr, &NORMAL_BUFF, &hashMessage, &messageSize);
 }
 
 static void GroupOperationTest20(void)
 {
-    uint8_t *hashMessage = NULL;
+    uint8_t *hashMessage = nullptr;
     uint32_t messageSize = 0;
     (void)GetHashMessage(&NORMAL_BUFF, nullptr, &hashMessage, &messageSize);
 }
@@ -164,7 +164,7 @@ static void GroupOperationTest21(void)
 
 static void GroupOperationTest22(void)
 {
-    uint8_t *hashMessage = NULL;
+    uint8_t *hashMessage = nullptr;
     (void)GetHashMessage(&NORMAL_BUFF, &NORMAL_BUFF, &hashMessage, nullptr);
 }
 
