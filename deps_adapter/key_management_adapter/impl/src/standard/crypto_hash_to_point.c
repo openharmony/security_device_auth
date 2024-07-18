@@ -359,7 +359,7 @@ static int32_t CurveHashToPoint(const struct HksBlob *hash, struct HksBlob *poin
         if (ret != HAL_SUCCESS) {
             break;
         }
-        if (BN_bn2bin(c, point->data) <= 0) {
+        if (BN_bn2binpad(c, point->data, point->size) <= 0) {
             ret = HAL_FAILED;
             break;
         }
