@@ -45,6 +45,7 @@ group("deviceauth_test_build") {
       "fuzztest/group_manage/getregisterinfo_fuzzer:fuzztest",
       "fuzztest/group_manage/getrelatedgroups_fuzzer:fuzztest",
       "fuzztest/group_manage/gettrusteddevices_fuzzer:fuzztest",
+      "fuzztest/group_manage/groupoperationcommon_fuzzer:fuzztest",
       "fuzztest/group_manage/isdeviceingroup_fuzzer:fuzztest",
       "fuzztest/group_manage/processbinddata_fuzzer:fuzztest",
       "fuzztest/group_manage/registercallback_fuzzer:fuzztest",
