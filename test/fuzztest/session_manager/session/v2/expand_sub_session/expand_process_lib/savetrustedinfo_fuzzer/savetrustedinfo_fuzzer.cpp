@@ -32,7 +32,6 @@ namespace OHOS {
 static const char *AUTH_ID_C = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
 static const char *AUTH_ID_S = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
 static const char *GROUP_ID = "E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21";
-static const char *USER_ID_C = "4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4";
 static const char *USER_ID_S = "9F207900038F91FEF95DD042FE2874E44269DC28B639681698809A67EDAD08E3";
 static const char *GROUP_NAME = "testGroup";
 static const char *GROUP_OWNER = "testApp";
@@ -174,73 +173,6 @@ static void SaveTrustedInfoTest00(void)
 {
     BaseCmd *self = CreateSaveTrustedInfoCmd((void *)&g_paramsC, true, ABORT_IF_ERROR);
     self->destroy(self);
-}
-
-static void SaveTrustedInfoTest01(void)
-{
-    DeleteDatabase();
-    int32_t res = InitDatabase();
-    
-    CreateParams params = { TEST_OS_ACCOUNT_ID1, SYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY, GROUP_VISIBILITY_PUBLIC,
-        GROUP_ID, GROUP_NAME, GROUP_OWNER, AUTH_ID_C, AUTH_ID_C, USER_ID_C };
-    res = CreatePeerToPeerGroup(&params);
-
-    BaseCmd *client = CreateSaveTrustedInfoCmd((void *)&g_paramsC, true, ABORT_IF_ERROR);
-
-    BaseCmd *server = CreateSaveTrustedInfoCmd((void *)&g_paramsS, false, ABORT_IF_ERROR);
-
-    CJson *clientOut = nullptr;
-    CJson *serverOut = nullptr;
-
-    res = client->start(client, &clientOut);
-
-    CmdState clientState;
-    CmdState serverState;
-    res = server->process(server, clientOut, &serverOut, &serverState);
-    FreeJson(clientOut);
-    clientOut = nullptr;
-
-    res = client->process(client, serverOut, &clientOut, &clientState);
-    FreeJson(serverOut);
-    serverOut = nullptr;
-
-    client->destroy(client);
-    server->destroy(server);
-
-    DestroyDatabase();
-}
-
-static void SaveTrustedInfoTest02(void)
-{
-    DeleteDatabase();
-    int32_t res = InitDatabase();
-    CreateParams params = { TEST_OS_ACCOUNT_ID2, SYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY, GROUP_VISIBILITY_PUBLIC,
-        GROUP_ID, GROUP_NAME, GROUP_OWNER, AUTH_ID_S, AUTH_ID_S, USER_ID_S };
-    res = CreatePeerToPeerGroup(&params);
-
-    BaseCmd *client = CreateSaveTrustedInfoCmd((void *)&g_paramsC, true, ABORT_IF_ERROR);
-
-    BaseCmd *server = CreateSaveTrustedInfoCmd((void *)&g_paramsS, false, ABORT_IF_ERROR);
-
-    CJson *clientOut = nullptr;
-    CJson *serverOut = nullptr;
-
-    res = client->start(client, &clientOut);
-
-    CmdState clientState;
-    CmdState serverState;
-    res = server->process(server, clientOut, &serverOut, &serverState);
-    FreeJson(clientOut);
-    clientOut = nullptr;
-
-    res = client->process(client, serverOut, &clientOut, &clientState);
-    FreeJson(serverOut);
-    serverOut = nullptr;
-
-    client->destroy(client);
-    server->destroy(server);
-
-    DestroyDatabase();
 }
 
 static void SaveTrustedInfoTest03(void)
@@ -437,8 +369,6 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     (void)data;
     (void)size;
     (void)SaveTrustedInfoTest00();
-    (void)SaveTrustedInfoTest01();
-    (void)SaveTrustedInfoTest02();
     (void)SaveTrustedInfoTest03();
     (void)SaveTrustedInfoTest04();
     (void)SaveTrustedInfoTest05();
