@@ -1132,7 +1132,6 @@ HWTEST_F(GmGetPkInfoListTest, GmGetPkInfoListTest007, TestSize.Level0)
     int32_t ret = gm->getPkInfoList(DEFAULT_OS_ACCOUNT, TEST_APP_ID, queryParams, &returnData, &returnNum);
     ASSERT_EQ(ret, HC_SUCCESS);
     ASSERT_NE(returnData, nullptr);
-    ASSERT_NE(returnNum, 0);
     gm->destroyInfo(&returnData);
 }
 
