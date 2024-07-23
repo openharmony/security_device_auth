@@ -375,10 +375,10 @@ static void CreateDemoIdenticalAccountGroup(int32_t osAccountId, const char *use
     FreeJson(json);
     gm->destroyInfo(&returnData);
     ret = gm->createGroup(osAccountId, TEST_REQ_ID, TEST_APP_ID.c_str(), jsonStr);
+    FreeJsonString(jsonStr);
     if (ret != HC_SUCCESS) {
         return;
     }
-    FreeJsonString(jsonStr);
     while (g_asyncStatus == ASYNC_STATUS_WAITING) {
         usleep(TEST_DEV_AUTH_SLEEP_TIME);
     }
@@ -564,10 +564,10 @@ static void CredsManagerTest01(void)
     }
     CJson *json = CreateJson();
     res = GetCredInfosByPeerIdentity(json, nullptr);
+    FreeJson(json);
     if (res != HC_SUCCESS) {
         return;
     }
-    FreeJson(json);
 }
 
 static void CredsManagerTest02(void)
@@ -741,11 +741,11 @@ static void CredsManagerTest14(void)
     (void)AddBoolToJson(json, FIELD_IS_DEVICE_LEVEL, true);
     IdentityInfoVec vec = CreateIdentityInfoVec();
     res = GetCredInfosByPeerIdentity(json, &vec);
+    FreeJson(json);
+    ClearIdentityInfoVec(&vec);
     if (res != HC_SUCCESS) {
         return;
     }
-    FreeJson(json);
-    ClearIdentityInfoVec(&vec);
 }
 
 static void CredsManagerTest15(void)
@@ -759,11 +759,10 @@ static void CredsManagerTest15(void)
     FreeJson(addMultiParam);
     const DeviceGroupManager *gm = GetGmInstance();
     int32_t res = gm->addMultiMembersToGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID.c_str(), addMultiParamStr);
+    FreeJsonString(addMultiParamStr);
     if (res != HC_SUCCESS) {
         return;
     }
-    FreeJsonString(addMultiParamStr);
-
     CJson *json = CreateJson();
     (void)AddIntToJson(json, FIELD_OS_ACCOUNT_ID, DEFAULT_OS_ACCOUNT);
     (void)AddStringToJson(json, FIELD_SERVICE_PKG_NAME, TEST_APP_ID.c_str());
@@ -771,11 +770,11 @@ static void CredsManagerTest15(void)
     (void)AddBoolToJson(json, FIELD_IS_DEVICE_LEVEL, true);
     IdentityInfoVec vec = CreateIdentityInfoVec();
     res = GetCredInfosByPeerIdentity(json, &vec);
+    FreeJson(json);
+    ClearIdentityInfoVec(&vec);
     if (res != HC_SUCCESS) {
         return;
     }
-    FreeJson(json);
-    ClearIdentityInfoVec(&vec);
 }
 
 static void CredsManagerTest16(void)
@@ -819,14 +818,15 @@ static void CredsManagerTest18(void)
     CJson *json = CreateJson();
     res = GetCredInfoByPeerUrl(json, nullptr, nullptr);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
     Uint8Buff presharedUrl = { nullptr, 0 };
     res = GetCredInfoByPeerUrl(json, &presharedUrl, nullptr);
+    FreeJson(json);
     if (res != HC_SUCCESS) {
         return;
     }
-    FreeJson(json);
 }
 
 static void CredsManagerTest19(void)
@@ -1083,6 +1083,28 @@ static void CredsManagerTest34(void)
     FreeJson(json);
 }
 
+static void CredsManagerTestInner(CertInfo *certInfo, CJson *json, IdentityInfo *info)
+{
+    CJson *pkInfoJson = CreateJson();
+    char *pkInfoStr = PackJsonToString(pkInfoJson);
+    FreeJson(pkInfoJson);
+    certInfo->pkInfoStr.val = reinterpret_cast<uint8_t *>(pkInfoStr);
+    certInfo->pkInfoStr.length = strlen(pkInfoStr) + 1;
+    int32_t res = GetCredInfoByPeerCert(json, certInfo, &info);
+    FreeJsonString(pkInfoStr);
+    if (res != HC_SUCCESS) {
+        return;
+    }
+    pkInfoJson = CreateJson();
+    AddStringToJson(pkInfoJson, FIELD_USER_ID, TEST_USER_ID.c_str());
+    pkInfoStr = PackJsonToString(pkInfoJson);
+    FreeJson(pkInfoJson);
+    certInfo->pkInfoStr.val = reinterpret_cast<uint8_t *>(pkInfoStr);
+    certInfo->pkInfoStr.length = strlen(pkInfoStr) + 1;
+    (void)GetCredInfoByPeerCert(json, certInfo, &info);
+    FreeJsonString(pkInfoStr);
+}
+
 static void CredsManagerTest35(void)
 {
     int32_t res = GetCredInfoByPeerCert(nullptr, nullptr, nullptr);
@@ -1092,44 +1114,28 @@ static void CredsManagerTest35(void)
     CJson *json = CreateJson();
     res = GetCredInfoByPeerCert(json, nullptr, nullptr);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
     CertInfo certInfo = { { nullptr, 0 }, { nullptr, 0 }, P256 };
     res = GetCredInfoByPeerCert(json, &certInfo, nullptr);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
     IdentityInfo *info = nullptr;
     res = GetCredInfoByPeerCert(json, &certInfo, &info);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, DEFAULT_OS_ACCOUNT);
     res = GetCredInfoByPeerCert(json, &certInfo, &info);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
-    CJson *pkInfoJson = CreateJson();
-    char *pkInfoStr = PackJsonToString(pkInfoJson);
-    FreeJson(pkInfoJson);
-    certInfo.pkInfoStr.val = reinterpret_cast<uint8_t *>(pkInfoStr);
-    certInfo.pkInfoStr.length = strlen(pkInfoStr) + 1;
-    res = GetCredInfoByPeerCert(json, &certInfo, &info);
-    if (res != HC_SUCCESS) {
-        return;
-    }
-    FreeJsonString(pkInfoStr);
-    pkInfoJson = CreateJson();
-    AddStringToJson(pkInfoJson, FIELD_USER_ID, TEST_USER_ID.c_str());
-    pkInfoStr = PackJsonToString(pkInfoJson);
-    FreeJson(pkInfoJson);
-    certInfo.pkInfoStr.val = reinterpret_cast<uint8_t *>(pkInfoStr);
-    certInfo.pkInfoStr.length = strlen(pkInfoStr) + 1;
-    res = GetCredInfoByPeerCert(json, &certInfo, &info);
-    if (res != HC_SUCCESS) {
-        return;
-    }
-    FreeJsonString(pkInfoStr);
+    CredsManagerTestInner(&certInfo, json, info);
     FreeJson(json);
 }
 
@@ -1179,16 +1185,19 @@ static void CredsManagerTest38(void)
     CJson *json = CreateJson();
     res = GetSharedSecretByUrl(json, nullptr, ALG_ISO, nullptr);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
     Uint8Buff presharedUrl = { nullptr, 0 };
     res = GetSharedSecretByUrl(json, &presharedUrl, ALG_ISO, nullptr);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
     Uint8Buff sharedSecret = { nullptr, 0 };
     res = GetSharedSecretByUrl(json, &presharedUrl, ALG_ISO, &sharedSecret);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
     CJson *presharedUrlJson = CreateJson();
@@ -1197,10 +1206,11 @@ static void CredsManagerTest38(void)
     presharedUrl.val = reinterpret_cast<uint8_t *>(presharedUrlStr);
     presharedUrl.length = strlen(presharedUrlStr) + 1;
     res = GetSharedSecretByUrl(json, &presharedUrl, ALG_ISO, &sharedSecret);
+    FreeJsonString(presharedUrlStr);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
-    FreeJsonString(presharedUrlStr);
     presharedUrlJson = CreateJson();
     AddIntToJson(presharedUrlJson, PRESHARED_URL_TRUST_TYPE, TRUST_TYPE_PIN);
     AddIntToJson(presharedUrlJson, PRESHARED_URL_KEY_TYPE, KEY_TYPE_SYM);
@@ -1209,11 +1219,11 @@ static void CredsManagerTest38(void)
     presharedUrl.val = reinterpret_cast<uint8_t *>(presharedUrlStr);
     presharedUrl.length = strlen(presharedUrlStr) + 1;
     res = GetSharedSecretByUrl(json, &presharedUrl, ALG_ISO, &sharedSecret);
+    FreeJsonString(presharedUrlStr);
+    FreeJson(json);
     if (res != HC_SUCCESS) {
         return;
     }
-    FreeJsonString(presharedUrlStr);
-    FreeJson(json);
 }
 
 static void CredsManagerTest39(void)
@@ -1240,6 +1250,7 @@ static void CredsManagerTest40(void)
     Uint8Buff seedBuff = { nullptr, 0 };
     int32_t res = GetSeedValue(&seedBuff);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
     AddByteToJson(json, FIELD_SEED, seedBuff.val, seedBuff.length);
@@ -1253,12 +1264,12 @@ static void CredsManagerTest40(void)
     presharedUrl.length = strlen(presharedUrlStr) + 1;
     Uint8Buff sharedSecret = { nullptr, 0 };
     res = GetSharedSecretByUrl(json, &presharedUrl, ALG_ISO, &sharedSecret);
-    if (res != HC_SUCCESS) {
-        return;
-    }
     FreeJsonString(presharedUrlStr);
     HcFree(sharedSecret.val);
     FreeJson(json);
+    if (res != HC_SUCCESS) {
+        return;
+    }
 }
 
 static void CredsManagerTest41(void)
@@ -1427,6 +1438,7 @@ static void CredsManagerTest50(void)
     Uint8Buff seedBuff = { nullptr, 0 };
     int32_t res = GetSeedValue(&seedBuff);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
     AddByteToJson(json, FIELD_SEED, seedBuff.val, seedBuff.length);
@@ -1441,12 +1453,12 @@ static void CredsManagerTest50(void)
     presharedUrl.length = strlen(presharedUrlStr) + 1;
     Uint8Buff sharedSecret = { nullptr, 0 };
     res = GetSharedSecretByUrl(json, &presharedUrl, ALG_ISO, &sharedSecret);
-    if (res != HC_SUCCESS) {
-        return;
-    }
     FreeJsonString(presharedUrlStr);
     HcFree(sharedSecret.val);
     FreeJson(json);
+    if (res != HC_SUCCESS) {
+        return;
+    }
 }
 
 static void CredsManagerTest51(void)
@@ -1462,11 +1474,12 @@ static void CredsManagerTest51(void)
     AddStringToJson(json, FIELD_PEER_AUTH_ID, TEST_AUTH_ID2.c_str());
     Uint8Buff seedBuff = { nullptr, 0 };
     res = GetSeedValue(&seedBuff);
-    if (res != HC_SUCCESS) {
-        return;
-    }
     AddByteToJson(json, FIELD_SEED, seedBuff.val, seedBuff.length);
     HcFree(seedBuff.val);
+    if (res != HC_SUCCESS) {
+        FreeJson(json);
+        return;
+    }
     Uint8Buff presharedUrl = { nullptr, 0 };
     CJson *presharedUrlJson = CreateJson();
     AddIntToJson(presharedUrlJson, PRESHARED_URL_TRUST_TYPE, TRUST_TYPE_UID);
@@ -1477,12 +1490,12 @@ static void CredsManagerTest51(void)
     presharedUrl.length = strlen(presharedUrlStr) + 1;
     Uint8Buff sharedSecret = { nullptr, 0 };
     res = GetSharedSecretByUrl(json, &presharedUrl, ALG_ISO, &sharedSecret);
-    if (res != HC_SUCCESS) {
-        return;
-    }
     FreeJsonString(presharedUrlStr);
     HcFree(sharedSecret.val);
     FreeJson(json);
+    if (res != HC_SUCCESS) {
+        return;
+    }
 }
 
 static void CredsManagerTest52(void)
@@ -1497,11 +1510,12 @@ static void CredsManagerTest52(void)
     AddStringToJson(json, FIELD_PEER_AUTH_ID, TEST_AUTH_ID2.c_str());
     Uint8Buff seedBuff = { nullptr, 0 };
     int32_t res = GetSeedValue(&seedBuff);
-    if (res != HC_SUCCESS) {
-        return;
-    }
     AddByteToJson(json, FIELD_SEED, seedBuff.val, seedBuff.length);
     HcFree(seedBuff.val);
+    if (res != HC_SUCCESS) {
+        FreeJson(json);
+        return;
+    }
     Uint8Buff presharedUrl = { nullptr, 0 };
     CJson *presharedUrlJson = CreateJson();
     AddIntToJson(presharedUrlJson, PRESHARED_URL_TRUST_TYPE, TRUST_TYPE_UID);
@@ -1512,12 +1526,12 @@ static void CredsManagerTest52(void)
     presharedUrl.length = strlen(presharedUrlStr) + 1;
     Uint8Buff sharedSecret = { nullptr, 0 };
     res = GetSharedSecretByUrl(json, &presharedUrl, ALG_ISO, &sharedSecret);
-    if (res != HC_SUCCESS) {
-        return;
-    }
     FreeJsonString(presharedUrlStr);
     HcFree(sharedSecret.val);
     FreeJson(json);
+    if (res != HC_SUCCESS) {
+        return;
+    }
 }
 
 static void CredsManagerTest53(void)
@@ -1558,11 +1572,12 @@ static void CredsManagerTest55(void)
     CJson *json = CreateJson();
     Uint8Buff seedBuff = { nullptr, 0 };
     int32_t res = GetSeedValue(&seedBuff);
-    if (res != HC_SUCCESS) {
-        return;
-    }
     AddByteToJson(json, FIELD_SEED, seedBuff.val, seedBuff.length);
     HcFree(seedBuff.val);
+    if (res != HC_SUCCESS) {
+        FreeJson(json);
+        return;
+    }
     Uint8Buff presharedUrl = { nullptr, 0 };
     CJson *presharedUrlJson = CreateJson();
     AddIntToJson(presharedUrlJson, PRESHARED_URL_TRUST_TYPE, TRUST_TYPE_P2P);
@@ -1573,11 +1588,11 @@ static void CredsManagerTest55(void)
     presharedUrl.length = strlen(presharedUrlStr) + 1;
     Uint8Buff sharedSecret = { nullptr, 0 };
     res = GetSharedSecretByUrl(json, &presharedUrl, ALG_ISO, &sharedSecret);
+    FreeJsonString(presharedUrlStr);
+    FreeJson(json);
     if (res != HC_SUCCESS) {
         return;
     }
-    FreeJsonString(presharedUrlStr);
-    FreeJson(json);
 }
 
 static void CredsManagerTest56(void)
@@ -1587,11 +1602,12 @@ static void CredsManagerTest56(void)
     AddStringToJson(json, FIELD_PEER_AUTH_ID, TEST_AUTH_ID2.c_str());
     Uint8Buff seedBuff = { nullptr, 0 };
     int32_t res = GetSeedValue(&seedBuff);
-    if (res != HC_SUCCESS) {
-        return;
-    }
     AddByteToJson(json, FIELD_SEED, seedBuff.val, seedBuff.length);
     HcFree(seedBuff.val);
+    if (res != HC_SUCCESS) {
+        FreeJson(json);
+        return;
+    }
     Uint8Buff presharedUrl = { nullptr, 0 };
     CJson *presharedUrlJson = CreateJson();
     AddIntToJson(presharedUrlJson, PRESHARED_URL_TRUST_TYPE, TRUST_TYPE_P2P);
@@ -1602,11 +1618,11 @@ static void CredsManagerTest56(void)
     presharedUrl.length = strlen(presharedUrlStr) + 1;
     Uint8Buff sharedSecret = { nullptr, 0 };
     res = GetSharedSecretByUrl(json, &presharedUrl, ALG_ISO, &sharedSecret);
+    FreeJsonString(presharedUrlStr);
+    FreeJson(json);
     if (res != HC_SUCCESS) {
         return;
     }
-    FreeJsonString(presharedUrlStr);
-    FreeJson(json);
 }
 
 static void CredsManagerTest57(void)
@@ -1618,11 +1634,12 @@ static void CredsManagerTest57(void)
     AddStringToJson(json, FIELD_PEER_AUTH_ID, TEST_AUTH_ID2.c_str());
     Uint8Buff seedBuff = { nullptr, 0 };
     int32_t res = GetSeedValue(&seedBuff);
-    if (res != HC_SUCCESS) {
-        return;
-    }
     AddByteToJson(json, FIELD_SEED, seedBuff.val, seedBuff.length);
     HcFree(seedBuff.val);
+    if (res != HC_SUCCESS) {
+        FreeJson(json);
+        return;
+    }
     Uint8Buff presharedUrl = { nullptr, 0 };
     CJson *presharedUrlJson = CreateJson();
     AddIntToJson(presharedUrlJson, PRESHARED_URL_TRUST_TYPE, TRUST_TYPE_P2P);
@@ -1633,12 +1650,12 @@ static void CredsManagerTest57(void)
     presharedUrl.length = strlen(presharedUrlStr) + 1;
     Uint8Buff sharedSecret = { nullptr, 0 };
     res = GetSharedSecretByUrl(json, &presharedUrl, ALG_ISO, &sharedSecret);
-    if (res != HC_SUCCESS) {
-        return;
-    }
     FreeJsonString(presharedUrlStr);
     HcFree(sharedSecret.val);
     FreeJson(json);
+    if (res != HC_SUCCESS) {
+        return;
+    }
 }
 
 static void CredsManagerTest58(void)
@@ -1707,11 +1724,12 @@ static void CredsManagerTest61(void)
     AddStringToJson(json, FIELD_PEER_AUTH_ID, TEST_AUTH_ID2.c_str());
     Uint8Buff nonceBuff = { nullptr, 0 };
     int32_t res = GetNonceValue(&nonceBuff);
-    if (res != HC_SUCCESS) {
-        return;
-    }
     AddByteToJson(json, FIELD_NONCE, nonceBuff.val, nonceBuff.length);
     HcFree(nonceBuff.val);
+    if (res != HC_SUCCESS) {
+        FreeJson(json);
+        return;
+    }
     Uint8Buff presharedUrl = { nullptr, 0 };
     CJson *presharedUrlJson = CreateJson();
     AddIntToJson(presharedUrlJson, PRESHARED_URL_TRUST_TYPE, TRUST_TYPE_P2P);
@@ -1722,12 +1740,12 @@ static void CredsManagerTest61(void)
     presharedUrl.length = strlen(presharedUrlStr) + 1;
     Uint8Buff sharedSecret = { nullptr, 0 };
     res = GetSharedSecretByUrl(json, &presharedUrl, ALG_EC_SPEKE, &sharedSecret);
-    if (res != HC_SUCCESS) {
-        return;
-    }
     FreeJsonString(presharedUrlStr);
     HcFree(sharedSecret.val);
     FreeJson(json);
+    if (res != HC_SUCCESS) {
+        return;
+    }
 }
 
 static void CredsManagerTest62(void)
@@ -1739,25 +1757,30 @@ static void CredsManagerTest62(void)
     CJson *json = CreateJson();
     res = GetSharedSecretByPeerCert(json, nullptr, ALG_EC_SPEKE, nullptr);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
     CertInfo certInfo = { { nullptr, 0 }, { nullptr, 0 }, P256 };
     res = GetSharedSecretByPeerCert(json, &certInfo, ALG_EC_SPEKE, nullptr);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
     Uint8Buff sharedSecret = { nullptr, 0 };
     res = GetSharedSecretByPeerCert(json, &certInfo, ALG_ISO, &sharedSecret);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
     res = GetSharedSecretByPeerCert(json, &certInfo, ALG_EC_SPEKE, &sharedSecret);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, DEFAULT_OS_ACCOUNT);
     res = GetSharedSecretByPeerCert(json, &certInfo, ALG_EC_SPEKE, &sharedSecret);
     if (res != HC_SUCCESS) {
+        FreeJson(json);
         return;
     }
     FreeJson(json);
