@@ -181,7 +181,7 @@ static void GroupOperationTest24(void)
 static void GroupOperationTest25(void)
 {
     char localUdid[INPUT_UDID_LEN] = { 0 };
-    (void)HcGetUdid((uint8_t *)localUdid, INPUT_UDID_LEN);
+    (void)HcGetUdid(reinterpret_cast<uint8_t *>(localUdid), INPUT_UDID_LEN);
     (void)AssertPeerDeviceNotSelf(localUdid);
 }
 
