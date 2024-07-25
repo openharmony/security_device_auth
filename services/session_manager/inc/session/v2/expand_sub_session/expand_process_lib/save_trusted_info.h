@@ -28,6 +28,7 @@ typedef struct {
     const char *appId;
     const char *groupId;
     const char *authId;
+    bool isBind;
 } SaveTrustedInfoParams;
 
 #ifdef ENABLE_SAVE_TRUSTED_INFO
