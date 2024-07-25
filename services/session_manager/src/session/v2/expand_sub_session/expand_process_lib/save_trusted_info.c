@@ -46,6 +46,7 @@
 typedef struct {
     bool isGroupExistSelf;
     bool isGroupExistPeer;
+    bool isBind;
     int32_t osAccountId;
     int32_t credType;
     int32_t userTypeSelf;
@@ -115,6 +116,25 @@ static TrustedGroupEntry *GetGroupEntryById(int32_t osAccountId, const char *gro
     return NULL;
 }
 
+static int32_t CheckGroupValidity(const CmdParams *params)
+{
+#ifdef DEV_AUTH_SAVE_TRUST_INFO_TEST
+    (void)params;
+    return HC_SUCCESS;
+#else
+    if (params->isBind) {
+        return HC_SUCCESS;
+    }
+    TrustedGroupEntry *entry = GetGroupEntryById(params->osAccountId, params->groupId);
+    if (entry == NULL) {
+        LOGE("Auth expand process, group not exist!");
+        return HC_ERR_GROUP_NOT_EXIST;
+    }
+    DestroyGroupEntry(entry);
+    return HC_SUCCESS;
+#endif
+}
+
 static int32_t ClientSendTrustedInfoProcEvent(CmdParams *params)
 {
     char udid[INPUT_UDID_LEN] = { 0 };
@@ -126,6 +146,10 @@ static int32_t ClientSendTrustedInfoProcEvent(CmdParams *params)
     if (DeepCopyString(udid, &params->udidSelf) != HC_SUCCESS) {
         LOGE("copy udid fail.");
         return HC_ERR_ALLOC_MEMORY;
+    }
+    res = CheckGroupValidity(params);
+    if (res != HC_SUCCESS) {
+        return res;
     }
     TrustedGroupEntry *entry = GetGroupEntryById(params->osAccountId, params->groupId);
     if (entry == NULL) {
@@ -437,6 +461,10 @@ static int32_t ServerSendTrustedInfoProcEvent(CmdParams *params)
     if (DeepCopyString(udid, &params->udidSelf) != HC_SUCCESS) {
         LOGE("copy udid fail.");
         return HC_ERR_ALLOC_MEMORY;
+    }
+    res = CheckGroupValidity(params);
+    if (res != HC_SUCCESS) {
+        return res;
     }
     TrustedGroupEntry *entry = GetGroupEntryById(params->osAccountId, params->groupId);
     if (entry == NULL) {
@@ -782,6 +810,7 @@ static int32_t InitSaveTrustedInfoCmd(SaveTrustedInfoCmd *instance, const SaveTr
     }
     instance->params.isGroupExistSelf = false;
     instance->params.isGroupExistPeer = false;
+    instance->params.isBind = params->isBind;
     instance->params.osAccountId = params->osAccountId;
     instance->params.credType = params->credType;
     instance->params.userTypeSelf = params->userType;

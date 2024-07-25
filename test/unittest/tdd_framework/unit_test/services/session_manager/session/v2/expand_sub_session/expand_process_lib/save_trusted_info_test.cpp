@@ -44,9 +44,9 @@ static const char *GROUP_OWNER = "testApp";
 #define TEST_OS_ACCOUNT_ID2 100
 
 static SaveTrustedInfoParams g_paramsC = { TEST_OS_ACCOUNT_ID1, ASYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY,
-    GROUP_VISIBILITY_PUBLIC, GROUP_OWNER, GROUP_ID, AUTH_ID_C };
+    GROUP_VISIBILITY_PUBLIC, GROUP_OWNER, GROUP_ID, AUTH_ID_C, false };
 static SaveTrustedInfoParams g_paramsS = { TEST_OS_ACCOUNT_ID2, ASYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY,
-    GROUP_VISIBILITY_PUBLIC, GROUP_OWNER, GROUP_ID, AUTH_ID_S };
+    GROUP_VISIBILITY_PUBLIC, GROUP_OWNER, GROUP_ID, AUTH_ID_S, false };
 
 static const char *g_invalidMsg1 = "{\"errCode\": 1}";
 static const char *g_invalidMsg2 = "{\"event\": -1, \"errCode\": 1}";
@@ -324,7 +324,7 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest101, TestSize.Level0)
 HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest102, TestSize.Level0)
 {
     SaveTrustedInfoParams errorParams = { 0, ASYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY, GROUP_VISIBILITY_PUBLIC,
-        nullptr, GROUP_ID, AUTH_ID_C };
+        nullptr, GROUP_ID, AUTH_ID_C, false };
     BaseCmd *self = CreateSaveTrustedInfoCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
@@ -332,7 +332,7 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest102, TestSize.Level0)
 HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest103, TestSize.Level0)
 {
     SaveTrustedInfoParams errorParams = { 0, ASYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY, GROUP_VISIBILITY_PUBLIC,
-        GROUP_OWNER, nullptr, AUTH_ID_C };
+        GROUP_OWNER, nullptr, AUTH_ID_C, false };
     BaseCmd *self = CreateSaveTrustedInfoCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
@@ -340,7 +340,7 @@ HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest103, TestSize.Level0)
 HWTEST_F(SaveTrustedInfoTest, SaveTrustedInfoTest104, TestSize.Level0)
 {
     SaveTrustedInfoParams errorParams = { 0, ASYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY, GROUP_VISIBILITY_PUBLIC,
-        GROUP_OWNER, GROUP_ID, nullptr };
+        GROUP_OWNER, GROUP_ID, nullptr, false };
     BaseCmd *self = CreateSaveTrustedInfoCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }

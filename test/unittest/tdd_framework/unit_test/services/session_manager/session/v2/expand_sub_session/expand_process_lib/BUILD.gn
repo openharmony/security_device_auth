@@ -214,6 +214,7 @@ ohos_unittest("save_trusted_info_test") {
   defines = [
     "DEV_AUTH_MEMORY_DEBUG",
     "ENABLE_SAVE_TRUSTED_INFO",
+    "DEV_AUTH_SAVE_TRUST_INFO_TEST",
   ]
 
   deps = [

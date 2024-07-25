@@ -41,6 +41,7 @@
 #include "pub_key_exchange.h"
 #include "save_trusted_info.h"
 #include "group_auth_data_operation.h"
+#include "group_operation_common.h"
 
 #define FIELD_DATA "data"
 #define FIELD_VR "vr"
@@ -84,27 +85,11 @@ typedef struct {
 
 typedef bool (*CmdInterceptor)(SessionImpl *impl, CmdProcessor processor);
 
-static int32_t GetSelfUpgradeFlag(const CJson *context, const char *groupId, bool *isSelfFromUpgrade)
+static int32_t GetSelfUpgradeFlag(int32_t osAccountId, const char *groupId, bool *isSelfFromUpgrade)
 {
-    int32_t operationCode;
-    if (GetIntFromJson(context, FIELD_OPERATION_CODE, &operationCode) != HC_SUCCESS) {
-        LOGE("Failed to get operation code!");
-        return HC_ERR_JSON_GET;
-    }
-    bool isClient = true;
-    if (GetBoolFromJson(context, FIELD_IS_CLIENT, &isClient) != HC_SUCCESS) {
-        LOGE("Failed to get isClient!");
-        return HC_ERR_JSON_GET;
-    }
-    bool isNeeded = (operationCode == MEMBER_INVITE && isClient) || (operationCode == MEMBER_JOIN && !isClient);
-    if (!isNeeded) {
-        LOGI("No need to get self upgrade flag.");
+    if (!IsGroupExistByGroupId(osAccountId, groupId)) {
+        LOGI("Group not exist, no need to get self upgrade flag.");
         return HC_SUCCESS;
-    }
-    int32_t osAccountId;
-    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId!");
-        return HC_ERR_JSON_GET;
     }
     TrustedDeviceEntry *selfDeviceEntry = CreateDeviceEntry();
     if (selfDeviceEntry == NULL) {
@@ -129,6 +114,11 @@ static int32_t CmdExchangePkGenerator(SessionImpl *impl)
         LOGE("get userType from context fail.");
         return HC_ERR_JSON_GET;
     }
+    int32_t osAccountId;
+    if (GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
     const char *groupId = GetStringFromJson(impl->context, FIELD_GROUP_ID);
     if (groupId == NULL) {
         LOGE("get groupId from context fail.");
@@ -141,9 +131,8 @@ static int32_t CmdExchangePkGenerator(SessionImpl *impl)
     }
     Uint8Buff authIdBuf = { (uint8_t *)authId, HcStrlen(authId) };
     bool isSelfFromUpgrade = false;
-    int32_t res = GetSelfUpgradeFlag(impl->context, groupId, &isSelfFromUpgrade);
+    int32_t res = GetSelfUpgradeFlag(osAccountId, groupId, &isSelfFromUpgrade);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get self upgrade flag!");
         return res;
     }
     PubKeyExchangeParams params = { userType, GROUP_MANAGER_PACKAGE_NAME, groupId, authIdBuf, isSelfFromUpgrade };
@@ -201,7 +190,9 @@ static int32_t CmdSaveTrustedInfoGenerator(SessionImpl *impl)
         LOGE("get authId from context fail.");
         return HC_ERR_JSON_GET;
     }
-    SaveTrustedInfoParams params = { osAccountId, credType, userType, visibility, appId, groupId, authId };
+    bool isBind = false;
+    (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
+    SaveTrustedInfoParams params = { osAccountId, credType, userType, visibility, appId, groupId, authId, isBind };
     return impl->expandSubSession->addCmd(impl->expandSubSession, SAVE_TRUSTED_INFO_CMD_TYPE, (void *)&params,
         (!impl->isClient), ABORT_IF_ERROR);
 }
@@ -1068,31 +1059,6 @@ static int32_t CreateEcSpekeSubSession(SessionImpl *impl, const IdentityInfo *cr
     *returnSubSession = authSubSession;
     LOGI("create EC_SPEKE authSubSession success.");
     return HC_SUCCESS;
-}
-
-static TrustedGroupEntry *GetGroupEntryById(int32_t osAccountId, const char *groupId)
-{
-    if (groupId == NULL) {
-        LOGE("The input groupId is NULL!");
-        return NULL;
-    }
-    uint32_t index;
-    TrustedGroupEntry **entry = NULL;
-    GroupEntryVec groupEntryVec = CreateGroupEntryVec();
-    QueryGroupParams params = InitQueryGroupParams();
-    params.groupId = groupId;
-    if (QueryGroups(osAccountId, &params, &groupEntryVec) != HC_SUCCESS) {
-        LOGE("Failed to query groups!");
-        ClearGroupEntryVec(&groupEntryVec);
-        return NULL;
-    }
-    FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
-        TrustedGroupEntry *returnEntry = DeepCopyGroupEntry(*entry);
-        ClearGroupEntryVec(&groupEntryVec);
-        return returnEntry;
-    }
-    ClearGroupEntryVec(&groupEntryVec);
-    return NULL;
 }
 
 static int32_t AddP2PGroupInfoToContext(SessionImpl *impl, const TrustedGroupEntry *entry)

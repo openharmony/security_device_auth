@@ -38,6 +38,7 @@ ohos_fuzztest("SaveTrustedInfoFuzzTest") {
   defines = [ "HILOG_ENABLE" ]
   defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
   defines += [ "DEV_AUTH_FUZZ_TEST" ]
+  defines += [ "DEV_AUTH_SAVE_TRUST_INFO_TEST" ]
   cflags = [ "-DHILOG_ENABLE" ]
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
