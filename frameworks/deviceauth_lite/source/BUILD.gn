@@ -117,7 +117,37 @@ config("hichain_standard_config") {
   }
 }
 
-if (os_level == "standard") {
+if (os_level == "small" || os_level == "mini") {
+  if (ohos_kernel_type == "liteos_m") {
+    static_library("hichainsdk") {
+      sources = hichian_sources
+      public_configs = [ ":hichain_config" ]
+      deps =
+          [ "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk" ]
+      if (board_toolchain_type == "iccarm") {
+        cflags = [
+          "--diag_suppress",
+          "Pe1097,Pe546,Pe188,Pe111",
+        ]
+      }
+    }
+  } else {
+    shared_library("hichainsdk") {
+      sources = hichian_sources
+      public_configs = [ ":hichain_config" ]
+      deps = [
+        "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk",
+        "//build/lite/config/component/cJSON:cjson_shared",
+        "//third_party/bounds_checking_function:libsec_shared",
+      ]
+      cflags = [
+        "-flto",
+        "-Wall",
+        "-fvisibility=hidden",
+      ]
+    }
+  }
+} else {
   ohos_shared_library("hichainsdk") {
     subsystem_name = "security"
     part_name = "device_auth"
@@ -161,35 +191,5 @@ if (os_level == "standard") {
       "--coverage",
     ]
     ldflags = [ "--coverage" ]
-  }
-} else {
-  if (ohos_kernel_type == "liteos_m") {
-    static_library("hichainsdk") {
-      sources = hichian_sources
-      public_configs = [ ":hichain_config" ]
-      deps =
-          [ "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk" ]
-      if (board_toolchain_type == "iccarm") {
-        cflags = [
-          "--diag_suppress",
-          "Pe1097,Pe546,Pe188,Pe111",
-        ]
-      }
-    }
-  } else {
-    shared_library("hichainsdk") {
-      sources = hichian_sources
-      public_configs = [ ":hichain_config" ]
-      deps = [
-        "//base/security/huks/interfaces/inner_api/huks_lite:huks_3.0_sdk",
-        "//build/lite/config/component/cJSON:cjson_shared",
-        "//third_party/bounds_checking_function:libsec_shared",
-      ]
-      cflags = [
-        "-flto",
-        "-Wall",
-        "-fvisibility=hidden",
-      ]
-    }
   }
 }

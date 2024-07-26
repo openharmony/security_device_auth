@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
 #ifdef HAS_OS_ACCOUNT_PART
