@@ -156,8 +156,8 @@ if (os_level == "small" || os_level == "mini") {
     external_deps = [
       "bounds_checking_function:libsec_shared",
       "cJSON:cjson",
-      "huks:libhukssdk",
       "c_utils:utils",
+      "huks:libhukssdk",
       "ipc:ipc_core",
     ]
     if (has_os_account_part) {
@@ -177,8 +177,8 @@ if (os_level == "small" || os_level == "mini") {
     external_deps = [
       "bounds_checking_function:libsec_shared",
       "cJSON:cjson",
-      "huks:libhukssdk",
       "c_utils:utils",
+      "huks:libhukssdk",
       "ipc:ipc_core",
     ]
     if (has_os_account_part) {
