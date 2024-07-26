@@ -16,6 +16,11 @@
 #ifndef __OS_ACCOUNT_ADAPTER_H__
 #define __OS_ACCOUNT_ADAPTER_H__
 
+enum AccountErrorCode {
+    ERR_FAILED = -1,
+    ERR_OK
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
