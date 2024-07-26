@@ -14,7 +14,6 @@
  */
 
 #include <cstdint>
-#include <vector>
 
 #ifdef HAS_OS_ACCOUNT_PART
 #include "os_account_manager.h"
