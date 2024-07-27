@@ -231,7 +231,7 @@ typedef void (*get_protocol_params_cb)(const struct session_identity *identity, 
                                        struct hc_pin *pin, struct operation_parameter *para);
 typedef void (*set_session_key_func)(const struct session_identity *identity,
                                      const struct hc_session_key *session_key);
-typedef void (*set_service_result_func)(const struct session_identity *identity, int32_t result);
+typedef void (*set_service_result_func)(const struct session_identity *identity, int32_t result, int32_t errorCodeRecv);
 typedef int32_t (*confirm_receive_request_func)(const struct session_identity *identity, int32_t operation_code);
 
 struct hc_call_back {
