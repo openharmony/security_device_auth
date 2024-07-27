@@ -56,10 +56,12 @@ static int32_t deserialize_message(const struct uint8_buff *data, struct message
 static int32_t build_send_data_by_struct(const struct message *message, void **send_data, uint32_t *send_data_len);
 static void destroy_receive_data_struct(const struct message *message);
 static void destroy_send_data(struct message *message);
-static void set_result(struct hichain *hichain, uint16_t rcv_msg_code, uint16_t snd_msg_code, int32_t error_code);
+static void set_result(struct hichain *hichain, uint16_t rcv_msg_code,
+                       uint16_t snd_msg_code, int32_t error_code, int32_t errorCodeRecv);
 static int32_t check_identity(const struct session_identity *identity);
 static int32_t check_call_back(const struct hc_call_back *call_back);
 static int32_t check_auth_info(const struct hc_user_info *user_info);
+static int32_t GetErrorCode(const struct uint8_buff *data, int32_t *errorCode);
 static int32_t delete_base_key(struct service_id service_id, struct operation_parameter para);
 static int32_t delete_public_key(hc_handle handle, struct service_id service_id, int32_t user_type);
 #if !(defined(_CUT_STS_) || defined(_CUT_STS_SERVER_) || defined(_CUT_EXCHANGE_) || defined(_CUT_EXCHANGE_SERVER_))
@@ -185,7 +187,9 @@ inform:
     } else {
         LOGE("build send data failed, error code is %d", ret);
     }
-    set_result(hichain, receive.msg_code, send.msg_code, ret);
+    int32_t errorCode = HC_OK;
+    GetErrorCode(data, &errorCode);
+    set_result(hichain, receive.msg_code, send.msg_code, ret, errorCode);
 
     destroy_receive_data_struct(&receive);
     destroy_send_data(&send);
@@ -435,7 +439,7 @@ struct msg_result_map {
     enum hichain_state state;
 };
 
-static void set_result_by_map(struct hichain *hichain, const struct msg_result_map *map)
+static void set_result_by_map(struct hichain *hichain, const struct msg_result_map *map, int32_t errorCodeRecv)
 {
     if (map == NULL) {
         return;
@@ -450,14 +454,14 @@ static void set_result_by_map(struct hichain *hichain, const struct msg_result_m
         hichain->last_state = hichain->state;
         hichain->state = OVER_STATE;
     }
-    hichain->cb.set_service_result(&hichain->identity, END_SUCCESS);
+    hichain->cb.set_service_result(&hichain->identity, END_SUCCESS, errorCodeRecv);
     return;
 out:
     if (hichain->state != map->state) {
         hichain->last_state = hichain->state;
         hichain->state = map->state;
     }
-    hichain->cb.set_service_result(&hichain->identity, map->result);
+    hichain->cb.set_service_result(&hichain->identity, map->result, errorCodeRecv);
 }
 
 const struct msg_result_map *select_result_map(uint16_t rcv_msg_code, const struct msg_result_map *map, uint32_t n)
@@ -470,7 +474,8 @@ const struct msg_result_map *select_result_map(uint16_t rcv_msg_code, const stru
     return NULL;
 }
 
-static void set_result(struct hichain *hichain, uint16_t rcv_msg_code, uint16_t snd_msg_code, int32_t error_code)
+static void set_result(struct hichain *hichain, uint16_t rcv_msg_code,
+                       uint16_t snd_msg_code, int32_t error_code, int32_t errorCodeRecv)
 {
     if (error_code != HC_OK) {
         LOGE("Error code is not ok, and set end failed");
@@ -501,12 +506,12 @@ static void set_result(struct hichain *hichain, uint16_t rcv_msg_code, uint16_t 
     const struct msg_result_map *map_ptr = select_result_map(rcv_msg_code, map,
         sizeof(map) / sizeof(struct msg_result_map));
 
-    set_result_by_map(hichain, map_ptr);
+    set_result_by_map(hichain, map_ptr, errorCodeRecv);
     return;
 error:
     hichain->last_state = hichain->state;
     hichain->state = OVER_STATE;
-    hichain->cb.set_service_result(&hichain->identity, END_FAILED);
+    hichain->cb.set_service_result(&hichain->identity, END_FAILED, errorCodeRecv);
 }
 
 static void encap_inform_message(int32_t error_code, struct message *send)
@@ -560,7 +565,7 @@ static int32_t triggered_pake_client(struct hichain *hichain, int32_t operation_
         FREE(send_data);
     }
 
-    set_result(hichain, INVALID_MESSAGE, PAKE_REQUEST, ret);
+    set_result(hichain, INVALID_MESSAGE, PAKE_REQUEST, ret, HC_OK);
     destroy_send_data(&send);
     return ret;
 }
@@ -602,7 +607,7 @@ static int32_t triggered_sts_client(struct hichain *hichain, int32_t operation_c
         FREE(send_data);
     }
 
-    set_result(hichain, INVALID_MESSAGE, AUTH_START_REQUEST, ret);
+    set_result(hichain, INVALID_MESSAGE, AUTH_START_REQUEST, ret, HC_OK);
     destroy_send_data(&send);
     return ret;
 }
@@ -927,6 +932,43 @@ static int32_t delete_public_key(hc_handle handle, struct service_id service_id,
         auth_id_list = NULL;
     }
 
+    return HC_OK;
+}
+
+static int32_t ParseInformMessage(const char *payload, enum json_object_data_type dataType, int32_t *errorCode);
+static int32_t GetErrorCode(const struct uint8_buff *data, int32_t *errorCode)
+{
+    check_ptr_return_val(data, HC_INPUT_ERROR);
+    check_ptr_return_val(errorCode, HC_INPUT_ERROR);
+    struct pass_through_data *passThroughData = parse_data((const char *)data->val);
+    if (passThroughData == NULL) {
+        LOGE("Parse data failed");
+        return HC_INPUT_ERROR;
+    }
+    if (passThroughData->message_code == INFORM_MESSAGE) {
+        return ParseInformMessage(passThroughData->payload_data, JSON_STRING_DATA, errorCode);
+    }
+    *errorCode = HC_OK;
+    return HC_OK;
+}
+
+static int32_t ParseInformMessage(const char *payload, enum json_object_data_type dataType, int32_t *errorCode)
+{
+    check_ptr_return_val(payload, HC_INPUT_ERROR);
+
+    json_pobject obj = parse_payload(payload, dataType);
+    if (obj == NULL) {
+        LOGE("Parse inform message payload failed");
+        return HC_INPUT_ERROR;
+    }
+
+    /* errorcode recv */
+    *errorCode = get_json_int(obj, FIELD_ERROR_CODE);
+    if (*errorCode == -1) {
+        LOGE("Parse inform message error code is not exist");
+        return HC_INPUT_ERROR;
+    }
+    LOGI("receive error code: %d", *errorCode);
     return HC_OK;
 }
 
