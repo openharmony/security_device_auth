@@ -42,7 +42,7 @@ namespace OHOS {
         return;
     }
 
-    static void SetServiceResultFunc(const struct session_identity *identity, int32_t result)
+    static void SetServiceResultFunc(const struct session_identity *identity, int32_t result, int32_t errorCode)
     {
         return;
     }
