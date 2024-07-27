@@ -188,9 +188,7 @@ inform:
         LOGE("build send data failed, error code is %d", ret);
     }
     int32_t errorCode = HC_OK;
-    if (GetErrorCode(data, &errorCode) != HC_OK) {
-        LOGE("GetErrorCode failed, Input error");
-    }
+    GetErrorCode(data, &errorCode);
     set_result(hichain, receive.msg_code, send.msg_code, ret, errorCode);
 
     destroy_receive_data_struct(&receive);
