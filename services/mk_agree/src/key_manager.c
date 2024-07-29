@@ -90,10 +90,6 @@ static int32_t ConvertHashToAliasWithPrefix(const char *prefix, const Uint8Buff 
 
 static int32_t GenerateDevKeyAlias(Uint8Buff *outKeyAlias)
 {
-    if (outKeyAlias == NULL) {
-        LOGE("Input key alias is null!");
-        return HC_ERR_INVALID_PARAMS;
-    }
     char selfUdid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {

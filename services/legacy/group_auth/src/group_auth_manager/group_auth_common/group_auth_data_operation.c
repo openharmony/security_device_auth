@@ -92,10 +92,6 @@ static bool GaDeepCopyGroupEntry(const TrustedGroupEntry *entry, TrustedGroupEnt
 
 static int32_t GetGroupEntryById(int32_t osAccountId, const char *groupId, TrustedGroupEntry *returnEntry)
 {
-    if (returnEntry == NULL) {
-        LOGE("The input returnEntry is NULL!");
-        return HC_ERR_INVALID_PARAMS;
-    }
     uint32_t groupIndex;
     TrustedGroupEntry **entry = NULL;
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
