@@ -494,12 +494,6 @@ ohos_unittest("deviceauth_unit_test") {
     "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
   ]
 
-  sources -= [
-    "${group_manager_path}/src/group_operation/across_account_group/across_account_group.c",
-    "${group_manager_path}/src/group_operation/identical_account_group/identical_account_group.c",
-    "${group_manager_path}/src/group_operation/peer_to_peer_group/peer_to_peer_group.c",
-  ]
-
   sources += [
     "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c",
     "source/os_account_adapter_mock.c",
