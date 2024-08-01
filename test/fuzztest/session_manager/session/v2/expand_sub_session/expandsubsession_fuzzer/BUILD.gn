@@ -96,10 +96,9 @@ ohos_fuzztest("ExpandSubSessionFuzzTest") {
   ]
   defines += [ "ENABLE_AUTH_CODE_IMPORT" ]
 
-  deps += [ "//third_party/cJSON:cjson" ]
-
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
     "hilog:libhilog",
     "huks:libhukssdk",
   ]

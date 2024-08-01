@@ -91,10 +91,9 @@ ohos_fuzztest("SaveTrustedInfoFuzzTest") {
   ]
   defines += [ "ENABLE_SAVE_TRUSTED_INFO" ]
 
-  deps += [ "//third_party/cJSON:cjson" ]
-
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "huks:libhukssdk",
