@@ -33,10 +33,6 @@ ohos_fuzztest("CredsManagerFuzzTest") {
     "${frameworks_path}/inc/standard",
     "${tdd_framework_path}/common/inc",
     "${dev_frameworks_path}/inc/hiview_adapter",
-    "//third_party/cJSON",
-    "//third_party/openssl/include/",
-    "//third_party/mbedtls/include",
-    "//third_party/mbedtls/include/mbedtls",
   ]
   include_dirs += identity_manager_inc
 
@@ -83,19 +79,16 @@ ohos_fuzztest("CredsManagerFuzzTest") {
     "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}",
   ]
 
-  deps = [
-    "//third_party/cJSON:cjson",
-    "//third_party/mbedtls:mbedtls_shared",
-    "//third_party/openssl:libcrypto_static",
-  ]
-
   external_deps = [
+    "cJSON:cjson",
     "c_utils:utils",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "huks:libhukssdk",
+    "mbedtls:mbedtls_shared",
+    "openssl:libcrypto_static",
   ]
 }
 

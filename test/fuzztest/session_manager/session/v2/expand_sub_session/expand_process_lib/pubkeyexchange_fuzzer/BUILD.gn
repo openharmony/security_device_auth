@@ -91,10 +91,9 @@ ohos_fuzztest("PubkeyExchangeFuzzTest") {
     "${services_path}/frameworks/src/hiview_adapter/performance_dumper.c",
   ]
 
-  deps += [ "//third_party/cJSON:cjson" ]
-
   external_deps = [
     "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
     "hilog:libhilog",
     "huks:libhukssdk",
   ]

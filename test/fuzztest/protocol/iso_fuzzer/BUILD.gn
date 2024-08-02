@@ -27,7 +27,6 @@ ohos_fuzztest("IsoFuzzTest") {
   include_dirs = inc_path + hals_inc_path
   include_dirs += [
     ".",
-    "//third_party/cJSON",
     "${inner_api_path}",
     "${frameworks_path}/inc/standard",
     "${dev_frameworks_path}/inc/hiview_adapter",
@@ -57,14 +56,12 @@ ohos_fuzztest("IsoFuzzTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = [
-    "${deps_adapter_path}:${hal_module_name}",
-    "//third_party/cJSON:cjson",
-  ]
+  deps = [ "${deps_adapter_path}:${hal_module_name}" ]
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "cJSON:cjson",
     "c_utils:utils",
     "hilog:libhilog",
     "hisysevent:libhisysevent",

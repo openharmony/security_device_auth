@@ -57,7 +57,8 @@
           "openssl",
           "os_account",
           "samgr",
-          "ipc"
+          "ipc",
+          "googletest"
         ]
       },
       "build": {
