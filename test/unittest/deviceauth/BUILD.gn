@@ -356,7 +356,6 @@ ohos_unittest("device_auth_interface_test") {
     "ENABLE_P2P_BIND_EC_SPEKE",
     "ENABLE_P2P_AUTH_ISO",
     "ENABLE_P2P_AUTH_EC_SPEKE",
-    "DEV_AUTH_FUNC_TEST",
     "ENABLE_PSEUDONYM",
     "DEV_AUTH_HIVIEW_ENABLE",
   ]
