@@ -35,6 +35,7 @@ typedef const AuthModuleBase *(*GetAuthModulePluginFunc)(void);
 #define FUNC_NAME_INIT_EXT_PART "InitExtPart"
 #define FUNC_NAME_EXT_PLUGIN_LIST "GetExtPlugins"
 #define FUNC_NAME_DESTROY_EXT_PART "DestroyExtPart"
+#define LIBDEVICE_AUTH_EXT "libdevice_auth_ext.z.so"
 
 static void *g_handle = NULL;
 static ExtPartProxy g_pluginFunc;
@@ -131,14 +132,7 @@ void LoadExtendPlugin(void)
         LOGE("[Plugin]: The plugin has been loaded.");
         return;
     }
-    do {
-        g_handle = DevAuthDlopen("/system/lib64/libdevice_auth_ext.z.so");
-        if (g_handle != NULL) {
-            LOGI("[Plugin]: Open lib64 dynamic plugin success.");
-            break;
-        }
-        g_handle = DevAuthDlopen("/system/lib/libdevice_auth_ext.z.so");
-    } while (0);
+    g_handle = DevAuthDlopen(LIBDEVICE_AUTH_EXT);
     if (g_handle == NULL) {
         LOGI("[Plugin]: There are no plugin that need to be loaded.");
         return;
