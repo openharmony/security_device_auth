@@ -420,10 +420,16 @@ static int32_t AddGroupAndDevInfoToParams(const CompatibleBindSubSession *sessio
         LOGE("Failed to get authId from params!");
         return HC_ERR_JSON_GET;
     }
+    bool isSelfFromUpgrade = false;
+    (void)GetBoolFromJson(session->params, FIELD_IS_SELF_FROM_UPGRADE, &isSelfFromUpgrade);
     int32_t userType = DEVICE_TYPE_ACCESSORY;
     if (GetIntFromJson(session->params, FIELD_USER_TYPE, &userType) != HC_SUCCESS) {
         LOGE("Failed to get userType from params!");
         return HC_ERR_JSON_GET;
+    }
+    if (AddBoolToJson(moduleParams, FIELD_IS_SELF_FROM_UPGRADE, isSelfFromUpgrade) != HC_SUCCESS) {
+        LOGE("Failed to add isSelfFromUpgrade to moduleParams!");
+        return HC_ERR_JSON_ADD;
     }
     if (AddStringToJson(moduleParams, FIELD_SERVICE_TYPE, groupId) != HC_SUCCESS) {
         LOGE("Failed to add serviceType to moduleParams!");
