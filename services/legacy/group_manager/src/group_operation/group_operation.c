@@ -52,6 +52,11 @@ static void RemoveNoPermissionGroup(int32_t osAccountId, GroupEntryVec *groupEnt
     TrustedGroupEntry **groupEntryPtr = NULL;
     while (index < groupEntryVec->size(groupEntryVec)) {
         groupEntryPtr = groupEntryVec->getp(groupEntryVec, index);
+        if (groupEntryPtr == NULL) {
+            LOGW("groupEntryPtr is NULL!");
+            index++;
+            continue;
+        }
         if (CheckGroupAccessible(osAccountId, StringGet(&(*groupEntryPtr)->id), appId) == HC_SUCCESS) {
             index++;
             continue;
