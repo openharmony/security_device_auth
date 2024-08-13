@@ -70,9 +70,6 @@ hichain_sources = [
 config("standard_config") {
   visibility = [ ":*" ]
   include_dirs = [
-    "//third_party/cJSON",
-    "//third_party/bounds_checking_function/include",
-    "//base/security/huks/interfaces/inner_api/huks_standard/main/include",
     "//base/security/device_auth/interfaces/inner_api/deviceauth_lite",
     "../unittest",
     "../../inc/base",
