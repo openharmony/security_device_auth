@@ -501,7 +501,8 @@ static int32_t CheckGroupVisibility(const CJson *context)
         LOGE("Failed to get group entry!");
         return HC_ERR_GROUP_NOT_EXIST;
     }
-    if (strcmp(appId, "com.huawei.health") == 0 && entry->upgradeFlag == 1) {
+    int32_t res = CheckUpgradeIdentity(entry->upgradeFlag, appId, NULL);
+    if (res == HC_SUCCESS) {
         LOGI("Group is from upgrade, no need to check visibility.");
         DestroyGroupEntry(entry);
         return HC_SUCCESS;
