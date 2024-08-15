@@ -24,7 +24,7 @@ services_path = "${deviceauth_path}/services"
 
 declare_args() {
   deviceauth_feature_config = "//base/security/device_auth/default_config"
-  enable_soft_bus_channel = true
+  device_auth_enable_soft_bus_channel = true
 }
 
 build_flags = [
@@ -49,7 +49,7 @@ if (defined(ohos_lite)) {
   } else {
     import("${deviceauth_feature_config}/small/config.gni")
   }
-  enable_soft_bus_channel = false
+  device_auth_enable_soft_bus_channel = false
 } else {
   import("${deviceauth_feature_config}/standard/config.gni")
 }
