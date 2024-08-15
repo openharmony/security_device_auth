@@ -249,7 +249,7 @@ int32_t DevAuthGetRealOsAccountLocalId(int32_t inputId)
 {
     if (inputId == ANY_OS_ACCOUNT) {
         return GetCurrentActiveOsAccountId();
-    } else if (inputId >= 0) {
+    } else if (inputId >= SYSTEM_DEFAULT_USER) {
         if (inputId != SYSTEM_DEFAULT_USER) {
             LOGI("[OsAccountAdapter]: Use input os account! [Id]: %d", inputId);
         }
