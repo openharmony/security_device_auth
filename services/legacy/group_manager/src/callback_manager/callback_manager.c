@@ -134,6 +134,7 @@ void ProcessFinishCallback(int64_t reqId, int operationCode, const char *returnD
 
 static void FaultReportWithOpCode(int operationCode, int errorCode)
 {
+    (void)errorCode;
     if (operationCode < 0 || (unsigned int)operationCode > sizeof(OP_CODE_TO_EVENT) / sizeof(OP_CODE_TO_EVENT[0])) {
         LOGE("Invalid operation code! Cannot report this fault!");
         return;
