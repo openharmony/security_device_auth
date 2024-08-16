@@ -42,39 +42,45 @@ static int DecAndImportInner(IsoClientBindExchangeTask *realTask, const IsoParam
     const Uint8Buff *nonceBuf, const Uint8Buff *encDataBuf, Uint8Buff *authCodeBuf)
 {
     int res;
-    uint8_t *keyAlias = (uint8_t *)HcMalloc(ISO_KEY_ALIAS_LEN, 0);
-    if (keyAlias == NULL) {
+    uint8_t *keyAliasVal = (uint8_t *)HcMalloc(ISO_KEY_ALIAS_LEN, 0);
+    if (keyAliasVal == NULL) {
         res = HC_ERR_ALLOC_MEMORY;
         goto ERR;
     }
-    Uint8Buff keyAliasBuf = { keyAlias, ISO_KEY_ALIAS_LEN };
+    Uint8Buff keyAlias = { keyAliasVal, ISO_KEY_ALIAS_LEN };
     GcmParam gcmParam;
     gcmParam.aad = realTask->challenge;
     gcmParam.aadLen = sizeof(realTask->challenge);
     gcmParam.nonce = nonceBuf->val;
     gcmParam.nonceLen = nonceBuf->length;
-    res = params->baseParams.loader->aesGcmDecrypt(&params->baseParams.sessionKey, encDataBuf,
-        &gcmParam, false, authCodeBuf);
+    KeyParams keyParams = {
+        { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false },
+        false,
+        params->baseParams.osAccountId
+    };
+    res = params->baseParams.loader->aesGcmDecrypt(&keyParams, encDataBuf, &gcmParam, authCodeBuf);
     if (res != 0) {
         LOGE("gcm decrypt failed, res:%d", res);
         goto ERR;
     }
-    res = GenerateKeyAliasInIso(params, keyAlias, ISO_KEY_ALIAS_LEN, true);
+    res = GenerateKeyAliasInIso(params, keyAliasVal, ISO_KEY_ALIAS_LEN, true);
     if (res != 0) {
         LOGE("GenerateKeyAliasInIso failed, res:%d", res);
         goto ERR;
     }
 
-    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias[0], keyAlias[1], keyAlias[2], keyAlias[3]);
+    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
+        keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
     ExtraInfo exInfo = { { params->baseParams.authIdPeer.val, params->baseParams.authIdPeer.length },
         params->peerUserType, PAIR_TYPE_BIND };
-    res = params->baseParams.loader->importSymmetricKey(&keyAliasBuf, authCodeBuf, KEY_PURPOSE_MAC, &exInfo);
+    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false, params->baseParams.osAccountId };
+    res = params->baseParams.loader->importSymmetricKey(&keyAliasParams, authCodeBuf, KEY_PURPOSE_MAC, &exInfo);
     if (res != 0) {
         LOGE("ImportSymmetricKey failed, res: %x.", res);
         goto ERR;
     }
 ERR:
-    HcFree(keyAlias);
+    HcFree(keyAliasVal);
     return res;
 }
 
@@ -183,8 +189,12 @@ static int ClientBindAesEncrypt(IsoClientBindExchangeTask *task, const IsoParams
     gcmParams.nonce = *nonce;
     gcmParams.nonceLen = NONCE_SIZE;
     Uint8Buff outBuf = { *encData, sizeof(task->challenge) + TAG_LEN };
-    res = params->baseParams.loader->aesGcmEncrypt(&params->baseParams.sessionKey, &challengeBuf, &gcmParams, false,
-        &outBuf);
+    KeyParams keyParams = {
+        { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false },
+        false,
+        params->baseParams.osAccountId
+    };
+    res = params->baseParams.loader->aesGcmEncrypt(&keyParams, &challengeBuf, &gcmParams, &outBuf);
     if (res != 0) {
         LOGE("encrypt failed, res:%d", res);
         return res;

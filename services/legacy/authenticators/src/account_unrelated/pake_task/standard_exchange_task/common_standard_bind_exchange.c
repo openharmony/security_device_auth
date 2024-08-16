@@ -90,7 +90,8 @@ void DestroyStandardBindExchangeParams(StandardBindExchangeParams *params)
 
 static int32_t GenerateKeyPairIfNotExist(const PakeParams *pakeParams, const Uint8Buff *keyAlias)
 {
-    int32_t res = pakeParams->baseParams.loader->checkKeyExist(keyAlias, pakeParams->isSelfFromUpgrade);
+    int32_t res = pakeParams->baseParams.loader->checkKeyExist(keyAlias, pakeParams->isSelfFromUpgrade,
+        pakeParams->baseParams.osAccountId);
     if (res != HC_SUCCESS) {
         if (pakeParams->isSelfFromUpgrade) {
             LOGE("Self data is from upgrade, self authInfo not exist!");
@@ -100,7 +101,8 @@ static int32_t GenerateKeyPairIfNotExist(const PakeParams *pakeParams, const Uin
         Algorithm alg = (pakeParams->baseParams.curveType == CURVE_256) ? P256 : ED25519;
         /* UserType and pairType are not required when generating key. */
         ExtraInfo exInfo = { pakeParams->baseParams.idSelf, -1, -1 };
-        res = pakeParams->baseParams.loader->generateKeyPairWithStorage(keyAlias, PAKE_ED25519_KEY_PAIR_LEN, alg,
+        KeyParams keyParams = { { keyAlias->val, keyAlias->length, true }, false, pakeParams->baseParams.osAccountId };
+        res = pakeParams->baseParams.loader->generateKeyPairWithStorage(&keyParams, PAKE_ED25519_KEY_PAIR_LEN, alg,
             KEY_PURPOSE_SIGN_VERIFY, &exInfo);
         if (res != HC_SUCCESS) {
             LOGE("generate self auth keyPair failed.");
@@ -119,8 +121,12 @@ static int32_t PackageAuthInfo(const PakeParams *pakeParams, StandardBindExchang
         return res;
     }
 
-    res = pakeParams->baseParams.loader->exportPublicKey(keyAlias, pakeParams->isSelfFromUpgrade,
-        &(exchangeParams->pubKeySelf));
+    KeyParams keyParams = {
+        { keyAlias->val, keyAlias->length, true },
+        pakeParams->isSelfFromUpgrade,
+        pakeParams->baseParams.osAccountId
+    };
+    res = pakeParams->baseParams.loader->exportPublicKey(&keyParams, &(exchangeParams->pubKeySelf));
     if (res != HC_SUCCESS) {
         LOGE("exportPublicKey failed");
         return res;
@@ -194,7 +200,11 @@ static int32_t GenerateSignInfo(const PakeParams *pakeParams, const StandardBind
     }
 
     Algorithm alg = (pakeParams->baseParams.curveType == CURVE_256) ? P256 : ED25519;
-    KeyParams keyAliasParams = { { keyAlias->val, keyAlias->length, true }, pakeParams->isSelfFromUpgrade };
+    KeyParams keyAliasParams = {
+        { keyAlias->val, keyAlias->length, true },
+        pakeParams->isSelfFromUpgrade,
+        pakeParams->baseParams.osAccountId
+    };
     res = pakeParams->baseParams.loader->sign(&keyAliasParams, &msgInfo, alg, signInfo);
     if (res != HC_SUCCESS) {
         LOGE("sign failed");
@@ -247,8 +257,13 @@ static int32_t EncryptAuthAndSignInfo(const PakeParams *pakeParams, StandardBind
         .nonce = exchangeParams->nonce.val,
         .nonceLen = exchangeParams->nonce.length
     };
-    res = pakeParams->baseParams.loader->aesGcmEncrypt(&(pakeParams->baseParams.sessionKey), &exchangeInfo,
-        &encryptInfo, false, &(exchangeParams->exInfoCipher));
+    KeyParams keyParams = {
+        { pakeParams->baseParams.sessionKey.val, pakeParams->baseParams.sessionKey.length, false },
+        false,
+        pakeParams->baseParams.osAccountId
+    };
+    res = pakeParams->baseParams.loader->aesGcmEncrypt(&keyParams, &exchangeInfo, &encryptInfo,
+        &(exchangeParams->exInfoCipher));
     if (res != HC_SUCCESS) {
         LOGE("aesGcmEncrypt failed");
         goto ERR;
@@ -276,9 +291,13 @@ static int32_t DecryptAuthAndSignInfo(const PakeParams *pakeParams, StandardBind
         .nonce = exchangeParams->nonce.val,
         .nonceLen = exchangeParams->nonce.length
     };
-
-    int32_t res = pakeParams->baseParams.loader->aesGcmDecrypt(&(pakeParams->baseParams.sessionKey),
-        &(exchangeParams->exInfoCipher), &decryptInfo, false, &exchangeInfo);
+    KeyParams keyParams = {
+        { pakeParams->baseParams.sessionKey.val, pakeParams->baseParams.sessionKey.length, false },
+        false,
+        pakeParams->baseParams.osAccountId
+    };
+    int32_t res = pakeParams->baseParams.loader->aesGcmDecrypt(&keyParams, &(exchangeParams->exInfoCipher),
+        &decryptInfo, &exchangeInfo);
     if (res != HC_SUCCESS) {
         LOGE("aesGcmDecrypt failed");
         goto ERR;
@@ -361,7 +380,12 @@ static int32_t VerifySignInfo(const PakeParams *pakeParams, StandardBindExchange
     }
 
     Algorithm alg = (pakeParams->baseParams.curveType == CURVE_256) ? P256 : ED25519;
-    res = pakeParams->baseParams.loader->verify(&(exchangeParams->pubKeyPeer), &verifyMsg, alg, signInfo, false);
+    KeyParams keyParams = {
+        { exchangeParams->pubKeyPeer.val, exchangeParams->pubKeyPeer.length, false },
+        false,
+        pakeParams->baseParams.osAccountId
+    };
+    res = pakeParams->baseParams.loader->verify(&keyParams, &verifyMsg, alg, signInfo);
     if (res != HC_SUCCESS) {
         LOGE("verify failed");
         goto ERR;
@@ -374,7 +398,7 @@ ERR:
 static int32_t SaveAuthInfo(const PakeParams *pakeParams, const StandardBindExchangeParams *exchangeParams)
 {
     uint8_t keyAliasPeerVal[PAKE_KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff keyAliasPeer = { keyAliasPeerVal, PAKE_KEY_ALIAS_LEN };
+    Uint8Buff keyAlias = { keyAliasPeerVal, PAKE_KEY_ALIAS_LEN };
 #ifdef DEV_AUTH_FUNC_TEST
     KeyAliasType keyType = KEY_ALIAS_LT_KEY_PAIR;
 #else
@@ -383,7 +407,7 @@ static int32_t SaveAuthInfo(const PakeParams *pakeParams, const StandardBindExch
     Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, strlen(pakeParams->packageName) };
     Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, strlen(pakeParams->serviceType) };
     int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(pakeParams->baseParams.idPeer),
-        &keyAliasPeer);
+        &keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generateKeyAlias failed");
         return res;
@@ -392,7 +416,8 @@ static int32_t SaveAuthInfo(const PakeParams *pakeParams, const StandardBindExch
         keyAliasPeerVal[2], keyAliasPeerVal[3]);
     Algorithm alg = (pakeParams->baseParams.curveType == CURVE_256) ? P256 : ED25519;
     ExtraInfo exInfo = { pakeParams->baseParams.idPeer, pakeParams->userType, PAIR_TYPE_BIND };
-    res = pakeParams->baseParams.loader->importPublicKey(&keyAliasPeer, &(exchangeParams->pubKeyPeer), alg, &exInfo);
+    KeyParams keyParams = { { keyAlias.val, keyAlias.length, true }, false, pakeParams->baseParams.osAccountId };
+    res = pakeParams->baseParams.loader->importPublicKey(&keyParams, &(exchangeParams->pubKeyPeer), alg, &exInfo);
     if (res != HC_SUCCESS) {
         LOGE("importPublicKey failed");
         return res;

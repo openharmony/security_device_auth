@@ -320,8 +320,14 @@ static int32_t PackPublicKeyToJson(
     Uint8Buff authIdBuff = { (uint8_t *)authId, HcStrlen(authId) };
     uint8_t returnPkBytes[PUBLIC_KEY_MAX_LENGTH] = { 0 };
     Uint8Buff returnPkBuff = { returnPkBytes, PUBLIC_KEY_MAX_LENGTH };
-    int32_t res = GetStandardTokenManagerInstance()->getPublicKey(
-        DEFAULT_PACKAGE_NAME, serviceType, &authIdBuff, keyType, &returnPkBuff);
+    TokenManagerParams params = {
+        .osAccountId = osAccountId,
+        .pkgName = { (uint8_t *)DEFAULT_PACKAGE_NAME, HcStrlen(DEFAULT_PACKAGE_NAME) },
+        .serviceType = { (uint8_t *)serviceType, HcStrlen(serviceType) },
+        .authId = authIdBuff,
+        .userType = keyType
+    };
+    int32_t res = GetStandardTokenManagerInstance()->getPublicKey(&params, &returnPkBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to getPublicKey!");
         return HC_ERR_LOCAL_IDENTITY_NOT_EXIST;
@@ -385,7 +391,7 @@ static int32_t IsKeyExistReturnAliasIfNeeded(CredentialRequestParamT *param, Uin
         return HC_ERR_MEMORY_COPY;
     }
 
-    res = GetLoaderInstance()->checkKeyExist(&keyAliasBuff, false);
+    res = GetLoaderInstance()->checkKeyExist(&keyAliasBuff, false, param->osAccountId);
     if (res != HC_SUCCESS) {
         return HC_ERR_LOCAL_IDENTITY_NOT_EXIST;
     }
@@ -434,6 +440,19 @@ ERR:
     return res;
 }
 
+static int32_t RegisterIdentity(const CredentialRequestParamT *param, int32_t keyType)
+{
+    Uint8Buff authIdBuff = { (uint8_t *)param->deviceId, HcStrlen(param->deviceId) };
+    TokenManagerParams params = {
+        .osAccountId = param->osAccountId,
+        .pkgName = { (uint8_t *)DEFAULT_PACKAGE_NAME, HcStrlen(DEFAULT_PACKAGE_NAME) },
+        .serviceType = { (uint8_t *)param->serviceType, HcStrlen(param->serviceType) },
+        .authId = authIdBuff,
+        .userType = keyType
+    };
+    return GetStandardTokenManagerInstance()->registerLocalIdentity(&params);
+}
+
 static int32_t GenarateCredential(const char *reqJsonStr, char **returnData)
 {
     int32_t res;
@@ -454,7 +473,6 @@ static int32_t GenarateCredential(const char *reqJsonStr, char **returnData)
         res = HC_ERR_IDENTITY_DUPLICATED;
         goto ERR;
     }
-    Uint8Buff authIdBuff = { (uint8_t *)param->deviceId, HcStrlen(param->deviceId) };
     if (param->acquireType != P2P_BIND) {
         LOGE("acquireType invalid! only P2P_BIND is allowed now!");
         res = HC_ERR_INVALID_PARAMS;
@@ -462,8 +480,7 @@ static int32_t GenarateCredential(const char *reqJsonStr, char **returnData)
     }
     // Caution: Only acquireType is P2P_BIND, keyType can be set to KEY_ALIAS_P2P_AUTH
     int32_t keyType = KEY_ALIAS_P2P_AUTH;
-    res = GetStandardTokenManagerInstance()->registerLocalIdentity(
-        DEFAULT_PACKAGE_NAME, param->serviceType, &authIdBuff, keyType);
+    res = RegisterIdentity(param, keyType);
     if (res != HC_SUCCESS) {
         LOGE("Failed to registerLocalIdentity!");
         goto ERR;
@@ -484,7 +501,7 @@ ERR:
     return res;
 }
 
-static int32_t ComputeAndSavePsk(const char *peerServiceType, const char *peerAuthId, int keyType)
+static int32_t ComputeAndSavePsk(int32_t osAccountId, const char *peerServiceType, const char *peerAuthId, int keyType)
 {
     uint8_t selfKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff selfKeyAlias = { selfKeyAliasVal, PAKE_KEY_ALIAS_LEN };
@@ -513,12 +530,12 @@ static int32_t ComputeAndSavePsk(const char *peerServiceType, const char *peerAu
     }
     LOGI("peerKeyAlias(HEX): %x%x%x%x****", peerKeyAliasVal[DEV_AUTH_ZERO], peerKeyAliasVal[DEV_AUTH_ONE],
         peerKeyAliasVal[DEV_AUTH_TWO], peerKeyAliasVal[DEV_AUTH_THREE]);
-    res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, false);
+    res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, false, osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("self auth keyPair not exist .");
         return res;
     }
-    res = GetLoaderInstance()->checkKeyExist(&peerKeyAlias, false);
+    res = GetLoaderInstance()->checkKeyExist(&peerKeyAlias, false, osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("peer auth pubKey not exist");
         return res;
@@ -534,13 +551,13 @@ static int32_t ComputeAndSavePsk(const char *peerServiceType, const char *peerAu
     LOGI("psk alias(HEX): %x%x%x%x****", sharedKeyAliasVal[DEV_AUTH_ZERO], sharedKeyAliasVal[DEV_AUTH_ONE],
         sharedKeyAliasVal[DEV_AUTH_TWO], sharedKeyAliasVal[DEV_AUTH_THREE]);
 
-    KeyParams selfKeyParams = { { selfKeyAlias.val, selfKeyAlias.length, true }, false };
+    KeyParams selfKeyParams = { { selfKeyAlias.val, selfKeyAlias.length, true }, false, osAccountId };
     KeyBuff peerKeyBuff = { peerKeyAlias.val, peerKeyAlias.length, true };
     return GetLoaderInstance()->agreeSharedSecretWithStorage(
         &selfKeyParams, &peerKeyBuff, ED25519, PAKE_PSK_LEN, &sharedKeyAlias);
 }
 
-static int32_t IsSelfKeyPairExist(int keyType)
+static int32_t IsSelfKeyPairExist(int32_t osAccountId, int keyType)
 {
     if (keyType != KEY_ALIAS_P2P_AUTH) {
         LOGE("keyType invalid! only KEY_ALIAS_P2P_AUTH is allowed now!");
@@ -563,7 +580,7 @@ static int32_t IsSelfKeyPairExist(int keyType)
     LOGI("selfKeyAlias(HEX): %x%x%x%x****", selfKeyAliasVal[DEV_AUTH_ZERO], selfKeyAliasVal[DEV_AUTH_ONE],
         selfKeyAliasVal[DEV_AUTH_TWO], selfKeyAliasVal[DEV_AUTH_THREE]);
 
-    res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, false);
+    res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, false, osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("self keypair not exist");
         return res;
@@ -588,13 +605,25 @@ static int32_t CheckImportConditions(CredentialRequestParamT *param, Uint8Buff *
         return HC_ERR_IDENTITY_DUPLICATED;
     }
 
-    res = IsSelfKeyPairExist(KEY_ALIAS_P2P_AUTH);
+    res = IsSelfKeyPairExist(param->osAccountId, KEY_ALIAS_P2P_AUTH);
     if (res != HC_SUCCESS) {
         LOGD("self Key pair not exist.");
         return HC_ERR_LOCAL_IDENTITY_NOT_EXIST;
     }
 
     return HC_SUCCESS;
+}
+
+static int32_t UnregisterIdentity(const CredentialRequestParamT *param, const Uint8Buff *authIdBuff, int32_t keyType)
+{
+    TokenManagerParams params = {
+        .osAccountId = param->osAccountId,
+        .pkgName = { (uint8_t *)DEFAULT_PACKAGE_NAME, HcStrlen(DEFAULT_PACKAGE_NAME) },
+        .serviceType = { (uint8_t *)param->serviceType, HcStrlen(param->serviceType) },
+        .authId = *authIdBuff,
+        .userType = keyType
+    };
+    return GetStandardTokenManagerInstance()->unregisterLocalIdentity(&params);
 }
 
 static int32_t ImportCredential(const char *reqJsonStr, char **returnData)
@@ -622,16 +651,16 @@ static int32_t ImportCredential(const char *reqJsonStr, char **returnData)
     // Caution: Only acquireType is P2P_BIND, keyType can be set to KEY_ALIAS_P2P_AUTH
     int32_t keyType = KEY_ALIAS_P2P_AUTH;
     ExtraInfo exInfo = { authIdBuff, keyType, PAIR_TYPE_BIND };
-    res = GetLoaderInstance()->importPublicKey(&keyAliasBuff, param->publicKey, ED25519, &exInfo);
+    KeyParams keyParams = { { keyAliasBuff.val, keyAliasBuff.length, true }, false, param->osAccountId };
+    res = GetLoaderInstance()->importPublicKey(&keyParams, param->publicKey, ED25519, &exInfo);
     if (res != HC_SUCCESS) {
         LOGE("Failed to importPublicKey!");
         goto ERR;
     }
-    res = ComputeAndSavePsk(param->serviceType, param->deviceId, keyType);
+    res = ComputeAndSavePsk(param->osAccountId, param->serviceType, param->deviceId, keyType);
     if (res != HC_SUCCESS) {
         LOGE("Failed to ComputeAndSavePsk, lets delete imported key!");
-        if (GetStandardTokenManagerInstance()->unregisterLocalIdentity(
-            DEFAULT_PACKAGE_NAME, param->serviceType, &authIdBuff, keyType) != HC_SUCCESS) {
+        if (UnregisterIdentity(param, &authIdBuff, keyType) != HC_SUCCESS) {
             LOGE("Failed to delete imported PublicKey!");
         }
         goto ERR;
@@ -673,14 +702,12 @@ static int32_t DeleteCredential(const char *reqJsonStr, char **returnData)
         goto ERR;
     }
     Uint8Buff authIdBuff = { (uint8_t *)param->deviceId, strlen(param->deviceId) };
-    res = GetStandardTokenManagerInstance()->unregisterLocalIdentity(
-        DEFAULT_PACKAGE_NAME, param->serviceType, &authIdBuff, KEY_ALIAS_PSK);
+    res = UnregisterIdentity(param, &authIdBuff, KEY_ALIAS_PSK);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete psk!");
         goto ERR;
     }
-    res = GetStandardTokenManagerInstance()->unregisterLocalIdentity(
-        DEFAULT_PACKAGE_NAME, param->serviceType, &authIdBuff, keyType);
+    res = UnregisterIdentity(param, &authIdBuff, keyType);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete identity keyPair!");
         goto ERR;

@@ -22,6 +22,7 @@
 
 typedef struct {
     Uint8Buff authId;
+    int32_t osAccountId;
 } IsoInitParams;
 
 #ifdef ENABLE_ISO

@@ -495,6 +495,15 @@ static int32_t AddProtocolExpandValToParams(CompatibleBindSubSession *session, C
     return HC_SUCCESS;
 }
 
+static int32_t AddOsAccountIdToParams(CompatibleBindSubSession *session, CJson *moduleParams)
+{
+    if (AddIntToJson(moduleParams, FIELD_OS_ACCOUNT_ID, session->osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to add osAccountId to moduleParams!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t AddGroupInfoToSendData(const CompatibleBindSubSession *session, CJson *data)
 {
     const char *groupId = GetStringFromJson(session->params, FIELD_GROUP_ID);
@@ -660,7 +669,8 @@ int32_t GenerateBaseModuleParams(bool isClient, CompatibleBindSubSession *sessio
     if (((result = AddGroupAndDevInfoToParams(session, moduleParams)) != HC_SUCCESS) ||
         ((result = AddRequestInfoToParams(isClient, session, moduleParams)) != HC_SUCCESS) ||
         ((result = AddPinCodeToParams(session, moduleParams)) != HC_SUCCESS) ||
-        ((result = AddProtocolExpandValToParams(session, moduleParams)) != HC_SUCCESS)) {
+        ((result = AddProtocolExpandValToParams(session, moduleParams)) != HC_SUCCESS) ||
+        ((result = AddOsAccountIdToParams(session, moduleParams)) != HC_SUCCESS)) {
         return result;
     }
     return HC_SUCCESS;

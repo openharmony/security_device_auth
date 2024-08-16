@@ -44,6 +44,7 @@ typedef struct {
     Uint8Buff pkSelf;
     Uint8Buff pkPeer;
     bool isSelfFromUpgrade;
+    int32_t osAccountId;
 } CmdParams;
 
 typedef struct {
@@ -227,7 +228,8 @@ static int32_t ExportSelfPubKey(CmdParams *params)
             return res;
         }
     }
-    res = GetLoaderInstance()->checkKeyExist(&keyAlias, params->isSelfFromUpgrade);
+    res = GetLoaderInstance()->checkKeyExist(&keyAlias, params->isSelfFromUpgrade, params->osAccountId);
+    KeyParams keyParams = { { keyAlias.val, keyAlias.length, true }, params->isSelfFromUpgrade, params->osAccountId };
     if (res != HC_SUCCESS) {
         if (params->isSelfFromUpgrade) {
             LOGE("Self device is from upgrade, key pair not exist!");
@@ -237,7 +239,7 @@ static int32_t ExportSelfPubKey(CmdParams *params)
         Algorithm alg = ED25519;
         /* UserType and pairType are not required when generating key. */
         ExtraInfo exInfo = { params->authIdSelf, -1, -1 };
-        res = GetLoaderInstance()->generateKeyPairWithStorage(&keyAlias, PAKE_ED25519_KEY_PAIR_LEN, alg,
+        res = GetLoaderInstance()->generateKeyPairWithStorage(&keyParams, PAKE_ED25519_KEY_PAIR_LEN, alg,
             KEY_PURPOSE_SIGN_VERIFY, &exInfo);
         if (res != HC_SUCCESS) {
             LOGE("generate self auth keyPair failed.");
@@ -249,7 +251,7 @@ static int32_t ExportSelfPubKey(CmdParams *params)
         LOGE("allocate pkSelf memory fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
-    res = GetLoaderInstance()->exportPublicKey(&keyAlias, params->isSelfFromUpgrade, &params->pkSelf);
+    res = GetLoaderInstance()->exportPublicKey(&keyParams, &params->pkSelf);
     if (res != HC_SUCCESS) {
         LOGE("exportPublicKey failed");
         return res;
@@ -359,13 +361,14 @@ static int32_t GenerateSelfKeyAlias(const CmdParams *params, Uint8Buff *selfKeyA
     return HC_SUCCESS;
 }
 
-static int32_t ComputeAndSavePskInner(const Uint8Buff *selfKeyAlias, const Uint8Buff *peerKeyAlias,
-    bool isSelfFromUpgrade, Uint8Buff *sharedKeyAlias)
+static int32_t ComputeAndSavePskInner(int32_t osAccountId, const Uint8Buff *selfKeyAlias,
+    const Uint8Buff *peerKeyAlias, bool isSelfFromUpgrade, Uint8Buff *sharedKeyAlias)
 {
-    KeyParams selfKeyParams = { { selfKeyAlias->val, selfKeyAlias->length, true }, isSelfFromUpgrade };
+    KeyParams selfKeyParams = { { selfKeyAlias->val, selfKeyAlias->length, true }, isSelfFromUpgrade, osAccountId };
     uint8_t peerPubKeyVal[PAKE_ED25519_KEY_PAIR_LEN] = { 0 };
     Uint8Buff peerPubKeyBuff = { peerPubKeyVal, PAKE_ED25519_KEY_PAIR_LEN };
-    int32_t res = GetLoaderInstance()->exportPublicKey(peerKeyAlias, false, &peerPubKeyBuff);
+    KeyParams keyParams = { { peerKeyAlias->val, peerKeyAlias->length, true }, false, osAccountId };
+    int32_t res = GetLoaderInstance()->exportPublicKey(&keyParams, &peerPubKeyBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to export peer public key!");
         return res;
@@ -394,12 +397,12 @@ static int32_t ComputeAndSavePsk(const CmdParams *params)
         LOGE("generate peer keyAlias failed");
         return res;
     }
-    res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, params->isSelfFromUpgrade);
+    res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, params->isSelfFromUpgrade, params->osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("self auth keyPair not exist");
         return res;
     }
-    res = GetLoaderInstance()->checkKeyExist(&peerKeyAlias, false);
+    res = GetLoaderInstance()->checkKeyExist(&peerKeyAlias, false, params->osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("peer auth pubKey not exist");
         return res;
@@ -417,7 +420,8 @@ static int32_t ComputeAndSavePsk(const CmdParams *params)
         selfKeyAliasVal[DEV_AUTH_TWO], selfKeyAliasVal[DEV_AUTH_THREE]);
     LOGI("psk alias: %x %x %x %x****", sharedKeyAliasVal[DEV_AUTH_ZERO], sharedKeyAliasVal[DEV_AUTH_ONE],
         sharedKeyAliasVal[DEV_AUTH_TWO], sharedKeyAliasVal[DEV_AUTH_THREE]);
-    return ComputeAndSavePskInner(&selfKeyAlias, &peerKeyAlias, params->isSelfFromUpgrade, &sharedKeyAlias);
+    return ComputeAndSavePskInner(params->osAccountId, &selfKeyAlias, &peerKeyAlias, params->isSelfFromUpgrade,
+        &sharedKeyAlias);
 }
 
 static int32_t SavePeerPubKey(const CmdParams *params)
@@ -432,7 +436,8 @@ static int32_t SavePeerPubKey(const CmdParams *params)
     LOGI("PubKey alias: %x %x %x %x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
         keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
     ExtraInfo exInfo = { params->authIdPeer, params->userTypeSelf, PAIR_TYPE_BIND };
-    res = GetLoaderInstance()->importPublicKey(&keyAlias, &params->pkPeer, ED25519, &exInfo);
+    KeyParams keyParams = { { keyAlias.val, keyAlias.length, true }, false, params->osAccountId };
+    res = GetLoaderInstance()->importPublicKey(&keyParams, &params->pkPeer, ED25519, &exInfo);
     if (res != HC_SUCCESS) {
         LOGE("import peer pubKey failed");
         return res;
@@ -707,6 +712,7 @@ static int32_t InitPubkeyExchangeCmd(PubKeyExchangeCmd *instance, const PubKeyEx
         LOGE("copy groupId fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
+    instance->params.osAccountId = params->osAccountId;
     instance->params.userTypeSelf = params->userType;
     instance->params.isSelfFromUpgrade = params->isSelfFromUpgrade;
     instance->base.type = PUB_KEY_EXCHANGE_CMD_TYPE;

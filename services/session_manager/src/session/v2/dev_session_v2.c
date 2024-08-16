@@ -135,13 +135,25 @@ static int32_t CmdExchangePkGenerator(SessionImpl *impl)
     if (res != HC_SUCCESS) {
         return res;
     }
-    PubKeyExchangeParams params = { userType, GROUP_MANAGER_PACKAGE_NAME, groupId, authIdBuf, isSelfFromUpgrade };
+    PubKeyExchangeParams params = {
+        .userType = userType,
+        .appId = GROUP_MANAGER_PACKAGE_NAME,
+        .groupId = groupId,
+        .authId = authIdBuf,
+        .isSelfFromUpgrade = isSelfFromUpgrade,
+        .osAccountId = osAccountId
+    };
     return impl->expandSubSession->addCmd(impl->expandSubSession, PUB_KEY_EXCHANGE_CMD_TYPE, (void *)&params,
         (!impl->isClient), ABORT_IF_ERROR);
 }
 
 static int32_t CmdImportAuthCodeGenerator(SessionImpl *impl)
 {
+    int32_t osAccountId;
+    if (GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
     int32_t userType;
     if (GetIntFromJson(impl->context, FIELD_USER_TYPE, &userType) != HC_SUCCESS) {
         LOGE("get userType from context fail.");
@@ -158,7 +170,7 @@ static int32_t CmdImportAuthCodeGenerator(SessionImpl *impl)
         return HC_ERR_JSON_GET;
     }
     Uint8Buff authIdBuf = { (uint8_t *)authId, HcStrlen(authId) };
-    AuthCodeImportParams params = { userType, GROUP_MANAGER_PACKAGE_NAME, groupId, authIdBuf };
+    AuthCodeImportParams params = { userType, GROUP_MANAGER_PACKAGE_NAME, groupId, authIdBuf, osAccountId };
     return impl->expandSubSession->addCmd(impl->expandSubSession, AUTH_CODE_IMPORT_CMD_TYPE, (void *)&params,
         (!impl->isClient), ABORT_IF_ERROR);
 }
@@ -980,8 +992,13 @@ static int32_t CreateIsoSubSession(SessionImpl *impl, const IdentityInfo *cred, 
         LOGE("get self authId fail.");
         return HC_ERR_JSON_GET;
     }
+    int32_t osAccountId;
+    if (GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
     Uint8Buff authIdBuff = { (uint8_t *)authId, HcStrlen(authId) + 1 };
-    IsoInitParams params = { authIdBuff };
+    IsoInitParams params = { authIdBuff, osAccountId };
     AuthSubSession *authSubSession;
     int32_t res = CreateAuthSubSession(PROTOCOL_TYPE_ISO, &params, impl->isClient, &authSubSession);
     if (res != HC_SUCCESS) {
@@ -998,6 +1015,11 @@ static int32_t CreateDlSpekeSubSession(SessionImpl *impl, const IdentityInfo *cr
     if (cred->proofType == CERTIFICATED) {
         LOGE("Cert credential not support.");
         return HC_ERR_UNSUPPORTED_VERSION;
+    }
+    int32_t osAccountId;
+    if (GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
     }
     CJson *urlJson = CreateJsonFromString((const char *)cred->proof.preSharedUrl.val);
     if (urlJson == NULL) {
@@ -1027,8 +1049,7 @@ static int32_t CreateDlSpekeSubSession(SessionImpl *impl, const IdentityInfo *cr
 #ifdef P2P_PAKE_DL_PRIME_LEN_256
     primeMod = (uint32_t)primeMod | DL_SPEKE_PRIME_MOD_256;
 #endif
-    Uint8Buff authIdBuff = { (uint8_t *)authId, HcStrlen(authId) + 1 };
-    DlSpekeInitParams params = { primeMod, authIdBuff };
+    DlSpekeInitParams params = { primeMod, { (uint8_t *)authId, HcStrlen(authId) + 1 }, osAccountId };
     AuthSubSession *authSubSession;
     int32_t res = CreateAuthSubSession(PROTOCOL_TYPE_DL_SPEKE, &params, impl->isClient, &authSubSession);
     if (res != HC_SUCCESS) {
@@ -1048,8 +1069,13 @@ static int32_t CreateEcSpekeSubSession(SessionImpl *impl, const IdentityInfo *cr
         LOGE("get self authId fail.");
         return HC_ERR_JSON_GET;
     }
+    int32_t osAccountId;
+    if (GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
     Uint8Buff authIdBuff = { (uint8_t *)authId, HcStrlen(authId) + 1 };
-    EcSpekeInitParams params = { curveType, authIdBuff };
+    EcSpekeInitParams params = { curveType, authIdBuff, osAccountId };
     AuthSubSession *authSubSession;
     int32_t res = CreateAuthSubSession(PROTOCOL_TYPE_EC_SPEKE, &params, impl->isClient, &authSubSession);
     if (res != HC_SUCCESS) {

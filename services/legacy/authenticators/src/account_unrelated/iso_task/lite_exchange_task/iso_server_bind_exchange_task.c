@@ -99,8 +99,12 @@ static int DecryptChallenge(const IsoParams *params, const CJson *in, uint8_t *c
     gcmParam.nonce = nonce;
     gcmParam.nonceLen = NONCE_SIZE;
     Uint8Buff challengeBuf = { challenge, CHALLENGE_SIZE };
-    res = params->baseParams.loader->aesGcmDecrypt(&params->baseParams.sessionKey, &encDataBuf, &gcmParam, false,
-        &challengeBuf);
+    KeyParams keyParams = {
+        { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false },
+        false,
+        params->baseParams.osAccountId
+    };
+    res = params->baseParams.loader->aesGcmDecrypt(&keyParams, &encDataBuf, &gcmParam, &challengeBuf);
     if (res != 0) {
         LOGE("decrypt challenge failed, res:%d", res);
         goto ERR;
@@ -111,11 +115,35 @@ ERR:
     return res;
 }
 
+static int32_t ImportAuthCode(const IsoParams *params, const Uint8Buff *authCodeBuf)
+{
+    uint8_t *keyAlias = (uint8_t *)HcMalloc(ISO_KEY_ALIAS_LEN, 0);
+    if (keyAlias == NULL) {
+        LOGE("Failed to alloc memory for keyAlias!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    int32_t res = GenerateKeyAliasInIso(params, keyAlias, ISO_KEY_ALIAS_LEN, true);
+    if (res != 0) {
+        LOGE("GenerateKeyAliasInIso failed, res:%d", res);
+        HcFree(keyAlias);
+        return res;
+    }
+
+    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias[DEV_AUTH_ZERO], keyAlias[DEV_AUTH_ONE],
+        keyAlias[DEV_AUTH_TWO], keyAlias[DEV_AUTH_THREE]);
+    Uint8Buff keyAliasBuf = { keyAlias, ISO_KEY_ALIAS_LEN };
+    ExtraInfo exInfo = { { params->baseParams.authIdPeer.val, params->baseParams.authIdPeer.length },
+        params->peerUserType, PAIR_TYPE_BIND };
+    KeyParams keyAliasParams = { { keyAliasBuf.val, keyAliasBuf.length, true }, false, params->baseParams.osAccountId };
+    res = params->baseParams.loader->importSymmetricKey(&keyAliasParams, authCodeBuf, KEY_PURPOSE_MAC, &exInfo);
+    HcFree(keyAlias);
+    return res;
+}
+
 static int GenAndEncAuthCode(const IsoParams *params, Uint8Buff *nonceBuf, const Uint8Buff *challengeBuf,
     Uint8Buff *encAuthCodeBuf)
 {
     int res;
-    uint8_t *keyAlias = NULL;
     uint8_t *authCode = (uint8_t *)HcMalloc(AUTH_CODE_LEN, 0);
     if (authCode == NULL) {
         res = HC_ERR_ALLOC_MEMORY;
@@ -134,35 +162,23 @@ static int GenAndEncAuthCode(const IsoParams *params, Uint8Buff *nonceBuf, const
         goto ERR;
     }
     GcmParam gcmParam = { nonceBuf->val, nonceBuf->length, challengeBuf->val, challengeBuf->length };
-    res = params->baseParams.loader->aesGcmEncrypt(&params->baseParams.sessionKey, &authCodeBuf, &gcmParam, false,
-        encAuthCodeBuf);
+    KeyParams keyParams = {
+        { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false },
+        false,
+        params->baseParams.osAccountId
+    };
+    res = params->baseParams.loader->aesGcmEncrypt(&keyParams, &authCodeBuf, &gcmParam, encAuthCodeBuf);
     if (res != 0) {
         LOGE("encrypt auth code failed, res:%d", res);
         goto ERR;
     }
 
-    keyAlias = (uint8_t *)HcMalloc(ISO_KEY_ALIAS_LEN, 0);
-    if (keyAlias == NULL) {
-        res = HC_ERR_ALLOC_MEMORY;
-        goto ERR;
-    }
-    res = GenerateKeyAliasInIso(params, keyAlias, ISO_KEY_ALIAS_LEN, true);
+    res = ImportAuthCode(params, &authCodeBuf);
     if (res != 0) {
-        LOGE("GenerateKeyAliasInIso failed, res:%d", res);
-        goto ERR;
-    }
-
-    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias[0], keyAlias[1], keyAlias[2], keyAlias[3]);
-    Uint8Buff keyAliasBuf = { keyAlias, ISO_KEY_ALIAS_LEN };
-    ExtraInfo exInfo = { { params->baseParams.authIdPeer.val, params->baseParams.authIdPeer.length },
-        params->peerUserType, PAIR_TYPE_BIND };
-    res = params->baseParams.loader->importSymmetricKey(&keyAliasBuf, &authCodeBuf, KEY_PURPOSE_MAC, &exInfo);
-    if (res != 0) {
-        LOGE("ImportSymmetricKey failed, res: %x.", res);
+        LOGE("Import auth code failed, res: %x.", res);
         goto ERR;
     }
 ERR:
-    HcFree(keyAlias);
     FreeAndCleanKey(&authCodeBuf);
     return res;
 }

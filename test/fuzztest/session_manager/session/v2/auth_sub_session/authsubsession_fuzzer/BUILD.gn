@@ -46,7 +46,7 @@ ohos_fuzztest("AuthSubSessionFuzzTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = [ "${deps_adapter_path}:${hal_module_name}" ]
+  deps = [ "${deps_adapter_path}:${hal_module_test_name}" ]
   include_dirs += identity_manager_inc
   include_dirs += [
     "${dev_frameworks_path}/inc",

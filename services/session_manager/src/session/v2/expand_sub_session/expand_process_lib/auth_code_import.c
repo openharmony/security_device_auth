@@ -44,6 +44,7 @@ typedef struct {
     Uint8Buff authIdSelf;
     Uint8Buff authIdPeer;
     Uint8Buff authCode;
+    int32_t osAccountId;
 } CmdParams;
 
 typedef struct {
@@ -273,7 +274,8 @@ static int32_t ServerGenAuthCodeProcEvent(CmdParams *params)
     LOGI("AuthCode alias(HEX): %x %x %x %x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
         keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
     ExtraInfo exInfo = { params->authIdPeer, params->userTypePeer, PAIR_TYPE_BIND };
-    res = GetLoaderInstance()->importSymmetricKey(&keyAlias, &authCode, KEY_PURPOSE_MAC, &exInfo);
+    KeyParams keyParams = { { keyAlias.val, keyAlias.length, true }, false, params->osAccountId };
+    res = GetLoaderInstance()->importSymmetricKey(&keyParams, &authCode, KEY_PURPOSE_MAC, &exInfo);
     if (res != HC_SUCCESS) {
         LOGE("import sym key fail.");
         return res;
@@ -352,7 +354,8 @@ static int32_t ClientImportAuthCodeProcEvent(const CmdParams *params)
     LOGI("AuthCode alias(HEX): %x %x %x %x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
         keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
     ExtraInfo exInfo = { params->authIdPeer, params->userTypePeer, PAIR_TYPE_BIND };
-    res = GetLoaderInstance()->importSymmetricKey(&keyAlias, &(params->authCode), KEY_PURPOSE_MAC, &exInfo);
+    KeyParams keyParams = { { keyAlias.val, keyAlias.length, true }, false, params->osAccountId };
+    res = GetLoaderInstance()->importSymmetricKey(&keyParams, &(params->authCode), KEY_PURPOSE_MAC, &exInfo);
     if (res != HC_SUCCESS) {
         LOGE("import sym key fail.");
         return res;
@@ -543,6 +546,7 @@ static int32_t InitAuthCodeImportCmd(AuthCodeImportCmd *instance, const AuthCode
         LOGE("copy groupId fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
+    instance->params.osAccountId = params->osAccountId;
     instance->params.userTypeSelf = params->userType;
     instance->base.type = AUTH_CODE_IMPORT_CMD_TYPE;
     instance->base.strategy = strategy;

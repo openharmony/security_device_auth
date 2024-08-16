@@ -925,13 +925,14 @@ static void AddDemoMember(void)
 
 static bool GenerateTempKeyPair(Uint8Buff *keyAlias)
 {
-    int ret = GetLoaderInstance()->checkKeyExist(keyAlias, false);
+    int ret = GetLoaderInstance()->checkKeyExist(keyAlias, false, DEFAULT_OS_ACCOUNT);
     if (ret != HC_SUCCESS) {
         printf("Key pair not exist, start to generate\n");
         int32_t authId = 0;
         Uint8Buff authIdBuff = { reinterpret_cast<uint8_t *>(&authId), sizeof(int32_t)};
         ExtraInfo extInfo = {authIdBuff, -1, -1};
-        ret = GetLoaderInstance()->generateKeyPairWithStorage(keyAlias, TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN, P256,
+        KeyParams keyParams = { { keyAlias->val, keyAlias->length, true }, false, DEFAULT_OS_ACCOUNT };
+        ret = GetLoaderInstance()->generateKeyPairWithStorage(&keyParams, TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN, P256,
             KEY_PURPOSE_SIGN_VERIFY, &extInfo);
     } else {
         printf("Server key pair already exists\n");
@@ -963,7 +964,8 @@ static CJson *GetAsyCredentialJson(string registerInfo)
         .length = SERVER_PK_SIZE
     };
 
-    int32_t ret = GetLoaderInstance()->exportPublicKey(&keyAlias, false, &serverPk);
+    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false, DEFAULT_OS_ACCOUNT };
+    int32_t ret = GetLoaderInstance()->exportPublicKey(&keyAliasParams, &serverPk);
     if (ret != HC_SUCCESS) {
         printf("export PublicKey failed\n");
         HcFree(serverPkVal);
@@ -979,7 +981,6 @@ static CJson *GetAsyCredentialJson(string registerInfo)
         .val = signatureValue,
         .length = SIGNATURE_SIZE
     };
-    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false };
     ret = GetLoaderInstance()->sign(&keyAliasParams, &messageBuff, P256, &signature);
     if (ret != HC_SUCCESS) {
         printf("Sign pkInfo failed.\n");
@@ -1001,7 +1002,7 @@ static CJson *GetAsyCredentialJson(string registerInfo)
 static void CreateClientIdenticalAccountGroup(void)
 {
     SetDeviceStatus(true);
-    GenerateDeviceKeyPair();
+    GenerateDeviceKeyPair(DEFAULT_OS_ACCOUNT);
     g_asyncStatus = ASYNC_STATUS_WAITING;
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
@@ -1034,7 +1035,7 @@ static void CreateClientIdenticalAccountGroup(void)
 static void CreateServerIdenticalAccountGroup(void)
 {
     SetDeviceStatus(false);
-    GenerateDeviceKeyPair();
+    GenerateDeviceKeyPair(DEFAULT_OS_ACCOUNT);
     g_asyncStatus = ASYNC_STATUS_WAITING;
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
@@ -1299,7 +1300,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest010, TestSize.Level0)
     SetPakeV1Supported(true);
     SetDeviceStatus(true);
 
-    CJson *in = CreateJsonFromString("{\"pinCode\":\"123456\",\"seed\":"
+    CJson *in = CreateJsonFromString("{\"pinCode\":\"123456\",\"osAccountId\":0,\"seed\":"
                                      "\"CA32A9DFACB944B1F6292C9AE10783F6376A987A9CE30C13300BC866917DFF2E\"}");
     uint8_t val[] = { 0, 0 };
     Uint8Buff sharedSecret = { val, sizeof(val) };

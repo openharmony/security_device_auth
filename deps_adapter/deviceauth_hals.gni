@@ -36,6 +36,7 @@ if (target_os == "liteos" ||
     "${os_adapter_path}/interfaces/linux",
   ]
   hal_module_name = "deviceauth_hal_linux"
+  hal_module_test_name = "deviceauth_hal_linux_test"
 }
 
 hal_common_files = [

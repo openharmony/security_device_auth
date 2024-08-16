@@ -146,7 +146,7 @@ static int32_t CreateBaseBindSubSession(int32_t sessionType, int32_t opCode, con
     return HC_SUCCESS;
 }
 
-static int32_t GenerateKeyPairIfNeeded(int isClient, int32_t opCode, CJson *jsonParams)
+static int32_t GenerateKeyPairIfNeeded(int32_t osAccountId, int isClient, int32_t opCode, CJson *jsonParams)
 {
     if (!IsCreateGroupNeeded(isClient, opCode)) {
         LOGI("no need to generate local keypair.");
@@ -158,7 +158,7 @@ static int32_t GenerateKeyPairIfNeeded(int isClient, int32_t opCode, CJson *json
         return HC_ERR_JSON_GET;
     }
     DEV_AUTH_START_TRACE(TRACE_TAG_CREATE_KEY_PAIR);
-    int32_t result = ProcessKeyPair(CREATE_KEY_PAIR, jsonParams, groupId);
+    int32_t result = ProcessKeyPair(osAccountId, CREATE_KEY_PAIR, jsonParams, groupId);
     DEV_AUTH_FINISH_TRACE();
     if (result != HC_SUCCESS) {
         LOGE("Failed to create keypair!");
@@ -227,7 +227,7 @@ static int32_t GenerateServerBindParams(CompatibleBindSubSession *session, CJson
     if (res != HC_SUCCESS) {
         return res;
     }
-    return GenerateKeyPairIfNeeded(SERVER, session->opCode, jsonParams);
+    return GenerateKeyPairIfNeeded(session->osAccountId, SERVER, session->opCode, jsonParams);
 }
 
 static int32_t CheckPeerStatus(const CJson *params, bool *isNeedInform)
@@ -843,17 +843,18 @@ int32_t CreateClientBindSubSession(CJson *jsonParams, const DeviceAuthCallback *
         return result;
     }
 
-    result = GenerateKeyPairIfNeeded(CLIENT, opCode, jsonParams);
-    if (result != HC_SUCCESS) {
-        return result;
-    }
-
     result = CreateBaseBindSubSession(TYPE_CLIENT_BIND_SUB_SESSION, opCode, jsonParams, callback, session);
     if (result != HC_SUCCESS) {
         return result;
     }
 
     CompatibleBindSubSession *subSession = (CompatibleBindSubSession *)(*session);
+    result = GenerateKeyPairIfNeeded(subSession->osAccountId, CLIENT, opCode, jsonParams);
+    if (result != HC_SUCCESS) {
+        DestroyCompatibleBindSubSession(*session);
+        *session = NULL;
+        return result;
+    }
     result = InitChannel(jsonParams, subSession);
     if (result != HC_SUCCESS) {
         DestroyCompatibleBindSubSession(*session);

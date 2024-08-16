@@ -40,7 +40,7 @@ typedef struct {
     int32_t (*addToken)(int32_t osAccountId, int32_t opCode, const CJson *in);
     int32_t (*getToken)(int32_t osAccountId, AccountToken *token, const char *userId, const char *deviceId);
     int32_t (*deleteToken)(int32_t osAccountId, const char *userId, const char *deviceId);
-    int32_t (*getRegisterProof)(const CJson *in, CJson *out);
+    int32_t (*getRegisterProof)(int32_t osAccountId, const CJson *in, CJson *out);
     int32_t (*generateKeyAlias)(const char *userId, const char *deviceId,
         Uint8Buff *keyAlias, bool isServerPkAlias);
 } AccountAuthTokenManager;

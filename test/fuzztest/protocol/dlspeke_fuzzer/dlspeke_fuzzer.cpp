@@ -26,6 +26,7 @@
 #include "dl_speke_protocol.h"
 #include "json_utils.h"
 #include "uint8buff_utils.h"
+#include "device_auth.h"
 
 namespace OHOS {
 #define PSK_SIZE 32
@@ -42,10 +43,10 @@ static Uint8Buff g_authIdC = { (uint8_t *)AUTH_ID_C_VAL, 64 };
 static Uint8Buff g_authIdS = { (uint8_t *)AUTH_ID_S_VAL, 64 };
 static Uint8Buff g_msgC = { (uint8_t *)MSG_C_VAL, 16 };
 static Uint8Buff g_msgS = { (uint8_t *)MSG_S_VAL, 16 };
-static DlSpekeInitParams g_prime384ParamsC = { DL_SPEKE_PRIME_MOD_384, g_authIdC };
-static DlSpekeInitParams g_prime384ParamsS = { DL_SPEKE_PRIME_MOD_384, g_authIdS };
-static DlSpekeInitParams g_prime256ParamsC = { DL_SPEKE_PRIME_MOD_256, g_authIdC };
-static DlSpekeInitParams g_prime256ParamsS = { DL_SPEKE_PRIME_MOD_256, g_authIdS };
+static DlSpekeInitParams g_prime384ParamsC = { DL_SPEKE_PRIME_MOD_384, g_authIdC, DEFAULT_OS_ACCOUNT };
+static DlSpekeInitParams g_prime384ParamsS = { DL_SPEKE_PRIME_MOD_384, g_authIdS, DEFAULT_OS_ACCOUNT };
+static DlSpekeInitParams g_prime256ParamsC = { DL_SPEKE_PRIME_MOD_256, g_authIdC, DEFAULT_OS_ACCOUNT };
+static DlSpekeInitParams g_prime256ParamsS = { DL_SPEKE_PRIME_MOD_256, g_authIdS, DEFAULT_OS_ACCOUNT };
 
 static void DlSpekeTest01(void)
 {
@@ -198,7 +199,7 @@ static void DlSpekeTest06(void)
 static void DlSpekeTest07(void)
 {
     HksInitialize();
-    DlSpekeInitParams errParams = { DL_SPEKE_PRIME_MOD_384, { nullptr, 0 } };
+    DlSpekeInitParams errParams = { DL_SPEKE_PRIME_MOD_384, { nullptr, 0 }, DEFAULT_OS_ACCOUNT };
     BaseProtocol *self;
     CreateDlSpekeProtocol(&errParams, true, &self);
 }

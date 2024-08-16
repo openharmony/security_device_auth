@@ -34,6 +34,7 @@ typedef struct AuthModuleBaseT {
 } AuthModuleBase;
 
 typedef struct {
+    int32_t osAccountId;
     const char *pkgName;
     const char *serviceType;
     Uint8Buff *authId;
@@ -52,13 +53,10 @@ void DestroyTask(int taskId, int moduleType);
 int32_t CheckMsgRepeatability(const CJson *in, int moduleType);
 
 // for DAS
-int32_t RegisterLocalIdentity(const char *pkgName, const char *serviceType, Uint8Buff *authId, int userType,
-    int moduleType);
-int32_t UnregisterLocalIdentity(const char *pkgName, const char *serviceType, Uint8Buff *authId, int userType,
-    int moduleType);
-int32_t DeletePeerAuthInfo(const char *pkgName, const char *serviceType, Uint8Buff *authId, int userType,
-    int moduleType);
-int32_t GetPublicKey(int moduleType, AuthModuleParams *params, Uint8Buff *returnPk);
+int32_t RegisterLocalIdentity(const AuthModuleParams *moduleParams, int moduleType);
+int32_t UnregisterLocalIdentity(const AuthModuleParams *moduleParams, int moduleType);
+int32_t DeletePeerAuthInfo(const AuthModuleParams *moduleParams, int moduleType);
+int32_t GetPublicKey(int moduleType, AuthModuleParams *moduleParams, Uint8Buff *returnPk);
 
 #ifdef __cplusplus
 }

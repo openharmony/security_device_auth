@@ -19,6 +19,7 @@
 #include "hc_types.h"
 #include "hc_vector.h"
 #include "das_task_main.h"
+#include "das_token_manager.h"
 
 #define DAS_CLIENT_STEP_MASK 0xF00F
 #define DAS_CLIENT_FIRST_MESSAGE 0x0001
@@ -28,25 +29,24 @@ IMPLEMENT_HC_VECTOR(TaskInModuleVec, void *, 1)
 
 static TaskInModuleVec g_taskInModuleVec;
 
-static int32_t RegisterDasLocalIdentity(const char *pkgName, const char *serviceType, Uint8Buff *authId, int userType)
+static int32_t RegisterDasLocalIdentity(const TokenManagerParams *params)
 {
-    return RegisterLocalIdentityInTask(pkgName, serviceType, authId, userType);
+    return RegisterLocalIdentityInTask(params);
 }
 
-static int32_t UnregisterDasLocalIdentity(const char *pkgName, const char *serviceType, Uint8Buff *authId, int userType)
+static int32_t UnregisterDasLocalIdentity(const TokenManagerParams *params)
 {
-    return UnregisterLocalIdentityInTask(pkgName, serviceType, authId, userType);
+    return UnregisterLocalIdentityInTask(params);
 }
 
-static int32_t DeleteDasPeerAuthInfo(const char *pkgName, const char *serviceType, Uint8Buff *authId, int userType)
+static int32_t DeleteDasPeerAuthInfo(const TokenManagerParams *params)
 {
-    return DeletePeerAuthInfoInTask(pkgName, serviceType, authId, userType);
+    return DeletePeerAuthInfoInTask(params);
 }
 
-static int32_t GetDasPublicKey(const char *pkgName, const char *serviceType, Uint8Buff *authId, int userType,
-                               Uint8Buff *returnPk)
+static int32_t GetDasPublicKey(const TokenManagerParams *params, Uint8Buff *returnPk)
 {
-    return GetPublicKeyInTask(pkgName, serviceType, authId, userType, returnPk);
+    return GetPublicKeyInTask(params, returnPk);
 }
 
 static bool IsDasMsgNeedIgnore(const CJson *in)

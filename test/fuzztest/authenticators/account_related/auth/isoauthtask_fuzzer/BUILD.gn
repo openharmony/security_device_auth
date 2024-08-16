@@ -72,7 +72,7 @@ ohos_fuzztest("IsoAuthTaskFuzzTest") {
     ubsan = true
     debug = true
   }
-  deps = [ "${deps_adapter_path}:${hal_module_name}" ]
+  deps = [ "${deps_adapter_path}:${hal_module_test_name}" ]
   external_deps = [
     "cJSON:cjson",
     "c_utils:utils",

@@ -172,7 +172,7 @@ static int32_t CreateGroupInner(int32_t osAccountId, const CJson *jsonParams, ch
     int32_t result;
     if (((result = CheckCreateParams(osAccountId, jsonParams)) != HC_SUCCESS) ||
         ((result = GeneratePeerToPeerGroupId(jsonParams, &groupId)) != HC_SUCCESS) ||
-        ((result = ProcessKeyPair(CREATE_KEY_PAIR, jsonParams, groupId)) != HC_SUCCESS) ||
+        ((result = ProcessKeyPair(osAccountId, CREATE_KEY_PAIR, jsonParams, groupId)) != HC_SUCCESS) ||
         ((result = AddGroupToDatabaseByJson(osAccountId, GenerateGroupParams, jsonParams, groupId)) != HC_SUCCESS) ||
         ((result = AddDeviceToDatabaseByJson(osAccountId, GenerateDevParams, jsonParams, groupId)) != HC_SUCCESS) ||
         ((result = SaveOsAccountDb(osAccountId)) != HC_SUCCESS)) {
@@ -222,7 +222,14 @@ static int32_t DelPeerDevAndKeyInfo(int32_t osAccountId, const char *groupId, co
      * If the trusted device has been deleted from the database but the peer key fails to be deleted,
      * the forcible unbinding is still considered successful. Only logs need to be printed.
      */
-    result = DeletePeerAuthInfo(appId, groupId, &peerAuthIdBuff, peerUserType, DAS_MODULE);
+    AuthModuleParams params = {
+        .osAccountId = osAccountId,
+        .pkgName = appId,
+        .serviceType = groupId,
+        .authId = &peerAuthIdBuff,
+        .userType = peerUserType
+    };
+    result = DeletePeerAuthInfo(&params, DAS_MODULE);
     if (result != HC_SUCCESS) {
         LOGD("delete peer key fail! res: %d", result);
     } else {
@@ -306,7 +313,7 @@ static int32_t DelGroupAndSelfKeyInfo(int32_t osAccountId, const char *groupId, 
      */
     result = AddAuthIdAndUserTypeToParams(osAccountId, groupId, jsonParams);
     if (result == HC_SUCCESS) {
-        result = ProcessKeyPair(DELETE_KEY_PAIR, jsonParams, groupId);
+        result = ProcessKeyPair(osAccountId, DELETE_KEY_PAIR, jsonParams, groupId);
     }
     if (result != HC_SUCCESS) {
         LOGW("delete self key fail! res: %d", result);

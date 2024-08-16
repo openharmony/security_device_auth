@@ -287,13 +287,13 @@ static void GroupOperationTest42(void)
 
 static void GroupOperationTest43(void)
 {
-    (void)ProcessKeyPair(CREATE_KEY_PAIR, nullptr, NORMAL_STR);
+    (void)ProcessKeyPair(DEFAULT_OS_ACCOUNT, CREATE_KEY_PAIR, nullptr, NORMAL_STR);
 }
 
 static void GroupOperationTest44(void)
 {
     CJson *jsonParams = CreateJson();
-    (void)ProcessKeyPair(CREATE_KEY_PAIR, jsonParams, nullptr);
+    (void)ProcessKeyPair(DEFAULT_OS_ACCOUNT, CREATE_KEY_PAIR, jsonParams, nullptr);
     FreeJson(jsonParams);
 }
 

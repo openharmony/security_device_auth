@@ -237,6 +237,7 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest003, TestSize.Level0)
 
 static void ConstructPakeV1InParams(CJson *in)
 {
+    (void)AddIntToJson(in, FIELD_OS_ACCOUNT_ID, DEFAULT_OS_ACCOUNT);
     (void)AddBoolToJson(in, FIELD_IS_CLIENT, true);
     (void)AddIntToJson(in, FIELD_SELF_TYPE, 0);
     (void)AddStringToJson(in, FIELD_PKG_NAME, "testPkgName");
@@ -548,17 +549,19 @@ static void DestroyTaskTest(int taskId)
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest010, TestSize.Level0)
 {
     // dev_auth_module_manager.c interface test
-    int32_t res = UnregisterLocalIdentity(TEST_APP_ID, TEST_GROUP_ID, nullptr, 0, ACCOUNT_MODULE);
+    AuthModuleParams params = { DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_GROUP_ID, nullptr, 0 };
+    int32_t res = UnregisterLocalIdentity(&params, ACCOUNT_MODULE);
     ASSERT_NE(res, HC_SUCCESS);
     InitModules();
     Uint8Buff authIdBuff = { (uint8_t *)TEST_AUTH_ID, strlen(TEST_AUTH_ID) };
-    res = UnregisterLocalIdentity(TEST_APP_ID, TEST_GROUP_ID, &authIdBuff, 0, DAS_MODULE);
+    params.authId = &authIdBuff;
+    res = UnregisterLocalIdentity(&params, DAS_MODULE);
     ASSERT_EQ(res, HC_SUCCESS);
     CJson *in = CreateJson();
     ASSERT_NE(in, nullptr);
     res = CheckMsgRepeatability(in, DAS_MODULE);
     ASSERT_EQ(res, HC_SUCCESS);
-    res = UnregisterLocalIdentity(TEST_APP_ID, TEST_GROUP_ID, &authIdBuff, 0, DAS_MODULE);
+    res = UnregisterLocalIdentity(&params, DAS_MODULE);
     ASSERT_EQ(res, HC_SUCCESS);
     res = CheckMsgRepeatability(nullptr, DAS_MODULE);
     ASSERT_NE(res, HC_SUCCESS);
@@ -877,40 +880,51 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest017, TestSize.Level0)
     const TokenManager *liteManager = GetLiteTokenManagerInstance();
     ASSERT_NE(liteManager, nullptr);
     Uint8Buff authIdBuff = { (uint8_t *)TEST_AUTH_ID, strlen(TEST_AUTH_ID) };
-    int32_t res = liteManager->unregisterLocalIdentity(TEST_APP_ID, TEST_GROUP_ID, &authIdBuff, 0);
+    TokenManagerParams params = {
+        .osAccountId = DEFAULT_OS_ACCOUNT,
+        .pkgName = { (uint8_t *)TEST_APP_ID, HcStrlen(TEST_APP_ID) },
+        .serviceType = { (uint8_t *)TEST_GROUP_ID, HcStrlen(TEST_GROUP_ID) },
+        .authId = authIdBuff,
+        .userType = 0
+    };
+    int32_t res = liteManager->unregisterLocalIdentity(&params);
     ASSERT_EQ(res, HC_SUCCESS);
     // das_standard_token_manager.c interface test
     const TokenManager *standardMgr = GetStandardTokenManagerInstance();
     ASSERT_NE(standardMgr, nullptr);
-    res = standardMgr->unregisterLocalIdentity(GROUP_MANAGER_PACKAGE_NAME, TEST_GROUP_ID, &authIdBuff, 0);
+    params.pkgName.val = (uint8_t *)GROUP_MANAGER_PACKAGE_NAME;
+    params.pkgName.length = HcStrlen(GROUP_MANAGER_PACKAGE_NAME);
+    res = standardMgr->unregisterLocalIdentity(&params);
     ASSERT_EQ(res, HC_SUCCESS);
-    res = standardMgr->deletePeerAuthInfo(TEST_APP_ID, TEST_GROUP_ID, &authIdBuff, 0);
+    params.pkgName.val = (uint8_t *)TEST_APP_ID;
+    params.pkgName.length = HcStrlen(TEST_APP_ID);
+    res = standardMgr->deletePeerAuthInfo(&params);
     ASSERT_EQ(res, HC_SUCCESS);
-    PakeParams *params = (PakeParams *)HcMalloc(sizeof(PakeParams), 0);
-    params->baseParams.loader = GetLoaderInstance();
+    PakeParams *pakeParams = (PakeParams *)HcMalloc(sizeof(PakeParams), 0);
+    pakeParams->baseParams.loader = GetLoaderInstance();
     char appId[256] = TEST_APP_ID;
     char groupId[256] = TEST_GROUP_ID;
-    params->packageName = appId;
-    params->serviceType = groupId;
-    params->baseParams.idSelf.val = (uint8_t *)TEST_AUTH_ID;
-    params->baseParams.idSelf.length = strlen(TEST_AUTH_ID);
-    params->isSelfFromUpgrade = true;
-    params->baseParams.idPeer.val = (uint8_t *)TEST_AUTH_ID;
-    params->baseParams.idPeer.length = strlen(TEST_AUTH_ID);
-    res = standardMgr->computeAndSavePsk(params);
+    pakeParams->packageName = appId;
+    pakeParams->serviceType = groupId;
+    pakeParams->baseParams.idSelf.val = (uint8_t *)TEST_AUTH_ID;
+    pakeParams->baseParams.idSelf.length = strlen(TEST_AUTH_ID);
+    pakeParams->isSelfFromUpgrade = true;
+    pakeParams->baseParams.idPeer.val = (uint8_t *)TEST_AUTH_ID;
+    pakeParams->baseParams.idPeer.length = strlen(TEST_AUTH_ID);
+    res = standardMgr->computeAndSavePsk(pakeParams);
     ASSERT_NE(res, HC_SUCCESS);
     Uint8Buff returnPkBuff = { 0 };
-    res = standardMgr->getPublicKey(TEST_APP_ID, TEST_GROUP_ID, &authIdBuff, 0, &returnPkBuff);
+    res = standardMgr->getPublicKey(&params, &returnPkBuff);
     ASSERT_NE(res, HC_SUCCESS);
-    HcFree(params);
+    HcFree(pakeParams);
 }
 
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest018, TestSize.Level0)
 {
     // key_manager.c interface test
-    int32_t res = GetDevicePubKey(nullptr);
+    int32_t res = GetDevicePubKey(DEFAULT_OS_ACCOUNT, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
-    res = DeletePseudonymPsk(nullptr);
+    res = DeletePseudonymPsk(DEFAULT_OS_ACCOUNT, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
 }
 
@@ -1170,7 +1184,7 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest026, TestSize.Level0)
 {
     // pake_v1_protocol_common.c interface test
     DestroyPakeV1BaseParams(nullptr);
-    int32_t res = InitPakeV1BaseParams(nullptr);
+    int32_t res = InitPakeV1BaseParams(DEFAULT_OS_ACCOUNT, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
     res = ClientConfirmPakeV1Protocol(nullptr);
     ASSERT_NE(res, HC_SUCCESS);
@@ -1307,7 +1321,7 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest029, TestSize.Level0)
     ASSERT_NE(res, HC_SUCCESS);
     res = ClientConfirmPakeV2Protocol(params);
     ASSERT_NE(res, HC_SUCCESS);
-    res = InitPakeV2BaseParams(nullptr);
+    res = InitPakeV2BaseParams(DEFAULT_OS_ACCOUNT, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
     HcFree(params);
 }
@@ -1416,23 +1430,24 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest033, TestSize.Level0)
     ASSERT_NE(loader, nullptr);
     int32_t res = loader->agreeSharedSecretWithStorage(nullptr, nullptr, X25519, 0, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
-    res = loader->getKeyExtInfo(nullptr, nullptr, true);
+    res = loader->getKeyExtInfo(nullptr, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
-    Uint8Buff keyAlias = { 0 };
-    res = loader->getKeyExtInfo(&keyAlias, nullptr, true);
+    KeyParams keyParams = { { nullptr, 0, true }, true, DEFAULT_OS_ACCOUNT };
+    res = loader->getKeyExtInfo(&keyParams, nullptr);
     uint8_t keyAliasVal[256] = { 0 };
-    keyAlias.val = keyAliasVal;
-    keyAlias.length = 256;
-    res = loader->getKeyExtInfo(&keyAlias, nullptr, true);
+    keyParams.keyBuff.key = keyAliasVal;
+    keyParams.keyBuff.keyLen = 256;
+    res = loader->getKeyExtInfo(&keyParams, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
     Uint8Buff outExtInfo = { 0 };
-    res = loader->getKeyExtInfo(&keyAlias, &outExtInfo, true);
+    res = loader->getKeyExtInfo(&keyParams, &outExtInfo);
     ASSERT_NE(res, HC_SUCCESS);
-    res = loader->getKeyExtInfo(&keyAlias, &outExtInfo, false);
+    keyParams.isDeStorage = false;
+    res = loader->getKeyExtInfo(&keyParams, &outExtInfo);
     ASSERT_NE(res, HC_SUCCESS);
     res = loader->computePseudonymPsk(nullptr, nullptr, nullptr, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
-    KeyParams params = { { 0 }, false };
+    KeyParams params = { { 0 }, false, DEFAULT_OS_ACCOUNT };
     uint8_t keyValue[256] = { 0 };
     params.keyBuff.key = keyValue;
     params.keyBuff.keyLen = 256;

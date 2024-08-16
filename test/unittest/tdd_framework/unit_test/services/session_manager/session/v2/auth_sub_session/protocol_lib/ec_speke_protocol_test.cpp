@@ -26,6 +26,7 @@
 #include "memory_mock.h"
 #include "memory_monitor.h"
 #include "uint8buff_utils.h"
+#include "device_auth.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -45,10 +46,10 @@ static Uint8Buff g_authIdC = { (uint8_t *)AUTH_ID_C_VAL, 64 };
 static Uint8Buff g_authIdS = { (uint8_t *)AUTH_ID_S_VAL, 64 };
 static Uint8Buff g_msgC = { (uint8_t *)MSG_C_VAL, 16 };
 static Uint8Buff g_msgS = { (uint8_t *)MSG_S_VAL, 16 };
-static EcSpekeInitParams g_P256ParamsC = { CURVE_TYPE_256, g_authIdC };
-static EcSpekeInitParams g_P256ParamsS = { CURVE_TYPE_256, g_authIdS };
-static EcSpekeInitParams g_X25519ParamsC = { CURVE_TYPE_25519, g_authIdC };
-static EcSpekeInitParams g_X25519ParamsS = { CURVE_TYPE_25519, g_authIdS };
+static EcSpekeInitParams g_P256ParamsC = { CURVE_TYPE_256, g_authIdC, DEFAULT_OS_ACCOUNT };
+static EcSpekeInitParams g_P256ParamsS = { CURVE_TYPE_256, g_authIdS, DEFAULT_OS_ACCOUNT };
+static EcSpekeInitParams g_X25519ParamsC = { CURVE_TYPE_25519, g_authIdC, DEFAULT_OS_ACCOUNT };
+static EcSpekeInitParams g_X25519ParamsS = { CURVE_TYPE_25519, g_authIdS, DEFAULT_OS_ACCOUNT };
 
 class EcSpekeProtocolTest : public testing::Test {
 public:
@@ -281,7 +282,7 @@ HWTEST_F(EcSpekeProtocolTest, EcSpekeProtocolTest102, TestSize.Level0)
 
 HWTEST_F(EcSpekeProtocolTest, EcSpekeProtocolTest103, TestSize.Level0)
 {
-    EcSpekeInitParams errParams = { INVALID_CURVE_TYPE, g_authIdC };
+    EcSpekeInitParams errParams = { INVALID_CURVE_TYPE, g_authIdC, DEFAULT_OS_ACCOUNT };
     BaseProtocol *self;
     int32_t res = CreateEcSpekeProtocol(&errParams, true, &self);
     ASSERT_NE(res, HC_SUCCESS);
@@ -289,7 +290,7 @@ HWTEST_F(EcSpekeProtocolTest, EcSpekeProtocolTest103, TestSize.Level0)
 
 HWTEST_F(EcSpekeProtocolTest, EcSpekeProtocolTest104, TestSize.Level0)
 {
-    EcSpekeInitParams errParams = { CURVE_TYPE_25519, { nullptr, 0 } };
+    EcSpekeInitParams errParams = { CURVE_TYPE_25519, { nullptr, 0 }, DEFAULT_OS_ACCOUNT };
     BaseProtocol *self;
     int32_t res = CreateEcSpekeProtocol(&errParams, true, &self);
     ASSERT_NE(res, HC_SUCCESS);

@@ -31,7 +31,7 @@ bool IsExpireTimeValid(int expireTime);
 bool IsGroupVisibilityValid(int groupVisibility);
 
 int32_t CheckUpgradeIdentity(uint8_t upgradeFlag, const char *appId, const char *identityFromDB);
-int32_t ProcessKeyPair(int action, const CJson *jsonParams, const char *groupId);
+int32_t ProcessKeyPair(int32_t osAccountId, int action, const CJson *jsonParams, const char *groupId);
 int32_t GetHashMessage(const Uint8Buff *first, const Uint8Buff *second, uint8_t **hashMessage, uint32_t *messageSize);
 
 int32_t AssertUserIdExist(const CJson *jsonParams);

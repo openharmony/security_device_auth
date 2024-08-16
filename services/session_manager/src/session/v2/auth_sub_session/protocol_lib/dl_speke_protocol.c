@@ -87,6 +87,7 @@ typedef struct {
     uint32_t innerKeyLen;
     const char *largePrimeNumHex;
     DlSpekePrimeMod primeMod;
+    int32_t osAccountId;
 } DlSpekeParams;
 
 typedef struct {
@@ -255,7 +256,7 @@ static int32_t CalSalt(DlSpekeParams *params)
 static int32_t CalSecret(DlSpekeParams *params, Uint8Buff *secret)
 {
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_BASE_INFO, HcStrlen(HICHAIN_SPEKE_BASE_INFO) };
-    KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false };
+    KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false, params->osAccountId };
     int32_t res = GetLoaderInstance()->computeHkdf(&keyParams, &(params->salt), &keyInfo, secret);
     if (res != HC_SUCCESS) {
         LOGE("Derive secret from psk failed, res: %x.", res);
@@ -652,7 +653,11 @@ static int32_t CalSessionKey(DlSpekeProtocol *impl)
         return HC_ERR_ALLOC_MEMORY;
     }
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_SESSIONKEY_INFO, HcStrlen(HICHAIN_SPEKE_SESSIONKEY_INFO) };
-    KeyParams keyParams = { { impl->params.sharedSecret.val, impl->params.sharedSecret.length, false }, false };
+    KeyParams keyParams = {
+        { impl->params.sharedSecret.val, impl->params.sharedSecret.length, false },
+        false,
+        impl->params.osAccountId
+    };
     int32_t res = GetLoaderInstance()->computeHkdf(&keyParams, &impl->params.salt, &keyInfo,
         &impl->base.sessionKey);
     ClearFreeUint8Buff(&impl->params.salt);
@@ -1105,6 +1110,7 @@ static int32_t BuildDlSpekeProtocolObj(const DlSpekeInitParams *params, bool isC
         LOGE("Failed to set self authId!");
         return HC_ERR_ALLOC_MEMORY;
     }
+    instance->params.osAccountId = params->osAccountId;
     instance->params.primeMod = params->primeMod;
     instance->base.name = PROTOCOL_TYPE_DL_SPEKE;
     instance->base.beginState = isClient ? CREATE_AS_CLIENT_STATE : CREATE_AS_SERVER_STATE;

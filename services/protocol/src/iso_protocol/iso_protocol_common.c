@@ -19,12 +19,17 @@
 #include "hc_log.h"
 #include "hc_types.h"
 #include "protocol_common.h"
+#include "device_auth.h"
 
-int32_t InitIsoBaseParams(IsoBaseParams *params)
+int32_t InitIsoBaseParams(const CJson *in, IsoBaseParams *params)
 {
-    if (params == NULL) {
+    if (in == NULL || params == NULL) {
         LOGE("Params is null.");
         return HC_ERR_NULL_PTR;
+    }
+    if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &params->osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
     }
 
     int32_t res;
@@ -121,7 +126,8 @@ static int IsoCalSelfToken(const IsoBaseParams *params, Uint8Buff *outHmac)
     }
     Uint8Buff messageBuf = { messagePeer, length };
     Uint8Buff pskBuf = { (uint8_t *)params->psk, sizeof(params->psk) };
-    res = params->loader->computeHmac(&pskBuf, &messageBuf, outHmac, false);
+    KeyParams keyParams = { { pskBuf.val, pskBuf.length, false }, false, params->osAccountId };
+    res = params->loader->computeHmac(&keyParams, &messageBuf, outHmac);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHmac failed, res: %x.", res);
         goto CLEAN_UP;
@@ -167,7 +173,8 @@ static int IsoCalPeerToken(const IsoBaseParams *params, Uint8Buff *selfToken)
     }
     Uint8Buff messageBufSelf = { messageSelf, length };
     Uint8Buff pskBuf = { (uint8_t *)params->psk, sizeof(params->psk) };
-    res = params->loader->computeHmac(&pskBuf, &messageBufSelf, selfToken, false);
+    KeyParams keyParams = { { pskBuf.val, pskBuf.length, false }, false, params->osAccountId };
+    res = params->loader->computeHmac(&keyParams, &messageBufSelf, selfToken);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHmac for selfToken failed, res: %x.", res);
         goto CLEAN_UP;
@@ -220,7 +227,7 @@ static int IsoGenSessionKey(IsoBaseParams *params, Uint8Buff *pskBuf, bool isCli
     }
 
     Uint8Buff keyInfoBuf = { (uint8_t *)GENERATE_SESSION_KEY_STR, HcStrlen(GENERATE_SESSION_KEY_STR) };
-    KeyParams keyParams = { { pskBuf->val, pskBuf->length, false }, false };
+    KeyParams keyParams = { { pskBuf->val, pskBuf->length, false }, false, params->osAccountId };
     res = params->loader->computeHkdf(&keyParams, &hkdfSaltBuf, &keyInfoBuf, &params->sessionKey);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHkdf for sessionKey failed, res: %x.", res);
@@ -293,7 +300,8 @@ int IsoClientGenSessionKey(IsoBaseParams *params, int returnResult, const uint8_
     Uint8Buff hmacMessage = { (uint8_t *)&returnResult, sizeof(int) };
     uint8_t hmacSelf[SHA256_LEN] = { 0 };
     Uint8Buff outHmacBuf = { hmacSelf, sizeof(hmacSelf) };
-    int res = params->loader->computeHmac(&pskBuf, &hmacMessage, &outHmacBuf, false);
+    KeyParams keyParams = { { pskBuf.val, pskBuf.length, false }, false, params->osAccountId };
+    int res = params->loader->computeHmac(&keyParams, &hmacMessage, &outHmacBuf);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHmac for returnResult failed, res: %x.", res);
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
@@ -375,7 +383,8 @@ int IsoServerGenSessionKeyAndCalToken(IsoBaseParams *params, const Uint8Buff *to
 
     int returnCode = 0;
     Uint8Buff messageBuf = { (uint8_t *)&returnCode, sizeof(int) };
-    res = params->loader->computeHmac(&pskBuf, &messageBuf, tokenToPeer, false);
+    KeyParams keyParams = { { pskBuf.val, pskBuf.length, false }, false, params->osAccountId };
+    res = params->loader->computeHmac(&keyParams, &messageBuf, tokenToPeer);
     if (res != HC_SUCCESS) {
         LOGE("Compute hmac for returnCode failed, res: %x.", res);
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);

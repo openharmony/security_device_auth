@@ -71,6 +71,7 @@ typedef struct PakeBaseParamsT {
     bool isClient;
 
     const AlgLoader *loader;
+    int32_t osAccountId;
 } PakeBaseParams;
 
 #ifdef __cplusplus

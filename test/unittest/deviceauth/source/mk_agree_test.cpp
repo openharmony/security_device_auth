@@ -82,7 +82,7 @@ void MKAgreeTest::TearDown()
 
 HWTEST_F(MKAgreeTest, GenerateDeviceKeyPairTest001, TestSize.Level0)
 {
-    int32_t ret = GenerateDeviceKeyPair();
+    int32_t ret = GenerateDeviceKeyPair(DEFAULT_OS_ACCOUNT);
     EXPECT_EQ(ret, HC_SUCCESS);
 }
 
@@ -94,10 +94,10 @@ HWTEST_F(MKAgreeTest, GenerateMkTest001, TestSize.Level0)
     int32_t ret = HexStringToByte(TEST_DEV_PK, peerDevPkVal, peerDevPkLen);
     EXPECT_EQ(ret, HC_SUCCESS);
     Uint8Buff peerPkBuff = { peerDevPkVal, peerDevPkLen };
-    ret = GenerateMk(TEST_DEVICE_ID, &peerPkBuff);
+    ret = GenerateMk(DEFAULT_OS_ACCOUNT, TEST_DEVICE_ID, &peerPkBuff);
     HcFree(peerDevPkVal);
     EXPECT_NE(ret, HC_SUCCESS);
-    ret = DeleteMk(TEST_DEVICE_ID);
+    ret = DeleteMk(DEFAULT_OS_ACCOUNT, TEST_DEVICE_ID);
     EXPECT_EQ(ret, HC_SUCCESS);
 }
 
@@ -105,7 +105,7 @@ HWTEST_F(MKAgreeTest, GenerateMkTest002, TestSize.Level0)
 {
     uint32_t peerDevPkLen = HcStrlen(TEST_DEV_PK) / BYTE_TO_HEX_OPER_LENGTH;
     Uint8Buff peerPkBuff = { nullptr, peerDevPkLen };
-    int32_t ret = GenerateMk(TEST_DEVICE_ID, &peerPkBuff);
+    int32_t ret = GenerateMk(DEFAULT_OS_ACCOUNT, TEST_DEVICE_ID, &peerPkBuff);
     EXPECT_NE(ret, HC_SUCCESS);
 }
 
@@ -117,7 +117,7 @@ HWTEST_F(MKAgreeTest, GenerateMkTest003, TestSize.Level0)
     int32_t ret = HexStringToByte(TEST_DEV_PK, peerDevPkVal, peerDevPkLen);
     EXPECT_EQ(ret, HC_SUCCESS);
     Uint8Buff peerPkBuff = { peerDevPkVal, 0 };
-    ret = GenerateMk(TEST_DEVICE_ID, &peerPkBuff);
+    ret = GenerateMk(DEFAULT_OS_ACCOUNT, TEST_DEVICE_ID, &peerPkBuff);
     HcFree(peerDevPkVal);
     EXPECT_NE(ret, HC_SUCCESS);
 }
@@ -130,18 +130,18 @@ HWTEST_F(MKAgreeTest, GenerateMkTest004, TestSize.Level0)
     int32_t ret = HexStringToByte(TEST_DEV_PK, peerDevPkVal, peerDevPkLen);
     EXPECT_EQ(ret, HC_SUCCESS);
     Uint8Buff peerPkBuff = { peerDevPkVal, peerDevPkLen };
-    ret = GenerateMk(nullptr, &peerPkBuff);
+    ret = GenerateMk(DEFAULT_OS_ACCOUNT, nullptr, &peerPkBuff);
     HcFree(peerDevPkVal);
     EXPECT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(MKAgreeTest, DeleteMkTest001, TestSize.Level0)
 {
-    int32_t ret = DeleteMk(TEST_DEVICE_ID2);
+    int32_t ret = DeleteMk(DEFAULT_OS_ACCOUNT, TEST_DEVICE_ID2);
     EXPECT_EQ(ret, HC_SUCCESS);
-    ret = DeleteMk(nullptr);
+    ret = DeleteMk(DEFAULT_OS_ACCOUNT, nullptr);
     EXPECT_NE(ret, HC_SUCCESS);
-    ret = DeleteMk("");
+    ret = DeleteMk(DEFAULT_OS_ACCOUNT, "");
     EXPECT_NE(ret, HC_SUCCESS);
 }
 
@@ -153,18 +153,18 @@ HWTEST_F(MKAgreeTest, GeneratePseudonymPskTest001, TestSize.Level0)
     int32_t ret = HexStringToByte(TEST_DEV_PK, peerDevPkVal, peerDevPkLen);
     EXPECT_EQ(ret, HC_SUCCESS);
     Uint8Buff salt = { peerDevPkVal, peerDevPkLen };
-    ret = GeneratePseudonymPsk(TEST_DEVICE_ID, &salt);
+    ret = GeneratePseudonymPsk(DEFAULT_OS_ACCOUNT, TEST_DEVICE_ID, &salt);
     HcFree(peerDevPkVal);
     EXPECT_NE(ret, HC_SUCCESS);
 
-    ret = DeletePseudonymPsk(TEST_DEVICE_ID);
+    ret = DeletePseudonymPsk(DEFAULT_OS_ACCOUNT, TEST_DEVICE_ID);
     EXPECT_EQ(ret, HC_SUCCESS);
 }
 
 HWTEST_F(MKAgreeTest, GeneratePseudonymPskTest002, TestSize.Level0)
 {
     Uint8Buff salt = { nullptr, 0 };
-    int32_t ret = GeneratePseudonymPsk(TEST_DEVICE_ID, &salt);
+    int32_t ret = GeneratePseudonymPsk(DEFAULT_OS_ACCOUNT, TEST_DEVICE_ID, &salt);
     EXPECT_NE(ret, HC_SUCCESS);
 }
 
@@ -176,7 +176,7 @@ HWTEST_F(MKAgreeTest, GeneratePseudonymPskTest003, TestSize.Level0)
     int32_t ret = HexStringToByte(TEST_DEV_PK, peerDevPkVal, peerDevPkLen);
     EXPECT_EQ(ret, HC_SUCCESS);
     Uint8Buff salt = { peerDevPkVal, peerDevPkLen };
-    ret = GeneratePseudonymPsk(nullptr, &salt);
+    ret = GeneratePseudonymPsk(DEFAULT_OS_ACCOUNT, nullptr, &salt);
     HcFree(peerDevPkVal);
     EXPECT_NE(ret, HC_SUCCESS);
 }
@@ -257,12 +257,12 @@ HWTEST_F(MKAgreeTest, GenerateAndSavePseudonymIdTest005, TestSize.Level0)
 
 HWTEST_F(MKAgreeTest, GetDevicePubKeyTest001, TestSize.Level0)
 {
-    int32_t ret = GenerateDeviceKeyPair();
+    int32_t ret = GenerateDeviceKeyPair(DEFAULT_OS_ACCOUNT);
     EXPECT_EQ(ret, HC_SUCCESS);
     Uint8Buff devicePk = { NULL, 0 };
     ret = InitUint8Buff(&devicePk, PAKE_X25519_KEY_PAIR_LEN);
     EXPECT_EQ(ret, HC_SUCCESS);
-    ret = GetDevicePubKey(&devicePk);
+    ret = GetDevicePubKey(DEFAULT_OS_ACCOUNT, &devicePk);
     EXPECT_EQ(ret, HC_SUCCESS);
     FreeUint8Buff(&devicePk);
 }
@@ -270,7 +270,7 @@ HWTEST_F(MKAgreeTest, GetDevicePubKeyTest001, TestSize.Level0)
 HWTEST_F(MKAgreeTest, GetDevicePubKeyTest002, TestSize.Level0)
 {
     Uint8Buff devicePk = { NULL, 0 };
-    int32_t ret = GetDevicePubKey(&devicePk);
+    int32_t ret = GetDevicePubKey(DEFAULT_OS_ACCOUNT, &devicePk);
     EXPECT_NE(ret, HC_SUCCESS);
 }
 }

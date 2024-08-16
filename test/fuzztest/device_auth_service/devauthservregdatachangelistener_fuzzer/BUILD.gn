@@ -52,7 +52,7 @@ ohos_fuzztest("DevAuthServRegDataChangeListenerFuzzTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = [ "${deps_adapter_path}:${hal_module_name}" ]
+  deps = [ "${deps_adapter_path}:${hal_module_test_name}" ]
   external_deps = [
     "cJSON:cjson",
     "c_utils:utils",

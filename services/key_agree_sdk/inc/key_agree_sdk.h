@@ -93,7 +93,8 @@ typedef struct {
 #ifdef __cplusplus
 extern "C" {
 #endif
-KeyAgreeResult KeyAgreeInitSession(KeyAgreeSession *session, KeyAgreeProtocol protocol, KeyAgreeType type);
+KeyAgreeResult KeyAgreeInitSession(int32_t osAccountId, KeyAgreeSession *session, KeyAgreeProtocol protocol,
+    KeyAgreeType type);
 KeyAgreeResult KeyAgreeStartSession(KeyAgreeSession *session, const KeyAgreeBlob *sharedSecret,
     const KeyAgreeBlob *deviceId, const char *extras);
 KeyAgreeResult KeyAgreeGenerateNextMessage(KeyAgreeSession *session, const KeyAgreeBlob *messageReceived,
