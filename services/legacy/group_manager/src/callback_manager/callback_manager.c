@@ -134,12 +134,12 @@ void ProcessFinishCallback(int64_t reqId, int operationCode, const char *returnD
 
 static void FaultReportWithOpCode(int operationCode, int errorCode)
 {
-    if (operationCode >= 0 && operationCode <= sizeof(OP_CODE_TO_EVENT) / sizeof(OP_CODE_TO_EVENT[0])) {
-        DEV_AUTH_REPORT_FAULT_EVENT(OP_CODE_TO_EVENT[operationCode], errorCode,
-            DEFAULT_CRED_TYPE, DEFAULT_GROUP_TYPE, DEFAULT_APPID);
-    } else {
+    if (operationCode < 0 || (unsigned int)operationCode > sizeof(OP_CODE_TO_EVENT) / sizeof(OP_CODE_TO_EVENT[0])) {
         LOGE("Invalid operation code! Cannot report this fault!");
+        return;
     }
+    DEV_AUTH_REPORT_FAULT_EVENT(OP_CODE_TO_EVENT[operationCode], errorCode,
+        DEFAULT_CRED_TYPE, DEFAULT_GROUP_TYPE, DEFAULT_APPID);
 }
 
 void ProcessErrorCallback(int64_t reqId, int operationCode, int errorCode, const char *errorReturn,
