@@ -44,14 +44,14 @@ if (defined(ohos_lite)) {
         "${os_adapter_path}/impl/src/liteos/mini/hc_init_protection.c",
       ]
 
-      if (enable_posix_interface) {
+      if (device_auth_enable_posix_interface) {
         sources += [ "${os_adapter_path}/impl/src/liteos/mini/hc_file_posix.c" ]
       } else {
         sources += [ "${os_adapter_path}/impl/src/liteos/mini/hc_file.c" ]
       }
 
       cflags = [ "-DHILOG_ENABLE" ]
-      cflags += [ "-DAUTH_STORAGE_PATH=\"${deviceauth_storage_path}\"" ]
+      cflags += [ "-DAUTH_STORAGE_PATH=\"${device_auth_storage_path}\"" ]
       if (board_toolchain_type == "iccarm") {
         cflags += [
           "--diag_suppress",

@@ -59,7 +59,7 @@ ohos_fuzztest("StandardExchangeTaskFuzzTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   cflags += [
-    "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",
+    "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${device_auth_hichain_thread_stack_size}",
     "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}",
   ]
   deps = [ "${deps_adapter_path}:${hal_module_name}" ]

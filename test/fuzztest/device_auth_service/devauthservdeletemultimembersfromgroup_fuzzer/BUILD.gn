@@ -32,7 +32,7 @@ ohos_fuzztest("DevAuthServDeleteMultiMembersFromGroupFuzzTest") {
   sources = [ "devauthservdeletemultimembersfromgroup_fuzzer.cpp" ]
   sources += deviceauth_files
   sources += hiview_adapter_files
-  if (enable_soft_bus_channel == true) {
+  if (device_auth_enable_soft_bus_channel == true) {
     sources -= soft_bus_channel_files
     sources += soft_bus_channel_mock_files
   }

@@ -14,7 +14,7 @@
 import("//base/security/device_auth/deviceauth_env.gni")
 
 declare_args() {
-  deviceauth_storage_path = ""
+  device_auth_storage_path = ""
 }
 
 if (target_os == "liteos" ||
