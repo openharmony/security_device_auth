@@ -846,7 +846,7 @@ static void GaCbOnErrorWithType(int64_t requestId, int32_t operationCode,
     /* delete request id */
     DelIpcCallBackByReqId(requestId, type, false);
     LOGI("process done, request id: %lld", static_cast<long long>(requestId));
-    FaultReportWithType(type, errorCode)
+    FaultReportWithType(type, errorCode);
     return;
 }
 
