@@ -45,7 +45,7 @@ static int32_t ProcessAsyTokens(int32_t osAccountId, int32_t cmdId, CJson *in, C
                 LOGE("Params: out is null.");
                 return HC_ERR_NULL_PTR;
             }
-            return GetAccountAuthTokenManager()->getRegisterProof(in, out);
+            return GetAccountAuthTokenManager()->getRegisterProof(osAccountId, in, out);
         default:
             LOGE("Operation is not supported for: %d.", cmdId);
             return HC_ERR_NOT_SUPPORT;

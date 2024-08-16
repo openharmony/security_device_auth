@@ -66,6 +66,7 @@ typedef struct {
     Uint8Buff kcfDataSelf;
     Uint8Buff kcfDataPeer;
     Uint8Buff sharedSecret;
+    int32_t osAccountId;
 } EcSpekeParams;
 
 typedef struct {
@@ -201,7 +202,7 @@ static int32_t CalSalt(EcSpekeParams *params)
 static int32_t CalSecret(EcSpekeParams *params, Uint8Buff *secret)
 {
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_BASE_INFO, HcStrlen(HICHAIN_SPEKE_BASE_INFO) };
-    KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false };
+    KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false, params->osAccountId };
     int32_t res = GetLoaderInstance()->computeHkdf(&keyParams, &(params->salt), &keyInfo, secret);
     if (res != HC_SUCCESS) {
         LOGE("Derive secret from psk failed, res: %x.", res);
@@ -286,9 +287,9 @@ static int32_t EcSpekeCalEpkSelf(EcSpekeParams *params)
         LOGE("allocate epkSelf memory fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
-    KeyBuff eskSelfBuff = { params->eskSelf.val, params->eskSelf.length, false };
+    KeyParams eskSelfParams = { { params->eskSelf.val, params->eskSelf.length, false }, false, params->osAccountId };
     KeyBuff baseBuff = { params->base.val, params->base.length, false };
-    res = GetLoaderInstance()->agreeSharedSecret(&eskSelfBuff, &baseBuff, algo, &params->epkSelf);
+    res = GetLoaderInstance()->agreeSharedSecret(&eskSelfParams, &baseBuff, algo, &params->epkSelf);
     if (res != HC_SUCCESS) {
         LOGE("AgreeSharedSecret for epkSelf failed, res: %x", res);
         return res;
@@ -315,10 +316,10 @@ static int32_t CheckEpkPeerValid(EcSpekeParams *params)
 
 static int32_t CalP(EcSpekeParams *params, Uint8Buff *p)
 {
-    KeyBuff eskSelfBuff = { params->eskSelf.val, params->eskSelf.length, false };
+    KeyParams eskSelfParams = { { params->eskSelf.val, params->eskSelf.length, false }, false, params->osAccountId };
     KeyBuff epkPeerBuff = { params->epkPeer.val, params->epkPeer.length, false };
     Algorithm algo = (params->curveType == CURVE_TYPE_256) ? P256 : X25519;
-    int32_t res = GetLoaderInstance()->agreeSharedSecret(&eskSelfBuff, &epkPeerBuff, algo, p);
+    int32_t res = GetLoaderInstance()->agreeSharedSecret(&eskSelfParams, &epkPeerBuff, algo, p);
     ClearFreeUint8Buff(&params->eskSelf);
     if (res != HC_SUCCESS) {
         LOGE("AgreeSharedSecret for p failed, res: %x", res);
@@ -638,7 +639,11 @@ static int32_t CalSessionKey(EcSpekeProtocol *impl)
         return HC_ERR_ALLOC_MEMORY;
     }
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_SESSIONKEY_INFO, HcStrlen(HICHAIN_SPEKE_SESSIONKEY_INFO) };
-    KeyParams keyParams = { { impl->params.sharedSecret.val, impl->params.sharedSecret.length, false }, false };
+    KeyParams keyParams = {
+        { impl->params.sharedSecret.val, impl->params.sharedSecret.length, false },
+        false,
+        impl->params.osAccountId
+    };
     int32_t res = GetLoaderInstance()->computeHkdf(&keyParams, &impl->params.salt, &keyInfo,
         &impl->base.sessionKey);
     ClearFreeUint8Buff(&impl->params.salt);
@@ -1087,6 +1092,7 @@ static int32_t BuildEcSpekeProtocolObj(const EcSpekeInitParams *params, bool isC
     if (DeepCopyUint8Buff(&params->authId, &instance->params.authIdSelf) != HC_SUCCESS) {
         return HC_ERR_ALLOC_MEMORY;
     }
+    instance->params.osAccountId = params->osAccountId;
     instance->base.name = PROTOCOL_TYPE_EC_SPEKE;
     instance->base.beginState = isClient ? CREATE_AS_CLIENT_STATE : CREATE_AS_SERVER_STATE;
     instance->base.finishState = isClient ? CLIENT_FINISH_STATE : SERVER_FINISH_STATE;

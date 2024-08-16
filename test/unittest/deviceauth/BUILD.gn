@@ -512,7 +512,7 @@ ohos_unittest("device_auth_ipc_test") {
     "source/p2p_bind_ipc_test.cpp",
   ]
 
-  deps = [ "${deps_adapter_path}:${hal_module_name}" ]
+  deps = [ "${deps_adapter_path}:${hal_module_test_name}" ]
 
   cflags = [ "-DHILOG_ENABLE" ]
 

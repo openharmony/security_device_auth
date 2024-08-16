@@ -232,12 +232,13 @@ static void DeleteDatabase()
 
 static int32_t GenerateTempKeyPair(const Uint8Buff *keyAlias)
 {
-    int32_t ret = GetLoaderInstance()->checkKeyExist(keyAlias, false);
+    int32_t ret = GetLoaderInstance()->checkKeyExist(keyAlias, false, DEFAULT_OS_ACCOUNT);
     if (ret != HC_SUCCESS) {
         int32_t authId = 0;
         Uint8Buff authIdBuff = { reinterpret_cast<uint8_t *>(&authId), sizeof(int32_t)};
         ExtraInfo extInfo = {authIdBuff, -1, -1};
-        ret = GetLoaderInstance()->generateKeyPairWithStorage(keyAlias, TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN, P256,
+        KeyParams keyParams = { { keyAlias->val, keyAlias->length, true }, false, DEFAULT_OS_ACCOUNT };
+        ret = GetLoaderInstance()->generateKeyPairWithStorage(&keyParams, TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN, P256,
             KEY_PURPOSE_SIGN_VERIFY, &extInfo);
     }
     return ret;
@@ -260,7 +261,8 @@ static CJson *GetAsyCredentialJson(const std::string registerInfo)
         .length = SERVER_PK_SIZE
     };
 
-    int32_t ret = GetLoaderInstance()->exportPublicKey(&keyAlias, false, &serverPk);
+    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false, DEFAULT_OS_ACCOUNT };
+    int32_t ret = GetLoaderInstance()->exportPublicKey(&keyAliasParams, &serverPk);
     if (ret != HC_SUCCESS) {
         HcFree(serverPkVal);
         return nullptr;
@@ -275,7 +277,6 @@ static CJson *GetAsyCredentialJson(const std::string registerInfo)
         .val = signatureValue,
         .length = SIGNATURE_SIZE
     };
-    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false };
     ret = GetLoaderInstance()->sign(&keyAliasParams, &messageBuff, P256, &signature);
     if (ret != HC_SUCCESS) {
         HcFree(serverPkVal);

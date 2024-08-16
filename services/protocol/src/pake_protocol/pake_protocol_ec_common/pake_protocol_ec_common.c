@@ -94,9 +94,9 @@ int32_t GenerateEcPakeParams(PakeBaseParams *params, Uint8Buff *secret)
         LOGE("HashToPoint from secret to base failed, res: %x.", res);
         goto CLEAN_UP;
     }
-    KeyBuff eskSelfBuff = { params->eskSelf.val, params->eskSelf.length, false };
+    KeyParams eskSelfParams = { { params->eskSelf.val, params->eskSelf.length, false }, false, params->osAccountId };
     KeyBuff baseBuff = { params->base.val, params->base.length, false };
-    res = params->loader->agreeSharedSecret(&eskSelfBuff, &baseBuff, alg, &params->epkSelf);
+    res = params->loader->agreeSharedSecret(&eskSelfParams, &baseBuff, alg, &params->epkSelf);
     if (res != HC_SUCCESS) {
         LOGE("AgreeSharedSecret failed, res: %x.", res);
         goto CLEAN_UP;
@@ -124,9 +124,9 @@ int32_t AgreeEcSharedSecret(PakeBaseParams *params, Uint8Buff *sharedSecret)
         res = HC_ERR_INVALID_PUBLIC_KEY;
         goto CLEAN_UP;
     }
-    KeyBuff eskSelfBuff = { params->eskSelf.val, params->eskSelf.length, false };
+    KeyParams eskSelfParams = { { params->eskSelf.val, params->eskSelf.length, false }, false, params->osAccountId };
     KeyBuff epkPeerBuff = { params->epkPeer.val, params->epkPeer.length, false };
-    res = params->loader->agreeSharedSecret(&eskSelfBuff, &epkPeerBuff, alg, sharedSecret);
+    res = params->loader->agreeSharedSecret(&eskSelfParams, &epkPeerBuff, alg, sharedSecret);
     if (res != HC_SUCCESS) {
         LOGE("AgreeSharedSecret failed, res: %x.", res);
         goto CLEAN_UP;

@@ -22,6 +22,17 @@
 #include "iso_protocol_common.h"
 #include "protocol_common.h"
 
+static int32_t ComputeHkdfByParams(const IsoParams *params, const Uint8Buff *hkdfSaltBuf, Uint8Buff *returnKeyBuf)
+{
+    Uint8Buff keyInfoBuf = { (uint8_t *)GENERATE_RETURN_KEY_STR, (uint32_t)strlen(GENERATE_RETURN_KEY_STR) };
+    KeyParams keyParam = {
+        .keyBuff = { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false },
+        .isDeStorage = false,
+        .osAccountId = params->baseParams.osAccountId
+    };
+    return params->baseParams.loader->computeHkdf(&keyParam, hkdfSaltBuf, &keyInfoBuf, returnKeyBuf);
+}
+
 static int GenerateReturnKey(IsoParams *params, uint8_t *returnKey, uint32_t returnKeyLen)
 {
     uint32_t hkdfSaltLen = params->baseParams.randPeer.length + params->baseParams.randPeer.length;
@@ -58,10 +69,8 @@ static int GenerateReturnKey(IsoParams *params, uint8_t *returnKey, uint32_t ret
         }
     }
     Uint8Buff hkdfSaltBuf = { hkdfSalt, hkdfSaltLen };
-    Uint8Buff keyInfoBuf = { (uint8_t *)GENERATE_RETURN_KEY_STR, (uint32_t)strlen(GENERATE_RETURN_KEY_STR) };
     Uint8Buff returnKeyBuf = { returnKey, returnKeyLen };
-    KeyParams keyParam = { { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false }, false };
-    res = params->baseParams.loader->computeHkdf(&keyParam, &hkdfSaltBuf, &keyInfoBuf, &returnKeyBuf);
+    res = ComputeHkdfByParams(params, &hkdfSaltBuf, &returnKeyBuf);
     if (res != HC_SUCCESS) {
         LOGE("computeHkdf for returnKey failed.");
         goto ERR;
@@ -97,8 +106,12 @@ int GenerateEncResult(const IsoParams *params, int message, CJson *sendToPeer, c
         goto ERR;
     }
     Uint8Buff outBuf = { out, sizeof(int) + TAG_LEN };
-    ret = params->baseParams.loader->aesGcmEncrypt(&params->baseParams.sessionKey, &plainBuf,
-        &encryptInfo, false, &outBuf);
+    KeyParams keyParams = {
+        { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false },
+        false,
+        params->baseParams.osAccountId
+    };
+    ret = params->baseParams.loader->aesGcmEncrypt(&keyParams, &plainBuf, &encryptInfo, &outBuf);
     if (ret != HC_SUCCESS) {
         goto ERR;
     }
@@ -230,8 +243,12 @@ int CheckEncResult(IsoParams *params, const CJson *in, const char *aad)
     gcmParam.nonce = nonce;
     gcmParam.nonceLen = NONCE_SIZE;
 
-    res = params->baseParams.loader->aesGcmDecrypt(&params->baseParams.sessionKey, &encResultBuf, &gcmParam, false,
-        &outBuf);
+    KeyParams keyParams = {
+        { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false },
+        false,
+        params->baseParams.osAccountId
+    };
+    res = params->baseParams.loader->aesGcmDecrypt(&keyParams, &encResultBuf, &gcmParam, &outBuf);
     if (res != 0) {
         LOGE("decrypt result failed, res:%d", res);
         goto ERR;
@@ -285,7 +302,8 @@ void DeleteAuthCode(const IsoParams *params)
     }
     LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAliasBuff.val[DEV_AUTH_ZERO], keyAliasBuff.val[DEV_AUTH_ONE],
         keyAliasBuff.val[DEV_AUTH_TWO], keyAliasBuff.val[DEV_AUTH_THREE]);
-    res = params->baseParams.loader->deleteKey(&keyAliasBuff, params->isPeerFromUpgrade);
+    res = params->baseParams.loader->deleteKey(&keyAliasBuff, params->isPeerFromUpgrade,
+        params->baseParams.osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete auth code!");
     }
@@ -515,7 +533,7 @@ int InitIsoParams(IsoParams *params, const CJson *in)
         res = HC_ERR_JSON_GET;
         goto ERR;
     }
-    res = InitIsoBaseParams(&params->baseParams);
+    res = InitIsoBaseParams(in, &params->baseParams);
     if (res != HC_SUCCESS) {
         LOGE("InitIsoBaseParams failed, res: %x.", res);
         goto ERR;
@@ -552,27 +570,28 @@ ERR:
 
 static int AuthGeneratePsk(const Uint8Buff *seed, IsoParams *params)
 {
-    uint8_t keyAlias[ISO_KEY_ALIAS_LEN] = { 0 };
-    uint8_t upgradeKeyAlias[ISO_UPGRADE_KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff keyAliasBuff = { keyAlias, ISO_KEY_ALIAS_LEN };
+    uint8_t keyAliasVal[ISO_KEY_ALIAS_LEN] = { 0 };
+    uint8_t upgradeKeyAliasVal[ISO_UPGRADE_KEY_ALIAS_LEN] = { 0 };
+    Uint8Buff keyAlias = { keyAliasVal, ISO_KEY_ALIAS_LEN };
     if (params->isPeerFromUpgrade) {
-        keyAliasBuff.val = upgradeKeyAlias;
-        keyAliasBuff.length = ISO_UPGRADE_KEY_ALIAS_LEN;
+        keyAlias.val = upgradeKeyAliasVal;
+        keyAlias.length = ISO_UPGRADE_KEY_ALIAS_LEN;
     }
-    int32_t res = GenerateKeyAliasForIso(params, &keyAliasBuff);
+    int32_t res = GenerateKeyAliasForIso(params, &keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate iso key alias!");
         return res;
     }
 
-    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAliasBuff.val[DEV_AUTH_ZERO], keyAliasBuff.val[DEV_AUTH_ONE],
-        keyAliasBuff.val[DEV_AUTH_TWO], keyAliasBuff.val[DEV_AUTH_THREE]);
+    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias.val[DEV_AUTH_ZERO], keyAlias.val[DEV_AUTH_ONE],
+        keyAlias.val[DEV_AUTH_TWO], keyAlias.val[DEV_AUTH_THREE]);
     Uint8Buff pskBuf = { params->baseParams.psk, sizeof(params->baseParams.psk) };
     if (params->isPeerFromUpgrade) {
-        KeyParams keyAliasParams = { { keyAliasBuff.val, keyAliasBuff.length, true }, true };
+        KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, true, params->baseParams.osAccountId };
         return params->baseParams.loader->computeHmacWithThreeStage(&keyAliasParams, seed, &pskBuf);
     } else {
-        return params->baseParams.loader->computeHmac(&keyAliasBuff, seed, &pskBuf, true);
+        KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false, params->baseParams.osAccountId };
+        return params->baseParams.loader->computeHmac(&keyAliasParams, seed, &pskBuf);
     }
 }
 
@@ -587,7 +606,8 @@ static int AuthGeneratePskUsePin(const Uint8Buff *seed, IsoParams *params, const
         LOGE("sha256 failed, res:%d", res);
         return res;
     }
-    return params->baseParams.loader->computeHmac(&hashBuf, seed, &pskBuf, false);
+    KeyParams keyParams = { { hashBuf.val, hashBuf.length, false }, false, params->baseParams.osAccountId };
+    return params->baseParams.loader->computeHmac(&keyParams, seed, &pskBuf);
 }
 
 int GenerateKeyAliasInIso(const IsoParams *params, uint8_t *keyAlias, uint32_t keyAliasLen, bool useOpposite)

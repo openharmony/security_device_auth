@@ -23,6 +23,7 @@
 #include "hks_type.h"
 #include "json_utils.h"
 #include "uint8buff_utils.h"
+#include "device_auth.h"
 
 namespace OHOS {
 static const char *AUTH_ID_C_VAL = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
@@ -32,8 +33,8 @@ static const char *GROUP_OWNER = "testApp";
 
 static Uint8Buff g_authIdC = { (uint8_t *)AUTH_ID_C_VAL, 64 };
 static Uint8Buff g_authIdS = { (uint8_t *)AUTH_ID_S_VAL, 64 };
-static AuthCodeImportParams g_paramsC = { 0, GROUP_OWNER, GROUP_ID, g_authIdC };
-static AuthCodeImportParams g_paramsS = { 0, GROUP_OWNER, GROUP_ID, g_authIdS };
+static AuthCodeImportParams g_paramsC = { 0, GROUP_OWNER, GROUP_ID, g_authIdC, DEFAULT_OS_ACCOUNT };
+static AuthCodeImportParams g_paramsS = { 0, GROUP_OWNER, GROUP_ID, g_authIdS, DEFAULT_OS_ACCOUNT };
 
 static const char *INVALID_MSG1 = "{\"errCode\": 1}";
 static const char *INVALID_MSG2 = "{\"event\": -1, \"errCode\": 1}";
@@ -115,7 +116,7 @@ void AuthCodeImportTest101()
 
 void AuthCodeImportTest102()
 {
-    AuthCodeImportParams errorParams = { 0, nullptr, GROUP_ID, g_authIdC };
+    AuthCodeImportParams errorParams = { 0, nullptr, GROUP_ID, g_authIdC, DEFAULT_OS_ACCOUNT };
     BaseCmd *self = CreateAuthCodeImportCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     if (self != nullptr) {
         self->destroy(self);
@@ -124,7 +125,7 @@ void AuthCodeImportTest102()
 
 void AuthCodeImportTest103()
 {
-    AuthCodeImportParams errorParams = { 0, GROUP_OWNER, nullptr, g_authIdC };
+    AuthCodeImportParams errorParams = { 0, GROUP_OWNER, nullptr, g_authIdC, DEFAULT_OS_ACCOUNT };
     BaseCmd *self = CreateAuthCodeImportCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     if (self != nullptr) {
         self->destroy(self);
@@ -133,7 +134,7 @@ void AuthCodeImportTest103()
 
 void AuthCodeImportTest104()
 {
-    AuthCodeImportParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { nullptr, 0 } };
+    AuthCodeImportParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { nullptr, 0 }, DEFAULT_OS_ACCOUNT };
     BaseCmd *self = CreateAuthCodeImportCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     if (self != nullptr) {
         self->destroy(self);
@@ -142,7 +143,7 @@ void AuthCodeImportTest104()
 
 void AuthCodeImportTest105()
 {
-    AuthCodeImportParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { (uint8_t *)AUTH_ID_C_VAL, 0 } };
+    AuthCodeImportParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { (uint8_t *)AUTH_ID_C_VAL, 0 }, 0 };
     BaseCmd *self = CreateAuthCodeImportCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     if (self != nullptr) {
         self->destroy(self);

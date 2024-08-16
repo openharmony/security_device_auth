@@ -158,7 +158,7 @@ static int32_t GenerateAuthTokenForAccessory(const IsoAuthParams *params, Uint8B
         .val = (uint8_t *)(params->userIdSelf),
         .length = HcStrlen(params->userIdSelf)
     };
-    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false };
+    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false, params->isoBaseParams.osAccountId };
     res = params->isoBaseParams.loader->computeHkdf(&keyAliasParams, &userIdSelfBuff, &params->challenge, outKey);
     if (res != HC_SUCCESS) {
         LOGE("Failed to computeHkdf from authCode to authToken.");
@@ -203,7 +203,12 @@ int32_t AccountAuthGeneratePsk(IsoAuthParams *params)
     }
     Uint8Buff pskBuf = { params->isoBaseParams.psk, PSK_SIZE };
     Uint8Buff seedBuf = { params->seed, sizeof(params->seed) };
-    res = params->isoBaseParams.loader->computeHmac(&authToken, &seedBuf, &pskBuf, isTokenStored);
+    KeyParams keyParams = {
+        .keyBuff = { authToken.val, authToken.length, isTokenStored },
+        .isDeStorage = false,
+        .osAccountId = params->isoBaseParams.osAccountId
+    };
+    res = params->isoBaseParams.loader->computeHmac(&keyParams, &seedBuf, &pskBuf);
     FreeAndCleanKey(&authToken);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHmac for psk failed, res: %d.", res);
@@ -227,7 +232,7 @@ int32_t InitIsoAuthParams(const CJson *in, IsoAuthParams *params, const AccountV
         LOGE("Failed to get localDevType from json in sym auth.");
         goto CLEAN_UP;
     }
-    res = InitIsoBaseParams(&params->isoBaseParams);
+    res = InitIsoBaseParams(in, &params->isoBaseParams);
     if (res != HC_SUCCESS) {
         LOGE("InitIsoBaseParams failed, res: %x.", res);
         goto CLEAN_UP;

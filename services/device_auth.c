@@ -1550,7 +1550,6 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
         return res;
     }
     INIT_PERFORMANCE_DUMPER();
-    (void)GenerateDeviceKeyPair();
     InitPseudonymModule();
     DEV_AUTH_LOAD_PLUGIN();
     SetInitStatus();

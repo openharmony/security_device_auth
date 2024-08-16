@@ -135,7 +135,7 @@ static void CreateDemoGroup(int32_t osAccountId, int64_t reqId, const char *appI
 
 static bool GenerateTempKeyPair(Uint8Buff *keyAlias)
 {
-    int res = GetLoaderInstance()->checkKeyExist(keyAlias, false);
+    int res = GetLoaderInstance()->checkKeyExist(keyAlias, false, DEFAULT_OS_ACCOUNT);
     if (res == HC_SUCCESS) {
         printf("Server key pair already exists\n");
         return true;
@@ -144,7 +144,8 @@ static bool GenerateTempKeyPair(Uint8Buff *keyAlias)
     int32_t authId = 0;
     Uint8Buff authIdBuff = { reinterpret_cast<uint8_t *>(&authId), sizeof(int32_t) };
     ExtraInfo extInfo = { authIdBuff, -1, -1 };
-    res = GetLoaderInstance()->generateKeyPairWithStorage(keyAlias, TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN, P256,
+    KeyParams keyParams = { { keyAlias->val, keyAlias->length, true }, false, DEFAULT_OS_ACCOUNT };
+    res = GetLoaderInstance()->generateKeyPairWithStorage(&keyParams, TEST_DEV_AUTH_TEMP_KEY_PAIR_LEN, P256,
         KEY_PURPOSE_SIGN_VERIFY, &extInfo);
     if (res != HC_SUCCESS) {
         printf("Generate key pair failed\n");
@@ -170,7 +171,8 @@ static CJson *GetAsyCredentialJson(string registerInfo)
         .length = SERVER_PK_SIZE
     };
 
-    int32_t ret = GetLoaderInstance()->exportPublicKey(&keyAlias, false, &serverPk);
+    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false, DEFAULT_OS_ACCOUNT };
+    int32_t ret = GetLoaderInstance()->exportPublicKey(&keyAliasParams, &serverPk);
     if (ret != HC_SUCCESS) {
         printf("export PublicKey failed\n");
         HcFree(serverPkVal);
@@ -186,7 +188,6 @@ static CJson *GetAsyCredentialJson(string registerInfo)
         .val = signatureValue,
         .length = SIGNATURE_SIZE
     };
-    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false };
     ret = GetLoaderInstance()->sign(&keyAliasParams, &messageBuff, P256, &signature);
     if (ret != HC_SUCCESS) {
         printf("Sign pkInfo failed.\n");

@@ -924,7 +924,7 @@ int32_t GenerateUnbindSuccessData(const char *peerAuthId, const char *groupId, c
     return HC_SUCCESS;
 }
 
-int32_t ProcessKeyPair(int action, const CJson *jsonParams, const char *groupId)
+int32_t ProcessKeyPair(int32_t osAccountId, int action, const CJson *jsonParams, const char *groupId)
 {
     if ((jsonParams == NULL) || (groupId == NULL)) {
         LOGE("The input parameters contains NULL value!");
@@ -961,11 +961,12 @@ int32_t ProcessKeyPair(int action, const CJson *jsonParams, const char *groupId)
         HcFree(authIdBuff.val);
         return HC_ERR_MEMORY_COPY;
     }
+    AuthModuleParams params = { osAccountId, appId, groupId, &authIdBuff, userType };
     int32_t result;
     if (action == CREATE_KEY_PAIR) {
-        result = RegisterLocalIdentity(appId, groupId, &authIdBuff, userType, DAS_MODULE);
+        result = RegisterLocalIdentity(&params, DAS_MODULE);
     } else {
-        result = UnregisterLocalIdentity(appId, groupId, &authIdBuff, userType, DAS_MODULE);
+        result = UnregisterLocalIdentity(&params, DAS_MODULE);
     }
     HcFree(authIdBuff.val);
     return result;

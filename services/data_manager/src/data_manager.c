@@ -1152,8 +1152,8 @@ static void PostDeviceUnBoundMsg(OsAccountTrustedInfo *info, const TrustedDevice
     if (QueryDeviceEntryPtrIfMatch(&info->devices, &deviceParams) == NULL) {
         GetBroadcaster()->postOnDeviceNotTrusted(udid);
         if (!IsSelfDeviceEntry(deviceEntry)) {
-            (void)DeleteMk(udid);
-            (void)DeletePseudonymPsk(udid);
+            (void)DeleteMk(info->osAccountId, udid);
+            (void)DeletePseudonymPsk(info->osAccountId, udid);
         }
     }
 }

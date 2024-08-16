@@ -32,7 +32,16 @@
 #define BASE_HKDF_PARAMS_LEN 6
 #define BASE_COMPUTE_PSEUDONYM_PSK_PARAMS_LEN 11
 #define BASE_SIGN_PARAMS_LEN 3
-#define EXT_STORAGE_PARAMS_LEN 1
+#define BASE_ENCRYPT_PARAMS_LEN 7
+#define BASE_DECRYPT_PARAMS_LEN 7
+#define BASE_AGREE_INIT_PARAMS_LEN 3
+#define BASE_AGREE_FINISH_PARAMS_LEN 7
+#define BASE_AGREE_PARAMS_LEN 3
+#define BASE_GENERATE_KEY_PAIR_PARAMS_LEN 6
+#define BASE_VERIFY_PARAMS_LEN 4
+#define BASE_IMPORT_PUB_KEY_PARAMS_LEN 8
+#define EXT_DE_PARAMS_LEN 1
+#define EXT_CE_PARAMS_LEN 2
 #define PSEUDONYM_KEY_FACTOR "hichain_pseudonym_psk_key"
 #define PSEUDONYM_KEY_LEBEL "hichain_pseudonym_psk_label"
 
@@ -67,6 +76,14 @@ static int32_t BaseCheckParams(const Uint8Buff **inParams, const char **paramTag
     return HAL_SUCCESS;
 }
 
+static void FreeParamSet(struct HksParamSet *paramSet)
+{
+    if (paramSet == NULL) {
+        return;
+    }
+    HksFreeParamSet(&paramSet);
+}
+
 static int32_t ConstructParamSet(struct HksParamSet **out, const struct HksParam *inParam,
     const uint32_t inParamNum)
 {
@@ -80,14 +97,14 @@ static int32_t ConstructParamSet(struct HksParamSet **out, const struct HksParam
     res = HksAddParams(paramSet, inParam, inParamNum);
     if (res != HKS_SUCCESS) {
         LOGE("add param failed, res = %d", res);
-        HksFreeParamSet(&paramSet);
+        FreeParamSet(paramSet);
         return HAL_ERR_ADD_PARAM_FAILED;
     }
 
     res = HksBuildParamSet(&paramSet);
     if (res != HKS_SUCCESS) {
         LOGE("build param set failed, res = %d", res);
-        HksFreeParamSet(&paramSet);
+        FreeParamSet(paramSet);
         return HAL_ERR_BUILD_PARAM_SET_FAILED;
     }
 
@@ -123,11 +140,11 @@ static int32_t Sha256(const Uint8Buff *message, Uint8Buff *hash)
     res = HksHash(paramSet, &srcBlob, &hashBlob);
     if (res != HKS_SUCCESS || hashBlob.size != SHA256_LEN) {
         LOGE("[HUKS]: HksHash fail. [Res]: %d", res);
-        HksFreeParamSet(&paramSet);
+        FreeParamSet(paramSet);
         return HAL_FAILED;
     }
 
-    HksFreeParamSet(&paramSet);
+    FreeParamSet(paramSet);
     return HAL_SUCCESS;
 }
 
@@ -147,34 +164,89 @@ static int32_t GenerateRandom(Uint8Buff *rand)
     return HAL_SUCCESS;
 }
 
-static int32_t CheckKeyExist(const Uint8Buff *keyAlias, bool isDeStorage)
+static uint32_t GetParamLen(bool isDeStorage, uint32_t baseLen)
+{
+#ifdef DEV_AUTH_ENABLE_CE
+    if (isDeStorage) {
+        return baseLen + EXT_DE_PARAMS_LEN;
+    } else {
+        return baseLen + EXT_CE_PARAMS_LEN;
+    }
+#else
+    (void)isDeStorage;
+    return baseLen;
+#endif
+}
+
+static void AddStorageExtParams(struct HksParam *params, bool isDeStorage, uint32_t *idx, int32_t osAccountId)
+{
+#ifdef DEV_AUTH_ENABLE_CE
+    if (isDeStorage) {
+        params[*idx].tag = HKS_TAG_AUTH_STORAGE_LEVEL;
+        params[(*idx)++].uint32Param = HKS_AUTH_STORAGE_LEVEL_DE;
+    } else {
+        params[*idx].tag = HKS_TAG_AUTH_STORAGE_LEVEL;
+        params[(*idx)++].uint32Param = HKS_AUTH_STORAGE_LEVEL_CE;
+        params[*idx].tag = HKS_TAG_SPECIFIC_USER_ID;
+        params[(*idx)++].uint32Param = osAccountId;
+    }
+#else
+    (void)params;
+    (void)isDeStorage;
+    (void)idx;
+    (void)osAccountId;
+#endif
+}
+
+static int32_t ConstructCheckParamSet(bool isDeStorage, int32_t osAccountId, struct HksParamSet **paramSet)
+{
+    uint32_t len = GetParamLen(isDeStorage, 0);
+    if (len == 0) {
+        return HAL_SUCCESS;
+    }
+    struct HksParam *checkParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (checkParams == NULL) {
+        LOGE("Malloc for checkParams failed.");
+        return HAL_ERR_BAD_ALLOC;
+    }
+    uint32_t idx = 0;
+    AddStorageExtParams(checkParams, isDeStorage, &idx, osAccountId);
+    int32_t res = ConstructParamSet(paramSet, checkParams, idx);
+    HcFree(checkParams);
+    if (res != HAL_SUCCESS) {
+        LOGE("Failed to construct check param set, res: %d", res);
+    }
+    return res;
+}
+
+static int32_t CheckKeyExist(const Uint8Buff *keyAlias, bool isDeStorage, int32_t osAccountId)
 {
     CHECK_PTR_RETURN_HAL_ERROR_CODE(keyAlias, "keyAlias");
     CHECK_PTR_RETURN_HAL_ERROR_CODE(keyAlias->val, "keyAlias->val");
     CHECK_LEN_ZERO_RETURN_ERROR_CODE(keyAlias->length, "keyAlias->length");
 
     struct HksParamSet *deParamSet = NULL;
-    struct HksParam checkParams[] = {
-        {
-            .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
-            .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE
-        }
-    };
-    int32_t res = ConstructParamSet(&deParamSet, checkParams, CAL_ARRAY_SIZE(checkParams));
+    int32_t res = ConstructCheckParamSet(true, osAccountId, &deParamSet);
     if (res != HAL_SUCCESS) {
-        LOGE("construct check param set failed, res = %d", res);
+        return res;
+    }
+    struct HksParamSet *ceParamSet = NULL;
+    res = ConstructCheckParamSet(false, osAccountId, &ceParamSet);
+    if (res != HAL_SUCCESS) {
+        FreeParamSet(deParamSet);
         return res;
     }
     struct HksBlob keyAliasBlob = { keyAlias->length, keyAlias->val };
     if (isDeStorage) {
         res = HksKeyExist(&keyAliasBlob, deParamSet);
     } else {
-        res = HksKeyExist(&keyAliasBlob, NULL);
+        res = HksKeyExist(&keyAliasBlob, ceParamSet);
         if (res != HKS_SUCCESS) {
             res = HksKeyExist(&keyAliasBlob, deParamSet);
         }
     }
-    HksFreeParamSet(&deParamSet);
+    FreeParamSet(deParamSet);
+    FreeParamSet(ceParamSet);
     if (res != HKS_SUCCESS) {
         LOGI("[HUKS]: HksKeyExist fail. [Res]: %d", res);
         return HAL_FAILED;
@@ -183,36 +255,59 @@ static int32_t CheckKeyExist(const Uint8Buff *keyAlias, bool isDeStorage)
     return HAL_SUCCESS;
 }
 
-static int32_t DeleteKey(const Uint8Buff *keyAlias, bool isDeStorage)
+static int32_t ConstructDeleteParamSet(bool isDeStorage, int32_t osAccountId, struct HksParamSet **paramSet)
+{
+    uint32_t len = GetParamLen(isDeStorage, 0);
+    if (len == 0) {
+        return HAL_SUCCESS;
+    }
+    struct HksParam *deleteParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (deleteParams == NULL) {
+        LOGE("Malloc for deleteParams failed.");
+        return HAL_ERR_BAD_ALLOC;
+    }
+    uint32_t idx = 0;
+    AddStorageExtParams(deleteParams, isDeStorage, &idx, osAccountId);
+    int32_t res = ConstructParamSet(paramSet, deleteParams, idx);
+    HcFree(deleteParams);
+    if (res != HAL_SUCCESS) {
+        LOGE("Failed to construct delete param set, res: %d", res);
+    }
+    return res;
+}
+
+static int32_t DeleteKey(const Uint8Buff *keyAlias, bool isDeStorage, int32_t osAccountId)
 {
     CHECK_PTR_RETURN_HAL_ERROR_CODE(keyAlias, "keyAlias");
     CHECK_PTR_RETURN_HAL_ERROR_CODE(keyAlias->val, "keyAlias->val");
     CHECK_LEN_ZERO_RETURN_ERROR_CODE(keyAlias->length, "keyAlias->length");
 
     struct HksParamSet *deParamSet = NULL;
-    struct HksParam deleteParam[] = {
-        {
-            .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
-            .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE
-        }
-    };
-    int32_t res = ConstructParamSet(&deParamSet, deleteParam, CAL_ARRAY_SIZE(deleteParam));
+    int32_t res = ConstructDeleteParamSet(true, osAccountId, &deParamSet);
     if (res != HAL_SUCCESS) {
-        LOGE("construct delete param set failed, res = %d", res);
         return res;
     }
-    LOGI("[HUKS]: HksDeleteKey enter.");
+    struct HksParamSet *ceParamSet = NULL;
+    res = ConstructDeleteParamSet(false, osAccountId, &ceParamSet);
+    if (res != HAL_SUCCESS) {
+        FreeParamSet(deParamSet);
+        return res;
+    }
     struct HksBlob keyAliasBlob = { keyAlias->length, keyAlias->val };
+
+    LOGI("[HUKS]: HksDeleteKey enter.");
     if (isDeStorage) {
         res = HksDeleteKey(&keyAliasBlob, deParamSet);
     } else {
-        res = HksDeleteKey(&keyAliasBlob, NULL);
+        res = HksDeleteKey(&keyAliasBlob, ceParamSet);
         if (res != HKS_SUCCESS) {
             res = HksDeleteKey(&keyAliasBlob, deParamSet);
         }
     }
     LOGI("[HUKS]: HksDeleteKey quit. [Res]: %d", res);
-    HksFreeParamSet(&deParamSet);
+
+    FreeParamSet(deParamSet);
+    FreeParamSet(ceParamSet);
     if (res == HKS_ERROR_NOT_EXIST) {
         LOGI("Key not exists.");
         return HAL_SUCCESS;
@@ -221,14 +316,13 @@ static int32_t DeleteKey(const Uint8Buff *keyAlias, bool isDeStorage)
         LOGE("[HUKS]: HksDeleteKey fail. [Res]: %d", res);
         return HAL_FAILED;
     }
-
     return HAL_SUCCESS;
 }
 
-static int32_t ConstructHmacParamSet(bool isDeStorage, bool isAlias, struct HksParamSet **hmacParamSet)
+static int32_t ConstructHmacParamSet(bool isDeStorage, int32_t osAccountId, bool isAlias,
+    struct HksParamSet **hmacParamSet)
 {
-    uint32_t len = isDeStorage ? (BASE_HMAC_PARAMS_LEN + EXT_STORAGE_PARAMS_LEN) :
-        BASE_HMAC_PARAMS_LEN;
+    uint32_t len = GetParamLen(isDeStorage, BASE_HMAC_PARAMS_LEN);
     struct HksParam *hmacParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
     if (hmacParams == NULL) {
         LOGE("Malloc for hmacParams failed.");
@@ -241,10 +335,7 @@ static int32_t ConstructHmacParamSet(bool isDeStorage, bool isAlias, struct HksP
     hmacParams[idx++].uint32Param = HKS_DIGEST_SHA256;
     hmacParams[idx].tag = HKS_TAG_IS_KEY_ALIAS;
     hmacParams[idx++].boolParam = isAlias;
-    if (isDeStorage) {
-        hmacParams[idx].tag = HKS_TAG_AUTH_STORAGE_LEVEL;
-        hmacParams[idx++].uint32Param = HKS_AUTH_STORAGE_LEVEL_DE;
-    }
+    AddStorageExtParams(hmacParams, isDeStorage, &idx, osAccountId);
     int32_t res = ConstructParamSet(hmacParamSet, hmacParams, idx);
     HcFree(hmacParams);
     if (res != HAL_SUCCESS) {
@@ -253,39 +344,56 @@ static int32_t ConstructHmacParamSet(bool isDeStorage, bool isAlias, struct HksP
     return res;
 }
 
-static int32_t ComputeHmac(const Uint8Buff *key, const Uint8Buff *message, Uint8Buff *outHmac, bool isAlias)
+static int32_t CheckHmacParams(const KeyParams *keyParams, const Uint8Buff *message, const Uint8Buff *outHmac)
 {
-    const Uint8Buff *inParams[] = { key, message, outHmac };
-    const char *paramTags[] = {"key", "message", "outHmac"};
-    int32_t res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+    int32_t res = CheckKeyParams(keyParams);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+    const Uint8Buff *inParams[] = { message, outHmac };
+    const char *paramTags[] = { "message", "outHmac" };
+    res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
     if (res != HAL_SUCCESS) {
         return res;
     }
     CHECK_LEN_EQUAL_RETURN(outHmac->length, HMAC_LEN, "outHmac->length");
+    return HAL_SUCCESS;
+}
 
-    struct HksBlob keyBlob = { key->length, key->val };
+static int32_t ComputeHmac(const KeyParams *keyParams, const Uint8Buff *message, Uint8Buff *outHmac)
+{
+    int32_t res = CheckHmacParams(keyParams, message, outHmac);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+
+    struct HksParamSet *deParamSet = NULL;
+    res = ConstructHmacParamSet(true, keyParams->osAccountId, keyParams->keyBuff.isAlias, &deParamSet);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+    struct HksParamSet *ceParamSet = NULL;
+    res = ConstructHmacParamSet(false, keyParams->osAccountId, keyParams->keyBuff.isAlias, &ceParamSet);
+    if (res != HAL_SUCCESS) {
+        FreeParamSet(deParamSet);
+        return res;
+    }
+    struct HksBlob keyBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
     struct HksBlob srcBlob = { message->length, message->val };
     struct HksBlob hmacBlob = { outHmac->length, outHmac->val };
-    struct HksParamSet *deParamSet = NULL;
-    res = ConstructHmacParamSet(true, isAlias, &deParamSet);
-    if (res != HAL_SUCCESS) {
-        return res;
-    }
-    struct HksParamSet *paramSet = NULL;
-    res = ConstructHmacParamSet(false, isAlias, &paramSet);
-    if (res != HAL_SUCCESS) {
-        HksFreeParamSet(&deParamSet);
-        return res;
-    }
 
     LOGI("[HUKS]: HksMac enter.");
-    res = HksMac(&keyBlob, paramSet, &srcBlob, &hmacBlob);
-    if (res != HKS_SUCCESS  || hmacBlob.size != HMAC_LEN) {
+    if (keyParams->isDeStorage) {
         res = HksMac(&keyBlob, deParamSet, &srcBlob, &hmacBlob);
+    } else {
+        res = HksMac(&keyBlob, ceParamSet, &srcBlob, &hmacBlob);
+        if (res != HKS_SUCCESS  || hmacBlob.size != HMAC_LEN) {
+            res = HksMac(&keyBlob, deParamSet, &srcBlob, &hmacBlob);
+        }
     }
     LOGI("[HUKS]: HksMac quit. [Res]: %d", res);
-    HksFreeParamSet(&deParamSet);
-    HksFreeParamSet(&paramSet);
+    FreeParamSet(deParamSet);
+    FreeParamSet(ceParamSet);
     if (res != HKS_SUCCESS  || hmacBlob.size != HMAC_LEN) {
         LOGE("[HUKS]: HksMac fail. [Res]: %d", res);
         return HAL_FAILED;
@@ -297,8 +405,7 @@ static int32_t ConstructDeriveParamSet(const KeyParams *keyParams, const Uint8Bu
     struct HksParamSet **deriveParamSet)
 {
     struct HksBlob srcBlob = { message->length, message->val };
-    uint32_t len = keyParams->isDeStorage ? (BASE_HMAC_DERIVE_PARAMS_LEN + EXT_STORAGE_PARAMS_LEN) :
-        BASE_HMAC_DERIVE_PARAMS_LEN;
+    uint32_t len = GetParamLen(keyParams->isDeStorage, BASE_HMAC_DERIVE_PARAMS_LEN);
     struct HksParam *hmacDeriveParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
     if (hmacDeriveParams == NULL) {
         LOGE("Malloc for hmacDeriveParams failed.");
@@ -315,10 +422,7 @@ static int32_t ConstructDeriveParamSet(const KeyParams *keyParams, const Uint8Bu
     hmacDeriveParams[idx++].uint32Param = HMAC_LEN;
     hmacDeriveParams[idx].tag = HKS_TAG_INFO;
     hmacDeriveParams[idx++].blob = srcBlob;
-    if (keyParams->isDeStorage) {
-        hmacDeriveParams[idx].tag = HKS_TAG_AUTH_STORAGE_LEVEL;
-        hmacDeriveParams[idx++].uint32Param = HKS_AUTH_STORAGE_LEVEL_DE;
-    }
+    AddStorageExtParams(hmacDeriveParams, keyParams->isDeStorage, &idx, keyParams->osAccountId);
     int32_t res = ConstructParamSet(deriveParamSet, hmacDeriveParams, idx);
     HcFree(hmacDeriveParams);
     if (res != HAL_SUCCESS) {
@@ -329,8 +433,7 @@ static int32_t ConstructDeriveParamSet(const KeyParams *keyParams, const Uint8Bu
 
 static int32_t ConstructFinishParamSet(const KeyParams *keyParams, struct HksParamSet **finishParamSet)
 {
-    uint32_t len = keyParams->isDeStorage ? (BASE_HMAC_FINISH_PARAMS_LEN + EXT_STORAGE_PARAMS_LEN) :
-        BASE_HMAC_FINISH_PARAMS_LEN;
+    uint32_t len = GetParamLen(keyParams->isDeStorage, BASE_HMAC_FINISH_PARAMS_LEN);
     struct HksParam *hmacFinishParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
     if (hmacFinishParams == NULL) {
         LOGE("Malloc for hmacFinishParams failed.");
@@ -343,10 +446,7 @@ static int32_t ConstructFinishParamSet(const KeyParams *keyParams, struct HksPar
     hmacFinishParams[idx++].uint32Param = HKS_AES_KEY_SIZE_256;
     hmacFinishParams[idx].tag = HKS_TAG_PURPOSE;
     hmacFinishParams[idx++].uint32Param = HKS_KEY_PURPOSE_ENCRYPT | HKS_KEY_PURPOSE_DECRYPT;
-    if (keyParams->isDeStorage) {
-        hmacFinishParams[idx].tag = HKS_TAG_AUTH_STORAGE_LEVEL;
-        hmacFinishParams[idx++].uint32Param = HKS_AUTH_STORAGE_LEVEL_DE;
-    }
+    AddStorageExtParams(hmacFinishParams, keyParams->isDeStorage, &idx, keyParams->osAccountId);
     int32_t res = ConstructParamSet(finishParamSet, hmacFinishParams, idx);
     HcFree(hmacFinishParams);
     if (res != HAL_SUCCESS) {
@@ -388,7 +488,7 @@ static int32_t ComputeHmacWithThreeStage(const KeyParams *keyParams, const Uint8
     struct HksParamSet *finishParamSet = NULL;
     res = ConstructFinishParamSet(keyParams, &finishParamSet);
     if (res != HAL_SUCCESS) {
-        HksFreeParamSet(&deriveParamSet);
+        FreeParamSet(deriveParamSet);
         return res;
     }
     uint8_t handle[sizeof(uint64_t)] = { 0 };
@@ -397,23 +497,23 @@ static int32_t ComputeHmacWithThreeStage(const KeyParams *keyParams, const Uint8
     res = HksInit(&keyAliasBlob, deriveParamSet, &handleDerive, NULL);
     if (res != HKS_SUCCESS) {
         LOGE("Failed to init derive params!");
-        HksFreeParamSet(&deriveParamSet);
-        HksFreeParamSet(&finishParamSet);
+        FreeParamSet(deriveParamSet);
+        FreeParamSet(finishParamSet);
         return HAL_FAILED;
     }
     uint8_t tmpOut[2048] = { 0 };
     struct HksBlob outData = { 2048, tmpOut };
     struct HksBlob inData = { 0, NULL };
     res = HksUpdate(&handleDerive, deriveParamSet, &inData, &outData);
-    HksFreeParamSet(&deriveParamSet);
+    FreeParamSet(deriveParamSet);
     if (res != HKS_SUCCESS) {
         LOGE("Failed to update derive params!");
-        HksFreeParamSet(&finishParamSet);
+        FreeParamSet(finishParamSet);
         return HAL_FAILED;
     }
     struct HksBlob hmacBlob = { outHmac->length, outHmac->val };
     res = HksFinish(&handleDerive, finishParamSet, &inData, &hmacBlob);
-    HksFreeParamSet(&finishParamSet);
+    FreeParamSet(finishParamSet);
     if (res != HKS_SUCCESS || hmacBlob.size != HMAC_LEN) {
         LOGE("Compute hmac with three stage failed! [Res]: %d, [size]: %d", res, hmacBlob.size);
         return HAL_FAILED;
@@ -421,8 +521,8 @@ static int32_t ComputeHmacWithThreeStage(const KeyParams *keyParams, const Uint8
     return HAL_SUCCESS;
 }
 
-static int32_t ConstructHkdfParamSet(bool isDeStorage, bool isAlias, const Uint8Buff *salt, const Uint8Buff *keyInfo,
-    struct HksParamSet **paramSet)
+static int32_t ConstructHkdfParamSet(bool isDeStorage, const KeyParams *keyParams, const Uint8Buff *salt,
+    const Uint8Buff *keyInfo, struct HksParamSet **paramSet)
 {
     struct HksBlob saltBlob = { salt->length, salt->val };
     struct HksBlob keyInfoBlob = { 0, NULL };
@@ -430,8 +530,7 @@ static int32_t ConstructHkdfParamSet(bool isDeStorage, bool isAlias, const Uint8
         keyInfoBlob.size = keyInfo->length;
         keyInfoBlob.data = keyInfo->val;
     }
-    uint32_t len = isDeStorage ? (BASE_HKDF_PARAMS_LEN + EXT_STORAGE_PARAMS_LEN) :
-        BASE_HKDF_PARAMS_LEN;
+    uint32_t len = GetParamLen(isDeStorage, BASE_HKDF_PARAMS_LEN);
     struct HksParam *hkdfParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
     if (hkdfParams == NULL) {
         LOGE("Malloc for hkdfParams failed.");
@@ -449,12 +548,8 @@ static int32_t ConstructHkdfParamSet(bool isDeStorage, bool isAlias, const Uint8
     hkdfParams[idx].tag = HKS_TAG_INFO;
     hkdfParams[idx++].blob = keyInfoBlob;
     hkdfParams[idx].tag = HKS_TAG_IS_KEY_ALIAS;
-    hkdfParams[idx++].boolParam = isAlias;
-    if (isDeStorage) {
-        hkdfParams[idx].tag = HKS_TAG_AUTH_STORAGE_LEVEL;
-        hkdfParams[idx++].uint32Param = HKS_AUTH_STORAGE_LEVEL_DE;
-    }
-
+    hkdfParams[idx++].boolParam = keyParams->keyBuff.isAlias;
+    AddStorageExtParams(hkdfParams, isDeStorage, &idx, keyParams->osAccountId);
     int32_t res = ConstructParamSet(paramSet, hkdfParams, idx);
     HcFree(hkdfParams);
     if (res != HAL_SUCCESS) {
@@ -463,8 +558,7 @@ static int32_t ConstructHkdfParamSet(bool isDeStorage, bool isAlias, const Uint8
     return res;
 }
 
-static int32_t ComputeHkdf(const KeyParams *keyParams, const Uint8Buff *salt, const Uint8Buff *keyInfo,
-    Uint8Buff *outHkdf)
+static int32_t CheckHkdfParams(const KeyParams *keyParams, const Uint8Buff *salt, const Uint8Buff *outHkdf)
 {
     int32_t res = CheckKeyParams(keyParams);
     if (res != HAL_SUCCESS) {
@@ -472,7 +566,13 @@ static int32_t ComputeHkdf(const KeyParams *keyParams, const Uint8Buff *salt, co
     }
     const Uint8Buff *inParams[] = { salt, outHkdf };
     const char *paramTags[] = { "salt", "outHkdf" };
-    res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+    return BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+}
+
+static int32_t ComputeHkdf(const KeyParams *keyParams, const Uint8Buff *salt, const Uint8Buff *keyInfo,
+    Uint8Buff *outHkdf)
+{
+    int32_t res = CheckHkdfParams(keyParams, salt, outHkdf);
     if (res != HAL_SUCCESS) {
         return res;
     }
@@ -481,14 +581,14 @@ static int32_t ComputeHkdf(const KeyParams *keyParams, const Uint8Buff *salt, co
     struct HksBlob derivedKeyBlob = { outHkdf->length, outHkdf->val };
 
     struct HksParamSet *deParamSet = NULL;
-    res = ConstructHkdfParamSet(true, keyParams->keyBuff.isAlias, salt, keyInfo, &deParamSet);
+    res = ConstructHkdfParamSet(true, keyParams, salt, keyInfo, &deParamSet);
     if (res != HAL_SUCCESS) {
         return res;
     }
-    struct HksParamSet *paramSet = NULL;
-    res = ConstructHkdfParamSet(false, keyParams->keyBuff.isAlias, salt, keyInfo, &paramSet);
+    struct HksParamSet *ceParamSet = NULL;
+    res = ConstructHkdfParamSet(false, keyParams, salt, keyInfo, &ceParamSet);
     if (res != HAL_SUCCESS) {
-        HksFreeParamSet(&deParamSet);
+        FreeParamSet(deParamSet);
         return res;
     }
 
@@ -496,14 +596,14 @@ static int32_t ComputeHkdf(const KeyParams *keyParams, const Uint8Buff *salt, co
     if (keyParams->isDeStorage) {
         res = HksDeriveKey(deParamSet, &srcKeyBlob, &derivedKeyBlob);
     } else {
-        res = HksDeriveKey(paramSet, &srcKeyBlob, &derivedKeyBlob);
+        res = HksDeriveKey(ceParamSet, &srcKeyBlob, &derivedKeyBlob);
         if (res != HKS_SUCCESS) {
             res = HksDeriveKey(deParamSet, &srcKeyBlob, &derivedKeyBlob);
         }
     }
     LOGI("[HUKS]: HksDeriveKey quit. [Res]: %d", res);
-    HksFreeParamSet(&deParamSet);
-    HksFreeParamSet(&paramSet);
+    FreeParamSet(deParamSet);
+    FreeParamSet(ceParamSet);
     if (res != HKS_SUCCESS) {
         LOGE("[HUKS]: HksDeriveKey fail. [Res]: %d", res);
         return HAL_FAILED;
@@ -512,13 +612,12 @@ static int32_t ComputeHkdf(const KeyParams *keyParams, const Uint8Buff *salt, co
 }
 
 static int32_t ConstructPseudonymParamSet(const KeyParams *keyParams, const Uint8Buff *pskKeyAlias,
-    const struct HksBlob *extInfoBlob, struct HksParamSet **paramSet, uint32_t outLen)
+    const struct HksBlob *extInfoBlob, uint32_t outLen, struct HksParamSet **paramSet)
 {
     struct HksBlob saltBlob = { strlen(PSEUDONYM_KEY_FACTOR), (uint8_t *)PSEUDONYM_KEY_FACTOR };
     struct HksBlob keyInfoBlob = { strlen(PSEUDONYM_KEY_LEBEL), (uint8_t *)PSEUDONYM_KEY_LEBEL };
     struct HksBlob pskAliasBlob = { pskKeyAlias->length, pskKeyAlias->val };
-    uint32_t len = keyParams->isDeStorage ? (BASE_COMPUTE_PSEUDONYM_PSK_PARAMS_LEN + EXT_STORAGE_PARAMS_LEN) :
-        BASE_COMPUTE_PSEUDONYM_PSK_PARAMS_LEN;
+    uint32_t len = GetParamLen(keyParams->isDeStorage, BASE_COMPUTE_PSEUDONYM_PSK_PARAMS_LEN);
     struct HksParam *hkdfParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
     if (hkdfParams == NULL) {
         LOGE("Malloc for hkdfParams failed.");
@@ -547,21 +646,13 @@ static int32_t ConstructPseudonymParamSet(const KeyParams *keyParams, const Uint
     hkdfParams[idx++].blob = pskAliasBlob;
     hkdfParams[idx].tag = HKS_TAG_EXT_INFO;
     hkdfParams[idx++].blob = *extInfoBlob;
-    if (keyParams->isDeStorage) {
-        hkdfParams[idx].tag = HKS_TAG_AUTH_STORAGE_LEVEL;
-        hkdfParams[idx++].uint32Param = HKS_AUTH_STORAGE_LEVEL_DE;
-    }
+    AddStorageExtParams(hkdfParams, keyParams->isDeStorage, &idx, keyParams->osAccountId);
     int32_t res = ConstructParamSet(paramSet, hkdfParams, idx);
     HcFree(hkdfParams);
-    if (res != HAL_SUCCESS) {
-        LOGE("Construct hkdf param set failed, res = %d", res);
-    }
     return res;
 }
 
-// pseudonym psk alias：sha256(serviceType bytes+peerAuthId bytes+{0x00, 0x07})
-static int32_t ComputePseudonymPsk(const KeyParams *keyParams, const Uint8Buff *pskKeyAlias,
-    const Uint8Buff *extInfo, Uint8Buff *outPsk)
+static int32_t CheckPskParams(const KeyParams *keyParams, const Uint8Buff *pskKeyAlias, const Uint8Buff *outPsk)
 {
     int32_t res = CheckKeyParams(keyParams);
     if (res != HAL_SUCCESS) {
@@ -569,7 +660,14 @@ static int32_t ComputePseudonymPsk(const KeyParams *keyParams, const Uint8Buff *
     }
     const Uint8Buff *inParams[] = { pskKeyAlias, outPsk };
     const char *paramTags[] = { "pskKeyAlias", "outPsk" };
-    res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+    return BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+}
+
+// pseudonym psk alias：sha256(serviceType bytes+peerAuthId bytes+{0x00, 0x07})
+static int32_t ComputePseudonymPsk(const KeyParams *keyParams, const Uint8Buff *pskKeyAlias,
+    const Uint8Buff *extInfo, Uint8Buff *outPsk)
+{
+    int32_t res = CheckPskParams(keyParams, pskKeyAlias, outPsk);
     if (res != HAL_SUCCESS) {
         return res;
     }
@@ -582,21 +680,20 @@ static int32_t ComputePseudonymPsk(const KeyParams *keyParams, const Uint8Buff *
         extInfoBlob.size = extInfo->length;
     }
     struct HksParamSet *paramSet = NULL;
-    res = ConstructPseudonymParamSet(keyParams, pskKeyAlias, &extInfoBlob, &paramSet, outPsk->length);
+    res = ConstructPseudonymParamSet(keyParams, pskKeyAlias, &extInfoBlob, outPsk->length, &paramSet);
     if (res != HAL_SUCCESS) {
+        LOGE("Construct param set failed!");
         return res;
     }
 
     LOGI("[HUKS]: HksDeriveKey enter.");
     res = HksDeriveKey(paramSet, &srcKeyBlob, &derivedKeyBlob);
+    FreeParamSet(paramSet);
     LOGI("[HUKS]: HksDeriveKey quit. [Res]: %d", res);
     if (res != HKS_SUCCESS) {
         LOGE("[HUKS]: HksDeriveKey fail. [Res]: %d", res);
-        HksFreeParamSet(&paramSet);
         return HAL_FAILED;
     }
-
-    HksFreeParamSet(&paramSet);
     return HAL_SUCCESS;
 }
 
@@ -665,11 +762,30 @@ static int32_t GetExtInfoByParamSet(const struct HksParamSet *outParamSet, Uint8
     return HAL_SUCCESS;
 }
 
-static int32_t GetKeyExtInfo(const Uint8Buff *keyAlias, Uint8Buff *outExtInfo, bool isDeStorage)
+static int32_t ConstructGetKeyExtInfoParamSet(const KeyParams *keyParams, struct HksParamSet **paramSet)
 {
-    const Uint8Buff *inParams[] = { keyAlias };
-    const char *paramTags[] = { "keyAlias" };
-    int32_t res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+    uint32_t len = GetParamLen(keyParams->isDeStorage, 0);
+    if (len == 0) {
+        return HAL_SUCCESS;
+    }
+    struct HksParam *getParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (getParams == NULL) {
+        LOGE("Malloc for getParams failed.");
+        return HAL_ERR_BAD_ALLOC;
+    }
+    uint32_t idx = 0;
+    AddStorageExtParams(getParams, keyParams->isDeStorage, &idx, keyParams->osAccountId);
+    int32_t res = ConstructParamSet(paramSet, getParams, idx);
+    HcFree(getParams);
+    if (res != HAL_SUCCESS) {
+        LOGE("Failed to construct get param set, res: %d", res);
+    }
+    return res;
+}
+
+static int32_t GetKeyExtInfo(const KeyParams *keyParams, Uint8Buff *outExtInfo)
+{
+    int32_t res = CheckKeyParams(keyParams);
     if (res != HAL_SUCCESS) {
         return res;
     }
@@ -678,48 +794,39 @@ static int32_t GetKeyExtInfo(const Uint8Buff *keyAlias, Uint8Buff *outExtInfo, b
         return HAL_ERR_NULL_PTR;
     }
     struct HksParamSet *paramSet = NULL;
-    if (isDeStorage) {
-        struct HksParam hksParams[] = {
-            {
-                .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
-                .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE
-            }
-        };
-        res = ConstructParamSet(&paramSet, hksParams, CAL_ARRAY_SIZE(hksParams));
-        if (res != HAL_SUCCESS) {
-            LOGE("Failed to construct get param!");
-            return res;
-        }
+    res = ConstructGetKeyExtInfoParamSet(keyParams, &paramSet);
+    if (res != HAL_SUCCESS) {
+        return res;
     }
     struct HksParamSet *outParamSet = NULL;
     res = ConstructOutParamSet(&outParamSet);
     if (res != HAL_SUCCESS) {
-        if (paramSet != NULL) {
-            HksFreeParamSet(&paramSet);
-        }
+        FreeParamSet(paramSet);
         return res;
     }
-    struct HksBlob keyAliasBlob = { keyAlias->length, keyAlias->val };
+    struct HksBlob keyAliasBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
     res = HksGetKeyParamSet(&keyAliasBlob, paramSet, outParamSet);
-    if (paramSet != NULL) {
-        HksFreeParamSet(&paramSet);
-    }
+    FreeParamSet(paramSet);
     if (res != HKS_SUCCESS) {
         LOGE("Failed to get key param set!");
-        HksFreeParamSet(&outParamSet);
+        FreeParamSet(outParamSet);
         return HAL_FAILED;
     }
     res = GetExtInfoByParamSet(outParamSet, outExtInfo);
-    HksFreeParamSet(&outParamSet);
+    FreeParamSet(outParamSet);
     return res;
 }
 
-static int32_t CheckAesGcmEncryptParam(const Uint8Buff *key, const Uint8Buff *plain, const GcmParam *encryptInfo,
-    Uint8Buff *outCipher)
+static int32_t CheckAesGcmEncryptParam(const KeyParams *keyParams, const Uint8Buff *plain,
+    const GcmParam *encryptInfo, Uint8Buff *outCipher)
 {
-    const Uint8Buff *inParams[] = { key, plain, outCipher };
-    const char* paramTags[] = { "key", "plain", "outCipher" };
-    int32_t res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+    int32_t res = CheckKeyParams(keyParams);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+    const Uint8Buff *inParams[] = { plain, outCipher };
+    const char* paramTags[] = { "plain", "outCipher" };
+    res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
     if (res != HAL_SUCCESS) {
         return res;
     }
@@ -734,77 +841,80 @@ static int32_t CheckAesGcmEncryptParam(const Uint8Buff *key, const Uint8Buff *pl
     return HAL_SUCCESS;
 }
 
-static int32_t ConstructAesGcmEncryptParamSet(const GcmParam *encryptInfo, bool isAlias, struct HksParamSet **paramSet)
+static int32_t ConstructAesGcmEncryptParamSet(const GcmParam *encryptInfo, const KeyParams *keyParams,
+    struct HksParamSet **paramSet)
 {
-    struct HksParam encryptParam[] = {
-        {
-            .tag = HKS_TAG_PURPOSE,
-            .uint32Param = HKS_KEY_PURPOSE_ENCRYPT
-        }, {
-            .tag = HKS_TAG_ALGORITHM,
-            .uint32Param = HKS_ALG_AES
-        }, {
-            .tag = HKS_TAG_BLOCK_MODE,
-            .uint32Param = HKS_MODE_GCM
-        }, {
-            .tag = HKS_TAG_PADDING,
-            .uint32Param = HKS_PADDING_NONE
-        }, {
-            .tag = HKS_TAG_NONCE,
-            .blob = { encryptInfo->nonceLen, encryptInfo->nonce }
-        }, {
-            .tag = HKS_TAG_ASSOCIATED_DATA,
-            .blob = { encryptInfo->aadLen, encryptInfo->aad }
-        }, {
-            .tag = HKS_TAG_IS_KEY_ALIAS,
-            .boolParam = isAlias
-        }
-    };
-
-    int32_t res = ConstructParamSet(paramSet, encryptParam, CAL_ARRAY_SIZE(encryptParam));
+    struct HksBlob nonceBlob = { encryptInfo->nonceLen, encryptInfo->nonce };
+    struct HksBlob aadBlob = { encryptInfo->aadLen, encryptInfo->aad };
+    uint32_t len = GetParamLen(keyParams->isDeStorage, BASE_ENCRYPT_PARAMS_LEN);
+    struct HksParam *encryptParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (encryptParams == NULL) {
+        LOGE("Malloc for encryptParams failed.");
+        return HAL_ERR_BAD_ALLOC;
+    }
+    uint32_t idx = 0;
+    encryptParams[idx].tag = HKS_TAG_PURPOSE;
+    encryptParams[idx++].uint32Param = HKS_KEY_PURPOSE_ENCRYPT;
+    encryptParams[idx].tag = HKS_TAG_ALGORITHM;
+    encryptParams[idx++].uint32Param = HKS_ALG_AES;
+    encryptParams[idx].tag = HKS_TAG_BLOCK_MODE;
+    encryptParams[idx++].uint32Param = HKS_MODE_GCM;
+    encryptParams[idx].tag = HKS_TAG_PADDING;
+    encryptParams[idx++].uint32Param = HKS_PADDING_NONE;
+    encryptParams[idx].tag = HKS_TAG_NONCE;
+    encryptParams[idx++].blob = nonceBlob;
+    encryptParams[idx].tag = HKS_TAG_ASSOCIATED_DATA;
+    encryptParams[idx++].blob = aadBlob;
+    encryptParams[idx].tag = HKS_TAG_IS_KEY_ALIAS;
+    encryptParams[idx++].boolParam = keyParams->keyBuff.isAlias;
+    AddStorageExtParams(encryptParams, keyParams->isDeStorage, &idx, keyParams->osAccountId);
+    int32_t res = ConstructParamSet(paramSet, encryptParams, idx);
+    HcFree(encryptParams);
     if (res != HAL_SUCCESS) {
-        LOGE("construct param set failed, res = %d", res);
+        LOGE("Failed to construct encrypt param set, res: %d", res);
     }
     return res;
 }
 
-static int32_t AesGcmEncrypt(const Uint8Buff *key, const Uint8Buff *plain,
-    const GcmParam *encryptInfo, bool isAlias, Uint8Buff *outCipher)
+static int32_t AesGcmEncrypt(const KeyParams *keyParams, const Uint8Buff *plain, const GcmParam *encryptInfo,
+    Uint8Buff *outCipher)
 {
-    int32_t res = CheckAesGcmEncryptParam(key, plain, encryptInfo, outCipher);
+    int32_t res = CheckAesGcmEncryptParam(keyParams, plain, encryptInfo, outCipher);
     if (res != HAL_SUCCESS) {
         return res;
     }
 
-    struct HksBlob keyBlob = { key->length, key->val };
+    struct HksBlob keyBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
     struct HksBlob plainBlob = { plain->length, plain->val };
     struct HksBlob cipherBlob = { outCipher->length, outCipher->val };
 
     struct HksParamSet *paramSet = NULL;
-    res = ConstructAesGcmEncryptParamSet(encryptInfo, isAlias, &paramSet);
+    res = ConstructAesGcmEncryptParamSet(encryptInfo, keyParams, &paramSet);
     if (res != HAL_SUCCESS) {
         return res;
     }
 
     LOGI("[HUKS]: HksEncrypt enter.");
     res = HksEncrypt(&keyBlob, paramSet, &plainBlob, &cipherBlob);
+    FreeParamSet(paramSet);
     LOGI("[HUKS]: HksEncrypt quit. [Res]: %d", res);
     if (res != HKS_SUCCESS) {
         LOGE("[HUKS]: HksEncrypt fail. [Res]: %d", res);
-        HksFreeParamSet(&paramSet);
         return HAL_FAILED;
     }
-
-    HksFreeParamSet(&paramSet);
     return HAL_SUCCESS;
 }
 
-static int32_t CheckAesGcmDecryptParam(const Uint8Buff *key, const Uint8Buff *cipher, const GcmParam *decryptInfo,
-    Uint8Buff *outPlain)
+static int32_t CheckAesGcmDecryptParam(const KeyParams *keyParams, const Uint8Buff *cipher,
+    const GcmParam *decryptInfo, Uint8Buff *outPlain)
 {
-    const Uint8Buff *inParams[] = { key, cipher, outPlain };
-    const char *paramTags[] = { "key", "cipher", "outPlain" };
-    int32_t res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+    int32_t res = CheckKeyParams(keyParams);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+    const Uint8Buff *inParams[] = { cipher, outPlain };
+    const char *paramTags[] = { "cipher", "outPlain" };
+    res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
     if (res != HAL_SUCCESS) {
         return res;
     }
@@ -819,67 +929,67 @@ static int32_t CheckAesGcmDecryptParam(const Uint8Buff *key, const Uint8Buff *ci
     return HAL_SUCCESS;
 }
 
-static int32_t ConstructAesGcmDecryptParamSet(const GcmParam *decryptInfo, bool isAlias, struct HksParamSet **paramSet)
+static int32_t ConstructAesGcmDecryptParamSet(const GcmParam *decryptInfo, const KeyParams *keyParams,
+    struct HksParamSet **paramSet)
 {
-    struct HksParam decryptParam[] = {
-        {
-            .tag = HKS_TAG_PURPOSE,
-            .uint32Param = HKS_KEY_PURPOSE_DECRYPT
-        }, {
-            .tag = HKS_TAG_ALGORITHM,
-            .uint32Param = HKS_ALG_AES
-        }, {
-            .tag = HKS_TAG_BLOCK_MODE,
-            .uint32Param = HKS_MODE_GCM
-        }, {
-            .tag = HKS_TAG_PADDING,
-            .uint32Param = HKS_PADDING_NONE
-        }, {
-            .tag = HKS_TAG_NONCE,
-            .blob = { decryptInfo->nonceLen, decryptInfo->nonce }
-        }, {
-            .tag = HKS_TAG_ASSOCIATED_DATA,
-            .blob = { decryptInfo->aadLen, decryptInfo->aad }
-        }, {
-            .tag = HKS_TAG_IS_KEY_ALIAS,
-            .boolParam = isAlias
-        }
-    };
-    int32_t res = ConstructParamSet(paramSet, decryptParam, CAL_ARRAY_SIZE(decryptParam));
+    struct HksBlob nonceBlob = { decryptInfo->nonceLen, decryptInfo->nonce };
+    struct HksBlob aadBlob = { decryptInfo->aadLen, decryptInfo->aad };
+    uint32_t len = GetParamLen(keyParams->isDeStorage, BASE_DECRYPT_PARAMS_LEN);
+    struct HksParam *decryptParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (decryptParams == NULL) {
+        LOGE("Malloc for decryptParams failed.");
+        return HAL_ERR_BAD_ALLOC;
+    }
+    uint32_t idx = 0;
+    decryptParams[idx].tag = HKS_TAG_PURPOSE;
+    decryptParams[idx++].uint32Param = HKS_KEY_PURPOSE_DECRYPT;
+    decryptParams[idx].tag = HKS_TAG_ALGORITHM;
+    decryptParams[idx++].uint32Param = HKS_ALG_AES;
+    decryptParams[idx].tag = HKS_TAG_BLOCK_MODE;
+    decryptParams[idx++].uint32Param = HKS_MODE_GCM;
+    decryptParams[idx].tag = HKS_TAG_PADDING;
+    decryptParams[idx++].uint32Param = HKS_PADDING_NONE;
+    decryptParams[idx].tag = HKS_TAG_NONCE;
+    decryptParams[idx++].blob = nonceBlob;
+    decryptParams[idx].tag = HKS_TAG_ASSOCIATED_DATA;
+    decryptParams[idx++].blob = aadBlob;
+    decryptParams[idx].tag = HKS_TAG_IS_KEY_ALIAS;
+    decryptParams[idx++].boolParam = keyParams->keyBuff.isAlias;
+    AddStorageExtParams(decryptParams, keyParams->isDeStorage, &idx, keyParams->osAccountId);
+    int32_t res = ConstructParamSet(paramSet, decryptParams, idx);
+    HcFree(decryptParams);
     if (res != HAL_SUCCESS) {
-        LOGE("construct param set failed, res = %d", res);
+        LOGE("Failed to construct decrypt param set, res: %d", res);
     }
     return res;
 }
 
-static int32_t AesGcmDecrypt(const Uint8Buff *key, const Uint8Buff *cipher,
-    const GcmParam *decryptInfo, bool isAlias, Uint8Buff *outPlain)
+static int32_t AesGcmDecrypt(const KeyParams *keyParams, const Uint8Buff *cipher, const GcmParam *decryptInfo,
+    Uint8Buff *outPlain)
 {
-    int32_t res = CheckAesGcmDecryptParam(key, cipher, decryptInfo, outPlain);
+    int32_t res = CheckAesGcmDecryptParam(keyParams, cipher, decryptInfo, outPlain);
     if (res != HAL_SUCCESS) {
         return res;
     }
 
-    struct HksBlob keyBlob = { key->length, key->val };
+    struct HksBlob keyBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
     struct HksBlob cipherBlob = { cipher->length, cipher->val };
     struct HksBlob plainBlob = { outPlain->length, outPlain->val };
 
     struct HksParamSet *paramSet = NULL;
-    res = ConstructAesGcmDecryptParamSet(decryptInfo, isAlias, &paramSet);
+    res = ConstructAesGcmDecryptParamSet(decryptInfo, keyParams, &paramSet);
     if (res != HAL_SUCCESS) {
         return res;
     }
 
     LOGI("[HUKS]: HksDecrypt enter.");
     res = HksDecrypt(&keyBlob, paramSet, &cipherBlob, &plainBlob);
+    FreeParamSet(paramSet);
     LOGI("[HUKS]: HksDecrypt quit. [Res]: %d", res);
     if (res != HKS_SUCCESS) {
         LOGE("[HUKS]: HksDecrypt fail. [Res]: %d", res);
-        HksFreeParamSet(&paramSet);
         return HAL_FAILED;
     }
-
-    HksFreeParamSet(&paramSet);
     return HAL_SUCCESS;
 }
 
@@ -904,57 +1014,59 @@ static int32_t HashToPoint(const Uint8Buff *hash, Algorithm algo, Uint8Buff *out
     return HashToPointX25519(hash, outEcPoint);
 }
 
-static int32_t ConstructInitParamsP256(struct HksParamSet **initParamSet)
+static int32_t ConstructInitParamsP256(struct HksParamSet **initParamSet, const KeyParams *keyParams)
 {
-    struct HksParam agreeParamInit[] = {
-        {
-            .tag = HKS_TAG_ALGORITHM,
-            .uint32Param = HKS_ALG_ECDH
-        }, {
-            .tag = HKS_TAG_PURPOSE,
-            .uint32Param = HKS_KEY_PURPOSE_AGREE
-        }, {
-            .tag = HKS_TAG_KEY_SIZE,
-            .uint32Param = HKS_ECC_KEY_SIZE_256
-        }
-    };
-    int32_t res = ConstructParamSet(initParamSet, agreeParamInit, CAL_ARRAY_SIZE(agreeParamInit));
+    uint32_t len = GetParamLen(keyParams->isDeStorage, BASE_AGREE_INIT_PARAMS_LEN);
+    struct HksParam *initParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (initParams == NULL) {
+        LOGE("Malloc for initParams failed.");
+        return HAL_ERR_BAD_ALLOC;
+    }
+    uint32_t idx = 0;
+    initParams[idx].tag = HKS_TAG_ALGORITHM;
+    initParams[idx++].uint32Param = HKS_ALG_ECDH;
+    initParams[idx].tag = HKS_TAG_PURPOSE;
+    initParams[idx++].uint32Param = HKS_KEY_PURPOSE_AGREE;
+    initParams[idx].tag = HKS_TAG_KEY_SIZE;
+    initParams[idx++].uint32Param = HKS_ECC_KEY_SIZE_256;
+    AddStorageExtParams(initParams, keyParams->isDeStorage, &idx, keyParams->osAccountId);
+    int32_t res = ConstructParamSet(initParamSet, initParams, idx);
+    HcFree(initParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct init param set failed for P256, res = %d", res);
+        LOGE("Construct init param set failed, res = %d", res);
     }
     return res;
 }
 
-static int32_t ConstructFinishParamsP256(struct HksParamSet **finishParamSet,
+static int32_t ConstructFinishParamsP256(struct HksParamSet **finishParamSet, const KeyParams *keyParams,
     const struct HksBlob *sharedKeyAliasBlob)
 {
-    struct HksParam agreeParamFinish[] = {
-        {
-            .tag = HKS_TAG_KEY_STORAGE_FLAG,
-            .uint32Param = HKS_STORAGE_PERSISTENT
-        }, {
-            .tag = HKS_TAG_IS_KEY_ALIAS,
-            .boolParam = true
-        }, {
-            .tag = HKS_TAG_ALGORITHM,
-            .uint32Param = HKS_ALG_AES
-        }, {
-            .tag = HKS_TAG_KEY_SIZE,
-            .uint32Param = HKS_AES_KEY_SIZE_256
-        }, {
-            .tag = HKS_TAG_PURPOSE,
-            .uint32Param = HKS_KEY_PURPOSE_DERIVE
-        }, {
-            .tag = HKS_TAG_DIGEST,
-            .uint32Param = HKS_DIGEST_SHA256
-        }, {
-            .tag = HKS_TAG_KEY_ALIAS,
-            .blob = *sharedKeyAliasBlob
-        }
-    };
-    int32_t res = ConstructParamSet(finishParamSet, agreeParamFinish, CAL_ARRAY_SIZE(agreeParamFinish));
+    uint32_t len = GetParamLen(keyParams->isDeStorage, BASE_AGREE_FINISH_PARAMS_LEN);
+    struct HksParam *finishParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (finishParams == NULL) {
+        LOGE("Malloc for finishParams failed.");
+        return HAL_ERR_BAD_ALLOC;
+    }
+    uint32_t idx = 0;
+    finishParams[idx].tag = HKS_TAG_KEY_STORAGE_FLAG;
+    finishParams[idx++].uint32Param = HKS_STORAGE_PERSISTENT;
+    finishParams[idx].tag = HKS_TAG_IS_KEY_ALIAS;
+    finishParams[idx++].boolParam = true;
+    finishParams[idx].tag = HKS_TAG_ALGORITHM;
+    finishParams[idx++].uint32Param = HKS_ALG_AES;
+    finishParams[idx].tag = HKS_TAG_KEY_SIZE;
+    finishParams[idx++].uint32Param = HKS_AES_KEY_SIZE_256;
+    finishParams[idx].tag = HKS_TAG_PURPOSE;
+    finishParams[idx++].uint32Param = HKS_KEY_PURPOSE_DERIVE;
+    finishParams[idx].tag = HKS_TAG_DIGEST;
+    finishParams[idx++].uint32Param = HKS_DIGEST_SHA256;
+    finishParams[idx].tag = HKS_TAG_KEY_ALIAS;
+    finishParams[idx++].blob = *sharedKeyAliasBlob;
+    AddStorageExtParams(finishParams, keyParams->isDeStorage, &idx, keyParams->osAccountId);
+    int32_t res = ConstructParamSet(finishParamSet, finishParams, idx);
+    HcFree(finishParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct finish param set failed for P256, res = %d", res);
+        LOGE("Construct finish param set failed, res = %d", res);
     }
     return res;
 }
@@ -964,13 +1076,13 @@ static int32_t AgreeSharedSecretWithStorageP256(const KeyParams *priKeyParams, c
 {
     struct HksParamSet *initParamSet = NULL;
     struct HksParamSet *finishParamSet = NULL;
-    int32_t res = ConstructInitParamsP256(&initParamSet);
+    int32_t res = ConstructInitParamsP256(&initParamSet, priKeyParams);
     if (res != HAL_SUCCESS) {
         return res;
     }
-    res = ConstructFinishParamsP256(&finishParamSet, sharedKeyAliasBlob);
+    res = ConstructFinishParamsP256(&finishParamSet, priKeyParams, sharedKeyAliasBlob);
     if (res != HAL_SUCCESS) {
-        HksFreeParamSet(&initParamSet);
+        FreeParamSet(initParamSet);
         return res;
     }
     struct HksBlob priKeyAliasBlob = { priKeyParams->keyBuff.keyLen, priKeyParams->keyBuff.key };
@@ -1003,8 +1115,8 @@ static int32_t AgreeSharedSecretWithStorageP256(const KeyParams *priKeyParams, c
             break;
         }
     } while (0);
-    HksFreeParamSet(&initParamSet);
-    HksFreeParamSet(&finishParamSet);
+    FreeParamSet(initParamSet);
+    FreeParamSet(finishParamSet);
     return res;
 }
 
@@ -1013,8 +1125,7 @@ static int32_t ConstructAgreeWithStorageParams(struct HksParamSet **paramSet, ui
 {
     struct HksBlob priKeyBlob = { priKeyParams->keyBuff.keyLen, priKeyParams->keyBuff.key };
     struct HksBlob pubKeyBlob = { pubKeyBuff->keyLen, pubKeyBuff->key };
-    uint32_t len = priKeyParams->isDeStorage ? (BASE_AGREE_WITH_STORAGE_PARAMS_LEN + EXT_STORAGE_PARAMS_LEN) :
-        BASE_AGREE_WITH_STORAGE_PARAMS_LEN;
+    uint32_t len = GetParamLen(priKeyParams->isDeStorage, BASE_AGREE_WITH_STORAGE_PARAMS_LEN);
     struct HksParam *agreeParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
     if (agreeParams == NULL) {
         LOGE("Malloc for agreeParams failed.");
@@ -1039,14 +1150,11 @@ static int32_t ConstructAgreeWithStorageParams(struct HksParamSet **paramSet, ui
     agreeParams[idx++].blob = pubKeyBlob;
     agreeParams[idx].tag = HKS_TAG_AGREE_PUBLIC_KEY_IS_KEY_ALIAS;
     agreeParams[idx++].boolParam = pubKeyBuff->isAlias;
-    if (priKeyParams->isDeStorage) {
-        agreeParams[idx].tag = HKS_TAG_AUTH_STORAGE_LEVEL;
-        agreeParams[idx++].uint32Param = HKS_AUTH_STORAGE_LEVEL_DE;
-    }
+    AddStorageExtParams(agreeParams, priKeyParams->isDeStorage, &idx, priKeyParams->osAccountId);
     int32_t res = ConstructParamSet(paramSet, agreeParams, idx);
     HcFree(agreeParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct param set failed, res = %d", res);
+        LOGE("Construct agree param set failed, res = %d", res);
     }
     return res;
 }
@@ -1082,22 +1190,20 @@ static int32_t AgreeSharedSecretWithStorage(const KeyParams *priKeyParams, const
         return AgreeSharedSecretWithStorageP256(priKeyParams, pubKeyBuff, &sharedKeyAliasBlob);
     }
     struct HksParamSet *deParamSet = NULL;
-    KeyParams deKeyParams = {
+    KeyParams keyParams = {
         .keyBuff = { priKeyParams->keyBuff.key, priKeyParams->keyBuff.keyLen, priKeyParams->keyBuff.isAlias },
-        .isDeStorage = true
+        .isDeStorage = true,
+        .osAccountId = priKeyParams->osAccountId
     };
-    res = ConstructAgreeWithStorageParams(&deParamSet, sharedKeyLen, algo, &deKeyParams, pubKeyBuff);
+    res = ConstructAgreeWithStorageParams(&deParamSet, sharedKeyLen, algo, &keyParams, pubKeyBuff);
     if (res != HAL_SUCCESS) {
         return res;
     }
-    struct HksParamSet *paramSet = NULL;
-    KeyParams keyParams = {
-        .keyBuff = { priKeyParams->keyBuff.key, priKeyParams->keyBuff.keyLen, priKeyParams->keyBuff.isAlias },
-        .isDeStorage = false
-    };
-    res = ConstructAgreeWithStorageParams(&paramSet, sharedKeyLen, algo, &keyParams, pubKeyBuff);
+    struct HksParamSet *ceParamSet = NULL;
+    keyParams.isDeStorage = false;
+    res = ConstructAgreeWithStorageParams(&ceParamSet, sharedKeyLen, algo, &keyParams, pubKeyBuff);
     if (res != HAL_SUCCESS) {
-        HksFreeParamSet(&deParamSet);
+        FreeParamSet(deParamSet);
         return res;
     }
 
@@ -1105,14 +1211,14 @@ static int32_t AgreeSharedSecretWithStorage(const KeyParams *priKeyParams, const
     if (priKeyParams->isDeStorage) {
         res = HksGenerateKey(&sharedKeyAliasBlob, deParamSet, NULL);
     } else {
-        res = HksGenerateKey(&sharedKeyAliasBlob, paramSet, NULL);
+        res = HksGenerateKey(&sharedKeyAliasBlob, ceParamSet, NULL);
         if (res != HKS_SUCCESS) {
             res = HksGenerateKey(&sharedKeyAliasBlob, deParamSet, NULL);
         }
     }
     LOGI("[HUKS]: HksGenerateKey quit. [Res]: %d", res);
-    HksFreeParamSet(&deParamSet);
-    HksFreeParamSet(&paramSet);
+    FreeParamSet(deParamSet);
+    FreeParamSet(ceParamSet);
     if (res != HKS_SUCCESS) {
         LOGE("[HUKS]: HksGenerateKey fail. [Res]: %d", res);
         return HAL_FAILED;
@@ -1120,57 +1226,78 @@ static int32_t AgreeSharedSecretWithStorage(const KeyParams *priKeyParams, const
     return HAL_SUCCESS;
 }
 
-static int32_t AgreeSharedSecret(const KeyBuff *priKey, const KeyBuff *pubKey, Algorithm algo, Uint8Buff *sharedKey)
+static int32_t CheckAgreeParams(const KeyParams *priKeyParams, const KeyBuff *pubKey, const Uint8Buff *sharedKey)
 {
-    CHECK_PTR_RETURN_HAL_ERROR_CODE(priKey, "priKey");
-    CHECK_PTR_RETURN_HAL_ERROR_CODE(priKey->key, "priKey->key");
-    CHECK_LEN_ZERO_RETURN_ERROR_CODE(priKey->keyLen, "priKey->keyLen");
+    int32_t res = CheckKeyParams(priKeyParams);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
     CHECK_PTR_RETURN_HAL_ERROR_CODE(pubKey, "pubKey");
     CHECK_PTR_RETURN_HAL_ERROR_CODE(pubKey->key, "pubKey->key");
     CHECK_LEN_ZERO_RETURN_ERROR_CODE(pubKey->keyLen, "pubKey->keyLen");
     CHECK_PTR_RETURN_HAL_ERROR_CODE(sharedKey, "sharedKey");
     CHECK_PTR_RETURN_HAL_ERROR_CODE(sharedKey->val, "sharedKey->val");
     CHECK_LEN_ZERO_RETURN_ERROR_CODE(sharedKey->length, "sharedKey->length");
+    return HAL_SUCCESS;
+}
+
+static int32_t ConstructAgreeParamSet(const KeyParams *keyParams, Algorithm algo, const Uint8Buff *sharedKey,
+    struct HksParamSet **paramSet)
+{
+    uint32_t len = GetParamLen(keyParams->isDeStorage, BASE_AGREE_PARAMS_LEN);
+    struct HksParam *agreeParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (agreeParams == NULL) {
+        LOGE("Malloc for agreeParams failed.");
+        return HAL_ERR_BAD_ALLOC;
+    }
+    uint32_t idx = 0;
+    agreeParams[idx].tag = HKS_TAG_ALGORITHM;
+    agreeParams[idx++].uint32Param = g_algToHksAlgorithm[algo]; // only support HKS_ALG_X25519 now
+    agreeParams[idx].tag = HKS_TAG_KEY_SIZE;
+    agreeParams[idx++].uint32Param = sharedKey->length * BITS_PER_BYTE;
+    agreeParams[idx].tag = HKS_TAG_IS_KEY_ALIAS;
+    agreeParams[idx++].boolParam = keyParams->keyBuff.isAlias;
+    AddStorageExtParams(agreeParams, keyParams->isDeStorage, &idx, keyParams->osAccountId);
+    int32_t res = ConstructParamSet(paramSet, agreeParams, idx);
+    HcFree(agreeParams);
+    if (res != HAL_SUCCESS) {
+        LOGE("Construct agree param set failed, res = %d", res);
+    }
+    return res;
+}
+
+static int32_t AgreeSharedSecret(const KeyParams *priKeyParams, const KeyBuff *pubKey, Algorithm algo,
+    Uint8Buff *sharedKey)
+{
+    int32_t res = CheckAgreeParams(priKeyParams, pubKey, sharedKey);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
 
     if (g_algToHksAlgorithm[algo] == HKS_ALG_ECC) {
         LOGI("Hks agree key for P256.");
-        return MbedtlsAgreeSharedSecret(priKey, pubKey, sharedKey);
+        KeyBuff priKey = { priKeyParams->keyBuff.key, priKeyParams->keyBuff.keyLen, priKeyParams->keyBuff.isAlias };
+        return MbedtlsAgreeSharedSecret(&priKey, pubKey, sharedKey);
     }
 
-    struct HksBlob priKeyBlob = { priKey->keyLen, priKey->key };
+    struct HksBlob priKeyBlob = { priKeyParams->keyBuff.keyLen, priKeyParams->keyBuff.key };
     struct HksBlob pubKeyBlob = { pubKey->keyLen, pubKey->key };
     struct HksBlob sharedKeyBlob = { sharedKey->length, sharedKey->val };
 
     struct HksParamSet *paramSet = NULL;
-    struct HksParam agreeParam[] = {
-        {
-            .tag = HKS_TAG_ALGORITHM,
-            .uint32Param = g_algToHksAlgorithm[algo] // only support HKS_ALG_X25519 now
-        }, {
-            .tag = HKS_TAG_KEY_SIZE,
-            .uint32Param = sharedKey->length * BITS_PER_BYTE
-        }, {
-            .tag = HKS_TAG_IS_KEY_ALIAS,
-            .boolParam = priKey->isAlias
-        }
-    };
-
-    int32_t res = ConstructParamSet(&paramSet, agreeParam, CAL_ARRAY_SIZE(agreeParam));
+    res = ConstructAgreeParamSet(priKeyParams, algo, sharedKey, &paramSet);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct param set failed, res = %d", res);
         return res;
     }
 
     LOGI("[HUKS]: HksAgreeKey enter.");
     res = HksAgreeKey(paramSet, &priKeyBlob, &pubKeyBlob, &sharedKeyBlob);
+    FreeParamSet(paramSet);
     LOGI("[HUKS]: HksAgreeKey quit. [Res]: %d", res);
     if (res != HKS_SUCCESS) {
         LOGE("[HUKS]: HksAgreeKey fail. [Res]: %d", res);
-        HksFreeParamSet(&paramSet);
         return HAL_FAILED;
     }
-
-    HksFreeParamSet(&paramSet);
     return HAL_SUCCESS;
 }
 
@@ -1221,67 +1348,78 @@ static int32_t BigNumExpMod(const Uint8Buff *base, const Uint8Buff *exp, const c
 }
 
 static int32_t ConstructGenerateKeyPairWithStorageParams(struct HksParamSet **paramSet, Algorithm algo,
-    uint32_t keyLen, KeyPurpose purpose, const struct HksBlob *authIdBlob)
+    uint32_t keyLen, KeyPurpose purpose, const KeyParams *authIdParams)
 {
-    struct HksParam keyParam[] = {
-        {
-            .tag = HKS_TAG_ALGORITHM,
-            .uint32Param = g_algToHksAlgorithm[algo]
-        }, {
-            .tag = HKS_TAG_KEY_STORAGE_FLAG,
-            .uint32Param = HKS_STORAGE_PERSISTENT
-        }, {
-            .tag = HKS_TAG_PURPOSE,
-            .uint32Param = g_purposeToHksKeyPurpose[purpose]
-        }, {
-            .tag = HKS_TAG_KEY_SIZE,
-            .uint32Param = keyLen * BITS_PER_BYTE
-        }, {
-            .tag = HKS_TAG_KEY_AUTH_ID,
-            .blob = *authIdBlob
-        }, {
-            .tag = HKS_TAG_DIGEST,
-            .uint32Param = HKS_DIGEST_SHA256
-        }
-    };
-
-    int32_t res = ConstructParamSet(paramSet, keyParam, CAL_ARRAY_SIZE(keyParam));
+    struct HksBlob authIdBlob = { authIdParams->keyBuff.keyLen, authIdParams->keyBuff.key };
+    uint32_t len = GetParamLen(authIdParams->isDeStorage, BASE_GENERATE_KEY_PAIR_PARAMS_LEN);
+    struct HksParam *generateParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (generateParams == NULL) {
+        LOGE("Malloc for generateParams failed.");
+        return HAL_ERR_BAD_ALLOC;
+    }
+    uint32_t idx = 0;
+    generateParams[idx].tag = HKS_TAG_ALGORITHM;
+    generateParams[idx++].uint32Param = g_algToHksAlgorithm[algo];
+    generateParams[idx].tag = HKS_TAG_KEY_STORAGE_FLAG;
+    generateParams[idx++].uint32Param = HKS_STORAGE_PERSISTENT;
+    generateParams[idx].tag = HKS_TAG_PURPOSE;
+    generateParams[idx++].uint32Param = g_purposeToHksKeyPurpose[purpose];
+    generateParams[idx].tag = HKS_TAG_KEY_SIZE;
+    generateParams[idx++].uint32Param = keyLen * BITS_PER_BYTE;
+    generateParams[idx].tag = HKS_TAG_KEY_AUTH_ID;
+    generateParams[idx++].blob = authIdBlob;
+    generateParams[idx].tag = HKS_TAG_DIGEST;
+    generateParams[idx++].uint32Param = HKS_DIGEST_SHA256;
+    AddStorageExtParams(generateParams, authIdParams->isDeStorage, &idx, authIdParams->osAccountId);
+    int32_t res = ConstructParamSet(paramSet, generateParams, idx);
+    HcFree(generateParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct param set failed, res = %d", res);
-        return res;
+        LOGE("Construct generate key pair param set failed, res = %d", res);
     }
     return res;
 }
 
-static int32_t GenerateKeyPairWithStorage(const Uint8Buff *keyAlias, uint32_t keyLen, Algorithm algo,
-    KeyPurpose purpose, const ExtraInfo *exInfo)
+static int32_t CheckGenerateKeyPairParams(const KeyParams *keyParams, const ExtraInfo *exInfo, uint32_t keyLen)
 {
-    CHECK_PTR_RETURN_HAL_ERROR_CODE(keyAlias, "keyAlias");
-    CHECK_PTR_RETURN_HAL_ERROR_CODE(keyAlias->val, "keyAlias->val");
-    CHECK_LEN_ZERO_RETURN_ERROR_CODE(keyAlias->length, "keyAlias->length");
+    int32_t res = CheckKeyParams(keyParams);
+    if (res != HAL_SUCCESS)  {
+        return res;
+    }
     CHECK_PTR_RETURN_HAL_ERROR_CODE(exInfo, "exInfo");
     CHECK_PTR_RETURN_HAL_ERROR_CODE(exInfo->authId.val, "authId->val");
     CHECK_LEN_ZERO_RETURN_ERROR_CODE(exInfo->authId.length, "authId->length");
     CHECK_LEN_ZERO_RETURN_ERROR_CODE(keyLen, "keyLen");
+    return HAL_SUCCESS;
+}
 
-    struct HksBlob keyAliasBlob = { keyAlias->length, keyAlias->val };
-    struct HksBlob authIdBlob = { exInfo->authId.length, exInfo->authId.val };
-    struct HksParamSet *paramSet = NULL;
-    int32_t res = ConstructGenerateKeyPairWithStorageParams(&paramSet, algo, keyLen, purpose, &authIdBlob);
+static int32_t GenerateKeyPairWithStorage(const KeyParams *keyParams, uint32_t keyLen, Algorithm algo,
+    KeyPurpose purpose, const ExtraInfo *exInfo)
+{
+    int32_t res = CheckGenerateKeyPairParams(keyParams, exInfo, keyLen);
     if (res != HAL_SUCCESS) {
         return res;
     }
 
+    KeyParams authIdParams = {
+        .keyBuff = { exInfo->authId.val, exInfo->authId.length, true },
+        .isDeStorage = keyParams->isDeStorage,
+        .osAccountId = keyParams->osAccountId
+    };
+    struct HksParamSet *paramSet = NULL;
+    res = ConstructGenerateKeyPairWithStorageParams(&paramSet, algo, keyLen, purpose, &authIdParams);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+    struct HksBlob keyAliasBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
+
     LOGI("[HUKS]: HksGenerateKey enter.");
     res = HksGenerateKey(&keyAliasBlob, paramSet, NULL);
+    FreeParamSet(paramSet);
     LOGI("[HUKS]: HksGenerateKey quit. [Res]: %d", res);
     if (res != HKS_SUCCESS) {
         LOGE("[HUKS]: HksGenerateKey fail. [Res]: %d", res);
-        HksFreeParamSet(&paramSet);
         return HAL_FAILED;
     }
-
-    HksFreeParamSet(&paramSet);
     return HAL_SUCCESS;
 }
 
@@ -1396,46 +1534,77 @@ static int32_t GenerateKeyPair(Algorithm algo, Uint8Buff *outPriKey, Uint8Buff *
         goto ERR;
     }
 ERR:
-    HksFreeParamSet(&paramSet);
+    FreeParamSet(paramSet);
     HcFree(outParamSet);
     return res;
 }
 
-static int32_t ExportPublicKey(const Uint8Buff *keyAlias, bool isDeStorage, Uint8Buff *outPubKey)
+static int32_t ConstructExportParams(bool isDeStorage, int32_t osAccountId, struct HksParamSet **paramSet)
 {
-    CHECK_PTR_RETURN_HAL_ERROR_CODE(keyAlias, "keyAlias");
-    CHECK_PTR_RETURN_HAL_ERROR_CODE(keyAlias->val, "keyAlias->val");
-    CHECK_LEN_ZERO_RETURN_ERROR_CODE(keyAlias->length, "keyAlias->length");
+    uint32_t len = GetParamLen(isDeStorage, 0);
+    if (len == 0) {
+        return HAL_SUCCESS;
+    }
+    struct HksParam *exportParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (exportParams == NULL) {
+        LOGE("Malloc for exportParams failed.");
+        return HAL_ERR_BAD_ALLOC;
+    }
+    uint32_t idx = 0;
+    AddStorageExtParams(exportParams, isDeStorage, &idx, osAccountId);
+    int32_t res = ConstructParamSet(paramSet, exportParams, idx);
+    HcFree(exportParams);
+    if (res != HAL_SUCCESS) {
+        LOGE("Failed to construct export param set, res: %d", res);
+    }
+    return res;
+}
+
+static int32_t CheckExportParams(const KeyParams *keyParams, const Uint8Buff *outPubKey)
+{
+    int32_t res = CheckKeyParams(keyParams);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
     CHECK_PTR_RETURN_HAL_ERROR_CODE(outPubKey, "outPubKey");
     CHECK_PTR_RETURN_HAL_ERROR_CODE(outPubKey->val, "outPubKey->val");
     CHECK_LEN_ZERO_RETURN_ERROR_CODE(outPubKey->length, "outPubKey->length");
+    return HAL_SUCCESS;
+}
 
-    struct HksParamSet *deParamSet = NULL;
-    struct HksParam exportParam[] = {
-        {
-            .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
-            .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE
-        }
-    };
-    int32_t res = ConstructParamSet(&deParamSet, exportParam, CAL_ARRAY_SIZE(exportParam));
+static int32_t ExportPublicKey(const KeyParams *keyParams, Uint8Buff *outPubKey)
+{
+    int32_t res = CheckExportParams(keyParams, outPubKey);
     if (res != HAL_SUCCESS) {
-        LOGE("construct export param set failed, res = %d", res);
         return res;
     }
-    struct HksBlob keyAliasBlob = { keyAlias->length, keyAlias->val };
+
+    struct HksParamSet *deParamSet = NULL;
+    res = ConstructExportParams(true, keyParams->osAccountId, &deParamSet);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+    struct HksParamSet *ceParamSet = NULL;
+    res = ConstructExportParams(false, keyParams->osAccountId, &ceParamSet);
+    if (res != HAL_SUCCESS) {
+        FreeParamSet(deParamSet);
+        return res;
+    }
+    struct HksBlob keyAliasBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
     struct HksBlob keyBlob = { outPubKey->length, outPubKey->val };
 
     LOGI("[HUKS]: HksExportPublicKey enter.");
-    if (isDeStorage) {
+    if (keyParams->isDeStorage) {
         res = HksExportPublicKey(&keyAliasBlob, deParamSet, &keyBlob);
     } else {
-        res = HksExportPublicKey(&keyAliasBlob, NULL, &keyBlob);
+        res = HksExportPublicKey(&keyAliasBlob, ceParamSet, &keyBlob);
         if (res != HKS_SUCCESS) {
             res = HksExportPublicKey(&keyAliasBlob, deParamSet, &keyBlob);
         }
     }
     LOGI("[HUKS]: HksExportPublicKey quit. [Res]: %d", res);
-    HksFreeParamSet(&deParamSet);
+    FreeParamSet(deParamSet);
+    FreeParamSet(ceParamSet);
     if (res != HKS_SUCCESS) {
         LOGE("[HUKS]: HksExportPublicKey failed. [Res]: %d", res);
         return HAL_FAILED;
@@ -1444,10 +1613,10 @@ static int32_t ExportPublicKey(const Uint8Buff *keyAlias, bool isDeStorage, Uint
     return HAL_SUCCESS;
 }
 
-static int32_t ConstructSignParams(bool isDeStorage, struct HksParamSet **paramSet, Algorithm algo)
+static int32_t ConstructSignParams(bool isDeStorage, int32_t osAccountId, struct HksParamSet **paramSet,
+    Algorithm algo)
 {
-    uint32_t len = isDeStorage ? (BASE_SIGN_PARAMS_LEN + EXT_STORAGE_PARAMS_LEN) :
-        BASE_SIGN_PARAMS_LEN;
+    uint32_t len = GetParamLen(isDeStorage, BASE_SIGN_PARAMS_LEN);
     struct HksParam *signParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
     if (signParams == NULL) {
         LOGE("Malloc for signParams failed.");
@@ -1460,15 +1629,11 @@ static int32_t ConstructSignParams(bool isDeStorage, struct HksParamSet **paramS
     signParams[idx++].uint32Param = g_algToHksAlgorithm[algo]; // only support HKS_ALG_ED25519 and HKS_ALG_ECC.
     signParams[idx].tag = HKS_TAG_DIGEST;
     signParams[idx++].uint32Param = HKS_DIGEST_SHA256;
-    if (isDeStorage) {
-        signParams[idx].tag = HKS_TAG_AUTH_STORAGE_LEVEL;
-        signParams[idx++].uint32Param = HKS_AUTH_STORAGE_LEVEL_DE;
-    }
-
+    AddStorageExtParams(signParams, isDeStorage, &idx, osAccountId);
     int32_t res = ConstructParamSet(paramSet, signParams, idx);
     HcFree(signParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct param set failed, res = %d", res);
+        LOGE("Construct sign param set failed, res = %d", res);
     }
     return res;
 }
@@ -1493,7 +1658,6 @@ static int32_t Sign(const KeyParams *keyParams, const Uint8Buff *message, Algori
         return res;
     }
 
-    struct HksBlob keyAliasBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
     uint8_t messageHashVal[SHA256_LEN] = { 0 };
     Uint8Buff messageHash = { messageHashVal, SHA256_LEN };
     res = Sha256(message, &messageHash);
@@ -1502,16 +1666,17 @@ static int32_t Sign(const KeyParams *keyParams, const Uint8Buff *message, Algori
         return res;
     }
     struct HksParamSet *deParamSet = NULL;
-    res = ConstructSignParams(true, &deParamSet, algo);
+    res = ConstructSignParams(true, keyParams->osAccountId, &deParamSet, algo);
     if (res != HAL_SUCCESS) {
         return res;
     }
-    struct HksParamSet *paramSet = NULL;
-    res = ConstructSignParams(false, &paramSet, algo);
+    struct HksParamSet *ceParamSet = NULL;
+    res = ConstructSignParams(false, keyParams->osAccountId, &ceParamSet, algo);
     if (res != HAL_SUCCESS) {
-        HksFreeParamSet(&deParamSet);
+        FreeParamSet(deParamSet);
         return res;
     }
+    struct HksBlob keyAliasBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
     struct HksBlob messageBlob = { messageHash.length, messageHash.val };
     struct HksBlob signatureBlob = { outSignature->length, outSignature->val };
 
@@ -1519,14 +1684,14 @@ static int32_t Sign(const KeyParams *keyParams, const Uint8Buff *message, Algori
     if (keyParams->isDeStorage) {
         res = HksSign(&keyAliasBlob, deParamSet, &messageBlob, &signatureBlob);
     } else {
-        res = HksSign(&keyAliasBlob, paramSet, &messageBlob, &signatureBlob);
+        res = HksSign(&keyAliasBlob, ceParamSet, &messageBlob, &signatureBlob);
         if (res != HKS_SUCCESS) {
             res = HksSign(&keyAliasBlob, deParamSet, &messageBlob, &signatureBlob);
         }
     }
     LOGI("[HUKS]: HksSign quit. [Res]: %d", res);
-    HksFreeParamSet(&deParamSet);
-    HksFreeParamSet(&paramSet);
+    FreeParamSet(deParamSet);
+    FreeParamSet(ceParamSet);
     if (res != HKS_SUCCESS) {
         LOGE("[HUKS]: HksSign fail. [Res]: %d", res);
         return HAL_FAILED;
@@ -1535,128 +1700,126 @@ static int32_t Sign(const KeyParams *keyParams, const Uint8Buff *message, Algori
     return HAL_SUCCESS;
 }
 
-static int32_t ConstructVerifyParams(struct HksParamSet **paramSet, Algorithm algo, bool isAlias)
+static int32_t ConstructVerifyParams(struct HksParamSet **paramSet, const KeyParams *keyParams, Algorithm algo)
 {
-    struct HksParam verifyParam[] = {
-        {
-            .tag = HKS_TAG_PURPOSE,
-            .uint32Param = HKS_KEY_PURPOSE_VERIFY
-        }, {
-            .tag = HKS_TAG_ALGORITHM,
-            .uint32Param = g_algToHksAlgorithm[algo] // only support HKS_ALG_ED25519 and HKS_ALG_ECC.
-        }, {
-            .tag = HKS_TAG_IS_KEY_ALIAS,
-            .boolParam = isAlias
-        }, {
-            .tag = HKS_TAG_DIGEST,
-            .uint32Param = HKS_DIGEST_SHA256
-        }
-    };
-
-    int32_t res = ConstructParamSet(paramSet, verifyParam, CAL_ARRAY_SIZE(verifyParam));
+    uint32_t len = GetParamLen(keyParams->isDeStorage, BASE_VERIFY_PARAMS_LEN);
+    struct HksParam *verifyParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (verifyParams == NULL) {
+        LOGE("Malloc for verifyParams failed.");
+        return HAL_ERR_BAD_ALLOC;
+    }
+    uint32_t idx = 0;
+    verifyParams[idx].tag = HKS_TAG_PURPOSE;
+    verifyParams[idx++].uint32Param = HKS_KEY_PURPOSE_VERIFY;
+    verifyParams[idx].tag = HKS_TAG_ALGORITHM;
+    verifyParams[idx++].uint32Param = g_algToHksAlgorithm[algo]; // only support HKS_ALG_ED25519 and HKS_ALG_ECC.
+    verifyParams[idx].tag = HKS_TAG_IS_KEY_ALIAS;
+    verifyParams[idx++].boolParam = keyParams->keyBuff.isAlias;
+    verifyParams[idx].tag = HKS_TAG_DIGEST;
+    verifyParams[idx++].uint32Param = HKS_DIGEST_SHA256;
+    AddStorageExtParams(verifyParams, keyParams->isDeStorage, &idx, keyParams->osAccountId);
+    int32_t res = ConstructParamSet(paramSet, verifyParams, idx);
+    HcFree(verifyParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct param set failed, res = %d", res);
-        return res;
+        LOGE("Construct verify param set failed, res = %d", res);
     }
     return res;
 }
 
-static int32_t Verify(const Uint8Buff *key, const Uint8Buff *message, Algorithm algo,
-    const Uint8Buff *signature, bool isAlias)
+static int32_t CheckVerifyParams(const KeyParams *keyParams, const Uint8Buff *message,
+    const Uint8Buff *signature)
 {
-    struct HksParamSet *paramSet = NULL;
-    const Uint8Buff *inParams[] = { key, message, signature };
-    const char *paramTags[] = { "key", "message", "signature" };
-    int32_t res = BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+    int32_t res = CheckKeyParams(keyParams);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+    const Uint8Buff *inParams[] = { message, signature };
+    const char *paramTags[] = { "message", "signature" };
+    return BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+}
+
+static int32_t Verify(const KeyParams *keyParams, const Uint8Buff *message, Algorithm algo,
+    const Uint8Buff *signature)
+{
+    int32_t res = CheckVerifyParams(keyParams, message, signature);
     if (res != HAL_SUCCESS) {
         return res;
     }
 
-    struct HksBlob keyAliasBlob = { key->length, key->val };
-    Uint8Buff messageHash = { NULL, 0 };
-    messageHash.length = SHA256_LEN;
-    messageHash.val = (uint8_t *)HcMalloc(messageHash.length, 0);
-    if (messageHash.val == NULL) {
-        LOGE("malloc messageHash.data failed.");
-        return HAL_ERR_BAD_ALLOC;
+    uint8_t messageHashVal[SHA256_LEN] = { 0 };
+    Uint8Buff messageHash = { messageHashVal, SHA256_LEN };
+    res = Sha256(message, &messageHash);
+    if (res != HAL_SUCCESS) {
+        LOGE("Sha256 failed.");
+        return res;
     }
-    do {
-        res = Sha256(message, &messageHash);
-        if (res != HAL_SUCCESS) {
-            LOGE("Sha256 failed.");
-            break;
-        }
-        struct HksBlob messageBlob = { messageHash.length, messageHash.val };
-        struct HksBlob signatureBlob = { signature->length, signature->val };
 
-        res = ConstructVerifyParams(&paramSet, algo, isAlias);
-        if (res != HAL_SUCCESS) {
-            break;
-        }
+    struct HksParamSet *paramSet = NULL;
+    res = ConstructVerifyParams(&paramSet, keyParams, algo);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+    struct HksBlob keyAliasBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
+    struct HksBlob messageBlob = { messageHash.length, messageHash.val };
+    struct HksBlob signatureBlob = { signature->length, signature->val };
 
-        LOGI("[HUKS]: HksVerify enter.");
-        res = HksVerify(&keyAliasBlob, paramSet, &messageBlob, &signatureBlob);
-        LOGI("[HUKS]: HksVerify quit. [Res]: %d", res);
-        if ((res != HKS_SUCCESS)) {
-            LOGE("[HUKS]: HksVerify fail. [Res]: %d", res);
-            res = HAL_FAILED;
-            break;
-        }
-        res = HAL_SUCCESS;
-    } while (0);
-    HksFreeParamSet(&paramSet);
-    HcFree(messageHash.val);
-    return res;
+    LOGI("[HUKS]: HksVerify enter.");
+    res = HksVerify(&keyAliasBlob, paramSet, &messageBlob, &signatureBlob);
+    FreeParamSet(paramSet);
+    LOGI("[HUKS]: HksVerify quit. [Res]: %d", res);
+    if ((res != HKS_SUCCESS)) {
+        LOGE("[HUKS]: HksVerify fail. [Res]: %d", res);
+        return HAL_FAILED;
+    }
+    return HAL_SUCCESS;
 }
 
 static int32_t ConstructImportPublicKeyParams(struct HksParamSet **paramSet, Algorithm algo, uint32_t keyLen,
-    const struct HksBlob *authIdBlob, const union KeyRoleInfoUnion *roleInfoUnion)
+    const KeyParams *authIdParams, const union KeyRoleInfoUnion *roleInfoUnion)
 {
     if (g_algToHksAlgorithm[algo] == HKS_ALG_ECC) {
         keyLen = ECC_PK_LEN;
     }
-    struct HksParam importParam[] = {
-        {
-            .tag = HKS_TAG_ALGORITHM,
-            .uint32Param = g_algToHksAlgorithm[algo]
-        }, {
-            .tag = HKS_TAG_KEY_SIZE,
-            .uint32Param = keyLen * BITS_PER_BYTE
-        }, {
-            .tag = HKS_TAG_PADDING,
-            .uint32Param = HKS_PADDING_NONE
-        }, {
-            .tag = HKS_TAG_KEY_AUTH_ID,
-            .blob = *authIdBlob
-        }, {
-            .tag = HKS_TAG_IS_ALLOWED_WRAP,
-            .boolParam = true
-        }, {
-            .tag = HKS_TAG_PURPOSE,
-            .uint32Param = HKS_KEY_PURPOSE_VERIFY
-        }, {
-            .tag = HKS_TAG_KEY_ROLE,
-            .uint32Param = roleInfoUnion->roleInfo
-        }, {
-            .tag = HKS_TAG_DIGEST,
-            .uint32Param = HKS_DIGEST_SHA256
-        }
-    };
-
-    int32_t res = ConstructParamSet(paramSet, importParam, CAL_ARRAY_SIZE(importParam));
+    struct HksBlob authIdBlob = { authIdParams->keyBuff.keyLen, authIdParams->keyBuff.key };
+    uint32_t len = GetParamLen(authIdParams->isDeStorage, BASE_IMPORT_PUB_KEY_PARAMS_LEN);
+    struct HksParam *importParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (importParams == NULL) {
+        LOGE("Malloc for importParams failed.");
+        return HAL_ERR_BAD_ALLOC;
+    }
+    uint32_t idx = 0;
+    importParams[idx].tag = HKS_TAG_ALGORITHM;
+    importParams[idx++].uint32Param = g_algToHksAlgorithm[algo];
+    importParams[idx].tag = HKS_TAG_KEY_SIZE;
+    importParams[idx++].uint32Param = keyLen * BITS_PER_BYTE;
+    importParams[idx].tag = HKS_TAG_PADDING;
+    importParams[idx++].uint32Param = HKS_PADDING_NONE;
+    importParams[idx].tag = HKS_TAG_KEY_AUTH_ID;
+    importParams[idx++].blob = authIdBlob;
+    importParams[idx].tag = HKS_TAG_IS_ALLOWED_WRAP;
+    importParams[idx++].boolParam = true;
+    importParams[idx].tag = HKS_TAG_PURPOSE;
+    importParams[idx++].uint32Param = HKS_KEY_PURPOSE_VERIFY;
+    importParams[idx].tag = HKS_TAG_KEY_ROLE;
+    importParams[idx++].uint32Param = roleInfoUnion->roleInfo;
+    importParams[idx].tag = HKS_TAG_DIGEST;
+    importParams[idx++].uint32Param = HKS_DIGEST_SHA256;
+    AddStorageExtParams(importParams, authIdParams->isDeStorage, &idx, authIdParams->osAccountId);
+    int32_t res = ConstructParamSet(paramSet, importParams, idx);
+    HcFree(importParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct param set failed, res = %d", res);
-        return res;
+        LOGE("Construct import param set failed, res = %d", res);
     }
     return res;
 }
 
-static int32_t ImportPublicKey(const Uint8Buff *keyAlias, const Uint8Buff *pubKey, Algorithm algo,
+static int32_t CheckImportPubKeyParams(const KeyParams *keyParams, const Uint8Buff *pubKey,
     const ExtraInfo *exInfo)
 {
-    CHECK_PTR_RETURN_HAL_ERROR_CODE(keyAlias, "keyAlias");
-    CHECK_PTR_RETURN_HAL_ERROR_CODE(keyAlias->val, "keyAlias->val");
-    CHECK_LEN_ZERO_RETURN_ERROR_CODE(keyAlias->length, "keyAlias->length");
+    int32_t res = CheckKeyParams(keyParams);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
     CHECK_PTR_RETURN_HAL_ERROR_CODE(pubKey, "pubKey");
     CHECK_PTR_RETURN_HAL_ERROR_CODE(pubKey->val, "pubKey->val");
     CHECK_LEN_ZERO_RETURN_ERROR_CODE(pubKey->length, "pubKey->length");
@@ -1664,34 +1827,44 @@ static int32_t ImportPublicKey(const Uint8Buff *keyAlias, const Uint8Buff *pubKe
     CHECK_PTR_RETURN_HAL_ERROR_CODE(exInfo->authId.val, "authId->val");
     CHECK_LEN_ZERO_RETURN_ERROR_CODE(exInfo->authId.length, "authId->length");
     CHECK_LEN_HIGHER_RETURN(exInfo->pairType, PAIR_TYPE_END - 1, "pairType");
+    return HAL_SUCCESS;
+}
 
-    struct HksBlob keyAliasBlob = { keyAlias->length, keyAlias->val };
-    struct HksBlob pubKeyBlob = { pubKey->length, pubKey->val };
+static int32_t ImportPublicKey(const KeyParams *keyParams, const Uint8Buff *pubKey, Algorithm algo,
+    const ExtraInfo *exInfo)
+{
+    int32_t res = CheckImportPubKeyParams(keyParams, pubKey, exInfo);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
 
-    struct HksBlob authIdBlob = { exInfo->authId.length, exInfo->authId.val };
     union KeyRoleInfoUnion roleInfoUnion;
     roleInfoUnion.roleInfoStruct.userType = (uint8_t)exInfo->userType;
     roleInfoUnion.roleInfoStruct.pairType = (uint8_t)exInfo->pairType;
     roleInfoUnion.roleInfoStruct.reserved1 = (uint8_t)0;
     roleInfoUnion.roleInfoStruct.reserved2 = (uint8_t)0;
 
+    KeyParams authIdParams = {
+        .keyBuff = { exInfo->authId.val, exInfo->authId.length, true },
+        .isDeStorage = keyParams->isDeStorage,
+        .osAccountId = keyParams->osAccountId
+    };
     struct HksParamSet *paramSet = NULL;
-
-    int32_t res = ConstructImportPublicKeyParams(&paramSet, algo, pubKey->length, &authIdBlob, &roleInfoUnion);
+    res = ConstructImportPublicKeyParams(&paramSet, algo, pubKey->length, &authIdParams, &roleInfoUnion);
     if (res != HAL_SUCCESS) {
         return res;
     }
+    struct HksBlob keyAliasBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
+    struct HksBlob pubKeyBlob = { pubKey->length, pubKey->val };
 
     LOGI("[HUKS]: HksImportKey enter.");
     res = HksImportKey(&keyAliasBlob, paramSet, &pubKeyBlob);
+    FreeParamSet(paramSet);
     LOGI("[HUKS]: HksImportKey quit. [Res]: %d", res);
     if (res != HKS_SUCCESS) {
         LOGE("[HUKS]: HksImportKey fail. [Res]: %d", res);
-        HksFreeParamSet(&paramSet);
         return HAL_FAILED;
     }
-
-    HksFreeParamSet(&paramSet);
     return HAL_SUCCESS;
 }
 
@@ -1806,26 +1979,30 @@ static bool CheckEcPublicKey(const Uint8Buff *pubKey, Algorithm algo)
     return true;
 }
 
-static int32_t CheckImportSymmetricKeyParam(const Uint8Buff *keyAlias, const Uint8Buff *authToken)
-{
-    const Uint8Buff *inParams[] = { keyAlias, authToken };
-    const char *paramTags[] = { "keyAlias", "authToken" };
-    return BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
-}
-
-static int32_t ConstructImportSymmetricKeyParam(struct HksParamSet **paramSet, uint32_t keyLen, KeyPurpose purpose,
-    const ExtraInfo *exInfo)
+static int32_t InitImportParam(const KeyParams *keyParams, const ExtraInfo *exInfo, struct HksParam **importParam)
 {
     if (exInfo != NULL) {
         CHECK_PTR_RETURN_HAL_ERROR_CODE(exInfo->authId.val, "authId");
         CHECK_LEN_ZERO_RETURN_ERROR_CODE(exInfo->authId.length, "authId");
         CHECK_LEN_HIGHER_RETURN(exInfo->pairType, PAIR_TYPE_END - 1, "pairType");
     }
-    uint32_t len = ((exInfo == NULL) ? BASE_IMPORT_PARAMS_LEN : (BASE_IMPORT_PARAMS_LEN + EXT_IMPORT_PARAMS_LEN));
-    struct HksParam *importParam = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
-    if (importParam == NULL) {
+    uint32_t baseLen = ((exInfo == NULL) ? BASE_IMPORT_PARAMS_LEN : (BASE_IMPORT_PARAMS_LEN + EXT_IMPORT_PARAMS_LEN));
+    uint32_t len = GetParamLen(keyParams->isDeStorage, baseLen);
+    *importParam = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (*importParam == NULL) {
         LOGE("Malloc for importParam failed.");
         return HAL_ERR_BAD_ALLOC;
+    }
+    return HAL_SUCCESS;
+}
+
+static int32_t ConstructImportSymmetricKeyParam(struct HksParamSet **paramSet, const KeyParams *keyParams,
+    uint32_t keyLen, KeyPurpose purpose, const ExtraInfo *exInfo)
+{
+    struct HksParam *importParam = NULL;
+    int32_t res = InitImportParam(keyParams, exInfo, &importParam);
+    if (res != HAL_SUCCESS) {
+        return res;
     }
     uint32_t idx = 0;
     if (exInfo != NULL) {
@@ -1856,43 +2033,48 @@ static int32_t ConstructImportSymmetricKeyParam(struct HksParamSet **paramSet, u
     importParam[idx++].uint32Param = HKS_MODE_GCM;
     importParam[idx].tag = HKS_TAG_DIGEST;
     importParam[idx++].uint32Param = HKS_DIGEST_SHA256;
-
-    int res = ConstructParamSet(paramSet, importParam, idx);
-    if (res != HAL_SUCCESS) {
-        LOGE("Construct decrypt param set failed, res = %d.", res);
-    }
-
+    AddStorageExtParams(importParam, keyParams->isDeStorage, &idx, keyParams->osAccountId);
+    res = ConstructParamSet(paramSet, importParam, idx);
     HcFree(importParam);
     return res;
 }
 
-static int32_t ImportSymmetricKey(const Uint8Buff *keyAlias, const Uint8Buff *authToken, KeyPurpose purpose,
+static int32_t CheckImportSymmetricKeyParams(const KeyParams *keyParams, const Uint8Buff *authToken)
+{
+    int32_t res = CheckKeyParams(keyParams);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+    const Uint8Buff *inParams[] = { authToken };
+    const char *paramTags[] = { "authToken" };
+    return BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
+}
+
+static int32_t ImportSymmetricKey(const KeyParams *keyParams, const Uint8Buff *authToken, KeyPurpose purpose,
     const ExtraInfo *exInfo)
 {
-    int32_t res = CheckImportSymmetricKeyParam(keyAlias, authToken);
+    int32_t res = CheckImportSymmetricKeyParams(keyParams, authToken);
     if (res != HAL_SUCCESS) {
         return res;
     }
 
-    struct HksBlob keyAliasBlob = { keyAlias->length, keyAlias->val };
-    struct HksBlob symKeyBlob = { authToken->length, authToken->val };
     struct HksParamSet *paramSet = NULL;
-    res = ConstructImportSymmetricKeyParam(&paramSet, authToken->length, purpose, exInfo);
+    res = ConstructImportSymmetricKeyParam(&paramSet, keyParams, authToken->length, purpose, exInfo);
     if (res != HAL_SUCCESS) {
         LOGE("construct param set failed, res = %d", res);
         return res;
     }
+    struct HksBlob keyAliasBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
+    struct HksBlob symKeyBlob = { authToken->length, authToken->val };
 
     LOGI("[HUKS]: HksImportKey enter.");
     res = HksImportKey(&keyAliasBlob, paramSet, &symKeyBlob);
+    FreeParamSet(paramSet);
     LOGI("[HUKS]: HksImportKey quit. [Res]: %d", res);
     if (res != HKS_SUCCESS) {
         LOGE("[HUKS]: HksImportKey fail. [Res]: %d", res);
-        HksFreeParamSet(&paramSet);
-        return res;
+        return HAL_FAILED;
     }
-
-    HksFreeParamSet(&paramSet);
     return HAL_SUCCESS;
 }
 

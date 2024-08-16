@@ -50,7 +50,7 @@ ohos_fuzztest("DevAuthCbFuzzTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${deps_adapter_path}:${hal_module_name}",
+    "${deps_adapter_path}:${hal_module_test_name}",
     "${services_path}:deviceauth",
   ]
   external_deps = [

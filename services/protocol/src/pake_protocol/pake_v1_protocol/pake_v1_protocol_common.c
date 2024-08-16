@@ -146,12 +146,13 @@ static void FillDefaultValue(PakeBaseParams *params)
     params->isClient = true;
 }
 
-int32_t InitPakeV1BaseParams(PakeBaseParams *params)
+int32_t InitPakeV1BaseParams(int32_t osAccountId, PakeBaseParams *params)
 {
     if (params == NULL) {
         LOGE("Params is null.");
         return HC_ERR_NULL_PTR;
     }
+    params->osAccountId = osAccountId;
 
     int32_t res = AllocDefaultParams(params);
     if (res != HC_SUCCESS) {
@@ -192,7 +193,7 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
     }
 
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_BASE_INFO, HcStrlen(HICHAIN_SPEKE_BASE_INFO) };
-    KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false };
+    KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false, params->osAccountId };
     res = params->loader->computeHkdf(&keyParams, &(params->salt), &keyInfo, &secret);
     if (res != HC_SUCCESS) {
         LOGE("Derive secret from psk failed, res: %x.", res);
@@ -233,7 +234,11 @@ static int32_t DeriveKeyFromSharedSecret(PakeBaseParams *params)
         goto CLEAN_UP;
     }
 
-    KeyParams keyParams = { { params->sharedSecret.val, params->sharedSecret.length, false }, false };
+    KeyParams keyParams = {
+        .keyBuff = { params->sharedSecret.val, params->sharedSecret.length, false },
+        .isDeStorage = false,
+        .osAccountId = params->osAccountId
+    };
     res = params->loader->computeHkdf(&keyParams, &(params->salt), &keyInfo, &unionKey);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHkdf for unionKey failed, res: %x.", res);
@@ -305,7 +310,8 @@ static int32_t GenerateProof(PakeBaseParams *params)
         goto CLEAN_UP;
     }
 
-    res = params->loader->computeHmac(&(params->hmacKey), &challenge, &(params->kcfData), false);
+    KeyParams keyParams = { { params->hmacKey.val, params->hmacKey.length, false }, false, params->osAccountId };
+    res = params->loader->computeHmac(&keyParams, &challenge, &(params->kcfData));
     if (res != HC_SUCCESS) {
         LOGE("Compute hmac for kcfData failed, res: %x.", res);
         goto CLEAN_UP;
@@ -335,7 +341,8 @@ static int32_t VerifyProof(PakeBaseParams *params)
 
     uint8_t verifyProofVal[HMAC_LEN] = { 0 };
     Uint8Buff verifyProof = { verifyProofVal, HMAC_LEN };
-    res = params->loader->computeHmac(&(params->hmacKey), &challenge, &verifyProof, false);
+    KeyParams keyParams = { { params->hmacKey.val, params->hmacKey.length, false }, false, params->osAccountId };
+    res = params->loader->computeHmac(&keyParams, &challenge, &verifyProof);
     if (res != HC_SUCCESS) {
         LOGE("Compute hmac for kcfData failed, res: %x.", res);
         goto CLEAN_UP;
