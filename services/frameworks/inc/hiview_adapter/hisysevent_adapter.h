@@ -33,8 +33,6 @@
 #define DEFAULT_CRED_TYPE 0
 #define DEFAULT_APPID NULL
 
-static const char *g_opCodeToEvent[] = {"CreateGroup", "DeleteGroup", "AddMember", "AddMember", "DelMember"};
-
 #ifndef DEV_AUTH_HIVIEW_ENABLE
 
 #define DEV_AUTH_REPORT_CALL_EVENT(reqId, funcName, appId, osAccountId, callResult)

@@ -23,6 +23,7 @@
 #include "group_operation_common.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
+#include "hisysevent_adapter.h"
 #include "hitrace_adapter.h"
 #include "string_util.h"
 

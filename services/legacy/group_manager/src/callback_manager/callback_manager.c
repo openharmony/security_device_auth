@@ -23,6 +23,8 @@
 #include "securec.h"
 #include "hisysevent_adapter.h"
 
+static const char *g_opCodeToEvent[] = {"CreateGroup", "DeleteGroup", "AddMember", "AddMember", "DelMember"};
+
 typedef struct {
     char *appId;
     DeviceAuthCallback *callback;
