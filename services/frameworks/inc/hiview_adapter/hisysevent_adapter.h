@@ -34,7 +34,6 @@
 #define DEFAULT_APPID NULL
 
 static const char *g_opCodeToEvent[] = {"CreateGroup", "DeleteGroup", "AddMember", "AddMember", "DelMember"};
-(void)g_opCodeToEvent;
 
 #ifndef DEV_AUTH_HIVIEW_ENABLE
 
