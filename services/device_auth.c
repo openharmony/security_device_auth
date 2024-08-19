@@ -929,6 +929,7 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
         FreeJson(context);
         return res;
     }
+    DEV_AUTH_REPORT_CALL_EVENT(authReqId, AUTH_DEV_EVENT, appId, osAccountId, res);
     SessionInitParams params = { context, *gaCallback };
     res = OpenDevSession(authReqId, appId, &params);
     FreeJson(context);

@@ -21,6 +21,9 @@
 #include "hc_types.h"
 #include "hc_vector.h"
 #include "securec.h"
+#include "hisysevent_adapter.h"
+
+static const char *g_opCodeToEvent[] = {"CreateGroup", "DeleteGroup", "AddMember", "AddMember", "DelMember"};
 
 typedef struct {
     char *appId;
@@ -131,12 +134,25 @@ void ProcessFinishCallback(int64_t reqId, int operationCode, const char *returnD
     LOGE("[OnFinish]: Currently, the service callback is NULL! [ReqId]: %" PRId64, reqId);
 }
 
+static void FaultReportWithOpCode(int operationCode, int errorCode)
+{
+    (void)errorCode;
+    (void)g_opCodeToEvent;
+    if (operationCode < 0 || (unsigned int)operationCode > sizeof(g_opCodeToEvent) / sizeof(g_opCodeToEvent[0])) {
+        LOGE("Invalid operation code! Cannot report this fault!");
+        return;
+    }
+    DEV_AUTH_REPORT_FAULT_EVENT(g_opCodeToEvent[operationCode], errorCode,
+        DEFAULT_CRED_TYPE, DEFAULT_GROUP_TYPE, DEFAULT_APPID);
+}
+
 void ProcessErrorCallback(int64_t reqId, int operationCode, int errorCode, const char *errorReturn,
     const DeviceAuthCallback *callback)
 {
     if ((callback != NULL) && (callback->onError != NULL)) {
         LOGI("[Service][In]: ProcessErrorCallback! [ReqId]: %" PRId64, reqId);
         callback->onError(reqId, operationCode, errorCode, errorReturn);
+        FaultReportWithOpCode(operationCode, errorCode);
         LOGI("[Service][Out]: ProcessErrorCallback!");
         return;
     }
