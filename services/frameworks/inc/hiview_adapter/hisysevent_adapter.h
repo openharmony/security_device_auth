@@ -33,7 +33,7 @@
 #define DEFAULT_CRED_TYPE 0
 #define DEFAULT_APPID NULL
 
-static const char *OP_CODE_TO_EVENT[] = {"CreateGroup", "DeleteGroup", "AddMember", "AddMember", "DelMember"};
+static const char *g_opCodeToEvent[] = {"CreateGroup", "DeleteGroup", "AddMember", "AddMember", "DelMember"};
 
 #ifndef DEV_AUTH_HIVIEW_ENABLE
 
