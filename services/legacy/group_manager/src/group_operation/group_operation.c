@@ -34,6 +34,7 @@
 #include "across_account_group.h"
 #include "identical_account_group.h"
 #include "peer_to_peer_group.h"
+#include "hc_time.h"
 
 static bool IsGroupTypeSupported(int groupType)
 {
@@ -508,7 +509,11 @@ static int32_t CreateGroupInner(int32_t osAccountId, int64_t requestId, const ch
 
 static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams)
 {
+    int64_t startTime = HcGetCurTimeInMillis();
     int32_t res = CreateGroupInner(osAccountId, requestId, appId, createParams);
+    int64_t endTime = HcGetCurTimeInMillis();
+    int64_t elapsedTime = endTime - startTime;
+    LOGI("CreateGroup elapsed time:  %" PRId64 " milliseconds", elapsedTime);
     DEV_AUTH_REPORT_CALL_EVENT(requestId, CREATE_GROUP_EVENT, appId, osAccountId, res);
     return res;
 }
@@ -545,7 +550,11 @@ static int32_t DeleteGroupInner(int32_t osAccountId, int64_t requestId, const ch
 
 static int32_t RequestDeleteGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *disbandParams)
 {
+    int64_t startTime = HcGetCurTimeInMillis();
     int32_t res = DeleteGroupInner(osAccountId, requestId, appId, disbandParams);
+    int64_t endTime = HcGetCurTimeInMillis();
+    int64_t elapsedTime = endTime - startTime;
+    LOGI("DeleteGroup elapsed time:  %" PRId64 " milliseconds", elapsedTime);
     DEV_AUTH_REPORT_CALL_EVENT(requestId, DELETE_GROUP_EVENT, appId, osAccountId, res);
     return res;
 }
@@ -584,7 +593,11 @@ static int32_t DeleteMemberFromGroupInner(int32_t osAccountId, int64_t requestId
 static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t requestId, const char *appId,
     const char *deleteParams)
 {
+    int64_t startTime = HcGetCurTimeInMillis();
     int32_t res = DeleteMemberFromGroupInner(osAccountId, requestId, appId, deleteParams);
+    int64_t endTime = HcGetCurTimeInMillis();
+    int64_t elapsedTime = endTime - startTime;
+    LOGI("DeleteMemberFromGroup elapsed time:  %" PRId64 " milliseconds", elapsedTime);
     DEV_AUTH_REPORT_CALL_EVENT(requestId, DEL_MEMBER_EVENT, appId, osAccountId, res);
     return res;
 }
