@@ -636,6 +636,36 @@ static int32_t GeneratePeerKeyAlias(const TrustedDeviceEntry *peerDeviceEntry, U
     return HC_SUCCESS;
 }
 
+static int32_t CheckSelfKeyAlias(const Uint8Buff *selfKeyAlias, bool isSelfFromUpgrade, int osAccountId,
+    const char *groupId)
+{
+    int32_t ret = GetLoaderInstance()->checkKeyExist(selfKeyAlias, isSelfFromUpgrade, osAccountId);
+    if (ret != HC_SUCCESS) {
+        LOGE("self auth keyPair not exist, need to delete group and devices!");
+        if (DelGroupFromDb(osAccountId, groupId) != HC_SUCCESS) {
+            LOGW("delete group from db failed!");
+            return ret;
+        }
+        LOGI("self auth keyPair not exist, delete group from db successfully!");
+    }
+    return ret;
+}
+
+static int32_t CheckPeerKeyAlias(const Uint8Buff *peerKeyAlias, bool isPeerFromUpgrade, int osAccountId,
+    const char *groupId, const TrustedDeviceEntry *peerDeviceEntry)
+{
+    int32_t ret = GetLoaderInstance()->checkKeyExist(peerKeyAlias, isPeerFromUpgrade, osAccountId);
+    if (ret != HC_SUCCESS) {
+        LOGE("peer auth pubKey not exist, need to delete peer device!");
+        if (DelDeviceFromDb(osAccountId, groupId, peerDeviceEntry) != HC_SUCCESS) {
+            LOGW("delete peer device from db failed!");
+            return ret;
+        }
+        LOGI("peer auth pubKey not exist, delete peer device from db successfully!");
+    }    
+    return ret;
+}
+
 static int32_t ComputeAndSavePsk(int32_t osAccountId, const char *groupId,
     const TrustedDeviceEntry *peerDeviceEntry, const Uint8Buff *sharedKeyAlias)
 {
@@ -666,15 +696,13 @@ static int32_t ComputeAndSavePsk(int32_t osAccountId, const char *groupId,
         return ret;
     }
 
-    ret = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, isSelfFromUpgrade, osAccountId);
+    ret = CheckSelfKeyAlias(&selfKeyAlias, isSelfFromUpgrade, osAccountId, groupId);
     if (ret != HC_SUCCESS) {
-        LOGE("self auth keyPair not exist!");
         return ret;
     }
     bool isPeerFromUpgrade = peerDeviceEntry->upgradeFlag == 1;
-    ret = GetLoaderInstance()->checkKeyExist(&peerKeyAlias, isPeerFromUpgrade, osAccountId);
+    ret = CheckPeerKeyAlias(&peerKeyAlias, isPeerFromUpgrade, osAccountId, groupId, peerDeviceEntry);
     if (ret != HC_SUCCESS) {
-        LOGE("peer auth pubKey not exist!");
         return ret;
     }
     uint8_t peerPubKeyVal[PAKE_ED25519_KEY_PAIR_LEN] = { 0 };
