@@ -831,6 +831,28 @@ int32_t DelGroupFromDb(int32_t osAccountId, const char *groupId)
     return result;
 }
 
+int32_t DelDeviceFromDb(int32_t osAccountId, const char *groupId, const TrustedDeviceEntry *deviceEntry)
+{
+    if (groupId == NULL || deviceEntry == NULL) {
+        LOGE("The input groupId or deviceEntry is NULL!");
+        return HC_ERR_NULL_PTR;
+    }
+    const char *udid = StringGet(&deviceEntry->udid);
+    if (udid == NULL) {
+        LOGE("The input udid is NULL!");
+        return HC_ERR_NULL_PTR;
+    }
+    QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
+    queryDeviceParams.groupId = groupId;
+    queryDeviceParams.udid = udid;
+    int32_t result = DelTrustedDevice(osAccountId, &queryDeviceParams);
+    if (result != HC_SUCCESS) {
+        LOGW("delete device failed, result:%d", result);
+        return result;
+    }
+    return SaveOsAccountDb(osAccountId);
+}
+
 int32_t ConvertGroupIdToJsonStr(const char *groupId, char **returnJsonStr)
 {
     if ((groupId == NULL) || (returnJsonStr == NULL)) {
