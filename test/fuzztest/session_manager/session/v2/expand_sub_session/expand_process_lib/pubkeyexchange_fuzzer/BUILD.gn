@@ -88,6 +88,8 @@ ohos_fuzztest("PubkeyExchangeFuzzTest") {
     "${group_manager_path}/src/broadcast_manager_mock/broadcast_manager_mock.c",
     "${group_manager_path}/src/group_operation/group_operation_common/group_operation_common.c",
     "${identity_manager_path}/src/cert_operation.c",
+    "${mk_agree_path}/src/mock/key_manager_mock.c",
+    "${privacy_enhancement_path}/src/mock/pseudonym_manager_mock.c",
     "${services_path}/frameworks/src/hiview_adapter/performance_dumper.c",
   ]
 
