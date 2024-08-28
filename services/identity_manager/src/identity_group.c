@@ -636,7 +636,7 @@ static int32_t GeneratePeerKeyAlias(const TrustedDeviceEntry *peerDeviceEntry, U
     return HC_SUCCESS;
 }
 
-static int32_t CheckSelfKeyAlias(const Uint8Buff *selfKeyAlias, bool isSelfFromUpgrade, int osAccountId,
+static int32_t CheckSelfKeyAlias(const Uint8Buff *selfKeyAlias, bool isSelfFromUpgrade, int32_t osAccountId,
     const char *groupId)
 {
     int32_t ret = GetLoaderInstance()->checkKeyExist(selfKeyAlias, isSelfFromUpgrade, osAccountId);
@@ -651,7 +651,7 @@ static int32_t CheckSelfKeyAlias(const Uint8Buff *selfKeyAlias, bool isSelfFromU
     return ret;
 }
 
-static int32_t CheckPeerKeyAlias(const Uint8Buff *peerKeyAlias, bool isPeerFromUpgrade, int osAccountId,
+static int32_t CheckPeerKeyAlias(const Uint8Buff *peerKeyAlias, bool isPeerFromUpgrade, int32_t osAccountId,
     const char *groupId, const TrustedDeviceEntry *peerDeviceEntry)
 {
     int32_t ret = GetLoaderInstance()->checkKeyExist(peerKeyAlias, isPeerFromUpgrade, osAccountId);
@@ -662,7 +662,7 @@ static int32_t CheckPeerKeyAlias(const Uint8Buff *peerKeyAlias, bool isPeerFromU
             return ret;
         }
         LOGI("peer auth pubKey not exist, delete peer device from db successfully!");
-    }    
+    }
     return ret;
 }
 
