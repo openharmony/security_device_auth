@@ -20,12 +20,37 @@
 #include "clib_error.h"
 #include "hc_types.h"
 #include "string_util.h"
+#include "hc_log.h"
 
 #define RECURSE_FLAG_TRUE 1
+#define MAX_DEPTH 10
+
+static int32_t GetCjsonMaxDepth(const char *jsonStr)
+{
+    int32_t max = 0;
+    uint32_t len = strlen(jsonStr);
+    int32_t cnt = 0;
+    for (uint32_t i = 0; i < len; i++) {
+        if (jsonStr[i] == '{' || jsonStr[i] == '[') {
+            cnt++;
+            if (cnt > max) {
+                max = cnt;
+            }
+        } else if (jsonStr[i] == '}' || jsonStr[i] == ']') {
+            cnt--;
+        }
+    }
+    return max;
+}
 
 CJson *CreateJsonFromString(const char *jsonStr)
 {
     if (jsonStr == NULL) {
+        return NULL;
+    }
+    int32_t depth = GetCjsonMaxDepth(jsonStr);
+    if (depth > MAX_DEPTH) {
+        LOGE("jsonStr depth %d over 10", depth);
         return NULL;
     }
     return cJSON_Parse(jsonStr);
