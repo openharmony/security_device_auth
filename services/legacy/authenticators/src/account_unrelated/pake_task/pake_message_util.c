@@ -114,7 +114,7 @@ static int32_t GetDasEpkPeerFromJson(PakeParams *params, const CJson *in)
         LOGE("Get epkPeerHex failed.");
         return HC_ERR_JSON_GET;
     }
-    int res = InitSingleParam(&(params->baseParams.epkPeer), strlen(epkPeerHex) / BYTE_TO_HEX_OPER_LENGTH);
+    int res = InitSingleParam(&(params->baseParams.epkPeer), HcStrlen(epkPeerHex) / BYTE_TO_HEX_OPER_LENGTH);
     if (res != HC_SUCCESS) {
         LOGE("InitSingleParam for epkPeer failed, res: %d.", res);
         return res;

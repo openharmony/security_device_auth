@@ -135,13 +135,13 @@ static int32_t SetProtocolsToIdentityInfo(int32_t keyType, IdentityInfo *info)
 
 static bool IsP2pAuthTokenExist(int32_t osAccountId, const TrustedDeviceEntry *deviceEntry)
 {
-    Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, strlen(GROUP_MANAGER_PACKAGE_NAME) };
+    Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, HcStrlen(GROUP_MANAGER_PACKAGE_NAME) };
 
     const char *serviceType = StringGet(&deviceEntry->serviceType);
-    Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, strlen(serviceType) };
+    Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, HcStrlen(serviceType) };
 
     const char *peerAuthId = StringGet(&deviceEntry->authId);
-    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, strlen(peerAuthId) };
+    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, HcStrlen(peerAuthId) };
 
     uint8_t keyAliasVal[ISO_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAlias = { keyAliasVal, ISO_KEY_ALIAS_LEN };
@@ -452,11 +452,11 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
 
 static int32_t GenerateKeyAliasForIso(const TrustedDeviceEntry *deviceEntry, Uint8Buff *keyAliasBuff)
 {
-    Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, (uint32_t)strlen(GROUP_MANAGER_PACKAGE_NAME) };
+    Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, (uint32_t)HcStrlen(GROUP_MANAGER_PACKAGE_NAME) };
     const char *serviceType = StringGet(&deviceEntry->serviceType);
-    Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, (uint32_t)strlen(serviceType) };
+    Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, (uint32_t)HcStrlen(serviceType) };
     const char *peerAuthId = StringGet(&deviceEntry->authId);
-    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, (uint32_t)strlen(peerAuthId) };
+    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, (uint32_t)HcStrlen(peerAuthId) };
     KeyAliasType keyType = KEY_ALIAS_AUTH_TOKEN;
     if (deviceEntry->upgradeFlag == 1) {
         keyType = deviceEntry->devType;
@@ -564,7 +564,7 @@ static int32_t GetSelfAuthIdAndUserType(
         return ret;
     }
     const char *selfAuthId = StringGet(&deviceEntry->authId);
-    uint32_t authIdLen = strlen(selfAuthId);
+    uint32_t authIdLen = HcStrlen(selfAuthId);
     authIdBuff->val = (uint8_t *)HcMalloc(authIdLen + 1, 0);
     if (authIdBuff->val == NULL) {
         LOGE("Failed to alloc memory for authId!");
@@ -588,8 +588,8 @@ static int32_t GetSelfAuthIdAndUserType(
 static int32_t GenerateSelfKeyAlias(const char *serviceType, int32_t selfUserType, const Uint8Buff *selfAuthIdBuff,
     bool isSelfFromUpgrade, Uint8Buff *selfKeyAlias)
 {
-    Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, strlen(GROUP_MANAGER_PACKAGE_NAME) };
-    Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, strlen(serviceType) };
+    Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, HcStrlen(GROUP_MANAGER_PACKAGE_NAME) };
+    Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, HcStrlen(serviceType) };
     KeyAliasType keyType = (KeyAliasType)selfUserType;
     if (isSelfFromUpgrade) {
         keyType = KEY_ALIAS_LT_KEY_PAIR;
@@ -611,16 +611,16 @@ static int32_t GenerateSelfKeyAlias(const char *serviceType, int32_t selfUserTyp
 
 static int32_t GeneratePeerKeyAlias(const TrustedDeviceEntry *peerDeviceEntry, Uint8Buff *peerKeyAlias)
 {
-    Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, strlen(GROUP_MANAGER_PACKAGE_NAME) };
+    Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, HcStrlen(GROUP_MANAGER_PACKAGE_NAME) };
     const char *serviceType = StringGet(&peerDeviceEntry->serviceType);
-    Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, strlen(serviceType) };
+    Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, HcStrlen(serviceType) };
 #ifdef DEV_AUTH_FUNC_TEST
     KeyAliasType keyTypePeer = KEY_ALIAS_LT_KEY_PAIR;
 #else
     KeyAliasType keyTypePeer = (KeyAliasType)peerDeviceEntry->devType;
 #endif
     const char *peerAuthId = StringGet(&peerDeviceEntry->authId);
-    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, strlen(peerAuthId) };
+    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, HcStrlen(peerAuthId) };
     int32_t ret = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, keyTypePeer, &peerAuthIdBuff, peerKeyAlias);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to generate peer key alias!");
@@ -737,11 +737,11 @@ static int32_t GeneratePskAliasAndCheckExist(const CJson *in, const char *groupI
         DestroyDeviceEntry(deviceEntry);
         return ret;
     }
-    Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, strlen(GROUP_MANAGER_PACKAGE_NAME) };
+    Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, HcStrlen(GROUP_MANAGER_PACKAGE_NAME) };
     const char *serviceType = StringGet(&deviceEntry->serviceType);
-    Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, strlen(serviceType) };
+    Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, HcStrlen(serviceType) };
     const char *peerAuthId = StringGet(&deviceEntry->authId);
-    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, strlen(peerAuthId) };
+    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, HcStrlen(peerAuthId) };
     ret = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_PSK, &peerAuthIdBuff, pskKeyAlias);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to generate psk key alias!");
@@ -800,7 +800,7 @@ static int32_t GetSharedSecretForP2pInPake(const CJson *in, const char *groupId,
         HcFree(nonceVal);
         return HC_ERR_JSON_GET;
     }
-    Uint8Buff keyInfo = { (uint8_t *)TMP_AUTH_KEY_FACTOR, strlen(TMP_AUTH_KEY_FACTOR) };
+    Uint8Buff keyInfo = { (uint8_t *)TMP_AUTH_KEY_FACTOR, HcStrlen(TMP_AUTH_KEY_FACTOR) };
     KeyParams keyAliasParams = { { pskKeyAlias.val, pskKeyAlias.length, true }, false, osAccountId };
     ret = GetLoaderInstance()->computeHkdf(&keyAliasParams, &nonceBuff, &keyInfo, &pskBuff);
     HcFree(nonceVal);

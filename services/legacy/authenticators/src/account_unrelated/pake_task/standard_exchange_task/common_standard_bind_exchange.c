@@ -145,14 +145,14 @@ static int32_t PackageAuthInfo(const PakeParams *pakeParams, StandardBindExchang
         goto ERR;
     }
 
-    res = InitSingleParam(&(exchangeParams->authInfo), strlen(authInfoStr));
+    res = InitSingleParam(&(exchangeParams->authInfo), HcStrlen(authInfoStr));
     if (res != HC_SUCCESS) {
         LOGE("InitSingleParam for authInfo failed.");
         goto ERR;
     }
 
     if (memcpy_s(exchangeParams->authInfo.val, exchangeParams->authInfo.length,
-        authInfoStr, strlen(authInfoStr)) != EOK) {
+        authInfoStr, HcStrlen(authInfoStr)) != EOK) {
         LOGE("Memcpy authInfo failed.");
         res = HC_ERR_MEMORY_COPY;
         goto ERR;
@@ -253,7 +253,7 @@ static int32_t EncryptAuthAndSignInfo(const PakeParams *pakeParams, StandardBind
 
     GcmParam encryptInfo = {
         .aad = (uint8_t *)aad,
-        .aadLen = strlen(aad),
+        .aadLen = HcStrlen(aad),
         .nonce = exchangeParams->nonce.val,
         .nonceLen = exchangeParams->nonce.length
     };
@@ -287,7 +287,7 @@ static int32_t DecryptAuthAndSignInfo(const PakeParams *pakeParams, StandardBind
 
     GcmParam decryptInfo = {
         .aad = (uint8_t *)aad,
-        .aadLen = strlen(aad),
+        .aadLen = HcStrlen(aad),
         .nonce = exchangeParams->nonce.val,
         .nonceLen = exchangeParams->nonce.length
     };
@@ -404,8 +404,8 @@ static int32_t SaveAuthInfo(const PakeParams *pakeParams, const StandardBindExch
 #else
     KeyAliasType keyType = (KeyAliasType)pakeParams->userTypePeer;
 #endif
-    Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, strlen(pakeParams->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, strlen(pakeParams->serviceType) };
+    Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, HcStrlen(pakeParams->packageName) };
+    Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, HcStrlen(pakeParams->serviceType) };
     int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(pakeParams->baseParams.idPeer),
         &keyAlias);
     if (res != HC_SUCCESS) {
@@ -440,8 +440,8 @@ int32_t ClientRequestStandardBindExchange(const PakeParams *pakeParams, Standard
     if (pakeParams->isSelfFromUpgrade) {
         keyType = KEY_ALIAS_LT_KEY_PAIR;
     }
-    Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, strlen(pakeParams->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, strlen(pakeParams->serviceType) };
+    Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, HcStrlen(pakeParams->packageName) };
+    Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, HcStrlen(pakeParams->serviceType) };
     int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(pakeParams->baseParams.idSelf), &keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generateKeyAlias failed");
@@ -485,8 +485,8 @@ static int32_t GenerateSelfKeyAlias(const PakeParams *pakeParams, Uint8Buff *key
     if (pakeParams->isSelfFromUpgrade) {
         keyType = KEY_ALIAS_LT_KEY_PAIR;
     }
-    Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, strlen(pakeParams->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, strlen(pakeParams->serviceType) };
+    Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, HcStrlen(pakeParams->packageName) };
+    Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, HcStrlen(pakeParams->serviceType) };
     int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(pakeParams->baseParams.idSelf), keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generateKeyAlias failed");
@@ -563,8 +563,8 @@ int32_t ClientConfirmStandardBindExchange(PakeParams *pakeParams, StandardBindEx
     uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAlias = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
     KeyAliasType keyType = (KeyAliasType)pakeParams->userType;
-    Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, strlen(pakeParams->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, strlen(pakeParams->serviceType) };
+    Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, HcStrlen(pakeParams->packageName) };
+    Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, HcStrlen(pakeParams->serviceType) };
     int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(pakeParams->baseParams.idSelf), &keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generateKeyAlias failed");

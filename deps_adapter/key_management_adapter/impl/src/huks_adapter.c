@@ -614,8 +614,8 @@ static int32_t ComputeHkdf(const KeyParams *keyParams, const Uint8Buff *salt, co
 static int32_t ConstructPseudonymParamSet(const KeyParams *keyParams, const Uint8Buff *pskKeyAlias,
     const struct HksBlob *extInfoBlob, uint32_t outLen, struct HksParamSet **paramSet)
 {
-    struct HksBlob saltBlob = { strlen(PSEUDONYM_KEY_FACTOR), (uint8_t *)PSEUDONYM_KEY_FACTOR };
-    struct HksBlob keyInfoBlob = { strlen(PSEUDONYM_KEY_LEBEL), (uint8_t *)PSEUDONYM_KEY_LEBEL };
+    struct HksBlob saltBlob = { HcStrlen(PSEUDONYM_KEY_FACTOR), (uint8_t *)PSEUDONYM_KEY_FACTOR };
+    struct HksBlob keyInfoBlob = { HcStrlen(PSEUDONYM_KEY_LEBEL), (uint8_t *)PSEUDONYM_KEY_LEBEL };
     struct HksBlob pskAliasBlob = { pskKeyAlias->length, pskKeyAlias->val };
     uint32_t len = GetParamLen(keyParams->isDeStorage, BASE_COMPUTE_PSEUDONYM_PSK_PARAMS_LEN);
     struct HksParam *hkdfParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
@@ -1311,7 +1311,7 @@ static int32_t BigNumExpMod(const Uint8Buff *base, const Uint8Buff *exp, const c
     }
 
     CHECK_PTR_RETURN_HAL_ERROR_CODE(bigNumHex, "bigNumHex");
-    uint32_t primeLen = strlen(bigNumHex) / BYTE_TO_HEX_OPER_LENGTH;
+    uint32_t primeLen = HcStrlen(bigNumHex) / BYTE_TO_HEX_OPER_LENGTH;
     if ((primeLen != BIG_PRIME_LEN_384) && (primeLen != BIG_PRIME_LEN_256)) {
         LOGE("Not support big number len %d", outNum->length);
         return HAL_FAILED;

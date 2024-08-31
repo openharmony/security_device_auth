@@ -59,7 +59,7 @@ int32_t ParseNonceAndCipherFromJson(Uint8Buff *nonce, Uint8Buff *cipher, const C
         res = HC_ERR_JSON_GET;
         goto ERR;
     }
-    int32_t exAuthInfoLen = strlen(exAuthInfoStr) / BYTE_TO_HEX_OPER_LENGTH;
+    int32_t exAuthInfoLen = HcStrlen(exAuthInfoStr) / BYTE_TO_HEX_OPER_LENGTH;
     exAuthInfoVal = (uint8_t *)HcMalloc(exAuthInfoLen, 0);
     if (exAuthInfoVal == NULL) {
         LOGE("Malloc exAuthInfoVal failed.");

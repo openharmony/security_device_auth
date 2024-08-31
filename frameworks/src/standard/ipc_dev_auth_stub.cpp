@@ -49,6 +49,8 @@ static const uint32_t RESTORE_CODE = 14701;
 static const uint32_t DEFAULT_UPGRADE_OS_ACCOUNT_ID = 100;
 #endif
 
+#define MAX_DATA_LEN 10240
+
 ServiceDevAuth::ServiceDevAuth(bool serialInvokeFlag) : IRemoteStub(serialInvokeFlag)
 {}
 
@@ -111,6 +113,11 @@ static int32_t DecodeCallRequest(MessageParcel &data, IpcDataInfo *paramsCache, 
 
     if (data.GetReadableBytes() == 0) {
         return HC_SUCCESS;
+    }
+
+    if (data.GetReadableBytes() > MAX_DATA_LEN) {
+        LOGE("Data len over MAX_DATA_LEN");
+        return HC_ERR_IPC_BAD_MESSAGE_LENGTH;
     }
 
     if (data.GetReadableBytes() < sizeof(int32_t)) {

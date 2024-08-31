@@ -21,6 +21,8 @@
 extern "C" {
 #endif
 
+#define MAX_STR_LEN 8192
+
 void* HcMalloc(uint32_t size, char val)
 {
     if (size == 0) {
@@ -49,7 +51,7 @@ uint32_t HcStrlen(const char *str)
         return 0;
     }
     const char *p = str;
-    while (*p++ != '\0') {}
+    while (*p++ != '\0' && (p - str - 1) < MAX_STR_LEN) {}
     return p - str - 1;
 }
 

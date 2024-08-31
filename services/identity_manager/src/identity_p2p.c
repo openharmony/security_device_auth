@@ -196,9 +196,9 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
 static int32_t ComputeAndSaveDirectAuthPsk(int32_t osAccountId, const char *selfAuthId, const char *peerAuthId,
     const char *peerServiceType, const Uint8Buff *sharedKeyAlias)
 {
-    Uint8Buff selfAuthIdBuff = { (uint8_t *)selfAuthId, strlen(selfAuthId) };
-    Uint8Buff pkgNameBuff = { (uint8_t *)DEFAULT_PACKAGE_NAME, strlen(DEFAULT_PACKAGE_NAME) };
-    Uint8Buff serviceTypeBuff = { (uint8_t *)DEFAULT_SERVICE_TYPE, strlen(DEFAULT_SERVICE_TYPE) };
+    Uint8Buff selfAuthIdBuff = { (uint8_t *)selfAuthId, HcStrlen(selfAuthId) };
+    Uint8Buff pkgNameBuff = { (uint8_t *)DEFAULT_PACKAGE_NAME, HcStrlen(DEFAULT_PACKAGE_NAME) };
+    Uint8Buff serviceTypeBuff = { (uint8_t *)DEFAULT_SERVICE_TYPE, HcStrlen(DEFAULT_SERVICE_TYPE) };
     KeyAliasType keyType = KEY_ALIAS_P2P_AUTH;
     uint8_t selfKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff selfKeyAlias = { selfKeyAliasVal, PAKE_KEY_ALIAS_LEN };
@@ -210,9 +210,9 @@ static int32_t ComputeAndSaveDirectAuthPsk(int32_t osAccountId, const char *self
     LOGI("selfKeyAlias: %x %x %x %x****.", selfKeyAlias.val[DEV_AUTH_ZERO], selfKeyAlias.val[DEV_AUTH_ONE],
         selfKeyAlias.val[DEV_AUTH_TWO], selfKeyAlias.val[DEV_AUTH_THREE]);
 
-    Uint8Buff peerServiceTypeBuff = { (uint8_t *)peerServiceType, strlen(peerServiceType) };
+    Uint8Buff peerServiceTypeBuff = { (uint8_t *)peerServiceType, HcStrlen(peerServiceType) };
     KeyAliasType keyTypePeer = KEY_ALIAS_P2P_AUTH;
-    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, strlen(peerAuthId) };
+    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, HcStrlen(peerAuthId) };
     uint8_t peerKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff peerKeyAlias = { peerKeyAliasVal, PAKE_KEY_ALIAS_LEN };
     ret = GenerateKeyAlias(&pkgNameBuff, &peerServiceTypeBuff, keyTypePeer, &peerAuthIdBuff, &peerKeyAlias);
@@ -262,9 +262,9 @@ static int32_t GetDirectAuthPskAliasCreateIfNeeded(const CJson *in, Uint8Buff *p
         LOGI("get serviceType from json fail, replace by default");
         peerServieType = DEFAULT_SERVICE_TYPE;
     }
-    Uint8Buff pkgNameBuff = { (uint8_t *)DEFAULT_PACKAGE_NAME, strlen(DEFAULT_PACKAGE_NAME) };
-    Uint8Buff serviceTypeBuff = { (uint8_t *)peerServieType, strlen(peerServieType) };
-    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, strlen(peerAuthId) };
+    Uint8Buff pkgNameBuff = { (uint8_t *)DEFAULT_PACKAGE_NAME, HcStrlen(DEFAULT_PACKAGE_NAME) };
+    Uint8Buff serviceTypeBuff = { (uint8_t *)peerServieType, HcStrlen(peerServieType) };
+    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, HcStrlen(peerAuthId) };
     int32_t ret = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_PSK, &peerAuthIdBuff, pskKeyAlias);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to generate psk key alias!");
@@ -306,7 +306,7 @@ static int32_t GetSharedSecretByUrl(
     }
     uint8_t pskVal[PAKE_PSK_LEN] = { 0 };
     Uint8Buff pskBuff = { pskVal, PAKE_PSK_LEN };
-    Uint8Buff keyInfo = { (uint8_t *)TMP_AUTH_KEY_FACTOR, strlen(TMP_AUTH_KEY_FACTOR) };
+    Uint8Buff keyInfo = { (uint8_t *)TMP_AUTH_KEY_FACTOR, HcStrlen(TMP_AUTH_KEY_FACTOR) };
     KeyParams keyAliasParams = { { pskKeyAlias.val, pskKeyAlias.length, true }, false, osAccountId };
     ret = GetLoaderInstance()->computeHkdf(&keyAliasParams, &nonceBuff, &keyInfo, &pskBuff);
     if (ret != HC_SUCCESS) {
