@@ -17,6 +17,7 @@
 
 #include <inttypes.h>
 #include "securec.h"
+#include "hc_types.h"
 
 #define LOG_PRINT_MAX_LEN 2048
 
@@ -77,7 +78,7 @@ void DevAuthLogPrint(DevAuthLogLevel level, const char *funName, const char *fmt
     if (res < 0) {
         return;
     }
-    ulPos = strlen(outStr);
+    ulPos = HcStrlen(outStr);
     va_list arg;
     va_start(arg, fmt);
     res = vsprintf_s(&outStr[ulPos], sizeof(outStr) - ulPos, fmt, arg);

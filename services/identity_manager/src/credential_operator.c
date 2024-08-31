@@ -135,7 +135,7 @@ static int32_t CombineKeyAliasForPake(
         LOGE("ByteToHexString failed");
         goto ERR;
     }
-    if (memcpy_s(outKeyAlias->val, outKeyAlias->length, outKeyAliasHex, strlen(outKeyAliasHex)) != EOK) {
+    if (memcpy_s(outKeyAlias->val, outKeyAlias->length, outKeyAliasHex, HcStrlen(outKeyAliasHex)) != EOK) {
         LOGE("memcpy outkeyalias failed.");
         res = HC_ERR_MEMORY_COPY;
         goto ERR;
@@ -153,12 +153,12 @@ static int32_t GenerateKeyAliasInner(
     CHECK_PTR_RETURN_ERROR_CODE(serviceType, "serviceType");
     CHECK_PTR_RETURN_ERROR_CODE(authId, "authId");
     CHECK_PTR_RETURN_ERROR_CODE(outKeyAlias, "outKeyAlias");
-    if (strlen(pkgName) == 0 || strlen(serviceType) == 0 || strlen(authId) == 0) {
+    if (HcStrlen(pkgName) == 0 || HcStrlen(serviceType) == 0 || HcStrlen(authId) == 0) {
         LOGE("Invalid zero length params exist.");
         return HC_ERR_INVALID_LEN;
     }
-    Uint8Buff pkgNameBuff = { (uint8_t *)pkgName, strlen(pkgName) };
-    Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, strlen(serviceType) };
+    Uint8Buff pkgNameBuff = { (uint8_t *)pkgName, HcStrlen(pkgName) };
+    Uint8Buff serviceTypeBuff = { (uint8_t *)serviceType, HcStrlen(serviceType) };
     Uint8Buff authIdBuff = { NULL, HcStrlen(authId) };
     authIdBuff.val = (uint8_t *)HcMalloc(authIdBuff.length, 0);
     if (authIdBuff.val == NULL) {
@@ -647,7 +647,7 @@ static int32_t ImportCredential(const char *reqJsonStr, char **returnData)
         LOGE("CheckImportConditions failed.");
         goto ERR;
     }
-    Uint8Buff authIdBuff = { (uint8_t *)param->deviceId, strlen(param->deviceId) };
+    Uint8Buff authIdBuff = { (uint8_t *)param->deviceId, HcStrlen(param->deviceId) };
     // Caution: Only acquireType is P2P_BIND, keyType can be set to KEY_ALIAS_P2P_AUTH
     int32_t keyType = KEY_ALIAS_P2P_AUTH;
     ExtraInfo exInfo = { authIdBuff, keyType, PAIR_TYPE_BIND };
@@ -701,7 +701,7 @@ static int32_t DeleteCredential(const char *reqJsonStr, char **returnData)
         res = HC_ERR_INVALID_PARAMS;
         goto ERR;
     }
-    Uint8Buff authIdBuff = { (uint8_t *)param->deviceId, strlen(param->deviceId) };
+    Uint8Buff authIdBuff = { (uint8_t *)param->deviceId, HcStrlen(param->deviceId) };
     res = UnregisterIdentity(param, &authIdBuff, KEY_ALIAS_PSK);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete psk!");

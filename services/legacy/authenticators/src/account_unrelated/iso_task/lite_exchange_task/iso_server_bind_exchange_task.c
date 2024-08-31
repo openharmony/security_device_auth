@@ -95,7 +95,7 @@ static int DecryptChallenge(const IsoParams *params, const CJson *in, uint8_t *c
     Uint8Buff encDataBuf = { encData, ENC_CHALLENGE_LEN };
     GcmParam gcmParam;
     gcmParam.aad = (uint8_t *)EXCHANGE_AAD;
-    gcmParam.aadLen = (uint32_t)strlen(EXCHANGE_AAD);
+    gcmParam.aadLen = (uint32_t)HcStrlen(EXCHANGE_AAD);
     gcmParam.nonce = nonce;
     gcmParam.nonceLen = NONCE_SIZE;
     Uint8Buff challengeBuf = { challenge, CHALLENGE_SIZE };

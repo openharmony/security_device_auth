@@ -236,7 +236,7 @@ static int32_t AuthGeneratePskUsePin(const CJson *in, const Uint8Buff *seed, con
         LOGE("Failed to get osAccountId!");
         return HC_ERR_JSON_GET;
     }
-    Uint8Buff messageBuf = { (uint8_t *)pinCode, (uint32_t)strlen(pinCode) };
+    Uint8Buff messageBuf = { (uint8_t *)pinCode, (uint32_t)HcStrlen(pinCode) };
     uint8_t hash[SHA256_LEN] = { 0 };
     Uint8Buff hashBuf = { hash, sizeof(hash) };
     int ret = GetLoaderInstance()->sha256(&messageBuf, &hashBuf);
@@ -314,7 +314,7 @@ static int32_t GetSharedSecretForPinInPake(const CJson *in, Uint8Buff *sharedSec
         LOGE("Failed to get pinCode!");
         return HC_ERR_JSON_GET;
     }
-    uint32_t pinLen = strlen(pinCode);
+    uint32_t pinLen = HcStrlen(pinCode);
     if (pinLen < PIN_CODE_LEN_SHORT) {
         LOGE("Invalid pin code len!");
         return HC_ERR_INVALID_LEN;

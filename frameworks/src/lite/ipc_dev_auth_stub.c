@@ -30,6 +30,7 @@
 extern "C" {
 #endif
 
+#define MAX_DATA_LEN 10240
 static HcMutex g_cBMutex;
 
 struct CbStubInfo {
@@ -80,6 +81,11 @@ static int32_t DecodeCallRequest(IpcIo *data, IpcDataInfo *paramsCache, int32_t 
     int32_t dataLen;
     int32_t i;
     int32_t ret;
+    
+    if (GetIpcIoDataLength(data) > MAX_DATA_LEN) {
+        LOGE("Data len over MAX_DATA_LEN");
+        return HC_ERR_IPC_BAD_MESSAGE_LENGTH;
+    }
 
     ReadInt32(data, &dataLen);
     if (dataLen <= 0) {

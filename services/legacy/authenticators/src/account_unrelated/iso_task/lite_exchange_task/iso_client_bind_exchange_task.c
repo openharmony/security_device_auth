@@ -185,7 +185,7 @@ static int ClientBindAesEncrypt(IsoClientBindExchangeTask *task, const IsoParams
     }
     GcmParam gcmParams;
     gcmParams.aad = (uint8_t *)EXCHANGE_AAD;
-    gcmParams.aadLen = (uint32_t)strlen(EXCHANGE_AAD);
+    gcmParams.aadLen = (uint32_t)HcStrlen(EXCHANGE_AAD);
     gcmParams.nonce = *nonce;
     gcmParams.nonceLen = NONCE_SIZE;
     Uint8Buff outBuf = { *encData, sizeof(task->challenge) + TAG_LEN };

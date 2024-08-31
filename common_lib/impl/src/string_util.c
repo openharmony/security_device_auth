@@ -68,7 +68,7 @@ int32_t HexStringToByte(const char *hexStr, uint8_t *byte, uint32_t byteLen)
     if (byte == NULL || hexStr == NULL) {
         return CLIB_ERR_NULL_PTR;
     }
-    uint32_t realHexLen = strlen(hexStr);
+    uint32_t realHexLen = HcStrlen(hexStr);
     /* even number or not */
     if (realHexLen % BYTE_TO_HEX_OPER_LENGTH != 0 || byteLen < realHexLen / BYTE_TO_HEX_OPER_LENGTH) {
         return CLIB_ERR_INVALID_LEN;
@@ -99,7 +99,7 @@ int32_t ToUpperCase(const char *oriStr, char **desStr)
     if (oriStr == NULL || desStr == NULL) {
         return CLIB_ERR_NULL_PTR;
     }
-    uint32_t len = strlen(oriStr);
+    uint32_t len = HcStrlen(oriStr);
     *desStr = HcMalloc(len + 1, 0);
     if (*desStr == NULL) {
         return CLIB_ERR_BAD_ALLOC;
@@ -119,7 +119,7 @@ int32_t DeepCopyString(const char *str, char **newStr)
     if (str == NULL || newStr == NULL) {
         return CLIB_ERR_NULL_PTR;
     }
-    uint32_t len = strlen(str);
+    uint32_t len = HcStrlen(str);
     if (len == 0) {
         return CLIB_ERR_INVALID_LEN;
     }

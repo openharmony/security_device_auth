@@ -1221,7 +1221,7 @@ static int32_t GetPseudonymId(int32_t osAccountId, const char *indexKey, char **
 
 DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const char *reqJsonStr, char **returnData)
 {
-    if (reqJsonStr == NULL || returnData == NULL) {
+    if (reqJsonStr == NULL || returnData == NULL || HcStrlen(reqJsonStr) > MAX_DATA_BUFFER_SIZE) {
         LOGE("Invalid params!");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -1260,7 +1260,7 @@ DEVICE_AUTH_API_PUBLIC int32_t ProcessAuthDevice(
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(authReqId);
     LOGI("[DA] Begin ProcessAuthDevice [ReqId]: %" PRId64, authReqId);
-    if (authParams == NULL) {
+    if (authParams == NULL || HcStrlen(authParams) > MAX_DATA_BUFFER_SIZE) {
         LOGE("Invalid input for ProcessData!");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -1304,7 +1304,7 @@ DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
     SET_TRACE_ID(authReqId);
     LOGI("StartAuthDevice. [ReqId]:%" PRId64, authReqId);
 
-    if ((authParams == NULL) || (callback == NULL)) {
+    if ((authParams == NULL) || (callback == NULL) || HcStrlen(authParams) > MAX_DATA_BUFFER_SIZE) {
         LOGE("The input auth params is invalid!");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -1349,7 +1349,7 @@ DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *
 {
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(requestId);
-    if (authParams == NULL) {
+    if (authParams == NULL || HcStrlen(authParams) > MAX_DATA_BUFFER_SIZE) {
         LOGE("Invalid authParams!");
         return HC_ERR_INVALID_PARAMS;
     }

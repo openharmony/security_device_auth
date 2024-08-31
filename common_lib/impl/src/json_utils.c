@@ -28,7 +28,7 @@
 static int32_t GetCjsonMaxDepth(const char *jsonStr)
 {
     int32_t max = 0;
-    uint32_t len = strlen(jsonStr);
+    uint32_t len = HcStrlen(jsonStr);
     int32_t cnt = 0;
     for (uint32_t i = 0; i < len; i++) {
         if (jsonStr[i] == '{' || jsonStr[i] == '[') {
@@ -227,7 +227,7 @@ int32_t GetByteLenFromJson(const CJson *jsonObj, const char *key, uint32_t *byte
     if (valueStr == NULL) {
         return CLIB_ERR_JSON_GET;
     }
-    *byteLen = strlen(valueStr) / BYTE_TO_HEX_OPER_LENGTH;
+    *byteLen = HcStrlen(valueStr) / BYTE_TO_HEX_OPER_LENGTH;
     return CLIB_SUCCESS;
 }
 
@@ -241,7 +241,7 @@ int32_t GetByteFromJson(const CJson *jsonObj, const char *key, uint8_t *byte, ui
     if (valueStr == NULL) {
         return CLIB_ERR_JSON_GET;
     }
-    if (len < strlen(valueStr) / BYTE_TO_HEX_OPER_LENGTH) {
+    if (len < HcStrlen(valueStr) / BYTE_TO_HEX_OPER_LENGTH) {
         return CLIB_ERR_INVALID_LEN;
     }
     return HexStringToByte(valueStr, byte, len);
@@ -554,7 +554,7 @@ void ClearSensitiveStringInJson(CJson *jsonObj, const char *key)
     if (str == NULL) {
         return;
     }
-    (void)memset_s(str, strlen(str), 0, strlen(str));
+    (void)memset_s(str, HcStrlen(str), 0, HcStrlen(str));
 }
 
 void ClearAndFreeJsonString(char *jsonStr)
@@ -562,6 +562,6 @@ void ClearAndFreeJsonString(char *jsonStr)
     if (jsonStr == NULL) {
         return;
     }
-    (void)memset_s(jsonStr, strlen(jsonStr), 0, strlen(jsonStr));
+    (void)memset_s(jsonStr, HcStrlen(jsonStr), 0, HcStrlen(jsonStr));
     FreeJsonString(jsonStr);
 }

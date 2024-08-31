@@ -76,7 +76,7 @@ static int32_t UnregisterLocalIdentityStd(const TokenManagerParams *params)
     LOGI("Key pair deleted successfully!");
 
     // try to delete upgrade keypair if exist.
-    if (memcmp(params->pkgName.val, GROUP_MANAGER_PACKAGE_NAME, strlen(GROUP_MANAGER_PACKAGE_NAME)) == 0) {
+    if (memcmp(params->pkgName.val, GROUP_MANAGER_PACKAGE_NAME, HcStrlen(GROUP_MANAGER_PACKAGE_NAME)) == 0) {
         LOGI("Try to delete upgrade key pair.");
         res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_LT_KEY_PAIR, &authIdBuff, &pakeKeyAliasBuff);
         if (res != HC_SUCCESS) {
@@ -225,8 +225,8 @@ static int32_t GenerateSelfKeyAlias(const PakeParams *params, Uint8Buff *selfKey
     if (params->isSelfFromUpgrade) {
         keyType = KEY_ALIAS_LT_KEY_PAIR;
     }
-    Uint8Buff packageName = { (uint8_t *)params->packageName, strlen(params->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, strlen(params->serviceType) };
+    Uint8Buff packageName = { (uint8_t *)params->packageName, HcStrlen(params->packageName) };
+    Uint8Buff serviceType = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
     int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(params->baseParams.idSelf), selfKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generate self key alias failed");
@@ -244,8 +244,8 @@ static int32_t GenerateSelfKeyAlias(const PakeParams *params, Uint8Buff *selfKey
 
 static int32_t GeneratePeerKeyAlias(const PakeParams *params, Uint8Buff *peerKeyAlias)
 {
-    Uint8Buff packageName = { (uint8_t *)params->packageName, strlen(params->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, strlen(params->serviceType) };
+    Uint8Buff packageName = { (uint8_t *)params->packageName, HcStrlen(params->packageName) };
+    Uint8Buff serviceType = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
 #ifdef DEV_AUTH_FUNC_TEST
     KeyAliasType keyTypePeer = KEY_ALIAS_LT_KEY_PAIR;
 #else
@@ -268,8 +268,8 @@ static int32_t GeneratePeerKeyAlias(const PakeParams *params, Uint8Buff *peerKey
 
 static int32_t GenerateSharedKeyAlias(const PakeParams *params, Uint8Buff *sharedKeyAlias)
 {
-    Uint8Buff packageName = { (uint8_t *)params->packageName, strlen(params->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, strlen(params->serviceType) };
+    Uint8Buff packageName = { (uint8_t *)params->packageName, HcStrlen(params->packageName) };
+    Uint8Buff serviceType = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
     int32_t res = GenerateKeyAlias(&packageName, &serviceType, KEY_ALIAS_PSK, &(params->baseParams.idPeer),
         sharedKeyAlias);
     if (res != HC_SUCCESS) {
