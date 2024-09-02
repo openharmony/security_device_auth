@@ -78,7 +78,7 @@ void DevAuthLogPrint(DevAuthLogLevel level, const char *funName, const char *fmt
     if (res < 0) {
         return;
     }
-    ulPos = HcStrlen(outStr);
+    ulPos = (int32_t)HcStrlen(outStr);
     va_list arg;
     va_start(arg, fmt);
     res = vsprintf_s(&outStr[ulPos], sizeof(outStr) - ulPos, fmt, arg);
