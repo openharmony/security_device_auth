@@ -24,7 +24,6 @@
 #include "pake_v2_auth_task_common.h"
 
 #define IS_SUPPORT_CURVE_256 true
-#define IS_SUPPORT_CURVE_25519 false
 
 DECLARE_HC_VECTOR(AccountVersionInfoVec, void *)
 IMPLEMENT_HC_VECTOR(AccountVersionInfoVec, void *, 1)

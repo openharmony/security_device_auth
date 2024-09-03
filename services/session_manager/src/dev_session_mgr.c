@@ -52,7 +52,8 @@ static int32_t GetSessionInfo(int64_t sessionId, SessionInfo **returnObj)
 static void RemoveTimeoutSession(void)
 {
     uint32_t index = 0;
-    while (index < g_sessionInfoList.size(&(g_sessionInfoList))) {
+    uint32_t sessionInfoListSize = g_sessionInfoList.size(&(g_sessionInfoList));
+    while (index < sessionInfoListSize) {
         SessionInfo *sessionInfo = g_sessionInfoList.getp(&(g_sessionInfoList), index);
         int64_t runningTime = HcGetIntervalTime(sessionInfo->createTime);
         if (runningTime < TIME_OUT_VALUE) {

@@ -40,7 +40,7 @@ void Notify(pthread_cond_t* cond)
     }
     int res = pthread_cond_signal(cond);
     if (res != 0) {
-        LOGW("[OS]: pthread_cond_wait fail. [Res]: %d", res);
+        LOGW("[OS]: pthread_cond_signal fail. [Res]: %d", res);
     }
 }
 
