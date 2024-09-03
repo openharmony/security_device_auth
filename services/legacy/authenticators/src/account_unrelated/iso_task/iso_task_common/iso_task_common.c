@@ -35,7 +35,7 @@ static int32_t ComputeHkdfByParams(const IsoParams *params, const Uint8Buff *hkd
 
 static int GenerateReturnKey(IsoParams *params, uint8_t *returnKey, uint32_t returnKeyLen)
 {
-    uint32_t hkdfSaltLen = params->baseParams.randPeer.length + params->baseParams.randPeer.length;
+    uint32_t hkdfSaltLen = params->baseParams.randPeer.length + params->baseParams.randSelf.length;
     int res;
     uint8_t *hkdfSalt = (uint8_t *)HcMalloc(hkdfSaltLen, 0);
     if (hkdfSalt == NULL) {
