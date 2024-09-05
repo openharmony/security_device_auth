@@ -24,6 +24,9 @@ StringVector CreateStrVector(void)
 
 void DestroyStrVector(StringVector *vec)
 {
+    if (vec == NULL) {
+        return;
+    }
     uint32_t index;
     HcString *strItemPtr = NULL;
     FOR_EACH_HC_VECTOR(*vec, index, strItemPtr) {
