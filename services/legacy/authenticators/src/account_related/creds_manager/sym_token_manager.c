@@ -50,11 +50,11 @@ static HcMutex *g_dataMutex;
 static bool IsTokenMatch(const SymToken *token, const char *userId, const char *deviceId)
 {
     if (userId == NULL) {
-        LOGE("userId is null!")
+        LOGE("userId is null!");
         return false;
     }
     if (deviceId == NULL) {
-        LOGE("deviceId is null!")
+        LOGE("deviceId is null!");
         return false;
     }
     return (strcmp(userId, token->userId) == 0) && (strcmp(deviceId, token->deviceId) == 0);
