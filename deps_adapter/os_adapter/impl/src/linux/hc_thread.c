@@ -25,6 +25,9 @@ extern "C" {
 
 void *StaticThreadFunc(void *args)
 {
+    if (args == NULL) {
+        return NULL;
+    }
     HcThread* thread = (HcThread*)args;
     if (thread == NULL) {
         return NULL;
