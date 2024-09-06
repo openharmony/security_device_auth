@@ -25,9 +25,15 @@
 #include "json_utils.h"
 #include "performance_dumper.h"
 #include "string_util.h"
+#include "alg_loader.h"
 
 #define UID_HEX_STRING_LEN_MAX 64
 #define UID_HEX_STRING_LEN_MIN 10
+#define MAX_SERVICE_PEER_DATA_LENGTH 2048
+#define PLACE_HOLDER_LENGTH 4
+#define COMMA_SEPARATOR ","
+#define COLON_SEPARATOR ":"
+#define JSON_KEY_FORMAT "\"%s\":"
 
 static void OnAccountFinish(int64_t requestId, const CJson *authParam, const CJson *out,
     const DeviceAuthCallback *callback);
@@ -393,6 +399,125 @@ static int32_t QueryAuthGroupForServer(int32_t osAccountId, GroupEntryVec *accou
     return HC_SUCCESS;
 }
 
+static char *GetValueFromJsonStr(char *jsonStr, const char *key)
+{
+    if (HcStrlen(jsonStr) > MAX_SERVICE_PEER_DATA_LENGTH) {
+        LOGE("Invalid peer data length!");
+        return NULL;
+    }
+    uint32_t keyLen = HcStrlen(key);
+    char *keyStr = (char *)HcMalloc(keyLen + PLACE_HOLDER_LENGTH, 0);
+    if (keyStr == NULL) {
+        LOGE("Failed to alloc memory for keyStr!");
+        return NULL;
+    }
+    if (sprintf_s(keyStr, keyLen + PLACE_HOLDER_LENGTH, JSON_KEY_FORMAT, key) <= 0) {
+        LOGE("Failed to convert key to string!");
+        HcFree(keyStr);
+        return NULL;
+    }
+    char *nextPtr = NULL;
+    char *value = NULL;
+    char *subVal = strtok_s(jsonStr, COMMA_SEPARATOR, &nextPtr);
+    while (subVal != NULL) {
+        if (strstr(subVal, keyStr) != NULL) {
+            value = strstr(subVal, COLON_SEPARATOR);
+            if (value != NULL) {
+                value++;
+            }
+            break;
+        }
+        subVal = strtok_s(NULL, COMMA_SEPARATOR, &nextPtr);
+    }
+    HcFree(keyStr);
+    return value;
+}
+
+static int32_t GetPeerUserIdFromReceivedData(const CJson *data, char **peerUserId)
+{
+    const char *peerData = GetStringFromJson(data, FIELD_PLUGIN_EXT_DATA);
+    if (peerData == NULL) {
+        LOGE("Failed to get peerData from data!");
+        return HC_ERR_JSON_GET;
+    }
+    char *copyPeerData = NULL;
+    int32_t res = DeepCopyString(peerData, &copyPeerData);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to deep copy peerData!");
+        return res;
+    }
+    char *userId = GetValueFromJsonStr(copyPeerData, FIELD_USER_ID);
+    if (userId == NULL) {
+        LOGE("Failed to get userId from peer data!");
+        HcFree(copyPeerData);
+        return HC_ERR_JSON_GET;
+    }
+    uint8_t userIdHash[SHA256_LEN] = { 0 };
+    Uint8Buff hashBuff = { userIdHash, sizeof(userIdHash) };
+    Uint8Buff hashMsgBuff = { (uint8_t *)userId, HcStrlen(userId) };
+    res = GetLoaderInstance()->sha256(&hashMsgBuff, &hashBuff);
+    HcFree(copyPeerData);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get hash for userId!");
+        return res;
+    }
+    uint32_t hexLen = hashBuff.length * BYTE_TO_HEX_OPER_LENGTH + 1;
+    *peerUserId = (char *)HcMalloc(hexLen, 0);
+    if (*peerUserId == NULL) {
+        LOGE("Failed to alloc memory for peer userId!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    res = ByteToHexString(hashBuff.val, hashBuff.length, *peerUserId, hexLen);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to convert hash to hex string!");
+        HcFree(*peerUserId);
+        *peerUserId = NULL;
+        return res;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t QueryGroupForAccountPlugin(int32_t osAccountId, GroupEntryVec *accountVec, CJson *data)
+{
+    char *peerUserId = NULL;
+    int32_t res = GetPeerUserIdFromReceivedData(data, &peerUserId);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    do {
+        int32_t authForm = AUTH_FORM_INVALID_TYPE;
+        if (GetIntFromJson(data, FIELD_AUTH_FORM, &authForm) != HC_SUCCESS) {
+            LOGE("Failed to get auth form for server!");
+            res = HC_ERR_JSON_GET;
+            break;
+        }
+        int32_t groupType = AuthFormToGroupType(authForm);
+        if (groupType == GROUP_TYPE_INVALID) {
+            LOGE("Invalid authForm: %d.", authForm);
+            res = HC_ERR_INVALID_PARAMS;
+            break;
+        }
+        QueryGroupParams queryParams = InitQueryGroupParams();
+        queryParams.groupType = (uint32_t)groupType;
+        if (queryParams.groupType == IDENTICAL_ACCOUNT_GROUP) {
+            queryParams.userId = peerUserId;
+        } else {
+            queryParams.sharedUserId = peerUserId;
+        }
+        res = QueryGroups(osAccountId, &queryParams, accountVec);
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to query local device's account group info for server!");
+            break;
+        }
+        if (accountVec->size(accountVec) == 0) {
+            LOGE("Account group not exist!");
+            res = HC_ERR_NO_CANDIDATE_GROUP;
+        }
+    } while (0);
+    HcFree(peerUserId);
+    return res;
+}
+
 static int32_t AddSelfUserId(const TrustedGroupEntry *groupEntry, CJson *dataFromClient)
 {
     const char *selfUserId = StringGet(&groupEntry->userId);
@@ -466,6 +591,36 @@ static int32_t AddSelfDevInfoForServer(int32_t osAccountId, const TrustedGroupEn
     return res;
 }
 
+static int32_t AddServerParamsForAccountPlugin(CJson *dataFromClient)
+{
+    int32_t osAccountId = INVALID_OS_ACCOUNT;
+    if (GetIntFromJson(dataFromClient, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
+    GroupEntryVec accountVec = CreateGroupEntryVec();
+    int32_t res = QueryGroupForAccountPlugin(osAccountId, &accountVec, dataFromClient);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to query group!");
+        ClearGroupEntryVec(&accountVec);
+        return res;
+    }
+    if (accountVec.size(&accountVec) == 0) {
+        LOGE("Group size is 0!");
+        ClearGroupEntryVec(&accountVec);
+        return HC_ERR_NO_CANDIDATE_GROUP;
+    }
+    TrustedGroupEntry *groupEntry = accountVec.get(&accountVec, 0);
+    if (groupEntry == NULL) {
+        LOGE("Group entry is null!");
+        ClearGroupEntryVec(&accountVec);
+        return HC_ERR_GROUP_NOT_EXIST;
+    }
+    res = AddGroupIdForServer(groupEntry, dataFromClient);
+    ClearGroupEntryVec(&accountVec);
+    return res;
+}
+
 static int32_t AddSelfAccountInfoForServer(CJson *dataFromClient)
 {
     int32_t osAccountId = INVALID_OS_ACCOUNT;
@@ -514,10 +669,16 @@ static int32_t GetAuthParamsVecForServer(const CJson *dataFromClient, ParamsVecF
         return HC_ERR_JSON_FAIL;
     }
 
-    if ((HasAccountAuthPlugin() != HC_SUCCESS) && (AddSelfAccountInfoForServer(dupData) != HC_SUCCESS)) {
-        LOGE("Failed to add account info for server!");
+    int32_t res;
+    if (HasAccountAuthPlugin() == HC_SUCCESS) {
+        res = AddServerParamsForAccountPlugin(dupData);
+    } else {
+        res = AddSelfAccountInfoForServer(dupData);
+    }
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to add account server params!");
         FreeJson(dupData);
-        return HC_ERR_GROUP_NOT_EXIST;
+        return res;
     }
 
     if (authParamsVec->pushBack(authParamsVec, (const void **)&dupData) == NULL) {
