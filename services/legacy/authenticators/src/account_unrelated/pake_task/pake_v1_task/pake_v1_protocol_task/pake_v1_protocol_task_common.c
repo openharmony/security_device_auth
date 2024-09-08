@@ -256,6 +256,8 @@ static int32_t ConvertPakeV1Psk(const Uint8Buff *srcPsk, PakeParams *params)
     }
     params->baseParams.psk.length = params->baseParams.psk.length - 1; // do not need include '\0' when using psk
     (void)UpperToLowercase(&(params->baseParams.psk));
+    PRINT_DEBUG_MSG(srcPsk->val, srcPsk->length, "pskValue");
+    PRINT_SENSITIVE_DATA("pskValue", (char *)params->baseParams.psk.val);
     return res;
 }
 
@@ -312,6 +314,7 @@ int32_t FillPskWithDerivedKeyHex(PakeParams *params)
     Uint8Buff pskByte = { pskVal, PAKE_PSK_LEN };
     Uint8Buff keyInfo = { (uint8_t *)TMP_AUTH_KEY_FACTOR, HcStrlen(TMP_AUTH_KEY_FACTOR) };
     KeyParams keyParams = { { pskAlias.val, pskAlias.length, true }, isDeStorage, params->baseParams.osAccountId };
+    PRINT_DEBUG_MSG(params->nonce.val, params->nonce.length, "nonceValue");
     res = params->baseParams.loader->computeHkdf(&keyParams, &(params->nonce), &keyInfo, &pskByte);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHkdf for psk failed, res: %d.", res);

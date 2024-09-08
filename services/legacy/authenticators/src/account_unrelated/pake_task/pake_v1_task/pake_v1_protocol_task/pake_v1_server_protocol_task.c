@@ -156,6 +156,7 @@ static int PakeServerConfirm(AsyBaseCurTask *task, PakeParams *params, const CJs
         LOGE("Get challengePeer failed.");
         return HC_ERR_JSON_GET;
     }
+    PRINT_DEBUG_MSG(params->baseParams.challengePeer.val, params->baseParams.challengePeer.length, "challengePeer");
 
     // execute
     res = ServerConfirmPakeV1Protocol(&params->baseParams);

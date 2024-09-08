@@ -185,16 +185,20 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
             goto CLEAN_UP;
         }
     }
+    PRINT_DEBUG_MSG(params->salt.val, params->salt.length, "saltValue");
 
     res = params->loader->generateRandom(&(params->challengeSelf));
     if (res != HC_SUCCESS) {
         LOGE("Generate challengeSelf failed, res: %x.", res);
         goto CLEAN_UP;
     }
+    PRINT_DEBUG_MSG(params->challengeSelf.val, params->challengeSelf.length, "challengeSelf");
 
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_BASE_INFO, HcStrlen(HICHAIN_SPEKE_BASE_INFO) };
     KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false, params->osAccountId };
     res = params->loader->computeHkdf(&keyParams, &(params->salt), &keyInfo, &secret);
+    PRINT_SENSITIVE_DATA("pskValue", (char *)params->psk.val);
+    PRINT_DEBUG_MSG(secret.val, secret.length, "secretValue");
     if (res != HC_SUCCESS) {
         LOGE("Derive secret from psk failed, res: %x.", res);
         goto CLEAN_UP;
@@ -244,18 +248,21 @@ static int32_t DeriveKeyFromSharedSecret(PakeBaseParams *params)
         LOGE("ComputeHkdf for unionKey failed, res: %x.", res);
         goto CLEAN_UP;
     }
+    PRINT_DEBUG_MSG(unionKey.val, unionKey.length, "unionKey");
     FreeAndCleanKey(&params->sharedSecret);
     if (memcpy_s(params->sessionKey.val, params->sessionKey.length, unionKey.val, params->sessionKey.length) != EOK) {
         LOGE("Memcpy for sessionKey failed.");
         res = HC_ERR_ALLOC_MEMORY;
         goto CLEAN_UP;
     }
+    PRINT_DEBUG_MSG(params->sessionKey.val, params->sessionKey.length, "sessionKey");
     if (memcpy_s(params->hmacKey.val, params->hmacKey.length,
         unionKey.val + params->sessionKey.length, params->hmacKey.length) != EOK) {
         LOGE("Memcpy for hmacKey failed.");
         res = HC_ERR_ALLOC_MEMORY;
         goto CLEAN_UP;
     }
+    PRINT_DEBUG_MSG(params->hmacKey.val, params->hmacKey.length, "hmacKey");
 CLEAN_UP:
     FreeAndCleanKey(&unionKey);
     return res;
@@ -303,12 +310,14 @@ static int32_t GenerateProof(PakeBaseParams *params)
         res = HC_ERR_MEMORY_COPY;
         goto CLEAN_UP;
     }
+    PRINT_DEBUG_MSG(params->challengePeer.val, params->challengePeer.length, "challengePeer");
     if (memcpy_s(challenge.val + params->challengeSelf.length, challenge.length - params->challengeSelf.length,
         params->challengePeer.val, params->challengePeer.length) != EOK) {
         LOGE("Memcpy challengePeer failed.");
         res = HC_ERR_MEMORY_COPY;
         goto CLEAN_UP;
     }
+    PRINT_DEBUG_MSG(challenge.val, challenge.length, "challenge");
 
     KeyParams keyParams = { { params->hmacKey.val, params->hmacKey.length, false }, false, params->osAccountId };
     res = params->loader->computeHmac(&keyParams, &challenge, &(params->kcfData));
@@ -316,6 +325,7 @@ static int32_t GenerateProof(PakeBaseParams *params)
         LOGE("Compute hmac for kcfData failed, res: %x.", res);
         goto CLEAN_UP;
     }
+    PRINT_DEBUG_MSG(params->kcfData.val, params->kcfData.length, "kcfData");
     return res;
 CLEAN_UP:
     CleanPakeSensitiveKeys(params);
@@ -338,6 +348,7 @@ static int32_t VerifyProof(PakeBaseParams *params)
         res = HC_ERR_MEMORY_COPY;
         goto CLEAN_UP;
     }
+    PRINT_DEBUG_MSG(challenge.val, challenge.length, "challenge");
 
     uint8_t verifyProofVal[HMAC_LEN] = { 0 };
     Uint8Buff verifyProof = { verifyProofVal, HMAC_LEN };
@@ -347,6 +358,7 @@ static int32_t VerifyProof(PakeBaseParams *params)
         LOGE("Compute hmac for kcfData failed, res: %x.", res);
         goto CLEAN_UP;
     }
+    PRINT_DEBUG_MSG(verifyProof.val, verifyProof.length, "verifyProof");
 
     if (memcmp(verifyProof.val, params->kcfDataPeer.val, verifyProof.length) != 0) {
         LOGE("Compare kcfDataPeer failed.");

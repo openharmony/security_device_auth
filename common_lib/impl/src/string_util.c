@@ -21,6 +21,7 @@
 #include "securec.h"
 #include "clib_error.h"
 #include "hc_types.h"
+#include "hc_log.h"
 
 #define OUT_OF_HEX 16
 #define NUMBER_9_IN_DECIMAL 9
@@ -130,4 +131,16 @@ int32_t DeepCopyString(const char *str, char **newStr)
     (void)memcpy_s(val, len, str, len);
     *newStr = val;
     return CLIB_SUCCESS;
+}
+
+void PrintBuffer(const uint8_t *msgBuff, uint32_t msgLen, const char *msgTag)
+{
+    uint32_t hexLen = msgLen * BYTE_TO_HEX_OPER_LENGTH + 1;
+    char *hexStr = (char *)HcMalloc(hexLen, 0);
+    if (hexStr == NULL) {
+        return;
+    }
+    (void)ByteToHexString(msgBuff, msgLen, hexStr, hexLen);
+    LOGD("%s value is: %s", msgTag, hexStr);
+    HcFree(hexStr);
 }

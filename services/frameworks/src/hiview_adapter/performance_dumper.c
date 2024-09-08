@@ -22,6 +22,7 @@
 #include "hc_time.h"
 #include "hc_types.h"
 #include "hidump_adapter.h"
+#include "hisysevent_adapter.h"
 
 #define ENABLE_PERFORMANCE_DUMPER "--enable"
 #define DISABLE_PERFORMANCE_DUMPER "--disable"
@@ -147,6 +148,14 @@ static void UpdateDataByInputIndex(PerformData *performData, PerformTimeIndex ti
     } else if (timeIndex == ON_FINISH_TIME) {
         performData->onFinishTime = time;
         performData->status = PERFORM_DATA_STATUS_FINISH;
+        int64_t totalTime = performData->onFinishTime - performData->firstStartTime;
+        if (performData->isBind) {
+            DEV_AUTH_REPORT_CALL_EVENT(performData->reqId, BIND_CONSUME_EVENT, NULL,
+                DEFAULT_OS_ACCOUNT, (int32_t)totalTime);
+        } else {
+            DEV_AUTH_REPORT_CALL_EVENT(performData->reqId, AUTH_CONSUME_EVENT, NULL,
+                DEFAULT_OS_ACCOUNT, (int32_t)totalTime);
+        }
     } else {
         LOGE("Invalid timeIndex!");
     }
