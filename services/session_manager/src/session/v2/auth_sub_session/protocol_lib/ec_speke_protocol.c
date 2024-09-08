@@ -138,6 +138,7 @@ static int32_t GetSaltFromInput(const CJson *inputEvent, EcSpekeParams *params)
         LOGE("get salt from inputEvent fail.");
         return HC_ERR_JSON_GET;
     }
+    PRINT_DEBUG_MSG(params->salt.val, params->salt.length, "saltValue");
     return HC_SUCCESS;
 }
 
@@ -157,6 +158,7 @@ static int32_t GetEpkPeerFromInput(const CJson *inputEvent, EcSpekeParams *param
         LOGE("HexStringToByte for epkPeerStr failed.");
         return HC_ERR_CONVERT_FAILED;
     }
+    PRINT_DEBUG_MSG(params->epkPeer.val, params->epkPeer.length, "epkPeer");
     return HC_SUCCESS;
 }
 
@@ -171,6 +173,7 @@ static int32_t GetKcfDataPeerFromInput(const CJson *inputEvent, EcSpekeParams *p
         LOGE("get kcfDataPeer from inputEvent fail.");
         return HC_ERR_JSON_GET;
     }
+    PRINT_DEBUG_MSG(params->kcfDataPeer.val, params->kcfDataPeer.length, "kcfDataPeer");
     return HC_SUCCESS;
 }
 
@@ -196,6 +199,7 @@ static int32_t CalSalt(EcSpekeParams *params)
         LOGE("Generate salt failed, res: %x.", res);
         return res;
     }
+    PRINT_DEBUG_MSG(params->salt.val, params->salt.length, "saltValue");
     return HC_SUCCESS;
 }
 
@@ -208,6 +212,7 @@ static int32_t CalSecret(EcSpekeParams *params, Uint8Buff *secret)
         LOGE("Derive secret from psk failed, res: %x.", res);
         return res;
     }
+    PRINT_DEBUG_MSG(secret->val, secret->length, "secretValue");
     ClearFreeUint8Buff(&params->psk);
     return HC_SUCCESS;
 }
@@ -236,6 +241,7 @@ static int32_t EcSpekeCalBase(EcSpekeParams *params, Uint8Buff *secret)
         LOGE("HashToPoint from secret to base failed, res: %x", res);
         return res;
     }
+    PRINT_DEBUG_MSG(params->base.val, params->base.length, "baseValue");
     return HC_SUCCESS;
 }
 
@@ -265,6 +271,7 @@ static int32_t EcSpekeCalEskSelf(EcSpekeParams *params)
         LOGE("Unsupported curve type: %d", params->curveType);
         return HC_ERR_UNSUPPORTED_VERSION;
     }
+    PRINT_DEBUG_MSG(params->eskSelf.val, params->eskSelf.length, "eskSelf");
     return HC_SUCCESS;
 }
 
@@ -294,6 +301,7 @@ static int32_t EcSpekeCalEpkSelf(EcSpekeParams *params)
         LOGE("AgreeSharedSecret for epkSelf failed, res: %x", res);
         return res;
     }
+    PRINT_DEBUG_MSG(params->epkSelf.val, params->epkSelf.length, "epkSelf");
     return HC_SUCCESS;
 }
 
@@ -501,6 +509,7 @@ static int32_t CalSharedSecret(EcSpekeParams *params)
         LOGE("Sha256 for sharedSecret failed, res: %x", res);
         return res;
     }
+    PRINT_DEBUG_MSG(params->sharedSecret.val, params->sharedSecret.length, "sharedSecret");
     return HC_SUCCESS;
 }
 
@@ -594,6 +603,7 @@ static int32_t CalKcfDataSelf(EcSpekeProtocol *impl, bool isClient)
         LOGE("Sha256 for kcfDataSelf failed, res: %x", res);
         return res;
     }
+    PRINT_DEBUG_MSG(impl->params.kcfDataSelf.val, impl->params.kcfDataSelf.length, "kcfDataSelf");
     return HC_SUCCESS;
 }
 
@@ -624,6 +634,7 @@ static int32_t VerifyKcfDataPeer(EcSpekeProtocol *impl, bool isClient)
         LOGE("Sha256 for kcfDataPeer failed, res: %x", res);
         return res;
     }
+    PRINT_DEBUG_MSG(kcfDataPeer.val, kcfDataPeer.length, "kcfDataPeer");
     if (memcmp(kcfDataPeer.val, impl->params.kcfDataPeer.val, kcfDataPeer.length) != 0) {
         LOGE("verify kcfData fail.");
         (void)memset_s(kcfDataPeer.val, kcfDataPeer.length, 0, kcfDataPeer.length);
@@ -652,6 +663,7 @@ static int32_t CalSessionKey(EcSpekeProtocol *impl)
         LOGE("ComputeHkdf for sessionKey failed, res: %x", res);
         return res;
     }
+    PRINT_DEBUG_MSG(impl->base.sessionKey.val, impl->base.sessionKey.length, "sessionKey");
     return HC_SUCCESS;
 }
 
@@ -1020,6 +1032,7 @@ static int32_t SetEcSpekePsk(BaseProtocol *self, const Uint8Buff *psk)
         LOGE("copy psk fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
+    PRINT_DEBUG_MSG(impl->params.psk.val, impl->params.psk.length, "pskValue");
     LOGI("set psk success.");
     return HC_SUCCESS;
 }
@@ -1034,6 +1047,7 @@ static int32_t SetEcSpekeSelfProtectedMsg(BaseProtocol *self, const Uint8Buff *s
         LOGE("copy protected self msg fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
+    PRINT_DEBUG_MSG(self->protectedMsg.selfMsg.val, self->protectedMsg.selfMsg.length, "selfMsg");
     return HC_SUCCESS;
 }
 
@@ -1047,6 +1061,7 @@ static int32_t SetEcSpekePeerProtectedMsg(BaseProtocol *self, const Uint8Buff *p
         LOGE("copy protected peer msg fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
+    PRINT_DEBUG_MSG(self->protectedMsg.peerMsg.val, self->protectedMsg.peerMsg.length, "peerMsg");
     return HC_SUCCESS;
 }
 

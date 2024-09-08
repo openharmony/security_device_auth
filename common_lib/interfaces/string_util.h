@@ -24,6 +24,12 @@
 #define BYTE_TO_BASE64_MULTIPLIER 4
 #define DEC 10
 
+#ifndef DEV_AUTH_PRINT_DEBUG_MSG
+#define PRINT_DEBUG_MSG(msgBuff, msgLen, msgTag)
+#else
+#define PRINT_DEBUG_MSG(msgBuff, msgLen, msgTag) PrintBuffer(msgBuff, msgLen, msgTag)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -69,6 +75,14 @@ int32_t ToUpperCase(const char *oriStr, char **desStr);
  * @return success(0), otherwise, failure.
  */
 int32_t DeepCopyString(const char *str, char **newStr);
+
+/*
+ * Print the msg buffer in hex string.
+ * @param msgBuff: the msg buffer to be print.
+ * @param msgLen: the msg len.
+ * @param msgTag: the msg tag.
+ */
+void PrintBuffer(const uint8_t *msgBuff, uint32_t msgLen, const char *msgTag);
 
 #ifdef __cplusplus
 }

@@ -124,6 +124,7 @@ static int32_t GetDasEpkPeerFromJson(PakeParams *params, const CJson *in)
         LOGE("Convert epkPeer from hex string to byte failed, res: %d.", res);
         return res;
     }
+    PRINT_DEBUG_MSG(params->baseParams.epkPeer.val, params->baseParams.epkPeer.length, "epkPeer");
     return res;
 }
 
@@ -174,6 +175,7 @@ int32_t ParsePakeClientConfirmMessage(PakeParams *params, const CJson *in)
         LOGE("Get kcfDataPeer failed, res: %d.", res);
         return res;
     }
+    PRINT_DEBUG_MSG(params->baseParams.kcfDataPeer.val, params->baseParams.kcfDataPeer.length, "kcfDataPeer");
     res = GetDasEpkPeerFromJson(params, in);
     if (res != HC_SUCCESS) {
         LOGE("GetDasEpkPeerFromJson failed, res: %d.", res);
@@ -201,5 +203,6 @@ int32_t ParsePakeServerConfirmMessage(PakeParams *params, const CJson *in)
         LOGE("Get kcfDataPeer failed, res: %d.", res);
         return res;
     }
+    PRINT_DEBUG_MSG(params->baseParams.kcfDataPeer.val, params->baseParams.kcfDataPeer.length, "kcfDataPeer");
     return res;
 }

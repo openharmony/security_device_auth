@@ -102,6 +102,7 @@ static int ParseMsgForClientConfirm(PakeParams *params, const CJson *in)
         LOGE("Get challengePeer failed, res: %d.", res);
         return res;
     }
+    PRINT_DEBUG_MSG(params->baseParams.challengePeer.val, params->baseParams.challengePeer.length, "challengePeer");
     if (params->opCode == AUTHENTICATE || params->opCode == OP_UNBIND) {
         if (params->opCode == AUTHENTICATE && params->isPseudonym) {
             res = CheckPseudonymId(params, in);

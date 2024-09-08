@@ -28,6 +28,8 @@
 #define ADD_MEMBER_WITH_LITE_COMPATIBILITY "AddMemberWithLiteCompatibility"
 #define ADD_MEMBER_WITH_LITE_STANDARD "AddMemberWithLiteStandard"
 #define UPGRADE_DATA_EVENT "UpgradeData"
+#define BIND_CONSUME_EVENT "BindConsume"
+#define AUTH_CONSUME_EVENT "AuthConsume"
 
 #define DEFAULT_GROUP_TYPE 256
 #define DEFAULT_CRED_TYPE 0
