@@ -40,7 +40,11 @@ static int32_t SetProtocolsForUidType(IdentityInfo *info)
     }
     entity->protocolType = ALG_ISO;
     entity->expandProcessCmds = CMD_ADD_TRUST_DEVICE;
-    info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity);
+    if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity) == NULL) {
+        LOGE("Failed to push entity to vec");
+        HcFree(entity);
+        return HC_ERR_ALLOC_MEMORY;
+    }
 #else
     (void)info;
 #endif
