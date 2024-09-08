@@ -117,6 +117,7 @@ enum {
     HC_ERR_DEL_GROUP = 0x00005010,                                        // 20496
     HC_ERR_INFORM_ERR = 0x00005011,                                       // 20497
     HC_ERR_ONLY_ACCOUNT_RELATED = 0x00005012,                             // 20498
+    HC_ERR_CROSS_USER_ACCESS = 0x00005013,                                // 20499
 
     /* error code for database , 0x00006000 ~ 0x00006FFF */
     HC_ERR_DB = 0x00006001,                                               // 24577

@@ -73,6 +73,10 @@ int32_t CombineAuthConfirmData(const CJson *confirmationJson, CJson *dataFromCli
         LOGE("Invalid os account!");
         return HC_ERR_INVALID_PARAMS;
     }
+    if (!CheckIsForegroundOsAccountId(osAccountId)) {
+        LOGE("This access is not from the foreground user, rejected it.");
+        return HC_ERR_CROSS_USER_ACCESS;
+    }
     if (AddIntToJson(dataFromClient, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
         LOGE("Failed to add os accountId!");
         return HC_ERR_JSON_ADD;
