@@ -608,6 +608,10 @@ static int32_t AddMemberToGroupInner(int32_t osAccountId, int64_t requestId, con
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
+    if (!CheckIsForegroundOsAccountId(osAccountId)) {
+        LOGE("This access is not from the foreground user, rejected it.");
+        return HC_ERR_CROSS_USER_ACCESS;
+    }
     if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
@@ -696,6 +700,10 @@ static int32_t AddOsAccountIdToContextIfValid(CJson *context)
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if (osAccountId == INVALID_OS_ACCOUNT) {
         return HC_ERR_INVALID_PARAMS;
+    }
+    if (!CheckIsForegroundOsAccountId(osAccountId)) {
+        LOGE("This access is not from the foreground user, rejected it.");
+        return HC_ERR_CROSS_USER_ACCESS;
     }
     if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
@@ -908,6 +916,10 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
     if ((authParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT) || (gaCallback == NULL)) {
         LOGE("The input auth params is invalid!");
         return HC_ERR_INVALID_PARAMS;
+    }
+    if (!CheckIsForegroundOsAccountId(osAccountId)) {
+        LOGE("This access is not from the foreground user, rejected it.");
+        return HC_ERR_CROSS_USER_ACCESS;
     }
     if (!IsOsAccountUnlocked(osAccountId)) {
         LOGE("Os account is not unlocked!");
@@ -1319,11 +1331,14 @@ DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
         FreeJson(context);
         return HC_ERR_JSON_FAIL;
     }
-
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if (osAccountId == INVALID_OS_ACCOUNT) {
         FreeJson(context);
         return HC_ERR_INVALID_PARAMS;
+    }
+    if (!CheckIsForegroundOsAccountId(osAccountId)) {
+        LOGE("This access is not from the foreground user, rejected it.");
+        return HC_ERR_CROSS_USER_ACCESS;
     }
     int32_t res = BuildClientAuthContext(osAccountId, authReqId, DEFAULT_PACKAGE_NAME, context);
     if (res != HC_SUCCESS) {

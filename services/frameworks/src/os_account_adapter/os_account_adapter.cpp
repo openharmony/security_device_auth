@@ -260,6 +260,20 @@ int32_t DevAuthGetRealOsAccountLocalId(int32_t inputId)
     }
 }
 
+bool CheckIsForegroundOsAccountId(int32_t inputOsAccountId)
+{
+    int32_t foregroundOsAccountId = GetCurrentActiveOsAccountId();
+    if (foregroundOsAccountId == INVALID_OS_ACCOUNT) {
+        LOGE("[OsAccountAdapter]: get foreground osAccountId fail!");
+        return false;
+    }
+    if (inputOsAccountId != foregroundOsAccountId) {
+        LOGE("[OsAccountAdapter]: input osAccountId is not same as foreground osAccountId!");
+        return false;
+    }
+    return true;
+}
+
 void AddOsAccountEventCallback(EventCallbackId callbackId, OsAccountCallbackFunc unlockFunc,
     OsAccountCallbackFunc removeFunc)
 {
