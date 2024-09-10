@@ -150,9 +150,11 @@ static void UpdateDataByInputIndex(PerformData *performData, PerformTimeIndex ti
         performData->status = PERFORM_DATA_STATUS_FINISH;
         int64_t totalTime = performData->onFinishTime - performData->firstStartTime;
         if (performData->isBind) {
+            LOGI("Bind consume time: %lld, requestId: %lld", totalTime, performData->reqId);
             DEV_AUTH_REPORT_CALL_EVENT(performData->reqId, BIND_CONSUME_EVENT, NULL,
                 DEFAULT_OS_ACCOUNT, (int32_t)totalTime);
         } else {
+            LOGI("Auth consume time: %lld, requestId: %lld", totalTime, performData->reqId);
             DEV_AUTH_REPORT_CALL_EVENT(performData->reqId, AUTH_CONSUME_EVENT, NULL,
                 DEFAULT_OS_ACCOUNT, (int32_t)totalTime);
         }
