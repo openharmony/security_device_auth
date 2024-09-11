@@ -97,6 +97,7 @@ ohos_fuzztest("SaveTrustedInfoFuzzTest") {
     "bounds_checking_function:libsec_shared",
     "cJSON:cjson",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "huks:libhukssdk",
   ]

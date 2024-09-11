@@ -77,6 +77,7 @@ ohos_fuzztest("AuthSubSessionFuzzTest") {
   sources += identity_manager_files
   sources += iso_protocol_files
   sources += ec_speke_protocol_files
+  sources += hiview_adapter_files
   sources += [
     "${authenticators_path}/src/account_related/creds_manager/asy_token_manager.c",
     "${authenticators_path}/src/account_related/creds_manager/sym_token_manager.c",
@@ -94,7 +95,6 @@ ohos_fuzztest("AuthSubSessionFuzzTest") {
     "${identity_manager_path}/src/cert_operation.c",
     "${mk_agree_path}/src/mock/key_manager_mock.c",
     "${privacy_enhancement_path}/src/mock/pseudonym_manager_mock.c",
-    "${services_path}/frameworks/src/hiview_adapter/performance_dumper.c",
   ]
   defines += [ "ENABLE_AUTH_CODE_IMPORT" ]
 
@@ -102,6 +102,8 @@ ohos_fuzztest("AuthSubSessionFuzzTest") {
     "bounds_checking_function:libsec_shared",
     "cJSON:cjson",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "huks:libhukssdk",
   ]
 }
