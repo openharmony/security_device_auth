@@ -125,7 +125,11 @@ static int32_t SetProtocolsForDirectAuth(IdentityInfo *info)
     }
     ecSpekeEntity->protocolType = ALG_EC_SPEKE;
     ecSpekeEntity->expandProcessCmds = 0;
-    info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&ecSpekeEntity);
+    if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&ecSpekeEntity) == NULL) {
+        LOGE("Failed to push ecspeke entity!");
+        HcFree(ecSpekeEntity);
+        return HC_ERR_ALLOC_MEMORY;
+    }
 #else
 #endif
 
