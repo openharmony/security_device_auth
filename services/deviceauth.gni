@@ -389,7 +389,7 @@ if (enable_extend_plugin) {
   deviceauth_files += account_auth_plugin_mock_files
 }
 
-if (enable_soft_bus_channel == true) {
+if (device_auth_enable_soft_bus_channel == true) {
   deviceauth_files += soft_bus_channel_files
 } else {
   deviceauth_files += soft_bus_channel_mock_files

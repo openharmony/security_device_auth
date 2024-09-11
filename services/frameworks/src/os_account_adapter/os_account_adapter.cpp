@@ -173,7 +173,7 @@ static bool IsCallbackExist(EventCallbackId callbackId)
     return false;
 }
 
-static int32_t GetCurrentActiveOsAccountId(void)
+int32_t GetCurrentActiveOsAccountId(void)
 {
     std::vector<int> activatedOsAccountIds;
     OHOS::ErrCode res = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(activatedOsAccountIds);

@@ -22,6 +22,17 @@
 #include "iso_protocol_common.h"
 #include "protocol_common.h"
 
+static int32_t ComputeHkdfByParams(const IsoParams *params, const Uint8Buff *hkdfSaltBuf, Uint8Buff *returnKeyBuf)
+{
+    Uint8Buff keyInfoBuf = { (uint8_t *)GENERATE_RETURN_KEY_STR, (uint32_t)HcStrlen(GENERATE_RETURN_KEY_STR) };
+    KeyParams keyParam = {
+        .keyBuff = { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false },
+        .isDeStorage = false,
+        .osAccountId = params->baseParams.osAccountId
+    };
+    return params->baseParams.loader->computeHkdf(&keyParam, hkdfSaltBuf, &keyInfoBuf, returnKeyBuf);
+}
+
 static int GenerateReturnKey(IsoParams *params, uint8_t *returnKey, uint32_t returnKeyLen)
 {
     uint32_t hkdfSaltLen = params->baseParams.randPeer.length + params->baseParams.randPeer.length;
@@ -58,10 +69,8 @@ static int GenerateReturnKey(IsoParams *params, uint8_t *returnKey, uint32_t ret
         }
     }
     Uint8Buff hkdfSaltBuf = { hkdfSalt, hkdfSaltLen };
-    Uint8Buff keyInfoBuf = { (uint8_t *)GENERATE_RETURN_KEY_STR, (uint32_t)strlen(GENERATE_RETURN_KEY_STR) };
     Uint8Buff returnKeyBuf = { returnKey, returnKeyLen };
-    KeyParams keyParam = { { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false }, false };
-    res = params->baseParams.loader->computeHkdf(&keyParam, &hkdfSaltBuf, &keyInfoBuf, &returnKeyBuf);
+    res = ComputeHkdfByParams(params, &hkdfSaltBuf, &returnKeyBuf);
     if (res != HC_SUCCESS) {
         LOGE("computeHkdf for returnKey failed.");
         goto ERR;
@@ -90,15 +99,19 @@ int GenerateEncResult(const IsoParams *params, int message, CJson *sendToPeer, c
     encryptInfo.nonce = nonce;
     encryptInfo.nonceLen = NONCE_SIZE;
     encryptInfo.aad = (uint8_t *)aad;
-    encryptInfo.aadLen = (uint32_t)strlen(aad);
+    encryptInfo.aadLen = (uint32_t)HcStrlen(aad);
     out = (uint8_t *)HcMalloc((sizeof(int) + TAG_LEN), 0);
     if (out == NULL) {
         ret = HC_ERR_ALLOC_MEMORY;
         goto ERR;
     }
     Uint8Buff outBuf = { out, sizeof(int) + TAG_LEN };
-    ret = params->baseParams.loader->aesGcmEncrypt(&params->baseParams.sessionKey, &plainBuf,
-        &encryptInfo, false, &outBuf);
+    KeyParams keyParams = {
+        { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false },
+        false,
+        params->baseParams.osAccountId
+    };
+    ret = params->baseParams.loader->aesGcmEncrypt(&keyParams, &plainBuf, &encryptInfo, &outBuf);
     if (ret != HC_SUCCESS) {
         goto ERR;
     }
@@ -226,12 +239,16 @@ int CheckEncResult(IsoParams *params, const CJson *in, const char *aad)
     Uint8Buff encResultBuf = { encResult, sizeof(int) + TAG_LEN };
     GcmParam gcmParam;
     gcmParam.aad = (uint8_t *)aad;
-    gcmParam.aadLen = (uint32_t)strlen(aad);
+    gcmParam.aadLen = (uint32_t)HcStrlen(aad);
     gcmParam.nonce = nonce;
     gcmParam.nonceLen = NONCE_SIZE;
 
-    res = params->baseParams.loader->aesGcmDecrypt(&params->baseParams.sessionKey, &encResultBuf, &gcmParam, false,
-        &outBuf);
+    KeyParams keyParams = {
+        { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false },
+        false,
+        params->baseParams.osAccountId
+    };
+    res = params->baseParams.loader->aesGcmDecrypt(&keyParams, &encResultBuf, &gcmParam, &outBuf);
     if (res != 0) {
         LOGE("decrypt result failed, res:%d", res);
         goto ERR;
@@ -245,13 +262,13 @@ ERR:
 static int32_t GenerateKeyAliasForIso(const IsoParams *params, Uint8Buff *keyAliasBuff)
 {
     int32_t res;
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, (uint32_t)strlen(params->serviceType) };
+    Uint8Buff serviceType = { (uint8_t *)params->serviceType, (uint32_t)HcStrlen(params->serviceType) };
     if (params->isPeerFromUpgrade) {
-        Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, strlen(GROUP_MANAGER_PACKAGE_NAME) };
+        Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, HcStrlen(GROUP_MANAGER_PACKAGE_NAME) };
         res = GenerateKeyAlias(&pkgNameBuff, &serviceType, params->peerUserType, &params->baseParams.authIdPeer,
             keyAliasBuff);
     } else {
-        Uint8Buff pkgNameBuff = { (uint8_t *)params->packageName, (uint32_t)strlen(params->packageName) };
+        Uint8Buff pkgNameBuff = { (uint8_t *)params->packageName, (uint32_t)HcStrlen(params->packageName) };
         res = GenerateKeyAlias(&pkgNameBuff, &serviceType, KEY_ALIAS_AUTH_TOKEN, &params->baseParams.authIdPeer,
             keyAliasBuff);
     }
@@ -285,7 +302,8 @@ void DeleteAuthCode(const IsoParams *params)
     }
     LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAliasBuff.val[DEV_AUTH_ZERO], keyAliasBuff.val[DEV_AUTH_ONE],
         keyAliasBuff.val[DEV_AUTH_TWO], keyAliasBuff.val[DEV_AUTH_THREE]);
-    res = params->baseParams.loader->deleteKey(&keyAliasBuff, params->isPeerFromUpgrade);
+    res = params->baseParams.loader->deleteKey(&keyAliasBuff, params->isPeerFromUpgrade,
+        params->baseParams.osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete auth code!");
     }
@@ -312,7 +330,7 @@ void DestroyIsoParams(IsoParams *params)
         params->seed.val = NULL;
     }
     if (params->pinCodeString != NULL) {
-        (void)memset_s(params->pinCodeString, strlen(params->pinCodeString), 0, strlen(params->pinCodeString));
+        (void)memset_s(params->pinCodeString, HcStrlen(params->pinCodeString), 0, HcStrlen(params->pinCodeString));
         HcFree(params->pinCodeString);
         params->pinCodeString = NULL;
     }
@@ -326,7 +344,7 @@ static int FillAuthId(IsoParams *params, const CJson *in)
         LOGE("get self authId failed");
         return HC_ERROR;
     }
-    uint32_t authIdLen = strlen(authId);
+    uint32_t authIdLen = HcStrlen(authId);
     if (authIdLen == 0 || authIdLen > MAX_AUTH_ID_LEN) {
         LOGE("Invalid authIdSelfLen: %d.", authIdLen);
         return HC_ERR_INVALID_PARAMS;
@@ -338,7 +356,7 @@ static int FillAuthId(IsoParams *params, const CJson *in)
         return HC_ERROR;
     }
     if (memcpy_s(params->baseParams.authIdSelf.val, params->baseParams.authIdSelf.length,
-        authId, strlen(authId)) != EOK) {
+        authId, HcStrlen(authId)) != EOK) {
         LOGE("Memcpy authIdSelf failed.");
         return HC_ERR_MEMORY_COPY;
     }
@@ -352,7 +370,7 @@ static int FillAuthId(IsoParams *params, const CJson *in)
             LOGE("get peer authId failed");
             return HC_ERROR;
         }
-        authIdLen = strlen(authId);
+        authIdLen = HcStrlen(authId);
         if (authIdLen == 0 || authIdLen > MAX_AUTH_ID_LEN) {
             LOGE("Invalid authIdPeerLen %d.", authIdLen);
             return HC_ERR_INVALID_PARAMS;
@@ -364,7 +382,7 @@ static int FillAuthId(IsoParams *params, const CJson *in)
             return HC_ERROR;
         }
         if (memcpy_s(params->baseParams.authIdPeer.val, params->baseParams.authIdPeer.length,
-            authId, strlen(authId)) != EOK) {
+            authId, HcStrlen(authId)) != EOK) {
             LOGE("Memcpy authIdPeer failed.");
             return HC_ERR_MEMORY_COPY;
         }
@@ -380,12 +398,12 @@ static int FillPkgNameAndServiceType(IsoParams *params, const CJson *in)
         LOGE("get serviceType failed");
         return HC_ERROR;
     }
-    params->serviceType = (char *)HcMalloc((uint32_t)(strlen(serviceType) + 1), 0);
+    params->serviceType = (char *)HcMalloc((uint32_t)(HcStrlen(serviceType) + 1), 0);
     if (params->serviceType == NULL) {
         LOGE("malloc serviceType failed");
         return HC_ERR_ALLOC_MEMORY;
     }
-    if (memcpy_s(params->serviceType, strlen(serviceType) + 1, serviceType, strlen(serviceType)) != EOK) {
+    if (memcpy_s(params->serviceType, HcStrlen(serviceType) + 1, serviceType, HcStrlen(serviceType)) != EOK) {
         LOGE("memcpy serviceType failed.");
         return HC_ERR_MEMORY_COPY;
     }
@@ -394,12 +412,12 @@ static int FillPkgNameAndServiceType(IsoParams *params, const CJson *in)
         LOGE("get packageName failed");
         return HC_ERROR;
     }
-    params->packageName = (char *)HcMalloc((uint32_t)(strlen(packageName) + 1), 0);
+    params->packageName = (char *)HcMalloc((uint32_t)(HcStrlen(packageName) + 1), 0);
     if (params->packageName == NULL) {
         LOGE("malloc packageName failed");
         return HC_ERROR;
     }
-    if (memcpy_s(params->packageName, strlen(packageName) + 1, packageName, strlen(packageName)) != EOK) {
+    if (memcpy_s(params->packageName, HcStrlen(packageName) + 1, packageName, HcStrlen(packageName)) != EOK) {
         LOGE("memcpy packageName failed.");
         return HC_ERR_MEMORY_COPY;
     }
@@ -427,7 +445,7 @@ static int FillPin(IsoParams *params, const CJson *in)
             LOGE("Get pin failed.");
             return HC_ERROR;
         }
-        if (strlen(pinString) < MIN_PIN_LEN || strlen(pinString) > MAX_PIN_LEN) {
+        if (HcStrlen(pinString) < MIN_PIN_LEN || HcStrlen(pinString) > MAX_PIN_LEN) {
             LOGE("Pin is too short.");
             return HC_ERR_INVALID_PARAMS;
         }
@@ -437,14 +455,14 @@ static int FillPin(IsoParams *params, const CJson *in)
             return HC_ERR_INVALID_LEN;
         }
     #endif
-        params->pinCodeString = (char *)HcMalloc(strlen(pinString) + 1, 0);
+        params->pinCodeString = (char *)HcMalloc(HcStrlen(pinString) + 1, 0);
         if (params->pinCodeString == NULL) {
             LOGE("malloc pinCode failed.");
             return HC_ERR_ALLOC_MEMORY;
         }
-        if (memcpy_s(params->pinCodeString, strlen(pinString) + 1, pinString, strlen(pinString)) != EOK) {
+        if (memcpy_s(params->pinCodeString, HcStrlen(pinString) + 1, pinString, HcStrlen(pinString)) != EOK) {
             LOGE("memcpy pinCodeString failed.");
-            (void)memset_s(params->pinCodeString, strlen(pinString) + 1, 0, strlen(pinString) + 1);
+            (void)memset_s(params->pinCodeString, HcStrlen(pinString) + 1, 0, HcStrlen(pinString) + 1);
             return HC_ERR_MEMORY_COPY;
         }
     }
@@ -515,7 +533,7 @@ int InitIsoParams(IsoParams *params, const CJson *in)
         res = HC_ERR_JSON_GET;
         goto ERR;
     }
-    res = InitIsoBaseParams(&params->baseParams);
+    res = InitIsoBaseParams(in, &params->baseParams);
     if (res != HC_SUCCESS) {
         LOGE("InitIsoBaseParams failed, res: %x.", res);
         goto ERR;
@@ -552,33 +570,34 @@ ERR:
 
 static int AuthGeneratePsk(const Uint8Buff *seed, IsoParams *params)
 {
-    uint8_t keyAlias[ISO_KEY_ALIAS_LEN] = { 0 };
-    uint8_t upgradeKeyAlias[ISO_UPGRADE_KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff keyAliasBuff = { keyAlias, ISO_KEY_ALIAS_LEN };
+    uint8_t keyAliasVal[ISO_KEY_ALIAS_LEN] = { 0 };
+    uint8_t upgradeKeyAliasVal[ISO_UPGRADE_KEY_ALIAS_LEN] = { 0 };
+    Uint8Buff keyAlias = { keyAliasVal, ISO_KEY_ALIAS_LEN };
     if (params->isPeerFromUpgrade) {
-        keyAliasBuff.val = upgradeKeyAlias;
-        keyAliasBuff.length = ISO_UPGRADE_KEY_ALIAS_LEN;
+        keyAlias.val = upgradeKeyAliasVal;
+        keyAlias.length = ISO_UPGRADE_KEY_ALIAS_LEN;
     }
-    int32_t res = GenerateKeyAliasForIso(params, &keyAliasBuff);
+    int32_t res = GenerateKeyAliasForIso(params, &keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate iso key alias!");
         return res;
     }
 
-    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAliasBuff.val[DEV_AUTH_ZERO], keyAliasBuff.val[DEV_AUTH_ONE],
-        keyAliasBuff.val[DEV_AUTH_TWO], keyAliasBuff.val[DEV_AUTH_THREE]);
+    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias.val[DEV_AUTH_ZERO], keyAlias.val[DEV_AUTH_ONE],
+        keyAlias.val[DEV_AUTH_TWO], keyAlias.val[DEV_AUTH_THREE]);
     Uint8Buff pskBuf = { params->baseParams.psk, sizeof(params->baseParams.psk) };
     if (params->isPeerFromUpgrade) {
-        KeyParams keyAliasParams = { { keyAliasBuff.val, keyAliasBuff.length, true }, true };
+        KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, true, params->baseParams.osAccountId };
         return params->baseParams.loader->computeHmacWithThreeStage(&keyAliasParams, seed, &pskBuf);
     } else {
-        return params->baseParams.loader->computeHmac(&keyAliasBuff, seed, &pskBuf, true);
+        KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false, params->baseParams.osAccountId };
+        return params->baseParams.loader->computeHmac(&keyAliasParams, seed, &pskBuf);
     }
 }
 
 static int AuthGeneratePskUsePin(const Uint8Buff *seed, IsoParams *params, const char *pinString)
 {
-    Uint8Buff messageBuf = { (uint8_t *)pinString, (uint32_t)strlen(pinString) };
+    Uint8Buff messageBuf = { (uint8_t *)pinString, (uint32_t)HcStrlen(pinString) };
     Uint8Buff pskBuf = { params->baseParams.psk, sizeof(params->baseParams.psk) };
     uint8_t hash[SHA256_LEN] = { 0 };
     Uint8Buff hashBuf = { hash, sizeof(hash) };
@@ -587,7 +606,8 @@ static int AuthGeneratePskUsePin(const Uint8Buff *seed, IsoParams *params, const
         LOGE("sha256 failed, res:%d", res);
         return res;
     }
-    return params->baseParams.loader->computeHmac(&hashBuf, seed, &pskBuf, false);
+    KeyParams keyParams = { { hashBuf.val, hashBuf.length, false }, false, params->baseParams.osAccountId };
+    return params->baseParams.loader->computeHmac(&keyParams, seed, &pskBuf);
 }
 
 int GenerateKeyAliasInIso(const IsoParams *params, uint8_t *keyAlias, uint32_t keyAliasLen, bool useOpposite)
@@ -595,8 +615,8 @@ int GenerateKeyAliasInIso(const IsoParams *params, uint8_t *keyAlias, uint32_t k
     if (params == NULL || keyAlias == NULL || keyAliasLen == 0) {
         return HC_ERR_INVALID_PARAMS;
     }
-    Uint8Buff pkgName = { (uint8_t *)params->packageName, (uint32_t)strlen(params->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, (uint32_t)strlen(params->serviceType) };
+    Uint8Buff pkgName = { (uint8_t *)params->packageName, (uint32_t)HcStrlen(params->packageName) };
+    Uint8Buff serviceType = { (uint8_t *)params->serviceType, (uint32_t)HcStrlen(params->serviceType) };
     Uint8Buff authId = { NULL, 0 };
     if (useOpposite) {
         authId.val = params->baseParams.authIdPeer.val;

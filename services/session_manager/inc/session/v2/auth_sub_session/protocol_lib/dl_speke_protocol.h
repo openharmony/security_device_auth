@@ -29,6 +29,7 @@ typedef enum {
 typedef struct {
     int32_t primeMod;
     Uint8Buff authId;
+    int32_t osAccountId;
 } DlSpekeInitParams;
 
 #ifdef ENABLE_P2P_BIND_DL_SPEKE

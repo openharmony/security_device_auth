@@ -54,7 +54,7 @@ static void SetSessionKeyFunc(const struct session_identity *identity,
     return;
 }
 
-static void SetServiceResultFunc(const struct session_identity *identity, int32_t result, int32_t errorCode)
+static void SetServiceResultFunc(const struct session_identity *identity, int32_t result)
 {
     return;
 }

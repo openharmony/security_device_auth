@@ -30,7 +30,7 @@ bool IsUserTypeValid(int userType);
 bool IsExpireTimeValid(int expireTime);
 bool IsGroupVisibilityValid(int groupVisibility);
 
-int32_t ProcessKeyPair(int action, const CJson *jsonParams, const char *groupId);
+int32_t ProcessKeyPair(int32_t osAccountId, int action, const CJson *jsonParams, const char *groupId);
 int32_t GetHashMessage(const Uint8Buff *first, const Uint8Buff *second, uint8_t **hashMessage, uint32_t *messageSize);
 
 int32_t AssertUserIdExist(const CJson *jsonParams);
@@ -70,6 +70,7 @@ int32_t AddGroupToDatabaseByJson(int32_t osAccountId, int32_t (*generateGroupPar
 int32_t AddDeviceToDatabaseByJson(int32_t osAccountId, int32_t (*generateDevParams)(const CJson*, const char*,
     TrustedDeviceEntry*), const CJson *jsonParams, const char *groupId);
 int32_t DelGroupFromDb(int32_t osAccountId, const char *groupId);
+int32_t DelDeviceFromDb(int32_t osAccountId, const char *groupId, const TrustedDeviceEntry *deviceEntry);
 
 int32_t ConvertGroupIdToJsonStr(const char *groupId, char **returnJsonStr);
 int32_t GenerateBindSuccessData(const char *peerAuthId, const char *peerUdid, const char *groupId,

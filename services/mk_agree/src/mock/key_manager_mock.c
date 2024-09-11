@@ -16,33 +16,38 @@
 #include "key_manager.h"
 #include "device_auth_defines.h"
 
-int32_t GenerateDeviceKeyPair(void)
+int32_t GenerateDeviceKeyPair(int32_t osAccountId)
 {
+    (void)osAccountId;
     return HC_ERR_NOT_SUPPORT;
 }
 
-int32_t GenerateMk(const char *peerDeviceId, const Uint8Buff *peerPubKey)
+int32_t GenerateMk(int32_t osAccountId, const char *peerDeviceId, const Uint8Buff *peerPubKey)
 {
+    (void)osAccountId;
     (void)peerDeviceId;
     (void)peerPubKey;
     return HC_ERR_NOT_SUPPORT;
 }
 
-int32_t DeleteMk(const char *peerDeviceId)
+int32_t DeleteMk(int32_t osAccountId, const char *peerDeviceId)
 {
+    (void)osAccountId;
     (void)peerDeviceId;
     return HC_ERR_NOT_SUPPORT;
 }
 
-int32_t GeneratePseudonymPsk(const char *peerDeviceId, const Uint8Buff *salt)
+int32_t GeneratePseudonymPsk(int32_t osAccountId, const char *peerDeviceId, const Uint8Buff *salt)
 {
+    (void)osAccountId;
     (void)peerDeviceId;
     (void)salt;
     return HC_ERR_NOT_SUPPORT;
 }
 
-int32_t DeletePseudonymPsk(const char *peerDeviceId)
+int32_t DeletePseudonymPsk(int32_t osAccountId, const char *peerDeviceId)
 {
+    (void)osAccountId;
     (void)peerDeviceId;
     return HC_ERR_NOT_SUPPORT;
 }
@@ -58,8 +63,9 @@ int32_t GenerateAndSavePseudonymId(int32_t osAccountId, const char *peerDeviceId
     return HC_ERR_NOT_SUPPORT;
 }
 
-int32_t GetDevicePubKey(Uint8Buff *devicePk)
+int32_t GetDevicePubKey(int32_t osAccountId, Uint8Buff *devicePk)
 {
+    (void)osAccountId;
     (void)devicePk;
     return HC_ERR_NOT_SUPPORT;
 }

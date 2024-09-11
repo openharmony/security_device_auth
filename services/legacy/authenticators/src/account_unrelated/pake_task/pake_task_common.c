@@ -64,8 +64,12 @@ ERR:
 
 static int32_t GenerateOutputKey(PakeParams *params)
 {
-    Uint8Buff keyInfo = { (uint8_t *)HICHAIN_RETURN_KEY, strlen(HICHAIN_RETURN_KEY) };
-    KeyParams keyParam = { { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false }, false };
+    Uint8Buff keyInfo = { (uint8_t *)HICHAIN_RETURN_KEY, HcStrlen(HICHAIN_RETURN_KEY) };
+    KeyParams keyParam = {
+        { params->baseParams.sessionKey.val, params->baseParams.sessionKey.length, false },
+        false,
+        params->baseParams.osAccountId
+    };
     int32_t res = params->baseParams.loader->computeHkdf(&keyParam, &(params->baseParams.salt),
         &keyInfo, &(params->returnKey));
     if (res != HC_SUCCESS) {
@@ -113,18 +117,18 @@ static int32_t FillPskWithPin(PakeParams *params, const CJson *in)
         LOGE("Get pin code failed.");
         return HC_ERR_JSON_GET;
     }
-    if (strlen(pinString) < MIN_PIN_LEN || strlen(pinString) > MAX_PIN_LEN) {
+    if (HcStrlen(pinString) < MIN_PIN_LEN || HcStrlen(pinString) > MAX_PIN_LEN) {
         LOGE("Pin code len is invalid.");
         return HC_ERR_INVALID_LEN;
     }
 
-    int res = InitSingleParam(&(params->baseParams.psk), strlen(pinString));
+    int res = InitSingleParam(&(params->baseParams.psk), HcStrlen(pinString));
     if (res != HC_SUCCESS) {
         LOGE("InitSingleParam for psk failed, res: %d.", res);
         return res;
     }
     if (memcpy_s(params->baseParams.psk.val, params->baseParams.psk.length,
-        pinString, strlen(pinString)) != HC_SUCCESS) {
+        pinString, HcStrlen(pinString)) != HC_SUCCESS) {
         LOGE("Memcpy for pin code failed.");
         FreeAndCleanKey(&params->baseParams.psk);
         return HC_ERR_MEMORY_COPY;
@@ -140,7 +144,7 @@ static int32_t FillAuthId(PakeParams *params, const CJson *in)
         LOGE("Get self authId failed.");
         return HC_ERR_JSON_GET;
     }
-    uint32_t authIdLen = strlen(authId);
+    uint32_t authIdLen = HcStrlen(authId);
     if (authIdLen == 0 || authIdLen > MAX_AUTH_ID_LEN) {
         LOGE("Invalid self authId length: %d.", authIdLen);
         return HC_ERR_INVALID_LEN;
@@ -151,7 +155,7 @@ static int32_t FillAuthId(PakeParams *params, const CJson *in)
         LOGE("Malloc for idSelf failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
-    if (memcpy_s(params->baseParams.idSelf.val, params->baseParams.idSelf.length, authId, strlen(authId)) != EOK) {
+    if (memcpy_s(params->baseParams.idSelf.val, params->baseParams.idSelf.length, authId, HcStrlen(authId)) != EOK) {
         LOGE("Memcpy for idSelf failed.");
         return HC_ERR_MEMORY_COPY;
     }
@@ -162,7 +166,7 @@ static int32_t FillAuthId(PakeParams *params, const CJson *in)
             LOGE("Get peer authId failed.");
             return HC_ERR_JSON_GET;
         }
-        authIdLen = strlen(authId);
+        authIdLen = HcStrlen(authId);
         if (authIdLen == 0 || authIdLen > MAX_AUTH_ID_LEN) {
             LOGE("Invalid peer authId length: %d.", authIdLen);
             return HC_ERR_INVALID_LEN;
@@ -173,7 +177,8 @@ static int32_t FillAuthId(PakeParams *params, const CJson *in)
             LOGE("Malloc for idPeer failed.");
             return HC_ERR_ALLOC_MEMORY;
         }
-        if (memcpy_s(params->baseParams.idPeer.val, params->baseParams.idPeer.length, authId, strlen(authId)) != EOK) {
+        if (memcpy_s(params->baseParams.idPeer.val, params->baseParams.idPeer.length,
+            authId, HcStrlen(authId)) != EOK) {
             LOGE("Memcpy for idPeer failed.");
             return HC_ERR_MEMORY_COPY;
         }
@@ -203,12 +208,12 @@ static int32_t FillPkgNameAndServiceType(PakeParams *params, const CJson *in)
         LOGE("Get packageName failed.");
         return HC_ERR_JSON_GET;
     }
-    params->packageName = (char *)HcMalloc(strlen(packageName) + 1, 0);
+    params->packageName = (char *)HcMalloc(HcStrlen(packageName) + 1, 0);
     if (params->packageName == NULL) {
         LOGE("Malloc for packageName failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
-    if (memcpy_s(params->packageName, strlen(packageName) + 1, packageName, strlen(packageName)) != EOK) {
+    if (memcpy_s(params->packageName, HcStrlen(packageName) + 1, packageName, HcStrlen(packageName)) != EOK) {
         LOGE("Memcpy for packageName failed.");
         return HC_ERR_MEMORY_COPY;
     }
@@ -218,12 +223,12 @@ static int32_t FillPkgNameAndServiceType(PakeParams *params, const CJson *in)
         LOGE("Get serviceType failed.");
         return HC_ERR_JSON_GET;
     }
-    params->serviceType = (char *)HcMalloc(strlen(serviceType) + 1, 0);
+    params->serviceType = (char *)HcMalloc(HcStrlen(serviceType) + 1, 0);
     if (params->serviceType == NULL) {
         LOGE("Malloc for serviceType failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
-    if (memcpy_s(params->serviceType, strlen(serviceType) + 1, serviceType, strlen(serviceType)) != EOK) {
+    if (memcpy_s(params->serviceType, HcStrlen(serviceType) + 1, serviceType, HcStrlen(serviceType)) != EOK) {
         LOGE("Memcpy for serviceType failed.");
         return HC_ERR_MEMORY_COPY;
     }

@@ -943,14 +943,14 @@ void DestroySpekeSession(SpekeSession *spekeSession)
     HcFree(spekeSession);
 }
 
-SpekeSession *CreateSpekeSession(void)
+SpekeSession *CreateSpekeSession(int32_t osAccountId)
 {
     SpekeSession *spekeSession = (SpekeSession *)HcMalloc(sizeof(SpekeSession), 0);
     if (spekeSession == NULL) {
         LOGE("Failed to allocate session memory!");
         return spekeSession;
     }
-    if (InitPakeV2BaseParams(&(spekeSession->baseParam)) != HC_SUCCESS) {
+    if (InitPakeV2BaseParams(osAccountId, &(spekeSession->baseParam)) != HC_SUCCESS) {
         LOGE("InitPakeV2BaseParams failed!");
         HcFree(spekeSession);
         return NULL;

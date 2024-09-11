@@ -104,6 +104,14 @@ ohos_unittest("DeviceAuthTest") {
     "hichain_receivedata_test.cpp",
   ]
 
+  deps = [
+    "//base/security/huks/interfaces/inner_api/huks_standard/main:libhukssdk",
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/cJSON:cjson",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
   cflags = [
     "--coverage",
     "-Wall",
@@ -113,13 +121,8 @@ ohos_unittest("DeviceAuthTest") {
   ldflags = [ "--coverage" ]
 
   external_deps = [
-    "bounds_checking_function:libsec_shared",
-    "cJSON:cjson",
     "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
     "hilog:libhilog",
-    "huks:libhukssdk",
   ]
   if (has_os_account_part) {
     external_deps += [ "os_account:os_account_innerkits" ]
@@ -133,7 +136,13 @@ ohos_unittest("HuksAdapterTest") {
   sources = hichain_sources
   sources += [ "huks_adapter_test.cpp" ]
 
-  deps = []
+  deps = [
+    "//base/security/huks/interfaces/inner_api/huks_standard/main:libhukssdk",
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/cJSON:cjson",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
 
   cflags = [
     "--coverage",
@@ -143,13 +152,8 @@ ohos_unittest("HuksAdapterTest") {
   ldflags = [ "--coverage" ]
 
   external_deps = [
-    "bounds_checking_function:libsec_shared",
-    "cJSON:cjson",
     "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
     "hilog:libhilog",
-    "huks:libhukssdk",
   ]
   if (has_os_account_part) {
     external_deps += [ "os_account:os_account_innerkits" ]
@@ -167,7 +171,13 @@ ohos_unittest("PakeTest") {
     "hichain_pake_test.cpp",
   ]
 
-  deps = []
+  deps = [
+    "//base/security/huks/interfaces/inner_api/huks_standard/main:libhukssdk",
+    "//third_party/bounds_checking_function:libsec_shared",
+    "//third_party/cJSON:cjson",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
 
   cflags = [
     "--coverage",
@@ -177,15 +187,9 @@ ohos_unittest("PakeTest") {
   ldflags = [ "--coverage" ]
 
   external_deps = [
-    "bounds_checking_function:libsec_shared",
-    "cJSON:cjson",
     "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
     "hilog:libhilog",
-    "huks:libhukssdk",
   ]
-
   if (has_os_account_part) {
     external_deps += [ "os_account:os_account_innerkits" ]
   }

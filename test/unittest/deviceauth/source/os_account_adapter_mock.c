@@ -56,3 +56,8 @@ bool IsOsAccountSupported(void)
 {
     return false;
 }
+
+int32_t GetCurrentActiveOsAccountId(void)
+{
+    return DEFAULT_OS_ACCOUNT;
+}

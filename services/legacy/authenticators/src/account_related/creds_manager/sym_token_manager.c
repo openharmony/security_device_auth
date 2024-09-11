@@ -353,7 +353,7 @@ static int32_t GenerateKeyAlias(const char *userId, const char *deviceId, Uint8B
     return res;
 }
 
-static int32_t ImportSymTokenToKeyManager(const SymToken *token, CJson *in, int32_t opCode)
+static int32_t ImportSymTokenToKeyManager(int32_t osAccountId, const SymToken *token, CJson *in, int32_t opCode)
 {
     uint8_t authCode[DEV_AUTH_AUTH_CODE_SIZE] = { 0 };
     if (GetByteFromJson(in, FIELD_AUTH_CODE, authCode, DEV_AUTH_AUTH_CODE_SIZE) != HC_SUCCESS) {
@@ -383,7 +383,8 @@ static int32_t ImportSymTokenToKeyManager(const SymToken *token, CJson *in, int3
     if (opCode == IMPORT_TRUSTED_CREDENTIALS) {
         purpose = KEY_PURPOSE_MAC;
     }
-    res = GetLoaderInstance()->importSymmetricKey(&keyAlias, &authCodeBuff, purpose, NULL);
+    KeyParams keyParams = { { keyAlias.val, keyAlias.length, true }, false, osAccountId };
+    res = GetLoaderInstance()->importSymmetricKey(&keyParams, &authCodeBuff, purpose, NULL);
     HcFree(keyAliasVal);
     if (res != HC_SUCCESS) {
         LOGE("Failed to import sym token! res: %d", res);
@@ -396,7 +397,7 @@ static int32_t ImportSymTokenToKeyManager(const SymToken *token, CJson *in, int3
     return res;
 }
 
-static int32_t DeleteSymTokenFromKeyManager(const SymToken *token)
+static int32_t DeleteSymTokenFromKeyManager(int32_t osAccountId, const SymToken *token)
 {
     uint8_t *keyAliasVal = (uint8_t *)HcMalloc(SHA256_LEN, 0);
     if (keyAliasVal == NULL) {
@@ -413,7 +414,7 @@ static int32_t DeleteSymTokenFromKeyManager(const SymToken *token)
         HcFree(keyAliasVal);
         return res;
     }
-    res = GetLoaderInstance()->deleteKey(&keyAlias, false);
+    res = GetLoaderInstance()->deleteKey(&keyAlias, false, osAccountId);
     HcFree(keyAliasVal);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete sym token! res: %d", res);
@@ -659,7 +660,7 @@ static int32_t AddToken(int32_t osAccountId, int32_t opCode, CJson *in)
         HcFree(symToken);
         return res;
     }
-    res = ImportSymTokenToKeyManager(symToken, in, opCode);
+    res = ImportSymTokenToKeyManager(osAccountId, symToken, in, opCode);
     if (res != HC_SUCCESS) {
         g_dataMutex->unlock(g_dataMutex);
         LOGE("Failed to import sym token!");
@@ -688,7 +689,7 @@ static int32_t DeleteToken(int32_t osAccountId, const char *userId, const char *
         g_dataMutex->unlock(g_dataMutex);
         return HC_ERR_NULL_PTR;
     }
-    int32_t res = DeleteSymTokenFromKeyManager(symToken);
+    int32_t res = DeleteSymTokenFromKeyManager(osAccountId, symToken);
     HcFree(symToken);
     if (res != HC_SUCCESS) {
         g_dataMutex->unlock(g_dataMutex);

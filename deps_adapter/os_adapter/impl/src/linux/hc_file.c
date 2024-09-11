@@ -91,14 +91,6 @@ int HcFileOpen(const char *path, int mode, FileHandle *file)
     return 0;
 }
 
-bool HcFileExist(const char *path)
-{
-    if (path == NULL) {
-        return false;
-    }
-    return access(path, F_OK) == 0;
-}
-
 int HcFileSize(FileHandle file)
 {
     FILE *fp = (FILE *)file.pfd;

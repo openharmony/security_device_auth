@@ -34,6 +34,13 @@ ohos_fuzztest("DevAuthFuncFuzzTest") {
     "${dev_frameworks_path}/inc/hiview_adapter",
   ]
 
+  include_dirs += [
+    "//third_party/cJSON",
+    "//third_party/openssl/include/",
+    "//third_party/mbedtls/include",
+    "//third_party/mbedtls/include/mbedtls",
+  ]
+
   sources = hal_common_files
   sources -= [ "${common_lib_path}/impl/src/json_utils.c" ]
   sources += [
@@ -124,13 +131,16 @@ ohos_fuzztest("DevAuthFuncFuzzTest") {
     "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}",
   ]
 
+  deps = [
+    "//third_party/cJSON:cjson",
+    "//third_party/mbedtls:mbedtls_shared",
+    "//third_party/openssl:libcrypto_static",
+  ]
+
   external_deps = [
-    "cJSON:cjson",
     "c_utils:utils",
     "hilog:libhilog",
     "huks:libhukssdk",
-    "mbedtls:mbedtls_shared",
-    "openssl:libcrypto_static",
   ]
 }
 

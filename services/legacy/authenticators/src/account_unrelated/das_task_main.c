@@ -417,7 +417,7 @@ ERR:
     return NULL;
 }
 
-int32_t RegisterLocalIdentityInTask(const char *pkgName, const char *serviceType, Uint8Buff *authId, int userType)
+int32_t RegisterLocalIdentityInTask(const TokenManagerParams *params)
 {
     int32_t res = HC_SUCCESS;
     uint32_t index;
@@ -428,7 +428,7 @@ int32_t RegisterLocalIdentityInTask(const char *pkgName, const char *serviceType
             LOGD("Protocol type: %d, unsupported method!", temp->type);
             continue;
         }
-        res = temp->tokenManagerInstance->registerLocalIdentity(pkgName, serviceType, authId, userType);
+        res = temp->tokenManagerInstance->registerLocalIdentity(params);
         if (res != HC_SUCCESS) {
             LOGE("Protocol type: %d, registerLocalIdentity failed, res: %d!", temp->type, res);
             return HC_ERR_GENERATE_KEY_FAILED;
@@ -437,7 +437,7 @@ int32_t RegisterLocalIdentityInTask(const char *pkgName, const char *serviceType
     return res;
 }
 
-int32_t UnregisterLocalIdentityInTask(const char *pkgName, const char *serviceType, Uint8Buff *authId, int userType)
+int32_t UnregisterLocalIdentityInTask(const TokenManagerParams *params)
 {
     int32_t res = HC_SUCCESS;
     uint32_t index;
@@ -448,7 +448,7 @@ int32_t UnregisterLocalIdentityInTask(const char *pkgName, const char *serviceTy
             LOGD("Protocol type: %d, unsupported method!", temp->type);
             continue;
         }
-        res = temp->tokenManagerInstance->unregisterLocalIdentity(pkgName, serviceType, authId, userType);
+        res = temp->tokenManagerInstance->unregisterLocalIdentity(params);
         if (res != HC_SUCCESS) {
             LOGE("Protocol type: %d, unregisterLocalIdentity failed, res: %d!", temp->type, res);
             return res;
@@ -457,7 +457,7 @@ int32_t UnregisterLocalIdentityInTask(const char *pkgName, const char *serviceTy
     return res;
 }
 
-int32_t DeletePeerAuthInfoInTask(const char *pkgName, const char *serviceType, Uint8Buff *authIdPeer, int userTypePeer)
+int32_t DeletePeerAuthInfoInTask(const TokenManagerParams *params)
 {
     int32_t res = HC_SUCCESS;
     uint32_t index;
@@ -468,7 +468,7 @@ int32_t DeletePeerAuthInfoInTask(const char *pkgName, const char *serviceType, U
             LOGD("Protocol type: %d, unsupported method!", temp->type);
             continue;
         }
-        res = temp->tokenManagerInstance->deletePeerAuthInfo(pkgName, serviceType, authIdPeer, userTypePeer);
+        res = temp->tokenManagerInstance->deletePeerAuthInfo(params);
         if (res != HC_SUCCESS) {
             LOGE("Protocol type: %d, deletePeerAuthInfo failed, res: %d!", temp->type, res);
             return res;
@@ -477,8 +477,7 @@ int32_t DeletePeerAuthInfoInTask(const char *pkgName, const char *serviceType, U
     return res;
 }
 
-int32_t GetPublicKeyInTask(const char *pkgName, const char *serviceType, Uint8Buff *authIdPeer, int userTypePeer,
-                           Uint8Buff *returnPk)
+int32_t GetPublicKeyInTask(const TokenManagerParams *params, Uint8Buff *returnPk)
 {
     uint32_t index;
     void **ptr = NULL;
@@ -488,7 +487,7 @@ int32_t GetPublicKeyInTask(const char *pkgName, const char *serviceType, Uint8Bu
             LOGD("Protocol type: %d, unsupported method!", temp->type);
             continue;
         }
-        return temp->tokenManagerInstance->getPublicKey(pkgName, serviceType, authIdPeer, userTypePeer, returnPk);
+        return temp->tokenManagerInstance->getPublicKey(params, returnPk);
     }
     LOGE("Failed to find valid protocol!");
     return HC_ERR_NOT_SUPPORT;

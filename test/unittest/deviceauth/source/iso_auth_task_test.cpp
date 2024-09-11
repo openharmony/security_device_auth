@@ -214,6 +214,7 @@ static TaskBase *CreateServerTask(void)
         FreeJson(inJson);
         return nullptr;
     }
+    (void)AddIntToJson(inJson, FIELD_OS_ACCOUNT_ID, DEFAULT_OS_ACCOUNT);
     (void)AddIntToJson(inJson, FIELD_AUTH_FORM, AUTH_FORM_IDENTICAL_ACCOUNT);
     (void)AddIntToJson(inJson, FIELD_CREDENTIAL_TYPE, SYMMETRIC_CRED);
     (void)AddIntToJson(inJson, FIELD_LOCAL_DEVICE_TYPE, DEVICE_TYPE_CONTROLLER);
@@ -580,6 +581,7 @@ static TaskBase *CreateClientTask(void)
         FreeJson(inJson);
         return nullptr;
     }
+    (void)AddIntToJson(inJson, FIELD_OS_ACCOUNT_ID, DEFAULT_OS_ACCOUNT);
     (void)AddIntToJson(inJson, FIELD_AUTH_FORM, AUTH_FORM_IDENTICAL_ACCOUNT);
     (void)AddIntToJson(inJson, FIELD_CREDENTIAL_TYPE, SYMMETRIC_CRED);
     (void)AddIntToJson(inJson, FIELD_LOCAL_DEVICE_TYPE, DEVICE_TYPE_CONTROLLER);

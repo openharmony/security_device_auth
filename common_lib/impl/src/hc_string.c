@@ -15,6 +15,7 @@
 
 #include <string.h>
 #include "hc_string.h"
+#include "hc_types.h"
 
 const uint32_t STRING_ALLOC_SIZE = 10;
 const uint32_t STRING_END_CHAR_LENGTH = 1;
@@ -53,7 +54,7 @@ HcBool StringAppendPointer(HcString *self, const char *str)
         // remove '\0'
         ParcelPopBack(&self->parcel, STRING_END_CHAR_LENGTH);
         // append string (include '\0')
-        return ParcelWrite(&self->parcel, (void *)str, strlen(str) + 1);
+        return ParcelWrite(&self->parcel, (void *)str, HcStrlen(str) + 1);
     }
 
     return HC_FALSE;

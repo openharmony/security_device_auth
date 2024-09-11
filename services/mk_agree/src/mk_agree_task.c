@@ -39,7 +39,7 @@ static int32_t GeneratePakeRequestPayload(PakeMkAgreeTask *pakeTask, CJson *payl
         LOGE("Failed to init devicePk!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    res = GetDevicePubKey(&devicePk);
+    res = GetDevicePubKey(pakeTask->taskBase.osAccountId, &devicePk);
     if (res != HC_SUCCESS) {
         LOGE("Failed to get device pk!");
         FreeUint8Buff(&devicePk);
@@ -101,7 +101,7 @@ static int32_t GeneratePakeResponsePayload(PakeMkAgreeTask *pakeTask, const Uint
         LOGE("Failed to init devicePk!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t res = GetDevicePubKey(&devicePk);
+    int32_t res = GetDevicePubKey(pakeTask->taskBase.osAccountId, &devicePk);
     if (res != HC_SUCCESS) {
         LOGE("Failed to get device public key!");
         FreeUint8Buff(&devicePk);
@@ -305,7 +305,7 @@ static int32_t GenerateMkByPeer(PakeMkAgreeTask *pakeTask, const CJson *payload)
         return res;
     }
     Uint8Buff peerPkBuff = { peerDevPkVal, peerDevPkLen };
-    res = GenerateMk(pakeTask->taskBase.peerUdid, &peerPkBuff);
+    res = GenerateMk(pakeTask->taskBase.osAccountId, pakeTask->taskBase.peerUdid, &peerPkBuff);
     HcFree(peerDevPkVal);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate mk!");
@@ -319,7 +319,7 @@ static int32_t GenerateMkByPeer(PakeMkAgreeTask *pakeTask, const CJson *payload)
         LOGE("Failed to combine salt!");
         return res;
     }
-    res = GeneratePseudonymPsk(pakeTask->taskBase.peerUdid, &saltBuff);
+    res = GeneratePseudonymPsk(pakeTask->taskBase.osAccountId, pakeTask->taskBase.peerUdid, &saltBuff);
     FreeUint8Buff(&saltBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate and save tmp mk!");
@@ -599,6 +599,10 @@ static int32_t InitTaskParams(MkAgreeTaskBase *task, const CJson *in)
     if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &task->osAccountId) != HC_SUCCESS) {
         LOGE("Failed to get osAccountId!");
         return HC_ERR_JSON_GET;
+    }
+    int32_t res = GenerateDeviceKeyPair(task->osAccountId);
+    if (res != HC_SUCCESS) {
+        return res;
     }
     const char *peerInfo = GetStringFromJson(in, FIELD_REAL_INFO);
     if (peerInfo == NULL) {

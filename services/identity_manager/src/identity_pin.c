@@ -228,9 +228,15 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
     return HC_SUCCESS;
 }
 
-static int32_t AuthGeneratePskUsePin(const Uint8Buff *seed, const char *pinCode, Uint8Buff *sharedSecret)
+static int32_t AuthGeneratePskUsePin(const CJson *in, const Uint8Buff *seed, const char *pinCode,
+    Uint8Buff *sharedSecret)
 {
-    Uint8Buff messageBuf = { (uint8_t *)pinCode, (uint32_t)strlen(pinCode) };
+    int32_t osAccountId;
+    if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
+    Uint8Buff messageBuf = { (uint8_t *)pinCode, (uint32_t)HcStrlen(pinCode) };
     uint8_t hash[SHA256_LEN] = { 0 };
     Uint8Buff hashBuf = { hash, sizeof(hash) };
     int ret = GetLoaderInstance()->sha256(&messageBuf, &hashBuf);
@@ -238,7 +244,8 @@ static int32_t AuthGeneratePskUsePin(const Uint8Buff *seed, const char *pinCode,
         LOGE("sha256 failed, ret:%d", ret);
         return ret;
     }
-    return GetLoaderInstance()->computeHmac(&hashBuf, seed, sharedSecret, false);
+    KeyParams keyParams = { { hashBuf.val, hashBuf.length, false }, false, osAccountId };
+    return GetLoaderInstance()->computeHmac(&keyParams, seed, sharedSecret);
 }
 
 #ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
@@ -291,7 +298,7 @@ static int32_t GetSharedSecretForPinInIso(const CJson *in, Uint8Buff *sharedSecr
     }
     sharedSecret->val = pskVal;
     sharedSecret->length = ISO_PSK_LEN;
-    ret = AuthGeneratePskUsePin(&seedBuff, pinCode, sharedSecret);
+    ret = AuthGeneratePskUsePin(in, &seedBuff, pinCode, sharedSecret);
     HcFree(seedVal);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to generate psk use pin!");
@@ -307,7 +314,7 @@ static int32_t GetSharedSecretForPinInPake(const CJson *in, Uint8Buff *sharedSec
         LOGE("Failed to get pinCode!");
         return HC_ERR_JSON_GET;
     }
-    uint32_t pinLen = strlen(pinCode);
+    uint32_t pinLen = HcStrlen(pinCode);
     if (pinLen < PIN_CODE_LEN_SHORT) {
         LOGE("Invalid pin code len!");
         return HC_ERR_INVALID_LEN;

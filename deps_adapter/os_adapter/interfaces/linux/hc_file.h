@@ -39,7 +39,6 @@ int HcFileWrite(FileHandle file, const void *src, int srcSize);
 void HcFileClose(FileHandle file);
 void HcFileRemove(const char *path);
 void HcFileGetSubFileName(const char *path, StringVector *nameVec);
-bool HcFileExist(const char *path);
 
 #ifdef __cplusplus
 }

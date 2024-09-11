@@ -364,6 +364,10 @@ static int32_t AddTrustedGroup(const CmdParams *params)
 
 static int32_t AddPeerTrustedDevice(const CmdParams *params)
 {
+    if (!params->isBind && strcmp(params->userIdSelf, params->userIdPeer) != 0) {
+        LOGI("No peer-to-peer binding and SelfUserId is not equal to PeerUserId, don't need to add peerDevice!");
+        return HC_SUCCESS;
+    }
     TrustedDeviceEntry *devParams = CreateDeviceEntry();
     if (devParams == NULL) {
         LOGE("Failed to allocate devParams memory!");

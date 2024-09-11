@@ -26,6 +26,7 @@
 #include "mk_agree.h"
 #include "pub_key_exchange.h"
 #include "save_trusted_info.h"
+#include "device_auth.h"
 
 #define TAG_LEN 16
 
@@ -103,8 +104,8 @@ static int32_t EncryptMsg(ExpandSubSessionImpl *impl, Uint8Buff *rawData, Uint8B
     Uint8Buff encData = { encDataVal, encDataLen };
     GcmParam gcmParam = { impl->nonce.val, impl->nonce.length,
         (uint8_t *)EXPAND_SUB_SESSION_AAD, EXPAND_SUB_SESSION_AAD_LEN };
-    int32_t res = GetLoaderInstance()->aesGcmEncrypt(&impl->encKey, rawData,
-        &gcmParam, false, &encData);
+    KeyParams keyParams = { { impl->encKey.val, impl->encKey.length, false }, false, DEFAULT_OS_ACCOUNT };
+    int32_t res = GetLoaderInstance()->aesGcmEncrypt(&keyParams, rawData, &gcmParam, &encData);
     if (res != HC_SUCCESS) {
         LOGE("aesGcmEncrypt rawData failed.");
         HcFree(encDataVal);
@@ -126,8 +127,8 @@ static int32_t DecryptMsg(ExpandSubSessionImpl *impl, Uint8Buff *encData, Uint8B
     Uint8Buff rawData = { rawDataVal, rawDataLen };
     GcmParam gcmParam = { impl->nonce.val, impl->nonce.length,
         (uint8_t *)EXPAND_SUB_SESSION_AAD, EXPAND_SUB_SESSION_AAD_LEN };
-    int32_t res = GetLoaderInstance()->aesGcmDecrypt(&impl->encKey, encData,
-        &gcmParam, false, &rawData);
+    KeyParams keyParams = { { impl->encKey.val, impl->encKey.length, false }, false, DEFAULT_OS_ACCOUNT };
+    int32_t res = GetLoaderInstance()->aesGcmDecrypt(&keyParams, encData, &gcmParam, &rawData);
     if (res != HC_SUCCESS) {
         LOGE("aesGcmDecrypt rawData failed.");
         HcFree(rawDataVal);

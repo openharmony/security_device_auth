@@ -48,7 +48,7 @@ static int32_t ReturnSessionKey(int64_t requestId, const CJson *out, const Devic
         LOGE("Failed to get sessionKey!");
         return HC_ERR_JSON_GET;
     }
-    uint32_t keyLen = (strlen(returnSessionKeyStr) / BYTE_TO_HEX_OPER_LENGTH);
+    uint32_t keyLen = (HcStrlen(returnSessionKeyStr) / BYTE_TO_HEX_OPER_LENGTH);
     uint8_t *sessionKey = (uint8_t *)HcMalloc(keyLen, 0);
     if (sessionKey == NULL) {
         LOGE("Failed to allocate memory for sessionKey!");
@@ -226,7 +226,7 @@ static int32_t DasOnFinishToPeer(int64_t requestId, const CJson *out, const Devi
     if ((callback != NULL) && (callback->onTransmit != NULL)) {
         LOGD("Begin to transmit data to peer for auth in DasOnFinishToPeer.");
         UPDATE_PERFORM_DATA_BY_SELF_INDEX(requestId, HcGetCurTimeInMillis());
-        if (!callback->onTransmit(requestId, (uint8_t *)sendToPeerStr, (uint32_t)strlen(sendToPeerStr) + 1)) {
+        if (!callback->onTransmit(requestId, (uint8_t *)sendToPeerStr, (uint32_t)HcStrlen(sendToPeerStr) + 1)) {
             LOGE("Failed to transmit data to peer!");
             res = HC_ERR_TRANSMIT_FAIL;
         }

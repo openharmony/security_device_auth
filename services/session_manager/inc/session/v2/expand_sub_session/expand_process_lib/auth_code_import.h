@@ -25,6 +25,7 @@ typedef struct {
     const char *appId;
     const char *groupId;
     Uint8Buff authId;
+    int32_t osAccountId;
 } AuthCodeImportParams;
 
 #ifdef ENABLE_AUTH_CODE_IMPORT

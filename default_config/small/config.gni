@@ -34,5 +34,5 @@ declare_args() {
   enable_key_agree_pake_ec_prime_x25519 = true
 
   max_auth_session_count = 10
-  deviceauth_hichain_thread_stack_size = 102400
+  device_auth_hichain_thread_stack_size = 102400
 }

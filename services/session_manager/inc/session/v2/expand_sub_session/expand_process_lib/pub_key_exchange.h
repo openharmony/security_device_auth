@@ -26,6 +26,7 @@ typedef struct {
     const char *groupId;
     Uint8Buff authId;
     bool isSelfFromUpgrade;
+    int32_t osAccountId;
 } PubKeyExchangeParams;
 
 #ifdef ENABLE_PUB_KEY_EXCHANGE

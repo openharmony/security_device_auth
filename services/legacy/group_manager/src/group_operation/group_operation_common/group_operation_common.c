@@ -25,12 +25,37 @@
 #include "hc_dev_info.h"
 #include "hc_log.h"
 
+struct PackageNameMap {
+    const char *packageName;
+    const char *packageCompatibleName;
+};
+
+static const struct PackageNameMap G_PKG_MAP[] = {
+    {CAST_APP_ID, CAST_COMPATIBLE_APP_ID}
+};
+
+static bool checkUpgradeIdentity(uint8_t upgradeFlag, const char *appId, const char *identityFromDB)
+{
+    if (upgradeFlag != 1) {
+        return false;
+    }
+    for (uint32_t i = 0; i < sizeof(G_PKG_MAP) / sizeof(G_PKG_MAP[0]); i++) {
+        if ((strcmp(G_PKG_MAP[i].packageCompatibleName, appId) == 0) &&
+            (strcmp(G_PKG_MAP[i].packageName, identityFromDB) == 0)) {
+            LOGI("CheckUpgradeIdentity pass, identity name: %s", identityFromDB);
+            return true;
+        }
+    }
+    return false;
+}
+
 static bool IsGroupManager(const char *appId, const TrustedGroupEntry *entry)
 {
     uint32_t index;
     HcString *manager = NULL;
     FOR_EACH_HC_VECTOR(entry->managers, index, manager) {
-        if (strcmp(StringGet(manager), appId) == 0) {
+        if ((strcmp(StringGet(manager), appId) == 0) ||
+            checkUpgradeIdentity(entry->upgradeFlag, appId, StringGet(manager))) {
             return true;
         }
     }
@@ -42,7 +67,8 @@ static bool IsGroupFriend(const char *appId, const TrustedGroupEntry *entry)
     uint32_t index;
     HcString *trustedFriend = NULL;
     FOR_EACH_HC_VECTOR(entry->friends, index, trustedFriend) {
-        if (strcmp(StringGet(trustedFriend), appId) == 0) {
+        if ((strcmp(StringGet(trustedFriend), appId) == 0) ||
+            checkUpgradeIdentity(entry->upgradeFlag, appId, StringGet(trustedFriend))) {
             return true;
         }
     }
@@ -171,7 +197,8 @@ bool IsGroupOwner(int32_t osAccountId, const char *groupId, const char *appId)
     }
     HcString entryManager = HC_VECTOR_GET(&entry->managers, 0);
     const char *groupOwner = StringGet(&entryManager);
-    if (strcmp(groupOwner, appId) == 0) {
+    if ((strcmp(groupOwner, appId) == 0) ||
+        checkUpgradeIdentity(entry->upgradeFlag, appId, groupOwner)) {
         DestroyGroupEntry(entry);
         return true;
     }
@@ -794,6 +821,28 @@ int32_t DelGroupFromDb(int32_t osAccountId, const char *groupId)
     return result;
 }
 
+int32_t DelDeviceFromDb(int32_t osAccountId, const char *groupId, const TrustedDeviceEntry *deviceEntry)
+{
+    if (groupId == NULL || deviceEntry == NULL) {
+        LOGE("The input groupId or deviceEntry is NULL!");
+        return HC_ERR_NULL_PTR;
+    }
+    const char *udid = StringGet(&deviceEntry->udid);
+    if (udid == NULL) {
+        LOGE("The input udid is NULL!");
+        return HC_ERR_NULL_PTR;
+    }
+    QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
+    queryDeviceParams.groupId = groupId;
+    queryDeviceParams.udid = udid;
+    int32_t result = DelTrustedDevice(osAccountId, &queryDeviceParams);
+    if (result != HC_SUCCESS) {
+        LOGW("delete device failed, result:%d", result);
+        return result;
+    }
+    return SaveOsAccountDb(osAccountId);
+}
+
 int32_t ConvertGroupIdToJsonStr(const char *groupId, char **returnJsonStr)
 {
     if ((groupId == NULL) || (returnJsonStr == NULL)) {
@@ -887,7 +936,7 @@ int32_t GenerateUnbindSuccessData(const char *peerAuthId, const char *groupId, c
     return HC_SUCCESS;
 }
 
-int32_t ProcessKeyPair(int action, const CJson *jsonParams, const char *groupId)
+int32_t ProcessKeyPair(int32_t osAccountId, int action, const CJson *jsonParams, const char *groupId)
 {
     if ((jsonParams == NULL) || (groupId == NULL)) {
         LOGE("The input parameters contains NULL value!");
@@ -924,11 +973,12 @@ int32_t ProcessKeyPair(int action, const CJson *jsonParams, const char *groupId)
         HcFree(authIdBuff.val);
         return HC_ERR_MEMORY_COPY;
     }
+    AuthModuleParams params = { osAccountId, appId, groupId, &authIdBuff, userType };
     int32_t result;
     if (action == CREATE_KEY_PAIR) {
-        result = RegisterLocalIdentity(appId, groupId, &authIdBuff, userType, DAS_MODULE);
+        result = RegisterLocalIdentity(&params, DAS_MODULE);
     } else {
-        result = UnregisterLocalIdentity(appId, groupId, &authIdBuff, userType, DAS_MODULE);
+        result = UnregisterLocalIdentity(&params, DAS_MODULE);
     }
     HcFree(authIdBuff.val);
     return result;

@@ -247,7 +247,8 @@ static int32_t GetSelfDeviceEntryByPeerCert(
     return ret;
 }
 
-static int32_t VerifyPeerCertInfo(const char *selfUserId, const char *selfAuthId, const CertInfo *certInfo)
+static int32_t VerifyPeerCertInfo(int32_t osAccountId, const char *selfUserId, const char *selfAuthId,
+    const CertInfo *certInfo)
 {
     uint8_t *keyAliasValue = (uint8_t *)HcMalloc(SHA256_LEN, 0);
     if (keyAliasValue == NULL) {
@@ -261,8 +262,9 @@ static int32_t VerifyPeerCertInfo(const char *selfUserId, const char *selfAuthId
         HcFree(keyAliasValue);
         return ret;
     }
+    KeyParams keyParams = { { keyAlias.val, keyAlias.length, true }, false, osAccountId };
     ret = GetLoaderInstance()->verify(
-        &keyAlias, &certInfo->pkInfoStr, certInfo->signAlg, &certInfo->pkInfoSignature, true);
+        &keyParams, &certInfo->pkInfoStr, certInfo->signAlg, &certInfo->pkInfoSignature);
     HcFree(keyAliasValue);
     if (ret != HC_SUCCESS) {
         return HC_ERR_VERIFY_FAILED;
@@ -301,8 +303,8 @@ static int32_t GetPeerPubKeyFromCert(const CertInfo *peerCertInfo, Uint8Buff *pe
     return HC_SUCCESS;
 }
 
-static int32_t GetSharedSecretForAccountInPake(
-    const char *userId, const char *authId, const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
+static int32_t GetSharedSecretForAccountInPake(int32_t osAccountId, const char *userId, const char *authId,
+    const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
 {
     uint8_t *priAliasVal = (uint8_t *)HcMalloc(SHA256_LEN, 0);
     if (priAliasVal == NULL) {
@@ -332,7 +334,7 @@ static int32_t GetSharedSecretForAccountInPake(
     }
     sharedSecret->length = sharedKeyAliasLen;
     (void)memcpy_s(sharedSecret->val, sharedKeyAliasLen, SHARED_KEY_ALIAS, sharedKeyAliasLen);
-    KeyParams privKeyParams = { { aliasBuff.val, aliasBuff.length, true }, false };
+    KeyParams privKeyParams = { { aliasBuff.val, aliasBuff.length, true }, false, osAccountId };
     KeyBuff pubKeyBuff = { peerPkBuff.val, peerPkBuff.length, false };
     ret = GetLoaderInstance()->agreeSharedSecretWithStorage(
         &privKeyParams, &pubKeyBuff, P256, P256_SHARED_SECRET_KEY_SIZE, sharedSecret);
@@ -488,7 +490,7 @@ static int32_t GenerateAuthTokenForAccessory(int32_t osAccountId, const char *gr
     authToken->length = AUTH_TOKEN_SIZE;
     Uint8Buff userIdBuff = { (uint8_t *)userIdSelf, HcStrlen(userIdSelf) };
     Uint8Buff challenge = { (uint8_t *)KEY_INFO_PERSISTENT_TOKEN, HcStrlen(KEY_INFO_PERSISTENT_TOKEN) };
-    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false };
+    KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false, osAccountId };
     ret = GetLoaderInstance()->computeHkdf(&keyAliasParams, &userIdBuff, &challenge, authToken);
     DestroyDeviceEntry(deviceEntry);
     if (ret != HC_SUCCESS) {
@@ -714,13 +716,13 @@ int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *peerUserId, 
     }
     const char *selfUserId = StringGet(&deviceEntry->userId);
     const char *selfAuthId = StringGet(&deviceEntry->authId);
-    ret = VerifyPeerCertInfo(selfUserId, selfAuthId, peerCertInfo);
+    ret = VerifyPeerCertInfo(osAccountId, selfUserId, selfAuthId, peerCertInfo);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to verify peer cert! [Res]: %d", ret);
         DestroyDeviceEntry(deviceEntry);
         return ret;
     }
-    ret = GetSharedSecretForAccountInPake(selfUserId, selfAuthId, peerCertInfo, sharedSecret);
+    ret = GetSharedSecretForAccountInPake(osAccountId, selfUserId, selfAuthId, peerCertInfo, sharedSecret);
     DestroyDeviceEntry(deviceEntry);
     return ret;
 }
@@ -730,6 +732,11 @@ int32_t GetAccountSymSharedSecret(const CJson *in, const CJson *urlJson, Uint8Bu
     if (in == NULL || urlJson == NULL || sharedSecret == NULL) {
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
+    }
+    int32_t osAccountId;
+    if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
     }
     bool isTokenStored = true;
     Uint8Buff authToken = { NULL, 0 };
@@ -753,7 +760,8 @@ int32_t GetAccountSymSharedSecret(const CJson *in, const CJson *urlJson, Uint8Bu
         return HC_ERR_ALLOC_MEMORY;
     }
     sharedSecret->length = ISO_PSK_LEN;
-    ret = GetLoaderInstance()->computeHmac(&authToken, &seedBuff, sharedSecret, isTokenStored);
+    KeyParams keyParams = { { authToken.val, authToken.length, isTokenStored }, false, osAccountId };
+    ret = GetLoaderInstance()->computeHmac(&keyParams, &seedBuff, sharedSecret);
     FreeBuffData(&authToken);
     if (ret != HC_SUCCESS) {
         LOGE("ComputeHmac for psk failed, ret: %d.", ret);

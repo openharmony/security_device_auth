@@ -18,6 +18,7 @@
 
 #include "alg_defs.h"
 #include "string_util.h"
+#include "json_utils.h"
 
 #define GENERATE_SESSION_KEY_STR "hichain_iso_session_key"
 
@@ -33,13 +34,14 @@ typedef struct IsoBaseParamsT {
     Uint8Buff sessionKey;
     uint8_t psk[PSK_LEN];
     const AlgLoader *loader;
+    int32_t osAccountId;
 } IsoBaseParams;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t InitIsoBaseParams(IsoBaseParams *params);
+int32_t InitIsoBaseParams(const CJson *in, IsoBaseParams *params);
 void DestroyIsoBaseParams(IsoBaseParams *params);
 
 int IsoClientGenRandom(IsoBaseParams *params);

@@ -43,7 +43,7 @@ if (os_level == "mini" || os_level == "small") {
       "//build/lite/config/component/cJSON:cjson_shared",
       "//commonlibrary/utils_lite:utils",
     ]
-    if (enable_soft_bus_channel) {
+    if (device_auth_enable_soft_bus_channel) {
       deps += [ "//foundation/communication/dsoftbus/sdk:softbus_client" ]
     }
     if (enable_extend_plugin) {
@@ -69,7 +69,7 @@ if (os_level == "mini" || os_level == "small") {
       cflags = build_flags
     }
     cflags += [
-      "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",
+      "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${device_auth_hichain_thread_stack_size}",
       "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}",
     ]
     if (ohos_kernel_type == "linux" || ohos_kernel_type == "liteos_a") {
@@ -187,7 +187,7 @@ if (os_level == "mini" || os_level == "small") {
     defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
     cflags = build_flags
     cflags += [
-      "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",
+      "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${device_auth_hichain_thread_stack_size}",
       "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}",
     ]
     if (target_cpu == "arm") {
@@ -227,12 +227,10 @@ if (os_level == "mini" || os_level == "small") {
       "hitrace:hitrace_meter",
     ]
     if (support_os_account) {
-      defines += [ "DEV_AUTH_SUPPORT_OS_ACCOUNT" ]
       external_deps += [
         "ability_base:want",
         "common_event_service:cesfwk_innerkits",
         "ipc:ipc_single",
-        "json:nlohmann_json_static",
         "os_account:os_account_innerkits",
         "samgr:samgr_proxy",
       ]
