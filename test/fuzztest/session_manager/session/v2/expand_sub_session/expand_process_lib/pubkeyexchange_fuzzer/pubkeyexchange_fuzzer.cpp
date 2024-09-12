@@ -24,6 +24,7 @@
 #include "hks_type.h"
 #include "json_utils.h"
 #include "uint8buff_utils.h"
+#include "device_auth.h"
 
 namespace OHOS {
 static const char *AUTH_ID_C_VAL = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
@@ -33,8 +34,8 @@ static const char *GROUP_OWNER = "testApp";
 
 static Uint8Buff g_authIdC = { (uint8_t *)AUTH_ID_C_VAL, 64 };
 static Uint8Buff g_authIdS = { (uint8_t *)AUTH_ID_S_VAL, 64 };
-static PubKeyExchangeParams g_paramsC = { 0, GROUP_OWNER, GROUP_ID, g_authIdC, false };
-static PubKeyExchangeParams g_paramsS = { 0, GROUP_OWNER, GROUP_ID, g_authIdS, false };
+static PubKeyExchangeParams g_paramsC = { 0, GROUP_OWNER, GROUP_ID, g_authIdC, false, DEFAULT_OS_ACCOUNT };
+static PubKeyExchangeParams g_paramsS = { 0, GROUP_OWNER, GROUP_ID, g_authIdS, false, DEFAULT_OS_ACCOUNT };
 
 static const char *INVALID_MSG1 = "{\"errCode\": 1}";
 static const char *INVALID_MSG2 = "{\"event\": -1, \"errCode\": 1}";
@@ -84,28 +85,28 @@ static void PubkeyExchangeTest03(void)
 static void PubkeyExchangeTest04(void)
 {
     HksInitialize();
-    PubKeyExchangeParams errorParams = { 0, nullptr, GROUP_ID, g_authIdC, false };
+    PubKeyExchangeParams errorParams = { 0, nullptr, GROUP_ID, g_authIdC, false, DEFAULT_OS_ACCOUNT };
     (void)CreatePubKeyExchangeCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
 }
 
 static void PubkeyExchangeTest05(void)
 {
     HksInitialize();
-    PubKeyExchangeParams errorParams = { 0, GROUP_OWNER, nullptr, g_authIdC, false };
+    PubKeyExchangeParams errorParams = { 0, GROUP_OWNER, nullptr, g_authIdC, false, DEFAULT_OS_ACCOUNT };
     (void)CreatePubKeyExchangeCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
 }
 
 static void PubkeyExchangeTest06(void)
 {
     HksInitialize();
-    PubKeyExchangeParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { nullptr, 0 }, false };
+    PubKeyExchangeParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { nullptr, 0 }, false, DEFAULT_OS_ACCOUNT };
     (void)CreatePubKeyExchangeCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
 }
 
 static void PubkeyExchangeTest07(void)
 {
     HksInitialize();
-    PubKeyExchangeParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { (uint8_t *)AUTH_ID_C_VAL, 0 }, false };
+    PubKeyExchangeParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { (uint8_t *)AUTH_ID_C_VAL, 0 }, false, 0 };
     (void)CreatePubKeyExchangeCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
 }
 

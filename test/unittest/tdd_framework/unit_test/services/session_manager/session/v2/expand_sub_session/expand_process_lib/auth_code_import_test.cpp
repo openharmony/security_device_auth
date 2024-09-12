@@ -26,6 +26,7 @@
 #include "memory_mock.h"
 #include "memory_monitor.h"
 #include "uint8buff_utils.h"
+#include "device_auth.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -38,8 +39,8 @@ static const char *GROUP_OWNER = "testApp";
 
 static Uint8Buff g_authIdC = { (uint8_t *)AUTH_ID_C_VAL, 64 };
 static Uint8Buff g_authIdS = { (uint8_t *)AUTH_ID_S_VAL, 64 };
-static AuthCodeImportParams g_paramsC = { 0, GROUP_OWNER, GROUP_ID, g_authIdC };
-static AuthCodeImportParams g_paramsS = { 0, GROUP_OWNER, GROUP_ID, g_authIdS };
+static AuthCodeImportParams g_paramsC = { 0, GROUP_OWNER, GROUP_ID, g_authIdC, DEFAULT_OS_ACCOUNT };
+static AuthCodeImportParams g_paramsS = { 0, GROUP_OWNER, GROUP_ID, g_authIdS, DEFAULT_OS_ACCOUNT };
 
 static const char *INVALID_MSG1 = "{\"errCode\": 1}";
 static const char *INVALID_MSG2 = "{\"event\": -1, \"errCode\": 1}";
@@ -139,28 +140,29 @@ HWTEST_F(AuthCodeImportTest, AuthCodeImportTest101, TestSize.Level0)
 
 HWTEST_F(AuthCodeImportTest, AuthCodeImportTest102, TestSize.Level0)
 {
-    AuthCodeImportParams errorParams = { 0, nullptr, GROUP_ID, g_authIdC };
+    AuthCodeImportParams errorParams = { 0, nullptr, GROUP_ID, g_authIdC, DEFAULT_OS_ACCOUNT };
     BaseCmd *self = CreateAuthCodeImportCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
 
 HWTEST_F(AuthCodeImportTest, AuthCodeImportTest103, TestSize.Level0)
 {
-    AuthCodeImportParams errorParams = { 0, GROUP_OWNER, nullptr, g_authIdC };
+    AuthCodeImportParams errorParams = { 0, GROUP_OWNER, nullptr, g_authIdC, DEFAULT_OS_ACCOUNT };
     BaseCmd *self = CreateAuthCodeImportCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
 
 HWTEST_F(AuthCodeImportTest, AuthCodeImportTest104, TestSize.Level0)
 {
-    AuthCodeImportParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { nullptr, 0 } };
+    AuthCodeImportParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { nullptr, 0 }, DEFAULT_OS_ACCOUNT };
     BaseCmd *self = CreateAuthCodeImportCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }
 
 HWTEST_F(AuthCodeImportTest, AuthCodeImportTest105, TestSize.Level0)
 {
-    AuthCodeImportParams errorParams = { 0, GROUP_OWNER, GROUP_ID, { (uint8_t *)AUTH_ID_C_VAL, 0 } };
+    AuthCodeImportParams errorParams =
+        { 0, GROUP_OWNER, GROUP_ID, { (uint8_t *)AUTH_ID_C_VAL, 0 }, DEFAULT_OS_ACCOUNT };
     BaseCmd *self = CreateAuthCodeImportCmd((void *)(&errorParams), true, ABORT_IF_ERROR);
     ASSERT_EQ(self, nullptr);
 }

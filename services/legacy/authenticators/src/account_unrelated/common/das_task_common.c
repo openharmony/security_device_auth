@@ -333,7 +333,7 @@ static int32_t CombineKeyAliasForPake(const Uint8Buff *serviceId, const Uint8Buf
         LOGE("ByteToHexString failed");
         goto ERR;
     }
-    if (memcpy_s(outKeyAlias->val, outKeyAlias->length, outKeyAliasHex, strlen(outKeyAliasHex)) != EOK) {
+    if (memcpy_s(outKeyAlias->val, outKeyAlias->length, outKeyAliasHex, HcStrlen(outKeyAliasHex)) != EOK) {
         LOGE("memcpy outkeyalias failed.");
         res = HC_ERR_MEMORY_COPY;
         goto ERR;
@@ -451,7 +451,7 @@ int32_t GeneratePseudonymPskAlias(const Uint8Buff *serviceType, const Uint8Buff 
         return res;
     }
     HcFree(keyAliasHash.val);
-    if (memcpy_s(outKeyAlias->val, outKeyAlias->length, outKeyAliasHex, strlen(outKeyAliasHex)) != EOK) {
+    if (memcpy_s(outKeyAlias->val, outKeyAlias->length, outKeyAliasHex, HcStrlen(outKeyAliasHex)) != EOK) {
         LOGE("Failed to copy out key alias!");
         HcFree(outKeyAliasHex);
         return HC_ERR_MEMORY_COPY;

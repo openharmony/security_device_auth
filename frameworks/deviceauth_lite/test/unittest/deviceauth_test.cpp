@@ -146,7 +146,7 @@ static void SetSessionKey(const struct session_identity *identity, const struct 
     LOG("--------SetSessionKey--------");
 }
 
-static void SetServiceResult(const struct session_identity *identity, int32_t result, int32_t errorCode)
+static void SetServiceResult(const struct session_identity *identity, int32_t result)
 {
     LOG("--------SetServiceResult--------");
     LOG("identity session_id[%d] package_name[%s]", identity->session_id, identity->package_name.name);

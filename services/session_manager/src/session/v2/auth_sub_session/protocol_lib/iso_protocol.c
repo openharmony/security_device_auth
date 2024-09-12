@@ -56,6 +56,7 @@ typedef struct {
     Uint8Buff tokenSelf;
     Uint8Buff tokenPeer;
     Uint8Buff authResultMac;
+    int32_t osAccountId;
 } IsoParams;
 
 typedef struct {
@@ -170,7 +171,8 @@ static int32_t IsoCalToken(const IsoProtocol *protocol, Uint8Buff *token, bool i
         return res;
     }
     Uint8Buff messageBuf = { message, length };
-    res = GetLoaderInstance()->computeHmac(&params->psk, &messageBuf, token, false);
+    KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false, params->osAccountId };
+    res = GetLoaderInstance()->computeHmac(&keyParams, &messageBuf, token);
     HcFree(message);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHmac for token failed, res: %x.", res);
@@ -223,7 +225,11 @@ static int32_t IsoGenSessionKey(IsoProtocol *impl, bool isClient)
     Uint8Buff keyInfoBuf = { (uint8_t *)GENERATE_SESSION_KEY_STR, HcStrlen(GENERATE_SESSION_KEY_STR) };
     uint8_t sessionKeyVal[ISO_SESSION_KEY_LEN] = { 0 };
     Uint8Buff sessionKey = { sessionKeyVal, ISO_SESSION_KEY_LEN };
-    KeyParams keyParams = { { impl->params.psk.val, impl->params.psk.length, false }, false };
+    KeyParams keyParams = {
+        .keyBuff = { impl->params.psk.val, impl->params.psk.length, false },
+        .isDeStorage = false,
+        .osAccountId = impl->params.osAccountId
+    };
     res = GetLoaderInstance()->computeHkdf(&keyParams, &hkdfSaltBuf, &keyInfoBuf, &sessionKey);
     HcFree(hkdfSalt);
     if (res != HC_SUCCESS) {
@@ -243,7 +249,8 @@ static int32_t IsoGenAuthResultMac(const IsoParams *params, Uint8Buff *authResul
 {
     int32_t returnCode = 0;
     Uint8Buff messageBuf = { (uint8_t *)&returnCode, sizeof(int32_t) };
-    int32_t res = GetLoaderInstance()->computeHmac(&params->psk, &messageBuf, authResultMac, false);
+    KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false, params->osAccountId };
+    int32_t res = GetLoaderInstance()->computeHmac(&keyParams, &messageBuf, authResultMac);
     if (res != HC_SUCCESS) {
         LOGE("Compute authResultMac failed, res: %x.", res);
         return res;
@@ -850,6 +857,7 @@ int32_t CreateIsoProtocol(const void *baseParams, bool isClient, BaseProtocol **
         HcFree(instance);
         return HC_ERR_ALLOC_MEMORY;
     }
+    instance->params.osAccountId = params->osAccountId;
     instance->base.name = PROTOCOL_TYPE_ISO;
     instance->base.beginState = isClient ? CREATE_AS_CLIENT_STATE : CREATE_AS_SERVER_STATE;
     instance->base.finishState = isClient ? CLIENT_FINISH_STATE : SERVER_FINISH_STATE;

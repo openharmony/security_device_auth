@@ -26,13 +26,14 @@ ohos_fuzztest("DevAuthServCancelAuthRequestFuzzTest") {
   fuzz_config_file = "//base/security/device_auth/test/fuzztest/device_auth_service/devauthservcancelauthrequest_fuzzer"
   include_dirs = inc_path + hals_inc_path
   include_dirs += [
+    "//third_party/cJSON",
     "${frameworks_path}/inc/standard",
     "${dev_frameworks_path}/inc/hiview_adapter",
   ]
   sources = [ "devauthservcancelauthrequest_fuzzer.cpp" ]
   sources += deviceauth_files
   sources += hiview_adapter_files
-  if (enable_soft_bus_channel == true) {
+  if (device_auth_enable_soft_bus_channel == true) {
     sources -= soft_bus_channel_files
     sources += soft_bus_channel_mock_files
   }
@@ -52,9 +53,11 @@ ohos_fuzztest("DevAuthServCancelAuthRequestFuzzTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = [ "${deps_adapter_path}:${hal_module_name}" ]
+  deps = [
+    "${deps_adapter_path}:${hal_module_test_name}",
+    "//third_party/cJSON:cjson_static",
+  ]
   external_deps = [
-    "cJSON:cjson_static",
     "c_utils:utils",
     "dsoftbus:softbus_client",
     "hilog:libhilog",

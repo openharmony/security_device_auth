@@ -54,7 +54,7 @@ static int32_t ReturnSessionKey(int64_t requestId, const CJson *out, const Devic
         LOGE("Failed to get sessionKey!");
         return HC_ERR_JSON_GET;
     }
-    uint32_t keyLen = (strlen(returnSessionKeyStr) / BYTE_TO_HEX_OPER_LENGTH);
+    uint32_t keyLen = (HcStrlen(returnSessionKeyStr) / BYTE_TO_HEX_OPER_LENGTH);
     uint8_t *sessionKey = (uint8_t *)HcMalloc(keyLen, 0);
     if (sessionKey == NULL) {
         LOGE("Failed to allocate memory for sessionKey!");

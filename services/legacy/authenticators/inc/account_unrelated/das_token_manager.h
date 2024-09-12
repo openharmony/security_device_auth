@@ -19,12 +19,21 @@
 #include "common_defs.h"
 #include "pake_base_cur_task.h"
 
+typedef struct {
+    int32_t osAccountId;
+    Uint8Buff pkgName;
+    Uint8Buff serviceType;
+    Uint8Buff authId;
+    int userType;
+} TokenManagerParams;
+
+
 typedef struct TokenManagerT {
-    int32_t (*registerLocalIdentity)(const char *, const char *, Uint8Buff *, int);
-    int32_t (*unregisterLocalIdentity)(const char *, const char *, Uint8Buff *, int);
-    int32_t (*deletePeerAuthInfo)(const char *, const char *, Uint8Buff *, int);
+    int32_t (*registerLocalIdentity)(const TokenManagerParams *);
+    int32_t (*unregisterLocalIdentity)(const TokenManagerParams *);
+    int32_t (*deletePeerAuthInfo)(const TokenManagerParams *);
     int32_t (*computeAndSavePsk)(const PakeParams *);
-    int32_t (*getPublicKey)(const char *, const char *, Uint8Buff *, int, Uint8Buff *);
+    int32_t (*getPublicKey)(const TokenManagerParams *, Uint8Buff *);
 } TokenManager;
 
 #ifdef __cplusplus

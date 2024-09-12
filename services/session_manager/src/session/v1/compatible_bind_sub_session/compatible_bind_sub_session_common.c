@@ -420,10 +420,16 @@ static int32_t AddGroupAndDevInfoToParams(const CompatibleBindSubSession *sessio
         LOGE("Failed to get authId from params!");
         return HC_ERR_JSON_GET;
     }
+    bool isSelfFromUpgrade = false;
+    (void)GetBoolFromJson(session->params, FIELD_IS_SELF_FROM_UPGRADE, &isSelfFromUpgrade);
     int32_t userType = DEVICE_TYPE_ACCESSORY;
     if (GetIntFromJson(session->params, FIELD_USER_TYPE, &userType) != HC_SUCCESS) {
         LOGE("Failed to get userType from params!");
         return HC_ERR_JSON_GET;
+    }
+    if (AddBoolToJson(moduleParams, FIELD_IS_SELF_FROM_UPGRADE, isSelfFromUpgrade) != HC_SUCCESS) {
+        LOGE("Failed to add isSelfFromUpgrade to moduleParams!");
+        return HC_ERR_JSON_ADD;
     }
     if (AddStringToJson(moduleParams, FIELD_SERVICE_TYPE, groupId) != HC_SUCCESS) {
         LOGE("Failed to add serviceType to moduleParams!");
@@ -484,6 +490,15 @@ static int32_t AddProtocolExpandValToParams(CompatibleBindSubSession *session, C
     (void)GetIntFromJson(session->params, FIELD_PROTOCOL_EXPAND, &protocolExpandVal);
     if (AddIntToJson(moduleParams, FIELD_PROTOCOL_EXPAND, protocolExpandVal) != HC_SUCCESS) {
         LOGE("Failed to add protocol expand val to moduleParams!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t AddOsAccountIdToParams(CompatibleBindSubSession *session, CJson *moduleParams)
+{
+    if (AddIntToJson(moduleParams, FIELD_OS_ACCOUNT_ID, session->osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to add osAccountId to moduleParams!");
         return HC_ERR_JSON_ADD;
     }
     return HC_SUCCESS;
@@ -654,7 +669,8 @@ int32_t GenerateBaseModuleParams(bool isClient, CompatibleBindSubSession *sessio
     if (((result = AddGroupAndDevInfoToParams(session, moduleParams)) != HC_SUCCESS) ||
         ((result = AddRequestInfoToParams(isClient, session, moduleParams)) != HC_SUCCESS) ||
         ((result = AddPinCodeToParams(session, moduleParams)) != HC_SUCCESS) ||
-        ((result = AddProtocolExpandValToParams(session, moduleParams)) != HC_SUCCESS)) {
+        ((result = AddProtocolExpandValToParams(session, moduleParams)) != HC_SUCCESS) ||
+        ((result = AddOsAccountIdToParams(session, moduleParams)) != HC_SUCCESS)) {
         return result;
     }
     return HC_SUCCESS;

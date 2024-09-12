@@ -16,7 +16,7 @@ declare_args() {
   enable_session_v1 = true
   enable_extend_plugin = false
   enable_account = false
-  enable_posix_interface = false
+  device_auth_enable_posix_interface = false
   enable_pseudonym = false
 
   enable_p2p_bind_lite_protocol = true
@@ -35,5 +35,5 @@ declare_args() {
   enable_key_agree_pake_ec_prime_x25519 = true
 
   max_auth_session_count = 10
-  deviceauth_hichain_thread_stack_size = 8192
+  device_auth_hichain_thread_stack_size = 8192
 }

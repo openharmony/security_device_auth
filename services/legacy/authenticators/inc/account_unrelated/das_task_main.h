@@ -20,6 +20,7 @@
 #include "hc_vector.h"
 #include "json_utils.h"
 #include "das_version_util.h"
+#include "das_token_manager.h"
 
 DECLARE_HC_VECTOR(SubTaskVec, void *)
 
@@ -40,11 +41,10 @@ Task *CreateTaskT(int32_t *taskId, const CJson *in, CJson *out);
 int32_t InitDasProtocolEntities(void);
 void DestroyDasProtocolEntities(void);
 
-int32_t RegisterLocalIdentityInTask(const char *pkgName, const char *serviceType, Uint8Buff *authId, int userType);
-int32_t UnregisterLocalIdentityInTask(const char *pkgName, const char *serviceType, Uint8Buff *authId, int userType);
-int32_t DeletePeerAuthInfoInTask(const char *pkgName, const char *serviceType, Uint8Buff *authIdPeer, int userTypePeer);
-int32_t GetPublicKeyInTask(const char *pkgName, const char *serviceType, Uint8Buff *authIdPeer, int userTypePeer,
-                           Uint8Buff *returnPk);
+int32_t RegisterLocalIdentityInTask(const TokenManagerParams *params);
+int32_t UnregisterLocalIdentityInTask(const TokenManagerParams *params);
+int32_t DeletePeerAuthInfoInTask(const TokenManagerParams *params);
+int32_t GetPublicKeyInTask(const TokenManagerParams *params, Uint8Buff *returnPk);
 
 #ifdef __cplusplus
 }

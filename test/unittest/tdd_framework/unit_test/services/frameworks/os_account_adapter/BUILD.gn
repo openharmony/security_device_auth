@@ -23,6 +23,10 @@ if (support_os_account) {
     include_dirs += [
       "${dev_frameworks_path}/inc/hiview_adapter",
       "${tdd_framework_path}/common/inc",
+      "//third_party/cJSON",
+      "//third_party/openssl/include/",
+      "//third_party/mbedtls/include",
+      "//third_party/mbedtls/include/mbedtls",
     ]
     include_dirs += [ "${dev_frameworks_path}/inc/account_subscriber" ]
     include_dirs += [ "${dev_frameworks_path}/inc/sa_subscriber" ]
@@ -58,7 +62,7 @@ if (support_os_account) {
 
     cflags = [ "-DHILOG_ENABLE" ]
     cflags += [
-      "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${deviceauth_hichain_thread_stack_size}",
+      "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${device_auth_hichain_thread_stack_size}",
       "-DMAX_AUTH_SESSION_COUNT=${max_auth_session_count}",
     ]
     if (target_cpu == "arm") {
@@ -78,26 +82,27 @@ if (support_os_account) {
     defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
     defines -= [ "ENABLE_PSEUDONYM" ]
 
-    deps = []
+    deps = [
+      "//third_party/cJSON:cjson",
+      "//third_party/googletest:gmock_main",
+      "//third_party/googletest:gtest_main",
+      "//third_party/mbedtls:mbedtls_shared",
+      "//third_party/openssl:libcrypto_static",
+    ]
 
     external_deps = [
       "ability_base:want",
       "access_token:libnativetoken",
       "access_token:libtoken_setproc",
-      "cJSON:cjson",
       "c_utils:utils",
       "common_event_service:cesfwk_innerkits",
       "dsoftbus:softbus_client",
-      "googletest:gmock_main",
-      "googletest:gtest_main",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
       "huks:libhukssdk",
       "init:libbegetutil",
       "ipc:ipc_core",
-      "mbedtls:mbedtls_shared",
-      "openssl:libcrypto_static",
       "os_account:os_account_innerkits",
       "samgr:samgr_proxy",
     ]

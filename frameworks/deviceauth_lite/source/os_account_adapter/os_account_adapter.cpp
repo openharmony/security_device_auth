@@ -13,21 +13,20 @@
  * limitations under the License.
  */
 
-#include <cstdint>
-
 #ifdef HAS_OS_ACCOUNT_PART
 #include "os_account_manager.h"
 #endif
+
 #include "log.h"
 #include "os_account_adapter.h"
 
 #define DEFAULT_USER 100
 
-int32_t GetFrontUserId(int32_t *userId)
+int GetFrontUserId(int *userId)
 {
 #ifdef HAS_OS_ACCOUNT_PART
-    std::vector<int32_t> ids;
-    int32_t errCode = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
+    std::vector<int> ids;
+    int errCode = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
     if (errCode != ERR_OK || ids.empty()) {
         LOGE("QueryActiveOsAccountIds failed");
         return ERR_FAILED;

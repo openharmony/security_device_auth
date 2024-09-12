@@ -356,14 +356,14 @@ HWTEST_F(GroupOperationTest, GroupOperationTest042, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest043, TestSize.Level0)
 {
-    int32_t ret = ProcessKeyPair(CREATE_KEY_PAIR, nullptr, NORMAL_STR);
+    int32_t ret = ProcessKeyPair(DEFAULT_OS_ACCOUNT, CREATE_KEY_PAIR, nullptr, NORMAL_STR);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest044, TestSize.Level0)
 {
     CJson *jsonParams = CreateJson();
-    int32_t ret = ProcessKeyPair(CREATE_KEY_PAIR, jsonParams, nullptr);
+    int32_t ret = ProcessKeyPair(DEFAULT_OS_ACCOUNT, CREATE_KEY_PAIR, jsonParams, nullptr);
     FreeJson(jsonParams);
     ASSERT_NE(ret, HC_SUCCESS);
 }

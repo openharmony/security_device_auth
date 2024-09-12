@@ -26,26 +26,27 @@
 #include "ec_speke_protocol.h"
 #include "json_utils.h"
 #include "uint8buff_utils.h"
+#include "device_auth.h"
 
 namespace OHOS {
 #define PSK_SIZE 32
 #define INVALID_CURVE_TYPE 0
-static const uint8_t g_pskVal[PSK_SIZE] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+static const uint8_t PSK_VAL[PSK_SIZE] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
     20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 };
 static const char *AUTH_ID_C_VAL = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
 static const char *AUTH_ID_S_VAL = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
 static const char *MSG_C_VAL = "client send msg";
 static const char *MSG_S_VAL = "server send msg";
 
-static Uint8Buff g_psk = { (uint8_t *)g_pskVal, PSK_SIZE };
+static Uint8Buff g_psk = { (uint8_t *)PSK_VAL, PSK_SIZE };
 static Uint8Buff g_authIdC = { (uint8_t *)AUTH_ID_C_VAL, 64 };
 static Uint8Buff g_authIdS = { (uint8_t *)AUTH_ID_S_VAL, 64 };
 static Uint8Buff g_msgC = { (uint8_t *)MSG_C_VAL, 16 };
 static Uint8Buff g_msgS = { (uint8_t *)MSG_S_VAL, 16 };
-static EcSpekeInitParams g_P256ParamsC = { CURVE_TYPE_256, g_authIdC };
-static EcSpekeInitParams g_P256ParamsS = { CURVE_TYPE_256, g_authIdS };
-static EcSpekeInitParams g_X25519ParamsC = { CURVE_TYPE_25519, g_authIdC };
-static EcSpekeInitParams g_X25519ParamsS = { CURVE_TYPE_25519, g_authIdS };
+static EcSpekeInitParams g_P256ParamsC = { CURVE_TYPE_256, g_authIdC, DEFAULT_OS_ACCOUNT };
+static EcSpekeInitParams g_P256ParamsS = { CURVE_TYPE_256, g_authIdS, DEFAULT_OS_ACCOUNT };
+static EcSpekeInitParams g_X25519ParamsC = { CURVE_TYPE_25519, g_authIdC, DEFAULT_OS_ACCOUNT };
+static EcSpekeInitParams g_X25519ParamsS = { CURVE_TYPE_25519, g_authIdS, DEFAULT_OS_ACCOUNT };
 
 static void ECSpekeTest01(void)
 {
@@ -198,7 +199,7 @@ static void ECSpekeTest06(void)
 static void ECSpekeTest07(void)
 {
     HksInitialize();
-    EcSpekeInitParams errParams = { INVALID_CURVE_TYPE, g_authIdC };
+    EcSpekeInitParams errParams = { INVALID_CURVE_TYPE, g_authIdC, DEFAULT_OS_ACCOUNT };
     BaseProtocol *self;
     CreateEcSpekeProtocol(&errParams, true, &self);
 }
@@ -206,7 +207,7 @@ static void ECSpekeTest07(void)
 static void ECSpekeTest08(void)
 {
     HksInitialize();
-    EcSpekeInitParams errParams = { CURVE_TYPE_25519, { nullptr, 0 } };
+    EcSpekeInitParams errParams = { CURVE_TYPE_25519, { nullptr, 0 }, DEFAULT_OS_ACCOUNT };
     BaseProtocol *self;
     CreateEcSpekeProtocol(&errParams, true, &self);
 }
@@ -249,7 +250,7 @@ static void ECSpekeTest12(void)
     BaseProtocol *self;
     int32_t res = CreateEcSpekeProtocol(&g_X25519ParamsC, true, &self);
 
-    Uint8Buff errParams = { (uint8_t *)g_pskVal, 0 };
+    Uint8Buff errParams = { (uint8_t *)PSK_VAL, 0 };
     res = self->setPsk(self, &errParams);
 
     self->destroy(self);

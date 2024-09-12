@@ -80,7 +80,8 @@ int32_t VerifyPkSignPeer(const PakeAuthParams *params)
         .val = params->pkInfoSignPeer.val,
         .length = params->pkInfoSignPeer.length
     };
-    res = params->pakeParams.loader->verify(&serverPkAliasBuff, &messageBuff, P256, &peerSignBuff, true);
+    KeyParams keyParams = { { serverPkAliasBuff.val, serverPkAliasBuff.length, true }, false, params->osAccountId };
+    res = params->pakeParams.loader->verify(&keyParams, &messageBuff, P256, &peerSignBuff);
     HcFree(serverPkAlias);
     if (res != HC_SUCCESS) {
         LOGE("Verify pk sign failed.");
@@ -115,7 +116,7 @@ int32_t GenerateEcdhSharedKey(PakeAuthParams *params)
     }
     params->pakeParams.psk.length = sharedKeyAliasLen;
     (void)memcpy_s(params->pakeParams.psk.val, sharedKeyAliasLen, SHARED_KEY_ALIAS, sharedKeyAliasLen);
-    KeyParams privKeyParams = { { aliasBuff.val, aliasBuff.length, true }, false };
+    KeyParams privKeyParams = { { aliasBuff.val, aliasBuff.length, true }, false, params->pakeParams.osAccountId };
     KeyBuff pubKeyBuff = { params->pkPeerBuff.val, params->pkPeerBuff.length, false };
     res = params->pakeParams.loader->agreeSharedSecretWithStorage(&privKeyParams, &pubKeyBuff,
         P256, P256_SHARED_SECRET_KEY_SIZE, &(params->pakeParams.psk));
@@ -417,7 +418,7 @@ int32_t InitPakeAuthParams(const CJson *in, PakeAuthParams *params, const Accoun
     }
     uint32_t deviceIdLen = HcStrlen(deviceId);
     GOTO_IF_ERR(GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &params->osAccountId));
-    GOTO_IF_ERR(InitPakeV2BaseParams(&params->pakeParams));
+    GOTO_IF_ERR(InitPakeV2BaseParams(params->osAccountId, &params->pakeParams));
     GOTO_IF_ERR(InitSingleParam(&params->pakeParams.epkPeer, P256_PUBLIC_SIZE));
     GOTO_IF_ERR(InitSingleParam(&params->pkInfoSignSelf, SIGNATURE_SIZE));
     GOTO_IF_ERR(InitSingleParam(&params->pkInfoSignPeer, SIGNATURE_SIZE));

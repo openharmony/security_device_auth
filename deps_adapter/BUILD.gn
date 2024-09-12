@@ -44,14 +44,14 @@ if (defined(ohos_lite)) {
         "${os_adapter_path}/impl/src/liteos/mini/hc_init_protection.c",
       ]
 
-      if (enable_posix_interface) {
+      if (device_auth_enable_posix_interface) {
         sources += [ "${os_adapter_path}/impl/src/liteos/mini/hc_file_posix.c" ]
       } else {
         sources += [ "${os_adapter_path}/impl/src/liteos/mini/hc_file.c" ]
       }
 
       cflags = [ "-DHILOG_ENABLE" ]
-      cflags += [ "-DAUTH_STORAGE_PATH=\"${deviceauth_storage_path}\"" ]
+      cflags += [ "-DAUTH_STORAGE_PATH=\"${device_auth_storage_path}\"" ]
       if (board_toolchain_type == "iccarm") {
         cflags += [
           "--diag_suppress",
@@ -122,6 +122,59 @@ if (defined(ohos_lite)) {
   }
 } else {
   ohos_static_library("deviceauth_hal_linux") {
+    subsystem_name = "security"
+    part_name = "device_auth"
+    include_dirs = hals_inc_path
+
+    sources = hal_common_files
+    sources += [
+      "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
+      "${key_management_adapter_path}/impl/src/huks_adapter.c",
+      "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
+      "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
+      "${os_adapter_path}/impl/src/hc_log.c",
+      "${os_adapter_path}/impl/src/linux/hc_condition.c",
+      "${os_adapter_path}/impl/src/linux/hc_dev_info.c",
+      "${os_adapter_path}/impl/src/linux/hc_file.c",
+      "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
+      "${os_adapter_path}/impl/src/linux/hc_thread.c",
+      "${os_adapter_path}/impl/src/linux/hc_types.c",
+    ]
+
+    defines = []
+    defines += [ "DEV_AUTH_ENABLE_CE" ]
+    if (enable_extend_plugin) {
+      defines += [ "DEV_AUTH_PLUGIN_ENABLE" ]
+      sources += [ "${os_adapter_path}/impl/src/linux/dev_auth_dynamic_load.c" ]
+    }
+
+    cflags = build_flags
+    cflags += [
+      "-DHILOG_ENABLE",
+      "-DSET_THREAD_NAME",
+    ]
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      integer_overflow = true
+      boundary_sanitize = true
+      ubsan = true
+      debug = false
+    }
+    external_deps = [
+      "bounds_checking_function:libsec_shared",
+      "cJSON:cjson",
+      "c_utils:utils",
+      "hilog:libhilog",
+      "huks:libhukssdk",
+      "init:libbegetutil",
+      "mbedtls:mbedtls_shared",
+      "openssl:libcrypto_shared",
+    ]
+  }
+
+  ohos_static_library("deviceauth_hal_linux_test") {
     subsystem_name = "security"
     part_name = "device_auth"
     include_dirs = hals_inc_path

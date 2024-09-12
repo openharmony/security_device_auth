@@ -32,6 +32,12 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
   include_dirs += [
     ".",
     "${dev_frameworks_path}/inc/hiview_adapter",
+    "//third_party/bounds_checking_function/include",
+    "//third_party/mbedtls/include",
+    "//third_party/cJSON",
+    "//third_party/openssl/include/",
+    "//third_party/mbedtls/include",
+    "//third_party/mbedtls/include/mbedtls",
   ]
   if (support_os_account) {
     include_dirs += [ "${dev_frameworks_path}/inc/account_subscriber" ]
@@ -110,11 +116,15 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
 
   cflags = [ "-DHILOG_ENABLE" ]
   cflags += [
-    "-DDEV_AUTH_WORK_THREAD_STACK_SIZE = ${deviceauth_hichain_thread_stack_size}",
+    "-DDEV_AUTH_WORK_THREAD_STACK_SIZE = ${device_auth_hichain_thread_stack_size}",
     "-DMAX_AUTH_SESSION_COUNT = ${max_auth_session_count}",
   ]
 
-  deps = []
+  deps = [
+    "//third_party/cJSON:cjson",
+    "//third_party/mbedtls:mbedtls_shared",
+    "//third_party/openssl:libcrypto_static",
+  ]
 
   external_deps = [
     "cJSON:cjson",
@@ -124,8 +134,6 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
     "hitrace:hitrace_meter",
     "huks:libhukssdk",
     "init:libbegetutil",
-    "mbedtls:mbedtls_shared",
-    "openssl:libcrypto_static",
   ]
 
   if (support_os_account) {

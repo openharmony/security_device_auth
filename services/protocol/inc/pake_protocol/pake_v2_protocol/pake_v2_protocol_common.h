@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
-int32_t InitPakeV2BaseParams(PakeBaseParams *params);
+int32_t InitPakeV2BaseParams(int32_t osAccountId, PakeBaseParams *params);
 void DestroyPakeV2BaseParams(PakeBaseParams *params);
 
 int32_t ClientConfirmPakeV2Protocol(PakeBaseParams *params);

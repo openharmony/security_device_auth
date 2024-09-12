@@ -89,7 +89,7 @@ static int32_t AllocReturnKey(PakeParams *params, const CJson *in)
 
 static int32_t RemoveEscapeForExtInfo(const char *extInfoStr, char **outExtInfoStr)
 {
-    uint32_t len = strlen(extInfoStr);
+    uint32_t len = HcStrlen(extInfoStr);
     *outExtInfoStr = (char *)HcMalloc(len + 1, 0);
     if (*outExtInfoStr == NULL) {
         LOGE("Failed to alloc memory for outExtInfoStr!");
@@ -130,7 +130,7 @@ static int32_t GetInnerExtInfo(const Uint8Buff *extInfoBuff, Uint8Buff *innerExt
         return res;
     }
     innerExtInfo->val = (uint8_t *)outInnerExtStr;
-    innerExtInfo->length = strlen(outInnerExtStr) + 1;
+    innerExtInfo->length = HcStrlen(outInnerExtStr) + 1;
     return HC_SUCCESS;
 }
 
@@ -139,8 +139,8 @@ static int32_t LoadPseudonymFlagIfNeed(PakeParams *params)
     uint8_t peerKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff peerKeyAlias = { peerKeyAliasVal, PAKE_KEY_ALIAS_LEN };
     KeyAliasType keyTypePeer = (KeyAliasType)params->userTypePeer;
-    Uint8Buff packageName = { (uint8_t *)params->packageName, strlen(params->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, strlen(params->serviceType) };
+    Uint8Buff packageName = { (uint8_t *)params->packageName, HcStrlen(params->packageName) };
+    Uint8Buff serviceType = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
     int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyTypePeer, &(params->baseParams.idPeer),
         &peerKeyAlias);
     if (res != HC_SUCCESS) {
@@ -153,7 +153,8 @@ static int32_t LoadPseudonymFlagIfNeed(PakeParams *params)
         return res;
     }
     Uint8Buff extInfoBuff = { NULL, 0 };
-    res = params->baseParams.loader->getKeyExtInfo(&peerKeyAlias, &extInfoBuff, true);
+    KeyParams keyParams = { { peerKeyAlias.val, peerKeyAlias.length, true }, true, params->baseParams.osAccountId };
+    res = params->baseParams.loader->getKeyExtInfo(&keyParams, &extInfoBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to get public key extInfo!");
         return res;
@@ -187,7 +188,12 @@ static int32_t LoadPseudonymFlagIfNeed(PakeParams *params)
 
 int32_t InitDasPakeV1Params(PakeParams *params, const CJson *in)
 {
-    int32_t res = InitPakeV1BaseParams(&(params->baseParams));
+    int32_t osAccountId;
+    if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
+    int32_t res = InitPakeV1BaseParams(osAccountId, &(params->baseParams));
     if (res != HC_SUCCESS) {
         LOGE("InitPakeV1BaseParams failed, res: %d.", res);
         goto ERR;
@@ -255,8 +261,8 @@ static int32_t ConvertPakeV1Psk(const Uint8Buff *srcPsk, PakeParams *params)
 
 static int32_t GeneratePskAlias(const PakeParams *params, Uint8Buff *pskKeyAlias)
 {
-    Uint8Buff packageName = { (uint8_t *)params->packageName, strlen(params->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, strlen(params->serviceType) };
+    Uint8Buff packageName = { (uint8_t *)params->packageName, HcStrlen(params->packageName) };
+    Uint8Buff serviceType = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
     int32_t res = GenerateKeyAlias(&packageName, &serviceType, KEY_ALIAS_PSK, &(params->baseParams.idPeer),
         pskKeyAlias);
     if (res != HC_SUCCESS) {
@@ -283,16 +289,18 @@ int32_t FillPskWithDerivedKeyHex(PakeParams *params)
             return res;
         }
     }
-    uint8_t pskKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff pskKeyAlias = { pskKeyAliasVal, PAKE_KEY_ALIAS_LEN };
-    res = GeneratePskAlias(params, &pskKeyAlias);
+    uint8_t pskAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
+    Uint8Buff pskAlias = { pskAliasVal, PAKE_KEY_ALIAS_LEN };
+    res = GeneratePskAlias(params, &pskAlias);
     if (res != HC_SUCCESS) {
         return res;
     }
 
-    LOGI("Psk alias(HEX): %x%x%x%x****.", pskKeyAliasVal[0], pskKeyAliasVal[1], pskKeyAliasVal[2], pskKeyAliasVal[3]);
+    LOGI("Psk alias(HEX): %x%x%x%x****.", pskAliasVal[DEV_AUTH_ZERO], pskAliasVal[DEV_AUTH_ONE],
+        pskAliasVal[DEV_AUTH_TWO], pskAliasVal[DEV_AUTH_THREE]);
     bool isDeStorage = params->isSelfFromUpgrade;
-    if (params->baseParams.loader->checkKeyExist(&pskKeyAlias, isDeStorage) != HC_SUCCESS) {
+    if (params->baseParams.loader->checkKeyExist(&pskAlias, isDeStorage, params->baseParams.osAccountId) !=
+        HC_SUCCESS) {
         res = GetStandardTokenManagerInstance()->computeAndSavePsk(params);
         if (res != HC_SUCCESS) {
             LOGE("ComputeAndSavePsk failed, res: %d.", res);
@@ -300,30 +308,22 @@ int32_t FillPskWithDerivedKeyHex(PakeParams *params)
         }
     }
 
-    Uint8Buff pskByte = { NULL, PAKE_PSK_LEN };
-    pskByte.val = (uint8_t *)HcMalloc(PAKE_PSK_LEN, 0);
-    if (pskByte.val == NULL) {
-        LOGE("Malloc for pskByte failed.");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    Uint8Buff keyInfo = { (uint8_t *)TMP_AUTH_KEY_FACTOR, strlen(TMP_AUTH_KEY_FACTOR) };
-    KeyParams keyAliasParams = { { pskKeyAlias.val, pskKeyAlias.length, true }, isDeStorage };
-    res = params->baseParams.loader->computeHkdf(&keyAliasParams, &(params->nonce), &keyInfo, &pskByte);
+    uint8_t pskVal[PAKE_PSK_LEN] = { 0 };
+    Uint8Buff pskByte = { pskVal, PAKE_PSK_LEN };
+    Uint8Buff keyInfo = { (uint8_t *)TMP_AUTH_KEY_FACTOR, HcStrlen(TMP_AUTH_KEY_FACTOR) };
+    KeyParams keyParams = { { pskAlias.val, pskAlias.length, true }, isDeStorage, params->baseParams.osAccountId };
+    res = params->baseParams.loader->computeHkdf(&keyParams, &(params->nonce), &keyInfo, &pskByte);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHkdf for psk failed, res: %d.", res);
-        goto ERR;
+        FreeAndCleanKey(&(params->baseParams.psk));
+        return res;
     }
 
     res = ConvertPakeV1Psk(&pskByte, params);
     if (res != HC_SUCCESS) {
         LOGE("ConvertPakeV1Psk failed, res: %d.", res);
-        goto ERR;
+        FreeAndCleanKey(&(params->baseParams.psk));
     }
-    goto OUT;
-ERR:
-    FreeAndCleanKey(&(params->baseParams.psk));
-OUT:
-    FreeAndCleanKey(&pskByte);
     return res;
 }
 
@@ -381,7 +381,7 @@ int32_t LoadPseudonymExtInfoIfNeed(PakeParams *params)
         LOGE("Invalid params!");
         return HC_ERR_INVALID_PARAMS;
     }
-    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, strlen(params->serviceType) };
+    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
     uint8_t pskAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff pskAliasBuff = { pskAliasVal, PAKE_KEY_ALIAS_LEN };
     int32_t res = GeneratePseudonymPskAlias(&serviceTypeBuff, &(params->baseParams.idPeer), &pskAliasBuff);
@@ -395,7 +395,8 @@ int32_t LoadPseudonymExtInfoIfNeed(PakeParams *params)
         return res;
     }
     Uint8Buff extInfoBuff = { NULL, 0 };
-    res = params->baseParams.loader->getKeyExtInfo(&pskAliasBuff, &extInfoBuff, true);
+    KeyParams keyParams = { { pskAliasBuff.val, pskAliasBuff.length, true }, true, params->baseParams.osAccountId };
+    res = params->baseParams.loader->getKeyExtInfo(&keyParams, &extInfoBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to get pseudonym psk extInfo!");
         return res;
@@ -444,16 +445,16 @@ static int32_t CombinePseudonymChallenge(Uint8Buff *combinedChallengeBuff, const
 static int32_t GeneratePseudonymPskIfNotExist(const PakeParams *params)
 {
     uint8_t baseKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff baseKeyAliasBuff = { baseKeyAliasVal, PAKE_KEY_ALIAS_LEN };
-    Uint8Buff pkgNameBuff = { (uint8_t *)params->packageName, strlen(params->packageName)};
-    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, strlen(params->serviceType) };
+    Uint8Buff baseKeyAlias = { baseKeyAliasVal, PAKE_KEY_ALIAS_LEN };
+    Uint8Buff pkgNameBuff = { (uint8_t *)params->packageName, HcStrlen(params->packageName)};
+    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
     int32_t res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_PSK, &params->baseParams.idPeer,
-        &baseKeyAliasBuff);
+        &baseKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate base key alias!");
         return res;
     }
-    res = ToLowerCase(&baseKeyAliasBuff);
+    res = ToLowerCase(&baseKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to convert psk alias to lower case!");
         return res;
@@ -470,14 +471,14 @@ static int32_t GeneratePseudonymPskIfNotExist(const PakeParams *params)
         LOGE("Failed to convert pseudonym psk alias to lower case!");
         return res;
     }
-    if (params->baseParams.loader->checkKeyExist(&pskAliasBuff, true) == HC_SUCCESS) {
+    if (params->baseParams.loader->checkKeyExist(&pskAliasBuff, true, params->baseParams.osAccountId) == HC_SUCCESS) {
         LOGI("Pseudonym psk already exist.");
         return HC_SUCCESS;
     }
     uint8_t outKeyVal[PAKE_PSK_LEN] = { 0 };
     Uint8Buff outKeyBuff = { outKeyVal, PAKE_PSK_LEN };
-    KeyParams baseKeyParams = { { baseKeyAliasBuff.val, baseKeyAliasBuff.length, true }, true };
-    res = params->baseParams.loader->computePseudonymPsk(&baseKeyParams, &pskAliasBuff, NULL, &outKeyBuff);
+    KeyParams keyParams = { { baseKeyAlias.val, baseKeyAlias.length, true }, true, params->baseParams.osAccountId };
+    res = params->baseParams.loader->computePseudonymPsk(&keyParams, &pskAliasBuff, NULL, &outKeyBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to compute pseudonym psk!");
     }
@@ -500,7 +501,7 @@ static int32_t AddPseudonymIdToPayload(CJson *payload, const Uint8Buff *pseudony
     }
     Uint8Buff hexBuff = {
         .val = (uint8_t *)hexStr,
-        .length = strlen(hexStr)
+        .length = HcStrlen(hexStr)
     };
     res = ToLowerCase(&hexBuff);
     if (res != HC_SUCCESS) {
@@ -533,7 +534,7 @@ static int32_t AddPseudonymChallengeToPayload(CJson *payload, const Uint8Buff *p
     }
     Uint8Buff hexBuff = {
         .val = (uint8_t *)hexStr,
-        .length = strlen(hexStr)
+        .length = HcStrlen(hexStr)
     };
     res = ToLowerCase(&hexBuff);
     if (res != HC_SUCCESS) {
@@ -562,20 +563,20 @@ static int32_t GenerateSelfPseudonymChlgAndId(const PakeParams *params, Uint8Buf
         LOGE("Failed to generate pseudonym challenge!");
         return res;
     }
-    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, strlen(params->serviceType) };
+    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
     uint8_t pskAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff pskAliasBuff = { pskAliasVal, PAKE_KEY_ALIAS_LEN };
-    res = GeneratePseudonymPskAlias(&serviceTypeBuff, &(params->baseParams.idPeer), &pskAliasBuff);
+    Uint8Buff pskAlias = { pskAliasVal, PAKE_KEY_ALIAS_LEN };
+    res = GeneratePseudonymPskAlias(&serviceTypeBuff, &(params->baseParams.idPeer), &pskAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate pseudonym psk alias!");
         return res;
     }
-    res = ToLowerCase(&pskAliasBuff);
+    res = ToLowerCase(&pskAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to convert pseudonym psk alias to lower case!");
         return res;
     }
-    KeyParams pskAliasParams = { { pskAliasBuff.val, pskAliasBuff.length, true }, true };
+    KeyParams pskAliasParams = { { pskAlias.val, pskAlias.length, true }, true, params->baseParams.osAccountId };
     res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasParams, pseudonymChlgBuff, pseudonymIdBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate pseudonym id!");
@@ -655,22 +656,22 @@ static int32_t CheckPseudonymIdByCompute(const PakeParams *params, const Uint8Bu
         LOGE("Failed to generate pseudonym psk!");
         return res;
     }
-    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, strlen(params->serviceType) };
+    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
     uint8_t pskAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff pskAliasBuff = { pskAliasVal, PAKE_KEY_ALIAS_LEN };
-    res = GeneratePseudonymPskAlias(&serviceTypeBuff, &(params->baseParams.idPeer), &pskAliasBuff);
+    Uint8Buff pskAlias = { pskAliasVal, PAKE_KEY_ALIAS_LEN };
+    res = GeneratePseudonymPskAlias(&serviceTypeBuff, &(params->baseParams.idPeer), &pskAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate pseudonym psk alias!");
         return res;
     }
-    res = ToLowerCase(&pskAliasBuff);
+    res = ToLowerCase(&pskAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to convert pseudonym psk alias to lower case!");
         return res;
     }
     uint8_t computePeerPseudonymId[PSEUDONYM_ID_LEN] = { 0 };
     Uint8Buff computePeerPseudonymIdBuff = { computePeerPseudonymId, PSEUDONYM_ID_LEN };
-    KeyParams pskAliasParams = { { pskAliasBuff.val, pskAliasBuff.length, true }, true };
+    KeyParams pskAliasParams = { { pskAlias.val, pskAlias.length, true }, true, params->baseParams.osAccountId };
     res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasParams, peerPseudonymChallengeBuff,
         &computePeerPseudonymIdBuff);
     if (res != HC_SUCCESS) {
@@ -777,7 +778,7 @@ static int32_t GeneratePseudonymPskExtInfo(const PakeParams *params, const Uint8
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     extInfoBuff->val = (uint8_t *)extInfoJsonStr;
-    extInfoBuff->length = strlen(extInfoJsonStr) + 1;
+    extInfoBuff->length = HcStrlen(extInfoJsonStr) + 1;
     return HC_SUCCESS;
 }
 
@@ -785,24 +786,24 @@ static int32_t SaveExtInfoToPseudonymPsk(const PakeParams *params, const Uint8Bu
     const Uint8Buff *pskAliasBuff)
 {
     uint8_t baseKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff baseKeyAliasBuff = { baseKeyAliasVal, PAKE_KEY_ALIAS_LEN };
-    Uint8Buff pkgNameBuff = { (uint8_t *)params->packageName, strlen(params->packageName)};
-    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, strlen(params->serviceType) };
+    Uint8Buff baseKeyAlias = { baseKeyAliasVal, PAKE_KEY_ALIAS_LEN };
+    Uint8Buff pkgNameBuff = { (uint8_t *)params->packageName, HcStrlen(params->packageName)};
+    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
     int32_t res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_PSK, &params->baseParams.idPeer,
-        &baseKeyAliasBuff);
+        &baseKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate psk alias!");
         return res;
     }
-    res = ToLowerCase(&baseKeyAliasBuff);
+    res = ToLowerCase(&baseKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to convert psk alias to lower case!");
         return res;
     }
     uint8_t outKeyVal[PAKE_PSK_LEN] = { 0 };
     Uint8Buff outKeyBuff = { outKeyVal, PAKE_PSK_LEN };
-    KeyParams baseKeyParams = { { baseKeyAliasBuff.val, baseKeyAliasBuff.length, true }, true };
-    res = params->baseParams.loader->computePseudonymPsk(&baseKeyParams, pskAliasBuff, extInfoStrBuff,
+    KeyParams keyParams = { { baseKeyAlias.val, baseKeyAlias.length, true }, true, params->baseParams.osAccountId };
+    res = params->baseParams.loader->computePseudonymPsk(&keyParams, pskAliasBuff, extInfoStrBuff,
         &outKeyBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to save extInfo to pseudonym psk!");
@@ -816,15 +817,15 @@ int32_t SaveNextPseudonymIdAndChallenge(PakeParams *params)
     if (res != HC_SUCCESS) {
         return res;
     }
-    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, strlen(params->serviceType) };
+    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
     uint8_t pskAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff pskAliasBuff = { pskAliasVal, PAKE_KEY_ALIAS_LEN };
-    res = GeneratePseudonymPskAlias(&serviceTypeBuff, &(params->baseParams.idPeer), &pskAliasBuff);
+    Uint8Buff pskAlias = { pskAliasVal, PAKE_KEY_ALIAS_LEN };
+    res = GeneratePseudonymPskAlias(&serviceTypeBuff, &(params->baseParams.idPeer), &pskAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate pseudonym psk alias!");
         return res;
     }
-    res = ToLowerCase(&pskAliasBuff);
+    res = ToLowerCase(&pskAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to convert pseudonym psk alias to lower case!");
         return res;
@@ -832,7 +833,7 @@ int32_t SaveNextPseudonymIdAndChallenge(PakeParams *params)
     uint8_t selfNextPseudonymId[PSEUDONYM_ID_LEN] = { 0 };
     Uint8Buff selfNextPseudonymIdBuff = { selfNextPseudonymId, PSEUDONYM_ID_LEN };
     Uint8Buff selfNextPseudonymChallengeBuff = { params->selfNextPseudonymChallenge, PSEUDONYM_CHALLENGE_LEN };
-    KeyParams pskAliasParams = { { pskAliasBuff.val, pskAliasBuff.length, true }, true };
+    KeyParams pskAliasParams = { { pskAlias.val, pskAlias.length, true }, true, params->baseParams.osAccountId };
     res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasParams, &selfNextPseudonymChallengeBuff,
         &selfNextPseudonymIdBuff);
     if (res != HC_SUCCESS) {
@@ -853,7 +854,7 @@ int32_t SaveNextPseudonymIdAndChallenge(PakeParams *params)
     if (res != HC_SUCCESS) {
         return res;
     }
-    res = SaveExtInfoToPseudonymPsk(params, &extInfoStrBuff, &pskAliasBuff);
+    res = SaveExtInfoToPseudonymPsk(params, &extInfoStrBuff, &pskAlias);
     FreeJsonString((char *)extInfoStrBuff.val);
     return res;
 }

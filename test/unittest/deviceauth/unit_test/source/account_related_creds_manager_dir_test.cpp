@@ -122,22 +122,22 @@ HWTEST_F(AsyTokenManagerTest, AsyTokenManagerTest004, TestSize.Level0)
         if (in == nullptr) {
             break;
         }
-        ret = GetAccountAuthTokenManager()->getRegisterProof(nullptr, nullptr);
+        ret = GetAccountAuthTokenManager()->getRegisterProof(DEFAULT_OS_ACCOUNT, nullptr, nullptr);
         EXPECT_NE(ret, HC_SUCCESS);
 
-        ret = GetAccountAuthTokenManager()->getRegisterProof(in, nullptr);
+        ret = GetAccountAuthTokenManager()->getRegisterProof(DEFAULT_OS_ACCOUNT, in, nullptr);
         EXPECT_NE(ret, HC_SUCCESS);
 
         if (AddStringToJson(in, FIELD_USER_ID, "userId")) { // For unit test.
             break;
         }
-        ret = GetAccountAuthTokenManager()->getRegisterProof(in, nullptr);
+        ret = GetAccountAuthTokenManager()->getRegisterProof(DEFAULT_OS_ACCOUNT, in, nullptr);
         EXPECT_NE(ret, HC_SUCCESS);
 
         if (AddStringToJson(in, FIELD_VERSION, "version")) { // For unit test.
             break;
         }
-        ret = GetAccountAuthTokenManager()->getRegisterProof(in, nullptr);
+        ret = GetAccountAuthTokenManager()->getRegisterProof(DEFAULT_OS_ACCOUNT, in, nullptr);
         EXPECT_NE(ret, HC_SUCCESS);
     } while (0);
     FreeJson(in);

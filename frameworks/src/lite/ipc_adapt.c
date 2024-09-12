@@ -250,7 +250,7 @@ int32_t AddIpcCallBackByAppId(const char *appId, const uint8_t *cbPtr, int32_t c
         return HC_ERROR;
     }
     node->cbType = type;
-    if (memcpy_s(&(node->appId), sizeof(node->appId), appId, strlen(appId) + 1) != EOK) {
+    if (memcpy_s(&(node->appId), sizeof(node->appId), appId, HcStrlen(appId) + 1) != EOK) {
         ResetIpcCallBackNode(node);
         UnLockCallbackList();
         LOGE("appid memory copy failed");
@@ -808,7 +808,8 @@ static void GaCbOnFinishWithType(int64_t requestId, int32_t operationCode, const
     ret = EncodeCallData(dataParcel, PARAM_TYPE_REQID, (uint8_t *)(&requestId), sizeof(requestId));
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_OPCODE, (uint8_t *)(&operationCode), sizeof(operationCode));
     if (returnData != NULL) {
-        ret |= EncodeCallData(dataParcel, PARAM_TYPE_COMM_DATA, (const uint8_t *)(returnData), strlen(returnData) + 1);
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_COMM_DATA, (const uint8_t *)(returnData),
+            HcStrlen(returnData) + 1);
     }
     if (ret != HC_SUCCESS) {
         UnLockCallbackList();
@@ -861,7 +862,8 @@ static void GaCbOnErrorWithType(int64_t requestId, int32_t operationCode,
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_OPCODE, (uint8_t *)(&operationCode), sizeof(operationCode));
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_ERRCODE, (uint8_t *)(&errorCode), sizeof(errorCode));
     if (errorReturn != NULL) {
-        ret |= EncodeCallData(dataParcel, PARAM_TYPE_ERR_INFO, (const uint8_t *)(errorReturn), strlen(errorReturn) + 1);
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_ERR_INFO, (const uint8_t *)(errorReturn),
+            HcStrlen(errorReturn) + 1);
     }
     if (ret != HC_SUCCESS) {
         UnLockCallbackList();
@@ -917,7 +919,7 @@ static char *GaCbOnRequestWithType(int64_t requestId, int32_t operationCode, con
     uRet = EncodeCallData(dataParcel, PARAM_TYPE_REQID, (uint8_t *)(&requestId), sizeof(requestId));
     uRet |= EncodeCallData(dataParcel, PARAM_TYPE_OPCODE, (uint8_t *)(&operationCode), sizeof(operationCode));
     if (reqParams != NULL) {
-        uRet |= EncodeCallData(dataParcel, PARAM_TYPE_REQ_INFO, (const uint8_t *)(reqParams), strlen(reqParams) + 1);
+        uRet |= EncodeCallData(dataParcel, PARAM_TYPE_REQ_INFO, (const uint8_t *)(reqParams), HcStrlen(reqParams) + 1);
     }
     if (uRet != HC_SUCCESS) {
         UnLockCallbackList();
@@ -997,7 +999,7 @@ void IpcOnGroupCreated(const char *groupInfo)
         return;
     }
 
-    ret = EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO, (const uint8_t *)(groupInfo), strlen(groupInfo) + 1);
+    ret = EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO, (const uint8_t *)(groupInfo), HcStrlen(groupInfo) + 1);
     if (ret != HC_SUCCESS) {
         UnLockCallbackList();
         HcFree((void *)dataParcel);
@@ -1044,7 +1046,7 @@ void IpcOnGroupDeleted(const char *groupInfo)
         return;
     }
 
-    ret = EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO, (const uint8_t *)(groupInfo), strlen(groupInfo) + 1);
+    ret = EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO, (const uint8_t *)(groupInfo), HcStrlen(groupInfo) + 1);
     if (ret != HC_SUCCESS) {
         UnLockCallbackList();
         HcFree((void *)dataParcel);
@@ -1091,8 +1093,8 @@ void IpcOnDeviceBound(const char *peerUdid, const char *groupInfo)
         return;
     }
 
-    ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, (const uint8_t *)(peerUdid), strlen(peerUdid) + 1);
-    ret |= EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO, (const uint8_t *)(groupInfo), strlen(groupInfo) + 1);
+    ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, (const uint8_t *)(peerUdid), HcStrlen(peerUdid) + 1);
+    ret |= EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO, (const uint8_t *)(groupInfo), HcStrlen(groupInfo) + 1);
     if (ret != HC_SUCCESS) {
         UnLockCallbackList();
         HcFree((void *)dataParcel);
@@ -1139,8 +1141,8 @@ void IpcOnDeviceUnBound(const char *peerUdid, const char *groupInfo)
         return;
     }
 
-    ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, (const uint8_t *)(peerUdid), strlen(peerUdid) + 1);
-    ret |= EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO, (const uint8_t *)(groupInfo), strlen(groupInfo) + 1);
+    ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, (const uint8_t *)(peerUdid), HcStrlen(peerUdid) + 1);
+    ret |= EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO, (const uint8_t *)(groupInfo), HcStrlen(groupInfo) + 1);
     if (ret != HC_SUCCESS) {
         UnLockCallbackList();
         HcFree((void *)dataParcel);
@@ -1187,7 +1189,7 @@ void IpcOnDeviceNotTrusted(const char *peerUdid)
         return;
     }
 
-    ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, (const uint8_t *)(peerUdid), strlen(peerUdid) + 1);
+    ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, (const uint8_t *)(peerUdid), HcStrlen(peerUdid) + 1);
     if (ret != HC_SUCCESS) {
         UnLockCallbackList();
         HcFree((void *)dataParcel);
@@ -1234,7 +1236,7 @@ void IpcOnLastGroupDeleted(const char *peerUdid, int32_t groupType)
         return;
     }
 
-    ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, (const uint8_t *)(peerUdid), strlen(peerUdid) + 1);
+    ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, (const uint8_t *)(peerUdid), HcStrlen(peerUdid) + 1);
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_GROUP_TYPE, (const uint8_t *)(&groupType), sizeof(groupType));
     if (ret != HC_SUCCESS) {
         UnLockCallbackList();

@@ -181,7 +181,7 @@ static void GroupOperationTest24(void)
 static void GroupOperationTest25(void)
 {
     char localUdid[INPUT_UDID_LEN] = { 0 };
-    (void)HcGetUdid(reinterpret_cast<uint8_t *>(localUdid), INPUT_UDID_LEN);
+    (void)HcGetUdid((uint8_t *)localUdid, INPUT_UDID_LEN);
     (void)AssertPeerDeviceNotSelf(localUdid);
 }
 
@@ -287,13 +287,13 @@ static void GroupOperationTest42(void)
 
 static void GroupOperationTest43(void)
 {
-    (void)ProcessKeyPair(CREATE_KEY_PAIR, nullptr, NORMAL_STR);
+    (void)ProcessKeyPair(DEFAULT_OS_ACCOUNT, CREATE_KEY_PAIR, nullptr, NORMAL_STR);
 }
 
 static void GroupOperationTest44(void)
 {
     CJson *jsonParams = CreateJson();
-    (void)ProcessKeyPair(CREATE_KEY_PAIR, jsonParams, nullptr);
+    (void)ProcessKeyPair(DEFAULT_OS_ACCOUNT, CREATE_KEY_PAIR, jsonParams, nullptr);
     FreeJson(jsonParams);
 }
 

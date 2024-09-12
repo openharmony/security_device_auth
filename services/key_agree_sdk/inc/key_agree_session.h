@@ -94,7 +94,7 @@ typedef struct SpekeSessionT {
 extern "C" {
 #endif
 
-SpekeSession *CreateSpekeSession(void);
+SpekeSession *CreateSpekeSession(int32_t osAccountId);
 void DestroySpekeSession(SpekeSession *spekeSession);
 
 #ifdef __cplusplus

@@ -210,7 +210,7 @@ static int32_t QueryRelatedGroupsForGetPk(int32_t osAccountId, const char *udid,
     return HC_SUCCESS;
 }
 
-static int32_t GetPkByParams(const char *groupId, const TrustedDeviceEntry *deviceEntry,
+static int32_t GetPkByParams(int32_t osAccountId, const char *groupId, const TrustedDeviceEntry *deviceEntry,
     char *returnPkHexStr, int32_t returnPkHexStrLen)
 {
     /* Use the DeviceGroupManager package name. */
@@ -234,6 +234,7 @@ static int32_t GetPkByParams(const char *groupId, const TrustedDeviceEntry *devi
     returnPkBuff.length = PUBLIC_KEY_MAX_LENGTH;
     returnPkBuff.val = returnPkBytes;
     AuthModuleParams authParams = {
+        .osAccountId = osAccountId,
         .pkgName = appId,
         .serviceType = groupId,
         .authId = &authIdBuff,
@@ -260,7 +261,7 @@ static int32_t GeneratePkInfo(int32_t osAccountId, const char *queryUdid, const 
         return HC_ERR_DEVICE_NOT_EXIST;
     }
     char returnPkHexStr[SHA256_LEN * BYTE_TO_HEX_OPER_LENGTH + 1] = { 0 };
-    int32_t result = GetPkByParams(groupId, deviceEntry, returnPkHexStr, sizeof(returnPkHexStr));
+    int32_t result = GetPkByParams(osAccountId, groupId, deviceEntry, returnPkHexStr, sizeof(returnPkHexStr));
     DestroyDeviceEntry(deviceEntry);
     if (result != HC_SUCCESS) {
         return result;
@@ -731,7 +732,12 @@ static int32_t GetRegisterInfo(const char *reqJsonStr, char **returnRegisterInfo
         FreeJson(requestJson);
         return HC_ERR_JSON_CREATE;
     }
-    int32_t result = ProcCred(ACCOUNT_RELATED_PLUGIN, 0, REQUEST_SIGNATURE, requestJson, registerInfo);
+    int32_t osAccountId;
+    if (GetIntFromJson(requestJson, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGI("No osAccountId in request params, use current active osAccountId.");
+        osAccountId = GetCurrentActiveOsAccountId();
+    }
+    int32_t result = ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId, REQUEST_SIGNATURE, requestJson, registerInfo);
     FreeJson(requestJson);
     if (result != HC_SUCCESS) {
         LOGE("Failed to get register info!");

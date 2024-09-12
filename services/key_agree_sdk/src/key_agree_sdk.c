@@ -144,14 +144,15 @@ static int32_t InitKeyAgreeStartSessionParams(SpekeSession *spekeSession, const 
     return res;
 }
 
-KeyAgreeResult KeyAgreeInitSession(KeyAgreeSession *session, KeyAgreeProtocol protocol, KeyAgreeType type)
+KeyAgreeResult KeyAgreeInitSession(int32_t osAccountId, KeyAgreeSession *session, KeyAgreeProtocol protocol,
+    KeyAgreeType type)
 {
     LOGI("Key agree init begin!");
     if (session == NULL) {
         LOGE("Invalid input params.");
         return KEYAGREE_INIT_BAD_PARAMS;
     }
-    SpekeSession *spekeSession = CreateSpekeSession();
+    SpekeSession *spekeSession = CreateSpekeSession(osAccountId);
     if (spekeSession == NULL) {
         LOGE("Init spekeSession fail!");
         return KEYAGREE_INIT_CREATE_SESSION_FAIL;

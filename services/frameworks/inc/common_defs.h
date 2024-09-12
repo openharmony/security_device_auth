@@ -152,6 +152,8 @@
 #define GROUP_MANAGER_PACKAGE_NAME "com.huawei.devicegroupmanage"
 #define DM_APP_ID "ohos.distributedhardware.devicemanager"
 #define SOFTBUS_APP_ID "softbus_auth"
+#define CAST_APP_ID "com.huawei.android.airsharing"
+#define CAST_COMPATIBLE_APP_ID "com.huawei.android.airsharing+CastPlusDiscoveryModule"
 #define DEFAULT_RETURN_KEY_LENGTH 32
 #define MAX_BUFFER_LEN 1024
 #define MAX_DATA_BUFFER_SIZE 4096

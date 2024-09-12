@@ -140,12 +140,13 @@ static void FillDefaultValue(PakeBaseParams *params)
     params->isClient = true;
 }
 
-int32_t InitPakeV2BaseParams(PakeBaseParams *params)
+int32_t InitPakeV2BaseParams(int32_t osAccountId, PakeBaseParams *params)
 {
     if (params == NULL) {
         LOGE("Params is null.");
         return HC_ERR_NULL_PTR;
     }
+    params->osAccountId = osAccountId;
 
     int32_t res = AllocDefaultParams(params);
     if (res != HC_SUCCESS) {
@@ -180,7 +181,7 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
     }
 
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_BASE_INFO, HcStrlen(HICHAIN_SPEKE_BASE_INFO) };
-    KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false };
+    KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false, params->osAccountId };
     res = params->loader->computeHkdf(&keyParams, &(params->salt), &keyInfo, &secret);
     if (res != HC_SUCCESS) {
         LOGE("Derive secret from psk failed, res: %x.", res);
@@ -565,7 +566,11 @@ OUT:
 static int32_t GenerateSessionKey(PakeBaseParams *params)
 {
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_SESSIONKEY_INFO, HcStrlen(HICHAIN_SPEKE_SESSIONKEY_INFO) };
-    KeyParams keyParams = { { params->sharedSecret.val, params->sharedSecret.length, false }, false };
+    KeyParams keyParams = {
+        .keyBuff = { params->sharedSecret.val, params->sharedSecret.length, false },
+        .isDeStorage = false,
+        .osAccountId = params->osAccountId
+    };
     int res = params->loader->computeHkdf(&keyParams, &params->salt, &keyInfo, &params->sessionKey);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHkdf for sessionKey failed, res: %x.", res);

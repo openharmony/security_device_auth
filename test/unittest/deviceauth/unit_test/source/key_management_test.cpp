@@ -26,6 +26,7 @@
 #include "huks_adapter.h"
 #include "string_util.h"
 #include "alg_loader.h"
+#include "device_auth.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -130,7 +131,7 @@ HWTEST_F(KeyManagementTest, HuksAdapterTest003, TestSize.Level0)
     EXPECT_EQ(ret, HAL_SUCCESS);
     uint8_t keyData[P256_PUBLIC_SIZE] = { 0 };
     Uint8Buff sharedKey = { keyData, P256_PUBLIC_SIZE };
-    KeyParams privKeyParams = { { keyData, P256_PUBLIC_SIZE, false }, false };
+    KeyParams privKeyParams = { { keyData, P256_PUBLIC_SIZE, false }, false, DEFAULT_OS_ACCOUNT };
     KeyBuff pubKeyBuff = { keyData, P256_PUBLIC_SIZE, false };
     ret = GetLoaderInstance()->agreeSharedSecretWithStorage(&privKeyParams, &pubKeyBuff, P256, P256_PUBLIC_SIZE,
         &sharedKey);

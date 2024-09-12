@@ -65,6 +65,6 @@ void SetSecurityLabel(const char *filePath, const char *labelToSet)
         return;
     }
     int32_t res = setxattr(filePath, SECURITY_LABEL_XATTR_KEY, labelToSet,
-        strlen(labelToSet), 0);
+        HcStrlen(labelToSet), 0);
     LOGI("Set security label [Res]: %d", res);
 }

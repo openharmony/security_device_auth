@@ -405,7 +405,8 @@ static int32_t GenerateServerPkAlias(CJson *pkInfoJson, Uint8Buff *alias)
     return GenerateKeyAlias(userId, deviceId, alias, true);
 }
 
-static int32_t ImportServerPk(const CJson *credJson, Uint8Buff *keyAlias, uint8_t *serverPk, Algorithm alg)
+static int32_t ImportServerPk(int32_t osAccountId, const CJson *credJson, Uint8Buff *keyAlias, uint8_t *serverPk,
+    Algorithm alg)
 {
     const char *serverPkStr = GetStringFromJson(credJson, FIELD_SERVER_PK);
     if (serverPkStr == NULL) {
@@ -420,11 +421,12 @@ static int32_t ImportServerPk(const CJson *credJson, Uint8Buff *keyAlias, uint8_
     int32_t authId = 0;
     Uint8Buff authIdBuff = { (uint8_t *)&authId, sizeof(int32_t) };
     ExtraInfo extInfo = { authIdBuff, -1, -1 };
-    return g_algLoader->importPublicKey(keyAlias, &keyBuff, alg, &extInfo);
+    KeyParams keyParams = { { keyAlias->val, keyAlias->length, true }, false, osAccountId };
+    return g_algLoader->importPublicKey(&keyParams, &keyBuff, alg, &extInfo);
 }
 
-static int32_t VerifyPkInfoSignature(const CJson *credJson, CJson *pkInfoJson, uint8_t *signature,
-    Uint8Buff *keyAlias, Algorithm alg)
+static int32_t VerifyPkInfoSignature(int32_t osAccountId, const CJson *credJson, CJson *pkInfoJson,
+    uint8_t *signature, Uint8Buff *keyAlias)
 {
     char *pkInfoStr = PackJsonToString(pkInfoJson);
     if (pkInfoStr == NULL) {
@@ -446,13 +448,14 @@ static int32_t VerifyPkInfoSignature(const CJson *credJson, CJson *pkInfoJson, u
         .val = signature,
         .length = signatureLen
     };
-    int32_t ret = g_algLoader->verify(keyAlias, &messageBuff, alg, &signatureBuff, true);
+    KeyParams keyParams = { { keyAlias->val, keyAlias->length, true }, false, osAccountId };
+    int32_t ret = g_algLoader->verify(&keyParams, &messageBuff, P256, &signatureBuff);
     FreeJsonString(pkInfoStr);
     return ret;
 }
 
-static int32_t DoImportServerPkAndVerify(const CJson *credJson, uint8_t *signature, uint8_t *serverPk,
-    CJson *pkInfoJson)
+static int32_t DoImportServerPkAndVerify(int32_t osAccountId, const CJson *credJson, uint8_t *signature,
+    uint8_t *serverPk, CJson *pkInfoJson)
 {
     uint8_t *keyAliasValue = (uint8_t *)HcMalloc(SHA256_LEN, 0);
     if (keyAliasValue == NULL) {
@@ -478,7 +481,7 @@ static int32_t DoImportServerPkAndVerify(const CJson *credJson, uint8_t *signatu
         HcFree(keyAliasValue);
         return HC_ERR_JSON_GET;
     }
-    ret = ImportServerPk(credJson, &keyAlias, serverPk, P256);
+    ret = ImportServerPk(osAccountId, credJson, &keyAlias, serverPk, P256);
     if (ret != HAL_SUCCESS) {
         LOGE("Import server public key failed");
         g_accountDbMutex->unlock(g_accountDbMutex);
@@ -486,7 +489,7 @@ static int32_t DoImportServerPkAndVerify(const CJson *credJson, uint8_t *signatu
         return ret;
     }
     LOGI("Import server public key success, start to verify");
-    ret = VerifyPkInfoSignature(credJson, pkInfoJson, signature, &keyAlias, P256);
+    ret = VerifyPkInfoSignature(osAccountId, credJson, pkInfoJson, signature, &keyAlias);
     g_accountDbMutex->unlock(g_accountDbMutex);
     HcFree(keyAliasValue);
     if (ret != HC_SUCCESS) {
@@ -495,7 +498,7 @@ static int32_t DoImportServerPkAndVerify(const CJson *credJson, uint8_t *signatu
     return ret;
 }
 
-static int32_t VerifySignature(const CJson *credJson)
+static int32_t VerifySignature(int32_t osAccountId, const CJson *credJson)
 {
     LOGI("start verify server message!");
     uint8_t *signature = (uint8_t *)HcMalloc(SIGNATURE_SIZE, 0);
@@ -527,7 +530,7 @@ static int32_t VerifySignature(const CJson *credJson)
         HcFree(serverPk);
         return HC_ERR_JSON_GET;
     }
-    int32_t ret = DoImportServerPkAndVerify(credJson, signature, serverPk, pkInfoJson);
+    int32_t ret = DoImportServerPkAndVerify(osAccountId, credJson, signature, serverPk, pkInfoJson);
     HcFree(signature);
     HcFree(serverPk);
     if (ret != HC_SUCCESS) {
@@ -650,7 +653,7 @@ ERR:
     return res;
 }
 
-static int32_t DoExportPkAndCompare(const char *userId, const char *deviceId,
+static int32_t DoExportPkAndCompare(int32_t osAccountId, const char *userId, const char *deviceId,
     const char *devicePk, Uint8Buff *keyAlias)
 {
     g_accountDbMutex->lock(g_accountDbMutex);
@@ -660,7 +663,7 @@ static int32_t DoExportPkAndCompare(const char *userId, const char *deviceId,
         g_accountDbMutex->unlock(g_accountDbMutex);
         return ret;
     }
-    ret = g_algLoader->checkKeyExist(keyAlias, false);
+    ret = g_algLoader->checkKeyExist(keyAlias, false, osAccountId);
     if (ret != HAL_SUCCESS) {
         LOGE("Key pair not exist.");
         g_accountDbMutex->unlock(g_accountDbMutex);
@@ -676,7 +679,8 @@ static int32_t DoExportPkAndCompare(const char *userId, const char *deviceId,
         .val = publicKeyVal,
         .length = PK_SIZE
     };
-    ret = g_algLoader->exportPublicKey(keyAlias, false, &publicKey);
+    KeyParams keyParams = { { keyAlias->val, keyAlias->length, true }, false, osAccountId };
+    ret = g_algLoader->exportPublicKey(&keyParams, &publicKey);
     if (ret != HAL_SUCCESS) {
         LOGE("Failed to export public key");
         HcFree(publicKeyVal);
@@ -692,7 +696,7 @@ static int32_t DoExportPkAndCompare(const char *userId, const char *deviceId,
     return HC_ERROR;
 }
 
-static int32_t CheckDevicePk(const CJson *credJson)
+static int32_t CheckDevicePk(int32_t osAccountId, const CJson *credJson)
 {
     CJson *pkInfoJson = GetObjFromJson(credJson, FIELD_PK_INFO);
     if (pkInfoJson == NULL) {
@@ -729,7 +733,7 @@ static int32_t CheckDevicePk(const CJson *credJson)
         .val = keyAliasValue,
         .length = SHA256_LEN
     };
-    int32_t ret = DoExportPkAndCompare(userId, deviceId, (const char *)devicePk, &keyAlias);
+    int32_t ret = DoExportPkAndCompare(osAccountId, userId, deviceId, (const char *)devicePk, &keyAlias);
     HcFree(devicePk);
     HcFree(keyAliasValue);
     if (ret == HC_SUCCESS) {
@@ -758,14 +762,14 @@ static int32_t CheckUserId(const char *userId, const CJson *in)
     return HC_ERROR;
 }
 
-static int32_t CheckCredValidity(int32_t opCode, const CJson *in)
+static int32_t CheckCredValidity(int32_t osAccountId, int32_t opCode, const CJson *in)
 {
     const char *userId = GetStringFromJson(in, FIELD_USER_ID);
     if (userId == NULL) {
         LOGE("Failed to get userId");
         return HC_ERR_JSON_GET;
     }
-    int32_t ret = VerifySignature(in);
+    int32_t ret = VerifySignature(osAccountId, in);
     if (ret != HC_SUCCESS) {
         LOGE("Verify server credential failed!");
         return ret;
@@ -773,7 +777,7 @@ static int32_t CheckCredValidity(int32_t opCode, const CJson *in)
     if (opCode == IMPORT_TRUSTED_CREDENTIALS) {
         return HC_SUCCESS;
     }
-    ret = CheckDevicePk(in);
+    ret = CheckDevicePk(osAccountId, in);
     if (ret != HC_SUCCESS) {
         LOGE("Check devicePk failed!");
         return ret;
@@ -785,7 +789,7 @@ static int32_t CheckCredValidity(int32_t opCode, const CJson *in)
     return ret;
 }
 
-static int32_t DoGenerateAndExportPk(const char *userId, const char *deviceId,
+static int32_t DoGenerateAndExportPk(int32_t osAccountId, const char *userId, const char *deviceId,
     Uint8Buff *keyAlias, Uint8Buff *publicKey)
 {
     g_accountDbMutex->lock(g_accountDbMutex);
@@ -795,13 +799,14 @@ static int32_t DoGenerateAndExportPk(const char *userId, const char *deviceId,
         g_accountDbMutex->unlock(g_accountDbMutex);
         return ret;
     }
-    ret = g_algLoader->checkKeyExist(keyAlias, false);
+    ret = g_algLoader->checkKeyExist(keyAlias, false, osAccountId);
+    KeyParams keyParams = { { keyAlias->val, keyAlias->length, true }, false, osAccountId };
     if (ret != HAL_SUCCESS) {
         LOGI("Key pair not exist, start to generate");
         int32_t authId = 0;
         Uint8Buff authIdBuff = { (uint8_t *)&authId, sizeof(int32_t) };
         ExtraInfo extInfo = { authIdBuff, -1, -1 };
-        ret = g_algLoader->generateKeyPairWithStorage(keyAlias, SELF_ECC_KEY_LEN, P256,
+        ret = g_algLoader->generateKeyPairWithStorage(&keyParams, SELF_ECC_KEY_LEN, P256,
             KEY_PURPOSE_KEY_AGREE, &extInfo);
     } else {
         LOGI("Key pair already exists");
@@ -811,12 +816,12 @@ static int32_t DoGenerateAndExportPk(const char *userId, const char *deviceId,
         g_accountDbMutex->unlock(g_accountDbMutex);
         return ret;
     }
-    ret = g_algLoader->exportPublicKey(keyAlias, false, publicKey);
+    ret = g_algLoader->exportPublicKey(&keyParams, publicKey);
     g_accountDbMutex->unlock(g_accountDbMutex);
     return ret;
 }
 
-static int32_t GetRegisterProof(const CJson *in, CJson *out)
+static int32_t GetRegisterProof(int32_t osAccountId, const CJson *in, CJson *out)
 {
     const char *userId = GetStringFromJson(in, FIELD_USER_ID);
     if (userId == NULL) {
@@ -852,7 +857,7 @@ static int32_t GetRegisterProof(const CJson *in, CJson *out)
         .val = publicKeyVal,
         .length = PK_SIZE
     };
-    int32_t ret = DoGenerateAndExportPk(userId, deviceId, &keyAlias, &publicKey);
+    int32_t ret = DoGenerateAndExportPk(osAccountId, userId, deviceId, &keyAlias, &publicKey);
     HcFree(keyAliasValue);
     if (ret != HC_SUCCESS) {
         LOGE("exportPublicKey failed");
@@ -868,7 +873,7 @@ ERR:
     return ret;
 }
 
-static void DeleteKeyPair(AccountToken *token)
+static void DeleteKeyPair(int32_t osAccountId, AccountToken *token)
 {
     uint8_t *keyAliasValue = (uint8_t *)HcMalloc(SHA256_LEN, 0);
     if (keyAliasValue == NULL) {
@@ -887,7 +892,7 @@ static void DeleteKeyPair(AccountToken *token)
         g_accountDbMutex->unlock(g_accountDbMutex);
         return;
     }
-    if (g_algLoader->deleteKey(&keyAlias, false) != HAL_SUCCESS) {
+    if (g_algLoader->deleteKey(&keyAlias, false, osAccountId) != HAL_SUCCESS) {
         LOGE("Failed to delete key pair");
     } else {
         LOGI("Delete key pair success");
@@ -1204,7 +1209,7 @@ static int32_t AddToken(int32_t osAccountId, int32_t opCode, const CJson *in)
         LOGE("Input param is null!");
         return HC_ERR_NULL_PTR;
     }
-    int32_t ret = CheckCredValidity(opCode, in);
+    int32_t ret = CheckCredValidity(osAccountId, opCode, in);
     if (ret != HC_SUCCESS) {
         LOGE("Invalid credential");
         return ret;
@@ -1255,7 +1260,7 @@ static int32_t DeleteToken(int32_t osAccountId, const char *userId, const char *
     uint32_t index;
     AccountToken **token;
     FOR_EACH_HC_VECTOR(deleteTokens, index, token) {
-        DeleteKeyPair(*token);
+        DeleteKeyPair(osAccountId, *token);
     }
     ClearAccountTokenVec(&deleteTokens);
     return HC_SUCCESS;

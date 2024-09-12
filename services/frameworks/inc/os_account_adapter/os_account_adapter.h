@@ -41,6 +41,7 @@ void InitOsAccountAdapter(void);
 void DestroyOsAccountAdapter(void);
 int32_t GetAllOsAccountIds(int32_t **osAccountIds, uint32_t *size);
 bool IsOsAccountSupported(void);
+int32_t GetCurrentActiveOsAccountId(void);
 
 #ifdef __cplusplus
 }

@@ -49,7 +49,7 @@ ohos_fuzztest("ExpandSubSessionFuzzTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = [ "${deps_adapter_path}:${hal_module_name}" ]
+  deps = [ "${deps_adapter_path}:${hal_module_test_name}" ]
   include_dirs += identity_manager_inc
   include_dirs += [
     "${dev_frameworks_path}/inc",
@@ -96,9 +96,10 @@ ohos_fuzztest("ExpandSubSessionFuzzTest") {
   ]
   defines += [ "ENABLE_AUTH_CODE_IMPORT" ]
 
+  deps += [ "//third_party/cJSON:cjson" ]
+
   external_deps = [
     "bounds_checking_function:libsec_shared",
-    "cJSON:cjson",
     "hilog:libhilog",
     "huks:libhukssdk",
   ]

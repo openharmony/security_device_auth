@@ -16,16 +16,14 @@
 #ifndef __OS_ACCOUNT_ADAPTER_H__
 #define __OS_ACCOUNT_ADAPTER_H__
 
-enum AccountErrorCode {
-    ERR_FAILED = -1,
-    ERR_OK
-};
+const int ERR_OK = 0;
+const int ERR_FAILED = -1;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t GetFrontUserId(int32_t *userId);
+int GetFrontUserId(int *userId);
 
 #ifdef __cplusplus
 }

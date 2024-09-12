@@ -28,6 +28,7 @@ typedef enum {
 typedef struct {
     int32_t curveType;
     Uint8Buff authId;
+    int32_t osAccountId;
 } EcSpekeInitParams;
 
 #ifdef ENABLE_EC_SPEKE

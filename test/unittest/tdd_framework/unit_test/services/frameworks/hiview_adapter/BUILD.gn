@@ -29,12 +29,14 @@ ohos_unittest("perform_dumper_test") {
 
   defines = [ "DEV_AUTH_HIVIEW_ENABLE" ]
 
-  deps = [ "${deps_adapter_path}:${hal_module_name}" ]
+  deps = [
+    "${deps_adapter_path}:${hal_module_test_name}",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",

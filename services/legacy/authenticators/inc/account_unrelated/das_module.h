@@ -19,13 +19,14 @@
 #include "common_defs.h"
 #include "string_util.h"
 #include "dev_auth_module_manager.h"
+#include "das_token_manager.h"
 
 typedef struct DasAuthModuleT {
     AuthModuleBase base;
-    int32_t (*registerLocalIdentity)(const char *, const char *, Uint8Buff *, int);
-    int32_t (*unregisterLocalIdentity)(const char *, const char *, Uint8Buff *, int);
-    int32_t (*deletePeerAuthInfo)(const char *, const char *, Uint8Buff *, int);
-    int32_t (*getPublicKey)(const char *, const char *, Uint8Buff *, int, Uint8Buff *);
+    int32_t (*registerLocalIdentity)(const TokenManagerParams *);
+    int32_t (*unregisterLocalIdentity)(const TokenManagerParams *);
+    int32_t (*deletePeerAuthInfo)(const TokenManagerParams *);
+    int32_t (*getPublicKey)(const TokenManagerParams *, Uint8Buff *);
 } DasAuthModule;
 
 #ifdef __cplusplus

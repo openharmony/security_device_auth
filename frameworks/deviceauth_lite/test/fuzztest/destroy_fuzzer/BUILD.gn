@@ -17,6 +17,7 @@ import("//base/security/device_auth/services/deviceauth.gni")
 #####################hydra-fuzz###################
 import("//build/config/features.gni")
 import("//build/test.gni")
+THIRD_PATH = "//third_party/bounds_checking_function"
 module_output_path = "device_auth/device_auth"
 
 ##############################fuzztest##########################################
@@ -30,6 +31,7 @@ ohos_fuzztest("DestroyFuzzTest") {
     "${deviceauth_path}/frameworks/deviceauth_lite/inc/key_agreement",
     "${deviceauth_path}/frameworks/deviceauth_lite/inc/base",
     "${deviceauth_path}/frameworks/deviceauth_lite/inc/struct",
+    "$THIRD_PATH/include",
     "${deviceauth_path}/frameworks/deviceauth_lite/inc/json",
   ]
   cflags = [
@@ -43,8 +45,10 @@ ohos_fuzztest("DestroyFuzzTest") {
   ldflags = [ "--coverage" ]
 
   sources = [ "destroy_fuzzer.cpp" ]
-  deps = [ "${deviceauth_path}/frameworks/deviceauth_lite/source:hichainsdk" ]
-  external_deps = [ "bounds_checking_function:libsec_shared" ]
+  deps = [
+    "$THIRD_PATH:libsec_shared",
+    "${deviceauth_path}/frameworks/deviceauth_lite/source:hichainsdk",
+  ]
 }
 
 ###############################################################################
