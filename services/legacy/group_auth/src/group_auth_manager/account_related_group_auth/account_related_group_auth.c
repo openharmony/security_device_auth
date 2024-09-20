@@ -505,14 +505,6 @@ static int32_t QueryGroupForAccountPlugin(int32_t osAccountId, GroupEntryVec *ac
             queryParams.sharedUserId = peerUserId;
         }
         res = QueryGroups(osAccountId, &queryParams, accountVec);
-        if (res != HC_SUCCESS) {
-            LOGE("Failed to query local device's account group info for server!");
-            break;
-        }
-        if (accountVec->size(accountVec) == 0) {
-            LOGE("Account group not exist!");
-            res = HC_ERR_NO_CANDIDATE_GROUP;
-        }
     } while (0);
     HcFree(peerUserId);
     return res;
@@ -606,9 +598,10 @@ static int32_t AddServerParamsForAccountPlugin(CJson *dataFromClient)
         return res;
     }
     if (accountVec.size(&accountVec) == 0) {
+        // if group not found by peer userId, no need to add groupId to params, return success.
         LOGE("Group size is 0!");
         ClearGroupEntryVec(&accountVec);
-        return HC_ERR_NO_CANDIDATE_GROUP;
+        return HC_SUCCESS;
     }
     TrustedGroupEntry *groupEntry = accountVec.get(&accountVec, 0);
     if (groupEntry == NULL) {
