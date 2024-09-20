@@ -361,7 +361,8 @@ static char *PackResultToJson(CJson *out, int32_t res)
     return PackJsonToString(out);
 }
 
-static int32_t IsKeyExistReturnAliasIfNeeded(CredentialRequestParamT *param, Uint8Buff *outKeyAlias)
+static int32_t IsKeyExistReturnAliasIfNeeded(CredentialRequestParamT *param, Uint8Buff *outKeyAlias,
+    bool isCheckKeyExist)
 {
     if (param->acquireType != P2P_BIND) {
         LOGE("acquireType invalid! only P2P_BIND is allowed now!");
@@ -390,10 +391,11 @@ static int32_t IsKeyExistReturnAliasIfNeeded(CredentialRequestParamT *param, Uin
         LOGE("memcpy outkeyalias failed.");
         return HC_ERR_MEMORY_COPY;
     }
-
-    res = GetLoaderInstance()->checkKeyExist(&keyAliasBuff, false, param->osAccountId);
-    if (res != HC_SUCCESS) {
-        return HC_ERR_LOCAL_IDENTITY_NOT_EXIST;
+    if (isCheckKeyExist) {
+        res = GetLoaderInstance()->checkKeyExist(&keyAliasBuff, false, param->osAccountId);
+        if (res != HC_SUCCESS) {
+            return HC_ERR_LOCAL_IDENTITY_NOT_EXIST;
+        }
     }
     return HC_SUCCESS;
 }
@@ -412,7 +414,7 @@ static int32_t QueryCredential(const char *reqJsonStr, char **returnData)
         res = HC_ERR_JSON_GET;
         goto ERR;
     }
-    res = IsKeyExistReturnAliasIfNeeded(param, NULL);
+    res = IsKeyExistReturnAliasIfNeeded(param, NULL, true);
     if (res != HC_SUCCESS) {
         LOGD("Key pair not exist.");
         goto ERR;
@@ -467,7 +469,7 @@ static int32_t GenarateCredential(const char *reqJsonStr, char **returnData)
         res = HC_ERR_INVALID_PARAMS;
         goto ERR;
     }
-    res = IsKeyExistReturnAliasIfNeeded(param, NULL);
+    res = IsKeyExistReturnAliasIfNeeded(param, NULL, true);
     if (res == HC_SUCCESS) {
         LOGD("Key pair already exist.");
         res = HC_ERR_IDENTITY_DUPLICATED;
@@ -599,10 +601,10 @@ static int32_t CheckImportConditions(CredentialRequestParamT *param, Uint8Buff *
         LOGE("acquireType invalid! only P2P_BIND is allowed now!");
         return HC_ERR_INVALID_PARAMS;
     }
-    int32_t res = IsKeyExistReturnAliasIfNeeded(param, outKeyAlias);
-    if (res == HC_SUCCESS) {
-        LOGD("Key pair already exist.");
-        return HC_ERR_IDENTITY_DUPLICATED;
+    int32_t res = IsKeyExistReturnAliasIfNeeded(param, outKeyAlias, false);
+    if (res != HC_SUCCESS) {
+        LOGD("Generate keyAlias failed.");
+        return res;
     }
 
     res = IsSelfKeyPairExist(param->osAccountId, KEY_ALIAS_P2P_AUTH);
