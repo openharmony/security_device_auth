@@ -46,6 +46,7 @@ static const int TASK_STATUS_SERVER_END = 2;
 static const int TASK_STATUS_ISO_MAIN_STEP_ONE = 1;
 static const int TASK_STATUS_ISO_MAIN_STEP_TWO = 2;
 static const int TASK_STATUS_ISO_MAIN_END = 3;
+static const int DEFAULT_OS_ACCOUNT = 100;
 
 static TaskBase *CreateServerTask(void)
 {
@@ -64,6 +65,7 @@ static TaskBase *CreateServerTask(void)
     (void)AddStringToJson(inJson, FIELD_SELF_USER_ID, TEST_USER_ID.c_str());
     (void)AddStringToJson(inJson, FIELD_SELF_DEV_ID, TEST_UDID.c_str());
     (void)AddStringToJson(inJson, FIELD_SELF_DEVICE_ID, TEST_AUTH_ID.c_str());
+    (void)AddIntToJson(inJson, FIELD_OS_ACCOUNT_ID, DEFAULT_OS_ACCOUNT);
     AccountVersionInfo info = { AUTH_PAKE_V2_EC_P256, PAKE_V2, PAKE_ALG_EC, CURVE_256, false, nullptr, nullptr};
     TaskBase *task = CreateIsoAuthServerTask(inJson, outJson, &info);
     FreeJson(inJson);
@@ -88,6 +90,7 @@ static TaskBase *CreateClientTask(void)
     (void)AddStringToJson(inJson, FIELD_SELF_USER_ID, TEST_USER_ID.c_str());
     (void)AddStringToJson(inJson, FIELD_SELF_DEV_ID, TEST_UDID.c_str());
     (void)AddStringToJson(inJson, FIELD_SELF_DEVICE_ID, TEST_AUTH_ID.c_str());
+    (void)AddIntToJson(inJson, FIELD_OS_ACCOUNT_ID, DEFAULT_OS_ACCOUNT);
     AccountVersionInfo info = { AUTH_PAKE_V2_EC_P256, PAKE_V2, PAKE_ALG_EC, CURVE_256, false, nullptr, nullptr};
     TaskBase *task = CreateIsoAuthClientTask(inJson, outJson, &info);
     FreeJson(inJson);
