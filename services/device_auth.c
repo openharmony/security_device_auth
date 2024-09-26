@@ -631,6 +631,7 @@ static int32_t AddMemberToGroup(int32_t osAccountId, int64_t requestId, const ch
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     const char *callEventFuncName = GetAddMemberCallEventFuncName(addParams);
     DEV_AUTH_REPORT_CALL_EVENT(requestId, callEventFuncName, appId, osAccountId, res);
+    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, addParams, appId, callEventFuncName);
 #endif
     return res;
 }
@@ -941,6 +942,7 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
         FreeJson(context);
         return res;
     }
+    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, authParams, appId, AUTH_DEV_EVENT);
     DEV_AUTH_REPORT_CALL_EVENT(authReqId, AUTH_DEV_EVENT, appId, osAccountId, res);
     SessionInitParams params = { context, *gaCallback };
     res = OpenDevSession(authReqId, appId, &params);
@@ -1195,6 +1197,7 @@ static void CancelRequest(int64_t requestId, const char *appId)
 {
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(requestId);
+    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(DEFAULT_OS_ACCOUNT, NULL, appId, CANCEL_REQUEST_EVENT);
     if (appId == NULL) {
         LOGE("Invalid app id!");
         return;
@@ -1205,6 +1208,7 @@ static void CancelRequest(int64_t requestId, const char *appId)
 
 static int32_t GetRealInfo(int32_t osAccountId, const char *pseudonymId, char **realInfo)
 {
+    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, NULL, NULL, GET_REAL_INFO_EVENT);
     if (pseudonymId == NULL || realInfo == NULL) {
         LOGE("Invalid params!");
         return HC_ERR_INVALID_PARAMS;
@@ -1219,6 +1223,7 @@ static int32_t GetRealInfo(int32_t osAccountId, const char *pseudonymId, char **
 
 static int32_t GetPseudonymId(int32_t osAccountId, const char *indexKey, char **pseudonymId)
 {
+    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, NULL, NULL, GET_PSEUDONYM_ID_EVENT);
     if (indexKey == NULL || pseudonymId == NULL) {
         LOGE("Invalid params!");
         return HC_ERR_INVALID_PARAMS;
@@ -1531,6 +1536,7 @@ static void OnBytesReceivedCb(int64_t requestId, uint8_t *data, uint32_t dataLen
 static int32_t RegCallback(const char *appId, const DeviceAuthCallback *callback)
 {
     SET_LOG_MODE(NORMAL_MODE);
+    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(DEFAULT_OS_ACCOUNT, NULL, appId, REG_CALLBACK_EVENT);
     if ((appId == NULL) || (callback == NULL)) {
         LOGE("The input parameters contains NULL value!");
         return HC_ERR_INVALID_PARAMS;
@@ -1551,6 +1557,7 @@ static int32_t RegCallback(const char *appId, const DeviceAuthCallback *callback
 DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 {
     LOGI("[Service]: Start to init device auth service!");
+    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(DEFAULT_OS_ACCOUNT, NULL, NULL, INIT_DEVICE_AUTH_SERVICE_EVENT);
     if (CheckInit() == FINISH_INIT) {
         LOGI("[End]: [Service]: Device auth service is running!");
         return HC_SUCCESS;
@@ -1576,6 +1583,7 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
 {
     LOGI("[Service]: Start to destroy device auth service!");
+    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(DEFAULT_OS_ACCOUNT, NULL, NULL, DESTROY_DEVICE_AUTH_SERVICE_EVENT);
     if (CheckDestroy() == FINISH_DESTROY) {
         LOGI("[End]: [Service]: The service has not been initialized!");
         return;

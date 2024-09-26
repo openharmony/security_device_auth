@@ -14,6 +14,7 @@
  */
 
 #include "hisysevent_adapter.h"
+#include "common_defs.h"
 
 #include "hisysevent.h"
 
@@ -32,6 +33,8 @@
 #define STR_REQ_ID "REQ_ID"
 #define STR_CALL_RESULT "CALL_RESULT"
 #define STR_UNKNOWN "unknown"
+#define STR_PNAME_ID "PNAMEID"
+#define STR_PVERSION_ID "PVERSIONID"
 
 void DevAuthReportCallEvent(int64_t reqId, const char *funcName, const char *appId, int32_t osAccountId,
     int32_t callResult)
@@ -59,15 +62,27 @@ void DevAuthReportFaultEvent(const char *funcName, int32_t faultReason, uint8_t 
         STR_APP_ID, ((appId != NULL) ? appId : STR_UNKNOWN));
 }
 
-void DevAuthReportStatisticEvent(const char *appId, int32_t callResult, const char *funcName, uint8_t credType,
-    int32_t protocolType)
+void DevAuthReportUeCallEvent(int32_t osAccountId, int32_t groupType, const char *appId, const char *funcName)
 {
     HiSysEventWrite(
-        OHOS::HiviewDFX::HiSysEvent::Domain::DEVICE_AUTH,
-        STR_STATISTIC_EVENT, OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        OHOS::HiviewDFX::HiSysEvent::Domain::DEVICE_AUTH_UE,
+        STR_CALL_EVENT, OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
         STR_APP_ID, ((appId != NULL) ? appId : STR_UNKNOWN),
-        STR_CALL_RESULT, callResult,
         STR_FUNCTION_NAME, ((funcName != NULL) ? funcName : STR_UNKNOWN),
-        STR_CRED_TYPE, credType,
-        STR_PROTOCOL_TYPE, protocolType);
+        STR_OS_ACCOUNT_ID, osAccountId,
+        STR_GROUP_TYPE, groupType,
+        STR_PNAME_ID, DEFAULT_PNAMEID,
+        STR_PVERSION_ID, DEFAULT_PVERSIONID);
+}
+
+void DevAuthReportUeCallEventByParams(int32_t osAccountId, const char *inParams, const char *appId,
+    const char *funcName)
+{
+    int32_t groupType = GROUP_TYPE_INVALID;
+    CJson *params = CreateJsonFromString(inParams);
+    if (params != NULL) {
+        (void)GetIntFromJson(params, FIELD_GROUP_TYPE, &groupType);
+        FreeJson(params);
+    }
+    DEV_AUTH_REPORT_UE_CALL_EVENT(osAccountId, groupType, appId, funcName);
 }
