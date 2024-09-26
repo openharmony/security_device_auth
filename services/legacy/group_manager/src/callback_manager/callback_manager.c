@@ -202,6 +202,7 @@ int32_t RegGroupManagerCallback(const char *appId, const DeviceAuthCallback *cal
 int32_t UnRegGroupManagerCallback(const char *appId)
 {
     SET_LOG_MODE(NORMAL_MODE);
+    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(DEFAULT_OS_ACCOUNT, NULL, appId, UN_REG_GROUP_MANAGER_CALLBACK_EVENT);
     if (appId == NULL) {
         LOGE("The input appId is NULL!");
         return HC_ERR_INVALID_PARAMS;
