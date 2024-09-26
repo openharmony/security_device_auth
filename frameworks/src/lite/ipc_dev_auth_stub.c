@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-#define MAX_DATA_LEN 10240
+#define MAX_DATA_LEN 102400
 static HcMutex g_cBMutex;
 
 struct CbStubInfo {

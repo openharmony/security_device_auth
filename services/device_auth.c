@@ -1233,7 +1233,7 @@ static int32_t GetPseudonymId(int32_t osAccountId, const char *indexKey, char **
 
 DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const char *reqJsonStr, char **returnData)
 {
-    if (reqJsonStr == NULL || returnData == NULL || HcStrlen(reqJsonStr) > MAX_DATA_BUFFER_SIZE) {
+    if (reqJsonStr == NULL || returnData == NULL) {
         LOGE("Invalid params!");
         return HC_ERR_INVALID_PARAMS;
     }
