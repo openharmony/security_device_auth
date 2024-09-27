@@ -23,7 +23,6 @@
 #define STR_STATISTIC_EVENT "STATISTIC_EVENT"
 #define STR_OS_ACCOUNT_ID "OS_ACCOUNT_ID"
 #define STR_FUNC_NAME "FUNC_NAME"
-#define STR_FUNCTION_NAME "FUNCTION_NAME"
 #define STR_FAULT_REASON "FAULT_REASON"
 #define STR_CRED_TYPE "CRED_TYPE"
 #define STR_GROUP_TYPE "GROUP_TYPE"
@@ -55,7 +54,7 @@ void DevAuthReportFaultEvent(const char *funcName, int32_t faultReason, uint8_t 
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::DEVICE_AUTH,
         STR_FAULT_EVENT, OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
-        STR_FUNCTION_NAME, ((funcName != NULL) ? funcName : STR_UNKNOWN),
+        STR_FUNC_NAME, ((funcName != NULL) ? funcName : STR_UNKNOWN),
         STR_FAULT_REASON, faultReason,
         STR_CRED_TYPE, credType,
         STR_GROUP_TYPE, groupType,
@@ -68,7 +67,7 @@ void DevAuthReportUeCallEvent(int32_t osAccountId, int32_t groupType, const char
         OHOS::HiviewDFX::HiSysEvent::Domain::DEVICE_AUTH_UE,
         STR_CALL_EVENT, OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
         STR_APP_ID, ((appId != NULL) ? appId : STR_UNKNOWN),
-        STR_FUNCTION_NAME, ((funcName != NULL) ? funcName : STR_UNKNOWN),
+        STR_FUNC_NAME, ((funcName != NULL) ? funcName : STR_UNKNOWN),
         STR_OS_ACCOUNT_ID, osAccountId,
         STR_GROUP_TYPE, groupType,
         STR_PNAME_ID, DEFAULT_PNAMEID,
