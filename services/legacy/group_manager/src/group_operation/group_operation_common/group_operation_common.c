@@ -27,6 +27,7 @@
 #include "account_auth_plugin_proxy.h"
 
 static const char *IDENTITY_FROM_DB = "identityFromDB";
+static const int UPGRADE_OS_ACCOUNT_ID = 100;
 
 int32_t CheckUpgradeIdentity(uint8_t upgradeFlag, const char *appId, const char *identityFromDB)
 {
@@ -104,6 +105,43 @@ static uint32_t GetGroupNumByOwner(int32_t osAccountId, const char *ownerName)
     count = HC_VECTOR_SIZE(&groupEntryVec);
     ClearGroupEntryVec(&groupEntryVec);
     return count;
+}
+
+static void CheckAndRemoveUpgradeGroupEntry(const TrustedGroupEntry *groupEntry)
+{
+    if (groupEntry->upgradeFlag != IS_UPGRADE) {
+        LOGW("Group is not upgrade group, not need to remove!");
+        return;
+    }
+    const char *groupId = StringGet(&(groupEntry->id));
+
+    HcString entryManager = HC_VECTOR_GET(&groupEntry->managers, 0);
+    const char *groupOwner = StringGet(&entryManager);
+    if (groupId == NULL || groupOwner == NULL) {
+        LOGW("groupId or groupOwner is null, not need to remove!");
+        return;
+    }
+    CJson *upgradeJson = CreateJson();
+    if (upgradeJson == NULL) {
+        LOGE("Failed to create upgradeIdentity json.");
+        return;
+    }
+    if (AddStringToJson(upgradeJson, FIELD_APP_ID, groupOwner) != HC_SUCCESS) {
+        FreeJson(upgradeJson);
+        LOGE("Failed to add groupOwner.");
+        return;
+    }
+    int32_t res = ExcuteCredMgrCmd(UPGRADE_OS_ACCOUNT_ID, CHECK_UPGRADE_DATA, upgradeJson, NULL);
+    FreeJson(upgradeJson);
+    if (res == HC_SUCCESS) {
+        LOGI("GroupOwner is in trustedlist, not need to remove!");
+        return;
+    }
+    if (DelGroupFromDb(UPGRADE_OS_ACCOUNT_ID, groupId) != HC_SUCCESS) {
+        LOGW("Delete group from db failed!");
+        return;
+    }
+    LOGI("Delete group from db successfully!");
 }
 
 TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *deviceId, bool isUdid,
@@ -1121,4 +1159,26 @@ int32_t GetHashResult(const uint8_t *info, uint32_t infoLen, char *hash, uint32_
     HcFree(infoHash.val);
     HcFree(message.val);
     return result;
+}
+
+void CheckAndRemoveUpgradeData(void)
+{
+    QueryGroupParams queryParams = InitQueryGroupParams();
+    GroupEntryVec groupEntryVec = CreateGroupEntryVec();
+    int32_t ret = QueryGroups(UPGRADE_OS_ACCOUNT_ID, &queryParams, &groupEntryVec);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to query groups!");
+        ClearGroupEntryVec(&groupEntryVec);
+        return;
+    }
+    uint32_t index;
+    TrustedGroupEntry **ptr = NULL;
+    FOR_EACH_HC_VECTOR(groupEntryVec, index, ptr) {
+        if (ptr == NULL || *ptr == NULL) {
+            continue;
+        }
+        const TrustedGroupEntry *groupEntry = (const TrustedGroupEntry *)(*ptr);
+        CheckAndRemoveUpgradeGroupEntry(groupEntry);
+    }
+    ClearGroupEntryVec(&groupEntryVec);
 }
