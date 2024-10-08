@@ -1576,6 +1576,7 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     InitPseudonymModule();
     DEV_AUTH_LOAD_PLUGIN();
     SetInitStatus();
+    CheckAndRemoveUpgradeData();
     LOGI("[End]: [Service]: Init device auth service successfully!");
     return HC_SUCCESS;
 }
