@@ -71,6 +71,7 @@ static void GetAccountRelatedCandidateGroups(int32_t osAccountId, const CJson *p
 static void GetAccountUnrelatedCandidateGroups(int32_t osAccountId, bool isDeviceLevel, bool isClient,
     GroupEntryVec *vec)
 {
+    uint32_t groupSize = vec->size(vec);
     QueryGroupParams queryParams = InitQueryGroupParams();
     if (!isDeviceLevel || !isClient) {
         queryParams.groupVisibility = GROUP_VISIBILITY_PUBLIC;
@@ -80,7 +81,7 @@ static void GetAccountUnrelatedCandidateGroups(int32_t osAccountId, bool isDevic
         LOGE("Failed to query p2p groups!");
         return;
     }
-    if (vec->size(vec) == 0) {
+    if (vec->size(vec) == groupSize) {
         LOGI("p2p groups not found!");
     }
 }
