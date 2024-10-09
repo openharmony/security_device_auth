@@ -507,6 +507,7 @@ static int32_t CreateGroupInner(int32_t osAccountId, int64_t requestId, const ch
     return HC_SUCCESS;
 }
 
+#ifdef DEV_AUTH_HIVIEW_ENABLE
 static DevAuthCallEvent BuildCallEventData(const char *appId, const char *funcName, const int32_t osAccountId,
     const int32_t callResult, const int32_t processCode)
 {
@@ -522,6 +523,7 @@ static DevAuthCallEvent BuildCallEventData(const char *appId, const char *funcNa
     eventData.extInfo = DEFAULT_EXT_INFO;
     return eventData;
 }
+#endif
 
 static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams)
 {
