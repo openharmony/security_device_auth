@@ -531,10 +531,12 @@ static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const 
     int64_t elapsedTime = endTime - startTime;
     LOGI("CreateGroup elapsed time:  %" PRId64 " milliseconds", elapsedTime);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, createParams, appId, CREATE_GROUP_EVENT);
+    #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData = BuildCallEventData(appId, CREATE_GROUP_EVENT, osAccountId,
         PROCESS_REQUEST_CREATE_GROUP, res);
     eventData.executionTime = elapsedTime;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);
+    #endif
     return res;
 }
 
@@ -576,10 +578,12 @@ static int32_t RequestDeleteGroup(int32_t osAccountId, int64_t requestId, const 
     int64_t elapsedTime = endTime - startTime;
     LOGI("DeleteGroup elapsed time:  %" PRId64 " milliseconds", elapsedTime);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, disbandParams, appId, DELETE_GROUP_EVENT);
+    #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData = BuildCallEventData(appId, DELETE_GROUP_EVENT, osAccountId,
         PROCESS_REQUEST_DELETE_GROUP, res);
     eventData.executionTime = elapsedTime;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);
+    #endif
     return res;
 }
 
@@ -623,10 +627,12 @@ static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t request
     int64_t elapsedTime = endTime - startTime;
     LOGI("DeleteMemberFromGroup elapsed time:  %" PRId64 " milliseconds", elapsedTime);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, deleteParams, appId, DEL_MEMBER_EVENT);
+    #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData = BuildCallEventData(appId, DEL_MEMBER_EVENT, osAccountId,
         PROCESS_REQUEST_DELETE_MEMBER_FROM_GROUP, res);
     eventData.executionTime = elapsedTime;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);
+    #endif
     return res;
 }
 
