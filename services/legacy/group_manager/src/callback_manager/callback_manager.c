@@ -142,8 +142,8 @@ static void FaultReportWithOpCode(int operationCode, int errorCode)
         LOGE("Invalid operation code! Cannot report this fault!");
         return;
     }
-    DEV_AUTH_REPORT_FAULT_EVENT(g_opCodeToEvent[operationCode], errorCode,
-        DEFAULT_CRED_TYPE, DEFAULT_GROUP_TYPE, DEFAULT_APPID);
+    DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(g_opCodeToEvent[operationCode],
+        PROCESS_FAULT_REPORT_WITH_OP_CODE, errorCode);
 }
 
 void ProcessErrorCallback(int64_t reqId, int operationCode, int errorCode, const char *errorReturn,

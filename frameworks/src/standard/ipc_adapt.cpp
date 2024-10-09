@@ -804,10 +804,10 @@ static void FaultReportWithType(int32_t type, int32_t errorCode)
 {
     if (type == CB_TYPE_TMP_DEV_AUTH) {
         LOGE("device auth error");
-        DEV_AUTH_REPORT_FAULT_EVENT(AUTH_DEV_EVENT, errorCode, DEFAULT_CRED_TYPE, DEFAULT_GROUP_TYPE, DEFAULT_APPID);
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(AUTH_DEV_EVENT, PROCESS_FAULT_REPORT_WITH_TYPE, errorCode);
     } else if (type == CB_TYPE_DEV_AUTH) {
         LOGE("bind error");
-        DEV_AUTH_REPORT_FAULT_EVENT(ADD_MEMBER_EVENT, errorCode, DEFAULT_CRED_TYPE, DEFAULT_GROUP_TYPE, DEFAULT_APPID);
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(ADD_MEMBER_EVENT, PROCESS_FAULT_REPORT_WITH_TYPE, errorCode);
     } else {
         LOGE("unknown error, type is %d", type);
     }

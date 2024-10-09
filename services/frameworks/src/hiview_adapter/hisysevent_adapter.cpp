@@ -32,33 +32,69 @@
 #define STR_REQ_ID "REQ_ID"
 #define STR_CALL_RESULT "CALL_RESULT"
 #define STR_UNKNOWN "unknown"
+#define STR_PROCESS_CODE "PROCESS_CODE"
+#define STR_EXECUTION_TIME "EXECUTION_TIME"
+#define STR_EXT_INFO "EXT_INFO"
+#define STR_FAULT_INFO "FAULT_INFO"
+#define STR_ERROR_CODE "ERROR_CODE"
 #define STR_PNAME_ID "PNAMEID"
 #define STR_PVERSION_ID "PVERSIONID"
 
-void DevAuthReportCallEvent(int64_t reqId, const char *funcName, const char *appId, int32_t osAccountId,
-    int32_t callResult)
+void DevAuthReportCallEvent(const DevAuthCallEvent eventData)
 {
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::DEVICE_AUTH,
         STR_CALL_EVENT, OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        STR_REQ_ID, reqId,
-        STR_FUNC_NAME, ((funcName != NULL) ? funcName : STR_UNKNOWN),
-        STR_APP_ID, ((appId != NULL) ? appId : STR_UNKNOWN),
-        STR_OS_ACCOUNT_ID, osAccountId,
-        STR_CALL_RESULT, callResult);
+        STR_APP_ID, ((eventData.appId != NULL) ? eventData.appId : STR_UNKNOWN),
+        STR_FUNC_NAME, ((eventData.funcName != NULL) ? eventData.funcName : STR_UNKNOWN),
+        STR_OS_ACCOUNT_ID, eventData.osAccountId,
+        STR_CALL_RESULT, eventData.callResult,
+        STR_PROCESS_CODE, eventData.processCode,
+        STR_CRED_TYPE, eventData.credType,
+        STR_GROUP_TYPE, eventData.groupType,
+        STR_EXECUTION_TIME, eventData.executionTime,
+        STR_EXT_INFO, ((eventData.extInfo != NULL) ? eventData.extInfo : STR_UNKNOWN));
 }
 
-void DevAuthReportFaultEvent(const char *funcName, int32_t faultReason, uint8_t credType, int32_t groupType,
-    const char *appId)
+void DevAuthReportFaultEvent(DevAuthFaultEvent eventData)
 {
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::DEVICE_AUTH,
         STR_FAULT_EVENT, OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
-        STR_FUNC_NAME, ((funcName != NULL) ? funcName : STR_UNKNOWN),
-        STR_FAULT_REASON, faultReason,
-        STR_CRED_TYPE, credType,
-        STR_GROUP_TYPE, groupType,
-        STR_APP_ID, ((appId != NULL) ? appId : STR_UNKNOWN));
+        STR_APP_ID, ((eventData.appId != NULL) ? eventData.appId : STR_UNKNOWN),
+        STR_PROCESS_CODE, eventData.processCode,
+        STR_FUNC_NAME, ((eventData.funcName != NULL) ? eventData.funcName : STR_UNKNOWN),
+        STR_REQ_ID, eventData.reqId,
+        STR_ERROR_CODE, eventData.errorCode,
+        STR_FAULT_INFO, ((eventData.faultInfo != NULL) ? eventData.faultInfo : STR_UNKNOWN));
+}
+
+void DevAuthReportCallEventWithResult(const char *appId, const char *funcName, const int32_t osAccountId,
+    const int32_t callResult, const int32_t processCode)
+{
+    DevAuthCallEvent eventData;
+    eventData.appId = appId;
+    eventData.funcName = funcName;
+    eventData.osAccountId = osAccountId;
+    eventData.callResult = callResult;
+    eventData.processCode = processCode;
+    eventData.credType = DEFAULT_CRED_TYPE;
+    eventData.groupType = DEFAULT_GROUP_TYPE;
+    eventData.executionTime = DEFAULT_EXECUTION_TIME;
+    eventData.extInfo = DEFAULT_EXT_INFO;
+    DevAuthReportCallEvent(eventData);
+}
+
+void DevAuthReportFaultEventWithErrCode(const char *funcName, const int32_t processCode, const int32_t errorCode)
+{
+    DevAuthFaultEvent eventData;
+    eventData.appId = DEFAULT_APPID;
+    eventData.processCode = processCode;
+    eventData.funcName = funcName;
+    eventData.reqId = DEFAULT_REQ_ID;
+    eventData.errorCode = errorCode;
+    eventData.faultInfo = DEFAULT_FAULT_INFO;
+    DevAuthReportFaultEvent(eventData);
 }
 
 void DevAuthReportUeCallEvent(int32_t osAccountId, int32_t groupType, const char *appId, const char *funcName)
