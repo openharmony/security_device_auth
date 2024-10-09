@@ -583,35 +583,32 @@ static int32_t AddSelfDevInfoForServer(int32_t osAccountId, const TrustedGroupEn
     return res;
 }
 
-static int32_t AddServerParamsForAccountPlugin(CJson *dataFromClient)
+static void AddServerParamsForAccountPlugin(CJson *dataFromClient)
 {
     int32_t osAccountId = INVALID_OS_ACCOUNT;
     if (GetIntFromJson(dataFromClient, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
         LOGE("Failed to get osAccountId!");
-        return HC_ERR_JSON_GET;
+        return;
     }
     GroupEntryVec accountVec = CreateGroupEntryVec();
-    int32_t res = QueryGroupForAccountPlugin(osAccountId, &accountVec, dataFromClient);
-    if (res != HC_SUCCESS) {
+    if (QueryGroupForAccountPlugin(osAccountId, &accountVec, dataFromClient) != HC_SUCCESS) {
         LOGE("Failed to query group!");
         ClearGroupEntryVec(&accountVec);
-        return res;
+        return;
     }
     if (accountVec.size(&accountVec) == 0) {
-        // if group not found by peer userId, no need to add groupId to params, return success.
         LOGE("Group size is 0!");
         ClearGroupEntryVec(&accountVec);
-        return HC_SUCCESS;
+        return;
     }
     TrustedGroupEntry *groupEntry = accountVec.get(&accountVec, 0);
     if (groupEntry == NULL) {
         LOGE("Group entry is null!");
         ClearGroupEntryVec(&accountVec);
-        return HC_ERR_GROUP_NOT_EXIST;
+        return;
     }
-    res = AddGroupIdForServer(groupEntry, dataFromClient);
+    (void)AddGroupIdForServer(groupEntry, dataFromClient);
     ClearGroupEntryVec(&accountVec);
-    return res;
 }
 
 static int32_t AddSelfAccountInfoForServer(CJson *dataFromClient)
@@ -662,9 +659,10 @@ static int32_t GetAuthParamsVecForServer(const CJson *dataFromClient, ParamsVecF
         return HC_ERR_JSON_FAIL;
     }
 
-    int32_t res;
+    int32_t res = HC_SUCCESS;
     if (HasAccountAuthPlugin() == HC_SUCCESS) {
-        res = AddServerParamsForAccountPlugin(dupData);
+        // Try to add groupId to auth params. If add fail, ignore it.
+        AddServerParamsForAccountPlugin(dupData);
     } else {
         res = AddSelfAccountInfoForServer(dupData);
     }
