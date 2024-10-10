@@ -362,10 +362,22 @@ static int32_t AddTrustedGroup(const CmdParams *params)
     return res;
 }
 
-static int32_t AddPeerTrustedDevice(const CmdParams *params)
+static bool IsAcrossAccount(const CmdParams *params)
 {
+    if (params->userIdSelf == NULL || params->userIdPeer == NULL) {
+        LOGW("userIdSelf or userIdPeer is null");
+        return false;
+    }
     if (!params->isBind && strcmp(params->userIdSelf, params->userIdPeer) != 0) {
         LOGI("No peer-to-peer binding and SelfUserId is not equal to PeerUserId, don't need to add peerDevice!");
+        return true;
+    }
+    return false;
+}
+
+static int32_t AddPeerTrustedDevice(const CmdParams *params)
+{
+    if (IsAcrossAccount(params)) {
         return HC_SUCCESS;
     }
     TrustedDeviceEntry *devParams = CreateDeviceEntry();
