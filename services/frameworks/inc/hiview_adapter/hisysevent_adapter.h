@@ -56,23 +56,49 @@
 #define DEFAULT_GROUP_TYPE 256
 #define DEFAULT_CRED_TYPE 0
 #define DEFAULT_APPID NULL
+
+#define DEFAULT_EXECUTION_TIME 0
+#define DEFAULT_REQ_ID 0
+#define DEFAULT_FAULT_INFO NULL
+#define DEFAULT_EXT_INFO NULL
+
+#include <stdint.h>
+
+enum DevAuthReportProcessCode {
+    PROCESS_ADD_MEMBER_TO_GROUP = 0x001000,
+    PROCESS_AUTH_DEVICE,
+    PROCESS_UPDATE_DATA_BY_INPUT_INDEX,
+    PROCESS_REQUEST_CREATE_GROUP,
+    PROCESS_REQUEST_DELETE_GROUP,
+    PROCESS_REQUEST_DELETE_MEMBER_FROM_GROUP,
+    PREOCESS_REQUEST_ADD_MULTI_MEMBERS_TO_GROUP,
+    PROCESS_REQUEST_DEL_MULTI_MEMBERS_FROM_GROUP,
+    PROCESS_FAULT_REPORT_WITH_TYPE,
+    PROCESS_HANDLE_RESTORE_CALL,
+    PROCESS_FAULT_REPORT_WITH_OP_CODE
+};
+
 #define DEFAULT_PNAMEID "device_auth"
 #define DEFAULT_PVERSIONID "1.0"
 
 #ifndef DEV_AUTH_HIVIEW_ENABLE
 
-#define DEV_AUTH_REPORT_CALL_EVENT(reqId, funcName, appId, osAccountId, callResult)
-#define DEV_AUTH_REPORT_FAULT_EVENT(funcName, faultReason, credType, groupType, appId)
+#define DEV_AUTH_REPORT_CALL_EVENT(eventData)
+#define DEV_AUTH_REPORT_CALL_EVENT_WITH_RESULT(appId, funcName, osAccountId, callResult, processCode)
+#define DEV_AUTH_REPORT_FAULT_EVENT(eventdata)
+#define DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(funcName, processCode, errorCode)
 #define DEV_AUTH_REPORT_UE_CALL_EVENT(osAccountId, groupType, appId, funcName)
 #define DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, inParams, appId, funcName)
 #else
 
-#include <stdint.h>
-
-#define DEV_AUTH_REPORT_CALL_EVENT(reqId, funcName, appId, osAccountId, callResult) \
-    DevAuthReportCallEvent(reqId, funcName, appId, osAccountId, callResult)
-#define DEV_AUTH_REPORT_FAULT_EVENT(funcName, faultReason, credType, groupType, appId) \
-    DevAuthReportFaultEvent(funcName, faultReason, credType, groupType, appId)
+#define DEV_AUTH_REPORT_CALL_EVENT(eventData) \
+    DevAuthReportCallEvent(eventData)
+#define DEV_AUTH_REPORT_CALL_EVENT_WITH_RESULT(appId, funcName, osAccountId, callResult, processCode) \
+    DevAuthReportCallEventWithResult(appId, funcName, osAccountId, callResult, processCode)
+#define DEV_AUTH_REPORT_FAULT_EVENT(eventdata) \
+    DevAuthReportFaultEvent(eventdata)
+#define DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(funcName, processCode, errorCode) \
+    DevAuthReportFaultEventWithErrCode(funcName, processCode, errorCode)
 #define DEV_AUTH_REPORT_UE_CALL_EVENT(osAccountId, groupType, appId, funcName) \
     DevAuthReportUeCallEvent(osAccountId, groupType, appId, funcName)
 #define DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, inParams, appId, funcName) \
@@ -82,10 +108,32 @@
 extern "C" {
 #endif
 
-void DevAuthReportCallEvent(int64_t reqId, const char *funcName, const char *appId, int32_t osAccountId,
-    int32_t callResult);
-void DevAuthReportFaultEvent(const char *funcName, int32_t faultReason, uint8_t credType, int32_t groupType,
-    const char *appId);
+typedef struct {
+    const char *appId;
+    const char *funcName;
+    int32_t osAccountId;
+    int32_t callResult;
+    int32_t processCode;
+    uint8_t credType;
+    int32_t groupType;
+    int64_t executionTime;
+    const char *extInfo;
+}DevAuthCallEvent;
+
+typedef struct {
+    const char *appId;
+    int32_t processCode;
+    const char *funcName;
+    int64_t reqId;
+    int32_t errorCode;
+    const char *faultInfo;
+}DevAuthFaultEvent;
+
+void DevAuthReportCallEvent(const DevAuthCallEvent eventData);
+void DevAuthReportFaultEvent(const DevAuthFaultEvent eventdata);
+void DevAuthReportCallEventWithResult(const char *appId, const char *funcName, const int32_t osAccountId,
+    const int32_t callResult, const int32_t processCode);
+void DevAuthReportFaultEventWithErrCode(const char *funcName, const int32_t processCode, const int32_t errorCode);
 void DevAuthReportUeCallEvent(int32_t osAccountId, int32_t groupType, const char *appId,
     const char *funcName);
 void DevAuthReportUeCallEventByParams(int32_t osAccountId, const char *inParams, const char *appId,
