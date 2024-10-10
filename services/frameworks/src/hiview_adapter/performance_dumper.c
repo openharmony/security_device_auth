@@ -141,6 +141,7 @@ static void UpdateDataBySelfIndex(PerformData *performData, int64_t time)
     }
 }
 
+#ifdef DEV_AUTH_HIVIEW_ENABLE
 static void ReportCallEventWithTime(const char *funcName, const int32_t processCode, const int64_t time)
 {
     DevAuthCallEvent eventData;
@@ -155,6 +156,7 @@ static void ReportCallEventWithTime(const char *funcName, const int32_t processC
     eventData.extInfo = DEFAULT_EXT_INFO;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);
 }
+#endif
 
 static void UpdateDataByInputIndex(PerformData *performData, PerformTimeIndex timeIndex, int64_t time)
 {
@@ -166,10 +168,14 @@ static void UpdateDataByInputIndex(PerformData *performData, PerformTimeIndex ti
         int64_t totalTime = performData->onFinishTime - performData->firstStartTime;
         if (performData->isBind) {
             LOGI("Bind consume time: %lld, requestId: %lld", totalTime, performData->reqId);
+            #ifdef DEV_AUTH_HIVIEW_ENABLE
             ReportCallEventWithTime(BIND_CONSUME_EVENT, PROCESS_UPDATE_DATA_BY_INPUT_INDEX, totalTime);
+            #endif
         } else {
             LOGI("Auth consume time: %lld, requestId: %lld", totalTime, performData->reqId);
+            #ifdef DEV_AUTH_HIVIEW_ENABLE
             ReportCallEventWithTime(AUTH_CONSUME_EVENT, PROCESS_UPDATE_DATA_BY_INPUT_INDEX, totalTime);
+            #endif
         }
     } else {
         LOGE("Invalid timeIndex!");

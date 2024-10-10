@@ -78,27 +78,6 @@ enum DevAuthReportProcessCode {
     PROCESS_FAULT_REPORT_WITH_OP_CODE
 };
 
-typedef struct {
-    const char *appId;
-    const char *funcName;
-    int32_t osAccountId;
-    int32_t callResult;
-    int32_t processCode;
-    uint8_t credType;
-    int32_t groupType;
-    int64_t executionTime;
-    const char *extInfo;
-}DevAuthCallEvent;
-
-typedef struct {
-    const char *appId;
-    int32_t processCode;
-    const char *funcName;
-    int64_t reqId;
-    int32_t errorCode;
-    const char *faultInfo;
-}DevAuthFaultEvent;
-
 #define DEFAULT_PNAMEID "device_auth"
 #define DEFAULT_PVERSIONID "1.0"
 
@@ -128,6 +107,27 @@ typedef struct {
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct {
+    const char *appId;
+    const char *funcName;
+    int32_t osAccountId;
+    int32_t callResult;
+    int32_t processCode;
+    uint8_t credType;
+    int32_t groupType;
+    int64_t executionTime;
+    const char *extInfo;
+}DevAuthCallEvent;
+
+typedef struct {
+    const char *appId;
+    int32_t processCode;
+    const char *funcName;
+    int64_t reqId;
+    int32_t errorCode;
+    const char *faultInfo;
+}DevAuthFaultEvent;
 
 void DevAuthReportCallEvent(const DevAuthCallEvent eventData);
 void DevAuthReportFaultEvent(const DevAuthFaultEvent eventdata);
