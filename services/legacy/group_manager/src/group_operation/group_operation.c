@@ -535,7 +535,7 @@ static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const 
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, createParams, appId, CREATE_GROUP_EVENT);
     #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData = BuildCallEventData(appId, CREATE_GROUP_EVENT, osAccountId,
-        PROCESS_REQUEST_CREATE_GROUP, res);
+        res, PROCESS_REQUEST_CREATE_GROUP);
     eventData.executionTime = elapsedTime;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);
     #endif
@@ -582,7 +582,7 @@ static int32_t RequestDeleteGroup(int32_t osAccountId, int64_t requestId, const 
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, disbandParams, appId, DELETE_GROUP_EVENT);
     #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData = BuildCallEventData(appId, DELETE_GROUP_EVENT, osAccountId,
-        PROCESS_REQUEST_DELETE_GROUP, res);
+        res, PROCESS_REQUEST_DELETE_GROUP);
     eventData.executionTime = elapsedTime;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);
     #endif
@@ -631,7 +631,7 @@ static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t request
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, deleteParams, appId, DEL_MEMBER_EVENT);
     #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData = BuildCallEventData(appId, DEL_MEMBER_EVENT, osAccountId,
-        PROCESS_REQUEST_DELETE_MEMBER_FROM_GROUP, res);
+        res, PROCESS_REQUEST_DELETE_MEMBER_FROM_GROUP);
     eventData.executionTime = elapsedTime;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);
     #endif
@@ -686,7 +686,7 @@ static int32_t RequestAddMultiMembersToGroup(int32_t osAccountId, const char *ap
     int32_t res = AddMultiMembersToGroupInner(osAccountId, appId, addParams);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, addParams, appId, ADD_MULTI_MEMBER_EVENT);
     DEV_AUTH_REPORT_CALL_EVENT_WITH_RESULT(appId, ADD_MULTI_MEMBER_EVENT, osAccountId,
-        PREOCESS_REQUEST_ADD_MULTI_MEMBERS_TO_GROUP, res);
+        res, PREOCESS_REQUEST_ADD_MULTI_MEMBERS_TO_GROUP);
     return res;
 }
 
@@ -738,7 +738,7 @@ static int32_t RequestDelMultiMembersFromGroup(int32_t osAccountId, const char *
     int32_t res = DelMultiMembersFromGroupInner(osAccountId, appId, deleteParams);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, deleteParams, appId, DEL_MULTI_MEMBER_EVENT);
     DEV_AUTH_REPORT_CALL_EVENT_WITH_RESULT(appId, DEL_MULTI_MEMBER_EVENT, osAccountId,
-        PROCESS_REQUEST_DEL_MULTI_MEMBERS_FROM_GROUP, res);
+        res, PROCESS_REQUEST_DEL_MULTI_MEMBERS_FROM_GROUP);
     return res;
 }
 
