@@ -223,6 +223,10 @@ int32_t CheckGroupNumLimit(int32_t osAccountId, int32_t groupType, const char *a
 
 bool IsLocalDevice(const char *udid)
 {
+    if (udid == NULL) {
+        LOGE("The input udid is NULL!");
+        return true;
+    }
     char localUdid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)localUdid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
