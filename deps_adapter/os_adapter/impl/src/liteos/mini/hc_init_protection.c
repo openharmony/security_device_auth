@@ -25,52 +25,52 @@ static int g_singleCount = 0;
 
 int CheckInit(void)
 {
-    g_countMutex.lock(&g_countMutex);
+    LockHcMutex(&g_countMutex);
     if (g_singleCount < 0) {
         g_singleCount = 0;
     } else if (g_singleCount > 0) {
         g_singleCount++;
-        g_countMutex.unlock(&g_countMutex);
+        UnlockHcMutex(&g_countMutex);
         return FINISH_INIT;
     }
-    g_countMutex.unlock(&g_countMutex);
+    UnlockHcMutex(&g_countMutex);
     return CONTINUE_INIT;
 }
 
 int CheckDestroy(void)
 {
-    g_countMutex.lock(&g_countMutex);
+    LockHcMutex(&g_countMutex);
     if (g_singleCount == 0) {
-        g_countMutex.unlock(&g_countMutex);
+        UnlockHcMutex(&g_countMutex);
         return FINISH_DESTROY;
     }
     if (g_singleCount < 0) {
         g_singleCount = 0;
-        g_countMutex.unlock(&g_countMutex);
+        UnlockHcMutex(&g_countMutex);
         return FINISH_DESTROY;
     }
     if (g_singleCount > 1) {
         g_singleCount--;
-        g_countMutex.unlock(&g_countMutex);
+        UnlockHcMutex(&g_countMutex);
         return FINISH_DESTROY;
     }
-    g_countMutex.unlock(&g_countMutex);
+    UnlockHcMutex(&g_countMutex);
     return CONTINUE_DESTROY;
 }
 
 void SetInitStatus(void)
 {
-    g_countMutex.lock(&g_countMutex);
+    LockHcMutex(&g_countMutex);
     g_singleCount = 1;
-    g_countMutex.unlock(&g_countMutex);
+    UnlockHcMutex(&g_countMutex);
     return;
 }
 
 void SetDeInitStatus(void)
 {
-    g_countMutex.lock(&g_countMutex);
+    LockHcMutex(&g_countMutex);
     g_singleCount = 0;
-    g_countMutex.unlock(&g_countMutex);
+    UnlockHcMutex(&g_countMutex);
     return;
 }
 

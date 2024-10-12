@@ -23,14 +23,13 @@
 extern "C" {
 #endif
 
-typedef struct HcMutexT {
-    int (*lock)(struct HcMutexT* mutex);
-    void (*unlock)(struct HcMutexT* mutex);
-    pthread_mutex_t mutex;
-} HcMutex;
+typedef pthread_mutex_t HcMutex;
 
 int32_t InitHcMutex(HcMutex* mutex);
 void DestroyHcMutex(HcMutex* mutex);
+
+void LockHcMutex(HcMutex* mutex);
+void UnlockHcMutex(HcMutex* mutex);
 
 #ifdef __cplusplus
 }

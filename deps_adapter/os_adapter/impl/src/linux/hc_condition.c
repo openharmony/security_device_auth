@@ -26,7 +26,7 @@ int Wait(pthread_cond_t* cond, HcMutex* mutex)
     if (cond == NULL || mutex == NULL) {
         return -1;
     }
-    int res = pthread_cond_wait(cond, &mutex->mutex);
+    int res = pthread_cond_wait(cond, mutex);
     if (res != 0) {
         LOGE("[OS]: pthread_cond_wait fail. [Res]: %d", res);
     }
@@ -85,10 +85,10 @@ int HcCondWait(struct HcConditionT* hcCond)
         return -1;
     }
 
-    hcCond->mutex->lock(hcCond->mutex);
+    LockHcMutex(hcCond->mutex);
     if (hcCond->notified) {
         hcCond->notified = HC_FALSE;
-        hcCond->mutex->unlock(hcCond->mutex);
+        UnlockHcMutex(hcCond->mutex);
         return 0;
     } else {
         int ret;
@@ -96,7 +96,7 @@ int HcCondWait(struct HcConditionT* hcCond)
         ret = Wait(&hcCond->cond, hcCond->mutex);
         hcCond->waited = HC_FALSE;
         hcCond->notified = HC_FALSE;
-        hcCond->mutex->unlock(hcCond->mutex);
+        UnlockHcMutex(hcCond->mutex);
         return ret;
     }
 }
@@ -107,7 +107,7 @@ void HcCondNotify(struct HcConditionT* hcCond)
         return;
     }
 
-    hcCond->mutex->lock(hcCond->mutex);
+    LockHcMutex(hcCond->mutex);
 
     if (!hcCond->waited) {
         hcCond->notified = HC_TRUE;
@@ -115,7 +115,7 @@ void HcCondNotify(struct HcConditionT* hcCond)
         hcCond->notified = HC_FALSE;
     }
     Notify(&hcCond->cond);
-    hcCond->mutex->unlock(hcCond->mutex);
+    UnlockHcMutex(hcCond->mutex);
 }
 
 int32_t InitHcCond(HcCondition* hcCond, HcMutex* mutex)

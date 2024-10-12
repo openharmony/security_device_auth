@@ -112,21 +112,21 @@ void DestroyDevSessionManager(void)
 {
     uint32_t index;
     SessionInfo *ptr;
-    g_sessionMutex.lock(&g_sessionMutex);
+    LockHcMutex(&g_sessionMutex);
     FOR_EACH_HC_VECTOR(g_sessionInfoList, index, ptr) {
         ptr->session->destroy(ptr->session);
     }
     DESTROY_HC_VECTOR(SessionInfoList, &g_sessionInfoList);
-    g_sessionMutex.unlock(&g_sessionMutex);
+    UnlockHcMutex(&g_sessionMutex);
     DestroyHcMutex(&g_sessionMutex);
 }
 
 bool IsSessionExist(int64_t sessionId)
 {
-    g_sessionMutex.lock(&g_sessionMutex);
+    LockHcMutex(&g_sessionMutex);
     SessionInfo *sessionInfo;
     int32_t res = GetSessionInfo(sessionId, &sessionInfo);
-    g_sessionMutex.unlock(&g_sessionMutex);
+    UnlockHcMutex(&g_sessionMutex);
     return res == HC_SUCCESS;
 }
 
@@ -136,46 +136,46 @@ int32_t OpenDevSession(int64_t sessionId, const char *appId, SessionInitParams *
         LOGE("invalid params.");
         return HC_ERR_INVALID_PARAMS;
     }
-    g_sessionMutex.lock(&g_sessionMutex);
+    LockHcMutex(&g_sessionMutex);
     RemoveTimeoutSession();
     int32_t res = CheckEnvForOpenSession(sessionId);
     if (res != HC_SUCCESS) {
-        g_sessionMutex.unlock(&g_sessionMutex);
+        UnlockHcMutex(&g_sessionMutex);
         return res;
     }
     DevSession *session;
     res = CreateDevSession(sessionId, appId, params, &session);
     if (res != HC_SUCCESS) {
         LOGE("create session fail. [AppId]: %s, [Id]: %" PRId64, appId, sessionId);
-        g_sessionMutex.unlock(&g_sessionMutex);
+        UnlockHcMutex(&g_sessionMutex);
         return res;
     }
     res = AddNewSessionToList(session);
     if (res != HC_SUCCESS) {
         session->destroy(session);
-        g_sessionMutex.unlock(&g_sessionMutex);
+        UnlockHcMutex(&g_sessionMutex);
         return res;
     }
     LOGI("create session success. [AppId]: %s, [CurNum]: %u, [Id]: %" PRId64,
         appId, HC_VECTOR_SIZE(&g_sessionInfoList), sessionId);
-    g_sessionMutex.unlock(&g_sessionMutex);
+    UnlockHcMutex(&g_sessionMutex);
     return HC_SUCCESS;
 }
 
 int32_t StartDevSession(int64_t sessionId)
 {
-    g_sessionMutex.lock(&g_sessionMutex);
+    LockHcMutex(&g_sessionMutex);
     RemoveTimeoutSession();
     SessionInfo *sessionInfo;
     int32_t res = GetSessionInfo(sessionId, &sessionInfo);
     if (res != HC_SUCCESS) {
         LOGE("session not found. [Id]: %" PRId64, sessionId);
-        g_sessionMutex.unlock(&g_sessionMutex);
+        UnlockHcMutex(&g_sessionMutex);
         return res;
     }
     DevSession *session = sessionInfo->session;
     res = session->start(session);
-    g_sessionMutex.unlock(&g_sessionMutex);
+    UnlockHcMutex(&g_sessionMutex);
     return res;
 }
 
@@ -185,24 +185,24 @@ int32_t ProcessDevSession(int64_t sessionId, const CJson *receviedMsg, bool *isF
         LOGE("invalid params.");
         return HC_ERR_INVALID_PARAMS;
     }
-    g_sessionMutex.lock(&g_sessionMutex);
+    LockHcMutex(&g_sessionMutex);
     RemoveTimeoutSession();
     SessionInfo *sessionInfo;
     int32_t res = GetSessionInfo(sessionId, &sessionInfo);
     if (res != HC_SUCCESS) {
         LOGE("session not found. [Id]: %" PRId64, sessionId);
-        g_sessionMutex.unlock(&g_sessionMutex);
+        UnlockHcMutex(&g_sessionMutex);
         return res;
     }
     DevSession *session = sessionInfo->session;
     res = session->process(session, receviedMsg, isFinish);
-    g_sessionMutex.unlock(&g_sessionMutex);
+    UnlockHcMutex(&g_sessionMutex);
     return res;
 }
 
 void CloseDevSession(int64_t sessionId)
 {
-    g_sessionMutex.lock(&g_sessionMutex);
+    LockHcMutex(&g_sessionMutex);
     RemoveTimeoutSession();
     uint32_t index;
     SessionInfo *ptr;
@@ -212,12 +212,12 @@ void CloseDevSession(int64_t sessionId)
             session->destroy(session);
             HC_VECTOR_POPELEMENT(&g_sessionInfoList, ptr, index);
             LOGI("close session success. [CurNum]: %u, [Id]: %" PRId64, HC_VECTOR_SIZE(&g_sessionInfoList), sessionId);
-            g_sessionMutex.unlock(&g_sessionMutex);
+            UnlockHcMutex(&g_sessionMutex);
             return;
         }
     }
     LOGI("session not exist. [Id]: %" PRId64, sessionId);
-    g_sessionMutex.unlock(&g_sessionMutex);
+    UnlockHcMutex(&g_sessionMutex);
 }
 
 void CancelDevSession(int64_t sessionId, const char *appId)
@@ -226,7 +226,7 @@ void CancelDevSession(int64_t sessionId, const char *appId)
         LOGE("appId is NULL.");
         return;
     }
-    g_sessionMutex.lock(&g_sessionMutex);
+    LockHcMutex(&g_sessionMutex);
     RemoveTimeoutSession();
     uint32_t index;
     SessionInfo *ptr;
@@ -236,10 +236,10 @@ void CancelDevSession(int64_t sessionId, const char *appId)
             session->destroy(session);
             HC_VECTOR_POPELEMENT(&g_sessionInfoList, ptr, index);
             LOGI("cancel session success. [CurNum]: %u, [Id]: %" PRId64, HC_VECTOR_SIZE(&g_sessionInfoList), sessionId);
-            g_sessionMutex.unlock(&g_sessionMutex);
+            UnlockHcMutex(&g_sessionMutex);
             return;
         }
     }
     LOGI("session not exist. [Id]: %" PRId64, sessionId);
-    g_sessionMutex.unlock(&g_sessionMutex);
+    UnlockHcMutex(&g_sessionMutex);
 }

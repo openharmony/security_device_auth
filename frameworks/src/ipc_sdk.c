@@ -59,12 +59,12 @@ static void DelIpcCliCallbackCtx(const char *appId, IpcProxyCbInfo *cbCache)
     if (cbCache->appId[0] == 0) {
         return;
     }
-    g_ipcMutex.lock(&g_ipcMutex);
+    LockHcMutex(&g_ipcMutex);
     ret = memcmp(appId, cbCache->appId, HcStrlen(cbCache->appId) + 1);
     if (ret == 0) {
         cbCache->appId[0] = 0;
     }
-    g_ipcMutex.unlock(&g_ipcMutex);
+    UnlockHcMutex(&g_ipcMutex);
     return;
 }
 
@@ -72,15 +72,15 @@ static void AddIpcCliCallbackCtx(const char *appId, uintptr_t cbInst, IpcProxyCb
 {
     errno_t eno;
 
-    g_ipcMutex.lock(&g_ipcMutex);
+    LockHcMutex(&g_ipcMutex);
     eno = memcpy_s(cbCache->appId, IPC_APPID_LEN, appId, HcStrlen(appId) + 1);
     if (eno != EOK) {
-        g_ipcMutex.unlock(&g_ipcMutex);
+        UnlockHcMutex(&g_ipcMutex);
         LOGE("memory copy failed");
         return;
     }
     cbCache->inst = cbInst;
-    g_ipcMutex.unlock(&g_ipcMutex);
+    UnlockHcMutex(&g_ipcMutex);
 }
 
 static void GetIpcReplyByType(const IpcDataInfo *ipcData,

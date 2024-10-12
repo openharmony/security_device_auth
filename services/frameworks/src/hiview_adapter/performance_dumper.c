@@ -372,16 +372,16 @@ static void PerformanceDump(int fd, StringVector *strArgVec)
         LOGE("Not initialized!");
         return;
     }
-    g_performDataMutex->lock(g_performDataMutex);
+    LockHcMutex(g_performDataMutex);
     uint32_t argSize = strArgVec->size(strArgVec);
     if (argSize == MIN_ARGS_NUM) {
         DumpDevAuthPerformData(fd);
-        g_performDataMutex->unlock(g_performDataMutex);
+        UnlockHcMutex(g_performDataMutex);
         return;
     }
     if (argSize != MAX_ARGS_NUM) {
         dprintf(fd, "Invalid arguments number!\n");
-        g_performDataMutex->unlock(g_performDataMutex);
+        UnlockHcMutex(g_performDataMutex);
         return;
     }
     HcString strArg = strArgVec->get(strArgVec, 1);
@@ -395,7 +395,7 @@ static void PerformanceDump(int fd, StringVector *strArgVec)
     } else {
         dprintf(fd, "Invalid arguments!\n");
     }
-    g_performDataMutex->unlock(g_performDataMutex);
+    UnlockHcMutex(g_performDataMutex);
 }
 
 static bool IsSessionNumExceeded(bool isBind, bool isClient)
@@ -437,20 +437,20 @@ void AddPerformData(int64_t reqId, bool isBind, bool isClient, int64_t startTime
     if (!g_isInit) {
         return;
     }
-    g_performDataMutex->lock(g_performDataMutex);
+    LockHcMutex(g_performDataMutex);
     if (!g_isPerformDumpEnabled) {
-        g_performDataMutex->unlock(g_performDataMutex);
+        UnlockHcMutex(g_performDataMutex);
         return;
     }
     RemovePerformDataIfExist(reqId);
     if (IsSessionNumExceeded(isBind, isClient)) {
         LOGE("session number exceeded, requestId: %lld", reqId);
-        g_performDataMutex->unlock(g_performDataMutex);
+        UnlockHcMutex(g_performDataMutex);
         return;
     }
     PerformData *performData = CreatePerformData();
     if (performData == NULL) {
-        g_performDataMutex->unlock(g_performDataMutex);
+        UnlockHcMutex(g_performDataMutex);
         return;
     }
     performData->reqId = reqId;
@@ -462,11 +462,11 @@ void AddPerformData(int64_t reqId, bool isBind, bool isClient, int64_t startTime
     if (g_performDataVec.pushBackT(&g_performDataVec, performData) == NULL) {
         LOGE("Failed to push perform data to vec!");
         DestroyPerformData(performData);
-        g_performDataMutex->unlock(g_performDataMutex);
+        UnlockHcMutex(g_performDataMutex);
         return;
     }
     IncreaseSessionNum(performData);
-    g_performDataMutex->unlock(g_performDataMutex);
+    UnlockHcMutex(g_performDataMutex);
 }
 
 void ResetPerformData(int64_t reqId)
@@ -474,9 +474,9 @@ void ResetPerformData(int64_t reqId)
     if (!g_isInit) {
         return;
     }
-    g_performDataMutex->lock(g_performDataMutex);
+    LockHcMutex(g_performDataMutex);
     if (!g_isPerformDumpEnabled) {
-        g_performDataMutex->unlock(g_performDataMutex);
+        UnlockHcMutex(g_performDataMutex);
         return;
     }
     uint32_t index;
@@ -501,11 +501,11 @@ void ResetPerformData(int64_t reqId)
             (*performData)->fourthConsumeTime = 0;
             (*performData)->innerConsumeTime = 0;
             (*performData)->totalConsumeTime = 0;
-            g_performDataMutex->unlock(g_performDataMutex);
+            UnlockHcMutex(g_performDataMutex);
             return;
         }
     }
-    g_performDataMutex->unlock(g_performDataMutex);
+    UnlockHcMutex(g_performDataMutex);
 }
 
 void UpdatePerformDataBySelfIndex(int64_t reqId, int64_t time)
@@ -513,9 +513,9 @@ void UpdatePerformDataBySelfIndex(int64_t reqId, int64_t time)
     if (!g_isInit) {
         return;
     }
-    g_performDataMutex->lock(g_performDataMutex);
+    LockHcMutex(g_performDataMutex);
     if (!g_isPerformDumpEnabled) {
-        g_performDataMutex->unlock(g_performDataMutex);
+        UnlockHcMutex(g_performDataMutex);
         return;
     }
     uint32_t index;
@@ -523,11 +523,11 @@ void UpdatePerformDataBySelfIndex(int64_t reqId, int64_t time)
     FOR_EACH_HC_VECTOR(g_performDataVec, index, performData) {
         if ((*performData)->reqId == reqId) {
             UpdateDataBySelfIndex(*performData, time);
-            g_performDataMutex->unlock(g_performDataMutex);
+            UnlockHcMutex(g_performDataMutex);
             return;
         }
     }
-    g_performDataMutex->unlock(g_performDataMutex);
+    UnlockHcMutex(g_performDataMutex);
 }
 
 void UpdatePerformDataByInputIndex(int64_t reqId, PerformTimeIndex timeIndex, int64_t time)
@@ -535,9 +535,9 @@ void UpdatePerformDataByInputIndex(int64_t reqId, PerformTimeIndex timeIndex, in
     if (!g_isInit) {
         return;
     }
-    g_performDataMutex->lock(g_performDataMutex);
+    LockHcMutex(g_performDataMutex);
     if (!g_isPerformDumpEnabled) {
-        g_performDataMutex->unlock(g_performDataMutex);
+        UnlockHcMutex(g_performDataMutex);
         return;
     }
     uint32_t index;
@@ -545,11 +545,11 @@ void UpdatePerformDataByInputIndex(int64_t reqId, PerformTimeIndex timeIndex, in
     FOR_EACH_HC_VECTOR(g_performDataVec, index, performData) {
         if ((*performData)->reqId == reqId) {
             UpdateDataByInputIndex(*performData, timeIndex, time);
-            g_performDataMutex->unlock(g_performDataMutex);
+            UnlockHcMutex(g_performDataMutex);
             return;
         }
     }
-    g_performDataMutex->unlock(g_performDataMutex);
+    UnlockHcMutex(g_performDataMutex);
 }
 
 void InitPerformanceDumper(void)
@@ -570,9 +570,9 @@ void InitPerformanceDumper(void)
             return;
         }
     }
-    g_performDataMutex->lock(g_performDataMutex);
+    LockHcMutex(g_performDataMutex);
     g_performDataVec = CREATE_HC_VECTOR(PerformDataVec);
-    g_performDataMutex->unlock(g_performDataMutex);
+    UnlockHcMutex(g_performDataMutex);
     DEV_AUTH_REG_PERFORM_DUMP_FUNC(PerformanceDump);
     g_isInit = true;
 }
@@ -583,11 +583,11 @@ void DestroyPerformanceDumper(void)
         return;
     }
     g_isInit = false;
-    g_performDataMutex->lock(g_performDataMutex);
+    LockHcMutex(g_performDataMutex);
     g_isPerformDumpEnabled = false;
     ClearPerformDataVec();
     DESTROY_HC_VECTOR(PerformDataVec, &g_performDataVec);
-    g_performDataMutex->unlock(g_performDataMutex);
+    UnlockHcMutex(g_performDataMutex);
     DestroyHcMutex(g_performDataMutex);
     HcFree(g_performDataMutex);
     g_performDataMutex = NULL;

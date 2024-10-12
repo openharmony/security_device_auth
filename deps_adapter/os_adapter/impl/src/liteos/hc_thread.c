@@ -39,10 +39,10 @@ void *StaticThreadFunc(void *args)
     if (thread->threadFunc) {
         thread->threadFunc(args);
     }
-    thread->threadLock.lock(&thread->threadLock);
+    LockHcMutex(&thread->threadLock);
     thread->running = HC_FALSE;
     thread->threadWaitObj.notifyWithoutLock(&thread->threadWaitObj);
-    thread->threadLock.unlock(&thread->threadLock);
+    UnlockHcMutex(&thread->threadLock);
     return NULL;
 }
 
@@ -51,9 +51,9 @@ int Start(struct HcThreadT *thread)
     if (thread == NULL) {
         return HAL_ERR_NULL_PTR;
     }
-    thread->threadLock.lock(&thread->threadLock);
+    LockHcMutex(&thread->threadLock);
     if (thread->running) {
-        thread->threadLock.unlock(&thread->threadLock);
+        UnlockHcMutex(&thread->threadLock);
         return 0;
     }
     thread->running = HC_TRUE;
@@ -74,7 +74,7 @@ int Start(struct HcThreadT *thread)
         LOGE("[OS]: pthread_create fail. [Res]: %d", res);
         thread->running = HC_FALSE;
     }
-    thread->threadLock.unlock(&thread->threadLock);
+    UnlockHcMutex(&thread->threadLock);
     return res;
 }
 

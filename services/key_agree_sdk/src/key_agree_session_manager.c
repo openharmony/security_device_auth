@@ -48,12 +48,12 @@ static int32_t CreateKeyAgreeSessionMgr(void)
             return HC_ERROR;
         }
     }
-    g_sessionMutex->lock(g_sessionMutex);
+    LockHcMutex(g_sessionMutex);
     if (!g_IsinitSessionNodeVec) {
         g_IsinitSessionNodeVec = true;
         g_SessionNodeVec = CREATE_HC_VECTOR(SessionNodeVec);
     }
-    g_sessionMutex->unlock(g_sessionMutex);
+    UnlockHcMutex(g_sessionMutex);
     return HC_SUCCESS;
 }
 

@@ -27,10 +27,10 @@ static HcTaskBase* PopTask(HcTaskThread* thread)
         return NULL;
     }
 
-    thread->queueLock.lock(&thread->queueLock);
+    LockHcMutex(&thread->queueLock);
     HcTaskWrap task;
     HcBool ret = thread->tasks.popFront(&thread->tasks, &task);
-    thread->queueLock.unlock(&thread->queueLock);
+    UnlockHcMutex(&thread->queueLock);
     if (ret) {
         return task.task;
     }
@@ -43,17 +43,17 @@ static void PushTask(struct HcTaskThreadT* thread, HcTaskBase* task)
         return;
     }
 
-    thread->queueLock.lock(&thread->queueLock);
+    LockHcMutex(&thread->queueLock);
     HcTaskWrap taskWarp;
     taskWarp.task = task;
     thread->tasks.pushBack(&thread->tasks, &taskWarp);
     thread->thread.notify(&thread->thread);
-    thread->queueLock.unlock(&thread->queueLock);
+    UnlockHcMutex(&thread->queueLock);
 }
 
 static void Clear(struct HcTaskThreadT* thread)
 {
-    thread->queueLock.lock(&thread->queueLock);
+    LockHcMutex(&thread->queueLock);
     HcTaskWrap *taskWarp = NULL;
     uint32_t index;
     FOR_EACH_HC_VECTOR(thread->tasks, index, taskWarp) {
@@ -63,7 +63,7 @@ static void Clear(struct HcTaskThreadT* thread)
         HcFree(taskWarp->task);
     }
     thread->tasks.clear(&thread->tasks);
-    thread->queueLock.unlock(&thread->queueLock);
+    UnlockHcMutex(&thread->queueLock);
 }
 
 static void StopAndClear(struct HcTaskThreadT* thread)

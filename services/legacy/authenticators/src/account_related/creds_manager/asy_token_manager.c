@@ -466,31 +466,31 @@ static int32_t DoImportServerPkAndVerify(int32_t osAccountId, const CJson *credJ
         .val = keyAliasValue,
         .length = SHA256_LEN
     };
-    g_accountDbMutex->lock(g_accountDbMutex);
+    LockHcMutex(g_accountDbMutex);
     int32_t ret = GenerateServerPkAlias(pkInfoJson, &keyAlias);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to generate serverPk alias");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         HcFree(keyAliasValue);
         return ret;
     }
     const char *version = GetStringFromJson(pkInfoJson, FIELD_VERSION);
     if (version == NULL) {
         LOGE("Failed to get version from pkInfo");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         HcFree(keyAliasValue);
         return HC_ERR_JSON_GET;
     }
     ret = ImportServerPk(osAccountId, credJson, &keyAlias, serverPk, P256);
     if (ret != HAL_SUCCESS) {
         LOGE("Import server public key failed");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         HcFree(keyAliasValue);
         return ret;
     }
     LOGI("Import server public key success, start to verify");
     ret = VerifyPkInfoSignature(osAccountId, credJson, pkInfoJson, signature, &keyAlias);
-    g_accountDbMutex->unlock(g_accountDbMutex);
+    UnlockHcMutex(g_accountDbMutex);
     HcFree(keyAliasValue);
     if (ret != HC_SUCCESS) {
         LOGE("Verify pkInfoSignature failed");
@@ -656,23 +656,23 @@ ERR:
 static int32_t DoExportPkAndCompare(int32_t osAccountId, const char *userId, const char *deviceId,
     const char *devicePk, Uint8Buff *keyAlias)
 {
-    g_accountDbMutex->lock(g_accountDbMutex);
+    LockHcMutex(g_accountDbMutex);
     int32_t ret = GenerateKeyAlias(userId, deviceId, keyAlias, false);
     if (ret != HC_SUCCESS) {
         LOGE("Generate key alias failed.");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return ret;
     }
     ret = g_algLoader->checkKeyExist(keyAlias, false, osAccountId);
     if (ret != HAL_SUCCESS) {
         LOGE("Key pair not exist.");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return ret;
     }
     uint8_t *publicKeyVal = (uint8_t *)HcMalloc(PK_SIZE, 0);
     if (publicKeyVal == NULL) {
         LOGE("Malloc publicKeyVal failed");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return HC_ERR_ALLOC_MEMORY;
     }
     Uint8Buff publicKey = {
@@ -684,10 +684,10 @@ static int32_t DoExportPkAndCompare(int32_t osAccountId, const char *userId, con
     if (ret != HAL_SUCCESS) {
         LOGE("Failed to export public key");
         HcFree(publicKeyVal);
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return ret;
     }
-    g_accountDbMutex->unlock(g_accountDbMutex);
+    UnlockHcMutex(g_accountDbMutex);
     if (strcmp((const char *)devicePk, (const char *)publicKeyVal) == 0) {
         HcFree(publicKeyVal);
         return HC_SUCCESS;
@@ -792,11 +792,11 @@ static int32_t CheckCredValidity(int32_t osAccountId, int32_t opCode, const CJso
 static int32_t DoGenerateAndExportPk(int32_t osAccountId, const char *userId, const char *deviceId,
     Uint8Buff *keyAlias, Uint8Buff *publicKey)
 {
-    g_accountDbMutex->lock(g_accountDbMutex);
+    LockHcMutex(g_accountDbMutex);
     int32_t ret = GenerateKeyAlias(userId, deviceId, keyAlias, false);
     if (ret != HC_SUCCESS) {
         LOGE("Generate key alias failed");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return ret;
     }
     ret = g_algLoader->checkKeyExist(keyAlias, false, osAccountId);
@@ -813,11 +813,11 @@ static int32_t DoGenerateAndExportPk(int32_t osAccountId, const char *userId, co
     }
     if (ret != HAL_SUCCESS) {
         LOGE("Generate key pair failed");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return ret;
     }
     ret = g_algLoader->exportPublicKey(&keyParams, publicKey);
-    g_accountDbMutex->unlock(g_accountDbMutex);
+    UnlockHcMutex(g_accountDbMutex);
     return ret;
 }
 
@@ -884,12 +884,12 @@ static void DeleteKeyPair(int32_t osAccountId, AccountToken *token)
         .val = keyAliasValue,
         .length = SHA256_LEN
     };
-    g_accountDbMutex->lock(g_accountDbMutex);
+    LockHcMutex(g_accountDbMutex);
     if (GenerateKeyAlias((const char *)token->pkInfo.userId.val,
         (const char *)token->pkInfo.deviceId.val, &keyAlias, false) != HC_SUCCESS) {
         LOGE("Failed to generate key alias");
         HcFree(keyAliasValue);
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return;
     }
     if (g_algLoader->deleteKey(&keyAlias, false, osAccountId) != HAL_SUCCESS) {
@@ -898,7 +898,7 @@ static void DeleteKeyPair(int32_t osAccountId, AccountToken *token)
         LOGI("Delete key pair success");
     }
     HcFree(keyAliasValue);
-    g_accountDbMutex->unlock(g_accountDbMutex);
+    UnlockHcMutex(g_accountDbMutex);
 }
 
 static void LoadOsAccountTokenDb(int32_t osAccountId)
@@ -990,17 +990,17 @@ static void LoadOsAccountTokenDbCe(int32_t osAccountId)
 static void OnOsAccountUnlocked(int32_t osAccountId)
 {
     LOGI("Os account is unlocked, osAccountId: %d", osAccountId);
-    g_accountDbMutex->lock(g_accountDbMutex);
+    LockHcMutex(g_accountDbMutex);
     LoadOsAccountTokenDbCe(osAccountId);
-    g_accountDbMutex->unlock(g_accountDbMutex);
+    UnlockHcMutex(g_accountDbMutex);
 }
 
 static void OnOsAccountRemoved(int32_t osAccountId)
 {
     LOGI("Os account is removed, osAccountId: %d", osAccountId);
-    g_accountDbMutex->lock(g_accountDbMutex);
+    LockHcMutex(g_accountDbMutex);
     RemoveOsAccountTokenInfo(osAccountId);
-    g_accountDbMutex->unlock(g_accountDbMutex);
+    UnlockHcMutex(g_accountDbMutex);
 }
 
 static bool IsOsAccountDataLoaded(int32_t osAccountId)
@@ -1055,40 +1055,40 @@ static int32_t SaveOsAccountTokenDb(int32_t osAccountId)
         LOGE("Failed to get token path!");
         return HC_ERROR;
     }
-    g_accountDbMutex->lock(g_accountDbMutex);
+    LockHcMutex(g_accountDbMutex);
     OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         LOGE("Get token info by os account id failed");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return HC_ERROR;
     }
     int32_t ret = SaveTokensToFile(&info->tokens, tokenPath);
     if (ret != HC_SUCCESS) {
         LOGE("Save tokens to file failed");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return ret;
     }
-    g_accountDbMutex->unlock(g_accountDbMutex);
+    UnlockHcMutex(g_accountDbMutex);
     LOGI("Save an os account database successfully! [Id]: %d", osAccountId);
     return HC_SUCCESS;
 }
 
 static AccountToken *GetAccountToken(int32_t osAccountId, const char *userId, const char *deviceId)
 {
-    g_accountDbMutex->lock(g_accountDbMutex);
+    LockHcMutex(g_accountDbMutex);
     OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         LOGE("Failed to get token by osAccountId");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return NULL;
     }
     AccountToken **token = QueryTokenPtrIfMatch(&info->tokens, userId, deviceId);
     if ((token == NULL) || (*token == NULL)) {
         LOGE("Query token failed");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return NULL;
     }
-    g_accountDbMutex->unlock(g_accountDbMutex);
+    UnlockHcMutex(g_accountDbMutex);
     return *token;
 }
 
@@ -1131,11 +1131,11 @@ static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, const c
     AccountTokenVec *deleteTokens)
 {
     LOGI("Start to delete tokens from database!");
-    g_accountDbMutex->lock(g_accountDbMutex);
+    LockHcMutex(g_accountDbMutex);
     OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         LOGE("Failed to get token by os account id");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return HC_ERROR;
     }
     int32_t count = 0;
@@ -1158,7 +1158,7 @@ static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, const c
             DestroyAccountToken(deleteToken);
         }
     }
-    g_accountDbMutex->unlock(g_accountDbMutex);
+    UnlockHcMutex(g_accountDbMutex);
     if (count == 0) {
         LOGE("No token deleted");
         return HC_ERROR;
@@ -1170,17 +1170,17 @@ static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, const c
 static int32_t AddTokenInner(int32_t osAccountId, const AccountToken *token)
 {
     LOGI("Start to add a token to database!");
-    g_accountDbMutex->lock(g_accountDbMutex);
+    LockHcMutex(g_accountDbMutex);
     OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         LOGE("Failed to get token by os account id");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return HC_ERROR;
     }
     AccountToken *newToken = DeepCopyToken(token);
     if (newToken == NULL) {
         LOGE("Deep copy token failed");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return HC_ERR_MEMORY_COPY;
     }
     AccountToken **oldTokenPtr = QueryTokenPtrIfMatch(&info->tokens, (const char *)(newToken->pkInfo.userId.val),
@@ -1188,17 +1188,17 @@ static int32_t AddTokenInner(int32_t osAccountId, const AccountToken *token)
     if (oldTokenPtr != NULL) {
         DestroyAccountToken(*oldTokenPtr);
         *oldTokenPtr = newToken;
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         LOGI("Replace an old token successfully!");
         return HC_SUCCESS;
     }
     if (info->tokens.pushBackT(&info->tokens, newToken) == NULL) {
         DestroyAccountToken(newToken);
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         LOGE("Failed to push token to vec!");
         return HC_ERR_MEMORY_COPY;
     }
-    g_accountDbMutex->unlock(g_accountDbMutex);
+    UnlockHcMutex(g_accountDbMutex);
     LOGI("Add a token to database successfully!");
     return HC_SUCCESS;
 }
@@ -1305,7 +1305,7 @@ void InitTokenManager(void)
             return;
         }
     }
-    g_accountDbMutex->lock(g_accountDbMutex);
+    LockHcMutex(g_accountDbMutex);
     (void)memset_s(&g_asyTokenManager, sizeof(AccountAuthTokenManager), 0, sizeof(AccountAuthTokenManager));
     g_asyTokenManager.addToken = AddToken;
     g_asyTokenManager.getToken = GetToken;
@@ -1322,14 +1322,14 @@ void InitTokenManager(void)
     g_algLoader = GetLoaderInstance();
     if (g_algLoader == NULL) {
         LOGE("Get loader failed.");
-        g_accountDbMutex->unlock(g_accountDbMutex);
+        UnlockHcMutex(g_accountDbMutex);
         return;
     }
     int32_t res = g_algLoader->initAlg();
     if (res != HAL_SUCCESS) {
         LOGE("Failed to init algorithm!");
     }
-    g_accountDbMutex->unlock(g_accountDbMutex);
+    UnlockHcMutex(g_accountDbMutex);
 }
 
 void ClearAccountTokenVec(AccountTokenVec *vec)
@@ -1418,7 +1418,7 @@ AccountAuthTokenManager *GetAccountAuthTokenManager(void)
 
 void DestroyTokenManager(void)
 {
-    g_accountDbMutex->lock(g_accountDbMutex);
+    LockHcMutex(g_accountDbMutex);
     RemoveOsAccountEventCallback(ASY_TOKEN_DATA_CALLBACK);
     g_algLoader = NULL;
     (void)memset_s(&g_asyTokenManager, sizeof(AccountAuthTokenManager), 0, sizeof(AccountAuthTokenManager));
@@ -1429,7 +1429,7 @@ void DestroyTokenManager(void)
     }
     DESTROY_HC_VECTOR(AccountTokenDb, &g_accountTokenDb);
     g_isInitial = false;
-    g_accountDbMutex->unlock(g_accountDbMutex);
+    UnlockHcMutex(g_accountDbMutex);
     DestroyHcMutex(g_accountDbMutex);
     HcFree(g_accountDbMutex);
     g_accountDbMutex = NULL;

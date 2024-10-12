@@ -40,15 +40,15 @@ static int32_t GetReqIdByChannelId(int64_t channelId, int64_t *returnReqId)
 {
     uint32_t index;
     ChannelEntry *entry = NULL;
-    g_channelMutex->lock(g_channelMutex);
+    LockHcMutex(g_channelMutex);
     FOR_EACH_HC_VECTOR(g_channelVec, index, entry) {
         if (channelId == entry->channelId) {
             *returnReqId = entry->requestId;
-            g_channelMutex->unlock(g_channelMutex);
+            UnlockHcMutex(g_channelMutex);
             return HC_SUCCESS;
         }
     }
-    g_channelMutex->unlock(g_channelMutex);
+    UnlockHcMutex(g_channelMutex);
     return HC_ERR_REQUEST_NOT_FOUND;
 }
 
@@ -63,9 +63,9 @@ static int32_t AddChannelEntry(int64_t requestId, int64_t channelId)
         .channelId = channelId,
         .requestId = requestId
     };
-    g_channelMutex->lock(g_channelMutex);
+    LockHcMutex(g_channelMutex);
     g_channelVec.pushBack(&g_channelVec, &entry);
-    g_channelMutex->unlock(g_channelMutex);
+    UnlockHcMutex(g_channelMutex);
     return HC_SUCCESS;
 }
 
@@ -73,16 +73,16 @@ static void RemoveChannelEntry(int64_t channelId)
 {
     uint32_t index;
     ChannelEntry *entry = NULL;
-    g_channelMutex->lock(g_channelMutex);
+    LockHcMutex(g_channelMutex);
     FOR_EACH_HC_VECTOR(g_channelVec, index, entry) {
         if (channelId == entry->channelId) {
             ChannelEntry tmpEntry;
             HC_VECTOR_POPELEMENT(&g_channelVec, &tmpEntry, index);
-            g_channelMutex->unlock(g_channelMutex);
+            UnlockHcMutex(g_channelMutex);
             return;
         }
     }
-    g_channelMutex->unlock(g_channelMutex);
+    UnlockHcMutex(g_channelMutex);
 }
 
 static char *GenRecvData(int64_t channelId, const void *data, uint32_t dataLen, int64_t *requestId)
@@ -263,9 +263,9 @@ int32_t InitSoftBusChannelModule(ChannelProxy *channelProxy)
 
 void DestroySoftBusChannelModule(void)
 {
-    g_channelMutex->lock(g_channelMutex);
+    LockHcMutex(g_channelMutex);
     DESTROY_HC_VECTOR(ChannelEntryVec, &g_channelVec);
-    g_channelMutex->unlock(g_channelMutex);
+    UnlockHcMutex(g_channelMutex);
     DestroyHcMutex(g_channelMutex);
     HcFree(g_channelMutex);
     g_channelMutex = NULL;

@@ -601,17 +601,17 @@ static void LoadOsAccountDbCe(int32_t osAccountId)
 
 static void OnOsAccountUnlocked(int32_t osAccountId)
 {
-    g_databaseMutex->lock(g_databaseMutex);
+    LockHcMutex(g_databaseMutex);
     LoadOsAccountDbCe(osAccountId);
-    g_databaseMutex->unlock(g_databaseMutex);
+    UnlockHcMutex(g_databaseMutex);
 }
 
 static void OnOsAccountRemoved(int32_t osAccountId)
 {
     LOGI("[DB]: os account is removed, osAccountId: %d", osAccountId);
-    g_databaseMutex->lock(g_databaseMutex);
+    LockHcMutex(g_databaseMutex);
     RemoveOsAccountTrustedInfo(osAccountId);
-    g_databaseMutex->unlock(g_databaseMutex);
+    UnlockHcMutex(g_databaseMutex);
 }
 
 static bool IsOsAccountDataLoaded(int32_t osAccountId)
@@ -666,7 +666,7 @@ static void LoadDeviceAuthDb(void)
     if (IsOsAccountSupported()) {
         return;
     }
-    g_databaseMutex->lock(g_databaseMutex);
+    LockHcMutex(g_databaseMutex);
     StringVector osAccountDbNameVec = CreateStrVector();
     HcFileGetSubFileName(GetStorageDirPath(), &osAccountDbNameVec);
     uint32_t index;
@@ -684,7 +684,7 @@ static void LoadDeviceAuthDb(void)
         }
     }
     DestroyStrVector(&osAccountDbNameVec);
-    g_databaseMutex->unlock(g_databaseMutex);
+    UnlockHcMutex(g_databaseMutex);
 }
 
 static bool SetGroupElement(TlvGroupElement *element, TrustedGroupEntry *entry)
@@ -1320,15 +1320,15 @@ int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
         LOGE("[DB]: The input groupEntry is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    g_databaseMutex->lock(g_databaseMutex);
+    LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         return HC_ERR_INVALID_PARAMS;
     }
     TrustedGroupEntry *newEntry = DeepCopyGroupEntry(groupEntry);
     if (newEntry == NULL) {
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         return HC_ERR_MEMORY_COPY;
     }
     QueryGroupParams params = InitQueryGroupParams();
@@ -1338,18 +1338,18 @@ int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
         DestroyGroupEntry(*oldEntryPtr);
         *oldEntryPtr = newEntry;
         PostGroupCreatedMsg(newEntry);
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         LOGI("[DB]: Replace an old group successfully! [GroupType]: %u", groupEntry->type);
         return HC_SUCCESS;
     }
     if (info->groups.pushBackT(&info->groups, newEntry) == NULL) {
         DestroyGroupEntry(newEntry);
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         LOGE("[DB]: Failed to push groupEntry to vec!");
         return HC_ERR_MEMORY_COPY;
     }
     PostGroupCreatedMsg(newEntry);
-    g_databaseMutex->unlock(g_databaseMutex);
+    UnlockHcMutex(g_databaseMutex);
     LOGI("[DB]: Add a group to database successfully! [GroupType]: %u", groupEntry->type);
     return HC_SUCCESS;
 }
@@ -1361,15 +1361,15 @@ int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEn
         LOGE("[DB]: The input deviceEntry is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    g_databaseMutex->lock(g_databaseMutex);
+    LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         return HC_ERR_INVALID_PARAMS;
     }
     TrustedDeviceEntry *newEntry = DeepCopyDeviceEntry(deviceEntry);
     if (newEntry == NULL) {
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         return HC_ERR_MEMORY_COPY;
     }
     QueryDeviceParams params = InitQueryDeviceParams();
@@ -1380,18 +1380,18 @@ int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEn
         DestroyDeviceEntry(*oldEntryPtr);
         *oldEntryPtr = newEntry;
         PostDeviceBoundMsg(info, newEntry);
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         LOGI("[DB]: Replace an old trusted device successfully!");
         return HC_SUCCESS;
     }
     if (info->devices.pushBackT(&info->devices, newEntry) == NULL) {
         DestroyDeviceEntry(newEntry);
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         LOGE("[DB]: Failed to push deviceEntry to vec!");
         return HC_ERR_MEMORY_COPY;
     }
     PostDeviceBoundMsg(info, newEntry);
-    g_databaseMutex->unlock(g_databaseMutex);
+    UnlockHcMutex(g_databaseMutex);
     LOGI("[DB]: Add a trusted device to database successfully!");
     return HC_SUCCESS;
 }
@@ -1403,10 +1403,10 @@ int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params)
         LOGE("[DB]: The input params is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    g_databaseMutex->lock(g_databaseMutex);
+    LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         return HC_ERR_INVALID_PARAMS;
     }
     int32_t count = 0;
@@ -1425,7 +1425,7 @@ int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params)
         DestroyGroupEntry(popEntry);
         count++;
     }
-    g_databaseMutex->unlock(g_databaseMutex);
+    UnlockHcMutex(g_databaseMutex);
     LOGI("[DB]: Number of groups deleted: %d", count);
     return HC_SUCCESS;
 }
@@ -1437,10 +1437,10 @@ int32_t DelTrustedDevice(int32_t osAccountId, const QueryDeviceParams *params)
         LOGE("[DB]: The input params is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    g_databaseMutex->lock(g_databaseMutex);
+    LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         return HC_ERR_INVALID_PARAMS;
     }
     int32_t count = 0;
@@ -1460,7 +1460,7 @@ int32_t DelTrustedDevice(int32_t osAccountId, const QueryDeviceParams *params)
         DestroyDeviceEntry(popEntry);
         count++;
     }
-    g_databaseMutex->unlock(g_databaseMutex);
+    UnlockHcMutex(g_databaseMutex);
     LOGI("[DB]: Number of trusted devices deleted: %d", count);
     return HC_SUCCESS;
 }
@@ -1471,10 +1471,10 @@ int32_t QueryGroups(int32_t osAccountId, const QueryGroupParams *params, GroupEn
         LOGE("[DB]: The input params or vec is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    g_databaseMutex->lock(g_databaseMutex);
+    LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         return HC_ERR_INVALID_PARAMS;
     }
     uint32_t index;
@@ -1492,7 +1492,7 @@ int32_t QueryGroups(int32_t osAccountId, const QueryGroupParams *params, GroupEn
             DestroyGroupEntry(newEntry);
         }
     }
-    g_databaseMutex->unlock(g_databaseMutex);
+    UnlockHcMutex(g_databaseMutex);
     return HC_SUCCESS;
 }
 
@@ -1502,10 +1502,10 @@ int32_t QueryDevices(int32_t osAccountId, const QueryDeviceParams *params, Devic
         LOGE("[DB]: The input params or vec is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    g_databaseMutex->lock(g_databaseMutex);
+    LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         return HC_ERR_INVALID_PARAMS;
     }
     uint32_t index;
@@ -1523,37 +1523,37 @@ int32_t QueryDevices(int32_t osAccountId, const QueryDeviceParams *params, Devic
             DestroyDeviceEntry(newEntry);
         }
     }
-    g_databaseMutex->unlock(g_databaseMutex);
+    UnlockHcMutex(g_databaseMutex);
     return HC_SUCCESS;
 }
 
 int32_t SaveOsAccountDb(int32_t osAccountId)
 {
-    g_databaseMutex->lock(g_databaseMutex);
+    LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         return HC_ERR_INVALID_PARAMS;
     }
     HcParcel parcel = CreateParcel(0, 0);
     if (!SaveInfoToParcel(info, &parcel)) {
         DeleteParcel(&parcel);
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         return HC_ERR_MEMORY_COPY;
     }
     char filePath[MAX_DB_PATH_LEN] = { 0 };
     if (!GetOsAccountInfoPath(osAccountId, filePath, MAX_DB_PATH_LEN)) {
         DeleteParcel(&parcel);
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         return HC_ERROR;
     }
     if (!SaveParcelToFile(filePath, &parcel)) {
         DeleteParcel(&parcel);
-        g_databaseMutex->unlock(g_databaseMutex);
+        UnlockHcMutex(g_databaseMutex);
         return HC_ERR_MEMORY_COPY;
     }
     DeleteParcel(&parcel);
-    g_databaseMutex->unlock(g_databaseMutex);
+    UnlockHcMutex(g_databaseMutex);
     LOGI("[DB]: Save an os account database successfully! [Id]: %d", osAccountId);
     return HC_SUCCESS;
 }
@@ -1564,9 +1564,9 @@ void ReloadOsAccountDb(int32_t osAccountId)
         LOGE("[DB]: not initialized!");
         return;
     }
-    g_databaseMutex->lock(g_databaseMutex);
+    LockHcMutex(g_databaseMutex);
     LoadOsAccountDbCe(osAccountId);
-    g_databaseMutex->unlock(g_databaseMutex);
+    UnlockHcMutex(g_databaseMutex);
 }
 
 #ifdef DEV_AUTH_HIVIEW_ENABLE
@@ -1643,7 +1643,7 @@ static void DevAuthDataBaseDump(int fd)
         LOGE("[DB]: Init mutex failed");
         return;
     }
-    g_databaseMutex->lock(g_databaseMutex);
+    LockHcMutex(g_databaseMutex);
     if (IsOsAccountSupported()) {
         LoadAllAccountsData();
     }
@@ -1652,7 +1652,7 @@ static void DevAuthDataBaseDump(int fd)
     FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {
         DumpDb(fd, info);
     }
-    g_databaseMutex->unlock(g_databaseMutex);
+    UnlockHcMutex(g_databaseMutex);
 }
 #endif
 
@@ -1681,7 +1681,7 @@ int32_t InitDatabase(void)
 void DestroyDatabase(void)
 {
     RemoveOsAccountEventCallback(GROUP_DATA_CALLBACK);
-    g_databaseMutex->lock(g_databaseMutex);
+    LockHcMutex(g_databaseMutex);
     uint32_t index;
     OsAccountTrustedInfo *info;
     FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {
@@ -1689,7 +1689,7 @@ void DestroyDatabase(void)
         ClearDeviceEntryVec(&info->devices);
     }
     DESTROY_HC_VECTOR(DeviceAuthDb, &g_deviceauthDb);
-    g_databaseMutex->unlock(g_databaseMutex);
+    UnlockHcMutex(g_databaseMutex);
     DestroyHcMutex(g_databaseMutex);
     HcFree(g_databaseMutex);
     g_databaseMutex = NULL;
