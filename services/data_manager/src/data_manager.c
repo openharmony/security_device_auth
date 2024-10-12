@@ -1095,6 +1095,10 @@ static bool IsSelfDeviceEntry(const TrustedDeviceEntry *deviceEntry)
         return false;
     }
     const char *entryUdid = StringGet(&deviceEntry->udid);
+    if (entryUdid == NULL) {
+        LOGE("The entryUdid is NULL!");
+        return false;
+    }
     return strcmp(selfUdid, entryUdid) == 0;
 }
 
