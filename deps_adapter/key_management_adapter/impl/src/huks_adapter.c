@@ -198,6 +198,73 @@ static void AddStorageExtParams(struct HksParam *params, bool isDeStorage, uint3
 #endif
 }
 
+static int32_t ConstructDeParamSet(struct HksParamSet **paramSet)
+{
+    struct HksParam keyParam[] = {
+        {
+            .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
+            .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE
+        }
+    };
+
+    int32_t res = ConstructParamSet(paramSet, keyParam, CAL_ARRAY_SIZE(keyParam));
+    if (res != HAL_SUCCESS) {
+        LOGE("Construct de param set failed, res = %d", res);
+    }
+    return res;
+}
+
+static int32_t ConstructCeParamSet(int32_t osAccountId, struct HksParamSet **paramSet)
+{
+    struct HksParam keyParam[] = {
+        {
+            .tag = HKS_TAG_AUTH_STORAGE_LEVEL,
+            .uint32Param = HKS_AUTH_STORAGE_LEVEL_CE
+        }, {
+            .tag = HKS_TAG_SPECIFIC_USER_ID,
+            .uint32Param = osAccountId
+        }
+    };
+
+    int32_t res = ConstructParamSet(paramSet, keyParam, CAL_ARRAY_SIZE(keyParam));
+    if (res != HAL_SUCCESS) {
+        LOGE("Construct ce param set failed, res = %d", res);
+    }
+    return res;
+}
+
+static int32_t ChangeStorageLevel(const struct HksBlob *keyAliasBlob, const struct HksParamSet *deParamSet,
+    const struct HksParamSet *ceParamSet)
+{
+#ifdef DEV_AUTH_ENABLE_CE
+    return HksChangeStorageLevel(keyAliasBlob, deParamSet, ceParamSet);
+#else
+    (void)keyAliasBlob;
+    (void)deParamSet;
+    (void)ceParamSet;
+    return HKS_SUCCESS;
+#endif
+}
+
+static void MoveDeKeyToCe(bool isKeyAlias, int32_t osAccountId, const struct HksBlob *keyAliasBlob)
+{
+    if (!isKeyAlias) {
+        return;
+    }
+    struct HksParamSet *deParamSet = NULL;
+    if (ConstructDeParamSet(&deParamSet) != HAL_SUCCESS) {
+        return;
+    }
+    struct HksParamSet *ceParamSet = NULL;
+    if (ConstructCeParamSet(osAccountId, &ceParamSet) != HAL_SUCCESS) {
+        return;
+    }
+    int32_t res = ChangeStorageLevel(keyAliasBlob, deParamSet, ceParamSet);
+    if (res != HKS_SUCCESS) {
+        LOGE("Failed to move de key to ce!");
+    }
+}
+
 static int32_t ConstructCheckParamSet(bool isDeStorage, int32_t osAccountId, struct HksParamSet **paramSet)
 {
     uint32_t len = GetParamLen(isDeStorage, 0);
@@ -239,6 +306,11 @@ static int32_t CheckKeyExist(const Uint8Buff *keyAlias, bool isDeStorage, int32_
     struct HksBlob keyAliasBlob = { keyAlias->length, keyAlias->val };
     if (isDeStorage) {
         res = HksKeyExist(&keyAliasBlob, deParamSet);
+        if (res == HKS_SUCCESS) {
+            MoveDeKeyToCe(true, osAccountId, &keyAliasBlob);
+        } else {
+            res = HksKeyExist(&keyAliasBlob, ceParamSet);
+        }
     } else {
         res = HksKeyExist(&keyAliasBlob, ceParamSet);
         if (res != HKS_SUCCESS) {
@@ -298,6 +370,9 @@ static int32_t DeleteKey(const Uint8Buff *keyAlias, bool isDeStorage, int32_t os
     LOGI("[HUKS]: HksDeleteKey enter.");
     if (isDeStorage) {
         res = HksDeleteKey(&keyAliasBlob, deParamSet);
+        if (res != HKS_SUCCESS) {
+            res = HksDeleteKey(&keyAliasBlob, ceParamSet);
+        }
     } else {
         res = HksDeleteKey(&keyAliasBlob, ceParamSet);
         if (res != HKS_SUCCESS) {
@@ -472,15 +547,10 @@ static int32_t CheckHmacWithThreeStageParams(const KeyParams *keyParams, const U
     return HAL_SUCCESS;
 }
 
-static int32_t ComputeHmacWithThreeStage(const KeyParams *keyParams, const Uint8Buff *message, Uint8Buff *outHmac)
+static int32_t ComputeHmacWithThreeStageInner(const KeyParams *keyParams, const Uint8Buff *message, Uint8Buff *outHmac)
 {
-    int32_t res = CheckHmacWithThreeStageParams(keyParams, message, outHmac);
-    if (res != HAL_SUCCESS) {
-        return res;
-    }
-
     struct HksParamSet *deriveParamSet = NULL;
-    res = ConstructDeriveParamSet(keyParams, message, &deriveParamSet);
+    int32_t res = ConstructDeriveParamSet(keyParams, message, &deriveParamSet);
     if (res != HAL_SUCCESS) {
         return res;
     }
@@ -519,6 +589,31 @@ static int32_t ComputeHmacWithThreeStage(const KeyParams *keyParams, const Uint8
         return HAL_FAILED;
     }
     return HAL_SUCCESS;
+}
+
+static int32_t ComputeHmacWithThreeStage(const KeyParams *keyParams, const Uint8Buff *message, Uint8Buff *outHmac)
+{
+    int32_t res = CheckHmacWithThreeStageParams(keyParams, message, outHmac);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+
+    res = ComputeHmacWithThreeStageInner(keyParams, message, outHmac);
+    if (!keyParams->isDeStorage) {
+        return res;
+    }
+    if (res == HAL_SUCCESS) {
+        struct HksBlob keyAliasBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
+        MoveDeKeyToCe(keyParams->keyBuff.isAlias, keyParams->osAccountId, &keyAliasBlob);
+    } else {
+        KeyParams ceParams = {
+            .keyBuff = { keyParams->keyBuff.key, keyParams->keyBuff.keyLen, keyParams->keyBuff.isAlias },
+            .isDeStorage = false,
+            .osAccountId = keyParams->osAccountId
+        };
+        res = ComputeHmacWithThreeStageInner(&ceParams, message, outHmac);
+    }
+    return res;
 }
 
 static int32_t ConstructHkdfParamSet(bool isDeStorage, const KeyParams *keyParams, const Uint8Buff *salt,
@@ -595,6 +690,11 @@ static int32_t ComputeHkdf(const KeyParams *keyParams, const Uint8Buff *salt, co
     LOGI("[HUKS]: HksDeriveKey enter.");
     if (keyParams->isDeStorage) {
         res = HksDeriveKey(deParamSet, &srcKeyBlob, &derivedKeyBlob);
+        if (res == HKS_SUCCESS) {
+            MoveDeKeyToCe(keyParams->keyBuff.isAlias, keyParams->osAccountId, &srcKeyBlob);
+        } else {
+            res = HksDeriveKey(ceParamSet, &srcKeyBlob, &derivedKeyBlob);
+        }
     } else {
         res = HksDeriveKey(ceParamSet, &srcKeyBlob, &derivedKeyBlob);
         if (res != HKS_SUCCESS) {
@@ -663,15 +763,9 @@ static int32_t CheckPskParams(const KeyParams *keyParams, const Uint8Buff *pskKe
     return BaseCheckParams(inParams, paramTags, CAL_ARRAY_SIZE(inParams));
 }
 
-// pseudonym psk alias：sha256(serviceType bytes+peerAuthId bytes+{0x00, 0x07})
-static int32_t ComputePseudonymPsk(const KeyParams *keyParams, const Uint8Buff *pskKeyAlias,
+static int32_t ComputePseudonymPskInner(const KeyParams *keyParams, const Uint8Buff *pskKeyAlias,
     const Uint8Buff *extInfo, Uint8Buff *outPsk)
 {
-    int32_t res = CheckPskParams(keyParams, pskKeyAlias, outPsk);
-    if (res != HAL_SUCCESS) {
-        return res;
-    }
-
     struct HksBlob srcKeyBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
     struct HksBlob derivedKeyBlob = { outPsk->length, outPsk->val };
     struct HksBlob extInfoBlob = { 0, NULL };
@@ -680,7 +774,7 @@ static int32_t ComputePseudonymPsk(const KeyParams *keyParams, const Uint8Buff *
         extInfoBlob.size = extInfo->length;
     }
     struct HksParamSet *paramSet = NULL;
-    res = ConstructPseudonymParamSet(keyParams, pskKeyAlias, &extInfoBlob, outPsk->length, &paramSet);
+    int32_t res = ConstructPseudonymParamSet(keyParams, pskKeyAlias, &extInfoBlob, outPsk->length, &paramSet);
     if (res != HAL_SUCCESS) {
         LOGE("Construct param set failed!");
         return res;
@@ -695,6 +789,33 @@ static int32_t ComputePseudonymPsk(const KeyParams *keyParams, const Uint8Buff *
         return HAL_FAILED;
     }
     return HAL_SUCCESS;
+}
+
+// pseudonym psk alias：sha256(serviceType bytes+peerAuthId bytes+{0x00, 0x07})
+static int32_t ComputePseudonymPsk(const KeyParams *keyParams, const Uint8Buff *pskKeyAlias,
+    const Uint8Buff *extInfo, Uint8Buff *outPsk)
+{
+    int32_t res = CheckPskParams(keyParams, pskKeyAlias, outPsk);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+
+    res = ComputePseudonymPskInner(keyParams, pskKeyAlias, extInfo, outPsk);
+    if (!keyParams->isDeStorage) {
+        return res;
+    }
+    if (res == HAL_SUCCESS) {
+        struct HksBlob keyAliasBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
+        MoveDeKeyToCe(keyParams->keyBuff.isAlias, keyParams->osAccountId, &keyAliasBlob);
+    } else {
+        KeyParams ceParams = {
+            .keyBuff = { keyParams->keyBuff.key, keyParams->keyBuff.keyLen, keyParams->keyBuff.isAlias },
+            .isDeStorage = false,
+            .osAccountId = keyParams->osAccountId
+        };
+        res = ComputePseudonymPskInner(&ceParams, pskKeyAlias, extInfo, outPsk);
+    }
+    return res;
 }
 
 static int32_t ConstructOutParamSet(struct HksParamSet **outParamSet)
@@ -783,18 +904,10 @@ static int32_t ConstructGetKeyExtInfoParamSet(const KeyParams *keyParams, struct
     return res;
 }
 
-static int32_t GetKeyExtInfo(const KeyParams *keyParams, Uint8Buff *outExtInfo)
+static int32_t GetKeyExtInfoInner(const KeyParams *keyParams, Uint8Buff *outExtInfo)
 {
-    int32_t res = CheckKeyParams(keyParams);
-    if (res != HAL_SUCCESS) {
-        return res;
-    }
-    if (outExtInfo == NULL) {
-        LOGE("outExtInfo is null!");
-        return HAL_ERR_NULL_PTR;
-    }
     struct HksParamSet *paramSet = NULL;
-    res = ConstructGetKeyExtInfoParamSet(keyParams, &paramSet);
+    int32_t res = ConstructGetKeyExtInfoParamSet(keyParams, &paramSet);
     if (res != HAL_SUCCESS) {
         return res;
     }
@@ -814,6 +927,35 @@ static int32_t GetKeyExtInfo(const KeyParams *keyParams, Uint8Buff *outExtInfo)
     }
     res = GetExtInfoByParamSet(outParamSet, outExtInfo);
     FreeParamSet(outParamSet);
+    return res;
+}
+
+static int32_t GetKeyExtInfo(const KeyParams *keyParams, Uint8Buff *outExtInfo)
+{
+    int32_t res = CheckKeyParams(keyParams);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+    if (outExtInfo == NULL) {
+        LOGE("outExtInfo is null!");
+        return HAL_ERR_NULL_PTR;
+    }
+
+    res = GetKeyExtInfoInner(keyParams, outExtInfo);
+    if (!keyParams->isDeStorage) {
+        return res;
+    }
+    if (res == HAL_SUCCESS) {
+        struct HksBlob keyAliasBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
+        MoveDeKeyToCe(keyParams->keyBuff.isAlias, keyParams->osAccountId, &keyAliasBlob);
+    } else {
+        KeyParams ceParams = {
+            .keyBuff = { keyParams->keyBuff.key, keyParams->keyBuff.keyLen, keyParams->keyBuff.isAlias },
+            .isDeStorage = false,
+            .osAccountId = keyParams->osAccountId
+        };
+        res = GetKeyExtInfoInner(&ceParams, outExtInfo);
+    }
     return res;
 }
 
@@ -1176,6 +1318,13 @@ static int32_t CheckAgreeWithStorageParams(const KeyParams *priKeyParams, const 
     return HAL_SUCCESS;
 }
 
+static void MoveSharedKeyToCe(const KeyParams *priKeyParams, const struct HksBlob *sharedKeyAlias)
+{
+    struct HksBlob priKeyBlob = { priKeyParams->keyBuff.keyLen, priKeyParams->keyBuff.key };
+    MoveDeKeyToCe(priKeyParams->keyBuff.isAlias, priKeyParams->osAccountId, &priKeyBlob);
+    MoveDeKeyToCe(true, priKeyParams->osAccountId, sharedKeyAlias);
+}
+
 static int32_t AgreeSharedSecretWithStorage(const KeyParams *priKeyParams, const KeyBuff *pubKeyBuff,
     Algorithm algo, uint32_t sharedKeyLen, const Uint8Buff *sharedKeyAlias)
 {
@@ -1210,6 +1359,11 @@ static int32_t AgreeSharedSecretWithStorage(const KeyParams *priKeyParams, const
     LOGI("[HUKS]: HksGenerateKey enter.");
     if (priKeyParams->isDeStorage) {
         res = HksGenerateKey(&sharedKeyAliasBlob, deParamSet, NULL);
+        if (res == HKS_SUCCESS) {
+            MoveSharedKeyToCe(priKeyParams, &sharedKeyAliasBlob);
+        } else {
+            res = HksGenerateKey(&sharedKeyAliasBlob, ceParamSet, NULL);
+        }
     } else {
         res = HksGenerateKey(&sharedKeyAliasBlob, ceParamSet, NULL);
         if (res != HKS_SUCCESS) {
@@ -1596,6 +1750,11 @@ static int32_t ExportPublicKey(const KeyParams *keyParams, Uint8Buff *outPubKey)
     LOGI("[HUKS]: HksExportPublicKey enter.");
     if (keyParams->isDeStorage) {
         res = HksExportPublicKey(&keyAliasBlob, deParamSet, &keyBlob);
+        if (res == HKS_SUCCESS) {
+            MoveDeKeyToCe(true, keyParams->osAccountId, &keyAliasBlob);
+        } else {
+            res = HksExportPublicKey(&keyAliasBlob, ceParamSet, &keyBlob);
+        }
     } else {
         res = HksExportPublicKey(&keyAliasBlob, ceParamSet, &keyBlob);
         if (res != HKS_SUCCESS) {
@@ -1683,6 +1842,11 @@ static int32_t Sign(const KeyParams *keyParams, const Uint8Buff *message, Algori
     LOGI("[HUKS]: HksSign enter.");
     if (keyParams->isDeStorage) {
         res = HksSign(&keyAliasBlob, deParamSet, &messageBlob, &signatureBlob);
+        if (res == HKS_SUCCESS) {
+            MoveDeKeyToCe(keyParams->keyBuff.isAlias, keyParams->osAccountId, &keyAliasBlob);
+        } else {
+            res = HksSign(&keyAliasBlob, ceParamSet, &messageBlob, &signatureBlob);
+        }
     } else {
         res = HksSign(&keyAliasBlob, ceParamSet, &messageBlob, &signatureBlob);
         if (res != HKS_SUCCESS) {
