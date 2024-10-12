@@ -249,6 +249,11 @@ bool IsGroupOwner(int32_t osAccountId, const char *groupId, const char *appId)
     }
     HcString entryManager = HC_VECTOR_GET(&entry->managers, 0);
     const char *groupOwner = StringGet(&entryManager);
+    if (groupOwner == NULL) {
+        LOGE("The groupOwner is NULL!");
+        DestroyGroupEntry(entry);
+        return false;
+    }
     if ((strcmp(groupOwner, appId) == 0) ||
         CheckUpgradeIdentity(entry->upgradeFlag, appId, groupOwner) == HC_SUCCESS) {
         DestroyGroupEntry(entry);
