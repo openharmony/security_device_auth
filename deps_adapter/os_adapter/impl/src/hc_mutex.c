@@ -31,7 +31,7 @@ int32_t InitHcMutex(HcMutex *mutex)
         LOGE("[OS]: pthread_mutex_init fail. [Res]: %d", res);
         return res;
     }
-    return HC_SUCCESS;
+    return 0;
 }
 
 void DestroyHcMutex(HcMutex *mutex)
