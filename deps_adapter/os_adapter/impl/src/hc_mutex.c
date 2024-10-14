@@ -49,6 +49,7 @@ void LockHcMutex(HcMutex* mutex)
 {
     if (mutex == NULL) {
         LOGE("[OS]: mutex is null pointer!");
+        return;
     }
     int res = pthread_mutex_lock(mutex);
     if (res != 0) {
@@ -60,6 +61,7 @@ void UnlockHcMutex(HcMutex* mutex)
 {
     if (mutex == NULL) {
         LOGE("[OS]: mutex is null pointer!");
+        return;
     }
     int res = pthread_mutex_unlock(mutex);
     if (res != 0) {
