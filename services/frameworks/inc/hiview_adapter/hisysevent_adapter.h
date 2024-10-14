@@ -118,7 +118,7 @@ typedef struct {
     int32_t groupType;
     int64_t executionTime;
     const char *extInfo;
-}DevAuthCallEvent;
+} DevAuthCallEvent;
 
 typedef struct {
     const char *appId;
@@ -127,7 +127,7 @@ typedef struct {
     int64_t reqId;
     int32_t errorCode;
     const char *faultInfo;
-}DevAuthFaultEvent;
+} DevAuthFaultEvent;
 
 void DevAuthReportCallEvent(const DevAuthCallEvent eventData);
 void DevAuthReportFaultEvent(const DevAuthFaultEvent eventdata);
