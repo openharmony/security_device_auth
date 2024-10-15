@@ -531,7 +531,7 @@ static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const 
     int32_t res = CreateGroupInner(osAccountId, requestId, appId, createParams);
     int64_t endTime = HcGetCurTimeInMillis();
     int64_t elapsedTime = endTime - startTime;
-    LOGI("CreateGroup elapsed time:  %" PRId64 " milliseconds", elapsedTime);
+    LOGI("CreateGroup elapsed time:  %" PRId64 " milliseconds, [OsAccountId]: %d", elapsedTime, osAccountId);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, createParams, appId, CREATE_GROUP_EVENT);
     #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData = BuildCallEventData(appId, CREATE_GROUP_EVENT, osAccountId,

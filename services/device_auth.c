@@ -616,7 +616,8 @@ static int32_t AddMemberToGroupInner(int32_t osAccountId, int64_t requestId, con
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("Start to add member to group. [ReqId]: %" PRId64 ", [AppId]: %s", requestId, appId);
+    LOGI("Start to add member to group. [ReqId]: %" PRId64 ", [OsAccountId]: %d, [AppId]: %s",
+        requestId, osAccountId, appId);
     const DeviceAuthCallback *callback = GetGMCallbackByAppId(appId);
     if (callback == NULL) {
         LOGE("Failed to find callback by appId! [AppId]: %s", appId);
@@ -699,6 +700,7 @@ static int32_t AddOsAccountIdToContextIfValid(CJson *context)
     int32_t osAccountId = ANY_OS_ACCOUNT;
     (void)GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId);
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
+    LOGI("[OsAccountId]: %d", osAccountId);
     if (osAccountId == INVALID_OS_ACCOUNT) {
         return HC_ERR_INVALID_PARAMS;
     }
@@ -912,8 +914,8 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(authReqId);
     ADD_PERFORM_DATA(authReqId, false, true, HcGetCurTimeInMillis());
-    LOGI("Begin AuthDevice. [ReqId]:%" PRId64, authReqId);
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
+    LOGI("Begin AuthDevice. [ReqId]: %" PRId64 ", [OsAccountId]: %d", authReqId, osAccountId);
     if ((authParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT) || (gaCallback == NULL)) {
         LOGE("The input auth params is invalid!");
         return HC_ERR_INVALID_PARAMS;
