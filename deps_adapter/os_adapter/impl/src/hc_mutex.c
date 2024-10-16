@@ -29,9 +29,8 @@ int32_t InitHcMutex(HcMutex *mutex)
     int res = pthread_mutex_init(mutex, NULL);
     if (res != 0) {
         LOGE("[OS]: pthread_mutex_init fail. [Res]: %d", res);
-        return res;
     }
-    return 0;
+    return res;
 }
 
 void DestroyHcMutex(HcMutex *mutex)
@@ -53,7 +52,7 @@ void LockHcMutex(HcMutex* mutex)
     }
     int res = pthread_mutex_lock(mutex);
     if (res != 0) {
-        LOGW("[OS]: pthread_mutex_lock fail. [Res]: %d", res);
+        LOGE("[OS]: pthread_mutex_lock fail. [Res]: %d", res);
     }
 }
 
