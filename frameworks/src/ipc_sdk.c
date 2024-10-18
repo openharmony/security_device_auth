@@ -59,7 +59,7 @@ static void DelIpcCliCallbackCtx(const char *appId, IpcProxyCbInfo *cbCache)
     if (cbCache->appId[0] == 0) {
         return;
     }
-    LockHcMutex(&g_ipcMutex);
+    (void)LockHcMutex(&g_ipcMutex);
     ret = memcmp(appId, cbCache->appId, HcStrlen(cbCache->appId) + 1);
     if (ret == 0) {
         cbCache->appId[0] = 0;
@@ -72,7 +72,7 @@ static void AddIpcCliCallbackCtx(const char *appId, uintptr_t cbInst, IpcProxyCb
 {
     errno_t eno;
 
-    LockHcMutex(&g_ipcMutex);
+    (void)LockHcMutex(&g_ipcMutex);
     eno = memcpy_s(cbCache->appId, IPC_APPID_LEN, appId, HcStrlen(appId) + 1);
     if (eno != EOK) {
         UnlockHcMutex(&g_ipcMutex);

@@ -372,7 +372,7 @@ static void PerformanceDump(int fd, StringVector *strArgVec)
         LOGE("Not initialized!");
         return;
     }
-    LockHcMutex(g_performDataMutex);
+    (void)LockHcMutex(g_performDataMutex);
     uint32_t argSize = strArgVec->size(strArgVec);
     if (argSize == MIN_ARGS_NUM) {
         DumpDevAuthPerformData(fd);
@@ -437,7 +437,7 @@ void AddPerformData(int64_t reqId, bool isBind, bool isClient, int64_t startTime
     if (!g_isInit) {
         return;
     }
-    LockHcMutex(g_performDataMutex);
+    (void)LockHcMutex(g_performDataMutex);
     if (!g_isPerformDumpEnabled) {
         UnlockHcMutex(g_performDataMutex);
         return;
@@ -474,7 +474,7 @@ void ResetPerformData(int64_t reqId)
     if (!g_isInit) {
         return;
     }
-    LockHcMutex(g_performDataMutex);
+    (void)LockHcMutex(g_performDataMutex);
     if (!g_isPerformDumpEnabled) {
         UnlockHcMutex(g_performDataMutex);
         return;
@@ -513,7 +513,7 @@ void UpdatePerformDataBySelfIndex(int64_t reqId, int64_t time)
     if (!g_isInit) {
         return;
     }
-    LockHcMutex(g_performDataMutex);
+    (void)LockHcMutex(g_performDataMutex);
     if (!g_isPerformDumpEnabled) {
         UnlockHcMutex(g_performDataMutex);
         return;
@@ -535,7 +535,7 @@ void UpdatePerformDataByInputIndex(int64_t reqId, PerformTimeIndex timeIndex, in
     if (!g_isInit) {
         return;
     }
-    LockHcMutex(g_performDataMutex);
+    (void)LockHcMutex(g_performDataMutex);
     if (!g_isPerformDumpEnabled) {
         UnlockHcMutex(g_performDataMutex);
         return;
@@ -570,7 +570,7 @@ void InitPerformanceDumper(void)
             return;
         }
     }
-    LockHcMutex(g_performDataMutex);
+    (void)LockHcMutex(g_performDataMutex);
     g_performDataVec = CREATE_HC_VECTOR(PerformDataVec);
     UnlockHcMutex(g_performDataMutex);
     DEV_AUTH_REG_PERFORM_DUMP_FUNC(PerformanceDump);
@@ -583,7 +583,7 @@ void DestroyPerformanceDumper(void)
         return;
     }
     g_isInit = false;
-    LockHcMutex(g_performDataMutex);
+    (void)LockHcMutex(g_performDataMutex);
     g_isPerformDumpEnabled = false;
     ClearPerformDataVec();
     DESTROY_HC_VECTOR(PerformDataVec, &g_performDataVec);

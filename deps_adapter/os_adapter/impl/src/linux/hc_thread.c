@@ -46,7 +46,7 @@ void *StaticThreadFunc(void *args)
     if (thread->threadFunc) {
         thread->threadFunc(args);
     }
-    LockHcMutex(&thread->threadLock);
+    (void)LockHcMutex(&thread->threadLock);
     thread->running = HC_FALSE;
     thread->threadWaitObj.notifyWithoutLock(&thread->threadWaitObj);
     UnlockHcMutex(&thread->threadLock);
@@ -58,7 +58,7 @@ int Start(struct HcThreadT *thread)
     if (thread == NULL) {
         return HAL_ERR_NULL_PTR;
     }
-    LockHcMutex(&thread->threadLock);
+    (void)LockHcMutex(&thread->threadLock);
     if (thread->running) {
         UnlockHcMutex(&thread->threadLock);
         return 0;
@@ -90,7 +90,7 @@ void Join(struct HcThreadT *thread)
     if (thread == NULL) {
         return;
     }
-    LockHcMutex(&thread->threadLock);
+    (void)LockHcMutex(&thread->threadLock);
     if (thread->running) {
         thread->threadWaitObj.waitWithoutLock(&thread->threadWaitObj);
     }

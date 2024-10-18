@@ -62,7 +62,7 @@ void HcMonitorMalloc(void *addr, uint32_t size, const char *strFile, int nLine)
     if (!g_isInit) {
         return;
     }
-    LockHcMutex(g_mutex);
+    (void)LockHcMutex(g_mutex);
     map<void *, MemoryBlock>::iterator iter = gMemoryMap.find(addr);
     if (iter != gMemoryMap.end()) {
         cout << "############## Monitor Malloc error, addr is alread exist!" << endl;
@@ -97,7 +97,7 @@ void HcMonitorFree(void *addr)
     if (!g_isInit) {
         return;
     }
-    LockHcMutex(g_mutex);
+    (void)LockHcMutex(g_mutex);
     map<void *, MemoryBlock>::iterator iter = gMemoryMap.find(addr);
     if (iter != gMemoryMap.end()) {
         g_mallocCount -= GetRealMallocSize(iter->second.size);
@@ -113,7 +113,7 @@ void ReportMonitor(void)
     if (!g_isInit) {
         return;
     }
-    LockHcMutex(g_mutex);
+    (void)LockHcMutex(g_mutex);
     printf("\n############## Monitor Report ##############\nMemoryBlock Num: %zu\nMemory Used Size: %d\n"
         "Memory Max Used Size: %d\nMemory Max Single Size: %d\n",
         gMemoryMap.size(), g_mallocCount, g_maxCount, g_maxSingleCount);
@@ -146,7 +146,7 @@ void HcDestroyMallocMonitor(void)
         return;
     }
     g_isInit = false;
-    LockHcMutex(g_mutex);
+    (void)LockHcMutex(g_mutex);
     gMemoryMap.clear();
     g_mallocCount = 0;
     g_maxCount = 0;

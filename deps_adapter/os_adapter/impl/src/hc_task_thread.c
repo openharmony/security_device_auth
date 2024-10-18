@@ -27,7 +27,7 @@ static HcTaskBase* PopTask(HcTaskThread* thread)
         return NULL;
     }
 
-    LockHcMutex(&thread->queueLock);
+    (void)LockHcMutex(&thread->queueLock);
     HcTaskWrap task;
     HcBool ret = thread->tasks.popFront(&thread->tasks, &task);
     UnlockHcMutex(&thread->queueLock);
@@ -43,7 +43,7 @@ static void PushTask(struct HcTaskThreadT* thread, HcTaskBase* task)
         return;
     }
 
-    LockHcMutex(&thread->queueLock);
+    (void)LockHcMutex(&thread->queueLock);
     HcTaskWrap taskWarp;
     taskWarp.task = task;
     thread->tasks.pushBack(&thread->tasks, &taskWarp);
@@ -53,7 +53,7 @@ static void PushTask(struct HcTaskThreadT* thread, HcTaskBase* task)
 
 static void Clear(struct HcTaskThreadT* thread)
 {
-    LockHcMutex(&thread->queueLock);
+    (void)LockHcMutex(&thread->queueLock);
     HcTaskWrap *taskWarp = NULL;
     uint32_t index;
     FOR_EACH_HC_VECTOR(thread->tasks, index, taskWarp) {

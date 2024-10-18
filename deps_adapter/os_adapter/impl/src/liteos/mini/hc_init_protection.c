@@ -25,7 +25,7 @@ static int g_singleCount = 0;
 
 int CheckInit(void)
 {
-    LockHcMutex(&g_countMutex);
+    (void)LockHcMutex(&g_countMutex);
     if (g_singleCount < 0) {
         g_singleCount = 0;
     } else if (g_singleCount > 0) {
@@ -39,7 +39,7 @@ int CheckInit(void)
 
 int CheckDestroy(void)
 {
-    LockHcMutex(&g_countMutex);
+    (void)LockHcMutex(&g_countMutex);
     if (g_singleCount == 0) {
         UnlockHcMutex(&g_countMutex);
         return FINISH_DESTROY;
@@ -60,7 +60,7 @@ int CheckDestroy(void)
 
 void SetInitStatus(void)
 {
-    LockHcMutex(&g_countMutex);
+    (void)LockHcMutex(&g_countMutex);
     g_singleCount = 1;
     UnlockHcMutex(&g_countMutex);
     return;
@@ -68,7 +68,7 @@ void SetInitStatus(void)
 
 void SetDeInitStatus(void)
 {
-    LockHcMutex(&g_countMutex);
+    (void)LockHcMutex(&g_countMutex);
     g_singleCount = 0;
     UnlockHcMutex(&g_countMutex);
     return;

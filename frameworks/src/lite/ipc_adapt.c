@@ -107,7 +107,7 @@ static void ResetIpcCallBackNode(IpcCallBackNode *node)
 
 static void LockCallbackList(void)
 {
-    LockHcMutex(&g_cbListLock);
+    (void)LockHcMutex(&g_cbListLock);
     return;
 }
 

@@ -44,16 +44,17 @@ void DestroyHcMutex(HcMutex *mutex)
     }
 }
 
-void LockHcMutex(HcMutex* mutex)
+int LockHcMutex(HcMutex* mutex)
 {
     if (mutex == NULL) {
         LOGE("[OS]: mutex is null pointer!");
-        return;
+        return -1;
     }
     int res = pthread_mutex_lock(mutex);
     if (res != 0) {
         LOGE("[OS]: pthread_mutex_lock fail. [Res]: %d", res);
     }
+    return res;
 }
 
 void UnlockHcMutex(HcMutex* mutex)

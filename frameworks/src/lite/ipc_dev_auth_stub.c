@@ -150,7 +150,7 @@ void InitCbStubTable(void)
 
 static void LockCbStubTable(void)
 {
-    LockHcMutex(&g_cBMutex);
+    (void)LockHcMutex(&g_cBMutex);
     return;
 }
 

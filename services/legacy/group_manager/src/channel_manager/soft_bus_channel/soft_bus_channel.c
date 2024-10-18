@@ -40,7 +40,7 @@ static int32_t GetReqIdByChannelId(int64_t channelId, int64_t *returnReqId)
 {
     uint32_t index;
     ChannelEntry *entry = NULL;
-    LockHcMutex(g_channelMutex);
+    (void)LockHcMutex(g_channelMutex);
     FOR_EACH_HC_VECTOR(g_channelVec, index, entry) {
         if (channelId == entry->channelId) {
             *returnReqId = entry->requestId;
@@ -63,7 +63,7 @@ static int32_t AddChannelEntry(int64_t requestId, int64_t channelId)
         .channelId = channelId,
         .requestId = requestId
     };
-    LockHcMutex(g_channelMutex);
+    (void)LockHcMutex(g_channelMutex);
     g_channelVec.pushBack(&g_channelVec, &entry);
     UnlockHcMutex(g_channelMutex);
     return HC_SUCCESS;
@@ -73,7 +73,7 @@ static void RemoveChannelEntry(int64_t channelId)
 {
     uint32_t index;
     ChannelEntry *entry = NULL;
-    LockHcMutex(g_channelMutex);
+    (void)LockHcMutex(g_channelMutex);
     FOR_EACH_HC_VECTOR(g_channelVec, index, entry) {
         if (channelId == entry->channelId) {
             ChannelEntry tmpEntry;
@@ -263,7 +263,7 @@ int32_t InitSoftBusChannelModule(ChannelProxy *channelProxy)
 
 void DestroySoftBusChannelModule(void)
 {
-    LockHcMutex(g_channelMutex);
+    (void)LockHcMutex(g_channelMutex);
     DESTROY_HC_VECTOR(ChannelEntryVec, &g_channelVec);
     UnlockHcMutex(g_channelMutex);
     DestroyHcMutex(g_channelMutex);

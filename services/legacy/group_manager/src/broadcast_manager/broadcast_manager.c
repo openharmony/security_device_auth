@@ -41,7 +41,7 @@ static void PostOnGroupCreated(const char *messageStr)
     }
     uint32_t index;
     ListenerEntry *entry = NULL;
-    LockHcMutex(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onGroupCreated != NULL) {
             LOGI("[Broadcaster]: PostOnGroupCreated! [AppId]: %s", entry->appId);
@@ -59,7 +59,7 @@ static void PostOnGroupDeleted(const char *messageStr)
     }
     uint32_t index;
     ListenerEntry *entry = NULL;
-    LockHcMutex(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onGroupDeleted != NULL) {
             LOGI("[Broadcaster]: PostOnGroupDeleted! [AppId]: %s", entry->appId);
@@ -77,7 +77,7 @@ static void PostOnDeviceBound(const char *peerUdid, const char *messageStr)
     }
     uint32_t index;
     ListenerEntry *entry = NULL;
-    LockHcMutex(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onDeviceBound != NULL) {
             LOGI("[Broadcaster]: PostOnDeviceBound! [AppId]: %s", entry->appId);
@@ -95,7 +95,7 @@ static void PostOnDeviceUnBound(const char *peerUdid, const char *messageStr)
     }
     uint32_t index;
     ListenerEntry *entry = NULL;
-    LockHcMutex(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onDeviceUnBound != NULL) {
             LOGI("[Broadcaster]: PostOnDeviceUnBound! [AppId]: %s", entry->appId);
@@ -113,7 +113,7 @@ static void PostOnDeviceNotTrusted(const char *peerUdid)
     }
     uint32_t index;
     ListenerEntry *entry = NULL;
-    LockHcMutex(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onDeviceNotTrusted != NULL) {
             LOGI("[Broadcaster]: PostOnDeviceNotTrusted! [AppId]: %s", entry->appId);
@@ -131,7 +131,7 @@ static void PostOnLastGroupDeleted(const char *peerUdid, int groupType)
     }
     uint32_t index;
     ListenerEntry *entry = NULL;
-    LockHcMutex(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onLastGroupDeleted != NULL) {
             LOGI("[Broadcaster]: PostOnLastGroupDeleted! [AppId]: %s, [GroupType]: %d", entry->appId, groupType);
@@ -145,7 +145,7 @@ static void PostOnTrustedDeviceNumChanged(int curTrustedDeviceNum)
 {
     uint32_t index;
     ListenerEntry *entry = NULL;
-    LockHcMutex(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onTrustedDeviceNumChanged != NULL) {
             LOGI("[Broadcaster]: PostOnTrustedDeviceNumChanged! [AppId]: %s", entry->appId);
@@ -159,7 +159,7 @@ static int32_t UpdateListenerIfExist(const char *appId, const DataChangeListener
 {
     uint32_t index;
     ListenerEntry *entry = NULL;
-    LockHcMutex(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (strcmp(entry->appId, appId) == 0) {
             if (memcpy_s(entry->listener, sizeof(DataChangeListener),
@@ -206,7 +206,7 @@ static int32_t AddListenerIfNotExist(const char *appId, const DataChangeListener
     ListenerEntry entry;
     entry.appId = copyAppId;
     entry.listener = copyListener;
-    LockHcMutex(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     g_listenerEntryVec.pushBack(&g_listenerEntryVec, &entry);
     UnlockHcMutex(g_broadcastMutex);
     LOGI("Successfully added a listener. [AppId]: %s", appId);
@@ -252,7 +252,7 @@ void DestroyBroadcastManager(void)
 {
     uint32_t index;
     ListenerEntry *entry = NULL;
-    LockHcMutex(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         HcFree(entry->appId);
         HcFree(entry->listener);

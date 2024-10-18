@@ -39,7 +39,7 @@ static int32_t UpdateCallbackIfExist(const char *appId, const DeviceAuthCallback
 {
     uint32_t index;
     CallbackEntry *entry = NULL;
-    LockHcMutex(g_callbackMutex);
+    (void)LockHcMutex(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
         if (strcmp(entry->appId, appId) == 0) {
             if (memcpy_s(entry->callback, sizeof(DeviceAuthCallback),
@@ -85,7 +85,7 @@ static int32_t AddCallbackIfNotExist(const char *appId, const DeviceAuthCallback
     CallbackEntry entry;
     entry.appId = copyAppId;
     entry.callback = copyCallback;
-    LockHcMutex(g_callbackMutex);
+    (void)LockHcMutex(g_callbackMutex);
     if (g_callbackVec.pushBack(&g_callbackVec, &entry) == NULL) {
         LOGE("Failed to push callback to vector!");
         HcFree(copyAppId);
@@ -176,7 +176,7 @@ const DeviceAuthCallback *GetGMCallbackByAppId(const char *appId)
 {
     uint32_t index;
     CallbackEntry *entry = NULL;
-    LockHcMutex(g_callbackMutex);
+    (void)LockHcMutex(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
         if (strcmp(entry->appId, appId) == 0) {
             UnlockHcMutex(g_callbackMutex);
@@ -209,7 +209,7 @@ int32_t UnRegGroupManagerCallback(const char *appId)
     }
     uint32_t index;
     CallbackEntry *entry = NULL;
-    LockHcMutex(g_callbackMutex);
+    (void)LockHcMutex(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
         if (strcmp(entry->appId, appId) == 0) {
             HcFree(entry->appId);
@@ -249,7 +249,7 @@ void DestroyCallbackManager(void)
 {
     uint32_t index;
     CallbackEntry *entry = NULL;
-    LockHcMutex(g_callbackMutex);
+    (void)LockHcMutex(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
         HcFree(entry->appId);
         HcFree(entry->callback);

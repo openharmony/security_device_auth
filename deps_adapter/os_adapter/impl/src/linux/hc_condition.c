@@ -85,7 +85,7 @@ int HcCondWait(struct HcConditionT* hcCond)
         return -1;
     }
 
-    LockHcMutex(hcCond->mutex);
+    (void)LockHcMutex(hcCond->mutex);
     if (hcCond->notified) {
         hcCond->notified = HC_FALSE;
         UnlockHcMutex(hcCond->mutex);
@@ -107,7 +107,7 @@ void HcCondNotify(struct HcConditionT* hcCond)
         return;
     }
 
-    LockHcMutex(hcCond->mutex);
+    (void)LockHcMutex(hcCond->mutex);
 
     if (!hcCond->waited) {
         hcCond->notified = HC_TRUE;

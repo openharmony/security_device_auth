@@ -601,7 +601,7 @@ static void LoadOsAccountDbCe(int32_t osAccountId)
 
 static void OnOsAccountUnlocked(int32_t osAccountId)
 {
-    LockHcMutex(g_databaseMutex);
+    (void)LockHcMutex(g_databaseMutex);
     LoadOsAccountDbCe(osAccountId);
     UnlockHcMutex(g_databaseMutex);
 }
@@ -609,7 +609,7 @@ static void OnOsAccountUnlocked(int32_t osAccountId)
 static void OnOsAccountRemoved(int32_t osAccountId)
 {
     LOGI("[DB]: os account is removed, osAccountId: %d", osAccountId);
-    LockHcMutex(g_databaseMutex);
+    (void)LockHcMutex(g_databaseMutex);
     RemoveOsAccountTrustedInfo(osAccountId);
     UnlockHcMutex(g_databaseMutex);
 }
@@ -666,7 +666,7 @@ static void LoadDeviceAuthDb(void)
     if (IsOsAccountSupported()) {
         return;
     }
-    LockHcMutex(g_databaseMutex);
+    (void)LockHcMutex(g_databaseMutex);
     StringVector osAccountDbNameVec = CreateStrVector();
     HcFileGetSubFileName(GetStorageDirPath(), &osAccountDbNameVec);
     uint32_t index;
@@ -1320,7 +1320,7 @@ int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
         LOGE("[DB]: The input groupEntry is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    LockHcMutex(g_databaseMutex);
+    (void)LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         UnlockHcMutex(g_databaseMutex);
@@ -1361,7 +1361,7 @@ int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEn
         LOGE("[DB]: The input deviceEntry is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    LockHcMutex(g_databaseMutex);
+    (void)LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         UnlockHcMutex(g_databaseMutex);
@@ -1403,7 +1403,7 @@ int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params)
         LOGE("[DB]: The input params is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    LockHcMutex(g_databaseMutex);
+    (void)LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         UnlockHcMutex(g_databaseMutex);
@@ -1437,7 +1437,7 @@ int32_t DelTrustedDevice(int32_t osAccountId, const QueryDeviceParams *params)
         LOGE("[DB]: The input params is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    LockHcMutex(g_databaseMutex);
+    (void)LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         UnlockHcMutex(g_databaseMutex);
@@ -1471,7 +1471,7 @@ int32_t QueryGroups(int32_t osAccountId, const QueryGroupParams *params, GroupEn
         LOGE("[DB]: The input params or vec is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    LockHcMutex(g_databaseMutex);
+    (void)LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         UnlockHcMutex(g_databaseMutex);
@@ -1502,7 +1502,7 @@ int32_t QueryDevices(int32_t osAccountId, const QueryDeviceParams *params, Devic
         LOGE("[DB]: The input params or vec is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    LockHcMutex(g_databaseMutex);
+    (void)LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         UnlockHcMutex(g_databaseMutex);
@@ -1529,7 +1529,7 @@ int32_t QueryDevices(int32_t osAccountId, const QueryDeviceParams *params, Devic
 
 int32_t SaveOsAccountDb(int32_t osAccountId)
 {
-    LockHcMutex(g_databaseMutex);
+    (void)LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         UnlockHcMutex(g_databaseMutex);
@@ -1564,7 +1564,7 @@ void ReloadOsAccountDb(int32_t osAccountId)
         LOGE("[DB]: not initialized!");
         return;
     }
-    LockHcMutex(g_databaseMutex);
+    (void)LockHcMutex(g_databaseMutex);
     LoadOsAccountDbCe(osAccountId);
     UnlockHcMutex(g_databaseMutex);
 }
@@ -1643,7 +1643,7 @@ static void DevAuthDataBaseDump(int fd)
         LOGE("[DB]: Init mutex failed");
         return;
     }
-    LockHcMutex(g_databaseMutex);
+    (void)LockHcMutex(g_databaseMutex);
     if (IsOsAccountSupported()) {
         LoadAllAccountsData();
     }
@@ -1681,7 +1681,7 @@ int32_t InitDatabase(void)
 void DestroyDatabase(void)
 {
     RemoveOsAccountEventCallback(GROUP_DATA_CALLBACK);
-    LockHcMutex(g_databaseMutex);
+    (void)LockHcMutex(g_databaseMutex);
     uint32_t index;
     OsAccountTrustedInfo *info;
     FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {

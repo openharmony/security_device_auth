@@ -28,7 +28,7 @@ typedef pthread_mutex_t HcMutex;
 int32_t InitHcMutex(HcMutex* mutex);
 void DestroyHcMutex(HcMutex* mutex);
 
-void LockHcMutex(HcMutex* mutex);
+int LockHcMutex(HcMutex* mutex);
 void UnlockHcMutex(HcMutex* mutex);
 
 #ifdef __cplusplus

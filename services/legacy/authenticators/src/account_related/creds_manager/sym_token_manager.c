@@ -524,7 +524,7 @@ static void LoadOsSymTokensDbCe(int32_t osAccountId)
 static void OnOsAccountUnlocked(int32_t osAccountId)
 {
     LOGI("Os account is unlocked, osAccountId: %d", osAccountId);
-    LockHcMutex(g_dataMutex);
+    (void)LockHcMutex(g_dataMutex);
     LoadOsSymTokensDbCe(osAccountId);
     UnlockHcMutex(g_dataMutex);
 }
@@ -532,7 +532,7 @@ static void OnOsAccountUnlocked(int32_t osAccountId)
 static void OnOsAccountRemoved(int32_t osAccountId)
 {
     LOGI("Os account is removed, osAccountId: %d", osAccountId);
-    LockHcMutex(g_dataMutex);
+    (void)LockHcMutex(g_dataMutex);
     RemoveOsSymTokensInfo(osAccountId);
     UnlockHcMutex(g_dataMutex);
 }
@@ -663,7 +663,7 @@ static int32_t AddToken(int32_t osAccountId, int32_t opCode, CJson *in)
         LOGE("Failed to create symToken from json!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    LockHcMutex(g_dataMutex);
+    (void)LockHcMutex(g_dataMutex);
     int32_t res = AddSymTokenToVec(osAccountId, symToken);
     if (res != HC_SUCCESS) {
         UnlockHcMutex(g_dataMutex);
@@ -694,7 +694,7 @@ static int32_t DeleteToken(int32_t osAccountId, const char *userId, const char *
         LOGE("Invalid params");
         return HC_ERR_NULL_PTR;
     }
-    LockHcMutex(g_dataMutex);
+    (void)LockHcMutex(g_dataMutex);
     SymToken *symToken = PopSymTokenFromVec(osAccountId, userId, deviceId);
     if (symToken == NULL) {
         UnlockHcMutex(g_dataMutex);
@@ -771,7 +771,7 @@ void InitSymTokenManager(void)
             return;
         }
     }
-    LockHcMutex(g_dataMutex);
+    (void)LockHcMutex(g_dataMutex);
     (void)memset_s(&g_symTokenManager, sizeof(SymTokenManager), 0, sizeof(SymTokenManager));
     g_symTokenManager.addToken = AddToken;
     g_symTokenManager.deleteToken = DeleteToken;
@@ -784,7 +784,7 @@ void InitSymTokenManager(void)
 
 void DestroySymTokenManager(void)
 {
-    LockHcMutex(g_dataMutex);
+    (void)LockHcMutex(g_dataMutex);
     RemoveOsAccountEventCallback(SYM_TOKEN_DATA_CALLBACK);
     (void)memset_s(&g_symTokenManager, sizeof(SymTokenManager), 0, sizeof(SymTokenManager));
     uint32_t index;

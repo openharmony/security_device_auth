@@ -48,7 +48,7 @@ static int32_t CreateKeyAgreeSessionMgr(void)
             return HC_ERROR;
         }
     }
-    LockHcMutex(g_sessionMutex);
+    (void)LockHcMutex(g_sessionMutex);
     if (!g_IsinitSessionNodeVec) {
         g_IsinitSessionNodeVec = true;
         g_SessionNodeVec = CREATE_HC_VECTOR(SessionNodeVec);

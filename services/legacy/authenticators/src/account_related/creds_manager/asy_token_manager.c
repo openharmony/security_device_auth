@@ -466,7 +466,7 @@ static int32_t DoImportServerPkAndVerify(int32_t osAccountId, const CJson *credJ
         .val = keyAliasValue,
         .length = SHA256_LEN
     };
-    LockHcMutex(g_accountDbMutex);
+    (void)LockHcMutex(g_accountDbMutex);
     int32_t ret = GenerateServerPkAlias(pkInfoJson, &keyAlias);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to generate serverPk alias");
@@ -656,7 +656,7 @@ ERR:
 static int32_t DoExportPkAndCompare(int32_t osAccountId, const char *userId, const char *deviceId,
     const char *devicePk, Uint8Buff *keyAlias)
 {
-    LockHcMutex(g_accountDbMutex);
+    (void)LockHcMutex(g_accountDbMutex);
     int32_t ret = GenerateKeyAlias(userId, deviceId, keyAlias, false);
     if (ret != HC_SUCCESS) {
         LOGE("Generate key alias failed.");
@@ -792,7 +792,7 @@ static int32_t CheckCredValidity(int32_t osAccountId, int32_t opCode, const CJso
 static int32_t DoGenerateAndExportPk(int32_t osAccountId, const char *userId, const char *deviceId,
     Uint8Buff *keyAlias, Uint8Buff *publicKey)
 {
-    LockHcMutex(g_accountDbMutex);
+    (void)LockHcMutex(g_accountDbMutex);
     int32_t ret = GenerateKeyAlias(userId, deviceId, keyAlias, false);
     if (ret != HC_SUCCESS) {
         LOGE("Generate key alias failed");
@@ -884,7 +884,7 @@ static void DeleteKeyPair(int32_t osAccountId, AccountToken *token)
         .val = keyAliasValue,
         .length = SHA256_LEN
     };
-    LockHcMutex(g_accountDbMutex);
+    (void)LockHcMutex(g_accountDbMutex);
     if (GenerateKeyAlias((const char *)token->pkInfo.userId.val,
         (const char *)token->pkInfo.deviceId.val, &keyAlias, false) != HC_SUCCESS) {
         LOGE("Failed to generate key alias");
@@ -990,7 +990,7 @@ static void LoadOsAccountTokenDbCe(int32_t osAccountId)
 static void OnOsAccountUnlocked(int32_t osAccountId)
 {
     LOGI("Os account is unlocked, osAccountId: %d", osAccountId);
-    LockHcMutex(g_accountDbMutex);
+    (void)LockHcMutex(g_accountDbMutex);
     LoadOsAccountTokenDbCe(osAccountId);
     UnlockHcMutex(g_accountDbMutex);
 }
@@ -998,7 +998,7 @@ static void OnOsAccountUnlocked(int32_t osAccountId)
 static void OnOsAccountRemoved(int32_t osAccountId)
 {
     LOGI("Os account is removed, osAccountId: %d", osAccountId);
-    LockHcMutex(g_accountDbMutex);
+    (void)LockHcMutex(g_accountDbMutex);
     RemoveOsAccountTokenInfo(osAccountId);
     UnlockHcMutex(g_accountDbMutex);
 }
@@ -1055,7 +1055,7 @@ static int32_t SaveOsAccountTokenDb(int32_t osAccountId)
         LOGE("Failed to get token path!");
         return HC_ERROR;
     }
-    LockHcMutex(g_accountDbMutex);
+    (void)LockHcMutex(g_accountDbMutex);
     OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         LOGE("Get token info by os account id failed");
@@ -1075,7 +1075,7 @@ static int32_t SaveOsAccountTokenDb(int32_t osAccountId)
 
 static AccountToken *GetAccountToken(int32_t osAccountId, const char *userId, const char *deviceId)
 {
-    LockHcMutex(g_accountDbMutex);
+    (void)LockHcMutex(g_accountDbMutex);
     OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         LOGE("Failed to get token by osAccountId");
@@ -1131,7 +1131,7 @@ static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, const c
     AccountTokenVec *deleteTokens)
 {
     LOGI("Start to delete tokens from database!");
-    LockHcMutex(g_accountDbMutex);
+    (void)LockHcMutex(g_accountDbMutex);
     OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         LOGE("Failed to get token by os account id");
@@ -1170,7 +1170,7 @@ static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, const c
 static int32_t AddTokenInner(int32_t osAccountId, const AccountToken *token)
 {
     LOGI("Start to add a token to database!");
-    LockHcMutex(g_accountDbMutex);
+    (void)LockHcMutex(g_accountDbMutex);
     OsAccountTokenInfo *info = GetTokenInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         LOGE("Failed to get token by os account id");
@@ -1305,7 +1305,7 @@ void InitTokenManager(void)
             return;
         }
     }
-    LockHcMutex(g_accountDbMutex);
+    (void)LockHcMutex(g_accountDbMutex);
     (void)memset_s(&g_asyTokenManager, sizeof(AccountAuthTokenManager), 0, sizeof(AccountAuthTokenManager));
     g_asyTokenManager.addToken = AddToken;
     g_asyTokenManager.getToken = GetToken;
@@ -1418,7 +1418,7 @@ AccountAuthTokenManager *GetAccountAuthTokenManager(void)
 
 void DestroyTokenManager(void)
 {
-    LockHcMutex(g_accountDbMutex);
+    (void)LockHcMutex(g_accountDbMutex);
     RemoveOsAccountEventCallback(ASY_TOKEN_DATA_CALLBACK);
     g_algLoader = NULL;
     (void)memset_s(&g_asyTokenManager, sizeof(AccountAuthTokenManager), 0, sizeof(AccountAuthTokenManager));

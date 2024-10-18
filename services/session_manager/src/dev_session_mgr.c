@@ -112,7 +112,7 @@ void DestroyDevSessionManager(void)
 {
     uint32_t index;
     SessionInfo *ptr;
-    LockHcMutex(&g_sessionMutex);
+    (void)LockHcMutex(&g_sessionMutex);
     FOR_EACH_HC_VECTOR(g_sessionInfoList, index, ptr) {
         ptr->session->destroy(ptr->session);
     }
@@ -123,7 +123,7 @@ void DestroyDevSessionManager(void)
 
 bool IsSessionExist(int64_t sessionId)
 {
-    LockHcMutex(&g_sessionMutex);
+    (void)LockHcMutex(&g_sessionMutex);
     SessionInfo *sessionInfo;
     int32_t res = GetSessionInfo(sessionId, &sessionInfo);
     UnlockHcMutex(&g_sessionMutex);
@@ -136,7 +136,7 @@ int32_t OpenDevSession(int64_t sessionId, const char *appId, SessionInitParams *
         LOGE("invalid params.");
         return HC_ERR_INVALID_PARAMS;
     }
-    LockHcMutex(&g_sessionMutex);
+    (void)LockHcMutex(&g_sessionMutex);
     RemoveTimeoutSession();
     int32_t res = CheckEnvForOpenSession(sessionId);
     if (res != HC_SUCCESS) {
@@ -164,7 +164,7 @@ int32_t OpenDevSession(int64_t sessionId, const char *appId, SessionInitParams *
 
 int32_t StartDevSession(int64_t sessionId)
 {
-    LockHcMutex(&g_sessionMutex);
+    (void)LockHcMutex(&g_sessionMutex);
     RemoveTimeoutSession();
     SessionInfo *sessionInfo;
     int32_t res = GetSessionInfo(sessionId, &sessionInfo);
@@ -185,7 +185,7 @@ int32_t ProcessDevSession(int64_t sessionId, const CJson *receviedMsg, bool *isF
         LOGE("invalid params.");
         return HC_ERR_INVALID_PARAMS;
     }
-    LockHcMutex(&g_sessionMutex);
+    (void)LockHcMutex(&g_sessionMutex);
     RemoveTimeoutSession();
     SessionInfo *sessionInfo;
     int32_t res = GetSessionInfo(sessionId, &sessionInfo);
@@ -202,7 +202,7 @@ int32_t ProcessDevSession(int64_t sessionId, const CJson *receviedMsg, bool *isF
 
 void CloseDevSession(int64_t sessionId)
 {
-    LockHcMutex(&g_sessionMutex);
+    (void)LockHcMutex(&g_sessionMutex);
     RemoveTimeoutSession();
     uint32_t index;
     SessionInfo *ptr;
@@ -226,7 +226,7 @@ void CancelDevSession(int64_t sessionId, const char *appId)
         LOGE("appId is NULL.");
         return;
     }
-    LockHcMutex(&g_sessionMutex);
+    (void)LockHcMutex(&g_sessionMutex);
     RemoveTimeoutSession();
     uint32_t index;
     SessionInfo *ptr;
