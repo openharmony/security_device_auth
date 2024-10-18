@@ -58,9 +58,9 @@ void AddCallNum(void)
     if (!g_isNeedThrowException) {
         return;
     }
-    g_mutex->lock(g_mutex);
+    (void)LockHcMutex(g_mutex);
     g_callNum += 1;
-    g_mutex->unlock(g_mutex);
+    UnlockHcMutex(g_mutex);
 }
 
 void SetControllerMode(bool isNeedThrowException)
@@ -79,10 +79,10 @@ void SetThrowExceptionIndex(uint32_t index)
     if (!g_isNeedThrowException) {
         return;
     }
-    g_mutex->lock(g_mutex);
+    (void)LockHcMutex(g_mutex);
     g_callNum = 0;
     g_throwExceptionIndex = index;
-    g_mutex->unlock(g_mutex);
+    UnlockHcMutex(g_mutex);
 }
 
 void InitExceptionController(void)
@@ -104,11 +104,11 @@ void DestroyExceptionController(void)
         return;
     }
     g_isInit = false;
-    g_mutex->lock(g_mutex);
+    (void)LockHcMutex(g_mutex);
     g_isNeedThrowException = false;
     g_throwExceptionIndex = UINT32_MAX;
     g_callNum = 0;
-    g_mutex->unlock(g_mutex);
+    UnlockHcMutex(g_mutex);
     DestroyHcMutex(g_mutex);
     free(g_mutex);
     g_mutex = NULL;

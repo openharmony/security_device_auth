@@ -41,14 +41,14 @@ static void PostOnGroupCreated(const char *messageStr)
     }
     uint32_t index;
     ListenerEntry *entry = NULL;
-    g_broadcastMutex->lock(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onGroupCreated != NULL) {
             LOGI("[Broadcaster]: PostOnGroupCreated! [AppId]: %s", entry->appId);
             entry->listener->onGroupCreated(messageStr);
         }
     }
-    g_broadcastMutex->unlock(g_broadcastMutex);
+    UnlockHcMutex(g_broadcastMutex);
 }
 
 static void PostOnGroupDeleted(const char *messageStr)
@@ -59,14 +59,14 @@ static void PostOnGroupDeleted(const char *messageStr)
     }
     uint32_t index;
     ListenerEntry *entry = NULL;
-    g_broadcastMutex->lock(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onGroupDeleted != NULL) {
             LOGI("[Broadcaster]: PostOnGroupDeleted! [AppId]: %s", entry->appId);
             entry->listener->onGroupDeleted(messageStr);
         }
     }
-    g_broadcastMutex->unlock(g_broadcastMutex);
+    UnlockHcMutex(g_broadcastMutex);
 }
 
 static void PostOnDeviceBound(const char *peerUdid, const char *messageStr)
@@ -77,14 +77,14 @@ static void PostOnDeviceBound(const char *peerUdid, const char *messageStr)
     }
     uint32_t index;
     ListenerEntry *entry = NULL;
-    g_broadcastMutex->lock(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onDeviceBound != NULL) {
             LOGI("[Broadcaster]: PostOnDeviceBound! [AppId]: %s", entry->appId);
             entry->listener->onDeviceBound(peerUdid, messageStr);
         }
     }
-    g_broadcastMutex->unlock(g_broadcastMutex);
+    UnlockHcMutex(g_broadcastMutex);
 }
 
 static void PostOnDeviceUnBound(const char *peerUdid, const char *messageStr)
@@ -95,14 +95,14 @@ static void PostOnDeviceUnBound(const char *peerUdid, const char *messageStr)
     }
     uint32_t index;
     ListenerEntry *entry = NULL;
-    g_broadcastMutex->lock(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onDeviceUnBound != NULL) {
             LOGI("[Broadcaster]: PostOnDeviceUnBound! [AppId]: %s", entry->appId);
             entry->listener->onDeviceUnBound(peerUdid, messageStr);
         }
     }
-    g_broadcastMutex->unlock(g_broadcastMutex);
+    UnlockHcMutex(g_broadcastMutex);
 }
 
 static void PostOnDeviceNotTrusted(const char *peerUdid)
@@ -113,14 +113,14 @@ static void PostOnDeviceNotTrusted(const char *peerUdid)
     }
     uint32_t index;
     ListenerEntry *entry = NULL;
-    g_broadcastMutex->lock(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onDeviceNotTrusted != NULL) {
             LOGI("[Broadcaster]: PostOnDeviceNotTrusted! [AppId]: %s", entry->appId);
             entry->listener->onDeviceNotTrusted(peerUdid);
         }
     }
-    g_broadcastMutex->unlock(g_broadcastMutex);
+    UnlockHcMutex(g_broadcastMutex);
 }
 
 static void PostOnLastGroupDeleted(const char *peerUdid, int groupType)
@@ -131,49 +131,49 @@ static void PostOnLastGroupDeleted(const char *peerUdid, int groupType)
     }
     uint32_t index;
     ListenerEntry *entry = NULL;
-    g_broadcastMutex->lock(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onLastGroupDeleted != NULL) {
             LOGI("[Broadcaster]: PostOnLastGroupDeleted! [AppId]: %s, [GroupType]: %d", entry->appId, groupType);
             entry->listener->onLastGroupDeleted(peerUdid, groupType);
         }
     }
-    g_broadcastMutex->unlock(g_broadcastMutex);
+    UnlockHcMutex(g_broadcastMutex);
 }
 
 static void PostOnTrustedDeviceNumChanged(int curTrustedDeviceNum)
 {
     uint32_t index;
     ListenerEntry *entry = NULL;
-    g_broadcastMutex->lock(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onTrustedDeviceNumChanged != NULL) {
             LOGI("[Broadcaster]: PostOnTrustedDeviceNumChanged! [AppId]: %s", entry->appId);
             entry->listener->onTrustedDeviceNumChanged(curTrustedDeviceNum);
         }
     }
-    g_broadcastMutex->unlock(g_broadcastMutex);
+    UnlockHcMutex(g_broadcastMutex);
 }
 
 static int32_t UpdateListenerIfExist(const char *appId, const DataChangeListener *listener)
 {
     uint32_t index;
     ListenerEntry *entry = NULL;
-    g_broadcastMutex->lock(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (strcmp(entry->appId, appId) == 0) {
             if (memcpy_s(entry->listener, sizeof(DataChangeListener),
                 listener, sizeof(DataChangeListener)) != HC_SUCCESS) {
-                g_broadcastMutex->unlock(g_broadcastMutex);
+                UnlockHcMutex(g_broadcastMutex);
                 LOGE("Failed to copy listener!");
                 return HC_ERR_MEMORY_COPY;
             }
-            g_broadcastMutex->unlock(g_broadcastMutex);
+            UnlockHcMutex(g_broadcastMutex);
             LOGI("Successfully updated a listener. [AppId]: %s", appId);
             return HC_SUCCESS;
         }
     }
-    g_broadcastMutex->unlock(g_broadcastMutex);
+    UnlockHcMutex(g_broadcastMutex);
     return HC_ERR_LISTENER_NOT_EXIST;
 }
 
@@ -206,9 +206,9 @@ static int32_t AddListenerIfNotExist(const char *appId, const DataChangeListener
     ListenerEntry entry;
     entry.appId = copyAppId;
     entry.listener = copyListener;
-    g_broadcastMutex->lock(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     g_listenerEntryVec.pushBack(&g_listenerEntryVec, &entry);
-    g_broadcastMutex->unlock(g_broadcastMutex);
+    UnlockHcMutex(g_broadcastMutex);
     LOGI("Successfully added a listener. [AppId]: %s", appId);
     return HC_SUCCESS;
 }
@@ -252,13 +252,13 @@ void DestroyBroadcastManager(void)
 {
     uint32_t index;
     ListenerEntry *entry = NULL;
-    g_broadcastMutex->lock(g_broadcastMutex);
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         HcFree(entry->appId);
         HcFree(entry->listener);
     }
     DESTROY_HC_VECTOR(ListenerEntryVec, &g_listenerEntryVec);
-    g_broadcastMutex->unlock(g_broadcastMutex);
+    UnlockHcMutex(g_broadcastMutex);
     DestroyHcMutex(g_broadcastMutex);
     HcFree(g_broadcastMutex);
     g_broadcastMutex = NULL;

@@ -39,21 +39,21 @@ static int32_t UpdateCallbackIfExist(const char *appId, const DeviceAuthCallback
 {
     uint32_t index;
     CallbackEntry *entry = NULL;
-    g_callbackMutex->lock(g_callbackMutex);
+    (void)LockHcMutex(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
         if (strcmp(entry->appId, appId) == 0) {
             if (memcpy_s(entry->callback, sizeof(DeviceAuthCallback),
                 callback, sizeof(DeviceAuthCallback)) != EOK) {
-                g_callbackMutex->unlock(g_callbackMutex);
+                UnlockHcMutex(g_callbackMutex);
                 LOGE("Failed to copy service callback!");
                 return HC_ERR_MEMORY_COPY;
             }
-            g_callbackMutex->unlock(g_callbackMutex);
+            UnlockHcMutex(g_callbackMutex);
             LOGI("Successfully updated a callback! [AppId]: %s", appId);
             return HC_SUCCESS;
         }
     }
-    g_callbackMutex->unlock(g_callbackMutex);
+    UnlockHcMutex(g_callbackMutex);
     return HC_ERR_CALLBACK_NOT_FOUND;
 }
 
@@ -85,15 +85,15 @@ static int32_t AddCallbackIfNotExist(const char *appId, const DeviceAuthCallback
     CallbackEntry entry;
     entry.appId = copyAppId;
     entry.callback = copyCallback;
-    g_callbackMutex->lock(g_callbackMutex);
+    (void)LockHcMutex(g_callbackMutex);
     if (g_callbackVec.pushBack(&g_callbackVec, &entry) == NULL) {
         LOGE("Failed to push callback to vector!");
         HcFree(copyAppId);
         HcFree(copyCallback);
-        g_callbackMutex->unlock(g_callbackMutex);
+        UnlockHcMutex(g_callbackMutex);
         return HC_ERR_MEMORY_COPY;
     }
-    g_callbackMutex->unlock(g_callbackMutex);
+    UnlockHcMutex(g_callbackMutex);
     LOGI("Successfully added a callback! [AppId]: %s", appId);
     return HC_SUCCESS;
 }
@@ -176,14 +176,14 @@ const DeviceAuthCallback *GetGMCallbackByAppId(const char *appId)
 {
     uint32_t index;
     CallbackEntry *entry = NULL;
-    g_callbackMutex->lock(g_callbackMutex);
+    (void)LockHcMutex(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
         if (strcmp(entry->appId, appId) == 0) {
-            g_callbackMutex->unlock(g_callbackMutex);
+            UnlockHcMutex(g_callbackMutex);
             return entry->callback;
         }
     }
-    g_callbackMutex->unlock(g_callbackMutex);
+    UnlockHcMutex(g_callbackMutex);
     return NULL;
 }
 
@@ -209,19 +209,19 @@ int32_t UnRegGroupManagerCallback(const char *appId)
     }
     uint32_t index;
     CallbackEntry *entry = NULL;
-    g_callbackMutex->lock(g_callbackMutex);
+    (void)LockHcMutex(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
         if (strcmp(entry->appId, appId) == 0) {
             HcFree(entry->appId);
             HcFree(entry->callback);
             CallbackEntry tempEntry;
             HC_VECTOR_POPELEMENT(&g_callbackVec, &tempEntry, index);
-            g_callbackMutex->unlock(g_callbackMutex);
+            UnlockHcMutex(g_callbackMutex);
             LOGI("Successfully removed a callback. [AppId]: %s", appId);
             return HC_SUCCESS;
         }
     }
-    g_callbackMutex->unlock(g_callbackMutex);
+    UnlockHcMutex(g_callbackMutex);
     LOGI("The callback does not exist! [AppId]: %s", appId);
     return HC_SUCCESS;
 }
@@ -249,13 +249,13 @@ void DestroyCallbackManager(void)
 {
     uint32_t index;
     CallbackEntry *entry = NULL;
-    g_callbackMutex->lock(g_callbackMutex);
+    (void)LockHcMutex(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
         HcFree(entry->appId);
         HcFree(entry->callback);
     }
     DESTROY_HC_VECTOR(GMCallbackEntryVec, &g_callbackVec);
-    g_callbackMutex->unlock(g_callbackMutex);
+    UnlockHcMutex(g_callbackMutex);
     DestroyHcMutex(g_callbackMutex);
     HcFree(g_callbackMutex);
     g_callbackMutex = NULL;

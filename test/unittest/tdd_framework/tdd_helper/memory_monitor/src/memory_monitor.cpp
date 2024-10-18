@@ -62,7 +62,7 @@ void HcMonitorMalloc(void *addr, uint32_t size, const char *strFile, int nLine)
     if (!g_isInit) {
         return;
     }
-    g_mutex->lock(g_mutex);
+    (void)LockHcMutex(g_mutex);
     map<void *, MemoryBlock>::iterator iter = gMemoryMap.find(addr);
     if (iter != gMemoryMap.end()) {
         cout << "############## Monitor Malloc error, addr is alread exist!" << endl;
@@ -74,7 +74,7 @@ void HcMonitorMalloc(void *addr, uint32_t size, const char *strFile, int nLine)
         mb.id = g_count++;
         char strLine[MALLOC_MAX_LINE_STR_LEN];
         if (sprintf_s(strLine, MALLOC_MAX_LINE_STR_LEN, "%d", nLine) <= 0) {
-            g_mutex->unlock(g_mutex);
+            UnlockHcMutex(g_mutex);
             return;
         }
         mb.str = strFile;
@@ -89,7 +89,7 @@ void HcMonitorMalloc(void *addr, uint32_t size, const char *strFile, int nLine)
             g_maxSingleCount = realSize;
         }
     }
-    g_mutex->unlock(g_mutex);
+    UnlockHcMutex(g_mutex);
 }
 
 void HcMonitorFree(void *addr)
@@ -97,7 +97,7 @@ void HcMonitorFree(void *addr)
     if (!g_isInit) {
         return;
     }
-    g_mutex->lock(g_mutex);
+    (void)LockHcMutex(g_mutex);
     map<void *, MemoryBlock>::iterator iter = gMemoryMap.find(addr);
     if (iter != gMemoryMap.end()) {
         g_mallocCount -= GetRealMallocSize(iter->second.size);
@@ -105,7 +105,7 @@ void HcMonitorFree(void *addr)
     } else {
         cout << "############## Monitor Free error, addr is not exist!" << endl;
     }
-    g_mutex->unlock(g_mutex);
+    UnlockHcMutex(g_mutex);
 }
 
 void ReportMonitor(void)
@@ -113,7 +113,7 @@ void ReportMonitor(void)
     if (!g_isInit) {
         return;
     }
-    g_mutex->lock(g_mutex);
+    (void)LockHcMutex(g_mutex);
     printf("\n############## Monitor Report ##############\nMemoryBlock Num: %zu\nMemory Used Size: %d\n"
         "Memory Max Used Size: %d\nMemory Max Single Size: %d\n",
         gMemoryMap.size(), g_mallocCount, g_maxCount, g_maxSingleCount);
@@ -122,7 +122,7 @@ void ReportMonitor(void)
             "MemoryBlock Size: %d\nMemoryBlock Location: %s\n",
             iter->second.id, iter->second.size, iter->second.realSize, iter->second.str.c_str());
     }
-    g_mutex->unlock(g_mutex);
+    UnlockHcMutex(g_mutex);
 }
 
 bool IsMemoryLeak(void)
@@ -146,13 +146,13 @@ void HcDestroyMallocMonitor(void)
         return;
     }
     g_isInit = false;
-    g_mutex->lock(g_mutex);
+    (void)LockHcMutex(g_mutex);
     gMemoryMap.clear();
     g_mallocCount = 0;
     g_maxCount = 0;
     g_maxSingleCount = 0;
     g_count = 0;
-    g_mutex->unlock(g_mutex);
+    UnlockHcMutex(g_mutex);
     DestroyHcMutex(g_mutex);
     free(g_mutex);
     g_mutex = NULL;

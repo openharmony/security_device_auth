@@ -524,17 +524,17 @@ static void LoadOsSymTokensDbCe(int32_t osAccountId)
 static void OnOsAccountUnlocked(int32_t osAccountId)
 {
     LOGI("Os account is unlocked, osAccountId: %d", osAccountId);
-    g_dataMutex->lock(g_dataMutex);
+    (void)LockHcMutex(g_dataMutex);
     LoadOsSymTokensDbCe(osAccountId);
-    g_dataMutex->unlock(g_dataMutex);
+    UnlockHcMutex(g_dataMutex);
 }
 
 static void OnOsAccountRemoved(int32_t osAccountId)
 {
     LOGI("Os account is removed, osAccountId: %d", osAccountId);
-    g_dataMutex->lock(g_dataMutex);
+    (void)LockHcMutex(g_dataMutex);
     RemoveOsSymTokensInfo(osAccountId);
-    g_dataMutex->unlock(g_dataMutex);
+    UnlockHcMutex(g_dataMutex);
 }
 
 static bool IsOsAccountDataLoaded(int32_t osAccountId)
@@ -663,22 +663,22 @@ static int32_t AddToken(int32_t osAccountId, int32_t opCode, CJson *in)
         LOGE("Failed to create symToken from json!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    g_dataMutex->lock(g_dataMutex);
+    (void)LockHcMutex(g_dataMutex);
     int32_t res = AddSymTokenToVec(osAccountId, symToken);
     if (res != HC_SUCCESS) {
-        g_dataMutex->unlock(g_dataMutex);
+        UnlockHcMutex(g_dataMutex);
         LOGE("Failed to add sym token to vec");
         HcFree(symToken);
         return res;
     }
     res = ImportSymTokenToKeyManager(osAccountId, symToken, in, opCode);
     if (res != HC_SUCCESS) {
-        g_dataMutex->unlock(g_dataMutex);
+        UnlockHcMutex(g_dataMutex);
         LOGE("Failed to import sym token!");
         return res;
     }
     res = SaveOsSymTokensDb(osAccountId);
-    g_dataMutex->unlock(g_dataMutex);
+    UnlockHcMutex(g_dataMutex);
     if (res != HC_SUCCESS) {
         LOGE("Failed to save token to db");
         return res;
@@ -694,21 +694,21 @@ static int32_t DeleteToken(int32_t osAccountId, const char *userId, const char *
         LOGE("Invalid params");
         return HC_ERR_NULL_PTR;
     }
-    g_dataMutex->lock(g_dataMutex);
+    (void)LockHcMutex(g_dataMutex);
     SymToken *symToken = PopSymTokenFromVec(osAccountId, userId, deviceId);
     if (symToken == NULL) {
-        g_dataMutex->unlock(g_dataMutex);
+        UnlockHcMutex(g_dataMutex);
         return HC_ERR_NULL_PTR;
     }
     int32_t res = DeleteSymTokenFromKeyManager(osAccountId, symToken);
     HcFree(symToken);
     if (res != HC_SUCCESS) {
-        g_dataMutex->unlock(g_dataMutex);
+        UnlockHcMutex(g_dataMutex);
         LOGE("Failed to delete sym token!");
         return res;
     }
     res = SaveOsSymTokensDb(osAccountId);
-    g_dataMutex->unlock(g_dataMutex);
+    UnlockHcMutex(g_dataMutex);
     if (res != HC_SUCCESS) {
         LOGE("Failed to save token to db, account id is: %d", osAccountId);
         return res;
@@ -771,7 +771,7 @@ void InitSymTokenManager(void)
             return;
         }
     }
-    g_dataMutex->lock(g_dataMutex);
+    (void)LockHcMutex(g_dataMutex);
     (void)memset_s(&g_symTokenManager, sizeof(SymTokenManager), 0, sizeof(SymTokenManager));
     g_symTokenManager.addToken = AddToken;
     g_symTokenManager.deleteToken = DeleteToken;
@@ -779,12 +779,12 @@ void InitSymTokenManager(void)
     g_symTokensDb = CREATE_HC_VECTOR(SymTokensDb);
     AddOsAccountEventCallback(SYM_TOKEN_DATA_CALLBACK, OnOsAccountUnlocked, OnOsAccountRemoved);
     LoadTokenDb();
-    g_dataMutex->unlock(g_dataMutex);
+    UnlockHcMutex(g_dataMutex);
 }
 
 void DestroySymTokenManager(void)
 {
-    g_dataMutex->lock(g_dataMutex);
+    (void)LockHcMutex(g_dataMutex);
     RemoveOsAccountEventCallback(SYM_TOKEN_DATA_CALLBACK);
     (void)memset_s(&g_symTokenManager, sizeof(SymTokenManager), 0, sizeof(SymTokenManager));
     uint32_t index;
@@ -793,7 +793,7 @@ void DestroySymTokenManager(void)
         ClearSymTokenVec(&info->tokens);
     }
     DESTROY_HC_VECTOR(SymTokensDb, &g_symTokensDb);
-    g_dataMutex->unlock(g_dataMutex);
+    UnlockHcMutex(g_dataMutex);
     DestroyHcMutex(g_dataMutex);
     HcFree(g_dataMutex);
     g_dataMutex = NULL;

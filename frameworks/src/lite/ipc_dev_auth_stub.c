@@ -150,13 +150,13 @@ void InitCbStubTable(void)
 
 static void LockCbStubTable(void)
 {
-    (void)g_cBMutex.lock(&g_cBMutex);
+    (void)LockHcMutex(&g_cBMutex);
     return;
 }
 
 static void UnLockCbStubTable(void)
 {
-    g_cBMutex.unlock(&g_cBMutex);
+    UnlockHcMutex(&g_cBMutex);
     return;
 }
 
