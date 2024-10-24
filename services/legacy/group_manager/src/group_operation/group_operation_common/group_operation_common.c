@@ -26,7 +26,6 @@
 #include "hc_log.h"
 #include "account_auth_plugin_proxy.h"
 static const char *IDENTITY_FROM_DB = "identityFromDB";
-static const int UPGRADE_OS_ACCOUNT_ID = 100;
 
 int32_t CheckUpgradeIdentity(uint8_t upgradeFlag, const char *appId, const char *identityFromDB)
 {

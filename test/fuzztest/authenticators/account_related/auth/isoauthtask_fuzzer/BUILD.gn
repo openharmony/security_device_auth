@@ -27,7 +27,6 @@ ohos_fuzztest("IsoAuthTaskFuzzTest") {
   include_dirs = inc_path + hals_inc_path
   include_dirs += [
     ".",
-    "//third_party/cJSON",
     "${frameworks_path}/inc/standard",
     "${dev_frameworks_path}/inc/hiview_adapter",
     "${dev_frameworks_path}/inc/permission_adapter",
@@ -73,10 +72,7 @@ ohos_fuzztest("IsoAuthTaskFuzzTest") {
     ubsan = true
     debug = true
   }
-  deps = [
-    "${deps_adapter_path}:${hal_module_test_name}",
-    "//third_party/cJSON:cjson",
-  ]
+  deps = [ "${deps_adapter_path}:${hal_module_test_name}" ]
   external_deps = [
     "cJSON:cjson",
     "c_utils:utils",
