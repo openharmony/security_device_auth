@@ -92,6 +92,10 @@ static int CombineJson(CJson *desObj, const CJson *srcObj)
     for (int i = 0; i < len; i++) {
         CJson *item = GetItemFromArray(srcObj, i);
         const char *key = GetItemKey(item);
+        if (key == NULL) {
+            LOGE("key is null.");
+            return HC_ERR_NULL_PTR;
+        }
         CJson *payload = GetObjFromJson(desObj, FIELD_PAYLOAD);
         if (strcmp(key, FIELD_PAYLOAD) == 0 && payload != NULL) {
             res = CombineJson(payload, item);

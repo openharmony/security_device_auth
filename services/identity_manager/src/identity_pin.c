@@ -355,9 +355,6 @@ static int32_t GetSharedSecretByUrl(
 static int32_t GetCredInfoByPeerCert(const CJson *in, const CertInfo *certInfo, IdentityInfo **returnInfo)
 {
     // NOT SUPPORT FOR PIN
-    (void)in;
-    (void)certInfo;
-    (void)returnInfo;
     return HC_ERR_ALG_FAIL;
 }
 
@@ -365,10 +362,6 @@ static int32_t GetSharedSecretByPeerCert(
     const CJson *in, const CertInfo *peerCertInfo, ProtocolAlgType protocolType, Uint8Buff *sharedSecret)
 {
     // NOT SUPPORT FOR PIN
-    (void)in;
-    (void)peerCertInfo;
-    (void)protocolType;
-    (void)sharedSecret;
     return HC_ERR_ALG_FAIL;
 }
 

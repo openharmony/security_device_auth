@@ -24,29 +24,39 @@
 #include "hal_error.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
+#include "account_auth_plugin_proxy.h"
+static const char *IDENTITY_FROM_DB = "identityFromDB";
+static const int UPGRADE_OS_ACCOUNT_ID = 100;
 
-struct PackageNameMap {
-    const char *packageName;
-    const char *packageCompatibleName;
-};
-
-static const struct PackageNameMap G_PKG_MAP[] = {
-    {CAST_APP_ID, CAST_COMPATIBLE_APP_ID}
-};
-
-static bool checkUpgradeIdentity(uint8_t upgradeFlag, const char *appId, const char *identityFromDB)
+int32_t CheckUpgradeIdentity(uint8_t upgradeFlag, const char *appId, const char *identityFromDB)
 {
-    if (upgradeFlag != 1) {
-        return false;
+    if (upgradeFlag != IS_UPGRADE) {
+        LOGW("Failed to check upgrade indentity, not upgrade situation.");
+        return HC_ERROR;
     }
-    for (uint32_t i = 0; i < sizeof(G_PKG_MAP) / sizeof(G_PKG_MAP[0]); i++) {
-        if ((strcmp(G_PKG_MAP[i].packageCompatibleName, appId) == 0) &&
-            (strcmp(G_PKG_MAP[i].packageName, identityFromDB) == 0)) {
-            LOGI("CheckUpgradeIdentity pass, identity name: %s", identityFromDB);
-            return true;
-        }
+    CJson *upgradeJson = CreateJson();
+    if (upgradeJson == NULL) {
+        LOGE("Failed to create upgradeIdentity json.");
+        return HC_ERR_JSON_CREATE;
     }
-    return false;
+    if (AddStringToJson(upgradeJson, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        FreeJson(upgradeJson);
+        LOGE("Failed to add appId.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (identityFromDB != NULL && AddStringToJson(upgradeJson, IDENTITY_FROM_DB, identityFromDB) != HC_SUCCESS) {
+        FreeJson(upgradeJson);
+        LOGE("Failed to add identityFromDB.");
+        return HC_ERR_JSON_ADD;
+    }
+    int32_t res = ExcuteCredMgrCmd(0, CHECK_UPGRADE_IDENTITY, upgradeJson, NULL);
+    FreeJson(upgradeJson);
+    if (res != HC_SUCCESS) {
+        LOGW("Check upgradeIdentity failed, appId or identity may be incorrect.");
+        return res;
+    }
+    LOGI("Check upgradeIdentity successfully.");
+    return res;
 }
 
 static bool IsGroupManager(const char *appId, const TrustedGroupEntry *entry)
@@ -55,7 +65,7 @@ static bool IsGroupManager(const char *appId, const TrustedGroupEntry *entry)
     HcString *manager = NULL;
     FOR_EACH_HC_VECTOR(entry->managers, index, manager) {
         if ((strcmp(StringGet(manager), appId) == 0) ||
-            checkUpgradeIdentity(entry->upgradeFlag, appId, StringGet(manager))) {
+            CheckUpgradeIdentity(entry->upgradeFlag, appId, StringGet(manager)) == HC_SUCCESS) {
             return true;
         }
     }
@@ -68,7 +78,7 @@ static bool IsGroupFriend(const char *appId, const TrustedGroupEntry *entry)
     HcString *trustedFriend = NULL;
     FOR_EACH_HC_VECTOR(entry->friends, index, trustedFriend) {
         if ((strcmp(StringGet(trustedFriend), appId) == 0) ||
-            checkUpgradeIdentity(entry->upgradeFlag, appId, StringGet(trustedFriend))) {
+            CheckUpgradeIdentity(entry->upgradeFlag, appId, StringGet(trustedFriend)) == HC_SUCCESS) {
             return true;
         }
     }
@@ -198,7 +208,7 @@ bool IsGroupOwner(int32_t osAccountId, const char *groupId, const char *appId)
     HcString entryManager = HC_VECTOR_GET(&entry->managers, 0);
     const char *groupOwner = StringGet(&entryManager);
     if ((strcmp(groupOwner, appId) == 0) ||
-        checkUpgradeIdentity(entry->upgradeFlag, appId, groupOwner)) {
+        CheckUpgradeIdentity(entry->upgradeFlag, appId, groupOwner) == HC_SUCCESS) {
         DestroyGroupEntry(entry);
         return true;
     }
