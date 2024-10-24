@@ -501,7 +501,8 @@ static int32_t CheckGroupVisibility(const CJson *context)
         LOGE("Failed to get group entry!");
         return HC_ERR_GROUP_NOT_EXIST;
     }
-    if (strcmp(appId, "com.huawei.health") == 0 && entry->upgradeFlag == 1) {
+    int32_t res = CheckUpgradeIdentity(entry->upgradeFlag, appId, NULL);
+    if (res == HC_SUCCESS) {
         LOGI("Group is from upgrade, no need to check visibility.");
         DestroyGroupEntry(entry);
         return HC_SUCCESS;
@@ -928,6 +929,7 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
         FreeJson(context);
         return res;
     }
+    DEV_AUTH_REPORT_CALL_EVENT(authReqId, AUTH_DEV_EVENT, appId, osAccountId, res);
     SessionInitParams params = { context, *gaCallback };
     res = OpenDevSession(authReqId, appId, &params);
     FreeJson(context);
@@ -1219,7 +1221,7 @@ static int32_t GetPseudonymId(int32_t osAccountId, const char *indexKey, char **
 
 DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const char *reqJsonStr, char **returnData)
 {
-    if (reqJsonStr == NULL || returnData == NULL || HcStrlen(reqJsonStr) > MAX_DATA_BUFFER_SIZE) {
+    if (reqJsonStr == NULL || returnData == NULL) {
         LOGE("Invalid params!");
         return HC_ERR_INVALID_PARAMS;
     }

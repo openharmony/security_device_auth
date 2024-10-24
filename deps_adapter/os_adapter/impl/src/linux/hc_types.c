@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-#define MAX_STR_LEN 8192
+#define MAX_STR_LEN (512 * 1024)
 
 void* HcMalloc(uint32_t size, char val)
 {

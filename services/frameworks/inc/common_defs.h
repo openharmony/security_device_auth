@@ -130,6 +130,7 @@
 #define FIELD_LOCAL_DEVICE_TYPE "localDeviceType"
 #define FIELD_PLUGIN_EXT_DATA "originPeerData"
 #define FIELD_META_NODE_TYPE "metaNodeType"
+#define FIELD_UPGRADE_FLAG "upgradeFlag"
 
 #define INVALID_MODULE_TYPE (-1)
 #define GROUP_ERR_MSG 0x8080
@@ -152,12 +153,13 @@
 #define GROUP_MANAGER_PACKAGE_NAME "com.huawei.devicegroupmanage"
 #define DM_APP_ID "ohos.distributedhardware.devicemanager"
 #define SOFTBUS_APP_ID "softbus_auth"
-#define CAST_APP_ID "com.huawei.android.airsharing"
-#define CAST_COMPATIBLE_APP_ID "com.huawei.android.airsharing+CastPlusDiscoveryModule"
 #define DEFAULT_RETURN_KEY_LENGTH 32
 #define MAX_BUFFER_LEN 1024
 #define MAX_DATA_BUFFER_SIZE 4096
 #define MAX_AUTH_ID_LEN 256
+
+#define IS_UPGRADE 1
+#define IS_NOT_UPGRADE 0
 
 #define COMPATIBLE_GROUP 512
 #define GROUP_TYPE_INVALID (-1)
@@ -272,6 +274,7 @@ typedef enum {
     REQUEST_SIGNATURE = 6,
     GET_SHARED_SECRET_BY_PEER_CERT = 8,
     UPGRADE_DATA = 10,
+    CHECK_UPGRADE_IDENTITY = 11,
 } CredentialCode;
 
 #endif

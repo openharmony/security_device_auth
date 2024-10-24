@@ -448,7 +448,12 @@ declare_args() {
   identity_manager_files = []
 }
 
-if (enable_session_v2 == true) {
+if (defined(ohos_lite)) {
+  identity_manager_files = [
+    "${identity_manager_path}/src/mock/identity_manager_mock.c",
+    "${identity_manager_path}/src/mock/identity_common_mock.c",
+  ]
+} else {
   identity_manager_files = [
     "${identity_manager_path}/src/identity_manager.c",
     "${identity_manager_path}/src/credential_operator.c",
@@ -456,10 +461,5 @@ if (enable_session_v2 == true) {
     "${identity_manager_path}/src/identity_group.c",
     "${identity_manager_path}/src/identity_p2p.c",
     "${identity_manager_path}/src/identity_pin.c",
-  ]
-} else {
-  identity_manager_files = [
-    "${identity_manager_path}/src/mock/identity_manager_mock.c",
-    "${identity_manager_path}/src/mock/identity_common_mock.c",
   ]
 }

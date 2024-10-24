@@ -72,7 +72,16 @@ static FILE *HcFileOpenWrite(const char *path)
             return NULL;
         }
     }
-    return fopen(path, "wb+");
+    FILE *fp = fopen(path, "wb+");
+    if (fp == NULL) {
+        LOGE("[OS]: fopen fail. [errno]: %d", errno);
+        return NULL;
+    }
+    int res = fchmod(fileno(fp), S_IRUSR | S_IWUSR | S_IRGRP);
+    if (res != 0) {
+        LOGW("[OS]: fchmod fail. [Res]: %d, [errno]: %d", res, errno);
+    }
+    return fp;
 }
 
 int HcFileOpen(const char *path, int mode, FileHandle *file)
