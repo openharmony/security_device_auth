@@ -22,7 +22,6 @@
 #include "hc_time.h"
 #include "hc_types.h"
 #include "hidump_adapter.h"
-#include "hisysevent_adapter.h"
 
 #define ENABLE_PERFORMANCE_DUMPER "--enable"
 #define DISABLE_PERFORMANCE_DUMPER "--disable"
@@ -141,23 +140,6 @@ static void UpdateDataBySelfIndex(PerformData *performData, int64_t time)
     }
 }
 
-#ifdef DEV_AUTH_HIVIEW_ENABLE
-static void ReportCallEventWithTime(const char *funcName, const int32_t processCode, const int64_t time)
-{
-    DevAuthCallEvent eventData;
-    eventData.appId = DEFAULT_APPID;
-    eventData.funcName = funcName;
-    eventData.osAccountId = DEFAULT_OS_ACCOUNT;
-    eventData.callResult = (int32_t)time;
-    eventData.processCode = processCode;
-    eventData.credType = DEFAULT_CRED_TYPE;
-    eventData.groupType = DEFAULT_GROUP_TYPE;
-    eventData.executionTime = time;
-    eventData.extInfo = DEFAULT_EXT_INFO;
-    DEV_AUTH_REPORT_CALL_EVENT(eventData);
-}
-#endif
-
 static void UpdateDataByInputIndex(PerformData *performData, PerformTimeIndex timeIndex, int64_t time)
 {
     if (timeIndex == ON_SESSION_KEY_RETURN_TIME) {
@@ -168,14 +150,8 @@ static void UpdateDataByInputIndex(PerformData *performData, PerformTimeIndex ti
         int64_t totalTime = performData->onFinishTime - performData->firstStartTime;
         if (performData->isBind) {
             LOGI("Bind consume time: %lld, requestId: %lld", totalTime, performData->reqId);
-            #ifdef DEV_AUTH_HIVIEW_ENABLE
-            ReportCallEventWithTime(BIND_CONSUME_EVENT, PROCESS_UPDATE_DATA_BY_INPUT_INDEX, totalTime);
-            #endif
         } else {
             LOGI("Auth consume time: %lld, requestId: %lld", totalTime, performData->reqId);
-            #ifdef DEV_AUTH_HIVIEW_ENABLE
-            ReportCallEventWithTime(AUTH_CONSUME_EVENT, PROCESS_UPDATE_DATA_BY_INPUT_INDEX, totalTime);
-            #endif
         }
     } else {
         LOGE("Invalid timeIndex!");
@@ -591,4 +567,16 @@ void DestroyPerformanceDumper(void)
     DestroyHcMutex(g_performDataMutex);
     HcFree(g_performDataMutex);
     g_performDataMutex = NULL;
+}
+
+int64_t GetTotalConsumeTimeByReqId(int64_t reqId)
+{
+    uint32_t index;
+    PerformData **performData;
+    FOR_EACH_HC_VECTOR(g_performDataVec, index, performData) {
+        if ((*performData)->reqId == reqId) {
+            return (*performData)->totalConsumeTime;
+        }
+    }
+    return 0;
 }

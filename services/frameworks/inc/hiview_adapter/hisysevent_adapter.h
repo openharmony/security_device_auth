@@ -25,27 +25,12 @@
 #define ADD_MULTI_MEMBER_EVENT "AddMultiMember"
 #define DEL_MULTI_MEMBER_EVENT "DelMultiMember"
 #define AUTH_DEV_EVENT "AuthDevice"
-#define DESTROY_DEVICE_AUTH_SERVICE_EVENT "DestroyDeviceAuthService"
-#define INIT_DEVICE_AUTH_SERVICE_EVENT "InitDeviceAuthService"
 
 #define CANCEL_REQUEST_EVENT "CancelRequest"
 #define GET_REAL_INFO_EVENT "GetRealInfo"
 #define GET_PSEUDONYM_ID_EVENT "GetPseudonymId"
-#define REG_CALLBACK_EVENT "RegCallback"
-#define UN_REG_GROUP_MANAGER_CALLBACK_EVENT "UnRegGroupManagerCallback"
-#define REG_LISTENER_EVENT "RegListener"
-#define UN_REG_LISTENER_EVENT "UnRegListener"
 #define GET_REGISTER_INFO_EVENT "GetRegisterInfo"
-#define CHECK_ACCESS_TO_GROUP_EVENT "CheckAccessToGroup"
-#define GET_ACCESSIBLE_GROUP_INFO_BY_ID_EVENT "GetAccessibleGroupInfoById"
-#define GET_ACCESSIBLE_GROUP_INFO_EVENT "GetAccessibleGroupInfo"
-#define GET_ACCESSIBLE_JOINED_GROUPS_EVENT "GetAccessibleJoinedGroups"
-#define GET_ACCESSIBLE_RELATED_GROUPS_EVENT "GetAccessibleRelatedGroups"
-#define GET_ACCESSIBLE_DEVICE_INFO_BY_ID_EVENT "GetAccessibleDeviceInfoById"
-#define GET_ACCESSIBLE_TRUSTED_DEVICES_EVENT "GetAccessibleTrustedDevices"
-#define IS_DEVICE_IN_ACCESSIBLE_GROUP_EVENT "IsDeviceInAccessibleGroup"
 #define GET_PK_INFO_LIST_EVENT "GetPkInfoList"
-#define DESTROY_INFO_EVENT "DestroyInfo"
 
 #define ADD_MEMBER_WITH_LITE_COMPATIBILITY "AddMemberWithLiteCompatibility"
 #define ADD_MEMBER_WITH_LITE_STANDARD "AddMemberWithLiteStandard"
@@ -55,6 +40,7 @@
 
 #define DEFAULT_GROUP_TYPE 256
 #define DEFAULT_CRED_TYPE 0
+#define DEFAULT_CALL_RESULT 0
 #define DEFAULT_APPID NULL
 
 #define DEFAULT_EXECUTION_TIME 0
@@ -65,17 +51,14 @@
 #include <stdint.h>
 
 enum DevAuthReportProcessCode {
-    PROCESS_ADD_MEMBER_TO_GROUP = 0x001000,
-    PROCESS_AUTH_DEVICE,
-    PROCESS_UPDATE_DATA_BY_INPUT_INDEX,
-    PROCESS_REQUEST_CREATE_GROUP,
-    PROCESS_REQUEST_DELETE_GROUP,
-    PROCESS_REQUEST_DELETE_MEMBER_FROM_GROUP,
-    PREOCESS_REQUEST_ADD_MULTI_MEMBERS_TO_GROUP,
-    PROCESS_REQUEST_DEL_MULTI_MEMBERS_FROM_GROUP,
-    PROCESS_FAULT_REPORT_WITH_TYPE,
-    PROCESS_HANDLE_RESTORE_CALL,
-    PROCESS_FAULT_REPORT_WITH_OP_CODE
+    PROCESS_BIND = 0x001000,
+    PROCESS_AUTH,
+    PROCESS_CREATE_GROUP,
+    PROCESS_DELETE_GROUP,
+    PROCESS_DELETE_MEMBER_FROM_GROUP,
+    PROCESS_ADD_MULTI_MEMBERS_TO_GROUP,
+    PROCESS_DEL_MULTI_MEMBERS_FROM_GROUP,
+    PROCESS_UPDATE
 };
 
 #define DEFAULT_PNAMEID "device_auth"
@@ -109,8 +92,8 @@ extern "C" {
 #endif
 
 typedef struct {
-    const char *appId;
     const char *funcName;
+    const char *appId;
     int32_t osAccountId;
     int32_t callResult;
     int32_t processCode;

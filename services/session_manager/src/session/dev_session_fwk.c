@@ -32,6 +32,7 @@
 #include "hc_time.h"
 #include "hc_types.h"
 #include "performance_dumper.h"
+#include "hisysevent_adapter.h"
 
 #define FIELD_MSG "msg"
 #define FIELD_TYPE "type"
@@ -225,10 +226,30 @@ static bool IsMetaNode(const CJson *context)
     return GetStringFromJson(context, FIELD_META_NODE_TYPE) != NULL;
 }
 
+static void ReportBindAndAuthFaultEvent(const SessionImpl *impl, int32_t errorCode)
+{
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    bool isBind = true;
+    (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
+    if (isBind) {
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(BIND_CONSUME_EVENT,
+            PROCESS_BIND, errorCode);
+    } else {
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(AUTH_CONSUME_EVENT,
+            PROCESS_AUTH, errorCode);
+    }
+    return;
+#endif
+    (void)impl;
+    (void)errorCode;
+    return;
+}
+
 static void OnDevSessionError(const SessionImpl *impl, int32_t errorCode, const char *errorReturn)
 {
     ProcessErrorCallback(impl->base.id, impl->base.opCode, errorCode, errorReturn, &impl->base.callback);
     CloseChannel(impl->channelType, impl->channelId);
+    ReportBindAndAuthFaultEvent(impl, errorCode);
 }
 
 static int32_t StartSession(DevSession *self)
@@ -539,6 +560,28 @@ static char *GetSessionReturnData(const SessionImpl *impl)
     return returnDataStr;
 }
 
+static void ReportBindAndAuthCallEvent(int64_t reqId, const char *funcName, const int32_t processCode)
+{
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    DevAuthCallEvent eventData;
+    eventData.appId = DEFAULT_APPID;
+    eventData.funcName = funcName;
+    eventData.osAccountId = DEFAULT_OS_ACCOUNT;
+    eventData.callResult = DEFAULT_CALL_RESULT;
+    eventData.processCode = processCode;
+    eventData.credType = DEFAULT_CRED_TYPE;
+    eventData.groupType = DEFAULT_GROUP_TYPE;
+    eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQID(reqId);
+    eventData.extInfo = DEFAULT_EXT_INFO;
+    DEV_AUTH_REPORT_CALL_EVENT(eventData);
+    return;
+#endif
+    (void)reqId;
+    (void)funcName;
+    (void)processCode;
+    return;
+}
+
 static void OnDevSessionFinish(const SessionImpl *impl)
 {
     UPDATE_PERFORM_DATA_BY_INPUT_INDEX(impl->base.id, ON_SESSION_KEY_RETURN_TIME, HcGetCurTimeInMillis());
@@ -553,6 +596,9 @@ static void OnDevSessionFinish(const SessionImpl *impl)
     (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
     if (isBind) {
         NotifyBindResult(impl->channelType, impl->channelId);
+        ReportBindAndAuthCallEvent(impl->base.id, BIND_CONSUME_EVENT, PROCESS_BIND);
+    } else {
+        ReportBindAndAuthCallEvent(impl->base.id, AUTH_CONSUME_EVENT, PROCESS_AUTH);
     }
     CloseChannel(impl->channelType, impl->channelId);
 }

@@ -631,7 +631,6 @@ static int32_t AddMemberToGroup(int32_t osAccountId, int64_t requestId, const ch
     int32_t res = AddMemberToGroupInner(osAccountId, requestId, appId, addParams);
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     const char *callEventFuncName = GetAddMemberCallEventFuncName(addParams);
-    DEV_AUTH_REPORT_CALL_EVENT_WITH_RESULT(appId, callEventFuncName, osAccountId, res, PROCESS_ADD_MEMBER_TO_GROUP);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, addParams, appId, callEventFuncName);
 #endif
     return res;
@@ -945,7 +944,6 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
         return res;
     }
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, authParams, appId, AUTH_DEV_EVENT);
-    DEV_AUTH_REPORT_CALL_EVENT_WITH_RESULT(appId, AUTH_DEV_EVENT, osAccountId, res, PROCESS_AUTH_DEVICE);
     SessionInitParams params = { context, *gaCallback };
     res = OpenDevSession(authReqId, appId, &params);
     FreeJson(context);
@@ -1538,7 +1536,6 @@ static void OnBytesReceivedCb(int64_t requestId, uint8_t *data, uint32_t dataLen
 static int32_t RegCallback(const char *appId, const DeviceAuthCallback *callback)
 {
     SET_LOG_MODE(NORMAL_MODE);
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(DEFAULT_OS_ACCOUNT, NULL, appId, REG_CALLBACK_EVENT);
     if ((appId == NULL) || (callback == NULL)) {
         LOGE("The input parameters contains NULL value!");
         return HC_ERR_INVALID_PARAMS;
@@ -1559,7 +1556,6 @@ static int32_t RegCallback(const char *appId, const DeviceAuthCallback *callback
 DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 {
     LOGI("[Service]: Start to init device auth service!");
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(DEFAULT_OS_ACCOUNT, NULL, NULL, INIT_DEVICE_AUTH_SERVICE_EVENT);
     if (CheckInit() == FINISH_INIT) {
         LOGI("[End]: [Service]: Device auth service is running!");
         return HC_SUCCESS;
@@ -1585,7 +1581,6 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
 {
     LOGI("[Service]: Start to destroy device auth service!");
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(DEFAULT_OS_ACCOUNT, NULL, NULL, DESTROY_DEVICE_AUTH_SERVICE_EVENT);
     if (CheckDestroy() == FINISH_DESTROY) {
         LOGI("[End]: [Service]: The service has not been initialized!");
         return;
