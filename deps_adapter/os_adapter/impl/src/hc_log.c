@@ -21,6 +21,8 @@
 
 #define LOG_PRINT_MAX_LEN 2048
 
+static const char *SENSITIVE_WORDS[] = { "droid" };
+
 #ifdef DEV_AUTH_DEBUG_PRINTF
 
 #include <stdio.h>
@@ -65,6 +67,23 @@ static void DevAuthOutPrint(const char *buf, DevAuthLogLevel level)
     }
 }
 
+static void ReplaceSensitiveWord(char *msg, const char *sensitiveWord)
+{
+    uint32_t len = HcStrlen(sensitiveWord);
+    char *ptr = strstr(msg, sensitiveWord);
+    while (ptr != NULL) {
+        (void)memset_s(ptr, len, '*', len);
+        ptr = strstr(ptr + 1, sensitiveWord);
+    }
+}
+
+static void DesensitizeLogMsg(char *msg)
+{
+    for (uint32_t i = 0; i < sizeof(SENSITIVE_WORDS) / sizeof(SENSITIVE_WORDS[0]); i++) {
+        ReplaceSensitiveWord(msg, SENSITIVE_WORDS[i]);
+    }
+}
+
 void DevAuthLogPrint(DevAuthLogLevel level, const char *funName, const char *fmt, ...)
 {
     int32_t ulPos = 0;
@@ -86,6 +105,7 @@ void DevAuthLogPrint(DevAuthLogLevel level, const char *funName, const char *fmt
     if (res < 0) {
         return;
     }
+    DesensitizeLogMsg(outStr);
     DevAuthOutPrint(outStr, level);
 }
 
