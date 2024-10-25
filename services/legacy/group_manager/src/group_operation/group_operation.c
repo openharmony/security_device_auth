@@ -686,7 +686,7 @@ static int32_t RequestAddMultiMembersToGroup(int32_t osAccountId, const char *ap
     int32_t res = AddMultiMembersToGroupInner(osAccountId, appId, addParams);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, addParams, appId, ADD_MULTI_MEMBER_EVENT);
     DEV_AUTH_REPORT_CALL_EVENT_WITH_RESULT(appId, ADD_MULTI_MEMBER_EVENT, osAccountId,
-        res, PREOCESS_ADD_MULTI_MEMBERS_TO_GROUP);
+        res, PROCESS_ADD_MULTI_MEMBERS_TO_GROUP);
     return res;
 }
 
