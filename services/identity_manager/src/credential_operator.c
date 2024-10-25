@@ -606,7 +606,7 @@ static int32_t CheckImportConditions(CredentialRequestParamT *param, Uint8Buff *
         LOGD("Generate keyAlias failed.");
         return res;
     }
-    
+
     res = IsSelfKeyPairExist(param->osAccountId, KEY_ALIAS_P2P_AUTH);
     if (res != HC_SUCCESS) {
         LOGD("self Key pair not exist.");

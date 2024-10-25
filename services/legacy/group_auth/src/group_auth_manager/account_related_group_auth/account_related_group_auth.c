@@ -673,7 +673,7 @@ static int32_t GetAuthParamsVecForServer(const CJson *dataFromClient, ParamsVecF
         FreeJson(dupData);
         return res;
     }
-    
+
     if (authParamsVec->pushBack(authParamsVec, (const void **)&dupData) == NULL) {
         LOGE("Failed to push json data to vector in account-related auth!");
         FreeJson(dupData);
