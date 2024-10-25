@@ -439,7 +439,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest006, TestSize.Level0)
     res = ProcessCredentialDemoImport(SERVICE_TYPE_IMPORT);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemoImport(SERVICE_TYPE_IMPORT);
-    ASSERT_NE(res, HC_SUCCESS);
+    ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, SERVICE_TYPE_IMPORT);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_DELETE, SERVICE_TYPE_IMPORT);

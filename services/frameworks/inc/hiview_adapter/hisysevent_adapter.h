@@ -16,6 +16,8 @@
 #ifndef HISYSEVENT_ADAPTER_H
 #define HISYSEVENT_ADAPTER_H
 
+#include <stddef.h>
+
 #define CREATE_GROUP_EVENT "CreateGroup"
 #define DELETE_GROUP_EVENT "DeleteGroup"
 #define ADD_MEMBER_EVENT "AddMember"
@@ -26,6 +28,10 @@
 #define ADD_MEMBER_WITH_LITE_COMPATIBILITY "AddMemberWithLiteCompatibility"
 #define ADD_MEMBER_WITH_LITE_STANDARD "AddMemberWithLiteStandard"
 #define UPGRADE_DATA_EVENT "UpgradeData"
+
+#define DEFAULT_GROUP_TYPE 256
+#define DEFAULT_CRED_TYPE 0
+#define DEFAULT_APPID NULL
 
 #ifndef DEV_AUTH_HIVIEW_ENABLE
 

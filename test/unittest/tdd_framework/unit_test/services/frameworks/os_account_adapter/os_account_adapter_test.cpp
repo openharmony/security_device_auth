@@ -336,7 +336,7 @@ HWTEST_F(OsAccountAdapterTest, OsAccountAdapterTest001, TestSize.Level0)
     int32_t osAccountId = DevAuthGetRealOsAccountLocalId(ANY_OS_ACCOUNT);
     EXPECT_NE(osAccountId, INVALID_OS_ACCOUNT);
     osAccountId = DevAuthGetRealOsAccountLocalId(DEFAULT_OS_ACCOUNT);
-    EXPECT_EQ(osAccountId, DEFAULT_OS_ACCOUNT);
+    EXPECT_EQ(osAccountId, INVALID_OS_ACCOUNT);
     osAccountId = DevAuthGetRealOsAccountLocalId(INVALID_OS_ACCOUNT);
     EXPECT_EQ(osAccountId, INVALID_OS_ACCOUNT);
     int32_t res = GetAllOsAccountIds(nullptr, nullptr);

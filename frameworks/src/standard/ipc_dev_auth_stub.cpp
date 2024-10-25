@@ -49,7 +49,7 @@ static const uint32_t RESTORE_CODE = 14701;
 static const uint32_t DEFAULT_UPGRADE_OS_ACCOUNT_ID = 100;
 #endif
 
-#define MAX_DATA_LEN 10240
+#define MAX_DATA_LEN 102400
 
 ServiceDevAuth::ServiceDevAuth(bool serialInvokeFlag) : IRemoteStub(serialInvokeFlag)
 {}

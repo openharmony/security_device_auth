@@ -51,7 +51,7 @@ void DevAuthReportFaultEvent(const char *funcName, int32_t faultReason, uint8_t 
 {
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::DEVICE_AUTH,
-        STR_CALL_EVENT, OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
+        STR_FAULT_EVENT, OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
         STR_FUNCTION_NAME, ((funcName != NULL) ? funcName : STR_UNKNOWN),
         STR_FAULT_REASON, faultReason,
         STR_CRED_TYPE, credType,
@@ -64,7 +64,7 @@ void DevAuthReportStatisticEvent(const char *appId, int32_t callResult, const ch
 {
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::DEVICE_AUTH,
-        STR_CALL_EVENT, OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        STR_STATISTIC_EVENT, OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
         STR_APP_ID, ((appId != NULL) ? appId : STR_UNKNOWN),
         STR_CALL_RESULT, callResult,
         STR_FUNCTION_NAME, ((funcName != NULL) ? funcName : STR_UNKNOWN),

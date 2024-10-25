@@ -35,7 +35,7 @@ IMPLEMENT_HC_VECTOR(PerformDataVec, PerformData*, 1)
 static bool g_isInit = false;
 static HcMutex *g_performDataMutex = NULL;
 static PerformDataVec g_performDataVec;
-static bool g_isPerformDumpEnabled = false;
+static bool g_isPerformDumpEnabled = true;
 static uint32_t g_bindClientSessionNum = 0;
 static uint32_t g_bindServerSessionNum = 0;
 static uint32_t g_authClientSessionNum = 0;
@@ -207,21 +207,27 @@ static void DumpPerformData(int fd, PerformData *performData)
     int64_t firstConsume = 0;
     if (performData->firstStartTime != 0) {
         firstConsume = GetConsumeTimeByIndex(performData, FIRST_START_TIME);
+        LOGI("firstConsume time:  %" PRId64 " milliseconds", firstConsume);
     }
     int64_t secondConsume = 0;
     if (performData->secondStartTime != 0) {
         secondConsume = GetConsumeTimeByIndex(performData, SECOND_START_TIME);
+        LOGI("secondConsume time:  %" PRId64 " milliseconds", secondConsume);
     }
     int64_t thirdConsume = 0;
     if (performData->thirdStartTime != 0) {
         thirdConsume = GetConsumeTimeByIndex(performData, THIRD_START_TIME);
+        LOGI("thirdConsume time:  %" PRId64 " milliseconds", thirdConsume);
     }
     int64_t fourthConsume = 0;
     if (performData->fourthStartTime != 0) {
         fourthConsume = GetConsumeTimeByIndex(performData, FOURTH_START_TIME);
+        LOGI("fourthConsume time:  %" PRId64 " milliseconds", fourthConsume);
     }
     int64_t innerConsume = firstConsume + secondConsume + thirdConsume + fourthConsume;
+    LOGI("innerConsume time:  %" PRId64 " milliseconds", innerConsume);
     int64_t totalTime = performData->onFinishTime - performData->firstStartTime;
+    LOGI("totalTime time:  %" PRId64 " milliseconds", totalTime);
     char reqIdStr[MAX_REQUEST_ID_LEN] = { 0 };
     if (sprintf_s(reqIdStr, MAX_REQUEST_ID_LEN, "%lld", performData->reqId) <= 0) {
         LOGE("Failed to get requestId string!");
