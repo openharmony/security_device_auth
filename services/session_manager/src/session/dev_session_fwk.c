@@ -571,7 +571,7 @@ static void ReportBindAndAuthCallEvent(int64_t reqId, const char *funcName, cons
     eventData.processCode = processCode;
     eventData.credType = DEFAULT_CRED_TYPE;
     eventData.groupType = DEFAULT_GROUP_TYPE;
-    eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQID(reqId);
+    eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQ_ID(reqId);
     eventData.extInfo = DEFAULT_EXT_INFO;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);
     return;
