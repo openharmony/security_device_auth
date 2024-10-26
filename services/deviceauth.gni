@@ -436,10 +436,10 @@ if (defined(ohos_lite)) {
 
 deviceauth_ipc_files = [
   "${frameworks_path}/src/${ipc_adapt_path}/ipc_adapt.${ipc_src_suffix}",
-  "${frameworks_path}/src/${ipc_adapt_path}/ipc_dev_auth_proxy.${ipc_src_suffix}",
-  "${frameworks_path}/src/${ipc_adapt_path}/ipc_dev_auth_stub.${ipc_src_suffix}",
-  "${frameworks_path}/src/${ipc_adapt_path}/ipc_callback_proxy.${ipc_src_suffix}",
-  "${frameworks_path}/src/${ipc_adapt_path}/ipc_callback_stub.${ipc_src_suffix}",
+  "${frameworks_path}/src/${ipc_adapt_path}/client/ipc_dev_auth_proxy.${ipc_src_suffix}",
+  "${frameworks_path}/src/${ipc_adapt_path}/server/ipc_dev_auth_stub.${ipc_src_suffix}",
+  "${frameworks_path}/src/${ipc_adapt_path}/client/ipc_callback_proxy.${ipc_src_suffix}",
+  "${frameworks_path}/src/${ipc_adapt_path}/server/ipc_callback_stub.${ipc_src_suffix}",
 ]
 
 identity_manager_inc = [ "${identity_manager_path}/inc" ]
