@@ -567,7 +567,8 @@ static char *GetSessionReturnData(const SessionImpl *impl)
     return returnDataStr;
 }
 
-static void ReportBindAndAuthCallEvent(const SessionImpl *impl, bool isBind, const char *funcName, const int32_t processCode)
+static void ReportBindAndAuthCallEvent(const SessionImpl *impl, bool isBind,
+    const char *funcName, const int32_t processCode)
 {
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData;
@@ -583,9 +584,9 @@ static void ReportBindAndAuthCallEvent(const SessionImpl *impl, bool isBind, con
     } else {
         const int32_t AUTH_ACCOUNT_UNRELATED_GROUP_TYPE = 256;
         const int32_t AUTH_IDENTICAL_ACCOUNT_GROUP_TYPE = 1;
-        eventData.groupType = (impl->base.opCode == 
-            AUTH_FORM_ACCOUNT_UNRELATED) ? AUTH_ACCOUNT_UNRELATED_GROUP_TYPE : 
-            AUTH_IDENTICAL_ACCOUNT_GROUP_TYPE;
+        eventData.groupType = (impl->base.opCode == AUTH_FORM_ACCOUNT_UNRELATED)
+            ? AUTH_ACCOUNT_UNRELATED_GROUP_TYPE
+            : AUTH_IDENTICAL_ACCOUNT_GROUP_TYPE;
     }
     eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQ_ID(impl->base.id);
     eventData.extInfo = DEFAULT_EXT_INFO;
