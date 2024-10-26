@@ -226,23 +226,23 @@ static bool IsMetaNode(const CJson *context)
     return GetStringFromJson(context, FIELD_META_NODE_TYPE) != NULL;
 }
 
-static void ReportBindAndAuthCallEvent(const SessionImpl *impl)
+static void ReportBindAndAuthCallEvent(const SessionImpl *impl, int32_t callResult, bool isV1Session)
 {
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData;
     eventData.appId = impl->base.appId;
     (void)GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &eventData.osAccountId);
-    eventData.callResult = DEFAULT_CALL_RESULT;
+    eventData.callResult = callResult;
     eventData.credType = DEFAULT_CRED_TYPE;
     bool isBind = true;
     (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
     if (isBind) {
         eventData.funcName = ADD_MEMBER_EVENT;
-        eventData.processCode = PROCESS_BIND_V2;
+        eventData.processCode = isV1Session ? PROCESS_BIND_V1 : PROCESS_BIND_V2;
         eventData.groupType = PEER_TO_PEER_GROUP;
     } else {
         eventData.funcName = AUTH_DEV_EVENT;
-        eventData.processCode = PROCESS_AUTH_V2;
+        eventData.processCode = isV1Session ? PROCESS_AUTH_V1 : PROCESS_AUTH_V2;
         eventData.groupType = (impl->base.opCode == AUTH_FORM_ACCOUNT_UNRELATED)
             ? PEER_TO_PEER_GROUP
             : IDENTICAL_ACCOUNT_GROUP;
@@ -253,6 +253,8 @@ static void ReportBindAndAuthCallEvent(const SessionImpl *impl)
     return;
 #endif
     (void)impl;
+    (void)callResult;
+    (void)isV1Session;
     return;
 }
 
@@ -287,7 +289,7 @@ static void OnDevSessionError(const SessionImpl *impl, int32_t errorCode, const 
     ProcessErrorCallback(impl->base.id, impl->base.opCode, errorCode, errorReturn, &impl->base.callback);
     CloseChannel(impl->channelType, impl->channelId);
     ReportBindAndAuthFaultEvent(impl, errorCode, isV1Session);
-    ReportBindAndAuthCallEvent(impl);
+    ReportBindAndAuthCallEvent(impl, errorCode, isV1Session);
 }
 
 static int32_t StartSession(DevSession *self)
@@ -613,7 +615,7 @@ static void OnDevSessionFinish(const SessionImpl *impl)
     if (isBind) {
         NotifyBindResult(impl->channelType, impl->channelId);
     }
-    ReportBindAndAuthCallEvent(impl);
+    ReportBindAndAuthCallEvent(impl, HC_SUCCESS, false);
     CloseChannel(impl->channelType, impl->channelId);
 }
 

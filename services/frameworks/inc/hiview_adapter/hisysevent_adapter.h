@@ -27,8 +27,6 @@
 #define AUTH_DEV_EVENT "AuthDevice"
 
 #define CANCEL_REQUEST_EVENT "CancelRequest"
-#define GET_REAL_INFO_EVENT "GetRealInfo"
-#define GET_PSEUDONYM_ID_EVENT "GetPseudonymId"
 #define GET_REGISTER_INFO_EVENT "GetRegisterInfo"
 #define GET_PK_INFO_LIST_EVENT "GetPkInfoList"
 

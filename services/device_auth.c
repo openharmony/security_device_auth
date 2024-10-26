@@ -1208,7 +1208,6 @@ static void CancelRequest(int64_t requestId, const char *appId)
 
 static int32_t GetRealInfo(int32_t osAccountId, const char *pseudonymId, char **realInfo)
 {
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, NULL, NULL, GET_REAL_INFO_EVENT);
     if (pseudonymId == NULL || realInfo == NULL) {
         LOGE("Invalid params!");
         return HC_ERR_INVALID_PARAMS;
@@ -1223,7 +1222,6 @@ static int32_t GetRealInfo(int32_t osAccountId, const char *pseudonymId, char **
 
 static int32_t GetPseudonymId(int32_t osAccountId, const char *indexKey, char **pseudonymId)
 {
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, NULL, NULL, GET_PSEUDONYM_ID_EVENT);
     if (indexKey == NULL || pseudonymId == NULL) {
         LOGE("Invalid params!");
         return HC_ERR_INVALID_PARAMS;
