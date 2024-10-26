@@ -598,39 +598,6 @@ static char *GetSessionReturnData(const SessionImpl *impl)
     return returnDataStr;
 }
 
-static void ReportBindAndAuthCallEvent(const SessionImpl *impl, bool isBind,
-    const char *funcName, const int32_t processCode)
-{
-#ifdef DEV_AUTH_HIVIEW_ENABLE
-    DevAuthCallEvent eventData;
-    eventData.appId = impl->base.appId;
-    eventData.funcName = funcName;
-    (void)GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &eventData.osAccountId);
-    eventData.callResult = DEFAULT_CALL_RESULT;
-    eventData.processCode = processCode;
-    eventData.credType = DEFAULT_CRED_TYPE;
-    if (isBind) {
-        const int32_t BIND_GROUP_TYPE = 256;
-        eventData.groupType = BIND_GROUP_TYPE;
-    } else {
-        const int32_t AUTH_ACCOUNT_UNRELATED_GROUP_TYPE = 256;
-        const int32_t AUTH_IDENTICAL_ACCOUNT_GROUP_TYPE = 1;
-        eventData.groupType = (impl->base.opCode == AUTH_FORM_ACCOUNT_UNRELATED)
-            ? AUTH_ACCOUNT_UNRELATED_GROUP_TYPE
-            : AUTH_IDENTICAL_ACCOUNT_GROUP_TYPE;
-    }
-    eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQ_ID(impl->base.id);
-    eventData.extInfo = DEFAULT_EXT_INFO;
-    DEV_AUTH_REPORT_CALL_EVENT(eventData);
-    return;
-#endif
-    (void)impl;
-    (void)isBind;
-    (void)funcName;
-    (void)processCode;
-    return;
-}
-
 static void OnDevSessionFinish(const SessionImpl *impl)
 {
     UPDATE_PERFORM_DATA_BY_INPUT_INDEX(impl->base.id, ON_SESSION_KEY_RETURN_TIME, HcGetCurTimeInMillis());
