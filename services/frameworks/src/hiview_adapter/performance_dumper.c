@@ -575,7 +575,7 @@ int64_t GetTotalConsumeTimeByReqId(int64_t reqId)
     PerformData **performData;
     FOR_EACH_HC_VECTOR(g_performDataVec, index, performData) {
         if ((*performData)->reqId == reqId) {
-            return (*performData)->totalConsumeTime;
+            return (*performData)->onFinishTime - (*performData)->firstStartTime;
         }
     }
     return 0;
