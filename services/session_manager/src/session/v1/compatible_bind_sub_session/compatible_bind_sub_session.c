@@ -285,8 +285,7 @@ static void ReportV1BindCallEvent(const CompatibleBindSubSession *session)
     eventData.callResult = DEFAULT_CALL_RESULT;
     eventData.processCode = PROCESS_BIND_V1;
     eventData.credType = DEFAULT_CRED_TYPE;
-    const int32_t BIND_GROUP_TYPE = 256;
-    eventData.groupType = BIND_GROUP_TYPE;
+    eventData.groupType = PEER_TO_PEER_GROUP;
     eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQ_ID(session->reqId);
     eventData.extInfo = DEFAULT_EXT_INFO;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);

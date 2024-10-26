@@ -248,8 +248,7 @@ static void ReportV1UnrelatedAuthCallEvent(int64_t requestId, const CJson *authP
     eventData.callResult = DEFAULT_CALL_RESULT;
     eventData.processCode = PROCESS_AUTH_V1;
     eventData.credType = DEFAULT_CRED_TYPE;
-    const int32_t UNRELATED_AUTH_GROUP_TYPE = 256;
-    eventData.groupType = UNRELATED_AUTH_GROUP_TYPE;
+    eventData.groupType = PEER_TO_PEER_GROUP;
     eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQ_ID(requestId);
     eventData.extInfo = DEFAULT_EXT_INFO;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);

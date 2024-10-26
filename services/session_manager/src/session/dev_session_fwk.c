@@ -226,6 +226,36 @@ static bool IsMetaNode(const CJson *context)
     return GetStringFromJson(context, FIELD_META_NODE_TYPE) != NULL;
 }
 
+static void ReportBindAndAuthCallEvent(const SessionImpl *impl)
+{
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    DevAuthCallEvent eventData;
+    eventData.appId = impl->base.appId;
+    (void)GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &eventData.osAccountId);
+    eventData.callResult = DEFAULT_CALL_RESULT;
+    eventData.credType = DEFAULT_CRED_TYPE;
+    bool isBind = true;
+    (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
+    if (isBind) {
+        eventData.funcName = ADD_MEMBER_EVENT;
+        eventData.processCode = PROCESS_BIND_V2;
+        eventData.groupType = PEER_TO_PEER_GROUP;
+    } else {
+        eventData.funcName = AUTH_DEV_EVENT;
+        eventData.processCode = PROCESS_AUTH_V2;
+        eventData.groupType = (impl->base.opCode == AUTH_FORM_ACCOUNT_UNRELATED)
+            ? PEER_TO_PEER_GROUP
+            : IDENTICAL_ACCOUNT_GROUP;
+    }
+    eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQ_ID(impl->base.id);
+    eventData.extInfo = DEFAULT_EXT_INFO;
+    DEV_AUTH_REPORT_CALL_EVENT(eventData);
+    return;
+#endif
+    (void)impl;
+    return;
+}
+
 static void ReportBindAndAuthFaultEvent(const SessionImpl *impl, int32_t errorCode, bool isV1Session)
 {
 #ifdef DEV_AUTH_HIVIEW_ENABLE
@@ -257,6 +287,7 @@ static void OnDevSessionError(const SessionImpl *impl, int32_t errorCode, const 
     ProcessErrorCallback(impl->base.id, impl->base.opCode, errorCode, errorReturn, &impl->base.callback);
     CloseChannel(impl->channelType, impl->channelId);
     ReportBindAndAuthFaultEvent(impl, errorCode, isV1Session);
+    ReportBindAndAuthCallEvent(impl);
 }
 
 static int32_t StartSession(DevSession *self)
@@ -614,10 +645,8 @@ static void OnDevSessionFinish(const SessionImpl *impl)
     (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
     if (isBind) {
         NotifyBindResult(impl->channelType, impl->channelId);
-        ReportBindAndAuthCallEvent(impl, isBind, ADD_MEMBER_EVENT, PROCESS_BIND_V2);
-    } else {
-        ReportBindAndAuthCallEvent(impl, isBind, AUTH_DEV_EVENT, PROCESS_AUTH_V2);
     }
+    ReportBindAndAuthCallEvent(impl);
     CloseChannel(impl->channelType, impl->channelId);
 }
 

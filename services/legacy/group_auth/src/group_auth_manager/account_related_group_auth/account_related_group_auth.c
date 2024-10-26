@@ -820,8 +820,7 @@ static void ReportV1RelatedAuthCallEvent(int64_t requestId, const CJson *authPar
     eventData.callResult = DEFAULT_CALL_RESULT;
     eventData.processCode = PROCESS_AUTH_V1;
     eventData.credType = DEFAULT_CRED_TYPE;
-    const int32_t RELATED_AUTH_GROUP_TYPE = 1;
-    eventData.groupType = RELATED_AUTH_GROUP_TYPE;
+    eventData.groupType = IDENTICAL_ACCOUNT_GROUP;
     eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQ_ID(requestId);
     eventData.extInfo = DEFAULT_EXT_INFO;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);
