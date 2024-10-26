@@ -613,9 +613,9 @@ static void OnDevSessionFinish(const SessionImpl *impl)
     (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
     if (isBind) {
         NotifyBindResult(impl->channelType, impl->channelId);
-        ReportBindAndAuthCallEvent(impl, ADD_MEMBER_EVENT, PROCESS_BIND_V2);
+        ReportBindAndAuthCallEvent(impl, isBind, ADD_MEMBER_EVENT, PROCESS_BIND_V2);
     } else {
-        ReportBindAndAuthCallEvent(impl, AUTH_DEV_EVENT, PROCESS_AUTH_V2);
+        ReportBindAndAuthCallEvent(impl, isBind, AUTH_DEV_EVENT, PROCESS_AUTH_V2);
     }
     CloseChannel(impl->channelType, impl->channelId);
 }
