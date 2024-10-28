@@ -26,6 +26,7 @@
 #include "performance_dumper.h"
 #include "string_util.h"
 #include "alg_loader.h"
+#include "hisysevent_adapter.h"
 
 #define UID_HEX_STRING_LEN_MAX 64
 #define UID_HEX_STRING_LEN_MIN 10
@@ -808,6 +809,28 @@ static int32_t PrepareAccountDataToSelf(const CJson *sendToSelf, CJson *returnTo
     return res;
 }
 
+static void ReportV1RelatedAuthCallEvent(int64_t requestId, const CJson *authParam)
+{
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    DevAuthCallEvent eventData;
+    eventData.appId = SOFTBUS_APP_ID;
+    eventData.funcName = AUTH_DEV_EVENT;
+    eventData.osAccountId = DEFAULT_OS_ACCOUNT;
+    (void)GetIntFromJson(authParam, FIELD_OS_ACCOUNT_ID, &eventData.osAccountId);
+    eventData.callResult = DEFAULT_CALL_RESULT;
+    eventData.processCode = PROCESS_AUTH_V1;
+    eventData.credType = DEFAULT_CRED_TYPE;
+    eventData.groupType = IDENTICAL_ACCOUNT_GROUP;
+    eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQ_ID(requestId);
+    eventData.extInfo = DEFAULT_EXT_INFO;
+    DEV_AUTH_REPORT_CALL_EVENT(eventData);
+    return;
+#endif
+    (void)requestId;
+    (void)authParam;
+    return;
+}
+
 static int32_t AccountOnFinishToSelf(int64_t requestId, const CJson *authParam, const CJson *out,
     const DeviceAuthCallback *callback)
 {
@@ -850,6 +873,7 @@ static int32_t AccountOnFinishToSelf(int64_t requestId, const CJson *authParam, 
         }
     } while (0);
     ClearAndFreeJsonString(returnStr);
+    ReportV1RelatedAuthCallEvent(requestId, authParam);
     return res;
 }
 

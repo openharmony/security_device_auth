@@ -533,12 +533,12 @@ static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const 
     int64_t elapsedTime = endTime - startTime;
     LOGI("CreateGroup elapsed time:  %" PRId64 " milliseconds, [OsAccountId]: %d", elapsedTime, osAccountId);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, createParams, appId, CREATE_GROUP_EVENT);
-    #ifdef DEV_AUTH_HIVIEW_ENABLE
+#ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData = BuildCallEventData(appId, CREATE_GROUP_EVENT, osAccountId,
-        res, PROCESS_REQUEST_CREATE_GROUP);
+        res, PROCESS_CREATE_GROUP);
     eventData.executionTime = elapsedTime;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);
-    #endif
+#endif
     return res;
 }
 
@@ -580,12 +580,12 @@ static int32_t RequestDeleteGroup(int32_t osAccountId, int64_t requestId, const 
     int64_t elapsedTime = endTime - startTime;
     LOGI("DeleteGroup elapsed time:  %" PRId64 " milliseconds", elapsedTime);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, disbandParams, appId, DELETE_GROUP_EVENT);
-    #ifdef DEV_AUTH_HIVIEW_ENABLE
+#ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData = BuildCallEventData(appId, DELETE_GROUP_EVENT, osAccountId,
-        res, PROCESS_REQUEST_DELETE_GROUP);
+        res, PROCESS_DELETE_GROUP);
     eventData.executionTime = elapsedTime;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);
-    #endif
+#endif
     return res;
 }
 
@@ -629,12 +629,12 @@ static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t request
     int64_t elapsedTime = endTime - startTime;
     LOGI("DeleteMemberFromGroup elapsed time:  %" PRId64 " milliseconds", elapsedTime);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, deleteParams, appId, DEL_MEMBER_EVENT);
-    #ifdef DEV_AUTH_HIVIEW_ENABLE
+#ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData = BuildCallEventData(appId, DEL_MEMBER_EVENT, osAccountId,
-        res, PROCESS_REQUEST_DELETE_MEMBER_FROM_GROUP);
+        res, PROCESS_DELETE_MEMBER_FROM_GROUP);
     eventData.executionTime = elapsedTime;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);
-    #endif
+#endif
     return res;
 }
 
@@ -686,7 +686,7 @@ static int32_t RequestAddMultiMembersToGroup(int32_t osAccountId, const char *ap
     int32_t res = AddMultiMembersToGroupInner(osAccountId, appId, addParams);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, addParams, appId, ADD_MULTI_MEMBER_EVENT);
     DEV_AUTH_REPORT_CALL_EVENT_WITH_RESULT(appId, ADD_MULTI_MEMBER_EVENT, osAccountId,
-        res, PREOCESS_REQUEST_ADD_MULTI_MEMBERS_TO_GROUP);
+        res, PROCESS_ADD_MULTI_MEMBERS_TO_GROUP);
     return res;
 }
 
@@ -738,13 +738,12 @@ static int32_t RequestDelMultiMembersFromGroup(int32_t osAccountId, const char *
     int32_t res = DelMultiMembersFromGroupInner(osAccountId, appId, deleteParams);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, deleteParams, appId, DEL_MULTI_MEMBER_EVENT);
     DEV_AUTH_REPORT_CALL_EVENT_WITH_RESULT(appId, DEL_MULTI_MEMBER_EVENT, osAccountId,
-        res, PROCESS_REQUEST_DEL_MULTI_MEMBERS_FROM_GROUP);
+        res, PROCESS_DEL_MULTI_MEMBERS_FROM_GROUP);
     return res;
 }
 
 static int32_t RegListener(const char *appId, const DataChangeListener *listener)
 {
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(DEFAULT_OS_ACCOUNT, NULL, appId, REG_LISTENER_EVENT);
     if ((appId == NULL) || (listener == NULL)) {
         LOGE("The input parameter contains NULL value!");
         return HC_ERR_INVALID_PARAMS;
@@ -758,7 +757,6 @@ static int32_t RegListener(const char *appId, const DataChangeListener *listener
 
 static int32_t UnRegListener(const char *appId)
 {
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(DEFAULT_OS_ACCOUNT, NULL, appId, UN_REG_LISTENER_EVENT);
     if (appId == NULL) {
         LOGE("The input appId is NULL!");
         return HC_ERR_INVALID_PARAMS;
@@ -816,7 +814,6 @@ static int32_t GetRegisterInfo(const char *reqJsonStr, char **returnRegisterInfo
 
 static int32_t CheckAccessToGroup(int32_t osAccountId, const char *appId, const char *groupId)
 {
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, NULL, appId, CHECK_ACCESS_TO_GROUP_EVENT);
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((appId == NULL) || (groupId == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
@@ -837,7 +834,6 @@ static int32_t GetAccessibleGroupInfoById(int32_t osAccountId, const char *appId
     char **returnGroupInfo)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, NULL, appId, GET_ACCESSIBLE_DEVICE_INFO_BY_ID_EVENT);
     if ((appId == NULL) || (groupId == NULL) || (returnGroupInfo == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
@@ -884,7 +880,6 @@ static int32_t GetAccessibleGroupInfo(int32_t osAccountId, const char *appId, co
     char **returnGroupVec, uint32_t *groupNum)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, NULL, appId, GET_ACCESSIBLE_GROUP_INFO_EVENT);
     if ((appId == NULL) || (queryParams == NULL) || (returnGroupVec == NULL) || (groupNum == NULL) ||
         (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
@@ -936,7 +931,6 @@ static int32_t GetAccessibleJoinedGroups(int32_t osAccountId, const char *appId,
     char **returnGroupVec, uint32_t *groupNum)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    DEV_AUTH_REPORT_UE_CALL_EVENT(osAccountId, groupType, appId, GET_ACCESSIBLE_JOINED_GROUPS_EVENT);
     if ((appId == NULL) || (returnGroupVec == NULL) || (groupNum == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
         return HC_ERR_INVALID_PARAMS;
@@ -965,7 +959,6 @@ static int32_t GetAccessibleRelatedGroups(int32_t osAccountId, const char *appId
     char **returnGroupVec, uint32_t *groupNum)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, NULL, appId, GET_ACCESSIBLE_RELATED_GROUPS_EVENT);
     if ((appId == NULL) || (peerDeviceId == NULL) || (returnGroupVec == NULL) || (groupNum == NULL) ||
         (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
@@ -1013,7 +1006,6 @@ static int32_t GetAccessibleDeviceInfoById(int32_t osAccountId, const char *appI
     const DeviceQueryParams *devQueryParams, const char *groupId, char **returnDeviceInfo)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, NULL, appId, GET_ACCESSIBLE_DEVICE_INFO_BY_ID_EVENT);
     if (CheckParams(osAccountId, appId, devQueryParams, groupId, returnDeviceInfo) != HC_SUCCESS) {
         return HC_ERR_INVALID_PARAMS;
     }
@@ -1065,7 +1057,6 @@ static int32_t GetAccessibleTrustedDevices(int32_t osAccountId, const char *appI
     char **returnDevInfoVec, uint32_t *deviceNum)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, NULL, appId, GET_ACCESSIBLE_TRUSTED_DEVICES_EVENT);
     if ((appId == NULL) || (groupId == NULL) || (returnDevInfoVec == NULL) || (deviceNum == NULL) ||
         (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
@@ -1098,7 +1089,6 @@ static bool IsDeviceInAccessibleGroup(int32_t osAccountId, const char *appId, co
     const char *deviceId, bool isUdid)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, NULL, appId, IS_DEVICE_IN_ACCESSIBLE_GROUP_EVENT);
     if ((appId == NULL) || (groupId == NULL) || (deviceId == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
         LOGE("Invalid input parameters!");
         return false;
@@ -1165,7 +1155,6 @@ static int32_t GetPkInfoList(int32_t osAccountId, const char *appId, const char 
 
 static void DestroyInfo(char **returnInfo)
 {
-    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(DEFAULT_OS_ACCOUNT, NULL, NULL, DESTROY_INFO_EVENT);
     if ((returnInfo == NULL) || (*returnInfo == NULL)) {
         return;
     }

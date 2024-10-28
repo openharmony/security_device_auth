@@ -70,6 +70,7 @@ DECLARE_HC_VECTOR(PerformDataVec, PerformData*)
 #define UPDATE_PERFORM_DATA_BY_SELF_INDEX(reqId, time)
 #define INIT_PERFORMANCE_DUMPER()
 #define DESTROY_PERFORMANCE_DUMPER()
+#define GET_TOTAL_CONSUME_TIME_BY_REQ_ID(reqId)
 
 #else
 
@@ -80,6 +81,7 @@ DECLARE_HC_VECTOR(PerformDataVec, PerformData*)
 #define UPDATE_PERFORM_DATA_BY_SELF_INDEX(reqId, time) UpdatePerformDataBySelfIndex(reqId, time)
 #define INIT_PERFORMANCE_DUMPER() InitPerformanceDumper()
 #define DESTROY_PERFORMANCE_DUMPER() DestroyPerformanceDumper()
+#define GET_TOTAL_CONSUME_TIME_BY_REQ_ID(reqId) GetTotalConsumeTimeByReqId(reqId)
 
 #ifdef __cplusplus
 extern "C" {
@@ -91,6 +93,7 @@ void UpdatePerformDataByInputIndex(int64_t reqId, PerformTimeIndex timeIndex, in
 void UpdatePerformDataBySelfIndex(int64_t reqId, int64_t time);
 void InitPerformanceDumper(void);
 void DestroyPerformanceDumper(void);
+int64_t GetTotalConsumeTimeByReqId(int64_t reqId);
 
 #ifdef __cplusplus
 }

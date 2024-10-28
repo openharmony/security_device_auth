@@ -45,8 +45,8 @@ void DevAuthReportCallEvent(const DevAuthCallEvent eventData)
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::DEVICE_AUTH,
         STR_CALL_EVENT, OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        STR_APP_ID, ((eventData.appId != NULL) ? eventData.appId : STR_UNKNOWN),
         STR_FUNC_NAME, ((eventData.funcName != NULL) ? eventData.funcName : STR_UNKNOWN),
+        STR_APP_ID, ((eventData.appId != NULL) ? eventData.appId : STR_UNKNOWN),
         STR_OS_ACCOUNT_ID, eventData.osAccountId,
         STR_CALL_RESULT, eventData.callResult,
         STR_PROCESS_CODE, eventData.processCode,

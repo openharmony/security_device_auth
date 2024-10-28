@@ -32,6 +32,7 @@
 #include "hc_time.h"
 #include "hc_types.h"
 #include "performance_dumper.h"
+#include "hisysevent_adapter.h"
 
 #define FIELD_MSG "msg"
 #define FIELD_TYPE "type"
@@ -225,10 +226,69 @@ static bool IsMetaNode(const CJson *context)
     return GetStringFromJson(context, FIELD_META_NODE_TYPE) != NULL;
 }
 
-static void OnDevSessionError(const SessionImpl *impl, int32_t errorCode, const char *errorReturn)
+static void ReportBindAndAuthCallEvent(const SessionImpl *impl, int32_t callResult, bool isV1Session)
+{
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    DevAuthCallEvent eventData;
+    eventData.appId = impl->base.appId;
+    (void)GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &eventData.osAccountId);
+    eventData.callResult = callResult;
+    eventData.credType = DEFAULT_CRED_TYPE;
+    bool isBind = true;
+    (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
+    if (isBind) {
+        eventData.funcName = ADD_MEMBER_EVENT;
+        eventData.processCode = isV1Session ? PROCESS_BIND_V1 : PROCESS_BIND_V2;
+        eventData.groupType = PEER_TO_PEER_GROUP;
+    } else {
+        eventData.funcName = AUTH_DEV_EVENT;
+        eventData.processCode = isV1Session ? PROCESS_AUTH_V1 : PROCESS_AUTH_V2;
+        eventData.groupType =
+            (impl->base.opCode == AUTH_FORM_ACCOUNT_UNRELATED) ? PEER_TO_PEER_GROUP : IDENTICAL_ACCOUNT_GROUP;
+    }
+    eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQ_ID(impl->base.id);
+    eventData.extInfo = DEFAULT_EXT_INFO;
+    DEV_AUTH_REPORT_CALL_EVENT(eventData);
+    return;
+#endif
+    (void)impl;
+    (void)callResult;
+    (void)isV1Session;
+    return;
+}
+
+static void ReportBindAndAuthFaultEvent(const SessionImpl *impl, int32_t errorCode, bool isV1Session)
+{
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    DevAuthFaultEvent eventData;
+    eventData.appId = impl->base.appId;
+    eventData.reqId = impl->base.id;
+    eventData.errorCode = errorCode;
+    eventData.faultInfo = DEFAULT_FAULT_INFO;
+    bool isBind = true;
+    (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
+    if (isBind) {
+        eventData.funcName = ADD_MEMBER_EVENT;
+        eventData.processCode = isV1Session ? PROCESS_BIND_V1 : PROCESS_BIND_V2;
+    } else {
+        eventData.funcName = AUTH_DEV_EVENT;
+        eventData.processCode = isV1Session ? PROCESS_AUTH_V1 : PROCESS_AUTH_V2;
+    }
+    DEV_AUTH_REPORT_FAULT_EVENT(eventData);
+    return;
+#endif
+    (void)impl;
+    (void)errorCode;
+    (void)isV1Session;
+    return;
+}
+
+static void OnDevSessionError(const SessionImpl *impl, int32_t errorCode, const char *errorReturn, bool isV1Session)
 {
     ProcessErrorCallback(impl->base.id, impl->base.opCode, errorCode, errorReturn, &impl->base.callback);
     CloseChannel(impl->channelType, impl->channelId);
+    ReportBindAndAuthFaultEvent(impl, errorCode, isV1Session);
+    ReportBindAndAuthCallEvent(impl, errorCode, isV1Session);
 }
 
 static int32_t StartSession(DevSession *self)
@@ -277,7 +337,7 @@ static int32_t StartSession(DevSession *self)
         }
     } while (0);
     if (res != HC_SUCCESS) {
-        OnDevSessionError(impl, res, NULL);
+        OnDevSessionError(impl, res, NULL, false);
     }
     return res;
 }
@@ -492,7 +552,7 @@ static void OnV1SessionError(SessionImpl *impl, int32_t errorCode, const CJson *
     }
     char *errorReturn = NULL;
     GenerateErrorReturn(receviedMsg, &errorReturn);
-    OnDevSessionError(impl, errorCode, errorReturn);
+    OnDevSessionError(impl, errorCode, errorReturn, true);
     FreeJsonString(errorReturn);
 }
 
@@ -554,6 +614,7 @@ static void OnDevSessionFinish(const SessionImpl *impl)
     if (isBind) {
         NotifyBindResult(impl->channelType, impl->channelId);
     }
+    ReportBindAndAuthCallEvent(impl, HC_SUCCESS, false);
     CloseChannel(impl->channelType, impl->channelId);
 }
 
@@ -561,7 +622,7 @@ static int32_t ProcV2Session(SessionImpl *impl, const CJson *receviedMsg, bool *
 {
     if (!IsSupportSessionV2()) {
         LOGE("not suppot session v2.");
-        OnDevSessionError(impl, HC_ERR_NOT_SUPPORT, NULL);
+        OnDevSessionError(impl, HC_ERR_NOT_SUPPORT, NULL, false);
         return HC_ERR_NOT_SUPPORT;
     }
     if (impl->compatibleSubSession != NULL) {
@@ -577,7 +638,7 @@ static int32_t ProcV2Session(SessionImpl *impl, const CJson *receviedMsg, bool *
         res = ProcEventList(impl);
     } while (0);
     if (res != HC_SUCCESS) {
-        OnDevSessionError(impl, res, NULL);
+        OnDevSessionError(impl, res, NULL, false);
         return res;
     }
     if (impl->curState == SESSION_FINISH_STATE) {
