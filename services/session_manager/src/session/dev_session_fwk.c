@@ -243,9 +243,8 @@ static void ReportBindAndAuthCallEvent(const SessionImpl *impl, int32_t callResu
     } else {
         eventData.funcName = AUTH_DEV_EVENT;
         eventData.processCode = isV1Session ? PROCESS_AUTH_V1 : PROCESS_AUTH_V2;
-        eventData.groupType = (impl->base.opCode == AUTH_FORM_ACCOUNT_UNRELATED)
-            ? PEER_TO_PEER_GROUP
-            : IDENTICAL_ACCOUNT_GROUP;
+        eventData.groupType =
+            (impl->base.opCode == AUTH_FORM_ACCOUNT_UNRELATED) ? PEER_TO_PEER_GROUP : IDENTICAL_ACCOUNT_GROUP;
     }
     eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQ_ID(impl->base.id);
     eventData.extInfo = DEFAULT_EXT_INFO;
