@@ -225,9 +225,9 @@ static bool IsMetaNode(const CJson *context)
     return GetStringFromJson(context, FIELD_META_NODE_TYPE) != NULL;
 }
 
-static void OnDevSessionError(const SessionImpl *impl, int32_t errorCode)
+static void OnDevSessionError(const SessionImpl *impl, int32_t errorCode, const char *errorReturn)
 {
-    ProcessErrorCallback(impl->base.id, impl->base.opCode, errorCode, NULL, &impl->base.callback);
+    ProcessErrorCallback(impl->base.id, impl->base.opCode, errorCode, errorReturn, &impl->base.callback);
     CloseChannel(impl->channelType, impl->channelId);
 }
 
@@ -277,7 +277,7 @@ static int32_t StartSession(DevSession *self)
         }
     } while (0);
     if (res != HC_SUCCESS) {
-        OnDevSessionError(impl, res);
+        OnDevSessionError(impl, res, NULL);
     }
     return res;
 }
@@ -445,12 +445,55 @@ static inline bool HasNextAuthGroup(const CJson *receviedMsg)
     return GetStringFromJson(receviedMsg, FIELD_ALTERNATIVE) != NULL;
 }
 
+static void GenerateErrorReturn(const CJson *receviedMsg, char **errorReturn)
+{
+    const char *pkInfoStr = GetStringFromJson(receviedMsg, FIELD_AUTH_PK_INFO);
+    if (pkInfoStr == NULL) {
+        LOGI("receviedMsg without authPkInfo.");
+        return;
+    }
+    CJson *pkInfoJson = CreateJsonFromString(pkInfoStr);
+    if (pkInfoJson == NULL) {
+        LOGE("create json from string failed.");
+        return;
+    }
+
+    const char *deviceId = GetStringFromJson(pkInfoJson, FIELD_DEVICE_ID);
+    if (deviceId == NULL) {
+        LOGI("receviedMsg without devcieId.");
+        FreeJson(pkInfoJson);
+        return;
+    }
+    CJson *message = CreateJson();
+    if (message == NULL) {
+        LOGE("create json failed.");
+        FreeJson(pkInfoJson);
+        return;
+    }
+    if (AddStringToJson(message, FIELD_AUTH_ID, deviceId) != HC_SUCCESS) {
+        LOGE("add string to json failed.");
+        FreeJson(message);
+        FreeJson(pkInfoJson);
+        return;
+    }
+
+    *errorReturn = PackJsonToString(message);
+    if (*errorReturn == NULL) {
+        LOGE("Pack authId Json To String fail.");
+    }
+    FreeJson(message);
+    FreeJson(pkInfoJson);
+}
+
 static void OnV1SessionError(SessionImpl *impl, int32_t errorCode, const CJson *receviedMsg)
 {
     if (HasNextAuthGroup(receviedMsg)) {
         return;
     }
-    OnDevSessionError(impl, errorCode);
+    char *errorReturn = NULL;
+    GenerateErrorReturn(receviedMsg, &errorReturn);
+    OnDevSessionError(impl, errorCode, errorReturn);
+    FreeJsonString(errorReturn);
 }
 
 static int32_t ProcV1Session(SessionImpl *impl, const CJson *receviedMsg, bool *isFinish)
@@ -518,7 +561,7 @@ static int32_t ProcV2Session(SessionImpl *impl, const CJson *receviedMsg, bool *
 {
     if (!IsSupportSessionV2()) {
         LOGE("not suppot session v2.");
-        OnDevSessionError(impl, HC_ERR_NOT_SUPPORT);
+        OnDevSessionError(impl, HC_ERR_NOT_SUPPORT, NULL);
         return HC_ERR_NOT_SUPPORT;
     }
     if (impl->compatibleSubSession != NULL) {
@@ -534,7 +577,7 @@ static int32_t ProcV2Session(SessionImpl *impl, const CJson *receviedMsg, bool *
         res = ProcEventList(impl);
     } while (0);
     if (res != HC_SUCCESS) {
-        OnDevSessionError(impl, res);
+        OnDevSessionError(impl, res, NULL);
         return res;
     }
     if (impl->curState == SESSION_FINISH_STATE) {

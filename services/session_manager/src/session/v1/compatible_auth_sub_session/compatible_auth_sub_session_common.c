@@ -262,6 +262,8 @@ static int32_t FillAuthParams(int32_t osAccountId, const CJson *param,
             FreeJson(paramsData);
             continue;
         }
+        PRINT_SENSITIVE_DATA("GroupId", groupId);
+        LOGI("Group type is %d.", groupInfo->type);
         paramsVec->pushBack(paramsVec, (const void **)&paramsData);
     }
     LOGI("The candidate group size is: %u", paramsVec->size(paramsVec));
@@ -475,6 +477,11 @@ static int32_t ReturnTransmitData(const CompatibleAuthSubSession *session, CJson
     if (outStr == NULL) {
         LOGE("Failed to pack outStr for onTransmit!");
         return HC_ERR_ALLOC_MEMORY;
+    }
+    
+    int32_t authForm = AUTH_FORM_INVALID_TYPE;
+    if (GetIntFromJson(sendToPeer, FIELD_AUTH_FORM, &authForm) == HC_SUCCESS) {
+        LOGI("AuthForm is %d.", authForm);
     }
 
     const DeviceAuthCallback *callback = session->base.callback;
