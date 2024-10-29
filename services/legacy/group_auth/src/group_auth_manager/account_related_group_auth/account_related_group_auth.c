@@ -233,6 +233,10 @@ static void GaGetAccountGroup(int32_t osAccountId, GroupType type, const char *p
             continue;
         }
         TrustedGroupEntry *tempEntry = NULL;
+        const char *groupId = StringGet(&tempEntry->id);
+        if (groupId != NULL) {
+            PRINT_SENSITIVE_DATA("GroupId", groupId);
+        }
         HC_VECTOR_POPELEMENT(vec, &tempEntry, index);
         DestroyGroupEntry((TrustedGroupEntry *)tempEntry);
     }

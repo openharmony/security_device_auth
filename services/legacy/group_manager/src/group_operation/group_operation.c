@@ -513,7 +513,7 @@ static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const 
     int32_t res = CreateGroupInner(osAccountId, requestId, appId, createParams);
     int64_t endTime = HcGetCurTimeInMillis();
     int64_t elapsedTime = endTime - startTime;
-    LOGI("CreateGroup elapsed time:  %" PRId64 " milliseconds", elapsedTime);
+    LOGI("CreateGroup elapsed time:  %" PRId64 " milliseconds, [OsAccountId]: %d", elapsedTime, osAccountId);
     DEV_AUTH_REPORT_CALL_EVENT(requestId, CREATE_GROUP_EVENT, appId, osAccountId, res);
     return res;
 }
