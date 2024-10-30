@@ -525,6 +525,21 @@ static DevAuthCallEvent BuildCallEventData(const char *appId, const char *funcNa
 }
 #endif
 
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+static int32_t GetGroupTypeFromParams(const char *createParams)
+{
+    CJson *params = CreateJsonFromString(createParams);
+    if (params == NULL) {
+        LOGE("failed create json from string!");
+        return DEFAULT_GROUP_TYPE;
+    }
+    int32_t groupType = DEFAULT_GROUP_TYPE;
+    (void)GetIntFromJson(params, FIELD_GROUP_TYPE, &groupType);
+    FreeJson(params);
+    return groupType;
+}
+#endif
+
 static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams)
 {
     int64_t startTime = HcGetCurTimeInMillis();
@@ -536,6 +551,7 @@ static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const 
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData = BuildCallEventData(appId, CREATE_GROUP_EVENT, osAccountId,
         res, PROCESS_CREATE_GROUP);
+    eventData.groupType = GetGroupTypeFromParams(createParams);
     eventData.executionTime = elapsedTime;
     DEV_AUTH_REPORT_CALL_EVENT(eventData);
 #endif
@@ -681,11 +697,36 @@ static int32_t AddMultiMembersToGroupInner(int32_t osAccountId, const char *appI
     return res;
 }
 
+static void DevAuthReportCallEventWithResult(const char *appId, const char *funcName, const int32_t osAccountId,
+    const int32_t callResult, const int32_t processCode)
+{
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    DevAuthCallEvent eventData;
+    eventData.appId = appId;
+    eventData.funcName = funcName;
+    eventData.osAccountId = osAccountId;
+    eventData.callResult = callResult;
+    eventData.processCode = processCode;
+    eventData.credType = DEFAULT_CRED_TYPE;
+    eventData.groupType = DEFAULT_MULTI_MEMBER_GROUP_TYPE;
+    eventData.executionTime = DEFAULT_EXECUTION_TIME;
+    eventData.extInfo = DEFAULT_EXT_INFO;
+    DevAuthReportCallEvent(eventData);
+    return;
+#endif
+    (void)appId;
+    (void)funcName;
+    (void)osAccountId;
+    (void)callResult;
+    (void)processCode;
+    return;
+}
+
 static int32_t RequestAddMultiMembersToGroup(int32_t osAccountId, const char *appId, const char *addParams)
 {
     int32_t res = AddMultiMembersToGroupInner(osAccountId, appId, addParams);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, addParams, appId, ADD_MULTI_MEMBER_EVENT);
-    DEV_AUTH_REPORT_CALL_EVENT_WITH_RESULT(appId, ADD_MULTI_MEMBER_EVENT, osAccountId,
+    DevAuthReportCallEventWithResult(appId, ADD_MULTI_MEMBER_EVENT, osAccountId,
         res, PROCESS_ADD_MULTI_MEMBERS_TO_GROUP);
     return res;
 }
@@ -737,7 +778,7 @@ static int32_t RequestDelMultiMembersFromGroup(int32_t osAccountId, const char *
 {
     int32_t res = DelMultiMembersFromGroupInner(osAccountId, appId, deleteParams);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, deleteParams, appId, DEL_MULTI_MEMBER_EVENT);
-    DEV_AUTH_REPORT_CALL_EVENT_WITH_RESULT(appId, DEL_MULTI_MEMBER_EVENT, osAccountId,
+    DevAuthReportCallEventWithResult(appId, DEL_MULTI_MEMBER_EVENT, osAccountId,
         res, PROCESS_DEL_MULTI_MEMBERS_FROM_GROUP);
     return res;
 }

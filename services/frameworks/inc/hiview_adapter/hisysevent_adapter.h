@@ -37,6 +37,7 @@
 #define AUTH_CONSUME_EVENT "AuthConsume"
 
 #define DEFAULT_GROUP_TYPE 0
+#define DEFAULT_MULTI_MEMBER_GROUP_TYPE 1
 #define DEFAULT_CRED_TYPE 0
 #define DEFAULT_CALL_RESULT 0
 #define DEFAULT_APPID NULL
@@ -67,7 +68,6 @@ enum DevAuthReportProcessCode {
 #ifndef DEV_AUTH_HIVIEW_ENABLE
 
 #define DEV_AUTH_REPORT_CALL_EVENT(eventData)
-#define DEV_AUTH_REPORT_CALL_EVENT_WITH_RESULT(appId, funcName, osAccountId, callResult, processCode)
 #define DEV_AUTH_REPORT_FAULT_EVENT(eventdata)
 #define DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(funcName, processCode, errorCode)
 #define DEV_AUTH_REPORT_UE_CALL_EVENT(osAccountId, groupType, appId, funcName)
@@ -76,8 +76,6 @@ enum DevAuthReportProcessCode {
 
 #define DEV_AUTH_REPORT_CALL_EVENT(eventData) \
     DevAuthReportCallEvent(eventData)
-#define DEV_AUTH_REPORT_CALL_EVENT_WITH_RESULT(appId, funcName, osAccountId, callResult, processCode) \
-    DevAuthReportCallEventWithResult(appId, funcName, osAccountId, callResult, processCode)
 #define DEV_AUTH_REPORT_FAULT_EVENT(eventdata) \
     DevAuthReportFaultEvent(eventdata)
 #define DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(funcName, processCode, errorCode) \
@@ -114,8 +112,6 @@ typedef struct {
 
 void DevAuthReportCallEvent(const DevAuthCallEvent eventData);
 void DevAuthReportFaultEvent(const DevAuthFaultEvent eventdata);
-void DevAuthReportCallEventWithResult(const char *appId, const char *funcName, const int32_t osAccountId,
-    const int32_t callResult, const int32_t processCode);
 void DevAuthReportFaultEventWithErrCode(const char *funcName, const int32_t processCode, const int32_t errorCode);
 void DevAuthReportUeCallEvent(int32_t osAccountId, int32_t groupType, const char *appId,
     const char *funcName);
