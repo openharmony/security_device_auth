@@ -105,8 +105,6 @@ TrustedGroupEntry *GetGroupEntryById(int32_t osAccountId, const char *groupId);
 TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *deviceId, bool isUdid,
     const char *groupId);
 
-void CheckAndRemoveUpgradeData(void);
-
 #ifdef __cplusplus
 }
 #endif
