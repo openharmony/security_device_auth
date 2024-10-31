@@ -69,22 +69,6 @@ void DevAuthReportFaultEvent(DevAuthFaultEvent eventData)
         STR_FAULT_INFO, ((eventData.faultInfo != NULL) ? eventData.faultInfo : STR_UNKNOWN));
 }
 
-void DevAuthReportCallEventWithResult(const char *appId, const char *funcName, const int32_t osAccountId,
-    const int32_t callResult, const int32_t processCode)
-{
-    DevAuthCallEvent eventData;
-    eventData.appId = appId;
-    eventData.funcName = funcName;
-    eventData.osAccountId = osAccountId;
-    eventData.callResult = callResult;
-    eventData.processCode = processCode;
-    eventData.credType = DEFAULT_CRED_TYPE;
-    eventData.groupType = DEFAULT_GROUP_TYPE;
-    eventData.executionTime = DEFAULT_EXECUTION_TIME;
-    eventData.extInfo = DEFAULT_EXT_INFO;
-    DevAuthReportCallEvent(eventData);
-}
-
 void DevAuthReportFaultEventWithErrCode(const char *funcName, const int32_t processCode, const int32_t errorCode)
 {
     DevAuthFaultEvent eventData;
