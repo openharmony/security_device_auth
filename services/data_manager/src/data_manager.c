@@ -31,6 +31,7 @@
 #include "os_account_adapter.h"
 #include "pseudonym_manager.h"
 #include "security_label_adapter.h"
+#include "account_auth_plugin_proxy.h"
 
 typedef struct {
     DECLARE_TLV_STRUCT(10)
@@ -130,6 +131,7 @@ IMPLEMENT_HC_VECTOR(DeviceAuthDb, OsAccountTrustedInfo, 1)
 
 static HcMutex *g_databaseMutex = NULL;
 static DeviceAuthDb g_deviceauthDb;
+static const int UPGRADE_OS_ACCOUNT_ID = 100;
 
 static bool EndWithZero(HcParcel *parcel)
 {
@@ -599,11 +601,94 @@ static void LoadOsAccountDbCe(int32_t osAccountId)
     LoadOsAccountDb(osAccountId);
 }
 
+static int32_t DelGroupFromDbInner(int32_t osAccountId, const char *groupId)
+{
+    if (groupId == NULL) {
+        LOGE("The input groupId is NULL!");
+        return HC_ERR_NULL_PTR;
+    }
+    QueryGroupParams queryGroupParams = InitQueryGroupParams();
+    queryGroupParams.groupId = groupId;
+    QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
+    queryDeviceParams.groupId = groupId;
+    int32_t result = HC_SUCCESS;
+    if (DelTrustedDevice(osAccountId, &queryDeviceParams) != HC_SUCCESS) {
+        result = HC_ERR_DEL_GROUP;
+    }
+    if (DelGroup(osAccountId, &queryGroupParams) != HC_SUCCESS) {
+        result = HC_ERR_DEL_GROUP;
+    }
+    if (SaveOsAccountDb(osAccountId) != HC_SUCCESS) {
+        result = HC_ERR_DEL_GROUP;
+    }
+    return result;
+}
+
+static void CheckAndRemoveUpgradeGroupEntry(const TrustedGroupEntry *groupEntry)
+{
+    if (groupEntry->upgradeFlag != IS_UPGRADE) {
+        LOGW("Group is not upgrade group, not need to remove!");
+        return;
+    }
+    const char *groupId = StringGet(&(groupEntry->id));
+
+    HcString entryManager = HC_VECTOR_GET(&groupEntry->managers, 0);
+    const char *groupOwner = StringGet(&entryManager);
+    if (groupId == NULL || groupOwner == NULL) {
+        LOGW("groupId or groupOwner is null, not need to remove!");
+        return;
+    }
+    CJson *upgradeJson = CreateJson();
+    if (upgradeJson == NULL) {
+        LOGE("Failed to create upgradeIdentity json.");
+        return;
+    }
+    if (AddStringToJson(upgradeJson, FIELD_APP_ID, groupOwner) != HC_SUCCESS) {
+        FreeJson(upgradeJson);
+        LOGE("Failed to add groupOwner.");
+        return;
+    }
+    int32_t res = ExcuteCredMgrCmd(UPGRADE_OS_ACCOUNT_ID, CHECK_UPGRADE_DATA, upgradeJson, NULL);
+    FreeJson(upgradeJson);
+    if (res == HC_SUCCESS) {
+        LOGI("GroupOwner is in trustedlist, not need to remove!");
+        return;
+    }
+    if (DelGroupFromDbInner(UPGRADE_OS_ACCOUNT_ID, groupId) != HC_SUCCESS) {
+        LOGW("Delete group from db failed!");
+        return;
+    }
+    LOGI("Delete group from db successfully!");
+}
+
+static void CheckAndRemoveUpgradeData(void)
+{
+    QueryGroupParams queryParams = InitQueryGroupParams();
+    GroupEntryVec groupEntryVec = CreateGroupEntryVec();
+    int32_t ret = QueryGroups(UPGRADE_OS_ACCOUNT_ID, &queryParams, &groupEntryVec);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to query groups!");
+        ClearGroupEntryVec(&groupEntryVec);
+        return;
+    }
+    uint32_t index;
+    TrustedGroupEntry **ptr = NULL;
+    FOR_EACH_HC_VECTOR(groupEntryVec, index, ptr) {
+        if (ptr == NULL || *ptr == NULL) {
+            continue;
+        }
+        const TrustedGroupEntry *groupEntry = (const TrustedGroupEntry *)(*ptr);
+        CheckAndRemoveUpgradeGroupEntry(groupEntry);
+    }
+    ClearGroupEntryVec(&groupEntryVec);
+}
+
 static void OnOsAccountUnlocked(int32_t osAccountId)
 {
     (void)LockHcMutex(g_databaseMutex);
     LoadOsAccountDbCe(osAccountId);
     UnlockHcMutex(g_databaseMutex);
+    CheckAndRemoveUpgradeData();
 }
 
 static void OnOsAccountRemoved(int32_t osAccountId)
