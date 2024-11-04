@@ -26,6 +26,9 @@
 #define OUT_OF_HEX 16
 #define NUMBER_9_IN_DECIMAL 9
 #define ASCII_CASE_DIFFERENCE_VALUE 32
+#define MIN_ANONYMOUS_LEN 12
+#define ANONYMOUS_ASTERISK_LEN 2
+#define ANONYMOUS_DIVIDER 2
 
 static char HexToChar(uint8_t hex)
 {
@@ -143,4 +146,30 @@ void PrintBuffer(const uint8_t *msgBuff, uint32_t msgLen, const char *msgTag)
     (void)ByteToHexString(msgBuff, msgLen, hexStr, hexLen);
     LOGD("%s value is: %s", msgTag, hexStr);
     HcFree(hexStr);
+}
+
+int32_t GetAnonymousString(const char *originStr, char *anonymousStr, uint32_t anonymousLen)
+{
+    if (originStr == NULL || anonymousStr == NULL) {
+        return CLIB_ERR_NULL_PTR;
+    }
+    if (anonymousLen < MIN_ANONYMOUS_LEN || (anonymousLen - ANONYMOUS_ASTERISK_LEN) % ANONYMOUS_DIVIDER != 0) {
+        return CLIB_ERR_INVALID_LEN;
+    }
+    uint32_t originStrLen = HcStrlen(originStr);
+    if (originStrLen < anonymousLen - ANONYMOUS_ASTERISK_LEN) {
+        return CLIB_ERR_INVALID_LEN;
+    }
+    uint32_t printLen = (anonymousLen - ANONYMOUS_ASTERISK_LEN) / ANONYMOUS_DIVIDER;
+    if (memcpy_s(anonymousStr, printLen, originStr, printLen) != EOK) {
+        return CLIB_ERR_BAD_ALLOC;
+    }
+    if (memcpy_s(anonymousStr + printLen, ANONYMOUS_ASTERISK_LEN, "**", ANONYMOUS_ASTERISK_LEN) != EOK) {
+        return CLIB_ERR_BAD_ALLOC;
+    }
+    if (memcpy_s(anonymousStr + printLen + ANONYMOUS_ASTERISK_LEN, printLen,
+        originStr + originStrLen - printLen, printLen) != EOK) {
+        return CLIB_ERR_BAD_ALLOC;
+    }
+    return CLIB_SUCCESS;
 }

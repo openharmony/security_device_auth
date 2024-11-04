@@ -35,6 +35,14 @@
 #define UPGRADE_DATA_EVENT "UpgradeData"
 #define BIND_CONSUME_EVENT "BindConsume"
 #define AUTH_CONSUME_EVENT "AuthConsume"
+#define ADD_MEMBER_TO_CALL_PKG_NAME "dsoftbus"
+#define ADD_MEMBER_HOST_PKG_NAME "deviceManager"
+#define AUTH_DEVICE_HOST_PKG_NAME "dsoftbus"
+#define STAGE_RES_IDLE "0"
+#define STAGE_RES_SUCCESS "1"
+#define STAGE_RES_FAILED "2"
+
+#define ANONYMOUS_UDID_LEN 12
 
 #define DEFAULT_GROUP_TYPE 0
 #define DEFAULT_MULTI_MEMBER_GROUP_TYPE 1
@@ -102,6 +110,21 @@ typedef struct {
 } DevAuthCallEvent;
 
 typedef struct {
+    const char *orgPkg;
+    const char *funcName;
+    int32_t bizScene;
+    int32_t bizState;
+    int32_t bizStage;
+    const char *stageRes;
+    int32_t errorCode;
+    const char *toCallPkg;
+    const char *hostPkg;
+    const char *localUdid;
+    const char *peerUdid;
+    const char *concurrentId;
+} DevAuthBehaviorEvent;
+
+typedef struct {
     const char *appId;
     int32_t processCode;
     const char *funcName;
@@ -110,7 +133,28 @@ typedef struct {
     const char *faultInfo;
 } DevAuthFaultEvent;
 
+typedef enum {
+    BIZ_SCENE_ADD_MEMBER_CLIENT = 1,
+    BIZ_SCENE_ADD_MEMBER_SERVER,
+    BIZ_SCENE_AUTH_DEVICE_CLIENT,
+    BIZ_SCENE_AUTH_DEVICE_SERVER
+} DevAuthBizScene;
+
+typedef enum {
+    BIZ_STATE_PROCESS = 0,
+    BIZ_STATE_BEGIN,
+    BIZ_STATE_END
+} DevAuthBizState;
+
+typedef enum {
+    BIZ_STAGE_BEGIN = 1,
+    BIZ_STAGE_PROCESS
+} DevAuthBizStage;
+
 void DevAuthReportCallEvent(const DevAuthCallEvent eventData);
+void DevAuthReportBehaviorEvent(const DevAuthBehaviorEvent *eventData);
+void BuildBehaviorEventData(DevAuthBehaviorEvent *eventData, const char *funcName, int32_t bizScene, int32_t bizState,
+    int32_t bizStage);
 void DevAuthReportFaultEvent(const DevAuthFaultEvent eventdata);
 void DevAuthReportFaultEventWithErrCode(const char *funcName, const int32_t processCode, const int32_t errorCode);
 void DevAuthReportUeCallEvent(int32_t osAccountId, int32_t groupType, const char *appId,

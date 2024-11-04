@@ -626,9 +626,102 @@ static int32_t AddMemberToGroupInner(int32_t osAccountId, int64_t requestId, con
     return StartClientBindSession(osAccountId, requestId, appId, addParams, callback);
 }
 
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+static DevAuthBizScene GetBizScene(bool isBind, bool isClient)
+{
+    if (isBind) {
+        if (isClient) {
+            return BIZ_SCENE_ADD_MEMBER_CLIENT;
+        } else {
+            return BIZ_SCENE_ADD_MEMBER_SERVER;
+        }
+    } else {
+        if (isClient) {
+            return BIZ_SCENE_AUTH_DEVICE_CLIENT;
+        } else {
+            return BIZ_SCENE_AUTH_DEVICE_SERVER;
+        }
+    }
+}
+#endif
+
+static void ReportBehaviorBeginEvent(bool isBind, bool isClient, int64_t reqId)
+{
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    char *funcName = isBind ? ADD_MEMBER_EVENT : AUTH_DEV_EVENT;
+    DevAuthBizScene scene = GetBizScene(isBind, isClient);
+    DevAuthBehaviorEvent eventData = { 0 };
+    BuildBehaviorEventData(&eventData, funcName, scene, BIZ_STATE_BEGIN, BIZ_STAGE_BEGIN);
+    char anonymousLocalUdid[ANONYMOUS_UDID_LEN + 1] = { 0 };
+    if (isBind) {
+        eventData.hostPkg = ADD_MEMBER_HOST_PKG_NAME;
+        eventData.toCallPkg = ADD_MEMBER_TO_CALL_PKG_NAME;
+    } else {
+        eventData.hostPkg = AUTH_DEVICE_HOST_PKG_NAME;
+        char selfUdid[INPUT_UDID_LEN] = { 0 };
+        (void)HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
+        if (GetAnonymousString(selfUdid, anonymousLocalUdid, ANONYMOUS_UDID_LEN) == HC_SUCCESS) {
+            eventData.localUdid = anonymousLocalUdid;
+        }
+    }
+    char concurrentId[MAX_REQUEST_ID_LEN] = { 0 };
+    (void)sprintf_s(concurrentId, sizeof(concurrentId), "%" PRId64, reqId);
+    eventData.concurrentId = concurrentId;
+    DevAuthReportBehaviorEvent(&eventData);
+#else
+    (void)isBind;
+    (void)isClient;
+    (void)reqId;
+#endif
+}
+
+static void ReportBehaviorBeginResultEvent(bool isBind, bool isClient, int64_t reqId, const char *peerUdid, int32_t res)
+{
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    char *funcName = isBind ? ADD_MEMBER_EVENT : AUTH_DEV_EVENT;
+    DevAuthBizScene scene = GetBizScene(isBind, isClient);
+    DevAuthBehaviorEvent eventData = { 0 };
+    BuildBehaviorEventData(&eventData, funcName, scene, BIZ_STATE_PROCESS, BIZ_STAGE_BEGIN);
+    char anonymousLocalUdid[ANONYMOUS_UDID_LEN + 1] = { 0 };
+    char anonymousPeerUdid[ANONYMOUS_UDID_LEN + 1] = { 0 };
+    if (isBind) {
+        eventData.hostPkg = ADD_MEMBER_HOST_PKG_NAME;
+        eventData.toCallPkg = ADD_MEMBER_TO_CALL_PKG_NAME;
+    } else {
+        eventData.hostPkg = AUTH_DEVICE_HOST_PKG_NAME;
+        char selfUdid[INPUT_UDID_LEN] = { 0 };
+        (void)HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
+        if (GetAnonymousString(selfUdid, anonymousLocalUdid, ANONYMOUS_UDID_LEN) == HC_SUCCESS) {
+            eventData.localUdid = anonymousLocalUdid;
+        }
+        if (GetAnonymousString(peerUdid, anonymousPeerUdid, ANONYMOUS_UDID_LEN) == HC_SUCCESS) {
+            eventData.peerUdid = anonymousPeerUdid;
+        }
+    }
+    char concurrentId[MAX_REQUEST_ID_LEN] = { 0 };
+    (void)sprintf_s(concurrentId, sizeof(concurrentId), "%" PRId64, reqId);
+    eventData.concurrentId = concurrentId;
+    if (res == HC_SUCCESS) {
+        eventData.stageRes = STAGE_RES_SUCCESS;
+    } else {
+        eventData.stageRes = STAGE_RES_FAILED;
+        eventData.errorCode = res;
+    }
+    DevAuthReportBehaviorEvent(&eventData);
+#else
+    (void)isBind;
+    (void)isClient;
+    (void)reqId;
+    (void)peerUdid;
+    (void)res;
+#endif
+}
+
 static int32_t AddMemberToGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *addParams)
 {
+    ReportBehaviorBeginEvent(true, true, requestId);
     int32_t res = AddMemberToGroupInner(osAccountId, requestId, appId, addParams);
+    ReportBehaviorBeginResultEvent(true, true, requestId, NULL, res);
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     const char *callEventFuncName = GetAddMemberCallEventFuncName(addParams);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, addParams, appId, callEventFuncName);
@@ -797,7 +890,7 @@ static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg
     return res;
 }
 
-static int32_t ProcessBindData(int64_t requestId, const uint8_t *data, uint32_t dataLen)
+static int32_t ProcessBindDataInner(int64_t requestId, const uint8_t *data, uint32_t dataLen)
 {
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(requestId);
@@ -832,10 +925,25 @@ static int32_t ProcessBindData(int64_t requestId, const uint8_t *data, uint32_t 
     return HC_SUCCESS;
 }
 
-static int32_t BuildClientAuthContext(int32_t osAccountId, int64_t requestId, const char *appId, CJson *context)
+static int32_t ProcessBindData(int64_t requestId, const uint8_t *data, uint32_t dataLen)
+{
+    bool isSessionExist = IsSessionExist(requestId);
+    if (!isSessionExist) {
+        ReportBehaviorBeginEvent(true, false, requestId);
+    }
+    int32_t res = ProcessBindDataInner(requestId, data, dataLen);
+    if (!isSessionExist) {
+        ReportBehaviorBeginResultEvent(true, false, requestId, NULL, res);
+    }
+    return res;
+}
+
+static int32_t BuildClientAuthContext(int32_t osAccountId, int64_t requestId, const char *appId, CJson *context,
+    char **returnPeerUdid)
 {
     const char *peerUdid = GetPeerUdidFromJson(osAccountId, context);
     if (peerUdid != NULL) {
+        (void)DeepCopyString(peerUdid, returnPeerUdid);
         char *deviceId = NULL;
         if (DeepCopyString(peerUdid, &deviceId) != HC_SUCCESS) {
             LOGE("Failed to copy peerUdid!");
@@ -907,8 +1015,8 @@ static int32_t BuildP2PBindContext(CJson *context)
     return HC_SUCCESS;
 }
 
-static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *authParams,
-    const DeviceAuthCallback *gaCallback)
+static int32_t AuthDeviceInner(int32_t osAccountId, int64_t authReqId, const char *authParams,
+    const DeviceAuthCallback *gaCallback, char **returnPeerUdid)
 {
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(authReqId);
@@ -938,7 +1046,7 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
         FreeJson(context);
         return HC_ERR_JSON_GET;
     }
-    int32_t res = BuildClientAuthContext(osAccountId, authReqId, appId, context);
+    int32_t res = BuildClientAuthContext(osAccountId, authReqId, appId, context, returnPeerUdid);
     if (res != HC_SUCCESS) {
         FreeJson(context);
         return res;
@@ -952,6 +1060,19 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
         return res;
     }
     return PushStartSessionTask(authReqId);
+}
+
+static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *authParams,
+    const DeviceAuthCallback *gaCallback)
+{
+    ReportBehaviorBeginEvent(false, true, authReqId);
+    char *peerUdid = NULL;
+    int32_t res = AuthDeviceInner(osAccountId, authReqId, authParams, gaCallback, &peerUdid);
+    ReportBehaviorBeginResultEvent(false, true, authReqId, peerUdid, res);
+    if (peerUdid != NULL) {
+        HcFree(peerUdid);
+    }
+    return res;
 }
 
 static int32_t AddDeviceIdToJson(CJson *context, const char *peerUdid)
@@ -975,7 +1096,8 @@ static int32_t AddDeviceIdToJson(CJson *context, const char *peerUdid)
     return HC_SUCCESS;
 }
 
-static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const char *appId, CJson *context)
+static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const char *appId, CJson *context,
+    char **returnPeerUdid)
 {
     int32_t res = CheckConfirmationExist(context);
     if (res != HC_SUCCESS) {
@@ -991,6 +1113,7 @@ static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const c
     if (peerUdid == NULL) {
         return HC_ERR_JSON_GET;
     }
+    (void)DeepCopyString(peerUdid, returnPeerUdid);
     PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
     if (AddDeviceIdToJson(context, peerUdid) != HC_SUCCESS) {
         LOGE("add deviceId to context fail.");
@@ -1065,7 +1188,8 @@ static int32_t BuildServerP2PAuthContext(int64_t requestId, int32_t opCode, cons
     return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
 }
 
-static int32_t OpenServerAuthSession(int64_t requestId, const CJson *receivedMsg, const DeviceAuthCallback *callback)
+static int32_t OpenServerAuthSession(int64_t requestId, const CJson *receivedMsg, const DeviceAuthCallback *callback,
+    char **returnPeerUdid)
 {
     int32_t opCode = AUTH_FORM_ACCOUNT_UNRELATED;
     if (GetIntFromJson(receivedMsg, FIELD_AUTH_FORM, &opCode) != HC_SUCCESS) {
@@ -1091,7 +1215,7 @@ static int32_t OpenServerAuthSession(int64_t requestId, const CJson *receivedMsg
         FreeJson(context);
         return HC_ERR_JSON_GET;
     }
-    int32_t res = BuildServerAuthContext(requestId, opCode, appId, context);
+    int32_t res = BuildServerAuthContext(requestId, opCode, appId, context, returnPeerUdid);
     if (res != HC_SUCCESS) {
         FreeJson(context);
         return res;
@@ -1150,8 +1274,8 @@ static int32_t OpenServerAuthSessionForP2P(
     return res;
 }
 
-static int32_t ProcessData(int64_t authReqId, const uint8_t *data, uint32_t dataLen,
-    const DeviceAuthCallback *gaCallback)
+static int32_t ProcessDataInner(int64_t authReqId, const uint8_t *data, uint32_t dataLen,
+    const DeviceAuthCallback *gaCallback, char **returnPeerUdid)
 {
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(authReqId);
@@ -1172,7 +1296,7 @@ static int32_t ProcessData(int64_t authReqId, const uint8_t *data, uint32_t data
     }
     int32_t res;
     if (!IsSessionExist(authReqId)) {
-        res = OpenServerAuthSession(authReqId, receivedMsg, gaCallback);
+        res = OpenServerAuthSession(authReqId, receivedMsg, gaCallback, returnPeerUdid);
         if (res != HC_SUCCESS) {
             FreeJson(receivedMsg);
             return res;
@@ -1191,6 +1315,24 @@ static int32_t ProcessData(int64_t authReqId, const uint8_t *data, uint32_t data
         return res;
     }
     return HC_SUCCESS;
+}
+
+static int32_t ProcessData(int64_t authReqId, const uint8_t *data, uint32_t dataLen,
+    const DeviceAuthCallback *gaCallback)
+{
+    bool isSessionExist = IsSessionExist(authReqId);
+    if (!isSessionExist) {
+        ReportBehaviorBeginEvent(false, false, authReqId);
+    }
+    char *peerUdid = NULL;
+    int32_t res = ProcessDataInner(authReqId, data, dataLen, gaCallback, &peerUdid);
+    if (!isSessionExist) {
+        ReportBehaviorBeginResultEvent(false, false, authReqId, peerUdid, res);
+    }
+    if (peerUdid != NULL) {
+        HcFree(peerUdid);
+    }
+    return res;
 }
 
 static void CancelRequest(int64_t requestId, const char *appId)
@@ -1343,7 +1485,7 @@ DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
         LOGE("This access is not from the foreground user, rejected it.");
         return HC_ERR_CROSS_USER_ACCESS;
     }
-    int32_t res = BuildClientAuthContext(osAccountId, authReqId, DEFAULT_PACKAGE_NAME, context);
+    int32_t res = BuildClientAuthContext(osAccountId, authReqId, DEFAULT_PACKAGE_NAME, context, NULL);
     if (res != HC_SUCCESS) {
         FreeJson(context);
         return res;
