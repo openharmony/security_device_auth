@@ -212,7 +212,7 @@ static int32_t HandleRestoreCall(MessageParcel &data, MessageParcel &reply)
     ReloadOsAccountDb(osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to upgrade data!");
-        DEV_AUTH_REPORT_FAULT_EVENT(UPGRADE_DATA_EVENT, res, 0, 0, nullptr);
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(UPGRADE_DATA_EVENT, PROCESS_UPDATE, res);
     }
     reply.WriteInt32(res);
 #else

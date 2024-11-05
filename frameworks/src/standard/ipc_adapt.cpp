@@ -28,7 +28,6 @@
 #include "securec.h"
 #include "system_ability_definition.h"
 #include "parameter.h"
-#include "hisysevent_adapter.h"
 
 using namespace std;
 using namespace OHOS;
@@ -800,20 +799,6 @@ static void TmpIpcGaCbOnFinish(int64_t requestId, int32_t operationCode, const c
     return;
 }
 
-static void FaultReportWithType(int32_t type, int32_t errorCode)
-{
-    if (type == CB_TYPE_TMP_DEV_AUTH) {
-        LOGE("device auth error");
-        DEV_AUTH_REPORT_FAULT_EVENT(AUTH_DEV_EVENT, errorCode, DEFAULT_CRED_TYPE, DEFAULT_GROUP_TYPE, DEFAULT_APPID);
-    } else if (type == CB_TYPE_DEV_AUTH) {
-        LOGE("bind error");
-        DEV_AUTH_REPORT_FAULT_EVENT(ADD_MEMBER_EVENT, errorCode, DEFAULT_CRED_TYPE, DEFAULT_GROUP_TYPE, DEFAULT_APPID);
-    } else {
-        LOGE("unknown error, type is %d", type);
-    }
-    return;
-}
-
 static void GaCbOnErrorWithType(int64_t requestId, int32_t operationCode,
     int32_t errorCode, const char *errorReturn, int32_t type)
 {
@@ -846,7 +831,6 @@ static void GaCbOnErrorWithType(int64_t requestId, int32_t operationCode,
     /* delete request id */
     DelIpcCallBackByReqId(requestId, type, false);
     LOGI("process done, request id: %lld", static_cast<long long>(requestId));
-    FaultReportWithType(type, errorCode);
     return;
 }
 

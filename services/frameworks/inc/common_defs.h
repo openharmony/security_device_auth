@@ -275,6 +275,7 @@ typedef enum {
     GET_SHARED_SECRET_BY_PEER_CERT = 8,
     UPGRADE_DATA = 10,
     CHECK_UPGRADE_IDENTITY = 11,
+    CHECK_UPGRADE_DATA = 12,
 } CredentialCode;
 
 #endif

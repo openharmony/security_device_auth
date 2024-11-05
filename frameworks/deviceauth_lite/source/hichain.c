@@ -946,11 +946,8 @@ static int32_t GetErrorCode(const struct uint8_buff *data, int32_t *errorCode)
         return HC_INPUT_ERROR;
     }
     if (passThroughData->message_code == INFORM_MESSAGE) {
-        int32_t ret = ParseInformMessage(passThroughData->payload_data, JSON_STRING_DATA, errorCode);
-        free_data(passThroughData);
-        return ret;
+        return ParseInformMessage(passThroughData->payload_data, JSON_STRING_DATA, errorCode);
     }
-    free_data(passThroughData);
     *errorCode = HC_OK;
     return HC_OK;
 }
@@ -968,11 +965,9 @@ static int32_t ParseInformMessage(const char *payload, enum json_object_data_typ
     /* errorcode recv */
     *errorCode = get_json_int(obj, FIELD_ERROR_CODE);
     if (*errorCode == -1) {
-        free_payload(obj, dataType);
         LOGE("Parse inform message error code is not exist");
         return HC_INPUT_ERROR;
     }
-    free_payload(obj, dataType);
     LOGI("receive error code: %d", *errorCode);
     return HC_OK;
 }
