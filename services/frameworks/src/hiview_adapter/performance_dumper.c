@@ -562,3 +562,25 @@ void DestroyPerformanceDumper(void)
     HcFree(g_performDataMutex);
     g_performDataMutex = NULL;
 }
+
+int64_t GetTotalConsumeTimeByReqId(int64_t reqId)
+{
+    if (!g_isInit) {
+        return 0;
+    }
+    g_performDataMutex->lock(g_performDataMutex);
+    if (!g_isPerformDumpEnabled) {
+        g_performDataMutex->unlock(g_performDataMutex);
+        return 0;
+    }
+    uint32_t index;
+    PerformData **performData;
+    FOR_EACH_HC_VECTOR(g_performDataVec, index, performData) {
+        if ((*performData)->reqId == reqId) {
+            g_performDataMutex->unlock(g_performDataMutex);
+            return (*performData)->onFinishTime - (*performData)->firstStartTime;
+        }
+    }
+    g_performDataMutex->unlock(g_performDataMutex);
+    return 0;
+}

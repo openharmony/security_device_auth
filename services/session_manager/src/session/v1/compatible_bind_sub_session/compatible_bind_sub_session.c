@@ -28,6 +28,7 @@
 #include "hc_types.h"
 #include "hitrace_adapter.h"
 #include "performance_dumper.h"
+#include "hisysevent_adapter.h"
 
 static int32_t CheckInvitePeer(const CJson *jsonParams)
 {
@@ -274,6 +275,26 @@ static int32_t SendBindDataToPeer(CompatibleBindSubSession *session, CJson *out)
     return result;
 }
 
+static void ReportV1BindCallEvent(const CompatibleBindSubSession *session)
+{
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    DevAuthCallEvent eventData;
+    eventData.appId = session->base.appId;
+    eventData.funcName = ADD_MEMBER_EVENT;
+    eventData.osAccountId = session->osAccountId;
+    eventData.callResult = DEFAULT_CALL_RESULT;
+    eventData.processCode = PROCESS_BIND_V1;
+    eventData.credType = DEFAULT_CRED_TYPE;
+    eventData.groupType = PEER_TO_PEER_GROUP;
+    eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQ_ID(session->reqId);
+    eventData.extInfo = DEFAULT_EXT_INFO;
+    DEV_AUTH_REPORT_CALL_EVENT(eventData);
+    return;
+#endif
+    (void)session;
+    return;
+}
+
 static int32_t InformSelfBindSuccess(const char *peerAuthId, const char *peerUdid, const char *groupId,
     const CompatibleBindSubSession *session, CJson *out)
 {
@@ -294,6 +315,7 @@ static int32_t InformSelfBindSuccess(const char *peerAuthId, const char *peerUdi
     UPDATE_PERFORM_DATA_BY_INPUT_INDEX(session->reqId, ON_FINISH_TIME, HcGetCurTimeInMillis());
     ProcessFinishCallback(session->reqId, session->opCode, jsonDataStr, session->base.callback);
     FreeJsonString(jsonDataStr);
+    ReportV1BindCallEvent(session);
     return HC_SUCCESS;
 }
 

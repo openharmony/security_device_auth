@@ -282,7 +282,6 @@ static int32_t GetDirectAuthPskAliasCreateIfNeeded(const CJson *in, Uint8Buff *p
 static int32_t GetSharedSecretByUrl(
     const CJson *in, const Uint8Buff *presharedUrl, ProtocolAlgType protocolType, Uint8Buff *sharedSecret)
 {
-    (void)protocolType;
     if (in == NULL || presharedUrl == NULL || sharedSecret == NULL) {
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
@@ -324,9 +323,6 @@ static int32_t GetSharedSecretByUrl(
 static int32_t GetCredInfoByPeerCert(const CJson *in, const CertInfo *certInfo, IdentityInfo **returnInfo)
 {
     // NOT SUPPORT FOR P2P AUTH
-    (void)in;
-    (void)certInfo;
-    (void)returnInfo;
     return HC_ERR_ALG_FAIL;
 }
 
@@ -334,10 +330,6 @@ static int32_t GetSharedSecretByPeerCert(
     const CJson *in, const CertInfo *peerCertInfo, ProtocolAlgType protocolType, Uint8Buff *sharedSecret)
 {
     // NOT SUPPORT P2P AUTH
-    (void)in;
-    (void)peerCertInfo;
-    (void)protocolType;
-    (void)sharedSecret;
     return HC_ERR_ALG_FAIL;
 }
 

@@ -46,10 +46,10 @@ build_flags = [
 if (defined(ohos_lite)) {
   if (ohos_kernel_type == "liteos_m") {
     import("${deviceauth_feature_config}/mini/config.gni")
-    device_auth_enable_soft_bus_channel = false
   } else {
     import("${deviceauth_feature_config}/small/config.gni")
   }
+  device_auth_enable_soft_bus_channel = false
 } else {
   import("${deviceauth_feature_config}/standard/config.gni")
 }

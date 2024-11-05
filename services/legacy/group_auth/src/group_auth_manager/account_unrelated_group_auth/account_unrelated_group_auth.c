@@ -25,6 +25,7 @@
 #include "os_account_adapter.h"
 #include "performance_dumper.h"
 #include "string_util.h"
+#include "hisysevent_adapter.h"
 
 static void OnDasFinish(int64_t requestId, const CJson *authParam, const CJson *out,
     const DeviceAuthCallback *callback);
@@ -236,6 +237,28 @@ static int32_t DasOnFinishToPeer(int64_t requestId, const CJson *out, const Devi
     return res;
 }
 
+static void ReportV1UnrelatedAuthCallEvent(int64_t requestId, const CJson *authParam)
+{
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    DevAuthCallEvent eventData;
+    eventData.appId = SOFTBUS_APP_ID;
+    eventData.funcName = AUTH_DEV_EVENT;
+    eventData.osAccountId = DEFAULT_OS_ACCOUNT;
+    (void)GetIntFromJson(authParam, FIELD_OS_ACCOUNT_ID, &eventData.osAccountId);
+    eventData.callResult = DEFAULT_CALL_RESULT;
+    eventData.processCode = PROCESS_AUTH_V1;
+    eventData.credType = DEFAULT_CRED_TYPE;
+    eventData.groupType = PEER_TO_PEER_GROUP;
+    eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQ_ID(requestId);
+    eventData.extInfo = DEFAULT_EXT_INFO;
+    DEV_AUTH_REPORT_CALL_EVENT(eventData);
+    return;
+#endif
+    (void)requestId;
+    (void)authParam;
+    return;
+}
+
 static int32_t DasOnFinishToSelf(int64_t requestId, const CJson *authParam, const CJson *out,
     const DeviceAuthCallback *callback)
 {
@@ -269,6 +292,7 @@ static int32_t DasOnFinishToSelf(int64_t requestId, const CJson *authParam, cons
         callback->onFinish(requestId, AUTH_FORM_ACCOUNT_UNRELATED, returnStr);
     }
     ClearAndFreeJsonString(returnStr);
+    ReportV1UnrelatedAuthCallEvent(requestId, authParam);
     return res;
 }
 

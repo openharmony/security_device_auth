@@ -627,7 +627,7 @@ static int32_t AddMemberToGroup(int32_t osAccountId, int64_t requestId, const ch
     int32_t res = AddMemberToGroupInner(osAccountId, requestId, appId, addParams);
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     const char *callEventFuncName = GetAddMemberCallEventFuncName(addParams);
-    DEV_AUTH_REPORT_CALL_EVENT(requestId, callEventFuncName, appId, osAccountId, res);
+    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, addParams, appId, callEventFuncName);
 #endif
     return res;
 }
@@ -931,7 +931,7 @@ static int32_t AuthDevice(int32_t osAccountId, int64_t authReqId, const char *au
         FreeJson(context);
         return res;
     }
-    DEV_AUTH_REPORT_CALL_EVENT(authReqId, AUTH_DEV_EVENT, appId, osAccountId, res);
+    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, authParams, appId, AUTH_DEV_EVENT);
     SessionInitParams params = { context, *gaCallback };
     res = OpenDevSession(authReqId, appId, &params);
     FreeJson(context);
@@ -1185,6 +1185,7 @@ static void CancelRequest(int64_t requestId, const char *appId)
 {
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(requestId);
+    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(DEFAULT_OS_ACCOUNT, NULL, appId, CANCEL_REQUEST_EVENT);
     if (appId == NULL) {
         LOGE("Invalid app id!");
         return;

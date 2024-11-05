@@ -478,7 +478,7 @@ static int32_t ReturnTransmitData(const CompatibleAuthSubSession *session, CJson
         LOGE("Failed to pack outStr for onTransmit!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    
+
     int32_t authForm = AUTH_FORM_INVALID_TYPE;
     if (GetIntFromJson(sendToPeer, FIELD_AUTH_FORM, &authForm) == HC_SUCCESS) {
         LOGI("AuthForm is %d.", authForm);
