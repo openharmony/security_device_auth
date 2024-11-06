@@ -84,6 +84,15 @@ int32_t DeepCopyString(const char *str, char **newStr);
  */
 void PrintBuffer(const uint8_t *msgBuff, uint32_t msgLen, const char *msgTag);
 
+/*
+ * Get the anonymous string.
+ * @param originStr: the original string.
+ * @param anonymousStr: the anonymous string.
+ * @param anonymousLen: the anonymous string len.
+ * @return success(0), otherwise, failure.
+ */
+int32_t GetAnonymousString(const char *originStr, char *anonymousStr, uint32_t anonymousLen);
+
 #ifdef __cplusplus
 }
 #endif

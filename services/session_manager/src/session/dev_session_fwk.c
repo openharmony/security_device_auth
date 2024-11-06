@@ -226,6 +226,75 @@ static bool IsMetaNode(const CJson *context)
     return GetStringFromJson(context, FIELD_META_NODE_TYPE) != NULL;
 }
 
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+static DevAuthBizScene GetBizScene(bool isBind, bool isClient)
+{
+    if (isBind) {
+        if (isClient) {
+            return BIZ_SCENE_ADD_MEMBER_CLIENT;
+        } else {
+            return BIZ_SCENE_ADD_MEMBER_SERVER;
+        }
+    } else {
+        if (isClient) {
+            return BIZ_SCENE_AUTH_DEVICE_CLIENT;
+        } else {
+            return BIZ_SCENE_AUTH_DEVICE_SERVER;
+        }
+    }
+}
+#endif
+
+static void ReportBehaviorEvent(const SessionImpl *impl, bool isProcessEnd, bool isBehaviorEnd, int32_t res)
+{
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    bool isBind = true;
+    (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
+    char *funcName = isBind ? ADD_MEMBER_EVENT : AUTH_DEV_EVENT;
+    DevAuthBizScene scene = GetBizScene(isBind, impl->isClient);
+    DevAuthBehaviorEvent eventData = { 0 };
+    DevAuthBizState state = BIZ_STATE_PROCESS;
+    if (isBehaviorEnd) {
+        state = BIZ_STATE_END;
+    }
+    BuildBehaviorEventData(&eventData, funcName, scene, state, BIZ_STAGE_PROCESS);
+    char anonymousLocalUdid[ANONYMOUS_UDID_LEN + 1] = { 0 };
+    char anonymousPeerUdid[ANONYMOUS_UDID_LEN + 1] = { 0 };
+    if (isBind) {
+        eventData.hostPkg = ADD_MEMBER_HOST_PKG_NAME;
+        eventData.toCallPkg = ADD_MEMBER_TO_CALL_PKG_NAME;
+    } else {
+        eventData.hostPkg = AUTH_DEVICE_HOST_PKG_NAME;
+        char selfUdid[INPUT_UDID_LEN] = { 0 };
+        (void)HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
+        if (GetAnonymousString(selfUdid, anonymousLocalUdid, ANONYMOUS_UDID_LEN) == HC_SUCCESS) {
+            eventData.localUdid = anonymousLocalUdid;
+        }
+        const char *peerUdid = GetStringFromJson(impl->context, FIELD_PEER_CONN_DEVICE_ID);
+        if (GetAnonymousString(peerUdid, anonymousPeerUdid, ANONYMOUS_UDID_LEN) == HC_SUCCESS) {
+            eventData.peerUdid = anonymousPeerUdid;
+        }
+    }
+    char concurrentId[MAX_REQUEST_ID_LEN] = { 0 };
+    (void)sprintf_s(concurrentId, sizeof(concurrentId), "%" PRId64, impl->base.id);
+    eventData.concurrentId = concurrentId;
+    if (isProcessEnd || isBehaviorEnd) {
+        if (res == HC_SUCCESS) {
+            eventData.stageRes = STAGE_RES_SUCCESS;
+        } else {
+            eventData.stageRes = STAGE_RES_FAILED;
+            eventData.errorCode = res;
+        }
+    }
+    DevAuthReportBehaviorEvent(&eventData);
+#else
+    (void)impl;
+    (void)isProcessEnd;
+    (void)isBehaviorEnd;
+    (void)res;
+#endif
+}
+
 static void ReportBindAndAuthCallEvent(const SessionImpl *impl, int32_t callResult, bool isV1Session)
 {
 #ifdef DEV_AUTH_HIVIEW_ENABLE
@@ -285,6 +354,7 @@ static void ReportBindAndAuthFaultEvent(const SessionImpl *impl, int32_t errorCo
 
 static void OnDevSessionError(const SessionImpl *impl, int32_t errorCode, const char *errorReturn, bool isV1Session)
 {
+    ReportBehaviorEvent(impl, false, true, errorCode);
     ProcessErrorCallback(impl->base.id, impl->base.opCode, errorCode, errorReturn, &impl->base.callback);
     CloseChannel(impl->channelType, impl->channelId);
     ReportBindAndAuthFaultEvent(impl, errorCode, isV1Session);
@@ -298,6 +368,7 @@ static int32_t StartSession(DevSession *self)
         return HC_ERR_INVALID_PARAMS;
     }
     SessionImpl *impl = (SessionImpl *)self;
+    ReportBehaviorEvent(impl, false, false, HC_SUCCESS);
     int32_t res;
     do {
         CJson *sendMsg = NULL;
@@ -336,6 +407,7 @@ static int32_t StartSession(DevSession *self)
             break;
         }
     } while (0);
+    ReportBehaviorEvent(impl, true, false, res);
     if (res != HC_SUCCESS) {
         OnDevSessionError(impl, res, NULL, false);
     }
@@ -558,15 +630,21 @@ static void OnV1SessionError(SessionImpl *impl, int32_t errorCode, const CJson *
 
 static int32_t ProcV1Session(SessionImpl *impl, const CJson *receviedMsg, bool *isFinish)
 {
+    ReportBehaviorEvent(impl, false, false, HC_SUCCESS);
     int32_t res;
     if (impl->compatibleSubSession == NULL) {
         res = InitServerV1Session(impl, receviedMsg);
         if (res != HC_SUCCESS) {
+            ReportBehaviorEvent(impl, true, false, res);
             OnV1SessionError(impl, res, receviedMsg);
             return res;
         }
     }
     res = ProcV1SessionMsg(impl, receviedMsg, isFinish);
+    ReportBehaviorEvent(impl, true, false, res);
+    if (*isFinish) {
+        ReportBehaviorEvent(impl, false, true, HC_SUCCESS);
+    }
     if (res != HC_SUCCESS) {
         OnV1SessionError(impl, res, receviedMsg);
     }
@@ -601,6 +679,7 @@ static char *GetSessionReturnData(const SessionImpl *impl)
 
 static void OnDevSessionFinish(const SessionImpl *impl)
 {
+    ReportBehaviorEvent(impl, false, true, HC_SUCCESS);
     UPDATE_PERFORM_DATA_BY_INPUT_INDEX(impl->base.id, ON_SESSION_KEY_RETURN_TIME, HcGetCurTimeInMillis());
     ProcessSessionKeyCallback(impl->base.id, impl->sessionKey.val, impl->sessionKey.length, &impl->base.callback);
 
@@ -620,11 +699,7 @@ static void OnDevSessionFinish(const SessionImpl *impl)
 
 static int32_t ProcV2Session(SessionImpl *impl, const CJson *receviedMsg, bool *isFinish)
 {
-    if (!IsSupportSessionV2()) {
-        LOGE("not suppot session v2.");
-        OnDevSessionError(impl, HC_ERR_NOT_SUPPORT, NULL, false);
-        return HC_ERR_NOT_SUPPORT;
-    }
+    ReportBehaviorEvent(impl, false, false, HC_SUCCESS);
     if (impl->compatibleSubSession != NULL) {
         DestroyCompatibleSubSession(impl->compatibleSubSession);
         impl->compatibleSubSession = NULL;
@@ -637,6 +712,7 @@ static int32_t ProcV2Session(SessionImpl *impl, const CJson *receviedMsg, bool *
         }
         res = ProcEventList(impl);
     } while (0);
+    ReportBehaviorEvent(impl, true, false, res);
     if (res != HC_SUCCESS) {
         OnDevSessionError(impl, res, NULL, false);
         return res;

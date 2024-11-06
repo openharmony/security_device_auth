@@ -23,6 +23,7 @@
 #define STR_STATISTIC_EVENT "STATISTIC_EVENT"
 #define STR_OS_ACCOUNT_ID "OS_ACCOUNT_ID"
 #define STR_FUNC_NAME "FUNC_NAME"
+#define STR_FUNC "FUNC"
 #define STR_FAULT_REASON "FAULT_REASON"
 #define STR_CRED_TYPE "CRED_TYPE"
 #define STR_GROUP_TYPE "GROUP_TYPE"
@@ -39,6 +40,18 @@
 #define STR_ERROR_CODE "ERROR_CODE"
 #define STR_PNAME_ID "PNAMEID"
 #define STR_PVERSION_ID "PVERSIONID"
+#define STR_DEVAUTH_BEHAVIOR "DEVAUTH_BEHAVIOR"
+#define STR_ORG_PKG "ORG_PKG"
+#define STR_BIZ_SCENE "BIZ_SCENE"
+#define STR_BIZ_STATE "BIZ_STATE"
+#define STR_BIZ_STAGE "BIZ_STAGE"
+#define STR_STAGE_RES "STAGE_RES"
+#define STR_ERROR_CODE "ERROR_CODE"
+#define STR_TO_CALL_PKG "TO_CALL_PKG"
+#define STR_HOST_PKG "HOST_PKG"
+#define STR_LOCAL_UDID "LOCAL_UUID"
+#define STR_PEER_UDID "PEER_UUID"
+#define STR_CONCURRENT_ID "CONCURRENT_ID"
 
 void DevAuthReportCallEvent(const DevAuthCallEvent eventData)
 {
@@ -54,6 +67,37 @@ void DevAuthReportCallEvent(const DevAuthCallEvent eventData)
         STR_GROUP_TYPE, eventData.groupType,
         STR_EXECUTION_TIME, eventData.executionTime,
         STR_EXT_INFO, ((eventData.extInfo != NULL) ? eventData.extInfo : STR_UNKNOWN));
+}
+
+void DevAuthReportBehaviorEvent(const DevAuthBehaviorEvent *eventData)
+{
+    HiSysEventWrite(
+        OHOS::HiviewDFX::HiSysEvent::Domain::DEVICE_AUTH,
+        STR_DEVAUTH_BEHAVIOR, OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+        STR_ORG_PKG, ((eventData->orgPkg != NULL) ? eventData->orgPkg : STR_UNKNOWN),
+        STR_FUNC, ((eventData->funcName != NULL) ? eventData->funcName : STR_UNKNOWN),
+        STR_BIZ_SCENE, eventData->bizScene,
+        STR_BIZ_STATE, eventData->bizState,
+        STR_BIZ_STAGE, eventData->bizStage,
+        STR_STAGE_RES, ((eventData->stageRes != NULL) ? eventData->stageRes : STR_UNKNOWN),
+        STR_ERROR_CODE, eventData->errorCode,
+        STR_TO_CALL_PKG, ((eventData->toCallPkg != NULL) ? eventData->toCallPkg : STR_UNKNOWN),
+        STR_HOST_PKG, ((eventData->hostPkg != NULL) ? eventData->hostPkg : STR_UNKNOWN),
+        STR_LOCAL_UDID, ((eventData->localUdid != NULL) ? eventData->localUdid : STR_UNKNOWN),
+        STR_PEER_UDID, ((eventData->peerUdid != NULL) ? eventData->peerUdid : STR_UNKNOWN),
+        STR_CONCURRENT_ID, ((eventData->concurrentId != NULL) ? eventData->concurrentId : STR_UNKNOWN));
+}
+
+void BuildBehaviorEventData(DevAuthBehaviorEvent *eventData, const char *funcName, int32_t bizScene, int32_t bizState,
+    int32_t bizStage)
+{
+    eventData->orgPkg = "deviceauth_service";
+    eventData->funcName = funcName;
+    eventData->bizScene = bizScene;
+    eventData->bizState = bizState;
+    eventData->bizStage = bizStage;
+    eventData->stageRes = STAGE_RES_IDLE;
+    eventData->errorCode = 0;
 }
 
 void DevAuthReportFaultEvent(DevAuthFaultEvent eventData)

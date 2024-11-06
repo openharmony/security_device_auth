@@ -15,6 +15,7 @@
 
 #include "performance_dumper.h"
 
+#include "common_defs.h"
 #include "device_auth.h"
 #include "device_auth_defines.h"
 #include "hc_log.h"
@@ -25,7 +26,6 @@
 
 #define ENABLE_PERFORMANCE_DUMPER "--enable"
 #define DISABLE_PERFORMANCE_DUMPER "--disable"
-#define MAX_REQUEST_ID_LEN 128
 #define MAX_DUMP_SESSION_NUM 10
 #define MIN_ARGS_NUM 1
 #define MAX_ARGS_NUM 2
