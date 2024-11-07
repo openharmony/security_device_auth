@@ -23,7 +23,7 @@ extern "C" {
 #endif
 
 /* Calculate in seconds */
-#define TIME_OUT_VALUE 300
+#define TIME_OUT_VALUE 30
 
 /* Return in seconds */
 int64_t HcGetCurTime(void);
