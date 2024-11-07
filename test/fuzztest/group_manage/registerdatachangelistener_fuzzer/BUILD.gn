@@ -22,7 +22,7 @@ module_output_path = "device_auth/device_auth"
 ##############################fuzztest##########################################
 ohos_fuzztest("RegisterDataChangeListenerFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/security/device_auth/test/fuzztest/group_manage/registerdatachangelistener_fuzzer"
+  fuzz_config_file = "${deviceauth_path}/test/fuzztest/group_manage/registerdatachangelistener_fuzzer"
   include_dirs = inc_path
   sources = [ "registerdatachangelistener_fuzzer.cpp" ]
   cflags = [

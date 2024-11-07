@@ -23,7 +23,7 @@ module_output_path = "device_auth/device_auth"
 ##############################fuzztest##########################################
 ohos_fuzztest("DevAuthServAddMultiMembersToGroupFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//base/security/device_auth/test/fuzztest/device_auth_service/devauthservaddmultimemberstogroup_fuzzer"
+  fuzz_config_file = "${deviceauth_path}/test/fuzztest/device_auth_service/devauthservaddmultimemberstogroup_fuzzer"
   include_dirs = inc_path + hals_inc_path
   include_dirs += [
     "${frameworks_path}/inc/standard",
