@@ -23,7 +23,8 @@ module_output_path = "device_auth/device_auth"
 ohos_fuzztest("DeleteMemberFuzzTest") {
   module_out_path = module_output_path
   include_dirs = inc_path
-  fuzz_config_file = "//base/security/device_auth/test/fuzztest/group_manage/deletemember_fuzzer"
+  fuzz_config_file =
+      "${deviceauth_path}/test/fuzztest/group_manage/deletemember_fuzzer"
   sources = [ "deletemember_fuzzer.cpp" ]
   cflags = [
     "-g",

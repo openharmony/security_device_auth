@@ -23,7 +23,7 @@ module_output_path = "device_auth/device_auth"
 ohos_fuzztest("AddMemberFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
-      "//base/security/device_auth/test/fuzztest/group_manage/addmember_fuzzer"
+      "${deviceauth_path}/test/fuzztest/group_manage/addmember_fuzzer"
   include_dirs = inc_path
   sources = [ "addmember_fuzzer.cpp" ]
   cflags = [
