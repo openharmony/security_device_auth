@@ -38,9 +38,6 @@
 #define ADD_MEMBER_TO_CALL_PKG_NAME "dsoftbus"
 #define ADD_MEMBER_HOST_PKG_NAME "deviceManager"
 #define AUTH_DEVICE_HOST_PKG_NAME "dsoftbus"
-#define STAGE_RES_IDLE "0"
-#define STAGE_RES_SUCCESS "1"
-#define STAGE_RES_FAILED "2"
 
 #define ANONYMOUS_UDID_LEN 12
 
@@ -115,7 +112,7 @@ typedef struct {
     int32_t bizScene;
     int32_t bizState;
     int32_t bizStage;
-    const char *stageRes;
+    int32_t stageRes;
     int32_t errorCode;
     const char *toCallPkg;
     const char *hostPkg;
@@ -150,6 +147,12 @@ typedef enum {
     BIZ_STAGE_BEGIN = 1,
     BIZ_STAGE_PROCESS
 } DevAuthBizStage;
+
+typedef enum {
+    STAGE_RES_IDLE = 0,
+    STAGE_RES_SUCCESS,
+    STAGE_RES_FAILED
+} DevAuthStageRes;
 
 void DevAuthReportCallEvent(const DevAuthCallEvent eventData);
 void DevAuthReportBehaviorEvent(const DevAuthBehaviorEvent *eventData);
