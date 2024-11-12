@@ -32,12 +32,12 @@ DEVAUTH_BEHAVIOR:
   BIZ_SCENE: {type: INT32, desc: business scene}
   BIZ_STATE: {type: INT32, desc: business state}
   BIZ_STAGE: {type: INT32, desc: business stage}
-  STAGE_RES: {type: STRING, desc: stage res}
+  STAGE_RES: {type: INT32, desc: stage res}
   ERROR_CODE: {type: INT32, desc: error code}
   TO_CALL_PKG: {type: STRING, desc: call package}
   HOST_PKG: {type: STRING, desc: host package}
-  LOCAL_UUID: {type: STRING, desc: local udid}
-  PEER_UUID: {type: STRING, desc: peer udid}
+  LOCAL_UDID: {type: STRING, desc: local udid}
+  PEER_UDID: {type: STRING, desc: peer udid}
   CONCURRENT_ID: {type: STRING, desc: concurrent id}
 
 FAULT_EVENT:

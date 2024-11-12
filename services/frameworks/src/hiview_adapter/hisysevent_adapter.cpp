@@ -49,9 +49,10 @@
 #define STR_ERROR_CODE "ERROR_CODE"
 #define STR_TO_CALL_PKG "TO_CALL_PKG"
 #define STR_HOST_PKG "HOST_PKG"
-#define STR_LOCAL_UDID "LOCAL_UUID"
-#define STR_PEER_UDID "PEER_UUID"
+#define STR_LOCAL_UDID "LOCAL_UDID"
+#define STR_PEER_UDID "PEER_UDID"
 #define STR_CONCURRENT_ID "CONCURRENT_ID"
+#define STR_NULL_STRING ""
 
 void DevAuthReportCallEvent(const DevAuthCallEvent eventData)
 {
@@ -74,18 +75,18 @@ void DevAuthReportBehaviorEvent(const DevAuthBehaviorEvent *eventData)
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::DEVICE_AUTH,
         STR_DEVAUTH_BEHAVIOR, OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        STR_ORG_PKG, ((eventData->orgPkg != NULL) ? eventData->orgPkg : STR_UNKNOWN),
-        STR_FUNC, ((eventData->funcName != NULL) ? eventData->funcName : STR_UNKNOWN),
+        STR_ORG_PKG, ((eventData->orgPkg != NULL) ? eventData->orgPkg : STR_NULL_STRING),
+        STR_FUNC, ((eventData->funcName != NULL) ? eventData->funcName : STR_NULL_STRING),
         STR_BIZ_SCENE, eventData->bizScene,
         STR_BIZ_STATE, eventData->bizState,
         STR_BIZ_STAGE, eventData->bizStage,
-        STR_STAGE_RES, ((eventData->stageRes != NULL) ? eventData->stageRes : STR_UNKNOWN),
+        STR_STAGE_RES, eventData->stageRes,
         STR_ERROR_CODE, eventData->errorCode,
-        STR_TO_CALL_PKG, ((eventData->toCallPkg != NULL) ? eventData->toCallPkg : STR_UNKNOWN),
-        STR_HOST_PKG, ((eventData->hostPkg != NULL) ? eventData->hostPkg : STR_UNKNOWN),
-        STR_LOCAL_UDID, ((eventData->localUdid != NULL) ? eventData->localUdid : STR_UNKNOWN),
-        STR_PEER_UDID, ((eventData->peerUdid != NULL) ? eventData->peerUdid : STR_UNKNOWN),
-        STR_CONCURRENT_ID, ((eventData->concurrentId != NULL) ? eventData->concurrentId : STR_UNKNOWN));
+        STR_TO_CALL_PKG, ((eventData->toCallPkg != NULL) ? eventData->toCallPkg : STR_NULL_STRING),
+        STR_HOST_PKG, ((eventData->hostPkg != NULL) ? eventData->hostPkg : STR_NULL_STRING),
+        STR_LOCAL_UDID, ((eventData->localUdid != NULL) ? eventData->localUdid : STR_NULL_STRING),
+        STR_PEER_UDID, ((eventData->peerUdid != NULL) ? eventData->peerUdid : STR_NULL_STRING),
+        STR_CONCURRENT_ID, ((eventData->concurrentId != NULL) ? eventData->concurrentId : STR_NULL_STRING));
 }
 
 void BuildBehaviorEventData(DevAuthBehaviorEvent *eventData, const char *funcName, int32_t bizScene, int32_t bizState,
