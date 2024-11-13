@@ -20,7 +20,6 @@
 #include "device_auth.h"
 #include "device_auth_defines.h"
 #include "ipc_adapt.h"
-#include "hc_condition.h"
 #include "ipc_dev_auth_stub.h"
 #include "ipc_sdk.h"
 #include "common_defs.h"
@@ -1147,10 +1146,9 @@ static int32_t IpcServiceDaProcessCredential(const IpcDataInfo *ipcParams, int32
 
     LOGI("starting ...");
     int32_t inOutLen = sizeof(int32_t);
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_OPCODE, (uint8_t *)&operationCode, &inOutLen);
-    if ((inOutLen != sizeof(int32_t)) || (ret != HC_SUCCESS)) {
-        LOGE("get param error, type %d", PARAM_TYPE_OPCODE);
-        return HC_ERR_IPC_BAD_PARAM;
+    ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OPCODE, (uint8_t *)&operationCode, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        return ret;
     }
     ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_REQ_JSON, (uint8_t *)&reqJsonStr, nullptr);
     if (ret != HC_SUCCESS) {
