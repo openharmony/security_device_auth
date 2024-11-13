@@ -22,7 +22,6 @@
 #include "ipc_dev_auth_proxy.h"
 #include "ipc_dev_auth_stub.h"
 #include "ipc_sdk.h"
-#include "ipc_service.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "securec.h"

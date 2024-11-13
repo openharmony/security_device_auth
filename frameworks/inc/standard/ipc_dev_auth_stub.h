@@ -16,9 +16,10 @@
 #ifndef IPC_DEV_AUTH_STUB_H
 #define IPC_DEV_AUTH_STUB_H
 
+#include "iremote_stub.h"
+
 #include "ipc_iface.h"
 #include "ipc_adapt.h"
-#include "iremote_stub.h"
 
 namespace OHOS {
 typedef struct {
@@ -32,7 +33,7 @@ class ServiceDevAuth : public IRemoteStub<IMethodsIpcCall> {
 public:
     ServiceDevAuth(bool serialInvokeFlag = true);
     ~ServiceDevAuth() override;
-    int32_t Dump(int32_t fd, const std::vector<std::u16string>& args) override;
+    int32_t Dump(int32_t fd, const std::vector<std::u16string> &args) override;
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data,
         MessageParcel &reply, MessageOption &option) override;
     void ResetCallMap(void);
@@ -43,13 +44,16 @@ public:
     static void ActCallback(int32_t objIdx, int32_t callbackId, bool sync,
         uintptr_t cbHook, MessageParcel &dataParcel, MessageParcel &reply);
 
-private:
-    int32_t maxCallMapSz = MAX_CALLMAP_SIZE;
-    IpcServiceCallMap *callMapTable = nullptr;
-    int32_t callMapElemNum = 0;
-    IpcServiceCall GetCallMethodByMethodId(int32_t methodId);
+protected:
+    int32_t HandleRestoreCall(MessageParcel &data, MessageParcel &reply);
     int32_t HandleDeviceAuthCall(uint32_t code, MessageParcel &data,
         MessageParcel &reply, MessageOption &option);
+
+private:
+    int32_t maxCallMapSz = MAX_CALLMAP_SIZE;
+    IpcServiceCallMap *standardCallMapTable = nullptr;
+    int32_t callMapElemNum = 0;
+    IpcServiceCall GetCallMethodByMethodId(int32_t methodId);
 };
 
 class DevAuthDeathRecipient : public IRemoteObject::DeathRecipient {

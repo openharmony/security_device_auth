@@ -61,6 +61,7 @@
           "openssl",
           "os_account",
           "samgr",
+          "safwk",
           "ipc"
         ]
       },

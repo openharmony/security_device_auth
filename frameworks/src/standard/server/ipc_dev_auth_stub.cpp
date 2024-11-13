@@ -57,14 +57,14 @@ ServiceDevAuth::ServiceDevAuth(bool serialInvokeFlag) : IRemoteStub(serialInvoke
 ServiceDevAuth::~ServiceDevAuth()
 {
     maxCallMapSz = MAX_CALLMAP_SIZE;
-    if (callMapTable != nullptr) {
-        delete[] callMapTable;
-        callMapTable = nullptr;
+    if (standardCallMapTable != nullptr) {
+        delete[] standardCallMapTable;
+        standardCallMapTable = nullptr;
     }
     callMapElemNum = 0;
 }
 
-int32_t ServiceDevAuth::Dump(int32_t fd, const std::vector<std::u16string>& args)
+int32_t ServiceDevAuth::Dump(int32_t fd, const std::vector<std::u16string> &args)
 {
     std::vector<std::string> strArgs;
     for (auto arg : args) {
@@ -93,13 +93,13 @@ IpcServiceCall ServiceDevAuth::GetCallMethodByMethodId(int32_t methodId)
 {
     int32_t i;
 
-    if (callMapTable == nullptr) {
+    if (standardCallMapTable == nullptr) {
         return nullptr;
     }
 
     for (i = 0; i < maxCallMapSz; i++) {
-        if ((callMapTable[i].methodId == methodId) && (callMapTable[i].method != nullptr)) {
-            return callMapTable[i].method;
+        if ((standardCallMapTable[i].methodId == methodId) && (standardCallMapTable[i].method != nullptr)) {
+            return standardCallMapTable[i].method;
         }
     }
     return nullptr;
@@ -202,7 +202,7 @@ static void InitCbStubTable()
     return;
 }
 
-static int32_t HandleRestoreCall(MessageParcel &data, MessageParcel &reply)
+int32_t ServiceDevAuth::HandleRestoreCall(MessageParcel &data, MessageParcel &reply)
 {
 #ifdef DEV_AUTH_SERVICE_BUILD
     int32_t osAccountId = DEFAULT_UPGRADE_OS_ACCOUNT_ID;
@@ -245,11 +245,13 @@ int32_t ServiceDevAuth::HandleDeviceAuthCall(uint32_t code, MessageParcel &data,
             }
             serviceCall = GetCallMethodByMethodId(methodId);
             if (serviceCall == nullptr) {
+                LOGE("ServiceDevAuth::HandleDeviceAuthCall serviceCall is nullptr, methodId: %d", methodId);
                 ret = HC_ERR_IPC_METHOD_ID_INVALID;
                 break;
             }
             ret = DecodeCallRequest(data, reqParams, MAX_REQUEST_PARAMS_NUM, reqParamNum);
             if (ret != HC_SUCCESS) {
+                LOGE("ServiceDevAuth::HandleDeviceAuthCall DecodeCallRequest ret: %d", ret);
                 break;
             }
             if (reqParamNum < (MAX_REQUEST_PARAMS_NUM - 1)) {
@@ -294,23 +296,23 @@ int32_t ServiceDevAuth::SetCallMap(IpcServiceCall method, int32_t methodId)
 
     if ((1 + callMapElemNum) > maxCallMapSz) {
         maxCallMapSz += MAX_CALLMAP_SIZE;
-        if (callMapTable != nullptr) {
-            callMapTmp = callMapTable;
-            callMapTable = nullptr;
+        if (standardCallMapTable != nullptr) {
+            callMapTmp = standardCallMapTable;
+            standardCallMapTable = nullptr;
         }
     }
-    if (callMapTable == nullptr) {
-        callMapTable = new(std::nothrow) IpcServiceCallMap[maxCallMapSz];
-        if (callMapTable == nullptr) {
+    if (standardCallMapTable == nullptr) {
+        standardCallMapTable = new(std::nothrow) IpcServiceCallMap[maxCallMapSz];
+        if (standardCallMapTable == nullptr) {
             return HC_ERR_ALLOC_MEMORY;
         }
         len = sizeof(IpcServiceCallMap) * maxCallMapSz;
-        (void)memset_s(callMapTable, len, 0, len);
+        (void)memset_s(standardCallMapTable, len, 0, len);
         if (callMapTmp != nullptr) {
-            eno = memcpy_s(callMapTable, len, callMapTmp, (sizeof(IpcServiceCallMap) * callMapElemNum));
+            eno = memcpy_s(standardCallMapTable, len, callMapTmp, (sizeof(IpcServiceCallMap) * callMapElemNum));
             if (eno != EOK) {
-                delete[] callMapTable;
-                callMapTable = callMapTmp;
+                delete[] standardCallMapTable;
+                standardCallMapTable = callMapTmp;
                 maxCallMapSz -= MAX_CALLMAP_SIZE;
                 return HC_ERR_MEMORY_COPY;
             }
@@ -318,8 +320,9 @@ int32_t ServiceDevAuth::SetCallMap(IpcServiceCall method, int32_t methodId)
             callMapTmp = nullptr;
         }
     }
-    callMapTable[callMapElemNum].method = method;
-    callMapTable[callMapElemNum].methodId = methodId;
+
+    standardCallMapTable[callMapElemNum].method = method;
+    standardCallMapTable[callMapElemNum].methodId = methodId;
     callMapElemNum++;
     return HC_SUCCESS;
 }

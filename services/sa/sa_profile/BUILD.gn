@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Huawei Device Co., Ltd.
+# Copyright (C) 2024-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,23 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
+import("//build/ohos/sa_profile/sa_profile.gni")
 
-group("deviceauth_sdk_build") {
-  if (os_level == "standard" || os_level == "small") {
-    deps = [ "services:deviceauth_sdk" ]
-  }
-}
-
-group("deviceauth_service_build") {
-  if (os_level == "standard" || os_level == "small") {
-    deps = [
-      "services:deviceauth_service",
-      "services/sa/sa_profile:deviceauth_sa_profile",
-    ]
-  }
-}
-
-group("deviceauth_build") {
-  deps = [ "services:deviceauth" ]
+ohos_sa_profile("deviceauth_sa_profile") {
+  part_name = "device_auth"
+  sources = [ "4701.json" ]
 }

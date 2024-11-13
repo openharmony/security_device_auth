@@ -238,66 +238,11 @@ if (os_level == "mini" || os_level == "small") {
     }
   }
 
-  ohos_prebuilt_etc("auth_service.rc") {
-    source = "${frameworks_path}/src/standard/deviceauth_service.cfg"
+  ohos_prebuilt_etc("pre_deviceauth_service") {
+    source = "${deviceauth_path}/services/deviceauth_service.cfg"
     relative_install_dir = "init"
     subsystem_name = "security"
     part_name = "device_auth"
-  }
-
-  group("etc") {
-    deps = [ ":auth_service.rc" ]
-  }
-
-  ohos_executable("deviceauth_service") {
-    subsystem_name = "security"
-    part_name = "device_auth"
-    install_enable = true
-
-    include_dirs += [
-      "${frameworks_path}/inc/standard",
-      "${dev_frameworks_path}/inc/permission_adapter",
-      "${dev_frameworks_path}/inc/hiview_adapter",
-    ]
-
-    sources = deviceauth_ipc_files
-    sources += permission_adapter_files
-    sources += [ "${frameworks_path}/src/ipc_service.c" ]
-
-    defines = [ "HILOG_ENABLE" ]
-    defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
-    defines += [ "DEV_AUTH_SERVICE_BUILD" ]
-    cflags = build_flags
-    if (target_cpu == "arm") {
-      cflags += [ "-DBINDER_IPC_32BIT" ]
-    }
-
-    branch_protector_ret = "pac_ret"
-    sanitize = {
-      cfi = true
-      cfi_cross_dso = true
-      integer_overflow = true
-      boundary_sanitize = true
-      ubsan = true
-      debug = false
-    }
-
-    deps = [
-      ":auth_service.rc",
-      ":deviceauth",
-      "${deps_adapter_path}:${hal_module_name}",
-    ]
-
-    external_deps = [
-      "access_token:libaccesstoken_sdk",
-      "bounds_checking_function:libsec_shared",
-      "cJSON:cjson",
-      "c_utils:utils",
-      "hilog:libhilog",
-      "init:libbegetutil",
-      "ipc:ipc_single",
-      "samgr:samgr_proxy",
-    ]
   }
 
   ohos_shared_library("deviceauth_sdk") {
@@ -349,6 +294,63 @@ if (os_level == "mini" || os_level == "small") {
       "hitrace:hitrace_meter",
       "init:libbegetutil",
       "ipc:ipc_single",
+      "samgr:samgr_proxy",
+    ]
+  }
+
+  ohos_shared_library("deviceauth_service") {
+    subsystem_name = "security"
+    part_name = "device_auth"
+    version_script = "device_auth.map"
+    public_configs = [ ":deviceauth_config" ]
+    branch_protector_ret = "pac_ret"
+
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      integer_overflow = true
+      boundary_sanitize = true
+      ubsan = true
+      debug = false
+    }
+
+    cflags = build_flags
+    cflags += [ "-fPIC" ]
+    if (target_cpu == "arm") {
+      cflags += [ "-DBINDER_IPC_32BIT" ]
+    }
+
+    include_dirs += [
+      "${frameworks_path}/inc",
+      "${frameworks_path}/inc/standard",
+      "${dev_frameworks_path}/inc/permission_adapter",
+      "${dev_frameworks_path}/inc/hiview_adapter",
+    ]
+
+    defines = [ "HILOG_ENABLE" ]
+    defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
+    defines += [ "DEV_AUTH_SERVICE_BUILD" ]
+
+    sources = deviceauth_ipc_files
+    sources += permission_adapter_files
+    sources += [ "${frameworks_path}/src/deviceauth_sa.cpp" ]
+
+    deps = [
+      ":deviceauth",
+      ":pre_deviceauth_service",
+      "${deps_adapter_path}:${hal_module_name}",
+    ]
+
+    external_deps = [
+      "access_token:libaccesstoken_sdk",
+      "bounds_checking_function:libsec_shared",
+      "cJSON:cjson",
+      "c_utils:utils",
+      "hilog:libhilog",
+      "init:libbegetutil",
+      "ipc:ipc_core",
+      "ipc:ipc_single",
+      "safwk:system_ability_fwk",
       "samgr:samgr_proxy",
     ]
   }
