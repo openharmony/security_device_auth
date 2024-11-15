@@ -1,7 +1,8 @@
 {
     "name": "@ohos/device_auth",
-    "version": "4.0.2",
     "description": "The device authentication module belongs to the security subsystem of OpenHarmony. It manages the entire lifecycle of trust relationships between devices.",
+    "version": "4.0.2",
+    "license": "Apache License 2.0",
     "publishAs": "code-segment",
     "segment": {
         "destPath": "base/security/device_auth"
@@ -9,10 +10,14 @@
     "dirs": {},
     "scripts": {},
     "author": {},
+    "licensePath": "LICENSE",
+    "readmePath": {
+        "en": "README.md",
+        "zh": "README_zh.md"
+    },
     "homePage": "https://gitee.com/openharmony",
     "repository": "https://gitee.com/openharmony/security_device_auth",
     "supplier": "Organization: OpenHarmony",
-    "license": "Apache License 2.0",
     "component": {
       "name": "device_auth",
       "subsystem": "security",
@@ -31,9 +36,6 @@
         "device_auth_hichain_thread_stack_size",
         "device_auth_enable_posix_interface",
         "device_auth_enable_soft_bus_channel"
-      ],
-      "hisysevent_config": [
-          "//base/security/device_auth/hisysevent.yaml"
       ],
       "adapted_system_type": [
           "standard",
@@ -63,6 +65,10 @@
           "samgr",
           "safwk",
           "ipc"
+        ],
+        "third_party": [],
+        "hisysevent_config": [
+          "//base/security/device_auth/hisysevent.yaml"
         ]
       },
       "build": {
