@@ -31,6 +31,10 @@
 
 #include "deviceauth_sa.h"
 
+#ifdef DEV_AUTH_USE_JEMALLOC
+#include "malloc.h"
+#endif
+
 namespace OHOS {
 
 static const uint32_t RESTORE_CODE = 14701;
@@ -194,9 +198,18 @@ void DeviceAuthAbility::OnStart()
     LOGI("DeviceAuthAbility start success.");
 }
 
+static void DevAuthInitMemoryPolicy(void)
+{
+#ifdef DEV_AUTH_USE_JEMALLOC
+    (void)mallopt(M_SET_THREAD_CACHE, M_THREAD_CACHE_DISABLE);
+    (void)mallopt(M_DELAYED_FREE, M_DELAYED_FREE_DISABLE);
+#endif
+}
+
 int32_t DeviceAuthAbility::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
+    DevAuthInitMemoryPolicy();
     std::u16string readToken = data.ReadInterfaceToken();
 
     bool isRestoreCall = ((code == RESTORE_CODE) && (readToken == std::u16string(u"OHOS.Updater.RestoreData")));

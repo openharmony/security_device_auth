@@ -33,6 +33,10 @@
 #include "hisysevent_adapter.h"
 #endif
 
+#ifdef DEV_AUTH_USE_JEMALLOC
+#include "malloc.h"
+#endif
+
 using namespace std;
 namespace OHOS {
 static std::mutex g_cBMutex;
@@ -272,9 +276,18 @@ int32_t ServiceDevAuth::HandleDeviceAuthCall(uint32_t code, MessageParcel &data,
     return 0;
 }
 
+static void DevAuthInitMemoryPolicy(void)
+{
+#ifdef DEV_AUTH_USE_JEMALLOC
+    (void)mallopt(M_SET_THREAD_CACHE, M_THREAD_CACHE_DISABLE);
+    (void)mallopt(M_DELAYED_FREE, M_DELAYED_FREE_DISABLE);
+#endif
+}
+
 int32_t ServiceDevAuth::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
+    DevAuthInitMemoryPolicy();
     std::u16string readToken = data.ReadInterfaceToken();
     bool isRestoreCall = ((code == RESTORE_CODE) && (readToken == std::u16string(u"OHOS.Updater.RestoreData")));
     if (readToken != GetDescriptor() && !isRestoreCall) {
