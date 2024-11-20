@@ -566,12 +566,7 @@ int32_t AuthOnNextGroupIfExist(CompatibleAuthSubSession *session)
     if (res != HC_SUCCESS) {
         LOGW("Failed to auth on current group, try to auth on next group!");
         DestroyTask(session->base.curTaskId, GetAuthModuleType(paramInNextSession));
-        // return HC_SUCCESS if the next group auth successfully,
-        // return previous res otherwise.
-        if (ProcessClientAuthError(session, outNext) == HC_SUCCESS) {
-            FreeJson(outNext);
-            return HC_SUCCESS;
-        }
+        res = ProcessClientAuthError(session, outNext);
     }
     FreeJson(outNext);
     return res;
