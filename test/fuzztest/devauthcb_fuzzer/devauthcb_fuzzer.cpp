@@ -59,6 +59,8 @@ static void NativeTokenSet(const char *procName)
 
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
+    (void)data;
+    (void)size;
     NativeTokenSet("device_manager");
     StubDevAuthCb *remoteObj = new(std::nothrow) StubDevAuthCb();
     if (remoteObj == nullptr) {
