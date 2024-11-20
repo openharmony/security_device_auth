@@ -530,7 +530,7 @@ static int32_t GetGroupTypeFromParams(const char *createParams)
 {
     CJson *params = CreateJsonFromString(createParams);
     if (params == NULL) {
-        LOGE("failed create json from string!");
+        LOGE("Failed to create json from string!");
         return DEFAULT_GROUP_TYPE;
     }
     int32_t groupType = DEFAULT_GROUP_TYPE;
