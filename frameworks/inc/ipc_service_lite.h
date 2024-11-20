@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef IPC_SERVICE_H
-#define IPC_SERVICE_H
+#ifndef IPC_SERVICE_LITE_H
+#define IPC_SERVICE_LITE_H
 
 #include <stdint.h>
 
@@ -22,7 +22,6 @@
 extern "C" {
 #endif
 
-int32_t MainRescInit(void);
 int32_t AddMethodMap(uintptr_t ipcInstance);
 
 #ifdef __cplusplus

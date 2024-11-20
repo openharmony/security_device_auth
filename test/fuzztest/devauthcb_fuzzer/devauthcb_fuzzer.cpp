@@ -26,7 +26,6 @@
 #include "ipc_callback_stub.h"
 #include "ipc_dev_auth_stub.h"
 #include "ipc_sdk.h"
-#include "ipc_service.h"
 #include "message_parcel.h"
 #include "nativetoken_kit.h"
 #include "securec.h"
