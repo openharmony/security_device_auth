@@ -35,6 +35,8 @@ namespace OHOS {
 
     bool RegisteLogFuzz(const uint8_t *data, size_t size)
     {
+        (void)data;
+        (void)size;
         struct log_func_group logFunc = {
             TestLogd,
             TestLogd,
