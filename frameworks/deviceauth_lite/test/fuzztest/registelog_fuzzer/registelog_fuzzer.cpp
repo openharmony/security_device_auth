@@ -35,8 +35,9 @@ namespace OHOS {
 
     bool RegisteLogFuzz(const uint8_t *data, size_t size)
     {
-        (void)data;
-        (void)size;
+        if ((data == nullptr) || (size < sizeof(int32_t))) {
+            return false;
+        }
         struct log_func_group logFunc = {
             TestLogd,
             TestLogd,
