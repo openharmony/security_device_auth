@@ -320,6 +320,11 @@ if (os_level == "mini" || os_level == "small") {
     if (target_cpu == "arm") {
       cflags += [ "-DBINDER_IPC_32BIT" ]
     }
+    if (use_musl) {
+      if (musl_use_jemalloc && musl_use_jemalloc_dfx_intf) {
+        defines += [ "DEV_AUTH_USE_JEMALLOC" ]
+      }
+    }
 
     include_dirs += [
       "${frameworks_path}/inc",
