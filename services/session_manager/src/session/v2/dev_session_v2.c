@@ -175,6 +175,43 @@ static int32_t CmdImportAuthCodeGenerator(SessionImpl *impl)
         (!impl->isClient), ABORT_IF_ERROR);
 }
 
+static void DelTrustDeviceOnAuthError(const SessionImpl *impl, const int32_t errorCode)
+{
+    bool isBind = true;
+    int res = GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
+    if (res != HC_SUCCESS) {
+        LOGE("Get FIELD_IS_BIND from SessionImpl failed!");
+        return;
+    }
+    if (isBind || impl->base.opCode == AUTH_FORM_ACCOUNT_UNRELATED)
+        return;
+    if (errorCode != HC_ERR_GROUP_NOT_EXIST)
+        return;
+    int osAccountId;
+    res = GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId);
+    if (res != HC_SUCCESS) {
+        LOGE("Get osAccountId from SessionImpl failed!");
+        return;
+    }
+    QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
+    queryDeviceParams.groupId = GetStringFromJson(impl->context, FIELD_GROUP_ID);
+    if (queryDeviceParams.groupId == NULL) {
+        LOGE("Get groupId from SessionImpl failed!");
+        return;
+    }
+    queryDeviceParams.udid = GetStringFromJson(impl->context, FIELD_PEER_UDID);
+    if (queryDeviceParams.udid == NULL) {
+        LOGE("Get peer udid from SessionImpl failed!");
+        return;
+    }
+    res = DelTrustedDevice(osAccountId, &queryDeviceParams);
+    if (res != HC_SUCCESS) {
+        LOGE("Delete invaild trust device failed!");
+        return;
+    }
+    LOGI("Success delete invaild trust device!");
+}
+
 static int32_t CmdSaveTrustedInfoGenerator(SessionImpl *impl)
 {
     int32_t osAccountId;
@@ -1989,6 +2026,7 @@ static int32_t ProcFailEvent(SessionImpl *impl, SessionEvent *inputEvent, CJson 
     int32_t peerErrorCode = HC_ERR_PEER_ERROR;
     (void)GetIntFromJson(inputEvent->data, FIELD_ERROR_CODE, &peerErrorCode);
     LOGE("An exception occurred in the peer session. [Code]: %d", peerErrorCode);
+    DelTrustDeviceOnAuthError(impl, peerErrorCode);
     return RestartSession(impl, policy) == HC_SUCCESS ? HC_SUCCESS : peerErrorCode;
 }
 

@@ -631,6 +631,49 @@ void ClearCachedData(CJson *paramInSession)
     DeleteItemFromJson(paramInSession, FIELD_OPERATION_CODE);
 }
 
+static void DelTrustDeviceOnAuthErrorV1(const CJson *paramInSession, const CJson *out)
+{
+    int peerResultCode = 0;
+    int res = GetIntFromJson(out, FIELD_PEER_RESULT_CODE, &peerResultCode);
+    if (res != HC_SUCCESS) {
+        LOGE("Get peer result code from out failed!");
+        return;
+    }
+    int authForm = 0;
+    res = GetIntFromJson(paramInSession, FIELD_AUTH_FORM, &authForm);
+    if (res != HC_SUCCESS) {
+        LOGE("Get FIELD_AUTH_FORM from session failed!");
+        return;
+    }
+    if (authForm != AUTH_FORM_IDENTICAL_ACCOUNT)
+        return;
+    if (peerResultCode != PEER_NOT_MATCH && peerResultCode != PEER_NOT_LOGIN)
+        return;
+    int osAccountId;
+    res = GetIntFromJson(paramInSession, FIELD_OS_ACCOUNT_ID, &osAccountId);
+    if (res != HC_SUCCESS) {
+        LOGE("Get osAccountId from session failed!");
+        return;
+    }
+    QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
+    queryDeviceParams.groupId = GetStringFromJson(paramInSession, FIELD_GROUP_ID);
+    if (queryDeviceParams.groupId == NULL) {
+        LOGE("Get groupId from session failed!");
+        return;
+    }
+    queryDeviceParams.udid = GetStringFromJson(paramInSession, FIELD_PEER_UDID);
+    if (queryDeviceParams.udid == NULL) {
+        LOGE("Get peer udid from session failed!");
+        return;
+    }
+    res = DelTrustedDevice(osAccountId, &queryDeviceParams);
+    if (res != HC_SUCCESS) {
+        LOGE("Delete invaild trust device failed!");
+        return;
+    }
+    LOGI("Success delete invaild trust device!");
+}
+
 int32_t ProcessClientAuthError(CompatibleAuthSubSession *session, const CJson *out)
 {
     ParamsVecForAuth list = session->paramsList;
