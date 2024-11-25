@@ -682,6 +682,7 @@ int32_t ProcessClientAuthError(CompatibleAuthSubSession *session, const CJson *o
         LOGE("The json data in session is null!");
         return HC_ERR_NULL_PTR;
     }
+    DelTrustDeviceOnAuthErrorV1(paramInSession, out);
     CJson *sendToPeer = GetObjFromJson(out, FIELD_SEND_TO_PEER);
     if (sendToPeer != NULL && ReturnErrorToPeerByTask(sendToPeer, paramInSession,
         session->base.callback) != HC_SUCCESS) {
