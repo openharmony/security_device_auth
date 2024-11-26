@@ -645,8 +645,8 @@ static void DelTrustDeviceOnAuthErrorV1(const CJson *paramInSession, const CJson
         LOGE("Get FIELD_AUTH_FORM from session failed!");
         return;
     }
-    if ((authForm != AUTH_FORM_IDENTICAL_ACCOUNT) || 
-        ((peerResultCode != PEER_NOT_MATCH) && (peerResultCode != PEER_NOT_LOGIN))) {
+    if ((authForm != AUTH_FORM_IDENTICAL_ACCOUNT) ||
+        ((peerResultCode != PEER_ACCOUNT_NOT_MATCH) && (peerResultCode != PEER_ACCOUNT_NOT_LOGIN))) {
         return;
     }
     int32_t osAccountId;
