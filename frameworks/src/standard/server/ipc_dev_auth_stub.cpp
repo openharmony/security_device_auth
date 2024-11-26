@@ -369,7 +369,12 @@ void ServiceDevAuth::AddCbDeathRecipient(int32_t cbStubIdx, int32_t cbDataIdx)
     }
 
     std::lock_guard<std::mutex> autoLock(g_cBMutex);
-    bRet = g_cbStub[cbStubIdx].cbStub->AddDeathRecipient(new(std::nothrow) DevAuthDeathRecipient(cbDataIdx));
+    DevAuthDeathRecipient *deathRecipient = new(std::nothrow) DevAuthDeathRecipient(cbDataIdx);
+    if (deathRecipient == nullptr) {
+        LOGE("Failed to create death recipient");
+        return;
+    }
+    bRet = g_cbStub[cbStubIdx].cbStub->AddDeathRecipient(deathRecipient);
     LOGI("AddDeathRecipient %s, callback stub idx %d", bRet ? "success" : "failed", cbStubIdx);
     return;
 }
