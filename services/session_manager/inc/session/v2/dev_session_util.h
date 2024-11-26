@@ -34,6 +34,7 @@ int32_t GetRealPkInfoStr(int32_t osAccountId, const CJson *credInfo, char **retu
 int32_t AddPkInfoWithPdid(const CJson *context, CJson *credInfo, const char *realPkInfoStr);
 TrustedDeviceEntry *GetDeviceEntryById(int32_t osAccountId, const char *deviceId, bool isUdid,
     const char *groupId);
+void DelTrustDeviceOnAuthError(const SessionImpl *impl, const int32_t errorCode);
 
 #ifdef __cplusplus
 }
