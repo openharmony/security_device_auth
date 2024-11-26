@@ -183,10 +183,9 @@ static void DelTrustDeviceOnAuthError(const SessionImpl *impl, const int32_t err
         LOGE("Get FIELD_IS_BIND from SessionImpl failed!");
         return;
     }
-    if (isBind || impl->base.opCode == AUTH_FORM_ACCOUNT_UNRELATED)
+    if (isBind || (impl->base.opCode == AUTH_FORM_ACCOUNT_UNRELATED) || (errorCode != HC_ERR_GROUP_NOT_EXIST)) {
         return;
-    if (errorCode != HC_ERR_GROUP_NOT_EXIST)
-        return;
+    }
     int osAccountId;
     res = GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId);
     if (res != HC_SUCCESS) {
