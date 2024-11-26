@@ -542,10 +542,10 @@ TrustedDeviceEntry *GetDeviceEntryById(int32_t osAccountId, const char *deviceId
     return NULL;
 }
 
-void DelTrustDeviceOnAuthError(const SessionImpl *impl, const int32_t errorCode)
+void DelTrustDeviceOnAuthErrorV2(const SessionImpl *impl, const int32_t errorCode)
 {
     bool isBind = true;
-    int res = GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
+    int32_t res = GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
     if (res != HC_SUCCESS) {
         LOGE("Get FIELD_IS_BIND from SessionImpl failed!");
         return;
@@ -553,7 +553,7 @@ void DelTrustDeviceOnAuthError(const SessionImpl *impl, const int32_t errorCode)
     if (isBind || (impl->base.opCode == AUTH_FORM_ACCOUNT_UNRELATED) || (errorCode != HC_ERR_GROUP_NOT_EXIST)) {
         return;
     }
-    int osAccountId;
+    int32_t osAccountId;
     res = GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Get osAccountId from SessionImpl failed!");
@@ -572,8 +572,8 @@ void DelTrustDeviceOnAuthError(const SessionImpl *impl, const int32_t errorCode)
     }
     res = DelTrustedDevice(osAccountId, &queryDeviceParams);
     if (res != HC_SUCCESS) {
-        LOGE("Delete invaild trust device failed!");
+        LOGE("Failed to delete not trusted account related device!");
         return;
     }
-    LOGI("Success delete invaild trust device!");
+    LOGI("Success delete not trusted account related device!");
 }

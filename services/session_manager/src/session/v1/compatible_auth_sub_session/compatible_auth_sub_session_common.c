@@ -633,25 +633,23 @@ void ClearCachedData(CJson *paramInSession)
 
 static void DelTrustDeviceOnAuthErrorV1(const CJson *paramInSession, const CJson *out)
 {
-    int peerResultCode = 0;
-    int res = GetIntFromJson(out, FIELD_PEER_RESULT_CODE, &peerResultCode);
+    int32_t peerResultCode = 0;
+    int32_t res = GetIntFromJson(out, FIELD_PEER_RESULT_CODE, &peerResultCode);
     if (res != HC_SUCCESS) {
         LOGE("Get peer result code from out failed!");
         return;
     }
-    int authForm = 0;
+    int32_t authForm = 0;
     res = GetIntFromJson(paramInSession, FIELD_AUTH_FORM, &authForm);
     if (res != HC_SUCCESS) {
         LOGE("Get FIELD_AUTH_FORM from session failed!");
         return;
     }
-    if (authForm != AUTH_FORM_IDENTICAL_ACCOUNT) {
+    if ((authForm != AUTH_FORM_IDENTICAL_ACCOUNT) || 
+        ((peerResultCode != PEER_NOT_MATCH) && (peerResultCode != PEER_NOT_LOGIN))) {
         return;
     }
-    if ((peerResultCode != PEER_NOT_MATCH) && (peerResultCode != PEER_NOT_LOGIN)) {
-        return;
-    }
-    int osAccountId;
+    int32_t osAccountId;
     res = GetIntFromJson(paramInSession, FIELD_OS_ACCOUNT_ID, &osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Get osAccountId from session failed!");
@@ -670,10 +668,10 @@ static void DelTrustDeviceOnAuthErrorV1(const CJson *paramInSession, const CJson
     }
     res = DelTrustedDevice(osAccountId, &queryDeviceParams);
     if (res != HC_SUCCESS) {
-        LOGE("Delete invaild trust device failed!");
+        LOGE("Failed to delete not trusted account related device!");
         return;
     }
-    LOGI("Success delete invaild trust device!");
+    LOGI("Success delete not trusted account related device!");
 }
 
 int32_t ProcessClientAuthError(CompatibleAuthSubSession *session, const CJson *out)

@@ -23,8 +23,8 @@
 
 #define FIELD_PEER_RESULT_CODE "resultCode"
 
-#define PEER_NOT_MATCH 0x7A00000F                 //2046820367
-#define PEER_NOT_LOGIN 0x7A000023                 //2046820387
+#define PEER_ACCOUNT_NOT_MATCH 0x7A00000F                 //2046820367
+#define PEER_ACCOUNT_NOT_LOGIN 0x7A000023                 //2046820387
 
 #ifdef __cplusplus
 extern "C" {

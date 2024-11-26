@@ -135,15 +135,9 @@ static int32_t ProcessClientAuthTaskInner(CompatibleAuthSubSession *session, int
     if (res != HC_SUCCESS) {
         LOGW("Failed to process client auth task, try to auth on next group!");
         DestroyTask(session->base.curTaskId, moduleType);
-        int peerResultCode = 0;
-        res = GetIntFromJson(in, FIELD_PEER_RESULT_CODE, &peerResultCode);
-        if (res != HC_SUCCESS) {
-            LOGE("Get peer result code failed!");
-        }
-        res = AddIntToJson(out, FIELD_PEER_RESULT_CODE, peerResultCode);
-        if (res != HC_SUCCESS) {
-            LOGE("Failed to write peer result code!");
-        }
+        int32_t peerResultCode = 0;
+        (void)GetIntFromJson(in, FIELD_PEER_RESULT_CODE, &peerResultCode);
+        (void)AddIntToJson(out, FIELD_PEER_RESULT_CODE, peerResultCode);
         return ProcessClientAuthError(session, out);
     }
     return HandleAuthTaskStatus(session, out, *status, false);
