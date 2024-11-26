@@ -19,6 +19,7 @@
 #include "identity_defines.h"
 #include "data_manager.h"
 #include "json_utils.h"
+#include "dev_session_def.h"
 
 #ifdef __cplusplus
 extern "C" {
