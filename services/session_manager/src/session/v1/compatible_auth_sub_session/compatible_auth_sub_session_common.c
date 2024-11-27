@@ -631,6 +631,49 @@ void ClearCachedData(CJson *paramInSession)
     DeleteItemFromJson(paramInSession, FIELD_OPERATION_CODE);
 }
 
+static void DelTrustDeviceOnAuthErrorV1(const CJson *paramInSession, const CJson *out)
+{
+    int32_t peerResultCode = 0;
+    int32_t res = GetIntFromJson(out, FIELD_PEER_RESULT_CODE, &peerResultCode);
+    if (res != HC_SUCCESS) {
+        LOGE("Get peer result code from out failed!");
+        return;
+    }
+    int32_t authForm = 0;
+    res = GetIntFromJson(paramInSession, FIELD_AUTH_FORM, &authForm);
+    if (res != HC_SUCCESS) {
+        LOGE("Get FIELD_AUTH_FORM from session failed!");
+        return;
+    }
+    if ((authForm != AUTH_FORM_IDENTICAL_ACCOUNT) ||
+        ((peerResultCode != PEER_ACCOUNT_NOT_MATCH) && (peerResultCode != PEER_ACCOUNT_NOT_LOGIN))) {
+        return;
+    }
+    int32_t osAccountId;
+    res = GetIntFromJson(paramInSession, FIELD_OS_ACCOUNT_ID, &osAccountId);
+    if (res != HC_SUCCESS) {
+        LOGE("Get osAccountId from session failed!");
+        return;
+    }
+    QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
+    queryDeviceParams.groupId = GetStringFromJson(paramInSession, FIELD_GROUP_ID);
+    if (queryDeviceParams.groupId == NULL) {
+        LOGE("Get groupId from session failed!");
+        return;
+    }
+    queryDeviceParams.udid = GetStringFromJson(paramInSession, FIELD_PEER_UDID);
+    if (queryDeviceParams.udid == NULL) {
+        LOGE("Get peer udid from session failed!");
+        return;
+    }
+    res = DelTrustedDevice(osAccountId, &queryDeviceParams);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to delete not trusted account related device!");
+        return;
+    }
+    LOGI("Success delete not trusted account related device!");
+}
+
 int32_t ProcessClientAuthError(CompatibleAuthSubSession *session, const CJson *out)
 {
     ParamsVecForAuth list = session->paramsList;
@@ -639,6 +682,7 @@ int32_t ProcessClientAuthError(CompatibleAuthSubSession *session, const CJson *o
         LOGE("The json data in session is null!");
         return HC_ERR_NULL_PTR;
     }
+    DelTrustDeviceOnAuthErrorV1(paramInSession, out);
     CJson *sendToPeer = GetObjFromJson(out, FIELD_SEND_TO_PEER);
     if (sendToPeer != NULL && ReturnErrorToPeerByTask(sendToPeer, paramInSession,
         session->base.callback) != HC_SUCCESS) {

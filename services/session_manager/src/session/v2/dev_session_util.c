@@ -541,3 +541,39 @@ TrustedDeviceEntry *GetDeviceEntryById(int32_t osAccountId, const char *deviceId
     ClearDeviceEntryVec(&deviceEntryVec);
     return NULL;
 }
+
+void DelTrustDeviceOnAuthErrorV2(const SessionImpl *impl, const int32_t errorCode)
+{
+    bool isBind = true;
+    int32_t res = GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
+    if (res != HC_SUCCESS) {
+        LOGE("Get FIELD_IS_BIND from SessionImpl failed!");
+        return;
+    }
+    if (isBind || (impl->base.opCode == AUTH_FORM_ACCOUNT_UNRELATED) || (errorCode != HC_ERR_GROUP_NOT_EXIST)) {
+        return;
+    }
+    int32_t osAccountId;
+    res = GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId);
+    if (res != HC_SUCCESS) {
+        LOGE("Get osAccountId from SessionImpl failed!");
+        return;
+    }
+    QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
+    queryDeviceParams.groupId = GetStringFromJson(impl->context, FIELD_GROUP_ID);
+    if (queryDeviceParams.groupId == NULL) {
+        LOGE("Get groupId from SessionImpl failed!");
+        return;
+    }
+    queryDeviceParams.udid = GetStringFromJson(impl->context, FIELD_PEER_UDID);
+    if (queryDeviceParams.udid == NULL) {
+        LOGE("Get peer udid from SessionImpl failed!");
+        return;
+    }
+    res = DelTrustedDevice(osAccountId, &queryDeviceParams);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to delete not trusted account related device!");
+        return;
+    }
+    LOGI("Success delete not trusted account related device!");
+}

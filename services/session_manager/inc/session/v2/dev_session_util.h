@@ -19,6 +19,7 @@
 #include "identity_defines.h"
 #include "data_manager.h"
 #include "json_utils.h"
+#include "dev_session_def.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,6 +35,7 @@ int32_t GetRealPkInfoStr(int32_t osAccountId, const CJson *credInfo, char **retu
 int32_t AddPkInfoWithPdid(const CJson *context, CJson *credInfo, const char *realPkInfoStr);
 TrustedDeviceEntry *GetDeviceEntryById(int32_t osAccountId, const char *deviceId, bool isUdid,
     const char *groupId);
+void DelTrustDeviceOnAuthErrorV2(const SessionImpl *impl, const int32_t errorCode);
 
 #ifdef __cplusplus
 }
