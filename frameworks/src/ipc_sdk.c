@@ -1909,7 +1909,7 @@ DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *
 
 DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 {
-    InitHcMutex(&g_ipcMutex);
+    InitHcMutex(&g_ipcMutex, false);
     return InitProxyAdapt();
 }
 

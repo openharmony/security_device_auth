@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,18 +13,23 @@
  * limitations under the License.
  */
 
-#include "account_auth_plugin_proxy.h"
+#include "account_task_manager.h"
 
 #include "device_auth_defines.h"
 
-int32_t SetAccountAuthPlugin(const CJson *inputParams, AccountAuthExtPlug *accountAuthPlugin)
+int32_t InitAccountTaskManager(void)
 {
-    (void)inputParams;
-    (void)accountAuthPlugin;
     return HC_ERR_NOT_SUPPORT;
 }
 
-int32_t ExcuteCredMgrCmd(int32_t osAccountId, int32_t cmdId, const CJson *in, CJson *out)
+void DestroyAccountTaskManager(void) {}
+
+bool HasAccountPlugin(void)
+{
+    return false;
+}
+
+int32_t ExecuteAccountAuthCmd(int32_t osAccountId, int32_t cmdId, const CJson *in, CJson *out)
 {
     (void)osAccountId;
     (void)cmdId;
@@ -33,7 +38,7 @@ int32_t ExcuteCredMgrCmd(int32_t osAccountId, int32_t cmdId, const CJson *in, CJ
     return HC_ERR_NOT_SUPPORT;
 }
 
-int32_t CreateAuthSession(int32_t *sessionId, const CJson *in, CJson *out)
+int32_t CreateAccountAuthSession(int32_t *sessionId, const CJson *in, CJson *out)
 {
     (void)sessionId;
     (void)in;
@@ -41,7 +46,7 @@ int32_t CreateAuthSession(int32_t *sessionId, const CJson *in, CJson *out)
     return HC_ERR_NOT_SUPPORT;
 }
 
-int32_t ProcessAuthSession(int32_t *sessionId, const CJson *in, CJson *out, int32_t *status)
+int32_t ProcessAccountAuthSession(int32_t *sessionId, const CJson *in, CJson *out, int32_t *status)
 {
     (void)sessionId;
     (void)in;
@@ -50,15 +55,23 @@ int32_t ProcessAuthSession(int32_t *sessionId, const CJson *in, CJson *out, int3
     return HC_ERR_NOT_SUPPORT;
 }
 
-int32_t DestroyAuthSession(int32_t sessionId)
+int32_t DestroyAccountAuthSession(int32_t sessionId)
 {
     (void)sessionId;
     return HC_ERR_NOT_SUPPORT;
 }
 
-void DestoryAccountAuthPlugin(void) {}
-
-bool HasAccountAuthPlugin(void)
+int32_t LoadAccountAndAddTaskRecord(int32_t taskId)
 {
-    return false;
+    (void)taskId;
+    return HC_ERR_NOT_SUPPORT;
 }
+
+void RemoveAccountTaskRecordAndUnload(int32_t taskId)
+{
+    (void)taskId;
+}
+
+void NotifyAsyncTaskStart(void) {}
+
+void NotifyAsyncTaskStop(void) {}

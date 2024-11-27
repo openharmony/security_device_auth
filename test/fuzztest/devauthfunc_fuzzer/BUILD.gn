@@ -91,6 +91,7 @@ ohos_fuzztest("DevAuthFuncFuzzTest") {
   ]
 
   sources += [
+    "${dev_frameworks_path}/src/account_task_manager_mock/account_task_manager_mock.c",
     "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c",
     "../../unittest/deviceauth/source/device_auth_ext_mock.c",
     "../../unittest/deviceauth/source/os_account_adapter_mock.c",

@@ -132,7 +132,7 @@ int32_t InitHcTaskThread(HcTaskThread* thread, size_t stackSize, const char* thr
     if (res != 0) {
         return res;
     }
-    res = InitHcMutex(&thread->queueLock);
+    res = InitHcMutex(&thread->queueLock, false);
     if (res != 0) {
         DestroyThread(&thread->thread);
         return res;

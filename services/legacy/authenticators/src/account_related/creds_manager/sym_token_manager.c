@@ -764,7 +764,7 @@ void InitSymTokenManager(void)
             LOGE("Alloc account database mutex failed.");
             return;
         }
-        if (InitHcMutex(g_dataMutex) != HC_SUCCESS) {
+        if (InitHcMutex(g_dataMutex, false) != HC_SUCCESS) {
             LOGE("Init account mutex failed.");
             HcFree(g_dataMutex);
             g_dataMutex = NULL;

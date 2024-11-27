@@ -35,6 +35,9 @@
 #include "identical_account_group.h"
 #include "peer_to_peer_group.h"
 #include "hc_time.h"
+#include "account_task_manager.h"
+
+#define EXT_PART_APP_ID "ext_part"
 
 static bool IsGroupTypeSupported(int groupType)
 {
@@ -1224,15 +1227,6 @@ static const GroupImpl GROUP_IMPL_INSTANCE = {
     .destroyInfo = DestroyInfo
 };
 
-void DestroyGroupManagerTask(HcTaskBase *task)
-{
-    if (task == NULL) {
-        LOGE("The input task is NULL!");
-        return;
-    }
-    FreeJson(((GroupManagerTask *)task)->params);
-}
-
 static int32_t InitGroupManagerTask(GroupManagerTask *task, GMTaskParams *taskParams, TaskFunc func)
 {
     task->base.doAction = func;
@@ -1242,6 +1236,49 @@ static int32_t InitGroupManagerTask(GroupManagerTask *task, GMTaskParams *taskPa
     task->reqId = taskParams->reqId;
     task->params = taskParams->params;
     return BindCallbackToTask(task, taskParams->params);
+}
+
+static bool IsCallerExtPart(int32_t opCode, CJson *params)
+{
+    if (opCode != GROUP_CREATE && opCode != GROUP_DISBAND) {
+        return false;
+    }
+    const char *appId = GetStringFromJson(params, FIELD_APP_ID);
+    if (appId == NULL) {
+        LOGE("Failed to get appId!");
+        return false;
+    }
+    if (strcmp(appId, EXT_PART_APP_ID) != 0) {
+        return false;
+    }
+    return true;
+}
+
+static int32_t AddAccountTaskIfNeeded(int32_t opCode, int64_t reqId, CJson *params)
+{
+    if (!IsCallerExtPart(opCode, params)) {
+        return HC_SUCCESS;
+    }
+    return LoadAccountAndAddTaskRecord(reqId);
+}
+
+static void RemoveAccountTaskIfNeeded(int32_t opCode, int64_t reqId, CJson *params)
+{
+    if (!IsCallerExtPart(opCode, params)) {
+        return;
+    }
+    RemoveAccountTaskRecordAndUnload(reqId);
+}
+
+void DestroyGroupManagerTask(HcTaskBase *task)
+{
+    if (task == NULL) {
+        LOGE("The input task is NULL!");
+        return;
+    }
+    RemoveAccountTaskIfNeeded(((GroupManagerTask *)task)->opCode, ((GroupManagerTask *)task)->reqId,
+        ((GroupManagerTask *)task)->params);
+    FreeJson(((GroupManagerTask *)task)->params);
 }
 
 int32_t AddReqInfoToJson(int64_t requestId, const char *appId, CJson *jsonParams)
@@ -1297,7 +1334,13 @@ int32_t InitAndPushGMTask(int32_t osAccountId, int32_t opCode, int64_t reqId, CJ
         HcFree(task);
         return HC_ERR_INIT_TASK_FAIL;
     }
+    int32_t res = AddAccountTaskIfNeeded(opCode, reqId, params);
+    if (res != HC_SUCCESS) {
+        HcFree(task);
+        return res;
+    }
     if (PushTask((HcTaskBase *)task) != HC_SUCCESS) {
+        RemoveAccountTaskIfNeeded(opCode, reqId, params);
         HcFree(task);
         return HC_ERR_INIT_TASK_FAIL;
     }

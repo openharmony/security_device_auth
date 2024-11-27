@@ -26,6 +26,7 @@ if (support_os_account) {
     ]
     include_dirs += [ "${dev_frameworks_path}/inc/account_subscriber" ]
     include_dirs += [ "${dev_frameworks_path}/inc/sa_subscriber" ]
+    include_dirs += [ "${dev_frameworks_path}/inc/net_observer" ]
 
     sources = deviceauth_files
     sources += hal_common_files
@@ -34,7 +35,9 @@ if (support_os_account) {
     sources += soft_bus_channel_mock_files
     if (enable_extend_plugin) {
       sources -= account_auth_plugin_files
+      sources -= account_task_manager_files
       sources += account_auth_plugin_mock_files
+      sources += account_task_manager_mock_files
     }
     sources += [
       "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
@@ -52,6 +55,7 @@ if (support_os_account) {
     sources += [ "os_account_adapter_test.cpp" ]
     sources += account_subscriber_files
     sources += sa_subscriber_files
+    sources += net_observer_files
 
     include_dirs += identity_manager_inc
     sources += identity_manager_files
@@ -97,6 +101,7 @@ if (support_os_account) {
       "init:libbegetutil",
       "ipc:ipc_core",
       "mbedtls:mbedtls_shared",
+      "netmanager_base:net_conn_manager_if",
       "openssl:libcrypto_static",
       "os_account:os_account_innerkits",
       "samgr:samgr_proxy",

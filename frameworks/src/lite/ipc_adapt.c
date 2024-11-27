@@ -92,7 +92,7 @@ int32_t InitIpcCallBackList(void)
     for (i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
         SetIpcCallBackNodeDefault(g_ipcCallBackList.ctx + i);
     }
-    (void)InitHcMutex(&g_cbListLock);
+    (void)InitHcMutex(&g_cbListLock, false);
     g_ipcCallBackList.nodeCnt = 0;
     LOGI("initialized successful");
     return HC_SUCCESS;

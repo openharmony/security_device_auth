@@ -24,6 +24,7 @@
 #include "hc_log.h"
 #include "iservice_registry.h"
 #include "matching_skills.h"
+#include "net_observer.h"
 #include "os_account_info.h"
 #include "os_account_manager.h"
 #include "sa_subscriber.h"
@@ -46,6 +47,7 @@ static bool g_isSaSubscribed = false;
 static const int32_t SYSTEM_DEFAULT_USER = 100;
 static OHOS::DevAuth::OsAccountEventNotifier g_accountEventNotifier;
 static OHOS::DevAuth::SaEventNotifier g_saEventNotifier;
+static OHOS::sptr<NetObserver> g_observer = nullptr;
 
 static void NotifyOsAccountUnlocked(int32_t osAccountId)
 {
@@ -82,6 +84,9 @@ static void SubscribeCommonEvent(void)
         OHOS::EventFwk::MatchingSkills matchingSkills;
         matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
         matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED);
+        matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGIN);
+        matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGOUT);
+        matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_BLUETOOTH_HOST_STATE_UPDATE);
         OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
         g_accountSubscriber = std::make_shared<OHOS::DevAuth::AccountSubscriber>(subscribeInfo, g_accountEventNotifier);
     }
@@ -195,6 +200,8 @@ void InitOsAccountAdapter(void)
     }
     g_callbackVec = CREATE_HC_VECTOR(EventCallbackVec);
     SubscribeSystemAbility();
+    g_observer = new NetObserver();
+    g_observer->StartObserver();
     g_isInitialized = true;
 }
 
@@ -204,6 +211,10 @@ void DestroyOsAccountAdapter(void)
         return;
     }
     g_isInitialized = false;
+    if (g_observer != nullptr) {
+        g_observer->StopObserver();
+        g_observer = nullptr;
+    }
     UnSubscribeSystemAbility();
     UnSubscribeCommonEvent();
     DESTROY_HC_VECTOR(EventCallbackVec, &g_callbackVec);

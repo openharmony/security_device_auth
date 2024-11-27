@@ -131,6 +131,8 @@
 #define FIELD_PLUGIN_EXT_DATA "originPeerData"
 #define FIELD_META_NODE_TYPE "metaNodeType"
 #define FIELD_UPGRADE_FLAG "upgradeFlag"
+#define FIELD_COMMON_EVENT_NAME "commonEventName"
+#define FIELD_COMMON_EVENT_CODE "commonEventCode"
 
 #define INVALID_MODULE_TYPE (-1)
 #define GROUP_ERR_MSG 0x8080
@@ -277,6 +279,8 @@ typedef enum {
     UPGRADE_DATA = 10,
     CHECK_UPGRADE_IDENTITY = 11,
     CHECK_UPGRADE_DATA = 12,
+    HANDLE_COMMON_EVENT = 13,
+    RELOAD_CRED_MGR = 14,
 } CredentialCode;
 
 #endif

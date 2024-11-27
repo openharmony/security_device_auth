@@ -16,6 +16,7 @@
 #ifndef HC_MUTEX_H
 #define HC_MUTEX_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include "pthread.h"
 
@@ -23,9 +24,16 @@
 extern "C" {
 #endif
 
-typedef pthread_mutex_t HcMutex;
+typedef struct HcMutexT {
+    int (*lock)(struct HcMutexT* mutex);
+    void (*unlock)(struct HcMutexT* mutex);
+    pthread_mutex_t mutex;
+    pthread_t owner;
+    int count;
+    bool isReentrant;
+} HcMutex;
 
-int32_t InitHcMutex(HcMutex* mutex);
+int32_t InitHcMutex(HcMutex* mutex, bool isReentrant);
 void DestroyHcMutex(HcMutex* mutex);
 
 int LockHcMutex(HcMutex* mutex);

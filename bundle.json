@@ -64,7 +64,8 @@
           "os_account",
           "samgr",
           "safwk",
-          "ipc"
+          "ipc",
+          "netmanager_base"
         ],
         "third_party": [],
         "hisysevent_config": [

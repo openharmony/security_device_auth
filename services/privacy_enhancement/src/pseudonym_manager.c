@@ -554,7 +554,7 @@ static void InitPseudonymManger(void)
             LOGE("Alloc sessionMutex failed");
             return;
         }
-        if (InitHcMutex(g_mutex) != HC_SUCCESS) {
+        if (InitHcMutex(g_mutex, false) != HC_SUCCESS) {
             LOGE("Init mutex failed");
             HcFree(g_mutex);
             g_mutex = NULL;

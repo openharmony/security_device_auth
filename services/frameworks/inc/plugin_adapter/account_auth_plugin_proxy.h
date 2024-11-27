@@ -30,7 +30,7 @@ int32_t CreateAuthSession(int32_t *sessionId, const CJson *in, CJson *out);
 int32_t ProcessAuthSession(int32_t *sessionId, const CJson *in, CJson *out, int32_t *status);
 int32_t DestroyAuthSession(int32_t sessionId);
 void DestoryAccountAuthPlugin(void);
-int32_t HasAccountAuthPlugin(void);
+bool HasAccountAuthPlugin(void);
 
 #ifdef __cplusplus
 }

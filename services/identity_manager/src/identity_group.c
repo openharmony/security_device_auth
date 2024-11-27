@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include "account_auth_plugin_proxy.h"
 #include "account_related_group_auth.h"
+#include "account_task_manager.h"
 #include "alg_defs.h"
 #include "alg_loader.h"
 #include "cert_operation.h"
@@ -36,7 +36,7 @@ static int32_t GetAccountRelatedCandidateGroups(
     }
     ((AccountRelatedGroupAuth *)groupAuth)->getAccountCandidateGroup(osAccountId, in, &queryParams, vec);
     // All return success, only notify the plugin.
-    if (HasAccountAuthPlugin() == HC_SUCCESS && vec->size(vec) == 0) {
+    if (HasAccountPlugin() && vec->size(vec) == 0) {
         CJson *input = CreateJson();
         if (input == NULL) {
             return HC_SUCCESS;
@@ -46,7 +46,7 @@ static int32_t GetAccountRelatedCandidateGroups(
             FreeJson(input);
             return HC_SUCCESS;
         }
-        int32_t ret = ExcuteCredMgrCmd(osAccountId, QUERY_SELF_CREDENTIAL_INFO, input, output);
+        int32_t ret = ExecuteAccountAuthCmd(osAccountId, QUERY_SELF_CREDENTIAL_INFO, input, output);
         if (ret != HC_SUCCESS) {
             LOGE("Account cred is empty.");
         }

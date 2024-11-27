@@ -14,7 +14,6 @@
  */
 
 #include "account_related_group_auth.h"
-#include "account_auth_plugin_proxy.h"
 #include "common_defs.h"
 #include "device_auth_defines.h"
 #include "group_auth_data_operation.h"
@@ -27,6 +26,7 @@
 #include "string_util.h"
 #include "alg_loader.h"
 #include "hisysevent_adapter.h"
+#include "account_task_manager.h"
 
 #define UID_HEX_STRING_LEN_MAX 64
 #define UID_HEX_STRING_LEN_MIN 10
@@ -661,7 +661,7 @@ static int32_t GetAuthParamsVecForServer(const CJson *dataFromClient, ParamsVecF
     }
 
     int32_t res = HC_SUCCESS;
-    if (HasAccountAuthPlugin() == HC_SUCCESS) {
+    if (HasAccountPlugin()) {
         // Try to add groupId to auth params. If add fail, ignore it.
         AddServerParamsForAccountPlugin(dupData);
     } else {

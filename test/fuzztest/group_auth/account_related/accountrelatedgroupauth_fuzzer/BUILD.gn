@@ -36,6 +36,7 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
   if (support_os_account) {
     include_dirs += [ "${dev_frameworks_path}/inc/account_subscriber" ]
     include_dirs += [ "${dev_frameworks_path}/inc/sa_subscriber" ]
+    include_dirs += [ "${dev_frameworks_path}/inc/net_observer" ]
   }
   sources += hal_common_files
   sources += [
@@ -92,8 +93,12 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
   if (support_os_account) {
     sources += account_subscriber_files
     sources += sa_subscriber_files
+    sources += net_observer_files
   }
-  sources += [ "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c" ]
+  sources += [
+    "${dev_frameworks_path}/src/account_task_manager_mock/account_task_manager_mock.c",
+    "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c",
+  ]
   defines = [
     "P2P_PAKE_DL_PRIME_LEN_384",
     "P2P_PAKE_EC_TYPE",
@@ -134,6 +139,7 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
       "common_event_service:cesfwk_innerkits",
       "ipc:ipc_single",
       "json:nlohmann_json_static",
+      "netmanager_base:net_conn_manager_if",
       "os_account:os_account_innerkits",
       "samgr:samgr_proxy",
     ]

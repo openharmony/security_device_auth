@@ -76,7 +76,7 @@ void SetDeInitStatus(void)
 
 void InitSecurityDevAuth(void)
 {
-    int32_t res = InitHcMutex(&g_countMutex);
+    int32_t res = InitHcMutex(&g_countMutex, false);
     if (res != 0) {
         LOGE("When init security auth, init mutex failed");
     }

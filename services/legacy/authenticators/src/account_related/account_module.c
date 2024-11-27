@@ -14,9 +14,9 @@
  */
 
 #include "account_module.h"
-#include "account_auth_plugin_proxy.h"
 #include "account_module_defines.h"
 #include "account_multi_task_manager.h"
+#include "account_task_manager.h"
 #include "account_version_util.h"
 #include "alg_loader.h"
 #include "common_defs.h"
@@ -68,8 +68,8 @@ static int CreateAccountTask(int32_t *taskId, const CJson *in, CJson *out)
     if (IsAccountMsgNeedIgnore(in)) {
         return HC_ERR_IGNORE_MSG;
     }
-    if (HasAccountAuthPlugin() == HC_SUCCESS) {
-        return CreateAuthSession(taskId, in, out);
+    if (HasAccountPlugin()) {
+        return CreateAccountAuthSession(taskId, in, out);
     }
     AccountMultiTaskManager *authManager = GetAccountMultiTaskManager();
     if (authManager == NULL) {
@@ -95,8 +95,8 @@ static int CreateAccountTask(int32_t *taskId, const CJson *in, CJson *out)
 
 static int ProcessAccountTask(int32_t taskId, const CJson *in, CJson *out, int32_t *status)
 {
-    if (HasAccountAuthPlugin() == HC_SUCCESS) {
-        return ProcessAuthSession(&taskId, in, out, status);
+    if (HasAccountPlugin()) {
+        return ProcessAccountAuthSession(&taskId, in, out, status);
     }
     AccountMultiTaskManager *authManager = GetAccountMultiTaskManager();
     if (authManager == NULL) {
@@ -114,8 +114,8 @@ static int ProcessAccountTask(int32_t taskId, const CJson *in, CJson *out, int32
 
 static void DestroyAccountTask(int taskId)
 {
-    if (HasAccountAuthPlugin() == HC_SUCCESS) {
-        (void)DestroyAuthSession(taskId);
+    if (HasAccountPlugin()) {
+        (void)DestroyAccountAuthSession(taskId);
         return;
     }
     AccountMultiTaskManager *authManager = GetAccountMultiTaskManager();

@@ -128,6 +128,10 @@ typedef struct {
     int32_t (*unRegCallback)(const char *appId);
     /** This interface is used to execute business function. */
     int32_t (*executeWorkerTask)(struct ExtWorkerTask *task);
+    /** This interface is used to notify the account async task is started. */
+    void (*notifyAsyncTaskStart)(void);
+    /** This interface is used to notify the account async task is stopped. */
+    void (*notifyAsyncTaskStop)(void);
 } AccountLifecyleExtPlugCtx;
 
 #ifdef __cplusplus

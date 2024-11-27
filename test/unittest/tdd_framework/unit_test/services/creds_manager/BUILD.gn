@@ -35,7 +35,9 @@ ohos_unittest("creds_manager_test") {
   }
   if (enable_extend_plugin) {
     sources -= account_auth_plugin_files
+    sources -= account_task_manager_files
     sources += account_auth_plugin_mock_files
+    sources += account_task_manager_mock_files
   }
   sources -= soft_bus_channel_files
   sources += soft_bus_channel_mock_files

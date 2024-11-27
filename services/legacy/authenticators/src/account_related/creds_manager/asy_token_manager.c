@@ -15,9 +15,9 @@
 
 #include "asy_token_manager.h"
 
-#include "account_auth_plugin_proxy.h"
 #include "account_module_defines.h"
 #include "account_related_cred_plugin.h"
+#include "account_task_manager.h"
 #include "alg_loader.h"
 #include "common_defs.h"
 #include "hc_dev_info.h"
@@ -645,7 +645,7 @@ static int32_t GetTokenFromPlugin(int32_t osAccountId, AccountToken *token, cons
     if (AddStringToJson(input, FIELD_DEVICE_ID, deviceId) != HC_SUCCESS) {
         goto ERR;
     }
-    GOTO_ERR_AND_SET_RET(ExcuteCredMgrCmd(osAccountId, QUERY_SELF_CREDENTIAL_INFO, input, output), res);
+    GOTO_ERR_AND_SET_RET(ExecuteAccountAuthCmd(osAccountId, QUERY_SELF_CREDENTIAL_INFO, input, output), res);
     GOTO_ERR_AND_SET_RET(GenerateTokenFromJson(output, token), res);
 ERR:
     FreeJson(input);
@@ -1098,7 +1098,7 @@ static int32_t GetToken(int32_t osAccountId, AccountToken *token, const char *us
         LOGE("Invalid input params");
         return HC_ERR_NULL_PTR;
     }
-    if (HasAccountAuthPlugin() == HC_SUCCESS) {
+    if (HasAccountPlugin()) {
         return GetTokenFromPlugin(osAccountId, token, userId, deviceId);
     }
     AccountToken *existToken = GetAccountToken(osAccountId, userId, deviceId);
@@ -1298,7 +1298,7 @@ void InitTokenManager(void)
             LOGE("Alloc account database mutex failed.");
             return;
         }
-        if (InitHcMutex(g_accountDbMutex) != HC_SUCCESS) {
+        if (InitHcMutex(g_accountDbMutex, false) != HC_SUCCESS) {
             LOGE("Init account mutex failed.");
             HcFree(g_accountDbMutex);
             g_accountDbMutex = NULL;
