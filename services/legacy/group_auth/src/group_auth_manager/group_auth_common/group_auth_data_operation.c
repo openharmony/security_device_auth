@@ -275,7 +275,7 @@ int32_t GroupTypeToAuthForm(int32_t groupType)
 int32_t GetDeviceSource(int32_t osAccountId, const char *udid, const char *groupId, uint8_t *returnSource)
 {
     if ((udid == NULL) || (groupId == NULL) || (returnSource == NULL)) {
-        LOGE("The input udid or groupId or returnSource is NULL!")
+        LOGE("The input udid or groupId or returnSource is NULL!");
         return HC_ERR_INVALID_PARAMS;
     }
     TrustedDeviceEntry *peerDevInfo = CreateDeviceEntry();
