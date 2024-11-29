@@ -634,14 +634,12 @@ void ClearCachedData(CJson *paramInSession)
 static void DelTrustDeviceOnAuthErrorV1(const CJson *paramInSession, const CJson *out)
 {
     int32_t peerResultCode = 0;
-    int32_t res = GetIntFromJson(out, FIELD_PEER_RESULT_CODE, &peerResultCode);
-    if (res != HC_SUCCESS) {
+    if (GetIntFromJson(out, FIELD_PEER_RESULT_CODE, &peerResultCode) != HC_SUCCESS) {
         LOGE("Get peer result code from out failed!");
         return;
     }
     int32_t authForm = 0;
-    res = GetIntFromJson(paramInSession, FIELD_AUTH_FORM, &authForm);
-    if (res != HC_SUCCESS) {
+    if (GetIntFromJson(paramInSession, FIELD_AUTH_FORM, &authForm) != HC_SUCCESS) {
         LOGE("Get FIELD_AUTH_FORM from session failed!");
         return;
     }
@@ -650,8 +648,7 @@ static void DelTrustDeviceOnAuthErrorV1(const CJson *paramInSession, const CJson
         return;
     }
     int32_t osAccountId;
-    res = GetIntFromJson(paramInSession, FIELD_OS_ACCOUNT_ID, &osAccountId);
-    if (res != HC_SUCCESS) {
+    if (GetIntFromJson(paramInSession, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
         LOGE("Get osAccountId from session failed!");
         return;
     }
@@ -666,8 +663,16 @@ static void DelTrustDeviceOnAuthErrorV1(const CJson *paramInSession, const CJson
         LOGE("Get peer udid from session failed!");
         return;
     }
-    res = DelTrustedDevice(osAccountId, &queryDeviceParams);
-    if (res != HC_SUCCESS) {
+    uint8_t deviceSource;
+    if (GetDeviceSource(osAccountId, queryDeviceParams.udid, queryDeviceParams.groupId, &deviceSource) != HC_SUCCESS) {
+        LOGE("Failed to get device source!");
+        return;
+    }
+    if (deviceSource == IMPORTED_FROM_CLOUD) {
+        LOGE("The device waiting to be deleted is imported from the cloud!");
+        return;
+    }
+    if (DelTrustedDevice(osAccountId, &queryDeviceParams) != HC_SUCCESS) {
         LOGE("Failed to delete not trusted account related device!");
         return;
     }
