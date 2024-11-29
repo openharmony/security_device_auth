@@ -18,6 +18,7 @@
 #include "alg_loader.h"
 #include "hc_log.h"
 #include "pseudonym_manager.h"
+#include "group_auth_data_operation.h"
 
 #define AUTH_ID_LEN 32
 #define FIELD_AUTH_ID_CLIENT "authIdC"
@@ -545,8 +546,7 @@ TrustedDeviceEntry *GetDeviceEntryById(int32_t osAccountId, const char *deviceId
 void DelTrustDeviceOnAuthErrorV2(const SessionImpl *impl, const int32_t errorCode)
 {
     bool isBind = true;
-    int32_t res = GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
-    if (res != HC_SUCCESS) {
+    if (GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind) != HC_SUCCESS) {
         LOGE("Get FIELD_IS_BIND from SessionImpl failed!");
         return;
     }
@@ -554,8 +554,7 @@ void DelTrustDeviceOnAuthErrorV2(const SessionImpl *impl, const int32_t errorCod
         return;
     }
     int32_t osAccountId;
-    res = GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId);
-    if (res != HC_SUCCESS) {
+    if (GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
         LOGE("Get osAccountId from SessionImpl failed!");
         return;
     }
@@ -570,8 +569,16 @@ void DelTrustDeviceOnAuthErrorV2(const SessionImpl *impl, const int32_t errorCod
         LOGE("Get peer udid from SessionImpl failed!");
         return;
     }
-    res = DelTrustedDevice(osAccountId, &queryDeviceParams);
-    if (res != HC_SUCCESS) {
+    uint8_t deviceSource;
+    if (GetDeviceSource(osAccountId, queryDeviceParams.udid, queryDeviceParams.groupId, &deviceSource) != HC_SUCCESS) {
+        LOGE("Failed to get device source!");
+        return;
+    }
+    if (deviceSource == IMPORTED_FROM_CLOUD) {
+        LOGE("The device waiting to be deleted is imported from the cloud!");
+        return;
+    }
+    if (DelTrustedDevice(osAccountId, &queryDeviceParams) != HC_SUCCESS) {
         LOGE("Failed to delete not trusted account related device!");
         return;
     }
