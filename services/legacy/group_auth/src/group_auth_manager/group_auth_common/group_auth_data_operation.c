@@ -271,25 +271,3 @@ int32_t GroupTypeToAuthForm(int32_t groupType)
     }
     return authForm;
 }
-
-int32_t GetDeviceSource(int32_t osAccountId, const char *udid, const char *groupId, uint8_t *returnSource)
-{
-    if ((udid == NULL) || (groupId == NULL) || (returnSource == NULL)) {
-        LOGE("The input udid or groupId or returnSource is NULL!");
-        return HC_ERR_INVALID_PARAMS;
-    }
-    TrustedDeviceEntry *peerDevInfo = CreateDeviceEntry();
-    if (peerDevInfo == NULL) {
-        LOGE("Failed to alloc memory for peerDevInfo!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    int res = GaGetTrustedDeviceEntryById(osAccountId, udid, true, groupId, peerDevInfo);
-    if (res != HC_SUCCESS) {
-        DestroyDeviceEntry(peerDevInfo);
-        LOGE("Failed to get peer device entry!");
-        return res;
-    }
-    *returnSource = peerDevInfo->source;
-    DestroyDeviceEntry(peerDevInfo);
-    return HC_SUCCESS;
-}

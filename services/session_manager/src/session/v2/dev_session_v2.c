@@ -1989,7 +1989,6 @@ static int32_t ProcFailEvent(SessionImpl *impl, SessionEvent *inputEvent, CJson 
     int32_t peerErrorCode = HC_ERR_PEER_ERROR;
     (void)GetIntFromJson(inputEvent->data, FIELD_ERROR_CODE, &peerErrorCode);
     LOGE("An exception occurred in the peer session. [Code]: %d", peerErrorCode);
-    DelTrustDeviceOnAuthErrorV2(impl, peerErrorCode);
     return RestartSession(impl, policy) == HC_SUCCESS ? HC_SUCCESS : peerErrorCode;
 }
 
