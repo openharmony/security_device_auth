@@ -18,7 +18,6 @@
 #include "alg_loader.h"
 #include "hc_log.h"
 #include "pseudonym_manager.h"
-#include "group_auth_data_operation.h"
 
 #define AUTH_ID_LEN 32
 #define FIELD_AUTH_ID_CLIENT "authIdC"
@@ -541,46 +540,4 @@ TrustedDeviceEntry *GetDeviceEntryById(int32_t osAccountId, const char *deviceId
     }
     ClearDeviceEntryVec(&deviceEntryVec);
     return NULL;
-}
-
-void DelTrustDeviceOnAuthErrorV2(const SessionImpl *impl, const int32_t errorCode)
-{
-    bool isBind = true;
-    if (GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind) != HC_SUCCESS) {
-        LOGE("Get FIELD_IS_BIND from SessionImpl failed!");
-        return;
-    }
-    if (isBind || (impl->base.opCode == AUTH_FORM_ACCOUNT_UNRELATED) || (errorCode != HC_ERR_GROUP_NOT_EXIST)) {
-        return;
-    }
-    int32_t osAccountId;
-    if (GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Get osAccountId from SessionImpl failed!");
-        return;
-    }
-    QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
-    queryDeviceParams.groupId = GetStringFromJson(impl->context, FIELD_GROUP_ID);
-    if (queryDeviceParams.groupId == NULL) {
-        LOGE("Get groupId from SessionImpl failed!");
-        return;
-    }
-    queryDeviceParams.udid = GetStringFromJson(impl->context, FIELD_PEER_UDID);
-    if (queryDeviceParams.udid == NULL) {
-        LOGE("Get peer udid from SessionImpl failed!");
-        return;
-    }
-    uint8_t deviceSource;
-    if (GetDeviceSource(osAccountId, queryDeviceParams.udid, queryDeviceParams.groupId, &deviceSource) != HC_SUCCESS) {
-        LOGE("Failed to get device source!");
-        return;
-    }
-    if (deviceSource == IMPORTED_FROM_CLOUD) {
-        LOGE("The device waiting to be deleted is imported from the cloud!");
-        return;
-    }
-    if (DelTrustedDevice(osAccountId, &queryDeviceParams) != HC_SUCCESS) {
-        LOGE("Failed to delete not trusted account related device!");
-        return;
-    }
-    LOGI("Success delete not trusted account related device!");
 }
