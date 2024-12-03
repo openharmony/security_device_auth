@@ -625,8 +625,8 @@ int32_t MbedtlsBase64Decode(const char *base64Str, uint32_t strLen, uint8_t *byt
 
 bool MbedtlsCheckP256PublicKey(const Uint8Buff *pubKey)
 {
-    if ((pubKey->val == NULL) || (pubKey->length != P256_PUBLIC_SIZE)) {
-        LOGE("Invaild P256 pubKey input, the length is %u.", pubKey->length);
+    if ((pubKey == NULL) || (pubKey->val == NULL) || (pubKey->length != P256_PUBLIC_SIZE)) {
+        LOGE("Invaild P256 pubKey input.");
         return false;
     }
     mbedtls_ctr_drbg_context *ctrDrbg = HcMalloc(sizeof(mbedtls_ctr_drbg_context), 0);
@@ -708,8 +708,8 @@ CLEAN_UP:
 
 bool MbedtlsCheckX25519PublicKey(const Uint8Buff *pubKey)
 {
-    if ((pubKey->val == NULL) || (pubKey->length != X25519_PUBLIC_SIZE)) {
-        LOGE("Invaild X25519 pubKey input, the length is %u.", pubKey->length);
+    if ((pubKey == NULL) || (pubKey->val == NULL) || (pubKey->length != X25519_PUBLIC_SIZE)) {
+        LOGE("Invaild X25519 pubKey input.");
         return false;
     }
     mbedtls_ctr_drbg_context *ctrDrbg = HcMalloc(sizeof(mbedtls_ctr_drbg_context), 0);
