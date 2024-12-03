@@ -2138,9 +2138,15 @@ static bool CheckDlPublicKey(const Uint8Buff *key, const char *primeHex)
 
 static bool CheckEcPublicKey(const Uint8Buff *pubKey, Algorithm algo)
 {
-    (void)pubKey;
-    (void)algo;
-    return true;
+    if (algo == P256) {
+        LOGI("Start check P256 public key");
+        return MbedtlsIsP256PublicKeyValid(pubKey);
+    } else if (algo == X25519) {
+        LOGI("Start check X25519 public key");
+        return MbedtlsIsX25519PublicKeyValid(pubKey);
+    }
+    LOGE("Algorithm not support!");
+    return false;
 }
 
 static int32_t InitImportParam(const KeyParams *keyParams, const ExtraInfo *exInfo, struct HksParam **importParam)
