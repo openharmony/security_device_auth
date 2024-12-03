@@ -623,7 +623,7 @@ int32_t MbedtlsBase64Decode(const char *base64Str, uint32_t strLen, uint8_t *byt
     return HAL_SUCCESS;
 }
 
-bool CheckP256PublicKey(const Uint8Buff *pubKey)
+bool MbedtlsCheckP256PublicKey(const Uint8Buff *pubKey)
 {
     if ((pubKey->val == NULL) || (pubKey->length != P256_PUBLIC_SIZE)) {
         LOGE("Invaild P256 pubKey input, the length is %u.", pubKey->length);
@@ -706,7 +706,7 @@ CLEAN_UP:
     return ret;
 }
 
-bool CheckX25519PublicKey(const Uint8Buff *pubKey)
+bool MbedtlsCheckX25519PublicKey(const Uint8Buff *pubKey)
 {
     if ((pubKey->val == NULL) || (pubKey->length != X25519_PUBLIC_SIZE)) {
         LOGE("Invaild X25519 pubKey input, the length is %u.", pubKey->length);
