@@ -2140,10 +2140,10 @@ static bool CheckEcPublicKey(const Uint8Buff *pubKey, Algorithm algo)
 {
     if (algo == P256) {
         LOGI("Start check P256 public key");
-        return MbedtlsCheckP256PublicKey(pubKey);
+        return MbedtlsIsP256PublicKeyValid(pubKey);
     } else if (algo == X25519) {
         LOGI("Start check X25519 public key");
-        return MbedtlsCheckX25519PublicKey(pubKey);
+        return MbedtlsIsX25519PublicKeyValid(pubKey);
     }
     LOGE("Algorithm not support!");
     return false;
