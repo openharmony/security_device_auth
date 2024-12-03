@@ -677,7 +677,13 @@ CLEAN_UP:
 
 static int32_t SetX25519CheckScalar(mbedtls_mpi *scalar)
 {
-    const int32_t SCALAR_LENGTH = 32;
+#if defined(MBEDTLS_HAVE_INT64)
+    const int32_t SCALAR_LENGTH = 4;
+#elif defined(MBEDTLS_HAVE_INT32)
+    const int32_t SCALAR_LENGTH = 8;
+#else
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(HAL_ERR_NOT_SUPPORTED, "Scalar limb size unknown.\n");
+#endif
     const int32_t VAILD_SCALAR_VALUE_ZERO_POS0 = 0;
     const int32_t VAILD_SCALAR_VALUE_ZERO_POS1 = 1;
     const int32_t VAILD_SCALAR_VALUE_ZERO_POS2 = 2;
