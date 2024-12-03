@@ -666,7 +666,7 @@ CLEAN_UP:
     mbedtls_ecp_point_free(&publicKeyPoint);
     mbedtls_ecp_point_free(&returnPoint);
     mbedtls_mpi_free(&scalar);
-    HCFREE(ctrDrbg);
+    HcFree(ctrDrbg);
     if (ret != HAL_SUCCESS) {
         LOGE("P256 pubKey is invaild!");
         return false;
@@ -744,7 +744,7 @@ CLEAN_UP:
     mbedtls_ecp_point_free(&publicKeyPoint);
     mbedtls_ecp_point_free(&returnPoint);
     mbedtls_mpi_free(&scalar);
-    HCFREE(ctrDrbg);
+    HcFree(ctrDrbg);
     if (ret != HAL_SUCCESS) {
         LOGE("X25519 pubKey is invaild!");
         return false;
