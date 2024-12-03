@@ -49,6 +49,7 @@ do { \
 #define SHA256_HASH_LEN 32
 #define P256_KEY_SIZE 32
 #define P256_PUBLIC_SIZE 64 // P256_KEY_SIZE * 2
+#define X25519_PUBLIC_SIZE 32
 #define PARAM_A_INDEX 2
 #define PARAM_U_INDEX 4
 #define PARAM_MINUS_A_INDEX 3
@@ -620,4 +621,128 @@ int32_t MbedtlsBase64Decode(const char *base64Str, uint32_t strLen, uint8_t *byt
 
     *outLen = (uint32_t)needBuffLen;
     return HAL_SUCCESS;
+}
+
+bool CheckP256PublicKey(const Uint8Buff *pubKey)
+{
+    if ((pubKey->val == NULL) || (pubKey->length != P256_PUBLIC_SIZE)) {
+        LOGE("Invaild P256 pubKey input, the length is %u.", pubKey->length);
+        return false;
+    }
+    mbedtls_ctr_drbg_context *ctrDrbg = HcMalloc(sizeof(mbedtls_ctr_drbg_context), 0);
+    if (ctrDrbg == NULL) {
+        LOGE("Malloc for ctrDrbg failed.");
+        return false;
+    }
+    mbedtls_ecp_group grp;
+    mbedtls_ecp_point publicKeyPoint;
+    mbedtls_ecp_point returnPoint;
+    mbedtls_mpi scalar;
+    mbedtls_ecp_group_init(&grp);
+    mbedtls_ctr_drbg_init(ctrDrbg);
+    mbedtls_ecp_point_init(&publicKeyPoint);
+    mbedtls_ecp_point_init(&returnPoint);
+    mbedtls_mpi_init(&scalar);
+    int32_t ret = mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Load P256 group failed.\n");
+    Blob publicKey = {
+        .data = pubKey->val,
+        .dataSize = pubKey->length
+    };
+    ret = ReadEcPublicKey(&publicKeyPoint, &publicKey);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Read P256 public key failed.\n");
+    ret = mbedtls_ecp_check_pubkey(&grp, &publicKeyPoint);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Invaild point on P256.\n");
+    const int32_t CHECK_SCALAR_8 = 8;
+    ret = mbedtls_mpi_lset(&scalar, CHECK_SCALAR_8);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Set number eight failed.\n");
+    ret = mbedtls_ecp_mul(&grp, &returnPoint, &scalar, &publicKeyPoint, mbedtls_ctr_drbg_random, ctrDrbg);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Compute 8PK failed.\n");
+    ret = mbedtls_ecp_is_zero(&returnPoint);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "8PK is the point at infinity.\n");
+CLEAN_UP:
+    mbedtls_ecp_group_free(&grp);
+    mbedtls_ctr_drbg_free(ctrDrbg);
+    mbedtls_ecp_point_free(&publicKeyPoint);
+    mbedtls_ecp_point_free(&returnPoint);
+    mbedtls_mpi_free(&scalar);
+    HCFREE(ctrDrbg);
+    if (ret != HAL_SUCCESS) {
+        LOGE("P256 pubKey is invaild!");
+        return false;
+    }
+    LOGI("Check P256 pubKey success.");
+    return true;
+}
+
+static int32_t SetX25519CheckScalar(mbedtls_mpi *scalar)
+{
+    const int32_t SCALAR_LENGTH = 32;
+    const int32_t VAILD_SCALAR_VALUE_ZERO_POS0 = 0;
+    const int32_t VAILD_SCALAR_VALUE_ZERO_POS1 = 1;
+    const int32_t VAILD_SCALAR_VALUE_ZERO_POS2 = 2;
+    const int32_t VAILD_SCALAR_VALUE_ONE_POS254 = 254;
+    const int32_t CHECK_SCALAR_VALUE_ONE_POS3 = 3;
+    //2^254 + 8 * 1
+    int32_t ret = mbedtls_mpi_grow(scalar, SCALAR_LENGTH);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Set scalar length failed.\n");
+    ret = mbedtls_mpi_set_bit(scalar, VAILD_SCALAR_VALUE_ZERO_POS0, 0);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Set scalar pos 0 failed.\n");
+    ret = mbedtls_mpi_set_bit(scalar, VAILD_SCALAR_VALUE_ZERO_POS1, 0);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Set scalar pos 1 failed.\n");
+    ret = mbedtls_mpi_set_bit(scalar, VAILD_SCALAR_VALUE_ZERO_POS2, 0);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Set scalar pos 2 failed.\n");
+    ret = mbedtls_mpi_set_bit(scalar, VAILD_SCALAR_VALUE_ONE_POS254, 1);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Set scalar pos 254 failed.\n");
+    ret = mbedtls_mpi_set_bit(scalar, CHECK_SCALAR_VALUE_ONE_POS3, 1);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Set scalar pos 3 failed.\n");
+CLEAN_UP:
+    return ret;
+}
+
+bool CheckX25519PublicKey(const Uint8Buff *pubKey)
+{
+    if ((pubKey->val == NULL) || (pubKey->length != X25519_PUBLIC_SIZE)) {
+        LOGE("Invaild X25519 pubKey input, the length is %u.", pubKey->length);
+        return false;
+    }
+    mbedtls_ctr_drbg_context *ctrDrbg = HcMalloc(sizeof(mbedtls_ctr_drbg_context), 0);
+    if (ctrDrbg == NULL) {
+        LOGE("Malloc for ctrDrbg failed.");
+        return false;
+    }
+    mbedtls_ecp_group grp;
+    mbedtls_ecp_point publicKeyPoint;
+    mbedtls_ecp_point returnPoint;
+    mbedtls_mpi scalar;
+    mbedtls_ecp_group_init(&grp);
+    mbedtls_ctr_drbg_init(ctrDrbg);
+    mbedtls_ecp_point_init(&publicKeyPoint);
+    mbedtls_ecp_point_init(&returnPoint);
+    mbedtls_mpi_init(&scalar);
+    int32_t ret = mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_CURVE25519);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Load X25519 group failed.\n");
+    ret = mbedtls_ecp_point_read_binary(&grp, &publicKeyPoint, pubKey->val, pubKey->length);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Read X25519 public key failed.\n");
+    ret = mbedtls_ecp_check_pubkey(&grp, &publicKeyPoint);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Invaild point on X25519.\n");
+    ret = SetX25519CheckScalar(&scalar);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Set scalar (2^254 + 8 * 1) failed.\n");
+    ret = mbedtls_ecp_mul(&grp, &returnPoint, &scalar, &publicKeyPoint, mbedtls_ctr_drbg_random, ctrDrbg);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Compute (2^254 + 8 * 1)PK failed.\n");
+    ret = mbedtls_ecp_is_zero(&returnPoint);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "(2^254 + 8 * 1)PK is the point at infinity.\n");
+CLEAN_UP:
+    mbedtls_ecp_group_free(&grp);
+    mbedtls_ctr_drbg_free(ctrDrbg);
+    mbedtls_ecp_point_free(&publicKeyPoint);
+    mbedtls_ecp_point_free(&returnPoint);
+    mbedtls_mpi_free(&scalar);
+    HCFREE(ctrDrbg);
+    if (ret != HAL_SUCCESS) {
+        LOGE("X25519 pubKey is invaild!");
+        return false;
+    }
+    LOGI("Check X25519 pubKey success.");
+    return true;
 }
