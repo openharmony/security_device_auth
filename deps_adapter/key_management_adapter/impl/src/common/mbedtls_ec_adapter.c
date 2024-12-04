@@ -625,7 +625,6 @@ int32_t MbedtlsBase64Decode(const char *base64Str, uint32_t strLen, uint8_t *byt
 
 bool MbedtlsIsP256PublicKeyValid(const Uint8Buff *pubKey)
 {
-    const int32_t P256_CHECK_SCALAR_VALUE = 8;
     if ((pubKey == NULL) || (pubKey->val == NULL) || (pubKey->length != P256_PUBLIC_SIZE)) {
         LOGE("Invaild P256 pubKey input.");
         return false;
@@ -644,6 +643,7 @@ bool MbedtlsIsP256PublicKeyValid(const Uint8Buff *pubKey)
     mbedtls_ecp_point_init(&publicKeyPoint);
     mbedtls_ecp_point_init(&returnPoint);
     mbedtls_mpi_init(&scalar);
+    const int32_t P256_CHECK_SCALAR_VALUE = 8;
     Blob publicKey = {
         .data = pubKey->val,
         .dataSize = pubKey->length
