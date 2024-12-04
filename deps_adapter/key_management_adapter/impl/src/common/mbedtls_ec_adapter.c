@@ -643,18 +643,18 @@ bool MbedtlsIsP256PublicKeyValid(const Uint8Buff *pubKey)
     mbedtls_ecp_point_init(&publicKeyPoint);
     mbedtls_ecp_point_init(&returnPoint);
     mbedtls_mpi_init(&scalar);
-    int32_t ret = mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1);
-    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Load P256 group failed.");
+    const int32_t P256_CHECK_SCALAR_VALUE = 8;
     Blob publicKey = {
         .data = pubKey->val,
         .dataSize = pubKey->length
     };
+    int32_t ret = mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Load P256 group failed.");
     ret = ReadEcPublicKey(&publicKeyPoint, &publicKey);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Read P256 public key failed.");
     ret = mbedtls_ecp_check_pubkey(&grp, &publicKeyPoint);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Invaild point on P256.");
-    const int32_t CHECK_SCALAR_8 = 8;
-    ret = mbedtls_mpi_lset(&scalar, CHECK_SCALAR_8);
+    ret = mbedtls_mpi_lset(&scalar, P256_CHECK_SCALAR_VALUE);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Set number eight failed.");
     ret = mbedtls_ecp_mul(&grp, &returnPoint, &scalar, &publicKeyPoint, mbedtls_ctr_drbg_random, ctrDrbg);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Compute 8PK failed.");
@@ -677,6 +677,11 @@ CLEAN_UP:
 
 static int32_t SetX25519CheckScalar(mbedtls_mpi *scalar)
 {
+    const int32_t VAILD_SCALAR_VALUE_ZERO_POS0 = 0;
+    const int32_t VAILD_SCALAR_VALUE_ZERO_POS1 = 1;
+    const int32_t VAILD_SCALAR_VALUE_ZERO_POS2 = 2;
+    const int32_t VAILD_SCALAR_VALUE_ONE_POS254 = 254;
+    const int32_t CHECK_SCALAR_VALUE_ONE_POS3 = 3;
 #if defined(MBEDTLS_HAVE_INT64)
     const int32_t SCALAR_LENGTH = 4;
 #elif defined(MBEDTLS_HAVE_INT32)
@@ -684,11 +689,6 @@ static int32_t SetX25519CheckScalar(mbedtls_mpi *scalar)
 #else
     LOG_AND_GOTO_CLEANUP_IF_FAIL(HAL_ERR_NOT_SUPPORTED, "Scalar limb size unknown.");
 #endif
-    const int32_t VAILD_SCALAR_VALUE_ZERO_POS0 = 0;
-    const int32_t VAILD_SCALAR_VALUE_ZERO_POS1 = 1;
-    const int32_t VAILD_SCALAR_VALUE_ZERO_POS2 = 2;
-    const int32_t VAILD_SCALAR_VALUE_ONE_POS254 = 254;
-    const int32_t CHECK_SCALAR_VALUE_ONE_POS3 = 3;
     //2^254 + 8 * 1
     int32_t ret = mbedtls_mpi_grow(scalar, SCALAR_LENGTH);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Set scalar length failed.");
