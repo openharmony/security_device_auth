@@ -279,6 +279,8 @@ static void ParcelRecycle(HcParcel *parcel)
     if (contentSize > 0) {
         if (memmove_s(parcel->data, parcel->endPos - parcel->beginPos,
             parcel->data + parcel->beginPos, parcel->endPos - parcel->beginPos) != EOK) {
+            LOGE("Parcel memmove failed!");
+            return;
         }
     }
     parcel->beginPos = 0;
