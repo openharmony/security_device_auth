@@ -16,6 +16,7 @@
 #include "hc_parcel.h"
 #include "securec.h"
 #include "hc_types.h"
+#include "hc_log.h"
 
 const int PARCEL_DEFAULT_INCREASE_STEP = 16;
 const uint32_t PARCEL_UINT_MAX = 0xffffffffU;
