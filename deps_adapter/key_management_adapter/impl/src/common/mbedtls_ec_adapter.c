@@ -644,12 +644,12 @@ bool MbedtlsIsP256PublicKeyValid(const Uint8Buff *pubKey)
     mbedtls_ecp_point_init(&publicKeyPoint);
     mbedtls_ecp_point_init(&returnPoint);
     mbedtls_mpi_init(&scalar);
-    int32_t ret = mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1);
-    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Load P256 group failed.");
     Blob publicKey = {
         .data = pubKey->val,
         .dataSize = pubKey->length
     };
+    int32_t ret = mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1);
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Load P256 group failed.");
     ret = ReadEcPublicKey(&publicKeyPoint, &publicKey);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Read P256 public key failed.");
     ret = mbedtls_ecp_check_pubkey(&grp, &publicKeyPoint);
