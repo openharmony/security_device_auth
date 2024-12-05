@@ -30,6 +30,7 @@ bool GaIsDeviceInGroup(int32_t groupType, int32_t osAccountId, const char *peerU
 int32_t GaGetLocalDeviceInfo(int32_t osAccountId, const char *groupId, TrustedDeviceEntry *localAuthInfo);
 int32_t AuthFormToGroupType(int32_t authForm);
 int32_t GroupTypeToAuthForm(int32_t groupType);
+int32_t GetDeviceSource(int32_t osAccountId, const char *udid, const char *groupId, uint8_t *returnSource);
 
 #ifdef __cplusplus
 }

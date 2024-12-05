@@ -1187,6 +1187,28 @@ static bool IsSelfDeviceEntry(const TrustedDeviceEntry *deviceEntry)
     return strcmp(selfUdid, entryUdid) == 0;
 }
 
+static int32_t AddOsAccountInfoToMsg(const int32_t osAccountId, char *messageStr)
+{
+    CJson *messageJson = CreateJsonFromString(messageStr);
+    FreeJsonString(messageStr);
+    if (messageJson == NULL) {
+        LOGE("Failed to allocate messageJson memory!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    int32_t res = AddIntToJson(messageJson, FIELD_OS_ACCOUNT_ID, osAccountId);
+    if (res != HC_SUCCESS) {
+        FreeJson(messageJson);
+        return res;
+    }
+    messageStr = PackJsonToString(messageJson);
+    if (messageStr == NULL) {
+        FreeJson(messageJson);
+        return HC_ERR_JSON_FAIL;
+    }
+    FreeJson(messageJson);
+    return HC_SUCCESS;
+}
+
 static void PostDeviceUnBoundMsg(OsAccountTrustedInfo *info, const TrustedDeviceEntry *deviceEntry)
 {
     if (!IsBroadcastSupported()) {
@@ -1199,7 +1221,8 @@ static void PostDeviceUnBoundMsg(OsAccountTrustedInfo *info, const TrustedDevice
     TrustedGroupEntry **groupEntryPtr = QueryGroupEntryPtrIfMatch(&info->groups, &groupParams);
     if (groupEntryPtr != NULL) {
         char *messageStr = NULL;
-        if (GenerateMessage(*groupEntryPtr, &messageStr) != HC_SUCCESS) {
+        if ((GenerateMessage(*groupEntryPtr, &messageStr) != HC_SUCCESS) ||
+            (AddOsAccountInfoToMsg(info->osAccountId, messageStr) != HC_SUCCESS)) {
             return;
         }
         GetBroadcaster()->postOnDeviceUnBound(udid, messageStr);
