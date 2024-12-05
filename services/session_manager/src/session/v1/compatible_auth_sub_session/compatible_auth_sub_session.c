@@ -136,27 +136,31 @@ static void DelTrustDeviceOnAuthErrorV1(const CJson *paramInSession, int32_t pee
         LOGE("Get osAccountId from session failed!");
         return;
     }
-    QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
-    queryDeviceParams.groupId = GetStringFromJson(paramInSession, FIELD_GROUP_ID);
-    if (queryDeviceParams.groupId == NULL) {
+    const char *groupId = GetStringFromJson(paramInSession, FIELD_GROUP_ID);
+    if (groupId == NULL) {
         LOGE("Get groupId from session failed!");
         return;
     }
-    queryDeviceParams.udid = GetStringFromJson(paramInSession, FIELD_PEER_UDID);
-    if (queryDeviceParams.udid == NULL) {
+    const char *peerUdid = GetStringFromJson(paramInSession, FIELD_PEER_UDID);
+    if (peerUdid == NULL) {
         LOGE("Get peer udid from session failed!");
         return;
     }
-    uint8_t deviceSource;
-    if (GetDeviceSource(osAccountId, queryDeviceParams.udid, queryDeviceParams.groupId, &deviceSource) != HC_SUCCESS) {
-        LOGE("Failed to get device source!");
+    TrustedDeviceEntry *peerDevInfo = CreateDeviceEntry();
+    if (peerDevInfo == NULL) {
+        LOGE("Failed to create device entry!");
         return;
     }
-    if (deviceSource == IMPORTED_FROM_CLOUD) {
-        LOGE("The device waiting to be deleted is imported from the cloud!");
+    if (GaGetTrustedDeviceEntryById(osAccountId, peerUdid, true, groupId, peerDevInfo) != HC_SUCCESS) {
+        LOGW("peer device not exist, no need to delete!");
+        DestroyDeviceEntry(peerDevInfo);
         return;
     }
-    if (DelTrustedDevice(osAccountId, &queryDeviceParams) != HC_SUCCESS) {
+    if (peerDevInfo->source == IMPORTED_FROM_CLOUD) {
+        LOGW("peer device is imported, do not delete!");
+        return;
+    }
+    if (DelDeviceFromDb(osAccountId, groupId, peerDevInfo) != HC_SUCCESS) {
         LOGE("Failed to delete not trusted account related device!");
         return;
     }
