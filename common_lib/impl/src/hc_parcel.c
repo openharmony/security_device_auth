@@ -16,7 +16,6 @@
 #include "hc_parcel.h"
 #include "securec.h"
 #include "hc_types.h"
-#include "hc_log.h"
 
 const int PARCEL_DEFAULT_INCREASE_STEP = 16;
 const uint32_t PARCEL_UINT_MAX = 0xffffffffU;
@@ -280,7 +279,6 @@ static void ParcelRecycle(HcParcel *parcel)
     if (contentSize > 0) {
         if (memmove_s(parcel->data, parcel->endPos - parcel->beginPos,
             parcel->data + parcel->beginPos, parcel->endPos - parcel->beginPos) != EOK) {
-            LOGE("Parcel memmove failed!");
             return;
         }
     }
