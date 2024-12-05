@@ -1187,7 +1187,7 @@ static bool IsSelfDeviceEntry(const TrustedDeviceEntry *deviceEntry)
     return strcmp(selfUdid, entryUdid) == 0;
 }
 
-static int32_t GenerateMessageWithOsAccount(const TrustedGroupEntry *groupEntry, const int32_t osAccountId,
+static int32_t GenerateMessageWithOsAccount(const TrustedGroupEntry *groupEntry, int32_t osAccountId,
     char **returnMessageStr)
 {
     if (groupEntry == NULL) {
@@ -1204,16 +1204,15 @@ static int32_t GenerateMessageWithOsAccount(const TrustedGroupEntry *groupEntry,
         FreeJson(message);
         return result;
     }
-    result = AddIntToJson(message, FIELD_OS_ACCOUNT_ID, osAccountId);
-    if (result != HC_SUCCESS) {
+    if (AddIntToJson(message, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
         FreeJson(message);
-        return result;
+        return HC_ERR_JSON_ADD;
     }
     char *messageStr = PackJsonToString(message);
     FreeJson(message);
     if (messageStr == NULL) {
         LOGE("Failed to convert json to string!");
-        return HC_ERR_JSON_FAIL;
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     *returnMessageStr = messageStr;
     return HC_SUCCESS;
