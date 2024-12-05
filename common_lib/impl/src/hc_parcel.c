@@ -277,8 +277,7 @@ static void ParcelRecycle(HcParcel *parcel)
 
     uint32_t contentSize = parcel->endPos - parcel->beginPos;
     if (contentSize > 0) {
-        if (memmove_s(parcel->data, parcel->endPos - parcel->beginPos,
-            parcel->data + parcel->beginPos, parcel->endPos - parcel->beginPos) != EOK) {
+        if (memmove_s(parcel->data, contentSize, parcel->data + parcel->beginPos, contentSize) != EOK) {
             return;
         }
     }
