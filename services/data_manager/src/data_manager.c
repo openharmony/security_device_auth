@@ -1187,25 +1187,34 @@ static bool IsSelfDeviceEntry(const TrustedDeviceEntry *deviceEntry)
     return strcmp(selfUdid, entryUdid) == 0;
 }
 
-static int32_t AddOsAccountInfoToMsg(const int32_t osAccountId, char *messageStr)
+static int32_t GenerateMessageWithOsAccount(const TrustedGroupEntry *groupEntry, const int32_t osAccountId, char **returnGroupInfo)
 {
-    CJson *messageJson = CreateJsonFromString(messageStr);
-    FreeJsonString(messageStr);
-    if (messageJson == NULL) {
-        LOGE("Failed to allocate messageJson memory!");
+    if (groupEntry == NULL) {
+        LOGE("groupEntry is null!");
+        return HC_ERR_NULL_PTR;
+    }
+    CJson *message = CreateJson();
+    if (message == NULL) {
+        LOGE("Failed to allocate message memory!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t res = AddIntToJson(messageJson, FIELD_OS_ACCOUNT_ID, osAccountId);
-    if (res != HC_SUCCESS) {
-        FreeJson(messageJson);
-        return res;
+    int32_t result = GenerateReturnGroupInfo(groupEntry, message);
+    if (result != HC_SUCCESS) {
+        FreeJson(message);
+        return result;
     }
-    messageStr = PackJsonToString(messageJson);
+    result = AddIntToJson(message, FIELD_OS_ACCOUNT_ID, osAccountId);
+    if (result != HC_SUCCESS) {
+        FreeJson(message);
+        return result;
+    }
+    char *messageStr = PackJsonToString(message);
+    FreeJson(message);
     if (messageStr == NULL) {
-        FreeJson(messageJson);
+        LOGE("Failed to convert json to string!");
         return HC_ERR_JSON_FAIL;
     }
-    FreeJson(messageJson);
+    *returnGroupInfo = messageStr;
     return HC_SUCCESS;
 }
 
@@ -1221,8 +1230,7 @@ static void PostDeviceUnBoundMsg(OsAccountTrustedInfo *info, const TrustedDevice
     TrustedGroupEntry **groupEntryPtr = QueryGroupEntryPtrIfMatch(&info->groups, &groupParams);
     if (groupEntryPtr != NULL) {
         char *messageStr = NULL;
-        if ((GenerateMessage(*groupEntryPtr, &messageStr) != HC_SUCCESS) ||
-            (AddOsAccountInfoToMsg(info->osAccountId, messageStr) != HC_SUCCESS)) {
+        if (GenerateMessageWithOsAccount(*groupEntryPtr, info->osAccountId, &messageStr) != HC_SUCCESS) {
             return;
         }
         GetBroadcaster()->postOnDeviceUnBound(udid, messageStr);
