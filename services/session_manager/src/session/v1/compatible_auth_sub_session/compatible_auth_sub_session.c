@@ -21,6 +21,8 @@
 #include "hc_log.h"
 #include "hc_types.h"
 #include "hitrace_adapter.h"
+#include "group_auth_data_operation.h"
+#include "group_operation_common.h"
 
 static int32_t CheckInputAuthParams(const CJson *authParam)
 {
@@ -158,12 +160,15 @@ static void DelTrustDeviceOnAuthErrorV1(const CJson *paramInSession, int32_t pee
     }
     if (peerDevInfo->source == IMPORTED_FROM_CLOUD) {
         LOGW("peer device is imported, do not delete!");
+        DestroyDeviceEntry(peerDevInfo);
         return;
     }
     if (DelDeviceFromDb(osAccountId, groupId, peerDevInfo) != HC_SUCCESS) {
         LOGE("Failed to delete not trusted account related device!");
+        DestroyDeviceEntry(peerDevInfo);
         return;
     }
+    DestroyDeviceEntry(peerDevInfo);
     LOGI("Success delete not trusted account related device!");
 }
 
