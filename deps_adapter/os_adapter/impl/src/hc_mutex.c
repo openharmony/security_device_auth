@@ -21,24 +21,82 @@
 extern "C" {
 #endif
 
-int32_t InitHcMutex(HcMutex *mutex)
+static int HcMutexLock(HcMutex *mutex)
 {
     if (mutex == NULL) {
         return -1;
     }
-    int res = pthread_mutex_init(mutex, NULL);
+    int res = 0;
+    if (mutex->isReentrant) {
+        pthread_t currThread = pthread_self();
+        if (mutex->owner == currThread) {
+            mutex->count++;
+            return 0;
+        }
+        res = pthread_mutex_lock(&mutex->mutex);
+        mutex->owner = currThread;
+        mutex->count = 1;
+    } else {
+        res = pthread_mutex_lock(&mutex->mutex);
+    }
     if (res != 0) {
-        LOGE("[OS]: pthread_mutex_init fail. [Res]: %d", res);
+        LOGW("[OS]: pthread_mutex_lock fail. [Res]: %d", res);
     }
     return res;
 }
 
-void DestroyHcMutex(HcMutex *mutex)
+static void HcMutexUnlock(HcMutex *mutex)
 {
     if (mutex == NULL) {
         return;
     }
-    int res = pthread_mutex_destroy(mutex);
+    int res = 0;
+    if (mutex->isReentrant) {
+        pthread_t currThread = pthread_self();
+        if (mutex->owner != currThread) {
+            LOGE("[OS]: HcMutexUnlock fail. Not owner.");
+            return;
+        }
+        mutex->count--;
+        if (mutex->count == 0) {
+            mutex->owner = 0;
+            res = pthread_mutex_unlock(&mutex->mutex);
+        }
+    } else {
+        res = pthread_mutex_unlock(&mutex->mutex);
+    }
+    if (res != 0) {
+        LOGW("[OS]: pthread_mutex_unlock fail. [Res]: %d", res);
+    }
+}
+
+int32_t InitHcMutex(struct HcMutexT *mutex, bool isReentrant)
+{
+    if (mutex == NULL) {
+        return -1;
+    }
+    int res = pthread_mutex_init(&mutex->mutex, NULL);
+    if (res != 0) {
+        LOGE("[OS]: pthread_mutex_init fail. [Res]: %d", res);
+        return res;
+    }
+    mutex->lock = HcMutexLock;
+    mutex->unlock = HcMutexUnlock;
+    mutex->owner = 0;
+    mutex->count = 0;
+    mutex->isReentrant = isReentrant;
+    return 0;
+}
+
+void DestroyHcMutex(struct HcMutexT *mutex)
+{
+    if (mutex == NULL) {
+        return;
+    }
+    mutex->owner = 0;
+    mutex->count = 0;
+    mutex->isReentrant = false;
+    int res = pthread_mutex_destroy(&mutex->mutex);
     if (res != 0) {
         LOGW("[OS]: pthread_mutex_destroy fail. [Res]: %d", res);
     }
@@ -50,11 +108,7 @@ int LockHcMutex(HcMutex* mutex)
         LOGE("[OS]: mutex is null pointer!");
         return -1;
     }
-    int res = pthread_mutex_lock(mutex);
-    if (res != 0) {
-        LOGE("[OS]: pthread_mutex_lock fail. [Res]: %d", res);
-    }
-    return res;
+    return mutex->lock(mutex);
 }
 
 void UnlockHcMutex(HcMutex* mutex)
@@ -63,10 +117,7 @@ void UnlockHcMutex(HcMutex* mutex)
         LOGE("[OS]: mutex is null pointer!");
         return;
     }
-    int res = pthread_mutex_unlock(mutex);
-    if (res != 0) {
-        LOGW("[OS]: pthread_mutex_unlock fail. [Res]: %d", res);
-    }
+    return mutex->unlock(mutex);
 }
 
 #ifdef __cplusplus

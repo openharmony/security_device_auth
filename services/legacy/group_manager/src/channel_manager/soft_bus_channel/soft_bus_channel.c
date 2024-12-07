@@ -238,7 +238,7 @@ int32_t InitSoftBusChannelModule(ChannelProxy *channelProxy)
             LOGE("Failed to allocate channel mutex memory!");
             return HC_ERR_ALLOC_MEMORY;
         }
-        if (InitHcMutex(g_channelMutex) != HC_SUCCESS) {
+        if (InitHcMutex(g_channelMutex, false) != HC_SUCCESS) {
             LOGE("Init mutex failed!");
             HcFree(g_channelMutex);
             g_channelMutex = NULL;

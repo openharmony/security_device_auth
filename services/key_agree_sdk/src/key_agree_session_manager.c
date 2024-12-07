@@ -41,7 +41,7 @@ static int32_t CreateKeyAgreeSessionMgr(void)
             LOGE("Alloc sessionMutex failed");
             return HC_ERR_ALLOC_MEMORY;
         }
-        if (InitHcMutex(g_sessionMutex) != HC_SUCCESS) {
+        if (InitHcMutex(g_sessionMutex, false) != HC_SUCCESS) {
             LOGE("Init mutex failed");
             HcFree(g_sessionMutex);
             g_sessionMutex = NULL;

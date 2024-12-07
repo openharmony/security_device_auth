@@ -15,7 +15,7 @@
 
 #include "cert_operation.h"
 
-#include "account_auth_plugin_proxy.h"
+#include "account_task_manager.h"
 #include "account_related_group_auth.h"
 #include "alg_loader.h"
 #include "asy_token_manager.h"
@@ -672,7 +672,7 @@ static int32_t GetSharedSecretByPeerCertFromPlugin(
         goto ERR;
     }
     GOTO_ERR_AND_SET_RET(AddCertInfoToJson(peerCertInfo, input), res);
-    GOTO_ERR_AND_SET_RET(ExcuteCredMgrCmd(osAccountId, GET_SHARED_SECRET_BY_PEER_CERT, input, output), res);
+    GOTO_ERR_AND_SET_RET(ExecuteAccountAuthCmd(osAccountId, GET_SHARED_SECRET_BY_PEER_CERT, input, output), res);
     res = HC_ERR_JSON_GET;
     const char *sharedKeyAlias = GetStringFromJson(output, FIELD_SHARED_SECRET);
     if (sharedKeyAlias == NULL) {
@@ -704,7 +704,7 @@ int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *peerUserId, 
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
-    if (HasAccountAuthPlugin() == HC_SUCCESS) {
+    if (HasAccountPlugin()) {
         return GetSharedSecretByPeerCertFromPlugin(osAccountId, peerUserId, peerCertInfo, sharedSecret);
     }
     TrustedDeviceEntry *deviceEntry = CreateDeviceEntry();

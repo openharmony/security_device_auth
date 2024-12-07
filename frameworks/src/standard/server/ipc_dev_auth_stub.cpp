@@ -28,7 +28,7 @@
 #include "string_ex.h"
 
 #ifdef DEV_AUTH_SERVICE_BUILD
-#include "account_auth_plugin_proxy.h"
+#include "account_task_manager.h"
 #include "data_manager.h"
 #include "hisysevent_adapter.h"
 #endif
@@ -212,7 +212,7 @@ int32_t ServiceDevAuth::HandleRestoreCall(MessageParcel &data, MessageParcel &re
     int32_t osAccountId = DEFAULT_UPGRADE_OS_ACCOUNT_ID;
     data.ReadInt32(osAccountId);
     LOGI("Begin to upgrade data for osAccountId: %d.", osAccountId);
-    int32_t res = ExcuteCredMgrCmd(osAccountId, UPGRADE_DATA, nullptr, nullptr);
+    int32_t res = ExecuteAccountAuthCmd(osAccountId, UPGRADE_DATA, nullptr, nullptr);
     ReloadOsAccountDb(osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to upgrade data!");

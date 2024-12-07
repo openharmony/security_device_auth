@@ -95,7 +95,7 @@ void InitExceptionController(void)
     g_throwExceptionIndex = UINT32_MAX;
     g_callNum = 0;
     g_mutex = (HcMutex *)malloc(sizeof(HcMutex));
-    InitHcMutex(g_mutex);
+    InitHcMutex(g_mutex, false);
 }
 
 void DestroyExceptionController(void)

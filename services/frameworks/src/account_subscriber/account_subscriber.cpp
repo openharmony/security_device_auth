@@ -15,8 +15,12 @@
 
 #include "account_subscriber.h"
 
+#include "account_task_manager.h"
+#include "common_defs.h"
 #include "common_event_support.h"
+#include "device_auth.h"
 #include "hc_log.h"
+#include "json_utils.h"
 #include "want.h"
 
 namespace OHOS {
@@ -30,16 +34,35 @@ void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
 {
     const OHOS::AAFwk::Want& want = eventData.GetWant();
     std::string action = want.GetAction();
-    int32_t userId = eventData.GetCode();
-    LOGI("[AccountSubscriber]: OnReceiveEvent action: %s, userId: %d.", action.c_str(), userId);
+    LOGI("[AccountSubscriber]: OnReceiveEvent action: %s.", action.c_str());
 
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
-        notifier_.notifyOsAccountUnlocked(userId);
+        LOGI("[AccountSubscriber]: user unlocked, userId: %d.", eventData.GetCode());
+        notifier_.notifyOsAccountUnlocked(eventData.GetCode());
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED) {
-        notifier_.notifyOsAccountRemoved(userId);
+        LOGI("[AccountSubscriber]: user removed, userId: %d.", eventData.GetCode());
+        notifier_.notifyOsAccountRemoved(eventData.GetCode());
     } else {
-        LOGE("[AccountSubscriber]: OnReceiveEvent invalid action!");
+        LOGI("[AccountSubscriber]: receive other event.");
     }
+    CJson *cmdParamJson = CreateJson();
+    if (cmdParamJson == nullptr) {
+        LOGE("[AccountSubscriber]: Failed to create cmd params json!");
+        return;
+    }
+    if (AddStringToJson(cmdParamJson, FIELD_COMMON_EVENT_NAME, action.c_str()) != HC_SUCCESS) {
+        LOGE("[AccountSubscriber]: Failed to add common event name to json!");
+        FreeJson(cmdParamJson);
+        return;
+    }
+    if (AddIntToJson(cmdParamJson, FIELD_COMMON_EVENT_CODE, eventData.GetCode()) != HC_SUCCESS) {
+        LOGE("[AccountSubscriber]: Failed to add common event code to json!");
+        FreeJson(cmdParamJson);
+        return;
+    }
+    int32_t res = ExecuteAccountAuthCmd(DEFAULT_OS_ACCOUNT, HANDLE_COMMON_EVENT, cmdParamJson, nullptr);
+    FreeJson(cmdParamJson);
+    LOGI("[AccountSubscriber]: handle common event res: %d", res);
 }
 }  // namespace DevAuth
 }  // namespace OHOS

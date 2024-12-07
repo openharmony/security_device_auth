@@ -50,6 +50,7 @@ inc_path = [
   "${dev_frameworks_path}/inc/plugin_adapter",
   "${dev_frameworks_path}/inc/task_manager",
   "${dev_frameworks_path}/inc/security_label_adapter",
+  "${dev_frameworks_path}/inc/account_task_manager",
   "${authenticators_path}/inc/account_related",
   "${authenticators_path}/inc/account_unrelated",
   "${authenticators_path}/inc/account_unrelated/iso_task",
@@ -126,6 +127,9 @@ account_subscriber_files =
 sa_subscriber_files =
     [ "${dev_frameworks_path}/src/sa_subscriber/sa_subscriber.cpp" ]
 
+net_observer_files =
+    [ "${dev_frameworks_path}/src/net_observer/net_observer.cpp" ]
+
 group_auth_files = [
   "${group_auth_path}/src/group_auth_manager/group_auth_common/group_auth_data_operation.c",
   "${group_auth_path}/src/group_auth_manager/group_auth_manager.c",
@@ -139,6 +143,10 @@ account_related_cred_plugin_mock_files = [ "${cred_manager_path}/src/account_rel
 
 account_auth_plugin_files = [ "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin_proxy.c" ]
 account_auth_plugin_mock_files = [ "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c" ]
+
+account_task_manager_files =
+    [ "${dev_frameworks_path}/src/account_task_manager/account_task_manager.c" ]
+account_task_manager_mock_files = [ "${dev_frameworks_path}/src/account_task_manager_mock/account_task_manager_mock.c" ]
 
 cred_manager_files = [ "${cred_manager_path}/src/cred_manager.c" ]
 
@@ -385,8 +393,10 @@ if (enable_account == true) {
 
 if (enable_extend_plugin) {
   deviceauth_files += account_auth_plugin_files
+  deviceauth_files += account_task_manager_files
 } else {
   deviceauth_files += account_auth_plugin_mock_files
+  deviceauth_files += account_task_manager_mock_files
 }
 
 if (device_auth_enable_soft_bus_channel == true) {

@@ -31,7 +31,7 @@
 #include "os_account_adapter.h"
 #include "pseudonym_manager.h"
 #include "security_label_adapter.h"
-#include "account_auth_plugin_proxy.h"
+#include "account_task_manager.h"
 
 typedef struct {
     DECLARE_TLV_STRUCT(10)
@@ -648,7 +648,7 @@ static void CheckAndRemoveUpgradeGroupEntry(const TrustedGroupEntry *groupEntry)
         LOGE("Failed to add groupOwner.");
         return;
     }
-    int32_t res = ExcuteCredMgrCmd(UPGRADE_OS_ACCOUNT_ID, CHECK_UPGRADE_DATA, upgradeJson, NULL);
+    int32_t res = ExecuteAccountAuthCmd(UPGRADE_OS_ACCOUNT_ID, CHECK_UPGRADE_DATA, upgradeJson, NULL);
     FreeJson(upgradeJson);
     if (res == HC_SUCCESS) {
         LOGI("GroupOwner is in trustedlist, not need to remove!");
@@ -1753,7 +1753,7 @@ int32_t InitDatabase(void)
             LOGE("[DB]: Alloc databaseMutex failed");
             return HC_ERR_ALLOC_MEMORY;
         }
-        if (InitHcMutex(g_databaseMutex) != HC_SUCCESS) {
+        if (InitHcMutex(g_databaseMutex, false) != HC_SUCCESS) {
             LOGE("[DB]: Init mutex failed");
             HcFree(g_databaseMutex);
             g_databaseMutex = NULL;

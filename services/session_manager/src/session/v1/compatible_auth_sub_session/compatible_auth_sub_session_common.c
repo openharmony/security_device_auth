@@ -15,9 +15,9 @@
 
 #include "compatible_auth_sub_session_common.h"
 
-#include "account_auth_plugin_proxy.h"
 #include "account_module_defines.h"
 #include "account_related_group_auth.h"
+#include "account_task_manager.h"
 #include "compatible_auth_sub_session_util.h"
 #include "data_manager.h"
 #include "dev_auth_module_manager.h"
@@ -48,7 +48,7 @@ static void GetAccountRelatedCandidateGroups(int32_t osAccountId, const CJson *p
         return;
     }
     LOGI("Account related groups not found!");
-    if (HasAccountAuthPlugin() != HC_SUCCESS) {
+    if (HasAccountPlugin()) {
         return;
     }
     CJson *input = CreateJson();
@@ -60,7 +60,7 @@ static void GetAccountRelatedCandidateGroups(int32_t osAccountId, const CJson *p
         FreeJson(input);
         return;
     }
-    int32_t ret = ExcuteCredMgrCmd(osAccountId, QUERY_SELF_CREDENTIAL_INFO, input, output);
+    int32_t ret = ExecuteAccountAuthCmd(osAccountId, QUERY_SELF_CREDENTIAL_INFO, input, output);
     if (ret != HC_SUCCESS) {
         LOGE("Account cred is empty.");
     }

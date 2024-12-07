@@ -26,7 +26,7 @@ int Wait(pthread_cond_t* cond, HcMutex* mutex)
     if (cond == NULL || mutex == NULL) {
         return -1;
     }
-    int res = pthread_cond_wait(cond, mutex);
+    int res = pthread_cond_wait(cond, &mutex->mutex);
     if (res != 0) {
         LOGE("[OS]: pthread_cond_wait fail. [Res]: %d", res);
     }
@@ -145,7 +145,7 @@ int32_t InitHcCond(HcCondition* hcCond, HcMutex* mutex)
     } else {
         hcCond->mutex = (HcMutex*)HcMalloc(sizeof(HcMutex), 0);
         if (hcCond->mutex != NULL) {
-            res = InitHcMutex(hcCond->mutex);
+            res = InitHcMutex(hcCond->mutex, false);
             if (res != 0) {
                 HcFree(hcCond->mutex);
                 hcCond->mutex = NULL;

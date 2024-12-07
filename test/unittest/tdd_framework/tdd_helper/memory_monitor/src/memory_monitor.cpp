@@ -137,7 +137,7 @@ void HcInitMallocMonitor(void)
     }
     g_isInit = true;
     g_mutex = static_cast<HcMutex *>(malloc(sizeof(HcMutex)));
-    InitHcMutex(g_mutex);
+    InitHcMutex(g_mutex, false);
 }
 
 void HcDestroyMallocMonitor(void)

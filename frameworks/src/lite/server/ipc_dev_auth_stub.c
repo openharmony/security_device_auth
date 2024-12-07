@@ -140,7 +140,7 @@ static void WithObject(int32_t methodId, IpcIo *data, IpcDataInfo *ipcData, int3
 
 void InitCbStubTable(void)
 {
-    if (InitHcMutex(&g_cBMutex) != HC_SUCCESS) {
+    if (InitHcMutex(&g_cBMutex, false) != HC_SUCCESS) {
         LOGE("[DB]: Init mutex failed");
         return;
     }

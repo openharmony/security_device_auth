@@ -15,7 +15,6 @@
 
 #include "device_auth.h"
 
-#include "account_auth_plugin_proxy.h"
 #include "alg_loader.h"
 #include "callback_manager.h"
 #include "channel_manager.h"
@@ -41,6 +40,7 @@
 #include "performance_dumper.h"
 #include "identity_manager.h"
 #include "group_auth_manager.h"
+#include "account_task_manager.h"
 
 static GroupAuthManager *g_groupAuthManager =  NULL;
 static DeviceGroupManager *g_groupManagerInstance = NULL;
@@ -1302,7 +1302,7 @@ static int32_t ProcessDataInner(int64_t authReqId, const uint8_t *data, uint32_t
             return res;
         }
     }
-    if (HasAccountAuthPlugin() == HC_SUCCESS) {
+    if (HasAccountPlugin()) {
         res = AddOriginDataForPlugin(receivedMsg, data);
         if (res != HC_SUCCESS) {
             FreeJson(receivedMsg);
@@ -1712,7 +1712,7 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     }
     INIT_PERFORMANCE_DUMPER();
     InitPseudonymModule();
-    DEV_AUTH_LOAD_PLUGIN();
+    InitAccountTaskManager();
     SetInitStatus();
     LOGI("[End]: [Service]: Init device auth service successfully!");
     return HC_SUCCESS;
@@ -1729,7 +1729,7 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
     DestroyDevSessionManager();
     DestroyGroupManager();
     DestroyGmAndGa();
-    DEV_AUTH_UNLOAD_PLUGIN();
+    DestroyAccountTaskManager();
     DestroyModules();
     DestroyCredMgr();
     DestroyChannelManager();

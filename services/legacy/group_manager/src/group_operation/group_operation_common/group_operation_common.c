@@ -24,7 +24,7 @@
 #include "hal_error.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
-#include "account_auth_plugin_proxy.h"
+#include "account_task_manager.h"
 
 static const char *IDENTITY_FROM_DB = "identityFromDB";
 
@@ -49,7 +49,7 @@ int32_t CheckUpgradeIdentity(uint8_t upgradeFlag, const char *appId, const char 
         LOGE("Failed to add identityFromDB.");
         return HC_ERR_JSON_ADD;
     }
-    int32_t res = ExcuteCredMgrCmd(0, CHECK_UPGRADE_IDENTITY, upgradeJson, NULL);
+    int32_t res = ExecuteAccountAuthCmd(0, CHECK_UPGRADE_IDENTITY, upgradeJson, NULL);
     FreeJson(upgradeJson);
     if (res != HC_SUCCESS) {
         LOGW("Check upgradeIdentity failed, appId or identity may be incorrect.");

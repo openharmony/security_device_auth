@@ -99,7 +99,7 @@ static int32_t AddNewSessionToList(DevSession *session)
 
 int32_t InitDevSessionManager(void)
 {
-    int32_t res = InitHcMutex(&g_sessionMutex);
+    int32_t res = InitHcMutex(&g_sessionMutex, false);
     if (res != HC_SUCCESS) {
         LOGE("Init session mutex failed.");
         return res;

@@ -217,7 +217,7 @@ int32_t InitCallbackManager(void)
             LOGE("Failed to allocate broadcast mutex memory!");
             return HC_ERR_ALLOC_MEMORY;
         }
-        if (InitHcMutex(g_callbackMutex) != HC_SUCCESS) {
+        if (InitHcMutex(g_callbackMutex, false) != HC_SUCCESS) {
             LOGE("Init mutex failed!");
             HcFree(g_callbackMutex);
             g_callbackMutex = NULL;

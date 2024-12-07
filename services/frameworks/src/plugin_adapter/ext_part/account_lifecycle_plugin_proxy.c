@@ -18,6 +18,8 @@
 #include "hc_log.h"
 #include "hc_types.h"
 #include "task_manager.h"
+#include "account_task_manager.h"
+#include "alg_loader.h"
 
 static AccountLifecyleExtPlug *g_accountLifeCyclePlugin = NULL;
 static AccountLifecyleExtPlugCtx *g_accountPluginCtx = NULL;
@@ -25,6 +27,7 @@ static AccountLifecyleExtPlugCtx *g_accountPluginCtx = NULL;
 typedef struct {
     HcTaskBase base;
     ExtWorkerTask *extTask;
+    int32_t taskId;
 } WorkerTask;
 
 static void DoWorkerTask(HcTaskBase *task)
@@ -64,6 +67,7 @@ static void DestroyWorkerTask(HcTaskBase *workerTask)
         return;
     }
     DestroyExtWorkerTask(((WorkerTask *)workerTask)->extTask);
+    RemoveAccountTaskRecordAndUnload(((WorkerTask *)workerTask)->taskId);
     LOGD("[ACCOUNT_LIFE_PLUGIN]: Destroy worker task end.");
 }
 
@@ -82,8 +86,24 @@ static int32_t ExecuteWorkerTask(struct ExtWorkerTask *extTask)
     baseTask->extTask = extTask;
     baseTask->base.doAction = DoWorkerTask;
     baseTask->base.destroy = DestroyWorkerTask;
+    Uint8Buff taskIdBuff = { (uint8_t *)(&baseTask->taskId), sizeof(int32_t) };
+    int32_t res = GetLoaderInstance()->generateRandom(&taskIdBuff);
+    if (res != HC_SUCCESS) {
+        LOGE("Generate taskId failed, res: %d.", res);
+        DestroyExtWorkerTask(extTask);
+        HcFree(baseTask);
+        return res;
+    }
+    res = LoadAccountAndAddTaskRecord(baseTask->taskId);
+    if (res != HC_SUCCESS) {
+        LOGE("Add account task record failed, res: %d.", res);
+        DestroyExtWorkerTask(extTask);
+        HcFree(baseTask);
+        return res;
+    }
     if (PushTask((HcTaskBase *)baseTask) != HC_SUCCESS) {
         LOGE("[ACCOUNT_LIFE_PLUGIN]: Push worker task fail.");
+        RemoveAccountTaskRecordAndUnload(baseTask->taskId);
         DestroyExtWorkerTask(extTask);
         HcFree(baseTask);
         return HC_ERR_INIT_TASK_FAIL;
@@ -113,6 +133,8 @@ static int32_t InitAccountLifecyclePluginCtx(void)
     g_accountPluginCtx->regCallback = gmInstace->regCallback;
     g_accountPluginCtx->unRegCallback = gmInstace->unRegCallback;
     g_accountPluginCtx->executeWorkerTask = ExecuteWorkerTask;
+    g_accountPluginCtx->notifyAsyncTaskStart = NotifyAsyncTaskStart;
+    g_accountPluginCtx->notifyAsyncTaskStop = NotifyAsyncTaskStop;
     return HC_SUCCESS;
 }
 

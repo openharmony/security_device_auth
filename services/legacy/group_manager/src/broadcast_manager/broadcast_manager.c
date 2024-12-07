@@ -236,7 +236,7 @@ int32_t InitBroadcastManager(void)
             LOGE("Failed to allocate broadcast mutex memory!");
             return HC_ERR_ALLOC_MEMORY;
         }
-        if (InitHcMutex(g_broadcastMutex) != HC_SUCCESS) {
+        if (InitHcMutex(g_broadcastMutex, false) != HC_SUCCESS) {
             LOGE("Init mutex failed");
             HcFree(g_broadcastMutex);
             g_broadcastMutex = NULL;

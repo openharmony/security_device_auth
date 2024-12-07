@@ -34,6 +34,7 @@ ohos_fuzztest("DevAuthFuzzTest") {
   if (support_os_account) {
     include_dirs += [ "${dev_frameworks_path}/inc/account_subscriber" ]
     include_dirs += [ "${dev_frameworks_path}/inc/sa_subscriber" ]
+    include_dirs += [ "${dev_frameworks_path}/inc/net_observer" ]
   }
   include_dirs += identity_manager_inc
 
@@ -46,6 +47,7 @@ ohos_fuzztest("DevAuthFuzzTest") {
   if (support_os_account) {
     sources += account_subscriber_files
     sources += sa_subscriber_files
+    sources += net_observer_files
   }
   sources += hiview_adapter_files
   sources += identity_manager_files
@@ -96,6 +98,7 @@ ohos_fuzztest("DevAuthFuzzTest") {
       "common_event_service:cesfwk_innerkits",
       "ipc:ipc_single",
       "json:nlohmann_json_static",
+      "netmanager_base:net_conn_manager_if",
       "os_account:os_account_innerkits",
       "samgr:samgr_proxy",
     ]

@@ -539,7 +539,7 @@ void InitPerformanceDumper(void)
             LOGE("Alloc databaseMutex failed");
             return;
         }
-        if (InitHcMutex(g_performDataMutex) != HC_SUCCESS) {
+        if (InitHcMutex(g_performDataMutex, false) != HC_SUCCESS) {
             LOGE("[DB]: Init mutex failed");
             HcFree(g_performDataMutex);
             g_performDataMutex = NULL;

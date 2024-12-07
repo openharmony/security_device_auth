@@ -131,7 +131,7 @@ int32_t InitThread(HcThread *thread, ThreadFunc func, size_t stackSize, const ch
         return -1;
     }
 
-    int32_t res = InitHcMutex(&thread->threadLock);
+    int32_t res = InitHcMutex(&thread->threadLock, false);
     if (res != 0) {
         DeleteString(&thread->name);
         return res;

@@ -39,6 +39,7 @@ ohos_unittest("auth_code_import_test") {
     "${dev_frameworks_path}/inc",
     "${group_manager_path}/inc",
     "${group_auth_path}/inc",
+    "${dev_frameworks_path}/inc/account_task_manager",
     "${dev_frameworks_path}/inc/os_account_adapter",
     "${dev_frameworks_path}/inc/plugin_adapter",
     "${protocol_path}/inc/pake_protocol",
@@ -67,6 +68,7 @@ ohos_unittest("auth_code_import_test") {
     "${authenticators_path}/src/account_unrelated/common/das_task_common.c",
     "${authenticators_path}/src/account_unrelated/creds_manager/das_standard_token_manager.c",
     "${data_manager_path}/src/data_manager.c",
+    "${dev_frameworks_path}/src/account_task_manager/account_task_manager.c",
     "${dev_frameworks_path}/src/os_account_adapter_mock/os_account_adapter_mock.cpp",
     "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin_proxy.c",
     "${dev_frameworks_path}/src/security_label_adapter_mock/security_label_adapter_mock.c",
@@ -130,6 +132,7 @@ ohos_unittest("pub_key_exchange_test") {
     "${authenticators_path}/src/account_unrelated/common/das_task_common.c",
     "${authenticators_path}/src/account_unrelated/creds_manager/das_standard_token_manager.c",
     "${data_manager_path}/src/data_manager.c",
+    "${dev_frameworks_path}/src/account_task_manager/account_task_manager.c",
     "${dev_frameworks_path}/src/os_account_adapter_mock/os_account_adapter_mock.cpp",
     "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin_proxy.c",
     "${dev_frameworks_path}/src/security_label_adapter_mock/security_label_adapter_mock.c",
@@ -146,6 +149,7 @@ ohos_unittest("pub_key_exchange_test") {
     "${dev_frameworks_path}/inc",
     "${group_manager_path}/inc",
     "${group_auth_path}/inc",
+    "${dev_frameworks_path}/inc/account_task_manager",
     "${dev_frameworks_path}/inc/os_account_adapter",
     "${dev_frameworks_path}/inc/plugin_adapter",
     "${protocol_path}/inc/pake_protocol",
@@ -202,6 +206,7 @@ ohos_unittest("save_trusted_info_test") {
 
   sources = broadcast_manager_mock_files
   sources += account_auth_plugin_mock_files
+  sources += account_task_manager_mock_files
   sources += database_manager_files
   sources += save_trusted_info_files
   sources += privacy_enhancement_mock_files

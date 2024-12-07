@@ -87,6 +87,7 @@ ohos_unittest("deviceauth_llt") {
   ]
 
   sources += [
+    "${dev_frameworks_path}/src/account_task_manager_mock/account_task_manager_mock.c",
     "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c",
     "source/creds_manager_test.cpp",
     "source/device_auth_ext_mock.c",
@@ -209,6 +210,7 @@ ohos_unittest("device_auth_func_test") {
   ]
 
   sources += [
+    "${dev_frameworks_path}/src/account_task_manager_mock/account_task_manager_mock.c",
     "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c",
     "source/creds_manager_test.cpp",
     "source/device_auth_ext_mock.c",
@@ -338,6 +340,7 @@ ohos_unittest("device_auth_interface_test") {
   sources += hiview_adapter_files
 
   sources += [
+    "${dev_frameworks_path}/src/account_task_manager/account_task_manager.c",
     "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin_proxy.c",
     "source/device_auth_ext_mock.c",
     "source/os_account_adapter_mock.c",
@@ -461,6 +464,7 @@ ohos_unittest("deviceauth_unit_test") {
   ]
 
   sources += [
+    "${dev_frameworks_path}/src/account_task_manager_mock/account_task_manager_mock.c",
     "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c",
     "source/os_account_adapter_mock.c",
     "source/protocol_task_main_mock.c",
