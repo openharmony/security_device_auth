@@ -117,7 +117,7 @@ void UnlockHcMutex(HcMutex* mutex)
         LOGE("[OS]: mutex is null pointer!");
         return;
     }
-    return mutex->unlock(mutex);
+    mutex->unlock(mutex);
 }
 
 #ifdef __cplusplus
