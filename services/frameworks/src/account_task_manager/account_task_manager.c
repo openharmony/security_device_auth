@@ -78,7 +78,7 @@ void *ExecuteUnload(void *arg)
         LOGI("[ACCOUNT_TASK_MGR]: unload plugin successfully.");
     }
     UnlockHcMutex(&g_taskMutex);
-    pthread_exit(NULL);
+    return NULL;
 }
 
 static void UnloadAccountAuthPlugin(void)
