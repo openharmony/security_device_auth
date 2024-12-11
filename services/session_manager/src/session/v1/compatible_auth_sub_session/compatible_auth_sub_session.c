@@ -21,6 +21,8 @@
 #include "hc_log.h"
 #include "hc_types.h"
 #include "hitrace_adapter.h"
+#include "group_auth_data_operation.h"
+#include "group_operation_common.h"
 
 static int32_t CheckInputAuthParams(const CJson *authParam)
 {
@@ -120,6 +122,56 @@ static int32_t HandlePeerAuthError(CompatibleAuthSubSession *session)
     return HC_SUCCESS;
 }
 
+static void DelTrustDeviceOnAuthErrorV1(const CJson *paramInSession, int32_t peerResultCode)
+{
+    int32_t authForm = 0;
+    if (GetIntFromJson(paramInSession, FIELD_AUTH_FORM, &authForm) != HC_SUCCESS) {
+        LOGE("Get FIELD_AUTH_FORM from session failed!");
+        return;
+    }
+    if ((authForm != AUTH_FORM_IDENTICAL_ACCOUNT) ||
+        ((peerResultCode != PEER_ACCOUNT_NOT_MATCH) && (peerResultCode != PEER_ACCOUNT_NOT_LOGIN))) {
+        return;
+    }
+    int32_t osAccountId;
+    if (GetIntFromJson(paramInSession, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Get osAccountId from session failed!");
+        return;
+    }
+    const char *groupId = GetStringFromJson(paramInSession, FIELD_GROUP_ID);
+    if (groupId == NULL) {
+        LOGE("Get groupId from session failed!");
+        return;
+    }
+    const char *peerUdid = GetStringFromJson(paramInSession, FIELD_PEER_UDID);
+    if (peerUdid == NULL) {
+        LOGE("Get peer udid from session failed!");
+        return;
+    }
+    TrustedDeviceEntry *peerDevInfo = CreateDeviceEntry();
+    if (peerDevInfo == NULL) {
+        LOGE("Failed to create device entry!");
+        return;
+    }
+    if (GaGetTrustedDeviceEntryById(osAccountId, peerUdid, true, groupId, peerDevInfo) != HC_SUCCESS) {
+        LOGW("peer device not exist, no need to delete!");
+        DestroyDeviceEntry(peerDevInfo);
+        return;
+    }
+    if (peerDevInfo->source == IMPORTED_FROM_CLOUD) {
+        LOGW("peer device is imported, do not delete!");
+        DestroyDeviceEntry(peerDevInfo);
+        return;
+    }
+    if (DelDeviceFromDb(osAccountId, groupId, peerDevInfo) != HC_SUCCESS) {
+        LOGE("Failed to delete not trusted account related device!");
+        DestroyDeviceEntry(peerDevInfo);
+        return;
+    }
+    DestroyDeviceEntry(peerDevInfo);
+    LOGI("Success delete not trusted account related device!");
+}
+
 static int32_t ProcessClientAuthTaskInner(CompatibleAuthSubSession *session, int32_t moduleType, CJson *in,
     CJson *out, int32_t *status)
 {
@@ -135,6 +187,9 @@ static int32_t ProcessClientAuthTaskInner(CompatibleAuthSubSession *session, int
     if (res != HC_SUCCESS) {
         LOGW("Failed to process client auth task, try to auth on next group!");
         DestroyTask(session->base.curTaskId, moduleType);
+        int32_t peerResultCode = 0;
+        (void)GetIntFromJson(in, FIELD_RESULT_CODE, &peerResultCode);
+        DelTrustDeviceOnAuthErrorV1(paramInSession, peerResultCode);
         return ProcessClientAuthError(session, out);
     }
     return HandleAuthTaskStatus(session, out, *status, false);
