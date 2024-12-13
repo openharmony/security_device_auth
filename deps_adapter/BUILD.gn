@@ -116,7 +116,6 @@ if (defined(ohos_lite)) {
         "//commonlibrary/utils_lite:utils",
         "//third_party/bounds_checking_function:libsec_shared",
         "//third_party/mbedtls:mbedtls_shared",
-        "//third_party/openssl/ohos_lite:openssl_shared",
       ]
     }
   }
