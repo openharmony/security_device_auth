@@ -32,9 +32,12 @@ using namespace OHOS::NetManagerStandard;
 
 static sptr<INetConnCallback> g_netCallback = nullptr;
 
+static bool g_isObserverStarted = false;
+
 void NetObserver::StartObserver()
 {
     LOGI("[NetObserver]: Start to register net connection callback.");
+    g_isObserverStarted = true;
     std::thread regThread = std::thread([this]() {
         NetSpecifier netSpecifier;
         NetAllCapabilities netAllCapabilities;
@@ -45,6 +48,10 @@ void NetObserver::StartObserver()
         constexpr uint32_t RETRY_MAX_TIMES = 10;
         uint32_t retryCount = 0;
         do {
+            if (!g_isObserverStarted) {
+                LOGW("[NetObserver]: observer stopped, can not register!");
+                return;
+            }
             int32_t ret = NetConnClient::GetInstance().RegisterNetConnCallback(specifier, this, 0);
             if (ret == NetConnResultCode::NET_CONN_SUCCESS) {
                 LOGI("[NetObserver]: Register net connection callback succeeded.");
@@ -99,6 +106,7 @@ int32_t NetObserver::HandleNetAllCap(const NetAllCapabilities &netAllCap)
 void NetObserver::StopObserver()
 {
     LOGI("[NetObserver]: Start to unregister net connection callback.");
+    g_isObserverStarted = false;
     if (g_netCallback == nullptr) {
         LOGI("[NetObserver]: Net connection callback is null.");
         return;
