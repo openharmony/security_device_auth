@@ -14,6 +14,7 @@
  */
 
 #include "gettrusteddevices_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 namespace OHOS {
     bool FuzzDoGetTrustedDevices(const uint8_t* data, size_t size)
@@ -28,12 +29,13 @@ namespace OHOS {
         if (size < sizeof(int32_t)) {
             return false;
         }
-        const int32_t *osAccountId = reinterpret_cast<const int32_t *>(data);
-        std::string appId(reinterpret_cast<const char *>(data), size);
-        std::string groupId(reinterpret_cast<const char *>(data), size);
+        FuzzedDataProvider fdp(data, size);
+        const int32_t osAccountId = fdp.ConsumeIntegral<int32_t>();
+        std::string appId(fdp.ConsumeBytesAsString(size));
+        std::string groupId(fdp.ConsumeBytesAsString(size));
         char *outDevInfo = nullptr;
         uint32_t outDevNum = 0;
-        gmInstance->getTrustedDevices(*osAccountId, appId.c_str(), groupId.c_str(), &outDevInfo, &outDevNum);
+        gmInstance->getTrustedDevices(osAccountId, appId.c_str(), groupId.c_str(), &outDevInfo, &outDevNum);
         return true;
     }
 }

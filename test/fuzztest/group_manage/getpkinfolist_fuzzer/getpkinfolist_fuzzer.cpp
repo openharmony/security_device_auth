@@ -14,6 +14,7 @@
  */
 
 #include "getpkinfolist_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 namespace OHOS {
     bool FuzzDoGetPkInfoList(const uint8_t* data, size_t size)
@@ -28,12 +29,13 @@ namespace OHOS {
         if (size < sizeof(int32_t)) {
             return false;
         }
-        const int32_t *osAccountId = reinterpret_cast<const int32_t *>(data);
-        std::string appId(reinterpret_cast<const char *>(data), size);
-        std::string queryParams(reinterpret_cast<const char *>(data), size);
+        FuzzedDataProvider fdp(data, size);
+        const int32_t osAccountId = fdp.ConsumeIntegral<int32_t>();
+        std::string appId(fdp.ConsumeBytesAsString(size));
+        std::string queryParams(fdp.ConsumeBytesAsString(size));
         char *returnInfoList = nullptr;
         uint32_t returnInfoNum = 0;
-        gmInstance->getPkInfoList(*osAccountId, appId.c_str(), queryParams.c_str(), &returnInfoList, &returnInfoNum);
+        gmInstance->getPkInfoList(osAccountId, appId.c_str(), queryParams.c_str(), &returnInfoList, &returnInfoNum);
         return true;
     }
 }

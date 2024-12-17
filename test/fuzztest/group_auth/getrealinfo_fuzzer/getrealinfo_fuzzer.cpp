@@ -14,6 +14,7 @@
  */
 
 #include "getrealinfo_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 namespace OHOS {
     bool FuzzDoGetRealInfo(const uint8_t* data, size_t size)
@@ -28,10 +29,11 @@ namespace OHOS {
         if (size < sizeof(int64_t)) {
             return false;
         }
-        const int32_t *osAccountId = reinterpret_cast<const int32_t *>(data);
-        std::string pseudonymId(reinterpret_cast<const char *>(data), size);
+        FuzzedDataProvider fdp(data, size);
+        const int32_t osAccountId = fdp.ConsumeIntegral<int32_t>();
+        std::string pseudonymId(fdp.ConsumeBytesAsString(size));
         char *realInfo = nullptr;
-        gaInstance->getRealInfo(*osAccountId, pseudonymId.c_str(), &realInfo);
+        gaInstance->getRealInfo(osAccountId, pseudonymId.c_str(), &realInfo);
         if (realInfo != nullptr) {
             free(realInfo);
         }

@@ -14,6 +14,7 @@
  */
 
 #include "creategroup_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 namespace OHOS {
     bool FuzzDoCreateGroup(const uint8_t* data, size_t size)
@@ -28,11 +29,12 @@ namespace OHOS {
         if (size < sizeof(int64_t)) {
             return false;
         }
-        const int32_t *osAccountId = reinterpret_cast<const int32_t *>(data);
-        const int64_t *requestId = reinterpret_cast<const int64_t *>(data);
-        std::string appId(reinterpret_cast<const char *>(data), size);
-        std::string createParams(reinterpret_cast<const char *>(data), size);
-        gmInstance->createGroup(*osAccountId, *requestId, appId.c_str(), createParams.c_str());
+        FuzzedDataProvider fdp(data, size);
+        const int32_t osAccountId = fdp.ConsumeIntegral<int32_t>();
+        const int64_t requestId = fdp.ConsumeIntegral<int64_t>();
+        std::string appId(fdp.ConsumeBytesAsString(size));
+        std::string createParams(fdp.ConsumeBytesAsString(size));
+        gmInstance->createGroup(osAccountId, requestId, appId.c_str(), createParams.c_str());
         return true;
     }
 }
