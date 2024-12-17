@@ -14,6 +14,7 @@
  */
 
 #include "authdevice_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 namespace OHOS {
     void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn) {}
@@ -44,16 +45,17 @@ namespace OHOS {
         if (size < sizeof(int64_t)) {
             return false;
         }
-        const int32_t *osAccountId = reinterpret_cast<const int32_t *>(data);
-        const int64_t *authReqId = reinterpret_cast<const int64_t *>(data);
-        std::string authParams(reinterpret_cast<const char *>(data), size);
+        FuzzedDataProvider fdp(data, size);
+        const int32_t osAccountId = fdp.ConsumeIntegral<int32_t>();
+        const int64_t authReqId = fdp.ConsumeIntegral<int64_t>();
+        std::string authParams(fdp.ConsumeBytesAsString(size));
         DeviceAuthCallback gaCallback;
         gaCallback.onError = OnError;
         gaCallback.onFinish = OnFinish;
         gaCallback.onSessionKeyReturned = OnSessionKeyReturned;
         gaCallback.onTransmit = onTransmit;
         gaCallback.onRequest = onRequest;
-        gaInstance->authDevice(*osAccountId, *authReqId, authParams.c_str(), &gaCallback);
+        gaInstance->authDevice(osAccountId, authReqId, authParams.c_str(), &gaCallback);
         return true;
     }
 }

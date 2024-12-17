@@ -14,6 +14,7 @@
  */
 
 #include "processbinddata_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 namespace OHOS {
     bool FuzzDoProcessData(const uint8_t* data, size_t size)
@@ -28,8 +29,9 @@ namespace OHOS {
         if (size < sizeof(int64_t)) {
             return false;
         }
-        const int64_t *authReqId = reinterpret_cast<const int64_t *>(data);
-        gmInstance->processData(*authReqId, data, (uint32_t)size);
+        FuzzedDataProvider fdp(data, size);
+        const int64_t authReqId = fdp.ConsumeIntegral<int64_t>();
+        gmInstance->processData(authReqId, data, (uint32_t)size);
         return true;
     }
 }

@@ -14,6 +14,7 @@
  */
 
 #include "processauthdata_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 namespace OHOS {
     void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn) {}
@@ -44,14 +45,15 @@ namespace OHOS {
         if (size < sizeof(int64_t)) {
             return false;
         }
-        const int64_t *authReqId = reinterpret_cast<const int64_t *>(data);
+        FuzzedDataProvider fdp(data, size);
+        const int64_t authReqId = fdp.ConsumeIntegral<int64_t>();
         DeviceAuthCallback gaCallback;
         gaCallback.onError = OnError;
         gaCallback.onFinish = OnFinish;
         gaCallback.onSessionKeyReturned = OnSessionKeyReturned;
         gaCallback.onTransmit = onTransmit;
         gaCallback.onRequest = onRequest;
-        gaInstance->processData(*authReqId, data, (uint32_t)size, &gaCallback);
+        gaInstance->processData(authReqId, data, (uint32_t)size, &gaCallback);
         return true;
     }
 }

@@ -14,6 +14,7 @@
  */
 
 #include "getpseudonymid_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 namespace OHOS {
     bool FuzzDoGetPseudonymId(const uint8_t* data, size_t size)
@@ -28,10 +29,11 @@ namespace OHOS {
         if (size < sizeof(int64_t)) {
             return false;
         }
-        const int32_t *osAccountId = reinterpret_cast<const int32_t *>(data);
-        std::string indexKey(reinterpret_cast<const char *>(data), size);
+        FuzzedDataProvider fdp(data, size);
+        const int32_t osAccountId = fdp.ConsumeIntegral<int32_t>();
+        std::string indexKey(fdp.ConsumeBytesAsString(size));
         char *pseudonymId = nullptr;
-        gaInstance->getPseudonymId(*osAccountId, indexKey.c_str(), &pseudonymId);
+        gaInstance->getPseudonymId(osAccountId, indexKey.c_str(), &pseudonymId);
         if (pseudonymId != nullptr) {
             free(pseudonymId);
         }
