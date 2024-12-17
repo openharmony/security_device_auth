@@ -16,7 +16,6 @@
 #include "net_observer.h"
 
 #include <pthread.h>
-#include <thread>
 #include <unistd.h>
 
 #include "account_task_manager.h"
@@ -32,13 +31,16 @@ using namespace OHOS::NetManagerStandard;
 
 static sptr<INetConnCallback> g_netCallback = nullptr;
 
-static bool g_isObserverStarted = false;
-
 void NetObserver::StartObserver()
 {
     LOGI("[NetObserver]: Start to register net connection callback.");
-    g_isObserverStarted = true;
-    std::thread regThread = std::thread([this]() {
+    if (isObserverStarted_) {
+        LOGI("[NetObserver]: Observer already started.");
+        return;
+    }
+    isObserverStarted_ = true;
+    NetObserver *observer = static_cast<NetObserver *>(this);
+    regThread_ = std::thread([observer]() {
         NetSpecifier netSpecifier;
         NetAllCapabilities netAllCapabilities;
         netAllCapabilities.netCaps_.insert(NetManagerStandard::NetCap::NET_CAPABILITY_INTERNET);
@@ -48,14 +50,14 @@ void NetObserver::StartObserver()
         constexpr uint32_t RETRY_MAX_TIMES = 10;
         uint32_t retryCount = 0;
         do {
-            if (!g_isObserverStarted) {
+            if (!observer->IsObserverStarted()) {
                 LOGW("[NetObserver]: observer stopped, can not register!");
                 return;
             }
-            int32_t ret = NetConnClient::GetInstance().RegisterNetConnCallback(specifier, this, 0);
+            int32_t ret = NetConnClient::GetInstance().RegisterNetConnCallback(specifier, observer, 0);
             if (ret == NetConnResultCode::NET_CONN_SUCCESS) {
                 LOGI("[NetObserver]: Register net connection callback succeeded.");
-                g_netCallback = this;
+                g_netCallback = observer;
                 return;
             }
             retryCount++;
@@ -64,7 +66,6 @@ void NetObserver::StartObserver()
         } while (retryCount < RETRY_MAX_TIMES);
         LOGE("[NetObserver]: Register net connection callback failed!");
     });
-    regThread.detach();
 }
 
 int32_t NetObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandle, const sptr<NetAllCapabilities> &netAllCap)
@@ -103,10 +104,22 @@ int32_t NetObserver::HandleNetAllCap(const NetAllCapabilities &netAllCap)
     return 0;
 }
 
+bool NetObserver::IsObserverStarted()
+{
+    return isObserverStarted_;
+}
+
 void NetObserver::StopObserver()
 {
     LOGI("[NetObserver]: Start to unregister net connection callback.");
-    g_isObserverStarted = false;
+    if (!isObserverStarted_) {
+        LOGI("[NetObserver]: Observer already stopped.");
+        return;
+    }
+    isObserverStarted_ = false;
+    if (regThread_.joinable()) {
+        regThread_.join();
+    }
     if (g_netCallback == nullptr) {
         LOGI("[NetObserver]: Net connection callback is null.");
         return;
