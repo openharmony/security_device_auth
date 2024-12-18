@@ -38,6 +38,7 @@ static bool g_isPluginLoaded = false;
 static bool g_isAsyncTaskRunning = false;
 static bool g_hasAccountAuthPlugin = false;
 static HcMutex g_taskMutex;
+static bool g_isInit = false;
 
 static void LoadAccountAuthPlugin(void)
 {
@@ -119,6 +120,10 @@ static void RemoveAccountTaskRecord(int32_t taskId)
 
 int32_t InitAccountTaskManager(void)
 {
+    if (g_isInit) {
+        LOGI("[ACCOUNT_TASK_MGR]: has been initialized.");
+        return HC_SUCCESS;
+    }
     int32_t res = InitHcMutex(&g_taskMutex, true);
     if (res != HC_SUCCESS) {
         LOGE("[ACCOUNT_TASK_MGR]: init account task mutex failed.");
@@ -128,11 +133,17 @@ int32_t InitAccountTaskManager(void)
     g_hasAccountAuthPlugin = HasAccountAuthPlugin();
     DEV_AUTH_UNLOAD_PLUGIN();
     g_taskList = CREATE_HC_VECTOR(AccountTaskRecordList);
+    g_isInit = true;
     return HC_SUCCESS;
 }
 
 void DestroyAccountTaskManager(void)
 {
+    if (!g_isInit) {
+        LOGI("[ACCOUNT_TASK_MGR]: has not been initialized.");
+        return;
+    }
+    g_isInit = false;
     (void)LockHcMutex(&g_taskMutex);
     DESTROY_HC_VECTOR(AccountTaskRecordList, &g_taskList);
     UnlockHcMutex(&g_taskMutex);
@@ -146,6 +157,10 @@ bool HasAccountPlugin(void)
 
 int32_t ExecuteAccountAuthCmd(int32_t osAccountId, int32_t cmdId, const CJson *in, CJson *out)
 {
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return HC_ERROR;
+    }
     (void)LockHcMutex(&g_taskMutex);
     LoadAccountAuthPlugin();
     int32_t res = ExcuteCredMgrCmd(osAccountId, cmdId, in, out);
@@ -156,6 +171,10 @@ int32_t ExecuteAccountAuthCmd(int32_t osAccountId, int32_t cmdId, const CJson *i
 
 int32_t CreateAccountAuthSession(int32_t *sessionId, const CJson *in, CJson *out)
 {
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return HC_ERROR;
+    }
     (void)LockHcMutex(&g_taskMutex);
     LoadAccountAuthPlugin();
     int32_t res = CreateAuthSession(sessionId, in, out);
@@ -176,6 +195,10 @@ int32_t CreateAccountAuthSession(int32_t *sessionId, const CJson *in, CJson *out
 
 int32_t ProcessAccountAuthSession(int32_t *sessionId, const CJson *in, CJson *out, int32_t *status)
 {
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return HC_ERROR;
+    }
     (void)LockHcMutex(&g_taskMutex);
     LoadAccountAuthPlugin();
     int32_t res = ProcessAuthSession(sessionId, in, out, status);
@@ -185,6 +208,10 @@ int32_t ProcessAccountAuthSession(int32_t *sessionId, const CJson *in, CJson *ou
 
 int32_t DestroyAccountAuthSession(int32_t sessionId)
 {
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return HC_ERROR;
+    }
     (void)LockHcMutex(&g_taskMutex);
     LoadAccountAuthPlugin();
     int32_t res = DestroyAuthSession(sessionId);
@@ -196,6 +223,10 @@ int32_t DestroyAccountAuthSession(int32_t sessionId)
 
 int32_t LoadAccountAndAddTaskRecord(int32_t taskId)
 {
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return HC_ERROR;
+    }
     (void)LockHcMutex(&g_taskMutex);
     LoadAccountAuthPlugin();
     int32_t res = AddAccountTaskRecord(taskId);
@@ -208,6 +239,10 @@ int32_t LoadAccountAndAddTaskRecord(int32_t taskId)
 
 void RemoveAccountTaskRecordAndUnload(int32_t taskId)
 {
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return;
+    }
     (void)LockHcMutex(&g_taskMutex);
     RemoveAccountTaskRecord(taskId);
     UnloadAccountAuthPlugin();
@@ -216,6 +251,10 @@ void RemoveAccountTaskRecordAndUnload(int32_t taskId)
 
 void NotifyAsyncTaskStart(void)
 {
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return;
+    }
     (void)LockHcMutex(&g_taskMutex);
     if (g_isAsyncTaskRunning) {
         LOGI("[ACCOUNT_TASK_MGR]: async task is already started.");
@@ -228,6 +267,10 @@ void NotifyAsyncTaskStart(void)
 
 void NotifyAsyncTaskStop(void)
 {
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return;
+    }
     (void)LockHcMutex(&g_taskMutex);
     if (!g_isAsyncTaskRunning) {
         LOGI("[ACCOUNT_TASK_MGR]: async task is already stopped.");

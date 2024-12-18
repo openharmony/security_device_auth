@@ -104,7 +104,7 @@ void DestroyHcMutex(struct HcMutexT *mutex)
 
 int LockHcMutex(HcMutex* mutex)
 {
-    if (mutex == NULL) {
+    if (mutex == NULL || mutex->lock == NULL) {
         LOGE("[OS]: mutex is null pointer!");
         return -1;
     }
@@ -113,7 +113,7 @@ int LockHcMutex(HcMutex* mutex)
 
 void UnlockHcMutex(HcMutex* mutex)
 {
-    if (mutex == NULL) {
+    if (mutex == NULL || mutex->unlock == NULL) {
         LOGE("[OS]: mutex is null pointer!");
         return;
     }
