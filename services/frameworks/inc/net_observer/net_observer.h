@@ -16,6 +16,7 @@
 #ifndef NET_OBSERVER_H
 #define NET_OBSERVER_H
 
+#include <thread>
 #include "net_all_capabilities.h"
 #include "net_conn_callback_stub.h"
 #include "net_specifier.h"
@@ -28,8 +29,11 @@ public:
         const OHOS::sptr<OHOS::NetManagerStandard::NetAllCapabilities> &netAllCap) final;
     int32_t NetLost(OHOS::sptr<OHOS::NetManagerStandard::NetHandle> &netHandle) final;
     int32_t NetAvailable(OHOS::sptr<OHOS::NetManagerStandard::NetHandle> &netHandle) final;
+    bool IsObserverStarted();
 
 private:
+    std::thread regThread_;
+    bool isObserverStarted_;
     int32_t HandleNetAllCap(const OHOS::NetManagerStandard::NetAllCapabilities &netAllCap);
 };
 
