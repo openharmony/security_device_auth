@@ -22,12 +22,12 @@ namespace OHOS {
 
     void OnSessionKeyReturned(int64_t requestId, const uint8_t *sessionKey, uint32_t sessionKeyLen) {}
 
-    bool onTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
+    bool OnTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
     {
         return true;
     }
 
-    char *onRequest(int64_t requestId, int operationCode, const char* reqParam)
+    char *OnRequest(int64_t requestId, int operationCode, const char* reqParam)
     {
         return nullptr;
     }
@@ -49,8 +49,8 @@ namespace OHOS {
         gaCallback.onError = OnError;
         gaCallback.onFinish = OnFinish;
         gaCallback.onSessionKeyReturned = OnSessionKeyReturned;
-        gaCallback.onTransmit = onTransmit;
-        gaCallback.onRequest = onRequest;
+        gaCallback.onTransmit = OnTransmit;
+        gaCallback.onRequest = OnRequest;
         gaInstance->processData(*authReqId, data, (uint32_t)size, &gaCallback);
         return true;
     }
