@@ -37,9 +37,9 @@ static QueryGroupParams g_queryGroupParams = {
     .groupName = NORMAL_STR,
     .ownerName = NORMAL_STR,
     .groupType = PEER_TO_PEER_GROUP,
-    .userId = NULL,
+    .userId = nullptr,
     .groupVisibility = ALL_GROUP_VISIBILITY
-    };
+};
 
 static int32_t GenerateGroupParams(const CJson *jsonParams, const char *groupId, TrustedGroupEntry *groupParams)
 {
@@ -189,7 +189,7 @@ HWTEST_F(GroupOperationTest, GroupOperationTest018, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest019, TestSize.Level0)
 {
-    uint8_t *hashMessage = NULL;
+    uint8_t *hashMessage = nullptr;
     uint32_t messageSize = 0;
     int32_t ret = GetHashMessage(nullptr, &NORMAL_BUFF, &hashMessage, &messageSize);
     ASSERT_NE(ret, HC_SUCCESS);
@@ -197,7 +197,7 @@ HWTEST_F(GroupOperationTest, GroupOperationTest019, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest020, TestSize.Level0)
 {
-    uint8_t *hashMessage = NULL;
+    uint8_t *hashMessage = nullptr;
     uint32_t messageSize = 0;
     int32_t ret = GetHashMessage(&NORMAL_BUFF, nullptr, &hashMessage, &messageSize);
     ASSERT_NE(ret, HC_SUCCESS);
@@ -212,7 +212,7 @@ HWTEST_F(GroupOperationTest, GroupOperationTest021, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest022, TestSize.Level0)
 {
-    uint8_t *hashMessage = NULL;
+    uint8_t *hashMessage = nullptr;
     int32_t ret = GetHashMessage(&NORMAL_BUFF, &NORMAL_BUFF, &hashMessage, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
