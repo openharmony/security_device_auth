@@ -1704,8 +1704,6 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     if (res != HC_SUCCESS) {
         return res;
     }
-    InitAccountTaskManager();
-    InitOsAccountAdapter();
     res = InitAllModules();
     if (res != HC_SUCCESS) {
         DestroyGmAndGa();
@@ -1713,6 +1711,8 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     }
     INIT_PERFORMANCE_DUMPER();
     InitPseudonymModule();
+    InitAccountTaskManager();
+    InitOsAccountAdapter();
     SetInitStatus();
     LOGI("[End]: [Service]: Init device auth service successfully!");
     return HC_SUCCESS;
@@ -1725,6 +1725,8 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
         LOGI("[End]: [Service]: The service has not been initialized!");
         return;
     }
+    DestroyOsAccountAdapter();
+    DestroyAccountTaskManager();
     DestroyTaskManager();
     DestroyDevSessionManager();
     DestroyGroupManager();
@@ -1735,8 +1737,6 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
     DestroyCallbackManager();
     DESTROY_PERFORMANCE_DUMPER();
     DestroyPseudonymManager();
-    DestroyOsAccountAdapter();
-    DestroyAccountTaskManager();
     SetDeInitStatus();
     LOGI("[End]: [Service]: Destroy device auth service successfully!");
 }
