@@ -1704,6 +1704,7 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     if (res != HC_SUCCESS) {
         return res;
     }
+    InitOsAccountAdapter();
     res = InitAllModules();
     if (res != HC_SUCCESS) {
         DestroyGmAndGa();
@@ -1712,7 +1713,6 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     INIT_PERFORMANCE_DUMPER();
     InitPseudonymModule();
     InitAccountTaskManager();
-    InitOsAccountAdapter();
     SetInitStatus();
     LOGI("[End]: [Service]: Init device auth service successfully!");
     return HC_SUCCESS;
