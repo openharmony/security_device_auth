@@ -90,6 +90,7 @@ bool FuzzDoRegCallback(const uint8_t* data, size_t size)
         MessageOption option;
         (void)serviceObj->OnRemoteRequest(1, datas, reply, option);
     }
+    DestroyDeviceAuthService();
     return true;
 }
 }
