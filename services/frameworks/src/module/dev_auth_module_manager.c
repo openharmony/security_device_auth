@@ -261,7 +261,11 @@ int32_t InitModules(void)
             DestroyModules();
             return res;
         }
-        (void)g_authModuleVec.pushBack(&g_authModuleVec, &dasModule);
+        if (g_authModuleVec.pushBack(&g_authModuleVec, &dasModule) == NULL) {
+            LOGE("[ModuleMgr]: Failed to push dasModule!");
+            DestroyModules();
+            return HC_ERR_ALLOC_MEMORY;
+        }
         g_version.third |= dasModule->moduleType;
     }
     const AuthModuleBase *accountModule = GetAccountModule();
@@ -272,7 +276,11 @@ int32_t InitModules(void)
             DestroyModules();
             return res;
         }
-        (void)g_authModuleVec.pushBack(&g_authModuleVec, &accountModule);
+        if (g_authModuleVec.pushBack(&g_authModuleVec, &accountModule) == NULL) {
+            LOGE("[ModuleMgr]: Failed to push dasModule!");
+            DestroyModules();
+            return HC_ERR_ALLOC_MEMORY;
+        }
         g_version.third |= accountModule->moduleType;
     }
     LOGI("Init modules success!");

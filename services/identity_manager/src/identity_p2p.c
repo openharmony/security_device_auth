@@ -27,7 +27,11 @@ static int32_t SetProtocolsToIdentityInfo(IdentityInfo *info)
     }
     ecSpekeEntity->protocolType = ALG_EC_SPEKE;
     ecSpekeEntity->expandProcessCmds = 0;
-    info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&ecSpekeEntity);
+    if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&ecSpekeEntity) == NULL) {
+        LOGE("Failed to push ecSpeke entity!");
+        HcFree(ecSpekeEntity);
+        return HC_ERR_ALLOC_MEMORY;
+    }
 
     return HC_SUCCESS;
 }
@@ -151,7 +155,11 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
     }
     info->proofType = PRE_SHARED;
     info->IdInfoType = P2P_DIRECT_AUTH;
-    vec->pushBack(vec, (const IdentityInfo **)&info);
+    if (vec->pushBack(vec, (const IdentityInfo **)&info) == NULL) {
+        LOGE("Failed to push info!");
+        DestroyIdentityInfo(info);
+        return HC_ERR_ALLOC_MEMORY;
+    }
     return HC_SUCCESS;
 }
 

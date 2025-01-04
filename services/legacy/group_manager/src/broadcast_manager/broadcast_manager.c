@@ -207,7 +207,13 @@ static int32_t AddListenerIfNotExist(const char *appId, const DataChangeListener
     entry.appId = copyAppId;
     entry.listener = copyListener;
     (void)LockHcMutex(g_broadcastMutex);
-    g_listenerEntryVec.pushBack(&g_listenerEntryVec, &entry);
+    if (g_listenerEntryVec.pushBack(&g_listenerEntryVec, &entry) == NULL) {
+        LOGE("Failed to push listener entity!");
+        HcFree(copyAppId);
+        HcFree(copyListener);
+        UnlockHcMutex(g_broadcastMutex);
+        return HC_ERR_ALLOC_MEMORY;
+    }
     UnlockHcMutex(g_broadcastMutex);
     LOGI("Successfully added a listener. [AppId]: %s", appId);
     return HC_SUCCESS;

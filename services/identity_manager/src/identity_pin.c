@@ -181,7 +181,11 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
         return ret;
     }
     info->proofType = PRE_SHARED;
-    vec->pushBack(vec, (const IdentityInfo **)&info);
+    if (vec->pushBack(vec, (const IdentityInfo **)&info) == NULL) {
+        LOGE("Failed to push info!");
+        DestroyIdentityInfo(info);
+        return HC_ERR_ALLOC_MEMORY;
+    }
     return HC_SUCCESS;
 }
 

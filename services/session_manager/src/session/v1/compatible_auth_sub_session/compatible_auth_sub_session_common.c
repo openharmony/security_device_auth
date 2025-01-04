@@ -265,7 +265,11 @@ static int32_t FillAuthParams(int32_t osAccountId, const CJson *param,
         }
         PRINT_SENSITIVE_DATA("GroupId", groupId);
         LOGI("Group type is %d.", groupInfo->type);
-        paramsVec->pushBack(paramsVec, (const void **)&paramsData);
+        if (paramsVec->pushBack(paramsVec, (const void **)&paramsData) == NULL) {
+            LOGE("Failed to push paramsData!");
+            FreeJson(paramsData);
+            return HC_ERR_ALLOC_MEMORY;
+        }
     }
     LOGI("The candidate group size is: %u", paramsVec->size(paramsVec));
     return HC_SUCCESS;
