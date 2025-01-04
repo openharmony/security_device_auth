@@ -106,7 +106,7 @@ static int32_t IsPeerDevicePublicKeyExist(const CJson *in)
     return ret;
 }
 
-static int32_t CreateUrlStr(const CJson *in, int32_t keyType, char **urlStr)
+static int32_t CreateUrlStr(int32_t keyType, char **urlStr)
 {
     CJson *urlJson = CreateCredUrlJson(PRE_SHARED, keyType, TRUST_TYPE_P2P);
     if (!urlJson) {
