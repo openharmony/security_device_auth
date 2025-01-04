@@ -46,7 +46,11 @@ int32_t InitCredMgr(void)
     if (plugin != NULL) {
         int32_t res = plugin->init();
         if (res == HC_SUCCESS) {
-            (void)g_credPluginVec.pushBackT(&g_credPluginVec, plugin);
+            if (g_credPluginVec.pushBackT(&g_credPluginVec, plugin) == NULL) {
+                LOGE("[CredMgr]: Failed to push plugin!");
+                plugin->destroy();
+                return HC_ERR_ALLOC_MEMORY;
+            }
         } else {
             LOGW("[CredMgr]: Init account related cred plugin fail. [Res]: %d", res);
         }

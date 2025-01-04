@@ -106,16 +106,8 @@ static int32_t IsPeerDevicePublicKeyExist(const CJson *in)
     return ret;
 }
 
-static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
+static int32_t CreateUrlStr(const CJson *in, int32_t keyType, char **urlStr)
 {
-    int32_t keyType = KEY_TYPE_ASYM;
-    (void)GetIntFromJson(in, FIELD_KEY_TYPE, &keyType);
-
-    int32_t ret = IsPeerDevicePublicKeyExist(in);
-    if (ret != HC_SUCCESS) {
-        LOGE("Failed to get peer device public key!");
-        return ret;
-    }
     CJson *urlJson = CreateCredUrlJson(PRE_SHARED, keyType, TRUST_TYPE_P2P);
     if (!urlJson) {
         LOGE("Failed to create CredUrlJson info!");
@@ -128,11 +120,32 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
     } else {
         LOGI("add isDirectAuth:true into urlJson!");
     }
-    char *urlStr = PackJsonToString(urlJson);
-    FreeJson(urlJson);
-    if (urlStr == NULL) {
+    char *str = PackJsonToString(urlJson);
+    if (str == NULL) {
         LOGE("Failed to pack url json to string!");
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+    *urlStr = str;
+    FreeJson(urlJson);
+    return HC_SUCCESS;
+}
+
+static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
+{
+    int32_t keyType = KEY_TYPE_ASYM;
+    (void)GetIntFromJson(in, FIELD_KEY_TYPE, &keyType);
+
+    int32_t ret = IsPeerDevicePublicKeyExist(in);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to get peer device public key!");
+        return ret;
+    }
+
+    char *urlStr = NULL;
+    ret = CreateUrlStr(in, keyType, &urlStr);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to create url string!");
+        return ret;
     }
     IdentityInfo *info = CreateIdentityInfo();
     if (info == NULL) {

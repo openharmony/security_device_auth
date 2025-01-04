@@ -55,7 +55,10 @@ void InitVersionInfos(void)
         if (!g_authVersionInfoAll[i].isTaskSupported()) {
             continue;
         }
-        (void)g_authVersionInfoVec.pushBackT(&g_authVersionInfoVec, (void *)(&g_authVersionInfoAll[i]));
+        if (g_authVersionInfoVec.pushBackT(&g_authVersionInfoVec, (void *)(&g_authVersionInfoAll[i])) == NULL) {
+            LOGE("Failed to push g_authVersionInfoAll!");
+            continue;
+        }
         g_authVersionNo |= g_authVersionInfoAll[i].versionNo;
     }
 }

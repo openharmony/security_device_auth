@@ -136,6 +136,28 @@ static int32_t SetProtocolsForDirectAuth(IdentityInfo *info)
     return HC_SUCCESS;
 }
 
+static int32_t CreateUrlStr(const CJson *in, char **urlStr)
+{
+    CJson *urlJson = CreateCredUrlJson(PRE_SHARED, KEY_TYPE_SYM, TRUST_TYPE_PIN);
+    if (!urlJson) {
+        LOGE("Failed to create CredUrlJson info!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (IsDirectAuth(in) && AddBoolToJson(urlJson, FIELD_IS_DIRECT_AUTH, true) != HC_SUCCESS) {
+        LOGE("Failed to isDirectAuth to preshared url!");
+        FreeJson(urlJson);
+        return HC_ERR_JSON_ADD;
+    }
+    char *str = PackJsonToString(urlJson);
+    FreeJson(urlJson);
+    if (str == NULL) {
+        LOGE("Failed to pack url json to string!");
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+    *urlStr = str;
+    return HC_SUCCESS;
+}
+
 static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
 {
     IdentityInfo *info = CreateIdentityInfo();
@@ -143,26 +165,14 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
         LOGE("Failed to create identity info!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    CJson *urlJson = CreateCredUrlJson(PRE_SHARED, KEY_TYPE_SYM, TRUST_TYPE_PIN);
-    if (!urlJson) {
-        LOGE("Failed to create CredUrlJson info!");
+    char *urlStr = NULL;
+    int32_t ret = CreateUrlStr(in, &urlStr);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to create url string!");
         DestroyIdentityInfo(info);
-        return HC_ERR_ALLOC_MEMORY;
+        return ret;
     }
-    if (IsDirectAuth(in) && AddBoolToJson(urlJson, FIELD_IS_DIRECT_AUTH, true) != HC_SUCCESS) {
-        LOGE("Failed to isDirectAuth to preshared url!");
-        FreeJson(urlJson);
-        DestroyIdentityInfo(info);
-        return HC_ERR_JSON_ADD;
-    }
-    char *urlStr = PackJsonToString(urlJson);
-    FreeJson(urlJson);
-    if (urlStr == NULL) {
-        LOGE("Failed to pack url json to string!");
-        DestroyIdentityInfo(info);
-        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
-    }
-    int32_t ret = SetPreSharedUrlForProof(urlStr, &info->proof.preSharedUrl);
+    ret = SetPreSharedUrlForProof(urlStr, &info->proof.preSharedUrl);
     FreeJsonString(urlStr);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to set preSharedUrl of proof!");
