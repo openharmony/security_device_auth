@@ -142,7 +142,7 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
     }
 
     char *urlStr = NULL;
-    ret = CreateUrlStr(in, keyType, &urlStr);
+    ret = CreateUrlStr(keyType, &urlStr);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to create url string!");
         return ret;
