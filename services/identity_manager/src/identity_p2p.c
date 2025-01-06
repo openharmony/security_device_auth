@@ -121,19 +121,22 @@ static int32_t CreateUrlStr(int32_t keyType, char **urlStr)
         LOGI("add isDirectAuth:true into urlJson!");
     }
     char *str = PackJsonToString(urlJson);
+    FreeJson(urlJson);
     if (str == NULL) {
         LOGE("Failed to pack url json to string!");
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     *urlStr = str;
-    FreeJson(urlJson);
     return HC_SUCCESS;
 }
 
 static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
 {
     int32_t keyType = KEY_TYPE_ASYM;
-    (void)GetIntFromJson(in, FIELD_KEY_TYPE, &keyType);
+    if (GetIntFromJson(in, FIELD_KEY_TYPE, &keyType) != HC_SUCCESS) {
+        LOGE("Failed to get key type!");
+        return HC_ERR_JSON_GET;
+    }
 
     int32_t ret = IsPeerDevicePublicKeyExist(in);
     if (ret != HC_SUCCESS) {
