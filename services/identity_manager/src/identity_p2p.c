@@ -133,10 +133,7 @@ static int32_t CreateUrlStr(int32_t keyType, char **urlStr)
 static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
 {
     int32_t keyType = KEY_TYPE_ASYM;
-    if (GetIntFromJson(in, FIELD_KEY_TYPE, &keyType) != HC_SUCCESS) {
-        LOGE("Failed to get key type!");
-        return HC_ERR_JSON_GET;
-    }
+    (void)GetIntFromJson(in, FIELD_KEY_TYPE, &keyType);
 
     int32_t ret = IsPeerDevicePublicKeyExist(in);
     if (ret != HC_SUCCESS) {
