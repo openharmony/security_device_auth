@@ -282,7 +282,9 @@ static void ResetSessionState(SessionImpl *impl)
 
 static int32_t RestartSession(SessionImpl *impl, JumpPolicy *policy)
 {
-    if (!HasNextCredInfo(impl)) {
+    bool isBind = false;
+    (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
+    if (!HasNextCredInfo(impl) || isBind) {
         LOGE("session has no next available credential, session failed.");
         return HC_ERR_NO_CANDIDATE_GROUP;
     }
