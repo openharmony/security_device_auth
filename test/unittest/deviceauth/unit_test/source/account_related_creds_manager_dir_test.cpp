@@ -145,8 +145,8 @@ HWTEST_F(AsyTokenManagerTest, AsyTokenManagerTest004, TestSize.Level0)
 
 HWTEST_F(AsyTokenManagerTest, AsyTokenManagerTest005, TestSize.Level0)
 {
-    int32_t ret = HC_SUCCESS;
-    (void)DestroyAccountToken(nullptr);
-    EXPECT_EQ(ret, HC_SUCCESS);
+    AccountToken *token = nullptr;
+    DestroyAccountToken(token);
+    EXPECT_EQ(token, nullptr);
 }
 }

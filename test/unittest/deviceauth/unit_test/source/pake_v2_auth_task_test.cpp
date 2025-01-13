@@ -339,6 +339,7 @@ HWTEST_F(PakeV2AuthTaskCommonTest, PakeV2AuthTaskCommonTest107, TestSize.Level0)
     InitTokenManager();
     DestroyPakeAuthParams(params);
     DestroyTokenManager();
+    EXPECT_EQ(params, nullptr);
 }
 
 HWTEST_F(PakeV2AuthTaskCommonTest, PakeV2AuthTaskCommonTest108, TestSize.Level0)
