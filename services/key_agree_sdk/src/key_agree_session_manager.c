@@ -91,6 +91,7 @@ static uint32_t AddSessionInner(KeyAgreeSession *session, SpekeSession *spekeSes
     sessionNode.spekeSession = spekeSession;
     if (g_SessionNodeVec.pushBack(&g_SessionNodeVec, &sessionNode) == NULL) {
         LOGE("Failed to push session node!");
+        DestroyKeyAgreeSessionMgr();
         return HC_ERR_ALLOC_MEMORY;
     }
     return HC_SUCCESS;
