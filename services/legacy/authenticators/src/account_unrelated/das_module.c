@@ -79,7 +79,11 @@ static int CreateDasTask(int32_t *taskId, const CJson *in, CJson *out)
         return HC_ERR_ALLOC_MEMORY;
     }
 
-    g_taskInModuleVec.pushBackT(&g_taskInModuleVec, (void *)task);
+    if (g_taskInModuleVec.pushBackT(&g_taskInModuleVec, (void *)task) == NULL) {
+        LOGE("Failed to push task!");
+        task->destroyTask(task);
+        return HC_ERR_ALLOC_MEMORY;
+    }
     return HC_SUCCESS;
 }
 

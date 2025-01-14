@@ -112,7 +112,11 @@ static int32_t SetProtocolsToIdentityInfo(int32_t keyType, IdentityInfo *info)
             return HC_ERR_ALLOC_MEMORY;
         }
         entity->protocolType = ALG_EC_SPEKE;
-        info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity);
+        if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity) == NULL) {
+            LOGE("Failed to push entity!");
+            HcFree(entity);
+            return HC_ERR_ALLOC_MEMORY;
+        }
 #else
         (void)info;
 #endif
@@ -124,7 +128,11 @@ static int32_t SetProtocolsToIdentityInfo(int32_t keyType, IdentityInfo *info)
             return HC_ERR_ALLOC_MEMORY;
         }
         entity->protocolType = ALG_ISO;
-        info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity);
+        if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity) == NULL) {
+            LOGE("Failed to push entity!");
+            HcFree(entity);
+            return HC_ERR_ALLOC_MEMORY;
+        }
 #else
         (void)info;
 #endif
@@ -248,7 +256,11 @@ static void AddNoPseudonymIdentityInfo(int32_t osAccountId, const TrustedGroupEn
         return;
     }
     info->proof.certInfo.isPseudonym = false;
-    identityInfoVec->pushBack(identityInfoVec, (const IdentityInfo **)&info);
+    if (identityInfoVec->pushBack(identityInfoVec, (const IdentityInfo **)&info) == NULL) {
+        LOGE("Failed to push info!");
+        DestroyIdentityInfo(info);
+        return;
+    }
 }
 
 static int32_t GetIdentityInfos(
@@ -287,7 +299,11 @@ static int32_t GetIdentityInfos(
         if (info->proofType == CERTIFICATED) {
             info->proof.certInfo.isPseudonym = true;
         }
-        identityInfoVec->pushBack(identityInfoVec, (const IdentityInfo **)&info);
+        if (identityInfoVec->pushBack(identityInfoVec, (const IdentityInfo **)&info) == NULL) {
+            LOGE("Failed to push info!");
+            DestroyIdentityInfo(info);
+            return HC_ERR_ALLOC_MEMORY;
+        }
         if (info->proofType == CERTIFICATED) {
             AddNoPseudonymIdentityInfo(osAccountId, groupEntry, deviceId, isUdid, identityInfoVec);
         }

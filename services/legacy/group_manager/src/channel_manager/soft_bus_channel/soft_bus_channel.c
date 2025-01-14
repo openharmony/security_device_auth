@@ -64,7 +64,11 @@ static int32_t AddChannelEntry(int64_t requestId, int64_t channelId)
         .requestId = requestId
     };
     (void)LockHcMutex(g_channelMutex);
-    g_channelVec.pushBack(&g_channelVec, &entry);
+    if (g_channelVec.pushBack(&g_channelVec, &entry) == NULL) {
+        LOGE("Failed to push channel entity!");
+        UnlockHcMutex(g_channelMutex);
+        return HC_ERR_ALLOC_MEMORY;
+    }
     UnlockHcMutex(g_channelMutex);
     return HC_SUCCESS;
 }
