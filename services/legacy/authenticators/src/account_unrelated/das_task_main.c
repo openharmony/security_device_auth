@@ -583,6 +583,7 @@ int32_t InitDasProtocolEntities(void)
         res = PushISOEntity();
         if (res != HC_SUCCESS) {
             LOGE("Failed to push ISO protocol!");
+            DESTROY_HC_VECTOR(DasProtocolEntityVec, &g_protocolEntityVec);
             return res;
         }
     }
@@ -591,6 +592,7 @@ int32_t InitDasProtocolEntities(void)
         res = PushPakeV1Entity();
         if (res != HC_SUCCESS) {
             LOGE("Failed to push PAKEV1 protocol!");
+            DESTROY_HC_VECTOR(DasProtocolEntityVec, &g_protocolEntityVec);
             return res;
         }
     }
@@ -599,6 +601,7 @@ int32_t InitDasProtocolEntities(void)
         res = PushPakeV2Entity();
         if (res != HC_SUCCESS) {
             LOGE("Failed to push PAKEV2 protocol!");
+            DESTROY_HC_VECTOR(DasProtocolEntityVec, &g_protocolEntityVec);
             return res;
         }
     }
