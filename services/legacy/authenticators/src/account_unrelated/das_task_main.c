@@ -524,7 +524,7 @@ static int32_t PushISOEntity(void)
     if (protocol == NULL) {
         LOGE("Malloc for Iso dasProtocolEntity failed.");
         return HC_ERR_ALLOC_MEMORY;
-        }
+    }
     protocol->type = ISO;
     protocol->algInProtocol = ISO_ALG;
     protocol->createSubTask = CreateIsoSubTask;
@@ -561,7 +561,7 @@ static int32_t PushPakeV2Entity(void)
     DasProtocolEntity *protocol = (DasProtocolEntity *)HcMalloc(sizeof(DasProtocolEntity), 0);
     if (protocol == NULL) {
         LOGE("Malloc for pake v2 dasProtocolEntity failed.");
-            return HC_ERR_ALLOC_MEMORY;
+        return HC_ERR_ALLOC_MEMORY;
     }
     protocol->type = PAKE_V2;
     protocol->algInProtocol = GetPakeAlgInProtocol(ALG_OFFSET_FOR_PAKE_V2);
