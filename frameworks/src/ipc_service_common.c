@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,12 @@ static GroupAuthManager g_groupAuthMgrMethod = {NULL};
 static DeviceAuthCallback g_bindCbAdt = {NULL};
 static DeviceAuthCallback g_authCbAdt = {NULL};
 static DataChangeListener g_listenCbAdt = {NULL};
+
+#ifdef DEV_AUTH_IS_ENABLE
+static CredManager g_devCredMgrMethod = {NULL};
+static CredChangeListener g_credListenCbAdt = {NULL};
+static CredAuthManager g_credAuthMgrMethod = {NULL};
+#endif
 
 static inline int32_t GetAndValSize32Param(const IpcDataInfo *ipcParams,
     int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
@@ -1241,13 +1247,416 @@ int32_t IpcServiceDaCancelRequest(const IpcDataInfo *ipcParams, int32_t paramNum
     return ret;
 }
 
+#ifdef DEV_AUTH_IS_ENABLE
+int32_t IpcServiceCmAddCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t callRet;
+    int32_t ret;
+    int32_t osAccountId;
+    int32_t inOutLen;
+    const char *requestParams = NULL;
+    char *credId = NULL;
+
+    LOGI("starting ...");
+    inOutLen = sizeof(int32_t);
+    ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
+        return ret;
+    }
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_REQUEST_PARAMS, (uint8_t *)&requestParams, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_REQUEST_PARAMS);
+        return ret;
+    }
+    callRet = g_devCredMgrMethod.addCredential(osAccountId, requestParams, &credId);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_1, sizeof(int32_t));
+    if (credId != NULL) {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_CRED_ID, (const uint8_t *)credId, HcStrlen(credId) + 1);
+    } else {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_CRED_ID, NULL, 0);
+    }
+    g_devCredMgrMethod.destroyInfo(&credId);
+    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
+    return ret;
+}
+
+int32_t IpcServiceCmRegCredChangeListener(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t callRet;
+    int32_t ret;
+    const char *appId = NULL;
+    const CredChangeListener *listener = NULL;
+    static int32_t registered = 0;
+    int32_t cbObjIdx = -1;
+    int32_t inOutLen;
+    LOGI("starting ...");
+    inOutLen = sizeof(int32_t);
+
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_APPID);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+
+    inOutLen = sizeof(CredChangeListener);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_LISTERNER, (uint8_t *)&listener, &inOutLen);
+    if ((ret != HC_SUCCESS) || (inOutLen != sizeof(CredChangeListener))) {
+        LOGE("get param error, type %d", PARAM_TYPE_LISTERNER);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+
+    ret = AddIpcCallBackByAppId(appId, (const uint8_t *)listener, sizeof(CredChangeListener), CB_TYPE_CRED_LISTENER);
+    if (ret != HC_SUCCESS) {
+        LOGE("add ipc listener failed");
+        return HC_ERROR;
+    }
+
+    inOutLen = sizeof(int32_t);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CB_OBJECT, (uint8_t *)&cbObjIdx, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_CB_OBJECT);
+        DelIpcCallBackByAppId(appId, CB_TYPE_CRED_LISTENER);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    AddIpcCbObjByAppId(appId, cbObjIdx, CB_TYPE_CRED_LISTENER);
+
+    callRet = HC_SUCCESS;
+    if (registered == 0) {
+        InitDevAuthCredListenerCbCtx(&g_credListenCbAdt);
+        callRet = g_devCredMgrMethod.registerChangeListener(SERVICE_APP_ID, &g_credListenCbAdt);
+        if (callRet == HC_SUCCESS) {
+            registered = 1;
+        } else {
+            DelIpcCallBackByAppId(appId, CB_TYPE_CRED_LISTENER);
+        }
+    }
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
+    return ret;
+}
+
+int32_t IpcServiceCmUnRegCredChangeListener(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t callRet = HC_SUCCESS;
+    int32_t ret;
+    const char *appId = NULL;
+    LOGI("starting ...");
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_APPID);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    DelIpcCallBackByAppId(appId, CB_TYPE_CRED_LISTENER);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
+    return ret;
+}
+
+
+int32_t IpcServiceCmExportCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t callRet;
+    int32_t ret;
+    int32_t osAccountId;
+    int32_t inOutLen;
+    const char *credId = NULL;
+    char *returnCredVal = NULL;
+    LOGI("starting ...");
+    inOutLen = sizeof(int32_t);
+    ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
+        return ret;
+    }
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_CRED_ID, (uint8_t *)&credId, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_REQUEST_PARAMS);
+        return ret;
+    }
+    callRet = g_devCredMgrMethod.exportCredential(osAccountId, credId, &returnCredVal);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_1, sizeof(int32_t));
+    if (returnCredVal != NULL) {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_CRED_VAL, (const uint8_t *)returnCredVal,
+            HcStrlen(returnCredVal) + 1);
+    } else {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_CRED_VAL, NULL, 0);
+    }
+    g_devCredMgrMethod.destroyInfo(&returnCredVal);
+    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
+    return ret;
+}
+
+int32_t IpcServiceCmQueryCredentialByParams(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t callRet;
+    int32_t ret;
+    int32_t osAccountId;
+    int32_t inOutLen;
+    const char *requestParams = NULL;
+    char *returnCredList = NULL;
+    LOGI("starting ...");
+    inOutLen = sizeof(int32_t);
+    ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
+        return ret;
+    }
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_QUERY_PARAMS, (uint8_t *)&requestParams, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_QUERY_PARAMS);
+        return ret;
+    }
+    callRet = g_devCredMgrMethod.queryCredentialByParams(osAccountId, requestParams, &returnCredList);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_1, sizeof(int32_t));
+    if (returnCredList != NULL) {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_CRED_INFO_LIST, (const uint8_t *)returnCredList,
+            HcStrlen(returnCredList) + 1);
+    } else {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_CRED_INFO_LIST, NULL, 0);
+    }
+    g_devCredMgrMethod.destroyInfo(&returnCredList);
+    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
+    return ret;
+}
+
+int32_t IpcServiceCmQueryCredentialByCredId(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t callRet;
+    int32_t ret;
+    int32_t osAccountId;
+    int32_t inOutLen;
+    const char *credId = NULL;
+    char *returnCredInfo = NULL;
+    LOGI("starting ...");
+    inOutLen = sizeof(int32_t);
+    ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
+        return ret;
+    }
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_CRED_ID, (uint8_t *)&credId, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_CRED_ID);
+        return ret;
+    }
+    callRet = g_devCredMgrMethod.queryCredInfoByCredId(osAccountId, credId, &returnCredInfo);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_1, sizeof(int32_t));
+    if (returnCredInfo != NULL) {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_CRED_INFO, (const uint8_t *)returnCredInfo,
+            HcStrlen(returnCredInfo) + 1);
+    } else {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_CRED_INFO, NULL, 0);
+    }
+    g_devCredMgrMethod.destroyInfo(&returnCredInfo);
+    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
+    return ret;
+}
+
+int32_t IpcServiceCmDeleteCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t callRet;
+    int32_t ret;
+    int32_t osAccountId;
+    int32_t inOutLen;
+    const char *credId = NULL;
+    const char *appId = NULL;
+    LOGI("starting ...");
+    inOutLen = sizeof(int32_t);
+    ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
+        return ret;
+    }
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_APPID);
+        return ret;
+    }
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_CRED_ID, (uint8_t *)&credId, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_CRED_ID);
+        return ret;
+    }
+    callRet = g_devCredMgrMethod.deleteCredential(osAccountId, appId, credId);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
+    return ret;
+}
+
+int32_t IpcServiceCmUpdateCredInfo(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t callRet;
+    int32_t ret;
+    int32_t osAccountId;
+    int32_t inOutLen;
+    const char *credId = NULL;
+    const char *appId = NULL;
+    const char *requestParams = NULL;
+    LOGI("starting ...");
+    inOutLen = sizeof(int32_t);
+    ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
+        return ret;
+    }
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_APPID);
+        return ret;
+    }
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_CRED_ID, (uint8_t *)&credId, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_CRED_ID);
+        return ret;
+    }
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_REQUEST_PARAMS, (uint8_t *)&requestParams, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_REQUEST_PARAMS);
+        return ret;
+    }
+    callRet = g_devCredMgrMethod.updateCredInfo(osAccountId, appId, credId, requestParams);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
+    return ret;
+}
+
+
+int32_t IpcServiceCaAuthDevice(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t ret;
+    DeviceAuthCallback *caCallback = NULL;
+    int32_t osAccountId;
+    int64_t reqId = 0;
+    const char *authParams = NULL;
+    int32_t inOutLen;
+    int32_t cbObjIdx = -1;
+
+    inOutLen = sizeof(int32_t);
+    ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    inOutLen = sizeof(int64_t);
+    ret = GetAndValSize64Param(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&reqId, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_AUTH_PARAMS, (uint8_t *)&authParams, NULL);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    inOutLen = sizeof(DeviceAuthCallback);
+    ret = GetAndValSizeCbParam(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&caCallback, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+
+    /* add call back */
+    ret = AddIpcCallBackByReqId(reqId, (const uint8_t *)caCallback, sizeof(DeviceAuthCallback), CB_TYPE_CRED_DEV_AUTH);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    inOutLen = sizeof(int32_t);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CB_OBJECT, (uint8_t *)&cbObjIdx, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_CB_OBJECT);
+        DelIpcCallBackByReqId(reqId, CB_TYPE_CRED_DEV_AUTH, true);
+        return ret;
+    }
+    AddIpcCbObjByReqId(reqId, cbObjIdx, CB_TYPE_CRED_DEV_AUTH);
+    InitDeviceAuthCbCtx(&g_authCbAdt, CB_TYPE_CRED_DEV_AUTH);
+    ret = g_credAuthMgrMethod.authCredential(osAccountId, reqId, authParams, &g_authCbAdt);
+    if (ret != HC_SUCCESS) {
+        DelIpcCallBackByReqId(reqId, CB_TYPE_CRED_DEV_AUTH, true);
+    }
+    return IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&ret, sizeof(int32_t));
+}
+
+
+int32_t IpcServiceCaProcessCredData(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t callRet;
+    int32_t ret;
+    const DeviceAuthCallback *caCallback = NULL;
+    int64_t reqId = 0;
+    uint8_t *data = NULL;
+    uint32_t dataLen = 0;
+    int32_t inOutLen;
+    int32_t cbObjIdx = -1;
+
+    LOGI("starting ...");
+    inOutLen = sizeof(int64_t);
+    ret = GetAndValSize64Param(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&reqId, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_COMM_DATA, (uint8_t *)&data, (int32_t *)&dataLen);
+    if ((data == NULL) || (dataLen == 0) || (ret != HC_SUCCESS)) {
+        LOGE("get param error, type %d", PARAM_TYPE_COMM_DATA);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    inOutLen = sizeof(DeviceAuthCallback);
+    ret = GetAndValSizeCbParam(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&caCallback, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    /* add call back */
+    ret = AddIpcCallBackByReqId(reqId, (const uint8_t *)caCallback, sizeof(DeviceAuthCallback), CB_TYPE_CRED_DEV_AUTH);
+    if (ret != HC_SUCCESS) {
+        LOGE("add ipc callback failed");
+        return ret;
+    }
+    inOutLen = sizeof(int32_t);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CB_OBJECT, (uint8_t *)&cbObjIdx, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_CB_OBJECT);
+        DelIpcCallBackByReqId(reqId, CB_TYPE_CRED_DEV_AUTH, true);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    AddIpcCbObjByReqId(reqId, cbObjIdx, CB_TYPE_CRED_DEV_AUTH);
+    InitDeviceAuthCbCtx(&g_authCbAdt, CB_TYPE_CRED_DEV_AUTH);
+    callRet = g_credAuthMgrMethod.processCredData(reqId, data, dataLen, &g_authCbAdt);
+    if (callRet != HC_SUCCESS) {
+        DelIpcCallBackByReqId(reqId, CB_TYPE_CRED_DEV_AUTH, true);
+    }
+    return IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+}
+
+static int32_t ISIpcInit(void)
+{
+    const CredManager *cmInst = NULL;
+    const CredAuthManager *caInst = NULL;
+    cmInst = GetCredMgrInstance();
+    caInst = GetCredAuthInstance();
+    if (cmInst == NULL || caInst == NULL) {
+        DeInitIpcCallBackList();
+        LOGE("MainInit, GetGmInstance failed");
+        return HC_ERROR;
+    }
+    g_devCredMgrMethod = (CredManager)(*cmInst);
+    g_credAuthMgrMethod = (CredAuthManager)(*caInst);
+    InitDevAuthCredListenerCbCtx(&g_credListenCbAdt);
+    int32_t ret = cmInst->registerChangeListener(SERVICE_APP_ID, &g_credListenCbAdt);
+    if (ret != HC_SUCCESS) {
+        DeInitIpcCallBackList();
+        LOGE("MainInit, register ipc cred listener failed, ret %d", ret);
+        return HC_ERROR;
+    }
+    return HC_SUCCESS;
+}
+#endif
+
 int32_t MainRescInit(void)
 {
     int32_t ret;
+    LOGI("starting ...");
     const DeviceGroupManager *gmInst = NULL;
     const GroupAuthManager *gaInst = NULL;
-
-    LOGI("starting ...");
     ret = InitIpcCallBackList();
     if (ret != HC_SUCCESS) {
         return ret;
@@ -1268,7 +1677,13 @@ int32_t MainRescInit(void)
         LOGE("MainInit, register ipc listener failed, ret %d", ret);
         return HC_ERROR;
     }
-
+#ifdef DEV_AUTH_IS_ENABLE
+    ret = ISIpcInit();
+    if (ret != HC_SUCCESS) {
+        LOGE("IS ipc init failed.");
+        return ret;
+    }
+#endif
     LOGI("process done");
     return HC_SUCCESS;
 }
@@ -1278,6 +1693,11 @@ void DeMainRescInit(void)
     if (g_devGroupMgrMethod.unRegDataChangeListener != NULL) {
         (void)g_devGroupMgrMethod.unRegDataChangeListener(SERVICE_APP_ID);
     }
+#ifdef DEV_AUTH_IS_ENABLE
+    if (g_devCredMgrMethod.unregisterChangeListener != NULL) {
+        (void)g_devCredMgrMethod.unregisterChangeListener(SERVICE_APP_ID);
+    }
+#endif
     DeInitIpcCallBackList();
 }
 

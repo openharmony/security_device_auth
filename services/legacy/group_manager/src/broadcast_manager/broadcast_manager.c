@@ -16,7 +16,6 @@
 #include "broadcast_manager.h"
 #include "common_defs.h"
 #include "device_auth_defines.h"
-#include "group_operation_common.h"
 #include "hc_log.h"
 #include "hc_mutex.h"
 #include "hc_types.h"

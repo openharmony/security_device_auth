@@ -17,7 +17,7 @@
 
 #include "device_auth_defines.h"
 #include "common_defs.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 #include "device_auth.h"
 #include "hc_types.h"
 #include "hc_dev_info.h"

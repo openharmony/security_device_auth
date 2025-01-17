@@ -170,6 +170,7 @@ if (os_level == "mini" || os_level == "small") {
     include_dirs += [
       "${frameworks_path}/inc/standard",
       "${dev_frameworks_path}/inc/hiview_adapter",
+      "${dev_frameworks_path}/inc/permission_adapter",
     ]
 
     if (support_os_account) {
@@ -184,10 +185,12 @@ if (os_level == "mini" || os_level == "small") {
       sources += sa_subscriber_files
       sources += net_observer_files
     }
+    sources += permission_adapter_files
     sources += hiview_adapter_files
     defines = deviceauth_defines
     defines += [ "HILOG_ENABLE" ]
     defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
+    defines += [ "DEV_AUTH_PERMISSION_ENABLE" ]
     cflags = build_flags
     cflags += [
       "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${device_auth_hichain_thread_stack_size}",
@@ -221,6 +224,7 @@ if (os_level == "mini" || os_level == "small") {
     deps = [ "${deps_adapter_path}:${hal_module_name}" ]
 
     external_deps = [
+      "access_token:libaccesstoken_sdk",
       "bounds_checking_function:libsec_shared",
       "cJSON:cjson",
       "c_utils:utils",
@@ -265,11 +269,13 @@ if (os_level == "mini" || os_level == "small") {
     sources = deviceauth_ipc_files
     sources += permission_adapter_files
     sources += [ "${frameworks_path}/src/ipc_sdk.c" ]
+    sources += [ "${frameworks_path}/src/IS_ipc_sdk.c" ]
 
     defines = [
       "__LINUX__",
       "HILOG_ENABLE",
     ]
+    defines += [ "DEV_AUTH_IS_ENABLE" ]
     cflags = build_flags
     cflags += [ "-fPIC" ]
     if (target_cpu == "arm") {
@@ -334,6 +340,7 @@ if (os_level == "mini" || os_level == "small") {
     defines = [ "HILOG_ENABLE" ]
     defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
     defines += [ "DEV_AUTH_SERVICE_BUILD" ]
+    defines += [ "DEV_AUTH_IS_ENABLE" ]
 
     if (use_musl) {
       if (musl_use_jemalloc && musl_use_jemalloc_dfx_intf) {
@@ -342,7 +349,6 @@ if (os_level == "mini" || os_level == "small") {
     }
 
     sources = deviceauth_ipc_files
-    sources += permission_adapter_files
     sources += [ "${frameworks_path}/src/deviceauth_sa.cpp" ]
     sources += [ "${frameworks_path}/src/ipc_service_common.c" ]
 
@@ -353,7 +359,6 @@ if (os_level == "mini" || os_level == "small") {
     ]
 
     external_deps = [
-      "access_token:libaccesstoken_sdk",
       "bounds_checking_function:libsec_shared",
       "cJSON:cjson",
       "c_utils:utils",

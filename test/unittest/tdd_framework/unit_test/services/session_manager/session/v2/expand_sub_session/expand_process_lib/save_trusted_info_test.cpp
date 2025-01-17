@@ -16,7 +16,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "common_defs.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 #include "device_auth.h"
 #include "device_auth_defines.h"
 #include "dev_info_mock.h"

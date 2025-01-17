@@ -16,13 +16,12 @@
 #include "dev_session_v2.h"
 
 #include <inttypes.h>
-#include <time.h>
 #include "alg_loader.h"
 #include "callback_manager.h"
 #include "channel_manager.h"
 #include "common_defs.h"
 #include "creds_manager.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 #include "dev_session_util.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
@@ -42,29 +41,9 @@
 #include "save_trusted_info.h"
 #include "group_auth_data_operation.h"
 #include "group_operation_common.h"
-
-#define FIELD_DATA "data"
-#define FIELD_VR "vr"
-#define FIELD_INDEX "index"
-#define FIELD_TOTAL "total"
-#define FIELD_CRED_URL "credUrl"
-#define FIELD_PROTOCOL "protocol"
-#define FIELD_CMDS "cmds"
-#define FIELD_AUTH_MSG "authMsg"
-#define FIELD_AUTH_DATA "authData"
-#define FIELD_ABILITY "ability"
-#define FIELD_TYPE "type"
-
-#define FIELD_HAND_SHAKE "handshake"
-#define FIELD_AUTH_EVENT "authEvent"
-#define FIELD_ID "id"
-#define FIELD_TD_CMDS "tdCmds"
-#define FIELD_SP_CMDS "spCmds"
-#define FIELD_CMD_EVENT "cmdEvent"
-#define FIELD_SESSION_FAIL_EVENT "failEvent"
+#include "account_task_manager.h"
 
 #define USER_ID_LEN 65
-#define DEV_SESSION_SALT_LEN 32
 #define VERSION_2_0_0 "2.0.0"
 
 IMPLEMENT_HC_VECTOR(EventList, SessionEvent, 3)
@@ -282,9 +261,9 @@ static void ResetSessionState(SessionImpl *impl)
 
 static int32_t RestartSession(SessionImpl *impl, JumpPolicy *policy)
 {
-    bool isBind = false;
-    (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
-    if (!HasNextCredInfo(impl) || isBind) {
+    bool isSingleCred = false;
+    (void)GetBoolFromJson(impl->context, FIELD_IS_SINGLE_CRED, &isSingleCred);
+    if (!HasNextCredInfo(impl) || isSingleCred) {
         LOGE("session has no next available credential, session failed.");
         return HC_ERR_NO_CANDIDATE_GROUP;
     }
@@ -297,31 +276,6 @@ static int32_t RestartSession(SessionImpl *impl, JumpPolicy *policy)
     }
     *policy = RESTART_STATE;
     LOGI("restart session success.");
-    return HC_SUCCESS;
-}
-
-static int32_t AddMsgToSessionMsg(int32_t eventType, const CJson *msg, CJson *sessionMsg)
-{
-    CJson *event = CreateJson();
-    if (event == NULL) {
-        LOGE("allocate event memory fail.");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    if (AddIntToJson(event, FIELD_TYPE, eventType) != HC_SUCCESS) {
-        LOGE("add eventType to event fail.");
-        FreeJson(event);
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddObjToJson(event, FIELD_DATA, msg) != HC_SUCCESS) {
-        LOGE("add msg to event fail.");
-        FreeJson(event);
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddObjToArray(sessionMsg, event) != HC_SUCCESS) {
-        LOGE("add event to sessionMsg fail.");
-        FreeJson(event);
-        return HC_ERR_JSON_ADD;
-    }
     return HC_SUCCESS;
 }
 
@@ -583,66 +537,6 @@ static int32_t GetPreSharedCredInfo(SessionImpl *impl, const CJson *credInfo, Id
     return HC_SUCCESS;
 }
 
-static int32_t BuildPeerCertInfo(const char *pkInfoStr, const char *pkInfoSignHexStr, int32_t signAlg,
-    CertInfo *peerCert)
-{
-    Uint8Buff pkInfoStrBuff = { (uint8_t *)pkInfoStr, HcStrlen(pkInfoStr) + 1 };
-    uint32_t pkInfoSignatureLen = HcStrlen(pkInfoSignHexStr) / BYTE_TO_HEX_OPER_LENGTH;
-    if (DeepCopyUint8Buff(&pkInfoStrBuff, &peerCert->pkInfoStr) != HC_SUCCESS) {
-        LOGE("copy pkInfoStr fail.");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    if (InitUint8Buff(&peerCert->pkInfoSignature, pkInfoSignatureLen) != HC_SUCCESS) {
-        LOGE("allocate pkInfoSignature memory fail.");
-        ClearFreeUint8Buff(&peerCert->pkInfoStr);
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    if (HexStringToByte(pkInfoSignHexStr, peerCert->pkInfoSignature.val,
-        peerCert->pkInfoSignature.length) != HC_SUCCESS) {
-        LOGE("get pkInfoSignature from json fail.");
-        ClearFreeUint8Buff(&peerCert->pkInfoStr);
-        ClearFreeUint8Buff(&peerCert->pkInfoSignature);
-        return HC_ERR_JSON_ADD;
-    }
-    peerCert->signAlg = signAlg;
-    return HC_SUCCESS;
-}
-
-static void DestroyCertInfo(CertInfo *certInfo)
-{
-    ClearFreeUint8Buff(&certInfo->pkInfoSignature);
-    ClearFreeUint8Buff(&certInfo->pkInfoStr);
-}
-
-static int32_t GetPeerCertInfo(CJson *context, const CJson *credInfo, CertInfo *peerCert)
-{
-    int32_t osAccountId;
-    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId!");
-        return HC_ERR_JSON_GET;
-    }
-    int32_t signAlg;
-    if (GetIntFromJson(credInfo, FIELD_SIGN_ALG, &signAlg) != HC_SUCCESS) {
-        LOGE("get signAlg from json fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    char *pkInfoStr = NULL;
-    int32_t res = GetRealPkInfoStr(osAccountId, credInfo, &pkInfoStr, &peerCert->isPseudonym);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to get real pkInfo string!");
-        return res;
-    }
-    const char *pkInfoSignHexStr = GetStringFromJson(credInfo, FIELD_PK_INFO_SIGNATURE);
-    if (pkInfoSignHexStr == NULL) {
-        LOGE("get pkInfoSignature from json fail.");
-        HcFree(pkInfoStr);
-        return HC_ERR_JSON_GET;
-    }
-    res = BuildPeerCertInfo(pkInfoStr, pkInfoSignHexStr, signAlg, peerCert);
-    HcFree(pkInfoStr);
-    return res;
-}
-
 static int32_t GetCertCredInfo(SessionImpl *impl, const CJson *credInfo, IdentityInfo **selfCred)
 {
     int32_t res = CheckPeerPkInfoForPdid(impl->context, credInfo);
@@ -667,36 +561,6 @@ static int32_t GetCertCredInfo(SessionImpl *impl, const CJson *credInfo, Identit
     return HC_SUCCESS;
 }
 
-static int32_t GetSelfUserId(int32_t osAccountId, char *userId, uint32_t userIdLen)
-{
-    GroupEntryVec accountVec = CreateGroupEntryVec();
-    QueryGroupParams queryParams = InitQueryGroupParams();
-    queryParams.groupType = IDENTICAL_ACCOUNT_GROUP;
-    do {
-        if (QueryGroups(osAccountId, &queryParams, &accountVec) != HC_SUCCESS) {
-            LOGD("No identical-account group in db, no identical-account auth!");
-            break;
-        }
-        uint32_t index = 0;
-        TrustedGroupEntry **ptr = NULL;
-        while (index < accountVec.size(&accountVec)) {
-            ptr = accountVec.getp(&accountVec, index);
-            if ((ptr == NULL) || (*ptr == NULL)) {
-                index++;
-                continue;
-            }
-            if (memcpy_s(userId, userIdLen, StringGet(&(*ptr)->userId), StringLength(&(*ptr)->userId)) != EOK) {
-                LOGE("copy fail");
-                ClearGroupEntryVec(&accountVec);
-                return HC_ERROR;
-            }
-            index++;
-        }
-    } while (0);
-    ClearGroupEntryVec(&accountVec);
-    return HC_SUCCESS;
-}
-
 static int32_t GetSelfCredByInput(SessionImpl *impl, const CJson *inputData)
 {
     int32_t credType;
@@ -718,49 +582,6 @@ static int32_t GetSelfCredByInput(SessionImpl *impl, const CJson *inputData)
         LOGE("push cred to list fail.");
         DestroyIdentityInfo(info);
         return HC_ERR_ALLOC_MEMORY;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t GetSaltMsg(Uint8Buff *saltMsg)
-{
-    uint8_t randomVal[DEV_SESSION_SALT_LEN] = { 0 };
-    Uint8Buff random = { randomVal, DEV_SESSION_SALT_LEN };
-    int32_t res = GetLoaderInstance()->generateRandom(&random);
-    if (res != HC_SUCCESS) {
-        LOGE("generate random failed, res: %d", res);
-        return res;
-    }
-    clock_t times = 0;
-    if (memcpy_s(saltMsg->val, saltMsg->length, random.val, random.length) != EOK) {
-        LOGE("memcpy random failed.");
-        return HC_ERR_MEMORY_COPY;
-    }
-    if (memcpy_s(saltMsg->val + random.length, saltMsg->length - random.length, &times, sizeof(clock_t)) != EOK) {
-        LOGE("memcpy times failed.");
-        return HC_ERR_MEMORY_COPY;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t CalSalt(Uint8Buff *salt)
-{
-    uint32_t saltMsgLen = DEV_SESSION_SALT_LEN + sizeof(clock_t);
-    Uint8Buff saltMsg = { NULL, 0 };
-    if (InitUint8Buff(&saltMsg, saltMsgLen) != HC_SUCCESS) {
-        LOGE("allocate saltMsg memory fail.");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    int32_t res = GetSaltMsg(&saltMsg);
-    if (res != HC_SUCCESS) {
-        FreeUint8Buff(&saltMsg);
-        return res;
-    }
-    res = GetLoaderInstance()->sha256(&saltMsg, salt);
-    FreeUint8Buff(&saltMsg);
-    if (res != HC_SUCCESS) {
-        LOGE("sha256 for session salt failed.");
-        return res;
     }
     return HC_SUCCESS;
 }
@@ -1014,8 +835,8 @@ static int32_t CreateIsoSubSession(SessionImpl *impl, const IdentityInfo *cred, 
 
 static int32_t CreateDlSpekeSubSession(SessionImpl *impl, const IdentityInfo *cred, AuthSubSession **returnSubSession)
 {
-    if (cred->proofType == CERTIFICATED) {
-        LOGE("Cert credential not support.");
+    if (impl->isCredAuth || cred->proofType == CERTIFICATED) {
+        LOGE("IS or Cert credential not support.");
         return HC_ERR_UNSUPPORTED_VERSION;
     }
     int32_t osAccountId;
@@ -1197,22 +1018,6 @@ static int32_t AddAuthInfoToContextByDb(SessionImpl *impl, const char *selfUdid,
     return AddDevInfoToContext(impl, osAccountId, groupId, selfUdid);
 }
 
-static bool IsPeerSameUserId(int32_t osAccountId, const char *peerUserId)
-{
-    GroupEntryVec groupVec = CreateGroupEntryVec();
-    QueryGroupParams queryParams = InitQueryGroupParams();
-    queryParams.groupType = IDENTICAL_ACCOUNT_GROUP;
-    if (QueryGroups(osAccountId, &queryParams, &groupVec) != HC_SUCCESS || groupVec.size(&groupVec) <= 0) {
-        LOGE("get identical account group from db fail.");
-        ClearGroupEntryVec(&groupVec);
-        return false;
-    }
-    TrustedGroupEntry *groupEntry = groupVec.get(&groupVec, 0);
-    bool isSame = (strcmp(StringGet(&(groupEntry->userId)), peerUserId) == 0);
-    ClearGroupEntryVec(&groupVec);
-    return isSame;
-}
-
 static int32_t AddAcrossAccountAuthInfoToContext(SessionImpl *impl, int32_t osAccountId, const char *peerUserId)
 {
     GroupEntryVec groupVec = CreateGroupEntryVec();
@@ -1288,6 +1093,25 @@ static int32_t AddAuthInfoToContextByCert(SessionImpl *impl)
     }
 }
 
+static int32_t AddAuthInfoToContextIS(SessionImpl *impl, IdentityInfo *cred)
+{
+    if (cred->proofType == PRE_SHARED) {
+        return HC_SUCCESS;
+    }
+    char selfUdid[INPUT_UDID_LEN] = { 0 };
+    int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get local udid!");
+        return res;
+    }
+    PRINT_SENSITIVE_DATA("SelfUdid", selfUdid);
+    if (AddStringToJson(impl->context, FIELD_AUTH_ID, selfUdid) != HC_SUCCESS) {
+        LOGE("add selfAuthId to json fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t AddAuthInfoToContextByCred(SessionImpl *impl, IdentityInfo *cred)
 {
     char selfUdid[INPUT_UDID_LEN] = { 0 };
@@ -1361,7 +1185,8 @@ static int32_t ClientCreateAuthSubSessionByCred(SessionImpl *impl, IdentityInfo 
         LOGE("The credential does not have a valid protocol.");
         return HC_ERR_UNSUPPORTED_VERSION;
     }
-    int32_t res = AddAuthInfoToContextByCred(impl, cred);
+    int32_t res = impl->isCredAuth? AddAuthInfoToContextIS(impl, cred)
+        : AddAuthInfoToContextByCred(impl, cred);
     if (res != HC_SUCCESS) {
         return res;
     }
@@ -1376,11 +1201,30 @@ static int32_t ClientCreateAuthSubSessionByCred(SessionImpl *impl, IdentityInfo 
     return HC_SUCCESS;
 }
 
+static int32_t GetCredInfoIS(SessionImpl *impl)
+{
+    IdentityInfo *info = NULL;
+    int32_t res = GetIdentityInfoIS(impl->context, &info);
+    if (res != HC_SUCCESS) {
+        LOGE("Get Identity by credAuthInfo fail.");
+        return res;
+    }
+    if (impl->credList.pushBack(&impl->credList, (const IdentityInfo **)&info) == NULL) {
+        DestroyIdentityInfo(info);
+        LOGE("Failed to push protocol entity!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    impl->credCurIndex = 0;
+    impl->credTotalNum = 1;
+    return HC_SUCCESS;
+}
+
 static int32_t ProcStartEventInner(SessionImpl *impl, CJson *sessionMsg)
 {
     int32_t res;
     if (impl->credTotalNum == 0) {
-        res = GetAllCredsWithPeer(impl);
+        res = impl->isCredAuth ? GetCredInfoIS(impl)
+            : GetAllCredsWithPeer(impl);
         if (res != HC_SUCCESS) {
             LOGE("get all credentials with peer device fail.");
             return res;
@@ -1445,6 +1289,11 @@ static int32_t GetSharedSecret(SessionImpl *impl, const CJson *inputData, Identi
     if (res != HC_SUCCESS) {
         return res;
     }
+    if (impl->isCredAuth && (!HasAccountPlugin())) {
+        LOGE("The account plugin used by IS is missing!");
+        return HC_ERR_NOT_SUPPORT;
+    }
+    // verify and set psk "SHARED_KEY_ALIAS"
     res = GetSharedSecretByPeerCert(impl->context, &peerCert, impl->protocolEntity.protocolType, psk);
     DestroyCertInfo(&peerCert);
     return res;
@@ -1489,7 +1338,8 @@ static int32_t ServerCreateAuthSubSessionByCred(SessionImpl *impl, const CJson *
     if (res != HC_SUCCESS) {
         return res;
     }
-    res = AddAuthInfoToContextByCred(impl, cred);
+    res = impl->isCredAuth? AddAuthInfoToContextIS(impl, cred)
+        : AddAuthInfoToContextByCred(impl, cred);
     if (res != HC_SUCCESS) {
         return res;
     }
@@ -1738,7 +1588,7 @@ static int32_t ProcHandshakeReqEventInner(SessionImpl *impl, SessionEvent *input
     if (res != HC_SUCCESS) {
         return res;
     }
-    res = GetSelfCredByInput(impl, inputEvent->data);
+    res = impl->isCredAuth ? GetCredInfoIS(impl) : GetSelfCredByInput(impl, inputEvent->data);
     if (res != HC_SUCCESS) {
         LOGE("get cred by input fail.");
         return res;
@@ -1750,9 +1600,11 @@ static int32_t ProcHandshakeReqEventInner(SessionImpl *impl, SessionEvent *input
         LOGE("Failed to add isDirectAuth to context!");
         return HC_ERR_JSON_ADD;
     }
-    res = SetPeerAuthIdToContextIfNeeded(impl->context, selfCred);
-    if (res != HC_SUCCESS) {
-        return res;
+    if (!impl->isCredAuth) {
+        res = SetPeerAuthIdToContextIfNeeded(impl->context, selfCred);
+        if (res != HC_SUCCESS) {
+            return res;
+        }
     }
     res = CredNegotiate(impl, inputEvent->data, selfCred);
     if (res != HC_SUCCESS) {

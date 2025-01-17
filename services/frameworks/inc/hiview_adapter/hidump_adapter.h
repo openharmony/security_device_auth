@@ -22,18 +22,21 @@
 #define PERFORM_DUMP_ARG "performance"
 
 typedef void (*DumpCallBack)(int);
+typedef void (*CredDumpCallBack)(int);
 typedef void (*PerformanceDumpCallBack)(int, StringVector *);
 
 #ifndef DEV_AUTH_HIVIEW_ENABLE
 
 #define DEV_AUTH_DUMP(fd, strArgVec)
 #define DEV_AUTH_REG_DUMP_FUNC(func)
+#define DEV_AUTH_REG_CRED_DUMP_FUNC(func)
 #define DEV_AUTH_REG_PERFORM_DUMP_FUNC(func)
 
 #else
 
 #define DEV_AUTH_DUMP(fd, strArgVec) DevAuthDump(fd, strArgVec)
 #define DEV_AUTH_REG_DUMP_FUNC(func) RegisterDumpFunc(func)
+#define DEV_AUTH_REG_CRED_DUMP_FUNC(func) RegisterCredDumpFunc(func)
 #define DEV_AUTH_REG_PERFORM_DUMP_FUNC(func) RegisterPerformDumpFunc(func)
 
 #ifdef __cplusplus
@@ -43,6 +46,7 @@ extern "C" {
 void DevAuthDump(int fd, StringVector *strArgVec);
 
 void RegisterDumpFunc(DumpCallBack func);
+void RegisterCredDumpFunc(CredDumpCallBack func);
 void RegisterPerformDumpFunc(PerformanceDumpCallBack func);
 
 #ifdef __cplusplus

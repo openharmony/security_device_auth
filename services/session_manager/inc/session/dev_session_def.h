@@ -23,6 +23,29 @@
 #include "dev_session_fwk.h"
 #include "hc_vector.h"
 
+#define FIELD_DATA "data"
+#define FIELD_VR "vr"
+#define FIELD_INDEX "index"
+#define FIELD_TOTAL "total"
+#define FIELD_CRED_URL "credUrl"
+#define FIELD_PROTOCOL "protocol"
+#define FIELD_CMDS "cmds"
+#define FIELD_AUTH_MSG "authMsg"
+#define FIELD_AUTH_DATA "authData"
+#define FIELD_ABILITY "ability"
+#define FIELD_TYPE "type"
+#define FIELD_MSG "msg"
+
+#define FIELD_HAND_SHAKE "handshake"
+#define FIELD_AUTH_EVENT "authEvent"
+#define FIELD_ID "id"
+#define FIELD_TD_CMDS "tdCmds"
+#define FIELD_SP_CMDS "spCmds"
+#define FIELD_CMD_EVENT "cmdEvent"
+#define FIELD_SESSION_FAIL_EVENT "failEvent"
+
+#define DEV_SESSION_SALT_LEN 32
+
 typedef struct {
     int32_t type;
     const CJson *data;
@@ -50,6 +73,7 @@ typedef struct {
     AuthSubSessionList authSubSessionList;
     ExpandSubSession *expandSubSession;
     CompatibleBaseSubSession *compatibleSubSession;
+    bool isCredAuth;
 } SessionImpl;
 
 #endif

@@ -27,6 +27,8 @@ extern "C" {
 #define CB_TYPE_DEV_AUTH 1
 #define CB_TYPE_TMP_DEV_AUTH 2
 #define CB_TYPE_LISTENER 3
+#define CB_TYPE_CRED_LISTENER 4
+#define CB_TYPE_CRED_DEV_AUTH 5
 
 typedef struct {
     int32_t type;
@@ -48,6 +50,9 @@ enum {
     CB_ID_ON_DEV_UNTRUSTED,
     CB_ID_ON_LAST_GROUP_DELETED,
     CB_ID_ON_TRUST_DEV_NUM_CHANGED,
+    CB_ID_ON_CRED_ADD,
+    CB_ID_ON_CRED_DELETE,
+    CB_ID_ON_CRED_UPDATE,
 };
 
 typedef int32_t (*IpcServiceCall)(const IpcDataInfo *, int32_t, uintptr_t);
@@ -90,6 +95,8 @@ bool IsCallbackMethod(int32_t methodId);
 void ResetIpcCallBackNodeByNodeId(int32_t nodeIdx);
 int32_t InitProxyAdapt(void);
 void UnInitProxyAdapt(void);
+
+void InitDevAuthCredListenerCbCtx(CredChangeListener *ctx);
 
 #ifdef __cplusplus
 }

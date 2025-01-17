@@ -16,7 +16,7 @@
 #include "group_manager.h"
 
 #include "common_defs.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 #include "group_operation.h"
 #include "hc_log.h"
 #include "hitrace_adapter.h"

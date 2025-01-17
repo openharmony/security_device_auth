@@ -60,6 +60,17 @@ int32_t IpcServiceDaAuthDevice(const IpcDataInfo *ipcParams, int32_t paramNum, u
 int32_t IpcServiceDaProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
 int32_t IpcServiceDaCancelRequest(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
 
+// Credential Manager Interfaces - IS
+int32_t IpcServiceCmAddCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+int32_t IpcServiceCmRegCredChangeListener(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+int32_t IpcServiceCmUnRegCredChangeListener(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+int32_t IpcServiceCmExportCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+int32_t IpcServiceCmQueryCredentialByParams(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+int32_t IpcServiceCmQueryCredentialByCredId(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+int32_t IpcServiceCmDeleteCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+int32_t IpcServiceCmUpdateCredInfo(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+int32_t IpcServiceCaAuthDevice(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+int32_t IpcServiceCaProcessCredData(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
 
 int32_t MainRescInit(void);
 void DeMainRescInit(void);

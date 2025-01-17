@@ -54,6 +54,7 @@ ohos_fuzztest("DevAuthFuzzTest") {
   defines = [ "HILOG_ENABLE" ]
   defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
   defines += [ "DEV_AUTH_FUZZ_TEST" ]
+  defines += [ "DEV_AUTH_PERMISSION_ENABLE" ]
   cflags = [
     "-g",
     "-O0",

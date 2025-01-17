@@ -16,7 +16,7 @@
 #include "save_trusted_info.h"
 
 #include "common_defs.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 #include "device_auth_defines.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"

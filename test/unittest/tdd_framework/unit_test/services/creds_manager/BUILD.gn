@@ -21,6 +21,7 @@ ohos_unittest("creds_manager_test") {
   include_dirs = inc_path + hals_inc_path
   include_dirs += [
     "${dev_frameworks_path}/inc/hiview_adapter",
+    "${dev_frameworks_path}/inc/permission_adapter",
     "${tdd_framework_path}/common/inc",
   ]
 
@@ -44,6 +45,7 @@ ohos_unittest("creds_manager_test") {
   sources += [
     "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/huks_adapter.c",
+    "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
     "${os_adapter_path}/impl/src/hc_log.c",

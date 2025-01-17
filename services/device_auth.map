@@ -19,6 +19,8 @@
     DestroyDeviceAuthService;
     GetGaInstance;
     GetGmInstance;
+    GetCredMgrInstance;
+    GetCredAuthInstance;
     ProcessCredential;
     StartAuthDevice;
     ProcessAuthDevice;

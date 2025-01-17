@@ -37,5 +37,6 @@ enum {
     HAL_ERR_NOT_SUPPORTED = -22,
     HAL_ERR_MBEDTLS = -23,
     HAL_ERR_BASE64_FORMAT = -24,
+    HAL_ERR_KEY_NOT_EXIST = -25,
 };
 #endif

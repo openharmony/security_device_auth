@@ -27,6 +27,7 @@ ohos_unittest("deviceauth_llt") {
   include_dirs += [
     "./include",
     "./unit_test/include",
+    "${dev_frameworks_path}/inc/permission_adapter",
     "${dev_frameworks_path}/inc/hiview_adapter",
   ]
 
@@ -37,6 +38,7 @@ ohos_unittest("deviceauth_llt") {
   sources += [
     "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/huks_adapter.c",
+    "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
     "${os_adapter_path}/impl/src/hc_log.c",
@@ -51,8 +53,11 @@ ohos_unittest("deviceauth_llt") {
 
   sources += dev_frameworks_files
   sources += deviceauth_common_files
-  sources += database_manager_files
-  sources += cred_manager_files
+  sources += group_database_manager_files
+  sources += cred_database_manager_files
+  sources += cred_listener_files
+  sources += identity_service_files
+  sources += ext_plugin_manager_files
   sources += session_manager_files
   sources += session_v1_files
   sources += session_v2_mock_files
@@ -148,6 +153,7 @@ ohos_unittest("device_auth_func_test") {
   include_dirs += [
     "./include",
     "./unit_test/include",
+    "${dev_frameworks_path}/inc/permission_adapter",
     "${dev_frameworks_path}/inc/hiview_adapter",
   ]
 
@@ -156,6 +162,7 @@ ohos_unittest("device_auth_func_test") {
   sources += [
     "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/huks_adapter.c",
+    "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
     "${os_adapter_path}/impl/src/hc_log.c",
@@ -170,9 +177,12 @@ ohos_unittest("device_auth_func_test") {
 
   sources += dev_frameworks_files
   sources += deviceauth_common_files
-  sources += database_manager_files
-  sources += cred_manager_files
+  sources += group_database_manager_files
+  sources += cred_database_manager_files
+  sources += ext_plugin_manager_files
   sources += session_manager_files
+  sources += cred_listener_files
+  sources += identity_service_files
   sources += session_v1_files
   sources += session_v2_files
   sources += iso_protocol_files
@@ -289,6 +299,7 @@ ohos_unittest("device_auth_interface_test") {
   sources += [
     "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/huks_adapter.c",
+    "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
     "${os_adapter_path}/impl/src/hc_log.c",
@@ -303,8 +314,9 @@ ohos_unittest("device_auth_interface_test") {
 
   sources += dev_frameworks_files
   sources += deviceauth_common_files
-  sources += database_manager_files
-  sources += cred_manager_files
+  sources += group_database_manager_files
+  sources += cred_database_manager_files
+  sources += ext_plugin_manager_files
   sources += session_manager_files
   sources += session_v1_files
   sources += session_v2_files
@@ -361,6 +373,7 @@ ohos_unittest("device_auth_interface_test") {
     "ENABLE_P2P_AUTH_EC_SPEKE",
     "ENABLE_PSEUDONYM",
     "DEV_AUTH_HIVIEW_ENABLE",
+    "DEV_AUTH_PERMISSION_ENABLE",
   ]
 
   sources += identity_manager_files
@@ -404,6 +417,7 @@ ohos_unittest("deviceauth_unit_test") {
   include_dirs += [
     "./include",
     "./unit_test/include",
+    "${dev_frameworks_path}/inc/permission_adapter",
     "${dev_frameworks_path}/inc/hiview_adapter",
   ]
 
@@ -411,6 +425,7 @@ ohos_unittest("deviceauth_unit_test") {
   sources += [
     "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/huks_adapter.c",
+    "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
     "${os_adapter_path}/impl/src/hc_log.c",
@@ -426,9 +441,12 @@ ohos_unittest("deviceauth_unit_test") {
   sources += identity_manager_files
   sources += dev_frameworks_files
   sources += deviceauth_common_files
-  sources += database_manager_files
-  sources += cred_manager_files
+  sources += group_database_manager_files
+  sources += cred_database_manager_files
+  sources += ext_plugin_manager_files
   sources += session_manager_files
+  sources += identity_service_files
+  sources += cred_listener_files
   sources += session_v1_files
   sources += session_v2_files
   sources += iso_protocol_files
@@ -494,6 +512,7 @@ ohos_unittest("deviceauth_unit_test") {
   deps = []
 
   external_deps = [
+    "access_token:libaccesstoken_sdk",
     "cJSON:cjson",
     "c_utils:utils",
     "googletest:gmock_main",

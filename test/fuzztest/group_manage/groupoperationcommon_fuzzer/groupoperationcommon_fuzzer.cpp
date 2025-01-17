@@ -22,7 +22,7 @@
 #include "hc_dev_info.h"
 #include "json_utils.h"
 #include "securec.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 
 namespace OHOS {
 static const char *NORMAL_STR = "abc";

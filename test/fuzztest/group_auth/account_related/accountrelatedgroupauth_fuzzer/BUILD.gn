@@ -31,6 +31,7 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
 
   include_dirs += [
     ".",
+    "${dev_frameworks_path}/inc/permission_adapter",
     "${dev_frameworks_path}/inc/hiview_adapter",
   ]
   if (support_os_account) {
@@ -42,6 +43,7 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
   sources += [
     "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/huks_adapter.c",
+    "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
     "${os_adapter_path}/impl/src/hc_log.c",
@@ -57,9 +59,12 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
   sources += identity_manager_files
   sources += dev_frameworks_files
   sources += deviceauth_common_files
-  sources += database_manager_files
-  sources += cred_manager_files
+  sources += group_database_manager_files
+  sources += cred_database_manager_files
+  sources += ext_plugin_manager_files
   sources += session_manager_files
+  sources += identity_service_files
+  sources += cred_listener_files
   sources += session_v1_files
   sources += session_v2_files
   sources += iso_protocol_files

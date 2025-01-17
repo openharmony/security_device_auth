@@ -26,6 +26,7 @@
 #include "hal_error.h"
 #include "hc_log.h"
 #include "huks_adapter.h"
+#include "huks_adapter_utils.h"
 
 #define LOG_AND_RETURN_IF_MBED_FAIL(ret, fmt, ...) \
 do { \

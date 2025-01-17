@@ -97,6 +97,10 @@ static void GetIpcReplyByType(const IpcDataInfo *ipcData,
             case PARAM_TYPE_REG_INFO:
             case PARAM_TYPE_DEVICE_INFO:
             case PARAM_TYPE_GROUP_INFO:
+            case PARAM_TYPE_CRED_ID:
+            case PARAM_TYPE_CRED_INFO:
+            case PARAM_TYPE_CRED_INFO_LIST:
+            case PARAM_TYPE_CRED_VAL:
             case PARAM_TYPE_RETURN_DATA:
                 *(uint8_t **)outCache = ipcData[i].val;
                 break;

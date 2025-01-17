@@ -26,7 +26,7 @@ group_manager_identical_account_files = [ "${deviceauth_account_group_manager_pa
 group_manager_across_account_files = [ "${deviceauth_account_group_manager_path}/src/group_operation/across_account_group/across_account_group.c" ]
 
 group_auth_account_related_files = [ "${deviceauth_account_group_auth_path}/src/group_auth_manager/account_related_group_auth/account_related_group_auth.c" ]
-identity_manager_path = "${services_path}/identity_manager"
+identity_manager_path = "${services_path}/legacy/identity_manager"
 account_related_inc_path += [
   "${authenticators_path}/inc",
   "${authenticators_path}/inc/account_related",
@@ -50,7 +50,7 @@ authenticators_account_related_files = [
   "${authenticators_path}/src/account_related/auth/pake_v2_auth_task/pake_v2_auth_server_task.c",
 ]
 
-account_related_cred_plugin_files = [ "${services_path}/cred_manager/src/account_related/account_related_cred_plugin.c" ]
+account_related_cred_plugin_files = [ "${services_path}/ext_plugin_manager/src/account_related/account_related_cred_plugin.c" ]
 
 account_related_creds_manager_files =
     [ "${identity_manager_path}/src/cert_operation.c" ]

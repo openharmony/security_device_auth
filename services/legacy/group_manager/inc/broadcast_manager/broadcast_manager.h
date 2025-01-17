@@ -16,7 +16,6 @@
 #ifndef BROADCAST_MANAGER_H
 #define BROADCAST_MANAGER_H
 
-#include "data_manager.h"
 #include "device_auth.h"
 
 #ifdef __cplusplus

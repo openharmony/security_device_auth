@@ -38,6 +38,54 @@
 namespace OHOS {
 
 static const uint32_t RESTORE_CODE = 14701;
+using IpcCallMap = struct {
+    int32_t (*func)(const IpcDataInfo*, int32_t, uintptr_t);
+    uint32_t id;
+};
+
+static IpcCallMap g_ipcCallMaps[] = {
+    {IpcServiceGmRegCallback, IPC_CALL_ID_REG_CB},
+    {IpcServiceGmUnRegCallback, IPC_CALL_ID_UNREG_CB},
+    {IpcServiceGmRegDataChangeListener, IPC_CALL_ID_REG_LISTENER},
+    {IpcServiceGmUnRegDataChangeListener, IPC_CALL_ID_UNREG_LISTENER},
+    {IpcServiceGmCreateGroup, IPC_CALL_ID_CREATE_GROUP},
+    {IpcServiceGmDelGroup, IPC_CALL_ID_DEL_GROUP},
+    {IpcServiceGmAddMemberToGroup, IPC_CALL_ID_ADD_GROUP_MEMBER},
+    {IpcServiceGmDelMemberFromGroup, IPC_CALL_ID_DEL_GROUP_MEMBER},
+    {IpcServiceGmAddMultiMembersToGroup, IPC_CALL_ID_ADD_MULTI_GROUP_MEMBERS},
+    {IpcServiceGmDelMultiMembersFromGroup, IPC_CALL_ID_DEL_MULTI_GROUP_MEMBERS},
+    {IpcServiceGmProcessData, IPC_CALL_ID_GM_PROC_DATA},
+    {IpcServiceGmApplyRegisterInfo, IPC_CALL_ID_APPLY_REG_INFO},
+    {IpcServiceGmCheckAccessToGroup, IPC_CALL_ID_CHECK_ACCESS_TO_GROUP},
+    {IpcServiceGmGetPkInfoList, IPC_CALL_ID_GET_PK_INFO_LIST},
+    {IpcServiceGmGetGroupInfoById, IPC_CALL_ID_GET_GROUP_INFO},
+    {IpcServiceGmGetGroupInfo, IPC_CALL_ID_SEARCH_GROUPS},
+    {IpcServiceGmGetJoinedGroups, IPC_CALL_ID_GET_JOINED_GROUPS},
+    {IpcServiceGmGetRelatedGroups, IPC_CALL_ID_GET_RELATED_GROUPS},
+    {IpcServiceGmGetDeviceInfoById, IPC_CALL_ID_GET_DEV_INFO_BY_ID},
+    {IpcServiceGmGetTrustedDevices, IPC_CALL_ID_GET_TRUST_DEVICES},
+    {IpcServiceGmIsDeviceInGroup, IPC_CALL_ID_IS_DEV_IN_GROUP},
+    {IpcServiceGmCancelRequest, IPC_CALL_GM_CANCEL_REQUEST},
+    {IpcServiceGaProcessData, IPC_CALL_ID_GA_PROC_DATA},
+    {IpcServiceGaAuthDevice, IPC_CALL_ID_AUTH_DEVICE},
+    {IpcServiceGaCancelRequest, IPC_CALL_GA_CANCEL_REQUEST},
+    {IpcServiceGaGetRealInfo, IPC_CALL_ID_GET_REAL_INFO},
+    {IpcServiceGaGetPseudonymId, IPC_CALL_ID_GET_PSEUDONYM_ID},
+    {IpcServiceDaProcessCredential, IPC_CALL_ID_PROCESS_CREDENTIAL},
+    {IpcServiceDaAuthDevice, IPC_CALL_ID_DA_AUTH_DEVICE},
+    {IpcServiceDaProcessData, IPC_CALL_ID_DA_PROC_DATA},
+    {IpcServiceDaCancelRequest, IPC_CALL_ID_DA_CANCEL_REQUEST},
+    {IpcServiceCmAddCredential, IPC_CALL_ID_CM_ADD_CREDENTIAL},
+    {IpcServiceCmRegCredChangeListener, IPC_CALL_ID_CM_REG_LISTENER},
+    {IpcServiceCmUnRegCredChangeListener, IPC_CALL_ID_CM_UNREG_LISTENER},
+    {IpcServiceCmExportCredential, IPC_CALL_ID_CM_EXPORT_CREDENTIAL},
+    {IpcServiceCmQueryCredentialByParams, IPC_CALL_ID_CM_QUERY_CREDENTIAL_BY_PARAMS},
+    {IpcServiceCmQueryCredentialByCredId, IPC_CALL_ID_CM_QUERY_CREDENTIAL_BY_CRED_ID},
+    {IpcServiceCmDeleteCredential, IPC_CALL_ID_CM_DEL_CREDENTIAL},
+    {IpcServiceCmUpdateCredInfo, IPC_CALL_ID_CM_UPDATE_CRED_INFO},
+    {IpcServiceCaAuthDevice, IPC_CALL_ID_CA_AUTH_DEVICE},
+    {IpcServiceCaProcessCredData, IPC_CALL_ID_CA_PROCESS_CRED_DATA},
+};
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DeviceAuthAbility, SA_ID_DEVAUTH_SERVICE, true);
 
@@ -68,49 +116,9 @@ __attribute__((no_sanitize("cfi"))) static uint32_t SaSetIpcCallMap(
 static int32_t SaAddMethodMap(uintptr_t ipcInstance)
 {
     uint32_t ret = 0;
-    using IpcCallMap = struct {
-        int32_t (*func)(const IpcDataInfo*, int32_t, uintptr_t);
-        uint32_t id;
-    };
-
-    IpcCallMap ipcCallMaps[] = {
-        {IpcServiceGmRegCallback, IPC_CALL_ID_REG_CB},
-        {IpcServiceGmUnRegCallback, IPC_CALL_ID_UNREG_CB},
-        {IpcServiceGmRegDataChangeListener, IPC_CALL_ID_REG_LISTENER},
-        {IpcServiceGmUnRegDataChangeListener, IPC_CALL_ID_UNREG_LISTENER},
-        {IpcServiceGmCreateGroup, IPC_CALL_ID_CREATE_GROUP},
-        {IpcServiceGmDelGroup, IPC_CALL_ID_DEL_GROUP},
-        {IpcServiceGmAddMemberToGroup, IPC_CALL_ID_ADD_GROUP_MEMBER},
-        {IpcServiceGmDelMemberFromGroup, IPC_CALL_ID_DEL_GROUP_MEMBER},
-        {IpcServiceGmAddMultiMembersToGroup, IPC_CALL_ID_ADD_MULTI_GROUP_MEMBERS},
-        {IpcServiceGmDelMultiMembersFromGroup, IPC_CALL_ID_DEL_MULTI_GROUP_MEMBERS},
-        {IpcServiceGmProcessData, IPC_CALL_ID_GM_PROC_DATA},
-        {IpcServiceGmApplyRegisterInfo, IPC_CALL_ID_APPLY_REG_INFO},
-        {IpcServiceGmCheckAccessToGroup, IPC_CALL_ID_CHECK_ACCESS_TO_GROUP},
-        {IpcServiceGmGetPkInfoList, IPC_CALL_ID_GET_PK_INFO_LIST},
-        {IpcServiceGmGetGroupInfoById, IPC_CALL_ID_GET_GROUP_INFO},
-        {IpcServiceGmGetGroupInfo, IPC_CALL_ID_SEARCH_GROUPS},
-        {IpcServiceGmGetJoinedGroups, IPC_CALL_ID_GET_JOINED_GROUPS},
-        {IpcServiceGmGetRelatedGroups, IPC_CALL_ID_GET_RELATED_GROUPS},
-        {IpcServiceGmGetDeviceInfoById, IPC_CALL_ID_GET_DEV_INFO_BY_ID},
-        {IpcServiceGmGetTrustedDevices, IPC_CALL_ID_GET_TRUST_DEVICES},
-        {IpcServiceGmIsDeviceInGroup, IPC_CALL_ID_IS_DEV_IN_GROUP},
-        {IpcServiceGmCancelRequest, IPC_CALL_GM_CANCEL_REQUEST},
-        {IpcServiceGaProcessData, IPC_CALL_ID_GA_PROC_DATA},
-        {IpcServiceGaAuthDevice, IPC_CALL_ID_AUTH_DEVICE},
-        {IpcServiceGaCancelRequest, IPC_CALL_GA_CANCEL_REQUEST},
-        {IpcServiceGaGetRealInfo, IPC_CALL_ID_GET_REAL_INFO},
-        {IpcServiceGaGetPseudonymId, IPC_CALL_ID_GET_PSEUDONYM_ID},
-        {IpcServiceDaProcessCredential, IPC_CALL_ID_PROCESS_CREDENTIAL},
-        {IpcServiceDaAuthDevice, IPC_CALL_ID_DA_AUTH_DEVICE},
-        {IpcServiceDaProcessData, IPC_CALL_ID_DA_PROC_DATA},
-        {IpcServiceDaCancelRequest, IPC_CALL_ID_DA_CANCEL_REQUEST},
-    };
-
-    for (uint32_t i = 0; i < sizeof(ipcCallMaps)/sizeof(ipcCallMaps[0]); i++) {
-        ret &= SaSetIpcCallMap(ipcInstance, ipcCallMaps[i].func, ipcCallMaps[i].id);
+    for (uint32_t i = 0; i < sizeof(g_ipcCallMaps)/sizeof(g_ipcCallMaps[0]); i++) {
+        ret &= SaSetIpcCallMap(ipcInstance, g_ipcCallMaps[i].func, g_ipcCallMaps[i].id);
     }
-
     return ret;
 }
 

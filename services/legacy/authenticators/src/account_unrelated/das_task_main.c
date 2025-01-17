@@ -518,46 +518,91 @@ static uint32_t GetPakeAlgInProtocol(int offset)
     return algInProtocol;
 }
 
+static int32_t PushISOEntity(void)
+{
+    DasProtocolEntity *protocol = (DasProtocolEntity *)HcMalloc(sizeof(DasProtocolEntity), 0);
+    if (protocol == NULL) {
+        LOGE("Malloc for Iso dasProtocolEntity failed.");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    protocol->type = ISO;
+    protocol->algInProtocol = ISO_ALG;
+    protocol->createSubTask = CreateIsoSubTask;
+    protocol->tokenManagerInstance = GetLiteTokenManagerInstance();
+    if (g_protocolEntityVec.pushBackT(&g_protocolEntityVec, (void *)protocol) == NULL) {
+        LOGE("Failed to push protocol!");
+        HcFree(protocol);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t PushPakeV1Entity(void)
+{
+    DasProtocolEntity *protocol = (DasProtocolEntity *)HcMalloc(sizeof(DasProtocolEntity), 0);
+    if (protocol == NULL) {
+        LOGE("Malloc for pake v1 dasProtocolEntity failed.");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    protocol->type = PAKE_V1;
+    protocol->algInProtocol = GetPakeAlgInProtocol(ALG_OFFSET_FOR_PAKE_V1);
+    protocol->createSubTask = CreatePakeV1SubTask;
+    protocol->tokenManagerInstance = GetStandardTokenManagerInstance();
+    if (g_protocolEntityVec.pushBackT(&g_protocolEntityVec, (void *)protocol) == NULL) {
+        LOGE("Failed to push protocol!");
+        HcFree(protocol);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t PushPakeV2Entity(void)
+{
+    DasProtocolEntity *protocol = (DasProtocolEntity *)HcMalloc(sizeof(DasProtocolEntity), 0);
+    if (protocol == NULL) {
+        LOGE("Malloc for pake v2 dasProtocolEntity failed.");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    protocol->type = PAKE_V2;
+    protocol->algInProtocol = GetPakeAlgInProtocol(ALG_OFFSET_FOR_PAKE_V2);
+    protocol->createSubTask = CreatePakeV2SubTask;
+    protocol->tokenManagerInstance = GetStandardTokenManagerInstance();
+    if (g_protocolEntityVec.pushBackT(&g_protocolEntityVec, (void *)protocol) == NULL) {
+        LOGE("Failed to push protocol!");
+        HcFree(protocol);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    return HC_SUCCESS;
+}
+
 int32_t InitDasProtocolEntities(void)
 {
     g_protocolEntityVec = CREATE_HC_VECTOR(DasProtocolEntityVec);
-    DasProtocolEntity *protocol = NULL;
-    if (IsIsoSupported() || IsSupportPakeV1() || IsSupportPakeV2()) {
-        protocol = (DasProtocolEntity *)HcMalloc(sizeof(DasProtocolEntity), 0);
-        if (IsIsoSupported()) {
-            if (protocol == NULL) {
-                LOGE("Malloc for Iso dasProtocolEntity failed.");
-                return HC_ERR_ALLOC_MEMORY;
-            }
-            protocol->type = ISO;
-            protocol->algInProtocol = ISO_ALG;
-            protocol->createSubTask = CreateIsoSubTask;
-            protocol->tokenManagerInstance = GetLiteTokenManagerInstance();
+    int32_t res = HC_ERROR;
+    if (IsIsoSupported()) {
+        res = PushISOEntity();
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to push ISO protocol!");
+            DESTROY_HC_VECTOR(DasProtocolEntityVec, &g_protocolEntityVec);
+            return res;
         }
-        if (IsSupportPakeV1()) {
-            if (protocol == NULL) {
-                LOGE("Malloc for pake v1 dasProtocolEntity failed.");
-                return HC_ERR_ALLOC_MEMORY;
-            }
-            protocol->type = PAKE_V1;
-            protocol->algInProtocol = GetPakeAlgInProtocol(ALG_OFFSET_FOR_PAKE_V1);
-            protocol->createSubTask = CreatePakeV1SubTask;
-            protocol->tokenManagerInstance = GetStandardTokenManagerInstance();
+    }
+
+    if (IsSupportPakeV1()) {
+        res = PushPakeV1Entity();
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to push PAKEV1 protocol!");
+            DESTROY_HC_VECTOR(DasProtocolEntityVec, &g_protocolEntityVec);
+            return res;
         }
-        if (IsSupportPakeV2()) {
-            if (protocol == NULL) {
-                LOGE("Malloc for pake v2 dasProtocolEntity failed.");
-                return HC_ERR_ALLOC_MEMORY;
-            }
-            protocol->type = PAKE_V2;
-            protocol->algInProtocol = GetPakeAlgInProtocol(ALG_OFFSET_FOR_PAKE_V2);
-            protocol->createSubTask = CreatePakeV2SubTask;
-            protocol->tokenManagerInstance = GetStandardTokenManagerInstance();
-        }
-        if (g_protocolEntityVec.pushBackT(&g_protocolEntityVec, (void *)protocol) == NULL) {
-            LOGE("Failed to push protocol!");
-            HcFree(protocol);
-            return HC_ERR_ALLOC_MEMORY;
+    }
+
+    if (IsSupportPakeV2()) {
+        res = PushPakeV2Entity();
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to push PAKEV2 protocol!");
+            DESTROY_HC_VECTOR(DasProtocolEntityVec, &g_protocolEntityVec);
+            return res;
         }
     }
     return HC_SUCCESS;
