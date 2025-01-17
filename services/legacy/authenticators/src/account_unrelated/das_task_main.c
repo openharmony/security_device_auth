@@ -518,7 +518,7 @@ static uint32_t GetPakeAlgInProtocol(int offset)
     return algInProtocol;
 }
 
-static int32_t PushISOEntity()
+static int32_t PushISOEntity(void)
 {
     DasProtocolEntity *protocol = (DasProtocolEntity *)HcMalloc(sizeof(DasProtocolEntity), 0);
     if (protocol == NULL) {
@@ -537,7 +537,7 @@ static int32_t PushISOEntity()
     return HC_SUCCESS;
 }
 
-static int32_t PushPakeV1Entity()
+static int32_t PushPakeV1Entity(void)
 {
     DasProtocolEntity *protocol = (DasProtocolEntity *)HcMalloc(sizeof(DasProtocolEntity), 0);
     if (protocol == NULL) {
@@ -556,7 +556,7 @@ static int32_t PushPakeV1Entity()
     return HC_SUCCESS;
 }
 
-static int32_t PushPakeV2Entity()
+static int32_t PushPakeV2Entity(void)
 {
     DasProtocolEntity *protocol = (DasProtocolEntity *)HcMalloc(sizeof(DasProtocolEntity), 0);
     if (protocol == NULL) {
@@ -586,6 +586,7 @@ int32_t InitDasProtocolEntities(void)
             return res;
         }
     }
+
     if (IsSupportPakeV1()) {
         res = PushPakeV1Entity();
         if (res != HC_SUCCESS) {
@@ -593,6 +594,7 @@ int32_t InitDasProtocolEntities(void)
             return res;
         }
     }
+
     if (IsSupportPakeV2()) {
         res = PushPakeV2Entity();
         if (res != HC_SUCCESS) {
