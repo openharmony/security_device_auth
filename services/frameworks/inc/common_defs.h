@@ -133,6 +133,7 @@
 #define FIELD_UPGRADE_FLAG "upgradeFlag"
 #define FIELD_COMMON_EVENT_NAME "commonEventName"
 #define FIELD_COMMON_EVENT_CODE "commonEventCode"
+#define FIELD_IS_SINGLE_CRED "isSingleCred"
 
 #define INVALID_MODULE_TYPE (-1)
 #define GROUP_ERR_MSG 0x8080
