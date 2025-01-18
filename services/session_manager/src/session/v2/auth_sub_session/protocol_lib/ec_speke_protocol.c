@@ -35,7 +35,6 @@
 #define EC_SPEKE_PRIVATE_KEY_OR_MASK_LOW   0x40
 
 // event field define
-#define FIELD_PROTOCOL_TYPE "protocolType"
 #define FIELD_EVENT "event"
 #define FIELD_PROTOCOL_DATA "protocolData"
 #define FIELD_ERR_CODE "errCode"

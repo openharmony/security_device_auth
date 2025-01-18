@@ -19,7 +19,7 @@
 #include "account_related_group_auth.h"
 #include "account_task_manager.h"
 #include "compatible_auth_sub_session_util.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 #include "dev_auth_module_manager.h"
 #include "group_auth_data_operation.h"
 #include "hc_log.h"

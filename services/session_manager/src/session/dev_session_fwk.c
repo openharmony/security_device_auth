@@ -25,7 +25,7 @@
 #include "compatible_sub_session.h"
 #include "compatible_bind_sub_session_util.h"
 #include "compatible_auth_sub_session_util.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 #include "dev_session_v2.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
@@ -33,10 +33,6 @@
 #include "hc_types.h"
 #include "performance_dumper.h"
 #include "hisysevent_adapter.h"
-
-#define FIELD_MSG "msg"
-#define FIELD_TYPE "type"
-#define FIELD_DATA "data"
 
 static int32_t StartV1Session(SessionImpl *impl, CJson **sendMsg)
 {
@@ -376,7 +372,7 @@ static int32_t StartSession(DevSession *self)
         bool isDirectAuth = false;
         bool isDeviceLevel = false;
         (void)GetBoolFromJson(impl->context, FIELD_IS_DIRECT_AUTH, &isDirectAuth);
-        if (!isDirectAuth) {
+        if (!isDirectAuth && !impl->isCredAuth) {
             (void)GetBoolFromJson(impl->context, FIELD_IS_DEVICE_LEVEL, &isDeviceLevel);
             res = StartV1Session(impl, &sendMsg);
             if ((res != HC_SUCCESS)
@@ -660,16 +656,18 @@ static char *GetSessionReturnData(const SessionImpl *impl)
         LOGW("allocate returnData memory fail.");
         return NULL;
     }
-    const char *groupId = GetStringFromJson(impl->context, FIELD_GROUP_ID);
-    if (groupId == NULL) {
-        LOGW("get groupId from context fail.");
-        FreeJson(returnData);
-        return NULL;
-    }
-    if (AddStringToJson(returnData, FIELD_GROUP_ID, groupId) != HC_SUCCESS) {
-        LOGW("add groupId to returnData fail.");
-        FreeJson(returnData);
-        return NULL;
+    if (!impl->isCredAuth) {
+        const char *groupId = GetStringFromJson(impl->context, FIELD_GROUP_ID);
+        if (groupId == NULL) {
+            LOGW("get groupId from context fail.");
+            FreeJson(returnData);
+            return NULL;
+        }
+        if (AddStringToJson(returnData, FIELD_GROUP_ID, groupId) != HC_SUCCESS) {
+            LOGW("add groupId to returnData fail.");
+            FreeJson(returnData);
+            return NULL;
+        }
     }
     char *returnDataStr = PackJsonToString(returnData);
     FreeJson(returnData);
@@ -764,10 +762,13 @@ static int32_t BuildDevSessionByContext(const CJson *context, SessionImpl *sessi
         LOGE("get isClient from context fail.");
         return HC_ERR_JSON_GET;
     }
+    bool isCredAuth = false;
+    (void)GetBoolFromJson(context, FIELD_IS_CRED_AUTH, &isCredAuth);
     session->base.opCode = opCode;
     session->channelType = channelType;
     session->channelId = channelId;
     session->isClient = isClient;
+    session->isCredAuth = isCredAuth;
     return HC_SUCCESS;
 }
 

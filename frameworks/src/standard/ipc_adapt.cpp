@@ -51,6 +51,7 @@ typedef struct {
     union {
         DeviceAuthCallback devAuth;
         DataChangeListener listener;
+        CredChangeListener credListener;
     } cbCtx;
     int64_t requestId;
     char appId[BUFF_MAX_SZ];
@@ -633,16 +634,62 @@ __attribute__((no_sanitize("cfi"))) static void OnTrustDevNumChangedStub(Callbac
     return;
 }
 
+__attribute__((no_sanitize("cfi"))) static void OnCredAddStub(CallbackParams params)
+{
+    char *credId = nullptr;
+    char *credInfo = nullptr;
+    void (*onCredAddHook)(char *, char *) = nullptr;
+    onCredAddHook = reinterpret_cast<void (*)(char *, char *)>(params.cbHook);
+
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_CRED_ID,
+        reinterpret_cast<uint8_t *>(&credId), nullptr);
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_CRED_INFO,
+        reinterpret_cast<uint8_t *>(&credInfo), nullptr);
+    onCredAddHook(credId, credInfo);
+    return;
+}
+
+__attribute__((no_sanitize("cfi"))) static void OnCredDeleteStub(CallbackParams params)
+{
+    char *credId = nullptr;
+    char *credInfo = nullptr;
+    void (*onCredDeleteHook)(char *, char *) = nullptr;
+    onCredDeleteHook = reinterpret_cast<void (*)(char *, char *)>(params.cbHook);
+
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_CRED_ID,
+        reinterpret_cast<uint8_t *>(&credId), nullptr);
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_CRED_INFO,
+        reinterpret_cast<uint8_t *>(&credInfo), nullptr);
+    onCredDeleteHook(credId, credInfo);
+    return;
+}
+
+__attribute__((no_sanitize("cfi"))) static void OnCredUpdateStub(CallbackParams params)
+{
+    char *credId = nullptr;
+    char *credInfo = nullptr;
+    void (*onCredUpdateHook)(char *, char *) = nullptr;
+    onCredUpdateHook = reinterpret_cast<void (*)(char *, char *)>(params.cbHook);
+
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_CRED_ID,
+        reinterpret_cast<uint8_t *>(&credId), nullptr);
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_CRED_INFO,
+        reinterpret_cast<uint8_t *>(&credInfo), nullptr);
+    onCredUpdateHook(credId, credInfo);
+    return;
+}
+
 void ProcCbHook(int32_t callbackId, uintptr_t cbHook,
     const IpcDataInfo *cbDataCache, int32_t cacheNum, uintptr_t replyCtx)
 {
     CallbackStub stubTable[] = {
         OnTransmitStub, OnSessKeyStub, OnFinishStub, OnErrorStub,
         OnRequestStub, OnGroupCreatedStub, OnGroupDeletedStub, OnDevBoundStub,
-        OnDevUnboundStub, OnDevUnTrustStub, OnDelLastGroupStub, OnTrustDevNumChangedStub
+        OnDevUnboundStub, OnDevUnTrustStub, OnDelLastGroupStub, OnTrustDevNumChangedStub,
+        OnCredAddStub, OnCredDeleteStub, OnCredUpdateStub,
     };
     MessageParcel *reply = reinterpret_cast<MessageParcel *>(replyCtx);
-    if ((callbackId < CB_ID_ON_TRANS) || (callbackId > CB_ID_ON_TRUST_DEV_NUM_CHANGED)) {
+    if ((callbackId < CB_ID_ON_TRANS) || (callbackId > CB_ID_ON_CRED_UPDATE)) {
         LOGE("Invalid call back id");
         return;
     }
@@ -672,7 +719,7 @@ static uint32_t EncodeCallData(MessageParcel &dataParcel, int32_t type, const ui
     return static_cast<uint32_t>(HC_ERROR);
 }
 
-/* group auth callback adapter */
+/* group or cred auth callback adapter */
 static bool GaCbOnTransmitWithType(int64_t requestId, const uint8_t *data, uint32_t dataLen, int32_t type)
 {
     int32_t ret = -1;
@@ -714,6 +761,11 @@ static bool TmpIpcGaCbOnTransmit(int64_t requestId, const uint8_t *data, uint32_
     return GaCbOnTransmitWithType(requestId, data, dataLen, CB_TYPE_TMP_DEV_AUTH);
 }
 
+static bool IpcCaCbOnTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
+{
+    return GaCbOnTransmitWithType(requestId, data, dataLen, CB_TYPE_CRED_DEV_AUTH);
+}
+
 static void GaCbOnSessionKeyRetWithType(int64_t requestId, const uint8_t *sessKey, uint32_t sessKeyLen, int32_t type)
 {
     uint32_t ret;
@@ -750,6 +802,12 @@ static void IpcGaCbOnSessionKeyReturned(int64_t requestId, const uint8_t *sessKe
 static void TmpIpcGaCbOnSessionKeyReturned(int64_t requestId, const uint8_t *sessKey, uint32_t sessKeyLen)
 {
     GaCbOnSessionKeyRetWithType(requestId, sessKey, sessKeyLen, CB_TYPE_TMP_DEV_AUTH);
+    return;
+}
+
+static void IpcCaCbOnSessionKeyReturned(int64_t requestId, const uint8_t *sessKey, uint32_t sessKeyLen)
+{
+    GaCbOnSessionKeyRetWithType(requestId, sessKey, sessKeyLen, CB_TYPE_CRED_DEV_AUTH);
     return;
 }
 
@@ -795,6 +853,12 @@ static void IpcGaCbOnFinish(int64_t requestId, int32_t operationCode, const char
 static void TmpIpcGaCbOnFinish(int64_t requestId, int32_t operationCode, const char *returnData)
 {
     GaCbOnFinishWithType(requestId, operationCode, returnData, CB_TYPE_TMP_DEV_AUTH);
+    return;
+}
+
+static void IpcCaCbOnFinish(int64_t requestId, int32_t operationCode, const char *returnData)
+{
+    GaCbOnFinishWithType(requestId, operationCode, returnData, CB_TYPE_CRED_DEV_AUTH);
     return;
 }
 
@@ -845,6 +909,12 @@ static void TmpIpcGaCbOnError(int64_t requestId, int32_t operationCode, int32_t 
     return;
 }
 
+static void IpcCaCbOnError(int64_t requestId, int32_t operationCode, int32_t errorCode, const char *errorReturn)
+{
+    GaCbOnErrorWithType(requestId, operationCode, errorCode, errorReturn, CB_TYPE_CRED_DEV_AUTH);
+    return;
+}
+
 static char *GaCbOnRequestWithType(int64_t requestId, int32_t operationCode, const char *reqParams, int32_t type)
 {
     int32_t ret = -1;
@@ -889,16 +959,16 @@ static char *GaCbOnRequestWithType(int64_t requestId, int32_t operationCode, con
     return nullptr;
 }
 
-static bool CanFindCbByReqId(int64_t requestId)
+static bool CanFindCbByReqId(int64_t requestId, int32_t type)
 {
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
-    IpcCallBackNode *node = GetIpcCallBackByReqId(requestId, CB_TYPE_DEV_AUTH);
+    IpcCallBackNode *node = GetIpcCallBackByReqId(requestId, type);
     return (node != nullptr) ? true : false;
 }
 
 static char *IpcGaCbOnRequest(int64_t requestId, int32_t operationCode, const char *reqParams)
 {
-    if (!CanFindCbByReqId(requestId)) {
+    if (!CanFindCbByReqId(requestId, CB_TYPE_DEV_AUTH)) {
         CJson *reqParamsJson = CreateJsonFromString(reqParams);
         if (reqParamsJson == nullptr) {
             LOGE("failed to create json from string!");
@@ -922,6 +992,29 @@ static char *IpcGaCbOnRequest(int64_t requestId, int32_t operationCode, const ch
 static char *TmpIpcGaCbOnRequest(int64_t requestId, int32_t operationCode, const char *reqParams)
 {
     return GaCbOnRequestWithType(requestId, operationCode, reqParams, CB_TYPE_TMP_DEV_AUTH);
+}
+
+static char *IpcCaCbOnRequest(int64_t requestId, int32_t operationCode, const char *reqParams)
+{
+    if (!CanFindCbByReqId(requestId, CB_TYPE_CRED_DEV_AUTH)) {
+        CJson *reqParamsJson = CreateJsonFromString(reqParams);
+        if (reqParamsJson == nullptr) {
+            LOGE("failed to create json from string!");
+            return nullptr;
+        }
+        const char *callerAppId = GetStringFromJson(reqParamsJson, FIELD_APP_ID);
+        if (callerAppId == nullptr) {
+            LOGE("failed to get appId from json object!");
+            FreeJson(reqParamsJson);
+            return nullptr;
+        }
+        int32_t ret = AddReqIdByAppId(callerAppId, requestId);
+        FreeJson(reqParamsJson);
+        if (ret != HC_SUCCESS) {
+            return nullptr;
+        }
+    }
+    return GaCbOnRequestWithType(requestId, operationCode, reqParams, CB_TYPE_CRED_DEV_AUTH);
 }
 
 namespace {
@@ -1198,6 +1291,128 @@ void IpcOnTrustedDeviceNumChanged(int32_t curTrustedDeviceNum)
     }
     return;
 }
+
+void IpcOnCredAdd(const char *credId, const char *credInfo)
+{
+    int32_t i;
+    uint32_t ret;
+    MessageParcel dataParcel;
+    MessageParcel reply;
+    CredChangeListener *listener = nullptr;
+
+    std::lock_guard<std::mutex> autoLock(g_cbListLock);
+    if (g_ipcCallBackList.ctx == nullptr) {
+        LOGE("IpcCallBackList un-initialized");
+        return;
+    }
+
+    if (credId == nullptr) {
+        LOGE("IpcOnCredAdd failed, params error");
+        return;
+    }
+    ret = EncodeCallData(dataParcel, PARAM_TYPE_CRED_ID,
+        reinterpret_cast<const uint8_t *>(credId), HcStrlen(credId) + 1);
+    ret |= EncodeCallData(dataParcel, PARAM_TYPE_CRED_INFO,
+        reinterpret_cast<const uint8_t *>(credInfo), HcStrlen(credInfo) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("IpcGaCbOnRequest, build trans data failed");
+        return;
+    }
+
+    for (i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
+        if (g_ipcCallBackList.ctx[i].cbType == CB_TYPE_CRED_LISTENER) {
+            listener = &(g_ipcCallBackList.ctx[i].cbCtx.credListener);
+            if (listener->onCredAdd == nullptr) {
+                continue;
+            }
+            ServiceDevAuth::ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_CRED_ADD,
+                false, reinterpret_cast<uintptr_t>(listener->onCredAdd), dataParcel, reply);
+        }
+    }
+    return;
+}
+
+void IpcOnCredDelete(const char *credId, const char *credInfo)
+{
+    int32_t i;
+    uint32_t ret;
+    MessageParcel dataParcel;
+    MessageParcel reply;
+    CredChangeListener *listener = nullptr;
+
+    std::lock_guard<std::mutex> autoLock(g_cbListLock);
+    if (g_ipcCallBackList.ctx == nullptr) {
+        LOGE("IpcCallBackList un-initialized");
+        return;
+    }
+
+    if (credId == nullptr) {
+        LOGE("IpcOnCredDelete failed, params error");
+        return;
+    }
+
+    ret = EncodeCallData(dataParcel, PARAM_TYPE_CRED_ID,
+        reinterpret_cast<const uint8_t *>(credId), HcStrlen(credId) + 1);
+    ret |= EncodeCallData(dataParcel, PARAM_TYPE_CRED_INFO,
+        reinterpret_cast<const uint8_t *>(credInfo), HcStrlen(credInfo) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("IpcGaCbOnRequest, build trans data failed");
+        return;
+    }
+
+    for (i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
+        if (g_ipcCallBackList.ctx[i].cbType == CB_TYPE_CRED_LISTENER) {
+            listener = &(g_ipcCallBackList.ctx[i].cbCtx.credListener);
+            if (listener->onCredDelete == nullptr) {
+                continue;
+            }
+            ServiceDevAuth::ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_CRED_DELETE,
+                false, reinterpret_cast<uintptr_t>(listener->onCredDelete), dataParcel, reply);
+        }
+    }
+    return;
+}
+
+void IpcOnCredUpdate(const char *credId, const char *credInfo)
+{
+    int32_t i;
+    uint32_t ret;
+    MessageParcel dataParcel;
+    MessageParcel reply;
+    CredChangeListener *listener = nullptr;
+
+    std::lock_guard<std::mutex> autoLock(g_cbListLock);
+    if (g_ipcCallBackList.ctx == nullptr) {
+        LOGE("IpcCallBackList un-initialized");
+        return;
+    }
+
+    if (credId == nullptr) {
+        LOGE("IpcOnCredUpdate failed, params error");
+        return;
+    }
+
+    ret = EncodeCallData(dataParcel, PARAM_TYPE_CRED_ID,
+        reinterpret_cast<const uint8_t *>(credId), HcStrlen(credId) + 1);
+    ret |= EncodeCallData(dataParcel, PARAM_TYPE_CRED_INFO,
+        reinterpret_cast<const uint8_t *>(credInfo), HcStrlen(credInfo) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("IpcGaCbOnRequest, build trans data failed");
+        return;
+    }
+
+    for (i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
+        if (g_ipcCallBackList.ctx[i].cbType == CB_TYPE_CRED_LISTENER) {
+            listener = &(g_ipcCallBackList.ctx[i].cbCtx.credListener);
+            if (listener->onCredUpdate == nullptr) {
+                continue;
+            }
+            ServiceDevAuth::ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_CRED_UPDATE,
+                false, reinterpret_cast<uintptr_t>(listener->onCredUpdate), dataParcel, reply);
+        }
+    }
+    return;
+}
 };
 
 void InitDeviceAuthCbCtx(DeviceAuthCallback *ctx, int32_t type)
@@ -1219,6 +1434,13 @@ void InitDeviceAuthCbCtx(DeviceAuthCallback *ctx, int32_t type)
         ctx->onError = TmpIpcGaCbOnError;
         ctx->onRequest = TmpIpcGaCbOnRequest;
     }
+    if (type == CB_TYPE_CRED_DEV_AUTH) {
+        ctx->onTransmit = IpcCaCbOnTransmit;
+        ctx->onSessionKeyReturned = IpcCaCbOnSessionKeyReturned;
+        ctx->onFinish = IpcCaCbOnFinish;
+        ctx->onError = IpcCaCbOnError;
+        ctx->onRequest = IpcCaCbOnRequest;
+    }
     return;
 }
 
@@ -1234,6 +1456,17 @@ void InitDevAuthListenerCbCtx(DataChangeListener *ctx)
     ctx->onDeviceNotTrusted = IpcOnDeviceNotTrusted;
     ctx->onLastGroupDeleted = IpcOnLastGroupDeleted;
     ctx->onTrustedDeviceNumChanged = IpcOnTrustedDeviceNumChanged;
+    return;
+}
+
+void InitDevAuthCredListenerCbCtx(CredChangeListener *ctx)
+{
+    if (ctx == nullptr) {
+        return;
+    }
+    ctx->onCredAdd = IpcOnCredAdd;
+    ctx->onCredDelete = IpcOnCredDelete;
+    ctx->onCredUpdate = IpcOnCredUpdate;
     return;
 }
 
@@ -1434,7 +1667,8 @@ static bool IsTypeForSettingPtr(int32_t type)
         PARAM_TYPE_GROUPID, PARAM_TYPE_UDID, PARAM_TYPE_ADD_PARAMS, PARAM_TYPE_DEL_PARAMS,
         PARAM_TYPE_QUERY_PARAMS, PARAM_TYPE_COMM_DATA, PARAM_TYPE_SESS_KEY,
         PARAM_TYPE_REQ_INFO, PARAM_TYPE_GROUP_INFO, PARAM_TYPE_AUTH_PARAMS, PARAM_TYPE_REQ_JSON,
-        PARAM_TYPE_PSEUDONYM_ID, PARAM_TYPE_INDEX_KEY, PARAM_TYPE_ERR_INFO
+        PARAM_TYPE_PSEUDONYM_ID, PARAM_TYPE_INDEX_KEY, PARAM_TYPE_ERR_INFO, PARAM_TYPE_REQUEST_PARAMS,
+        PARAM_TYPE_CRED_ID,
     };
     int32_t i;
     int32_t n = sizeof(typeList) / sizeof(typeList[0]);
@@ -1504,7 +1738,9 @@ bool IsCallbackMethod(int32_t methodId)
 {
     if ((methodId == IPC_CALL_ID_REG_CB) || (methodId == IPC_CALL_ID_REG_LISTENER) ||
         (methodId == IPC_CALL_ID_DA_AUTH_DEVICE) || (methodId == IPC_CALL_ID_DA_PROC_DATA) ||
-        (methodId == IPC_CALL_ID_GA_PROC_DATA) || (methodId == IPC_CALL_ID_AUTH_DEVICE)) {
+        (methodId == IPC_CALL_ID_GA_PROC_DATA) || (methodId == IPC_CALL_ID_AUTH_DEVICE) ||
+        (methodId == IPC_CALL_ID_CM_REG_LISTENER) || (methodId == IPC_CALL_ID_CA_AUTH_DEVICE) ||
+        (methodId == IPC_CALL_ID_CA_PROCESS_CRED_DATA)) {
         return true;
     }
     return false;

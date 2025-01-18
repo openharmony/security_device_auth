@@ -16,7 +16,7 @@
 #ifndef GROUP_AUTH_DATA_OPERATION_H
 #define GROUP_AUTH_DATA_OPERATION_H
 
-#include "data_manager.h"
+#include "group_data_manager.h"
 
 #ifdef __cplusplus
 extern "C" {

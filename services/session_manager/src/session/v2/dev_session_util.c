@@ -15,9 +15,12 @@
 
 #include "dev_session_util.h"
 
+#include <time.h>
 #include "alg_loader.h"
 #include "hc_log.h"
 #include "pseudonym_manager.h"
+
+#include "dev_session_def.h"
 
 #define AUTH_ID_LEN 32
 #define FIELD_AUTH_ID_CLIENT "authIdC"
@@ -540,4 +543,202 @@ TrustedDeviceEntry *GetDeviceEntryById(int32_t osAccountId, const char *deviceId
     }
     ClearDeviceEntryVec(&deviceEntryVec);
     return NULL;
+}
+
+int32_t BuildPeerCertInfo(const char *pkInfoStr, const char *pkInfoSignHexStr, int32_t signAlg,
+    CertInfo *peerCert)
+{
+    if ((pkInfoStr == NULL) || (pkInfoSignHexStr == NULL) || (peerCert == NULL)) {
+        LOGE("The input contains null ptr!");
+        return HC_ERR_NULL_PTR;
+    }
+    Uint8Buff pkInfoStrBuff = { (uint8_t *)pkInfoStr, HcStrlen(pkInfoStr) + 1 };
+    uint32_t pkInfoSignatureLen = HcStrlen(pkInfoSignHexStr) / BYTE_TO_HEX_OPER_LENGTH;
+    if (DeepCopyUint8Buff(&pkInfoStrBuff, &peerCert->pkInfoStr) != HC_SUCCESS) {
+        LOGE("copy pkInfoStr fail.");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (InitUint8Buff(&peerCert->pkInfoSignature, pkInfoSignatureLen) != HC_SUCCESS) {
+        LOGE("allocate pkInfoSignature memory fail.");
+        ClearFreeUint8Buff(&peerCert->pkInfoStr);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (HexStringToByte(pkInfoSignHexStr, peerCert->pkInfoSignature.val,
+        peerCert->pkInfoSignature.length) != HC_SUCCESS) {
+        LOGE("get pkInfoSignature from json fail.");
+        ClearFreeUint8Buff(&peerCert->pkInfoStr);
+        ClearFreeUint8Buff(&peerCert->pkInfoSignature);
+        return HC_ERR_JSON_ADD;
+    }
+    peerCert->signAlg = signAlg;
+    return HC_SUCCESS;
+}
+
+void DestroyCertInfo(CertInfo *certInfo)
+{
+    ClearFreeUint8Buff(&certInfo->pkInfoSignature);
+    ClearFreeUint8Buff(&certInfo->pkInfoStr);
+}
+
+int32_t GetPeerCertInfo(CJson *context, const CJson *credInfo, CertInfo *peerCert)
+{
+    if ((context == NULL) || (credInfo == NULL) || (peerCert == NULL)) {
+        LOGE("The input contains null ptr!");
+        return HC_ERR_NULL_PTR;
+    }
+    int32_t osAccountId = 0;
+    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
+    int32_t signAlg;
+    if (GetIntFromJson(credInfo, FIELD_SIGN_ALG, &signAlg) != HC_SUCCESS) {
+        LOGE("get signAlg from json fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    char *pkInfoStr = NULL;
+    int32_t res = GetRealPkInfoStr(osAccountId, credInfo, &pkInfoStr, &peerCert->isPseudonym);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get real pkInfo string!");
+        return res;
+    }
+    const char *pkInfoSignHexStr = GetStringFromJson(credInfo, FIELD_PK_INFO_SIGNATURE);
+    if (pkInfoSignHexStr == NULL) {
+        LOGE("get pkInfoSignature from json fail.");
+        HcFree(pkInfoStr);
+        return HC_ERR_JSON_GET;
+    }
+    res = BuildPeerCertInfo(pkInfoStr, pkInfoSignHexStr, signAlg, peerCert);
+    HcFree(pkInfoStr);
+    return res;
+}
+
+static int32_t GetSaltMsg(Uint8Buff *saltMsg)
+{
+    uint8_t randomVal[DEV_SESSION_SALT_LEN] = { 0 };
+    Uint8Buff random = { randomVal, DEV_SESSION_SALT_LEN };
+    int32_t res = GetLoaderInstance()->generateRandom(&random);
+    if (res != HC_SUCCESS) {
+        LOGE("generate random failed, res: %d", res);
+        return res;
+    }
+    clock_t times = 0;
+    if (memcpy_s(saltMsg->val, saltMsg->length, random.val, random.length) != EOK) {
+        LOGE("memcpy random failed.");
+        return HC_ERR_MEMORY_COPY;
+    }
+    if (memcpy_s(saltMsg->val + random.length, saltMsg->length - random.length, &times, sizeof(clock_t)) != EOK) {
+        LOGE("memcpy times failed.");
+        return HC_ERR_MEMORY_COPY;
+    }
+    return HC_SUCCESS;
+}
+
+int32_t CalSalt(Uint8Buff *salt)
+{
+    if ((salt == NULL) || (salt->val == NULL)) {
+        LOGE("The input contains null ptr!");
+        return HC_ERR_NULL_PTR;
+    }
+    uint32_t saltMsgLen = DEV_SESSION_SALT_LEN + sizeof(clock_t);
+    Uint8Buff saltMsg = { NULL, 0 };
+    if (InitUint8Buff(&saltMsg, saltMsgLen) != HC_SUCCESS) {
+        LOGE("allocate saltMsg memory fail.");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    int32_t res = GetSaltMsg(&saltMsg);
+    if (res != HC_SUCCESS) {
+        FreeUint8Buff(&saltMsg);
+        return res;
+    }
+    res = GetLoaderInstance()->sha256(&saltMsg, salt);
+    FreeUint8Buff(&saltMsg);
+    if (res != HC_SUCCESS) {
+        LOGE("sha256 for session salt failed.");
+        return res;
+    }
+    return HC_SUCCESS;
+}
+
+int32_t GetSelfUserId(int32_t osAccountId, char *userId, uint32_t userIdLen)
+{
+    if (userId == NULL) {
+        LOGE("The input is null ptr!");
+        return HC_ERR_NULL_PTR;
+    }
+    GroupEntryVec accountVec = CreateGroupEntryVec();
+    QueryGroupParams queryParams = InitQueryGroupParams();
+    queryParams.groupType = IDENTICAL_ACCOUNT_GROUP;
+    do {
+        if (QueryGroups(osAccountId, &queryParams, &accountVec) != HC_SUCCESS) {
+            LOGD("No identical-account group in db, no identical-account auth!");
+            break;
+        }
+        uint32_t index = 0;
+        TrustedGroupEntry **ptr = NULL;
+        while (index < accountVec.size(&accountVec)) {
+            ptr = accountVec.getp(&accountVec, index);
+            if ((ptr == NULL) || (*ptr == NULL)) {
+                index++;
+                continue;
+            }
+            if (memcpy_s(userId, userIdLen, StringGet(&(*ptr)->userId), StringLength(&(*ptr)->userId)) != EOK) {
+                LOGE("copy fail");
+                ClearGroupEntryVec(&accountVec);
+                return HC_ERROR;
+            }
+            index++;
+        }
+    } while (0);
+    ClearGroupEntryVec(&accountVec);
+    return HC_SUCCESS;
+}
+
+int32_t AddMsgToSessionMsg(int32_t eventType, const CJson *msg, CJson *sessionMsg)
+{
+    if ((msg == NULL) || (sessionMsg == NULL)) {
+        LOGE("The input contains null ptr!");
+        return HC_ERR_NULL_PTR;
+    }
+    CJson *event = CreateJson();
+    if (event == NULL) {
+        LOGE("allocate event memory fail.");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (AddIntToJson(event, FIELD_TYPE, eventType) != HC_SUCCESS) {
+        LOGE("add eventType to event fail.");
+        FreeJson(event);
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddObjToJson(event, FIELD_DATA, msg) != HC_SUCCESS) {
+        LOGE("add msg to event fail.");
+        FreeJson(event);
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddObjToArray(sessionMsg, event) != HC_SUCCESS) {
+        LOGE("add event to sessionMsg fail.");
+        FreeJson(event);
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
+bool IsPeerSameUserId(int32_t osAccountId, const char *peerUserId)
+{
+    if (peerUserId == NULL) {
+        LOGE("The input is null ptr!");
+        return HC_ERR_NULL_PTR;
+    }
+    GroupEntryVec groupVec = CreateGroupEntryVec();
+    QueryGroupParams queryParams = InitQueryGroupParams();
+    queryParams.groupType = IDENTICAL_ACCOUNT_GROUP;
+    if (QueryGroups(osAccountId, &queryParams, &groupVec) != HC_SUCCESS || groupVec.size(&groupVec) <= 0) {
+        LOGE("get identical account group from db fail.");
+        ClearGroupEntryVec(&groupVec);
+        return false;
+    }
+    TrustedGroupEntry *groupEntry = groupVec.get(&groupVec, 0);
+    bool isSame = (strcmp(StringGet(&(groupEntry->userId)), peerUserId) == 0);
+    ClearGroupEntryVec(&groupVec);
+    return isSame;
 }

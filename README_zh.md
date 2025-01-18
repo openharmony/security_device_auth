@@ -56,15 +56,15 @@
 │   └── os_adapter               # 系统能力适配层
 └── services                     # 设备互信认证服务层代码
     ├── frameworks               # 设备互信认证框架层代码
-    ├── data_manager             # 设备互信群组信息管理模块
-    ├── identity_manager         # 认证凭据管理模块
+    ├── data_manager             # 设备互信数据管理模块
     ├── legacy
     │   ├── authenticators       # 认证执行模块
     │   ├── group_auth           # 设备群组认证服务
     │   ├── group_manager        # 设备群组管理服务
-    ├── creds_manager            # 凭据管理模块
+    │   ├── identity_manager     # 认证凭据管理模块
+    │   └── creds_manager        # 凭据管理模块
     ├── mk_agree                 # 设备级主密钥协商
-    ├── cred_manager             # 账号凭据插件管理模块
+    ├── ext_plugin_manager       # 账号凭据插件管理模块
     ├── key_agree_sdk            # 密钥协商sdk
     ├── privacy_enhancement      # 隐私增强模块
     ├── session_manager          # 会话管理模块

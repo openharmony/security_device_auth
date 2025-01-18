@@ -27,7 +27,7 @@
 #include "json_utils.h"
 #include "alg_loader.h"
 #include "mk_agree_task.h"
-#include "cred_manager.h"
+#include "ext_plugin_manager.h"
 #include "channel_manager.h"
 #include "soft_bus_channel.h"
 #include "dev_auth_module_manager.h"
@@ -411,7 +411,7 @@ static int32_t ProcessCredTest(int32_t osAccountId, int32_t cmdId, CJson *in, CJ
 
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest008, TestSize.Level0)
 {
-    // cred_manager.c interface test
+    // ext_plugin_manager.c interface test
     int32_t res = InitCredMgr();
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcCred(0, DEFAULT_OS_ACCOUNT, 0, nullptr, nullptr);

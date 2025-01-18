@@ -17,65 +17,6 @@
 #define HUKS_ADAPTER_H
 
 #include "alg_defs.h"
-#include "hal_error.h"
-#include "hc_types.h"
-
-#define BITS_PER_BYTE 8
-#define ECC_PK_LEN 32
-
-#define CAL_ARRAY_SIZE(arr) ((sizeof(arr)) / (sizeof((arr)[0])))
-
-#define CHECK_LEN_ZERO_RETURN_ERROR_CODE(len, paramTag) \
-    do { \
-        if ((len) == 0) { \
-            LOGE("%s is invalid length.", (paramTag)); \
-            return HAL_ERR_INVALID_LEN; \
-        } \
-    } while (0)
-
-#define CHECK_PTR_RETURN_HAL_ERROR_CODE(ptr, paramTag) \
-    do { \
-        if ((ptr) == NULL) { \
-            LOGE("%s is null.", (paramTag)); \
-            return HAL_ERR_NULL_PTR; \
-        } \
-    } while (0)
-
-#define CHECK_LEN_LOWER_RETURN(len, min, paramTag) \
-    do { \
-        if ((len) < (min)) { \
-            LOGE("%s is invalid length.", (paramTag)); \
-            return HAL_ERR_INVALID_LEN; \
-        } \
-    } while (0)
-
-#define CHECK_LEN_HIGHER_RETURN(len, max, paramTag) \
-    do { \
-        if ((len) > (max)) { \
-            LOGE("%s is invalid length.", (paramTag)); \
-            return HAL_ERR_INVALID_LEN; \
-        } \
-    } while (0)
-
-#define CHECK_LEN_EQUAL_RETURN(len, value, paramTag) \
-    do { \
-        if ((len) != (value)) { \
-            LOGE("%s is invalid length.", (paramTag)); \
-            return HAL_ERR_INVALID_LEN; \
-        } \
-    } while (0)
-
-struct KeyRoleInfo {
-    uint8_t userType;
-    uint8_t pairType;
-    uint8_t reserved1;
-    uint8_t reserved2;
-};
-
-union KeyRoleInfoUnion {
-    struct KeyRoleInfo roleInfoStruct;
-    uint32_t roleInfo;
-};
 
 #ifdef __cplusplus
 extern "C" {

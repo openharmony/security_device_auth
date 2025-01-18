@@ -111,3 +111,8 @@ int32_t CheckPermission(int32_t methodId)
     }
     return HC_SUCCESS;
 }
+
+int32_t GetCallingUid(void)
+{
+    return IPCSkeleton::GetCallingUid();
+}

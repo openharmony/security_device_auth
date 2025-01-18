@@ -18,7 +18,7 @@
 
 #include "common_defs.h"
 #include "string_util.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -104,6 +104,12 @@ int32_t GetTrustedDevices(int32_t osAccountId, const char *groupId, DeviceEntryV
 TrustedGroupEntry *GetGroupEntryById(int32_t osAccountId, const char *groupId);
 TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *deviceId, bool isUdid,
     const char *groupId);
+
+int32_t AddGroupInfoToContextByDb(const char *groupId, CJson *context);
+int32_t AddDevInfoToContextByDb(const char *groupId, CJson *context);
+
+int32_t AddGroupInfoToContextByInput(const CJson *receivedMsg, CJson *context);
+int32_t AddDevInfoToContextByInput(CJson *context);
 
 #ifdef __cplusplus
 }

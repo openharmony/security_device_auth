@@ -32,6 +32,7 @@ ohos_fuzztest("CredsManagerFuzzTest") {
     "${inner_api_path}",
     "${frameworks_path}/inc/standard",
     "${tdd_framework_path}/common/inc",
+    "${dev_frameworks_path}/inc/permission_adapter",
     "${dev_frameworks_path}/inc/hiview_adapter",
   ]
   include_dirs += identity_manager_inc
@@ -57,6 +58,7 @@ ohos_fuzztest("CredsManagerFuzzTest") {
   sources += [
     "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/huks_adapter.c",
+    "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
     "${os_adapter_path}/impl/src/hc_log.c",

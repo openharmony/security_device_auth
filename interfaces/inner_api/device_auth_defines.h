@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -149,6 +149,52 @@ enum {
     HC_ERR_ADD_ACCOUNT_TASK = 0x00009007,                                 // 36871
     HC_ERR_CLIENT_CONFIRM_PROTOCOL = 0x00009008,                          // 36872
     HC_ERR_SERVER_CONFIRM_PROTOCOL = 0x00009009,                          // 36873
+
+    IS_SUCCESS = 0x00000000,                                              // 0
+    /* IS interface error */
+    IS_ERR_HUKS_GENERATE_KEY_FAILED = 0x00010001,                         // 65537
+    IS_ERR_HUKS_IMPORT_KEY_FAILED = 0x00010002,                           // 65538
+    IS_ERR_HUKS_SHA256_FAILED = 0x00010003,                               // 65539
+    IS_ERR_HUKS_DELETE_FAILED = 0x00010004,                               // 65540
+    IS_ERR_HUKS_KEY_NOT_EXIST = 0x00010005,                               // 65541
+    IS_ERR_HUKS_CHECK_KEY_EXIST_FAILED = 0x00010006,                      // 65542
+    IS_ERR_HUKS_EXPORT_KEY_FAILED = 0x00010007,                           // 65543
+    // IS_ERR_SAVE_CRED_FAILED = 0x00010008,                                 // 65544
+    IS_ERR_LOCAL_CRED_NOT_EXIST = 0x00010009,                             // 65545
+    // IS_ERR_LOCAL_CRED_DELETE_FAILED = 0x0001000A,                         // 65546
+    IS_AUTH_ERR_CLIENT_CRED_NOT_EXIST = 0x0001000B,                       // 65547
+    IS_AUTH_ERR_CLIENT_KEY_NOT_EXIST = 0x0001000C,                        // 65548
+    IS_AUTH_ERR_SERVER_CRED_NOT_EXIST = 0x0001000D,                       // 65549
+    IS_AUTH_ERR_SERVER_KEY_NOT_EXIST = 0x0001000E,                        // 65550
+    IS_AUTH_ERR_PIN_NOT_MATCH = 0x0001000F,                               // 65551
+    IS_AUTH_ERR_PROOF_NOT_MATCH = 0x00010010,                             // 65552
+
+    // IS json error
+    IS_ERR_JSON_FAILED = 0x00020001,                                      // 131073
+    IS_ERR_JSON_CREATE = 0x00020002,                                      // 131074
+    IS_ERR_JSON_GET = 0x00020003,                                         // 131075
+    IS_ERR_JSON_ADD = 0x00020004,                                         // 131076
+    IS_ERR_PACKAGE_JSON_TO_STRING_FAIL = 0x00020005,                      // 131077
+
+    // IS DB error
+    // IS_ERR_DB = 0x00030001,                                               // 196609
+    IS_ERR_BEYOND_LIMIT = 0x00030002,                                     // 196610
+    IS_ERR_OS_ACCOUNT_NOT_UNLOCKED = 0x00030003,                          // 196611
+    IS_ERR_SERVICE_NEED_RESTART = 0x00030004,                             // 196612
+
+    // IS common error
+    IS_ERROR = 0x00040001,                                                // 262145
+    IS_ERR_INVALID_PARAMS = 0x00040002,                                   // 262146
+    // IS_ERR_INVALID_LEN = 0x00040003,                                      // 262147
+    IS_ERR_NULL_PTR = 0x00040004,                                         // 262148
+    IS_ERR_ALLOC_MEMORY = 0x00040005,                                     // 262149
+    IS_ERR_MEMORY_COPY = 0x00040006,                                      // 262150
+    IS_ERR_CONVERT_FAILED = 0x00040007,                                   // 262151
+    IS_ERR_NOT_SUPPORT = 0x00040008,                                      // 262152
+    IS_ERR_INIT_FAILED = 0x00040009,                                      // 262153
+
+    // IS listener error
+    IS_ERR_LISTENER_NOT_EXIST = 0x00050001,                               // 327681
 
     /* error code used on DAS service */
     INVALID_PARAMETERS = 0xF0000001,                                      // -268435455

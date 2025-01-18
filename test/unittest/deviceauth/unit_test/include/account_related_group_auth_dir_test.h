@@ -34,7 +34,7 @@ extern "C"
 #include "hc_string.h"
 #include "group_auth_data_operation.h"
 #include "account_related_group_auth.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 
 #ifdef __cpluscplus
 }

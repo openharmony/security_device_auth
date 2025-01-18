@@ -26,6 +26,7 @@ ohos_fuzztest("DevAuthServCheckAccessToGroupFuzzTest") {
   fuzz_config_file = "${deviceauth_path}/test/fuzztest/device_auth_service/devauthservcheckaccesstogroup_fuzzer"
   include_dirs = inc_path + hals_inc_path
   include_dirs += [
+    "${dev_frameworks_path}/inc/permission_adapter",
     "${frameworks_path}/inc/standard",
     "${dev_frameworks_path}/inc/hiview_adapter",
   ]

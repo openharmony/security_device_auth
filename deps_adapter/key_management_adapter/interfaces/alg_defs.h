@@ -49,7 +49,8 @@ typedef enum {
     KEY_PURPOSE_MAC = 0,
     KEY_PURPOSE_DERIVE = 1,
     KEY_PURPOSE_SIGN_VERIFY = 2,
-    KEY_PURPOSE_KEY_AGREE = 3
+    KEY_PURPOSE_KEY_AGREE = 3,
+    KEY_PURPOSE_KEY_ENCRYPT = 4,
 } KeyPurpose;
 
 typedef enum {

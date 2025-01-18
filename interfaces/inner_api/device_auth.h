@@ -25,11 +25,15 @@
 #define DEVICE_AUTH_API_PUBLIC
 #endif
 
+#define FIELD_CREDENTIAL_VAL "credentialVal"
+#define FIELD_CREDENTIAL_OWNER "credentialOwner"
+#define FIELD_PEER_USER_SPACE_ID "peerUserSpaceId"
 #define FIELD_GROUP_ID "groupId"
 #define FIELD_GROUP_TYPE "groupType"
 #define FIELD_GROUP_NAME "groupName"
 #define FIELD_PEER_DEVICE_ID "peerDeviceId"
 #define FIELD_IS_ADMIN "isAdmin"
+#define FIELD_CRED_TYPE "credType"
 #define FIELD_CREDENTIAL_TYPE "credentialType"
 #define FIELD_IS_FORCE_DELETE "isForceDelete"
 #define FIELD_IS_IGNORE_CHANNEL "isIgnoreChannel"
@@ -74,6 +78,22 @@
 #define FIELD_PROTOCOL_EXPAND "protocolExpand"
 #define FIELD_IS_SELF_FROM_UPGRADE "isSelfFromUpgrade"
 #define FIELD_IS_PEER_FROM_UPGRADE "isPeerFromUpgrade"
+#define FIELD_IS_CRED_AUTH "isCredAuth"
+#define FIELD_CRED_ID "credId"
+#define FIELD_SELF_CRED_ID "selfCredId"
+#define FIELD_PEER_CRED_ID "peerCredId"
+#define FIELD_SELF_CREDENTIAL_OBJ "selfCredentialObject"
+#define FIELD_PEER_CREDENTIAL_OBJ "peerCredentialObject"
+#define FIELD_CREDENTIAL_FORMAT "credentialFormat"
+#define FIELD_SUBJECT "subject"
+#define FIELD_ISSUER "issuer"
+#define FIELD_KEY_FORMAT "keyFormat"
+#define FIELD_PROOF_TYPE "proofType"
+#define FIELD_ALGORITHM_TYPE "algorithmType"
+#define FIELD_CRED_OWNER "credOwner"
+#define FIELD_AUTHORIZED_ACCOUNT_LIST "authorizedAccountList"
+#define FIELD_PROTOCOL_TYPE "protocolType"
+#define FIELD_EXTEND_INFO "extendInfo"
 
 /**
  * @brief protocol expand value for bind
@@ -199,6 +219,18 @@ typedef struct {
     void (*onLastGroupDeleted)(const char *peerUdid, int groupType);
     void (*onTrustedDeviceNumChanged)(int curTrustedDeviceNum);
 } DataChangeListener;
+
+/**
+ * @brief This structure provides the ability to monitor changes in credentials.
+ */
+typedef struct {
+    /** Call it when a cred add. */
+    void (*onCredAdd)(const char *credId, const char *credInfo);
+    /** Call it when a cred is delete. */
+    void (*onCredDelete)(const char *credId, const char *credInfo);
+    /** Call it when a cred update. */
+    void (*onCredUpdate)(const char *credId, const char *credInfo);
+} CredChangeListener;
 
 /**
  * @brief This structure describes the callbacks that need to be provided by the business.
@@ -328,6 +360,18 @@ typedef enum {
     P2P_BIND,
 } AcquireType;
 
+/**
+ * @brief This structure provides all the capabilities of credential authentication.
+ */
+typedef struct {
+    /** This interface is used to process authentication data. */
+    int32_t (*processCredData)(int64_t authReqId, const uint8_t *data, uint32_t dataLen,
+        const DeviceAuthCallback *gaCallback);
+    /** This interface is used to initiate authentication between devices. */
+    int32_t (*authCredential)(int32_t osAccountId, int64_t authReqId, const char *authParams,
+        const DeviceAuthCallback *gaCallback);
+} CredAuthManager;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -431,6 +475,39 @@ DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void);
  * Otherwise, it returns NULL.
  */
 DEVICE_AUTH_API_PUBLIC const DeviceGroupManager *GetGmInstance(void);
+
+typedef struct {
+    int32_t (*addCredential)(int32_t osAccountId, const char *requestParams, char **returnData);
+
+    int32_t (*exportCredential)(int32_t osAccountId, const char *credId, char **returnData);
+
+    int32_t (*queryCredentialByParams)(int32_t osAccountId, const char *requestParams, char **returnData);
+
+    int32_t (*queryCredInfoByCredId)(int32_t osAccountId, const char *credId, char **returnData);
+
+    int32_t (*deleteCredential)(int32_t osAccountId, const char *appId, const char *credId);
+
+    int32_t (*updateCredInfo)(int32_t osAccountId, const char *appId, const char *credId, const char *requestParams);
+
+    int32_t (*registerChangeListener)(const char *appId, CredChangeListener *listener);
+
+    int32_t (*unregisterChangeListener)(const char *appId);
+
+    void (*destroyInfo)(char **returnData);
+} CredManager;
+
+DEVICE_AUTH_API_PUBLIC const CredManager *GetCredMgrInstance(void);
+
+/**
+ * @brief Get credential authentication instance.
+ *
+ * This API is used to get credential authentication instance.
+ * The InitDeviceAuthService function must be called before using this method.
+ *
+ * @return When the method call result is successful, it returns CredAuthManager instance.
+ * Otherwise, it returns NULL.
+ */
+DEVICE_AUTH_API_PUBLIC const CredAuthManager *GetCredAuthInstance(void);
 
 #ifdef __cplusplus
 }

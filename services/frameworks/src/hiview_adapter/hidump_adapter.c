@@ -18,6 +18,7 @@
 #include "string.h"
 
 static DumpCallBack g_dumpCallBack = NULL;
+static CredDumpCallBack g_credDumpCallBack = NULL;
 static PerformanceDumpCallBack g_performDumpCallback = NULL;
 
 static void DumpByArgs(int fd, StringVector *strArgVec)
@@ -42,6 +43,9 @@ void DevAuthDump(int fd, StringVector *strArgVec)
         if (g_dumpCallBack != NULL) {
             g_dumpCallBack(fd);
         }
+        if (g_credDumpCallBack != NULL) {
+            g_credDumpCallBack(fd);
+        }
     } else {
         DumpByArgs(fd, strArgVec);
     }
@@ -50,6 +54,11 @@ void DevAuthDump(int fd, StringVector *strArgVec)
 void RegisterDumpFunc(DumpCallBack func)
 {
     g_dumpCallBack = func;
+}
+
+void RegisterCredDumpFunc(CredDumpCallBack func)
+{
+    g_credDumpCallBack = func;
 }
 
 void RegisterPerformDumpFunc(PerformanceDumpCallBack func)

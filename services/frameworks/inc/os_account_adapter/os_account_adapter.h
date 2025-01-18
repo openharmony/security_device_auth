@@ -27,7 +27,8 @@ typedef enum {
     GROUP_DATA_CALLBACK = 0,
     ASY_TOKEN_DATA_CALLBACK,
     SYM_TOKEN_DATA_CALLBACK,
-    PSEUDONYM_DATA_CALLBACK
+    PSEUDONYM_DATA_CALLBACK,
+    CRED_DATA_CALLBACK
 } EventCallbackId;
 
 typedef void (*OsAccountCallbackFunc)(int32_t osAccountId);

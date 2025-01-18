@@ -18,7 +18,7 @@
 
 #include <stddef.h>
 #include "cred_plugin_def.h"
-#include "cred_manager.h"
+#include "ext_plugin_manager.h"
 #include "dev_auth_dynamic_load.h"
 #include "dev_auth_module_manager.h"
 #include "device_auth_defines.h"

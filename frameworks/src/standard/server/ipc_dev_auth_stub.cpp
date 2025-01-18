@@ -29,7 +29,7 @@
 
 #ifdef DEV_AUTH_SERVICE_BUILD
 #include "account_task_manager.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 #include "hisysevent_adapter.h"
 #endif
 

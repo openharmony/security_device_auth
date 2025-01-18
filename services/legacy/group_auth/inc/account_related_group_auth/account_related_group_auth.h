@@ -18,7 +18,7 @@
 
 #include <stdint.h>
 #include "base_group_auth.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 
 typedef void (*GetAccountCandidateGroupFunc)(int32_t osAccountId, const CJson *param,
     QueryGroupParams *queryParams, GroupEntryVec *vec);

@@ -16,13 +16,14 @@
 #ifndef PERMISSION_ADAPTER_H
 #define PERMISSION_ADAPTER_H
 
-#include <cstdint>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 int32_t CheckPermission(int32_t methodId);
+int32_t GetCallingUid(void);
 
 #ifdef __cplusplus
 }

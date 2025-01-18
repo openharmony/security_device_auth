@@ -17,7 +17,7 @@
 #define BASE_GROUP_AUTH_H
 
 #include <stdint.h>
-#include "data_manager.h"
+#include "group_data_manager.h"
 #include "compatible_auth_sub_session_defines.h"
 #include "device_auth.h"
 #include "json_utils.h"

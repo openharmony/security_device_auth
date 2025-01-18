@@ -41,7 +41,6 @@
 #define FIELD_TOKEN_SERVER "tokenS"
 #define FIELD_AUTH_RESULT_MAC "authResultMac"
 
-#define FIELD_PROTOCOL_TYPE "protocolType"
 #define FIELD_EVENT "event"
 #define FIELD_PROTOCOL_DATA "protocolData"
 #define FIELD_ERR_CODE "errCode"

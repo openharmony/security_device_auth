@@ -17,7 +17,7 @@
 #define DEV_SESSION_UTIL_H
 
 #include "identity_defines.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 #include "json_utils.h"
 
 #ifdef __cplusplus
@@ -34,6 +34,14 @@ int32_t GetRealPkInfoStr(int32_t osAccountId, const CJson *credInfo, char **retu
 int32_t AddPkInfoWithPdid(const CJson *context, CJson *credInfo, const char *realPkInfoStr);
 TrustedDeviceEntry *GetDeviceEntryById(int32_t osAccountId, const char *deviceId, bool isUdid,
     const char *groupId);
+int32_t BuildPeerCertInfo(const char *pkInfoStr, const char *pkInfoSignHexStr, int32_t signAlg,
+    CertInfo *peerCert);
+void DestroyCertInfo(CertInfo *certInfo);
+int32_t GetPeerCertInfo(CJson *context, const CJson *credInfo, CertInfo *peerCert);
+int32_t CalSalt(Uint8Buff *salt);
+int32_t GetSelfUserId(int32_t osAccountId, char *userId, uint32_t userIdLen);
+int32_t AddMsgToSessionMsg(int32_t eventType, const CJson *msg, CJson *sessionMsg);
+bool IsPeerSameUserId(int32_t osAccountId, const char *peerUserId);
 
 #ifdef __cplusplus
 }

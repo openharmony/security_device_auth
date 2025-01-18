@@ -18,7 +18,7 @@
 #include "alg_defs.h"
 #include "callback_manager.h"
 #include "channel_manager.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 #include "dev_auth_module_manager.h"
 #include "group_operation_common.h"
 #include "hc_dev_info.h"

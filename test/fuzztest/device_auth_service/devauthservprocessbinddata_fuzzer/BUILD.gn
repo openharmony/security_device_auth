@@ -27,6 +27,7 @@ ohos_fuzztest("DevAuthServProcessBindDataFuzzTest") {
   include_dirs = inc_path + hals_inc_path
   include_dirs += [
     "${frameworks_path}/inc/standard",
+    "${dev_frameworks_path}/inc/permission_adapter",
     "${dev_frameworks_path}/inc/hiview_adapter",
   ]
   sources = [ "devauthservprocessbinddata_fuzzer.cpp" ]

@@ -126,6 +126,15 @@ static int32_t InitAccountLifecyclePluginCtx(void)
         g_accountPluginCtx = NULL;
         return HC_ERR_INVALID_PARAMS;
     }
+
+    const CredManager *cmInstace = GetCredMgrInstance();
+    if (cmInstace == NULL) {
+        LOGE("[ACCOUNT_LIFE_PLUGIN]: Cm instance is null.");
+        HcFree(g_accountPluginCtx);
+        g_accountPluginCtx = NULL;
+        return HC_ERR_INVALID_PARAMS;
+    }
+
     g_accountPluginCtx->createGroup = gmInstace->createGroup;
     g_accountPluginCtx->deleteGroup = gmInstace->deleteGroup;
     g_accountPluginCtx->getGroupInfo = gmInstace->getGroupInfo;
@@ -135,6 +144,11 @@ static int32_t InitAccountLifecyclePluginCtx(void)
     g_accountPluginCtx->executeWorkerTask = ExecuteWorkerTask;
     g_accountPluginCtx->notifyAsyncTaskStart = NotifyAsyncTaskStart;
     g_accountPluginCtx->notifyAsyncTaskStop = NotifyAsyncTaskStop;
+    g_accountPluginCtx->addCredential = cmInstace->addCredential;
+    g_accountPluginCtx->exportCredential = cmInstace->exportCredential;
+    g_accountPluginCtx->deleteCredential = cmInstace->deleteCredential;
+    g_accountPluginCtx->updateCredInfo = cmInstace->updateCredInfo;
+    g_accountPluginCtx->queryCredInfoByCredId = cmInstace->queryCredInfoByCredId;
     return HC_SUCCESS;
 }
 

@@ -305,6 +305,38 @@ int32_t GetUnsignedIntFromJson(const CJson *jsonObj, const char *key, uint32_t *
     return CLIB_ERR_JSON_GET;
 }
 
+int32_t GetUint8FromJson(const CJson *jsonObj, const char *key, uint8_t *value)
+{
+    if (jsonObj == NULL || key == NULL || value == NULL) {
+        return CLIB_ERR_NULL_PTR;
+    }
+
+    cJSON *jsonObjTmp = cJSON_GetObjectItemCaseSensitive(jsonObj, key);
+    if (jsonObjTmp != NULL && cJSON_IsNumber(jsonObjTmp)) {
+        double realValue = cJSON_GetNumberValue(jsonObjTmp);
+        if (realValue < 0) {
+            int8_t tmpValue = (int8_t)realValue;
+            *value = (uint8_t)tmpValue;
+        } else {
+            *value = (uint8_t)realValue;
+        }
+        return CLIB_SUCCESS;
+    }
+
+    int len = cJSON_GetArraySize(jsonObj);
+    for (int i = 0; i < len; i++) {
+        cJSON *item = cJSON_GetArrayItem(jsonObj, i);
+        if (cJSON_IsObject(item)) {
+            int8_t ret = GetUint8FromJson(item, key, value);
+            if (ret == CLIB_SUCCESS) {
+                return ret;
+            }
+        }
+    }
+
+    return CLIB_ERR_JSON_GET;
+}
+
 int32_t GetInt64FromJson(const CJson *jsonObj, const char *key, int64_t *value)
 {
     const char *str = GetStringFromJson(jsonObj, key);

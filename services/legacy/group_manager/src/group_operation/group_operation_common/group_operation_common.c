@@ -17,10 +17,9 @@
 
 #include "alg_loader.h"
 #include "string_util.h"
-#include "data_manager.h"
+#include "group_data_manager.h"
 #include "dev_auth_module_manager.h"
 #include "device_auth_defines.h"
-#include "group_operation.h"
 #include "hal_error.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
@@ -1130,4 +1129,125 @@ int32_t GetHashResult(const uint8_t *info, uint32_t infoLen, char *hash, uint32_
     HcFree(infoHash.val);
     HcFree(message.val);
     return result;
+}
+
+int32_t AddGroupInfoToContextByDb(const char *groupId, CJson *context)
+{
+    int32_t osAccountId;
+    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("get osAccountId from json fail.");
+        return HC_ERR_JSON_GET;
+    }
+    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
+    if (entry == NULL) {
+        LOGE("Failed to get groupEntry from db!");
+        return HC_ERR_DB;
+    }
+    if (AddStringToJson(context, FIELD_GROUP_ID, StringGet(&entry->id)) != HC_SUCCESS) {
+        LOGE("Failed to add groupId to json!");
+        DestroyGroupEntry(entry);
+        return HC_ERR_JSON_FAIL;
+    }
+    if (AddIntToJson(context, FIELD_GROUP_TYPE, entry->type) != HC_SUCCESS) {
+        LOGE("Failed to add groupType to json!");
+        DestroyGroupEntry(entry);
+        return HC_ERR_JSON_FAIL;
+    }
+    if (AddStringToJson(context, FIELD_GROUP_NAME, StringGet(&entry->name)) != HC_SUCCESS) {
+        LOGE("Failed to add groupName to json!");
+        DestroyGroupEntry(entry);
+        return HC_ERR_JSON_FAIL;
+    }
+    DestroyGroupEntry(entry);
+    return HC_SUCCESS;
+}
+
+int32_t AddDevInfoToContextByDb(const char *groupId, CJson *context)
+{
+    int32_t osAccountId;
+    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("get osAccountId from json fail.");
+        return HC_ERR_JSON_GET;
+    }
+    char udid[INPUT_UDID_LEN] = { 0 };
+    int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get local udid! res: %d", res);
+        return HC_ERR_DB;
+    }
+    TrustedDeviceEntry *devAuthParams = CreateDeviceEntry();
+    if (devAuthParams == NULL) {
+        LOGE("Failed to allocate devEntry memory!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (GetTrustedDevInfoById(osAccountId, udid, true, groupId, devAuthParams) != HC_SUCCESS) {
+        LOGE("Failed to obtain the local device information from the database!");
+        DestroyDeviceEntry(devAuthParams);
+        return HC_ERR_DB;
+    }
+    if (AddStringToJson(context, FIELD_AUTH_ID, StringGet(&devAuthParams->authId)) != HC_SUCCESS) {
+        LOGE("Failed to add authId to params!");
+        DestroyDeviceEntry(devAuthParams);
+        return HC_ERR_JSON_FAIL;
+    }
+    if (AddIntToJson(context, FIELD_USER_TYPE, devAuthParams->devType) != HC_SUCCESS) {
+        LOGE("Failed to add userType to params!");
+        DestroyDeviceEntry(devAuthParams);
+        return HC_ERR_JSON_FAIL;
+    }
+    DestroyDeviceEntry(devAuthParams);
+    return HC_SUCCESS;
+}
+
+int32_t AddGroupInfoToContextByInput(const CJson *receivedMsg, CJson *context)
+{
+    const char *groupId = GetStringFromJson(receivedMsg, FIELD_GROUP_ID);
+    if (groupId == NULL) {
+        LOGE("get groupId from json fail.");
+        return HC_ERR_JSON_GET;
+    }
+    const char *groupName = GetStringFromJson(receivedMsg, FIELD_GROUP_NAME);
+    if (groupName == NULL) {
+        LOGE("Failed to get groupName from jsonParams!");
+        return HC_ERR_JSON_GET;
+    }
+    if (AddStringToJson(context, FIELD_GROUP_ID, groupId) != HC_SUCCESS) {
+        LOGE("Failed to add groupId to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    if (AddIntToJson(context, FIELD_GROUP_TYPE, PEER_TO_PEER_GROUP) != HC_SUCCESS) {
+        LOGE("Failed to add groupType to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    if (AddStringToJson(context, FIELD_GROUP_NAME, groupName) != HC_SUCCESS) {
+        LOGE("Failed to add groupName to json!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
+int32_t AddDevInfoToContextByInput(CJson *context)
+{
+    int32_t userType = DEVICE_TYPE_ACCESSORY;
+    (void)GetIntFromJson(context, FIELD_USER_TYPE, &userType);
+    const char *authId = GetStringFromJson(context, FIELD_DEVICE_ID);
+    char udid[INPUT_UDID_LEN] = { 0 };
+    if (authId == NULL) {
+        LOGD("No authId is found. The default value is udid!");
+        int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to get local udid! res: %d", res);
+            return HC_ERR_DB;
+        }
+        authId = udid;
+    }
+    if (AddStringToJson(context, FIELD_AUTH_ID, authId) != HC_SUCCESS) {
+        LOGE("Failed to add authId to params!");
+        return HC_ERR_JSON_FAIL;
+    }
+    if (AddIntToJson(context, FIELD_USER_TYPE, userType) != HC_SUCCESS) {
+        LOGE("Failed to add userType to params!");
+        return HC_ERR_JSON_FAIL;
+    }
+    return HC_SUCCESS;
 }
