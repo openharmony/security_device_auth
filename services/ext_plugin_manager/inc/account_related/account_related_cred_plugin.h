@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ACCOUNT_RELATED_EXT_PLUGIN_MANAGER_H
-#define ACCOUNT_RELATED_EXT_PLUGIN_MANAGER_H
+#ifndef ACCOUNT_RELATED_CRED_PLUGIN_H
+#define ACCOUNT_RELATED_CRED_PLUGIN_H
 
 #include <stdbool.h>
 #include "cred_plugin_def.h"

@@ -436,7 +436,11 @@ static int32_t GetAccountAsymIdentityInfo(
 #else
     (void)isNeedGeneratePdid;
 #endif
-    info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&ecSpekeEntity);
+    if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&ecSpekeEntity) == NULL) {
+        LOGE("Failed to push ecSpeke entity!");
+        HcFree(ecSpekeEntity);
+        return HC_ERR_ALLOC_MEMORY;
+    }
 #else
     (void)isNeedGeneratePdid;
 #endif
