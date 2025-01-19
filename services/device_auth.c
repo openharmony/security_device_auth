@@ -1900,13 +1900,12 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
         LOGI("[End]: [Service]: The service has not been initialized!");
         return;
     }
-    DestroyOsAccountAdapter();
-    DestroyAccountTaskManager();
     DestroyTaskManager();
     DestroyDevSessionManager();
     DestroyGroupManager();
     DestroyIdentityService();
     DestroyGmAndGa();
+    DestroyAccountTaskManager();
     DestroyCa();
     DestroyCredentialMgr();
     DestroyModules();
@@ -1915,6 +1914,7 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
     DestroyCallbackManager();
     DESTROY_PERFORMANCE_DUMPER();
     DestroyPseudonymManager();
+    DestroyOsAccountAdapter();
     SetDeInitStatus();
     LOGI("[End]: [Service]: Destroy device auth service successfully!");
 }

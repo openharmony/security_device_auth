@@ -28,6 +28,44 @@
 
 #include "identity_operation.h"
 
+static int32_t AddCredentialImplInner(int32_t osAccountId, CJson *reqJson, Credential *credential,
+    char **returnData)
+{
+    uint8_t method = DEFAULT_VAL;
+    Uint8Buff keyValue = { NULL, 0 };
+    char *credIdStr = NULL;
+    int32_t ret = CheckAndSetCredInfo(credential, reqJson, osAccountId, &method, &keyValue);
+    if (ret != IS_SUCCESS) {
+        return ret;
+    }
+    uint8_t credIdByteVal[SHA256_LEN] = { 0 };
+    Uint8Buff credIdByte = { credIdByteVal, sizeof(credIdByteVal) };
+    if ((ret = GenerateCredId(credential, osAccountId, &credIdByte, &credIdStr)) != IS_SUCCESS) {
+        HcFree(keyValue.val);
+        return ret;
+    }
+    if ((ret = AddKeyValueToHuks(credIdByte, credential, osAccountId, method, &keyValue)) != IS_SUCCESS) {
+        HcFree(keyValue.val);
+        HcFree(credIdStr);
+        return ret;
+    }
+    HcFree(keyValue.val);
+    if ((ret = AddCredAndSaveDb(osAccountId, credential)) != IS_SUCCESS) {
+        HcFree(credIdStr);
+        if (GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId) != IS_SUCCESS) {
+            LOGE("Failed to delete key from HUKS");
+        }
+        return ret;
+    }
+    if (DeepCopyString(credIdStr, returnData) != EOK) {
+        LOGE("Failed to return credId");
+        HcFree(credIdStr);
+        return IS_ERR_MEMORY_COPY;
+    }
+    HcFree(credIdStr);
+    return IS_SUCCESS;
+}
+
 int32_t AddCredentialImpl(int32_t osAccountId, const char *requestParams, char **returnData)
 {
     CJson *reqJson = CreateJsonFromString(requestParams);
@@ -41,45 +79,10 @@ int32_t AddCredentialImpl(int32_t osAccountId, const char *requestParams, char *
         FreeJson(reqJson);
         return IS_ERR_ALLOC_MEMORY;
     }
-    uint8_t method = DEFAULT_VAL;
-    Uint8Buff keyValue = { NULL, 0 };
-    char *credIdStr = NULL;
-    int32_t ret = CheckAndSetCredInfo(credential, reqJson, osAccountId, &method, &keyValue);
+    int32_t ret = AddCredentialImplInner(osAccountId, reqJson, credential, returnData);
     FreeJson(reqJson);
-    if (ret != IS_SUCCESS) {
-        DestroyCredential(credential);
-        return ret;
-    }
-    uint8_t credIdByteVal[SHA256_LEN] = { 0 };
-    Uint8Buff credIdByte = { credIdByteVal, sizeof(credIdByteVal) };
-    if ((ret = GenerateCredId(credential, osAccountId, &credIdByte, &credIdStr)) != IS_SUCCESS) {
-        HcFree(keyValue.val);
-        DestroyCredential(credential);
-        return ret;
-    }
-    if ((ret = AddKeyValueToHuks(credIdByte, credential, osAccountId, method, &keyValue)) != IS_SUCCESS) {
-        HcFree(keyValue.val);
-        HcFree(credIdStr);
-        DestroyCredential(credential);
-        return ret;
-    }
-    HcFree(keyValue.val);
-    if ((ret = AddCredAndSaveDb(osAccountId, credential)) != IS_SUCCESS) {
-        HcFree(credIdStr);
-        DestroyCredential(credential);
-        if (GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId) != IS_SUCCESS) {
-            LOGE("Failed to delete key from HUKS");
-        }
-        return ret;
-    }
     DestroyCredential(credential);
-    if (DeepCopyString(credIdStr, returnData) != EOK) {
-        LOGE("Failed to return credId");
-        HcFree(credIdStr);
-        return IS_ERR_MEMORY_COPY;
-    }
-    HcFree(credIdStr);
-    return IS_SUCCESS;
+    return ret;
 }
 
 int32_t ExportCredentialImpl(int32_t osAccountId, const char *credId, char **returnData)
