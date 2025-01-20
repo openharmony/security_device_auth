@@ -305,7 +305,7 @@ static int32_t GetCertInfoIS(int32_t osAccountId, const CJson *credAuthInfo, Cer
         LOGE("unsupport algorithm type!");
         return ret;
     }
-    certInfo->isPseudonym = true;
+    certInfo->isPseudonym = false;
     return IS_SUCCESS;
 }
 
