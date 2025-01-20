@@ -1261,22 +1261,22 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest027, TestSize.Level0)
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest028, TestSize.Level0)
 {
     // dev_session_util.c interface test
-    int32_t res = AddPkInfoWithPdid(nullptr, nullptr, nullptr);
+    int32_t res = AddPkInfoWithPdid(nullptr, nullptr, false, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
     CJson *context = CreateJson();
-    res = AddPkInfoWithPdid(context, nullptr, nullptr);
+    res = AddPkInfoWithPdid(context, nullptr, false, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
     CJson *credJson = CreateJson();
-    res = AddPkInfoWithPdid(context, credJson, nullptr);
+    res = AddPkInfoWithPdid(context, credJson, false, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
-    res = AddPkInfoWithPdid(context, credJson, "TestRealPkInfo");
+    res = AddPkInfoWithPdid(context, credJson, false, "TestRealPkInfo");
     ASSERT_NE(res, HC_SUCCESS);
     CJson *realPkInfoJson = CreateJson();
     (void)AddStringToJson(realPkInfoJson, FIELD_USER_ID, TEST_GROUP_ID);
     (void)AddStringToJson(realPkInfoJson, FIELD_DEVICE_ID, TEST_AUTH_ID);
     char *realPkInfoStr = PackJsonToString(realPkInfoJson);
     FreeJson(realPkInfoJson);
-    res = AddPkInfoWithPdid(context, credJson, realPkInfoStr);
+    res = AddPkInfoWithPdid(context, credJson, false, realPkInfoStr);
     FreeJsonString(realPkInfoStr);
     ASSERT_NE(res, HC_SUCCESS);
     FreeJson(context);
