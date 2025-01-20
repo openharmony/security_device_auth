@@ -513,7 +513,8 @@ int32_t GetRealPkInfoStr(int32_t osAccountId, const CJson *credInfo, char **retu
     }
 }
 
-int32_t AddPkInfoWithPdid(const CJson *context, CJson *credInfo, bool isCredAuth, const char *realPkInfoStr)
+int32_t AddPkInfoWithPdid(const CJson *context, CJson *credInfo, bool isCredAuth,
+    const char *realPkInfoStr)
 {
     if (context == NULL || credInfo == NULL || realPkInfoStr == NULL) {
         LOGE("Invalid input params!");
