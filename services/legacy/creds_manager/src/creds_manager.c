@@ -300,7 +300,7 @@ static int32_t GetCertInfoIS(int32_t osAccountId, const CJson *credAuthInfo, Cer
         LOGE("Failed to get algorithm type!");
         return IS_ERR_JSON_GET;
     }
-    ret = ConvertISAlgToCertAlg(sigAlg, &certInfo->signAlg);
+    ret = ConvertISAlgToCertAlg(signAlg, &certInfo->signAlg);
     if (ret != IS_SUCCESS) {
         LOGE("unsupport algorithm type!");
         return ret;

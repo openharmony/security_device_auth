@@ -48,7 +48,7 @@ static TrustedDeviceEntry *GetPeerDeviceEntryByContext(int32_t osAccountId, cons
     return GetDeviceEntryById(osAccountId, peerDeviceId, isUdid, groupId);
 }
 
-static int32_t GetUserIdByGroup(const CJson *context, int32_t osAccountId, const char **returnUserId)
+static int32_t GetUserIdByGroup(const CJson *context, int32_t osAccountId, char **returnUserId)
 {
     TrustedDeviceEntry *deviceEntry = GetPeerDeviceEntryByContext(osAccountId, context);
     if (deviceEntry == NULL) {
@@ -61,12 +61,15 @@ static int32_t GetUserIdByGroup(const CJson *context, int32_t osAccountId, const
         DestroyDeviceEntry(deviceEntry);
         return HC_ERR_NULL_PTR;
     }
-    *returnUserId = userId;
+    if (DeepCopyString(userId, returnUserId) != HC_SUCCESS) {
+        LOGE("Failed to copy userId!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
     DestroyDeviceEntry(deviceEntry);
     return HC_SUCCESS;
 }
 
-static int32_t GetUserIdByISInfo(const CJson *context, const char **returnUserId)
+static int32_t GetUserIdByISInfo(const CJson *context, char **returnUserId)
 {
     CJson *credAuthInfo = GetObjFromJson(context, FIELD_SELF_CREDENTIAL_OBJ);
     if (credAuthInfo == NULL) {
@@ -78,7 +81,10 @@ static int32_t GetUserIdByISInfo(const CJson *context, const char **returnUserId
         LOGE("Failed to get user ID!");
         return IS_ERR_JSON_GET;
     }
-    *returnUserId = userId;
+    if (DeepCopyString(userId, returnUserId) != HC_SUCCESS) {
+        LOGE("Failed to copy userId!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
     return IS_SUCCESS;
 }
 
@@ -89,7 +95,7 @@ static int32_t GetPdidByContext(const CJson *context, bool isCredAuth, char **re
         LOGE("Failed to get osAccountId!");
         return HC_ERR_JSON_GET;
     }
-    const char *userId = NULL;
+    char *userId = NULL;
     int32_t res = isCredAuth? GetUserIdByISInfo(context, &userId)
         : GetUserIdByGroup(context, osAccountId, &userId);
     if (res != HC_SUCCESS) {
@@ -99,10 +105,12 @@ static int32_t GetPdidByContext(const CJson *context, bool isCredAuth, char **re
     PseudonymManager *manager = GetPseudonymInstance();
     if (manager == NULL) {
         LOGE("Pseudonym manager is null!");
+        HcFree(userId);
         return HC_ERR_NULL_PTR;
     }
     char *pdid = NULL;
     res = manager->getPseudonymId(osAccountId, userId, &pdid);
+    HcFree(userId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to get pdid!");
         return res;
