@@ -25,14 +25,14 @@
 static bool IsDirectAuth(const CJson *context)
 {
     bool isDirectAuth = false;
-    (void)GetBoolFromJson(context, FIELD_IS_DIRECT_AUTH, &isDirectAuth);
+    (void)GetBoolFromJson(context, FIELD_HC_DIRECT_AUTH, &isDirectAuth);
     return isDirectAuth;
 }
 
 static bool IsDeviceLevelAuth(const CJson *context)
 {
     bool isDeviceLevel = false;
-    (void)GetBoolFromJson(context, FIELD_IS_DEVICE_LEVEL, &isDeviceLevel);
+    (void)GetBoolFromJson(context, FIELD_HC_DEVICE_LEVEL, &isDeviceLevel);
     return isDeviceLevel;
 }
 
@@ -247,21 +247,21 @@ static int32_t ConvertISProofTypeToCertType(uint32_t protocolType, IdentityProof
 {
     if (protocolType == PROOF_TYPE_PSK) {
         *returnType = PRE_SHARED;
-        return IS_SUCCESS;
+        return HC_SUCCESS;
     } else if (protocolType == PROOF_TYPE_PKI) {
         *returnType = CERTIFICATED;
-        return IS_SUCCESS;
+        return HC_SUCCESS;
     }
-    return IS_ERR_NOT_SUPPORT;
+    return HC_ERR_NOT_SUPPORT;
 }
 
 static int32_t ConvertISAlgToCertAlg(uint32_t alg, Algorithm *returnAlg)
 {
     if (alg == ALGO_TYPE_P256) {
         *returnAlg = P256;
-        return IS_SUCCESS;
+        return HC_SUCCESS;
     }
-    return IS_ERR_NOT_SUPPORT;
+    return HC_ERR_NOT_SUPPORT;
 }
 
 static int32_t GetCertInfoIS(int32_t osAccountId, const CJson *credAuthInfo, CertInfo *certInfo)
@@ -269,44 +269,44 @@ static int32_t GetCertInfoIS(int32_t osAccountId, const CJson *credAuthInfo, Cer
     const char *userId = GetStringFromJson(credAuthInfo, FIELD_USER_ID);
     if (userId == NULL) {
         LOGE("Failed to get user ID!");
-        return IS_ERR_JSON_GET;
+        return HC_ERR_JSON_GET;
     }
 
     const char *authId = GetStringFromJson(credAuthInfo, FIELD_DEVICE_ID);
     if (authId == NULL) {
         LOGE("Failed to get auth ID!");
-        return IS_ERR_JSON_GET;
+        return HC_ERR_JSON_GET;
     }
 
     AccountToken *token = CreateAccountToken();
     if (token == NULL) {
         LOGE("Failed to create account token!");
-        return IS_ERR_ALLOC_MEMORY;
+        return HC_ERR_ALLOC_MEMORY;
     }
     int32_t ret = GetAccountAuthTokenManager()->getToken(osAccountId, token, userId, authId);
-    if (ret != IS_SUCCESS) {
+    if (ret != HC_SUCCESS) {
         LOGE("Failed to get account token!");
         DestroyAccountToken(token);
         return ret;
     }
     ret = GenerateCertInfo(&token->pkInfoStr, &token->pkInfoSignature, certInfo);
     DestroyAccountToken(token);
-    if (ret != IS_SUCCESS) {
+    if (ret != HC_SUCCESS) {
         LOGE("Failed to generate cert info!");
         return ret;
     }
     uint32_t signAlg = 0;
-    if (GetUnsignedIntFromJson(credAuthInfo, FIELD_ALGORITHM_TYPE, &signAlg) != IS_SUCCESS) {
+    if (GetUnsignedIntFromJson(credAuthInfo, FIELD_ALGORITHM_TYPE, &signAlg) != HC_SUCCESS) {
         LOGE("Failed to get algorithm type!");
-        return IS_ERR_JSON_GET;
+        return HC_ERR_JSON_GET;
     }
     ret = ConvertISAlgToCertAlg(signAlg, &certInfo->signAlg);
-    if (ret != IS_SUCCESS) {
+    if (ret != HC_SUCCESS) {
         LOGE("unsupport algorithm type!");
         return ret;
     }
     certInfo->isPseudonym = false;
-    return IS_SUCCESS;
+    return HC_SUCCESS;
 }
 
 static int32_t SetPreShareUrl(const CJson *context, const CJson *credAuthInfo, IdentityInfo *info)
@@ -314,13 +314,13 @@ static int32_t SetPreShareUrl(const CJson *context, const CJson *credAuthInfo, I
     CJson *preShareUrl = CreateJson();
     if (preShareUrl == NULL) {
         LOGE("create preShareUrl failed!");
-        return IS_ERR_ALLOC_MEMORY;
+        return HC_ERR_ALLOC_MEMORY;
     }
     int32_t credType = 0;
-    if (GetIntFromJson(credAuthInfo, FIELD_CRED_TYPE, &credType) != IS_SUCCESS) {
+    if (GetIntFromJson(credAuthInfo, FIELD_CRED_TYPE, &credType) != HC_SUCCESS) {
         LOGE("Get cred type failed!");
         FreeJson(preShareUrl);
-        return IS_ERR_JSON_GET;
+        return HC_ERR_JSON_GET;
     }
     const char *pinCode = GetStringFromJson(context, FIELD_PIN_CODE);
     TrustType trustType;
@@ -331,37 +331,37 @@ static int32_t SetPreShareUrl(const CJson *context, const CJson *credAuthInfo, I
     } else {
         trustType = TRUST_TYPE_P2P;
     }
-    if (AddIntToJson(preShareUrl, PRESHARED_URL_TRUST_TYPE, trustType) != IS_SUCCESS) {
+    if (AddIntToJson(preShareUrl, PRESHARED_URL_TRUST_TYPE, trustType) != HC_SUCCESS) {
         LOGE("Failed to add preshared url trust type!");
         FreeJson(preShareUrl);
-        return IS_ERR_JSON_ADD;
+        return HC_ERR_JSON_ADD;
     }
     info->proof.preSharedUrl.val = (uint8_t *)PackJsonToString(preShareUrl);
     FreeJson(preShareUrl);
     if (info->proof.preSharedUrl.val == NULL) {
         LOGE("Failed to pack preShareUrl string!");
-        return IS_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     info->proof.preSharedUrl.length = HcStrlen((const char *)info->proof.preSharedUrl.val);
-    return IS_SUCCESS;
+    return HC_SUCCESS;
 }
 
 static int32_t SetIdentityProof(const CJson *context, const CJson *credAuthInfo, IdentityInfo *info)
 {
-    int32_t res = IS_ERROR;
+    int32_t res = HC_ERROR;
     if (info->proofType == PRE_SHARED) {
         res = SetPreShareUrl(context, credAuthInfo, info);
-        if (res != IS_SUCCESS) {
+        if (res != HC_SUCCESS) {
             LOGE("Failed to set preshare url");
         }
     } else {
         int32_t osAccountId = 0;
-        if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != IS_SUCCESS) {
+        if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
             LOGE("Failed to get osAccountId!");
-            return IS_ERR_JSON_GET;
+            return HC_ERR_JSON_GET;
         }
         res = GetCertInfoIS(osAccountId, credAuthInfo, &info->proof.certInfo);
-        if (res != IS_SUCCESS) {
+        if (res != HC_SUCCESS) {
             LOGE("Failed to get cert info!");
         }
     }
@@ -373,7 +373,7 @@ static int32_t SetProtocolEntityIS(IdentityInfo *info)
     ProtocolEntity *entity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
     if (entity == NULL) {
         LOGE("Failed to alloc memory for protocol entity!");
-        return IS_ERR_ALLOC_MEMORY;
+        return HC_ERR_ALLOC_MEMORY;
     }
     if (info->proofType == PRE_SHARED) {
 #ifdef ENABLE_ACCOUNT_AUTH_ISO
@@ -382,7 +382,7 @@ static int32_t SetProtocolEntityIS(IdentityInfo *info)
 #else
         LOGE("ISO not support!");
         HcFree(entity);
-        return IS_ERR_NOT_SUPPORT;
+        return HC_ERR_NOT_SUPPORT;
 #endif
     } else if (info->proofType == CERTIFICATED) {
 #ifdef ENABLE_ACCOUNT_AUTH_EC_SPEKE
@@ -391,63 +391,63 @@ static int32_t SetProtocolEntityIS(IdentityInfo *info)
 #else
         LOGE("ec speke not support!");
         HcFree(entity);
-        return IS_ERR_NOT_SUPPORT;
+        return HC_ERR_NOT_SUPPORT;
 #endif
     } else {
         LOGE("unknown proof type!");
         HcFree(entity);
-        return IS_ERR_INVALID_PARAMS;
+        return HC_ERR_INVALID_PARAMS;
     }
     if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity) == NULL) {
         HcFree(entity);
         LOGE("Failed to push protocol entity!");
-        return IS_ERR_ALLOC_MEMORY;
+        return HC_ERR_ALLOC_MEMORY;
     }
-    return IS_SUCCESS;
+    return HC_SUCCESS;
 }
 
 int32_t GetIdentityInfoIS(const CJson *context, IdentityInfo **returnInfo)
 {
     if (context == NULL || returnInfo == NULL) {
         LOGE("Invalid input params!");
-        return IS_ERR_INVALID_PARAMS;
+        return HC_ERR_INVALID_PARAMS;
     }
     CJson *credAuthInfo = GetObjFromJson(context, FIELD_SELF_CREDENTIAL_OBJ);
     if (credAuthInfo == NULL) {
         LOGE("Get self credAuthInfo fail.");
-        return IS_ERR_JSON_GET;
+        return HC_ERR_JSON_GET;
     }
     IdentityInfo *info = CreateIdentityInfo();
     if (info == NULL) {
         LOGE("Failed to alloc memory for IdentityInfo!");
-        return IS_ERR_JSON_GET;
+        return HC_ERR_JSON_GET;
     }
     info->IdInfoType = DEFAULT_ID_TYPE;
-    int res = IS_ERROR;
+    int res = HC_ERROR;
     do {
         uint32_t proofType = 0;
         res = GetUnsignedIntFromJson(credAuthInfo, FIELD_PROOF_TYPE, &proofType);
-        if (res != IS_SUCCESS) {
+        if (res != HC_SUCCESS) {
             LOGE("Get proofType fail.");
             break;
         }
         res = ConvertISProofTypeToCertType(proofType, &info->proofType);
-        if (res != IS_SUCCESS) {
+        if (res != HC_SUCCESS) {
             LOGE("unsupport proof type!");
             break;;
         }
         res = SetIdentityProof(context, credAuthInfo, info);
-        if (res != IS_SUCCESS) {
+        if (res != HC_SUCCESS) {
             LOGE("Failed to get protocol entity!");
             break;
         }
         res = SetProtocolEntityIS(info);
-        if (res != IS_SUCCESS) {
+        if (res != HC_SUCCESS) {
             LOGE("Failed to get protocol entity!");
             break;
         }
     } while (0);
-    if (res != IS_SUCCESS) {
+    if (res != HC_SUCCESS) {
         DestroyIdentityInfo(info);
         return res;
     }

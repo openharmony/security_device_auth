@@ -1097,20 +1097,20 @@ static int32_t AddAuthInfoToContextByCert(SessionImpl *impl)
 static int32_t AddAuthInfoToContextIS(SessionImpl *impl, IdentityInfo *cred)
 {
     if (cred->proofType == PRE_SHARED) {
-        return IS_SUCCESS;
+        return HC_SUCCESS;
     }
     char selfUdid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
-    if (res != IS_SUCCESS) {
+    if (res != HC_SUCCESS) {
         LOGE("Failed to get local udid!");
         return res;
     }
     PRINT_SENSITIVE_DATA("SelfUdid", selfUdid);
-    if (AddStringToJson(impl->context, FIELD_AUTH_ID, selfUdid) != IS_SUCCESS) {
+    if (AddStringToJson(impl->context, FIELD_AUTH_ID, selfUdid) != HC_SUCCESS) {
         LOGE("add selfAuthId to json fail.");
-        return IS_ERR_JSON_ADD;
+        return HC_ERR_JSON_ADD;
     }
-    return IS_SUCCESS;
+    return HC_SUCCESS;
 }
 
 static int32_t AddAuthInfoToContextByCred(SessionImpl *impl, IdentityInfo *cred)
@@ -1206,18 +1206,18 @@ static int32_t GetCredInfoIS(SessionImpl *impl)
 {
     IdentityInfo *info = NULL;
     int32_t res = GetIdentityInfoIS(impl->context, &info);
-    if (res != IS_SUCCESS) {
+    if (res != HC_SUCCESS) {
         LOGE("Get Identity by credAuthInfo fail.");
         return res;
     }
     if (impl->credList.pushBack(&impl->credList, (const IdentityInfo **)&info) == NULL) {
         DestroyIdentityInfo(info);
         LOGE("Failed to push protocol entity!");
-        return IS_ERR_ALLOC_MEMORY;
+        return HC_ERR_ALLOC_MEMORY;
     }
     impl->credCurIndex = 0;
     impl->credTotalNum = 1;
-    return IS_SUCCESS;
+    return HC_SUCCESS;
 }
 
 static int32_t ProcStartEventInner(SessionImpl *impl, CJson *sessionMsg)
