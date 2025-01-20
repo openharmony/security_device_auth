@@ -246,10 +246,10 @@ int32_t GetSharedSecretByPeerCert(
 static int32_t ConvertISProofTypeToCertType(uint32_t protocolType, IdentityProofType *returnType)
 {
     if (protocolType == PROOF_TYPE_PSK) {
-        *returnType = CERTIFICATED;
+        *returnType = PRE_SHARED;
         return IS_SUCCESS;
     } else if (protocolType == PROOF_TYPE_PKI) {
-        *returnType = PRE_SHARED;
+        *returnType = CERTIFICATED;
         return IS_SUCCESS;
     }
     return IS_ERR_NOT_SUPPORT;
