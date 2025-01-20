@@ -92,6 +92,10 @@ static int32_t GetPdidByContext(const CJson *context, bool isCredAuth, char **re
     const char *userId = StringGet(&deviceEntry->userId);
     int32_t res = isCredAuth? GetUserIdByISInfo(context, &userId)
         : GetUserIdByGroup(context, osAccountId, &userId);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get userId!");
+        return res;
+    }
     PseudonymManager *manager = GetPseudonymInstance();
     if (manager == NULL) {
         LOGE("Pseudonym manager is null!");
