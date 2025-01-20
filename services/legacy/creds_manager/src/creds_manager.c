@@ -427,7 +427,6 @@ int32_t GetIdentityInfoIS(const CJson *context, IdentityInfo **returnInfo)
     do {
         uint32_t proofType = 0;
         res = GetUnsignedIntFromJson(credAuthInfo, FIELD_PROOF_TYPE, &proofType);
-        info->proofType = proofType;
         if (res != IS_SUCCESS) {
             LOGE("Get proofType fail.");
             break;
