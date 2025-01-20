@@ -63,6 +63,7 @@ static int32_t GetUserIdByGroup(const CJson *context, int32_t osAccountId, char 
     }
     if (DeepCopyString(userId, returnUserId) != HC_SUCCESS) {
         LOGE("Failed to copy userId!");
+        DestroyDeviceEntry(deviceEntry);
         return HC_ERR_ALLOC_MEMORY;
     }
     DestroyDeviceEntry(deviceEntry);
