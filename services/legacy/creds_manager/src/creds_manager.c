@@ -434,7 +434,7 @@ int32_t GetIdentityInfoIS(const CJson *context, IdentityInfo **returnInfo)
         res = ConvertISProofTypeToCertType(proofType, &info->proofType);
         if (res != HC_SUCCESS) {
             LOGE("unsupport proof type!");
-            break;;
+            break;
         }
         res = SetIdentityProof(context, credAuthInfo, info);
         if (res != HC_SUCCESS) {
