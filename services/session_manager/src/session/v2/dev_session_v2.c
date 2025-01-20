@@ -478,7 +478,7 @@ static int32_t AddCertCredInfo(SessionImpl *impl, IdentityInfo *cred, CJson *cre
     }
     int32_t res = HC_ERROR;
     if (cred->proof.certInfo.isPseudonym) {
-        res = AddPkInfoWithPdid(impl->context, credInfo, (const char *)cred->proof.certInfo.pkInfoStr.val);
+        res = AddPkInfoWithPdid(impl->context, credInfo, impl->isCredAuth, (const char *)cred->proof.certInfo.pkInfoStr.val);
     }
     if (res != HC_SUCCESS && AddStringToJson(credInfo, FIELD_PK_INFO,
         (const char *)cred->proof.certInfo.pkInfoStr.val) != HC_SUCCESS) {
@@ -1096,20 +1096,20 @@ static int32_t AddAuthInfoToContextByCert(SessionImpl *impl)
 static int32_t AddAuthInfoToContextIS(SessionImpl *impl, IdentityInfo *cred)
 {
     if (cred->proofType == PRE_SHARED) {
-        return HC_SUCCESS;
+        return IS_SUCCESS;
     }
     char selfUdid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
-    if (res != HC_SUCCESS) {
+    if (res != IS_SUCCESS) {
         LOGE("Failed to get local udid!");
         return res;
     }
     PRINT_SENSITIVE_DATA("SelfUdid", selfUdid);
-    if (AddStringToJson(impl->context, FIELD_AUTH_ID, selfUdid) != HC_SUCCESS) {
+    if (AddStringToJson(impl->context, FIELD_AUTH_ID, selfUdid) != IS_SUCCESS) {
         LOGE("add selfAuthId to json fail.");
-        return HC_ERR_JSON_ADD;
+        return IS_ERR_JSON_ADD;
     }
-    return HC_SUCCESS;
+    return IS_SUCCESS;
 }
 
 static int32_t AddAuthInfoToContextByCred(SessionImpl *impl, IdentityInfo *cred)
@@ -1205,18 +1205,18 @@ static int32_t GetCredInfoIS(SessionImpl *impl)
 {
     IdentityInfo *info = NULL;
     int32_t res = GetIdentityInfoIS(impl->context, &info);
-    if (res != HC_SUCCESS) {
+    if (res != IS_SUCCESS) {
         LOGE("Get Identity by credAuthInfo fail.");
         return res;
     }
     if (impl->credList.pushBack(&impl->credList, (const IdentityInfo **)&info) == NULL) {
         DestroyIdentityInfo(info);
         LOGE("Failed to push protocol entity!");
-        return HC_ERR_ALLOC_MEMORY;
+        return IS_ERR_ALLOC_MEMORY;
     }
     impl->credCurIndex = 0;
     impl->credTotalNum = 1;
-    return HC_SUCCESS;
+    return IS_SUCCESS;
 }
 
 static int32_t ProcStartEventInner(SessionImpl *impl, CJson *sessionMsg)

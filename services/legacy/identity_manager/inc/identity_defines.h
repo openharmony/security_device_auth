@@ -56,7 +56,7 @@ typedef enum { KEY_TYPE_SYM, KEY_TYPE_ASYM } KeyType;
 
 typedef enum { TRUST_TYPE_PIN, TRUST_TYPE_P2P, TRUST_TYPE_UID } TrustType;
 
-typedef enum { PRE_SHARED = 1, CERTIFICATED = 2 } IdentityProofType;
+typedef enum { PRE_SHARED, CERTIFICATED } IdentityProofType;
 
 typedef enum { ALG_EC_SPEKE = 0x0001, ALG_DL_SPEKE = 0x0002, ALG_ISO = 0x0004 } ProtocolAlgType;
 

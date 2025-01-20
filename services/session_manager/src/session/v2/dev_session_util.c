@@ -48,13 +48,8 @@ static TrustedDeviceEntry *GetPeerDeviceEntryByContext(int32_t osAccountId, cons
     return GetDeviceEntryById(osAccountId, peerDeviceId, isUdid, groupId);
 }
 
-static int32_t GetPdidByContext(const CJson *context, char **returnPdid)
+static int32_t GetUserIdByGroup(const CJson *context, int32_t osAccountId, const char **returnUserId)
 {
-    int32_t osAccountId;
-    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId!");
-        return HC_ERR_JSON_GET;
-    }
     TrustedDeviceEntry *deviceEntry = GetPeerDeviceEntryByContext(osAccountId, context);
     if (deviceEntry == NULL) {
         LOGE("Failed to get device entry!");
@@ -66,15 +61,44 @@ static int32_t GetPdidByContext(const CJson *context, char **returnPdid)
         DestroyDeviceEntry(deviceEntry);
         return HC_ERR_NULL_PTR;
     }
+    *returnUserId = userId;
+    DestroyDeviceEntry(deviceEntry);
+    return HC_SUCCESS;
+}
+
+static int32_t GetUserIdByISInfo(const CJson *context, const char **returnUserId)
+{
+    CJson *credAuthInfo = GetObjFromJson(context, FIELD_SELF_CREDENTIAL_OBJ);
+    if (credAuthInfo == NULL) {
+        LOGE("Get self credAuthInfo fail.");
+        return IS_ERR_JSON_GET;
+    }
+    const char *userId = GetStringFromJson(credAuthInfo, FIELD_USER_ID);
+    if (userId == NULL) {
+        LOGE("Failed to get user ID!");
+        return IS_ERR_JSON_GET;
+    }
+    *returnUserId = userId;
+    return IS_SUCCESS;
+}
+
+static int32_t GetPdidByContext(const CJson *context, bool isCredAuth, char **returnPdid)
+{
+    int32_t osAccountId;
+    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
+    const char *userId = StringGet(&deviceEntry->userId);
+    int32_t res = isCredAuth? GetUserIdByISInfo(context, &userId)
+        : GetUserIdByGroup(context, osAccountId, &userId);
     PseudonymManager *manager = GetPseudonymInstance();
     if (manager == NULL) {
         LOGE("Pseudonym manager is null!");
-        DestroyDeviceEntry(deviceEntry);
         return HC_ERR_NULL_PTR;
     }
     char *pdid = NULL;
-    int32_t res = manager->getPseudonymId(osAccountId, userId, &pdid);
-    DestroyDeviceEntry(deviceEntry);
+    res = manager->getPseudonymId(osAccountId, userId, &pdid);
     if (res != HC_SUCCESS) {
         LOGE("Failed to get pdid!");
         return res;
@@ -476,14 +500,14 @@ int32_t GetRealPkInfoStr(int32_t osAccountId, const CJson *credInfo, char **retu
     }
 }
 
-int32_t AddPkInfoWithPdid(const CJson *context, CJson *credInfo, const char *realPkInfoStr)
+int32_t AddPkInfoWithPdid(const CJson *context, CJson *credInfo, bool isCredAuth, const char *realPkInfoStr)
 {
     if (context == NULL || credInfo == NULL || realPkInfoStr == NULL) {
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
     char *pdid = NULL;
-    int32_t res = GetPdidByContext(context, &pdid);
+    int32_t res = GetPdidByContext(context, isCredAuth, &pdid);
     if (res != HC_SUCCESS) {
         LOGE("Failed to get pdid by context!");
         return res;

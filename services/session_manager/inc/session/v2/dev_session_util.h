@@ -31,7 +31,7 @@ int32_t SetPeerInfoToContext(CJson *context, const CJson *inputData);
 int32_t ReplaceAuthIdWithRandom(CJson *authData);
 int32_t CheckPeerPkInfoForPdid(const CJson *context, const CJson *inputData);
 int32_t GetRealPkInfoStr(int32_t osAccountId, const CJson *credInfo, char **returnPkInfoStr, bool *isPseudonym);
-int32_t AddPkInfoWithPdid(const CJson *context, CJson *credInfo, const char *realPkInfoStr);
+int32_t AddPkInfoWithPdid(const CJson *context, CJson *credInfo, bool isCredAuth, const char *realPkInfoStr);
 TrustedDeviceEntry *GetDeviceEntryById(int32_t osAccountId, const char *deviceId, bool isUdid,
     const char *groupId);
 int32_t BuildPeerCertInfo(const char *pkInfoStr, const char *pkInfoSignHexStr, int32_t signAlg,
