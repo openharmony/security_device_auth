@@ -33,7 +33,7 @@ int32_t GetSharedSecretByPeerCert(
     const CJson *in, const CertInfo *peerCertInfo, ProtocolAlgType protocolType, Uint8Buff *sharedSecret);
 
 //IS
-int32_t GetIdentityInfoIS(const CJson *context, IdentityInfo **returnInfo);
+int32_t GetIdentityInfoIS(const CJson *context, bool isClient, IdentityInfo **returnInfo);
 #ifdef __cplusplus
 }
 #endif
