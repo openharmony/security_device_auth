@@ -257,7 +257,7 @@ static int32_t ConvertISProofTypeToCertType(uint32_t protocolType, IdentityProof
 
 static int32_t ConvertISAlgToCertAlg(uint32_t alg, Algorithm *returnAlg)
 {
-    if (alg == ALG_TYPE_P256) {
+    if (alg == ALGO_TYPE_P256) {
         *returnAlg = P256;
         return IS_SUCCESS;
     }
