@@ -243,12 +243,8 @@ int32_t GetSharedSecretByPeerCert(
     return authIdentity->getSharedSecretByPeerCert(in, peerCertInfo, protocolType, sharedSecret);
 }
 
-static int32_t ConvertISProofTypeToCertType(uint32_t protocolType, bool isClient, IdentityProofType *returnType)
+static int32_t ConvertISProofTypeToCertType(uint32_t protocolType, IdentityProofType *returnType)
 {
-    if (!isClient) {
-        *returnType = protocolType;
-        return HC_SUCCESS;
-    }
     if (protocolType == PROOF_TYPE_PSK) {
         *returnType = PRE_SHARED;
         return IS_SUCCESS;
@@ -259,12 +255,8 @@ static int32_t ConvertISProofTypeToCertType(uint32_t protocolType, bool isClient
     return IS_ERR_NOT_SUPPORT;
 }
 
-static int32_t ConvertISAlgToCertAlg(uint32_t alg, bool isClient, Algorithm *returnAlg)
+static int32_t ConvertISAlgToCertAlg(uint32_t alg, Algorithm *returnAlg)
 {
-    if (!isClient) {
-        *returnAlg = alg;
-        return HC_SUCCESS;
-    }
     if (alg == ALG_TYPE_P256) {
         *returnAlg = P256;
         return IS_SUCCESS;
@@ -272,7 +264,7 @@ static int32_t ConvertISAlgToCertAlg(uint32_t alg, bool isClient, Algorithm *ret
     return IS_ERR_NOT_SUPPORT;
 }
 
-static int32_t GetCertInfoIS(int32_t osAccountId, bool isClient, const CJson *credAuthInfo, CertInfo *certInfo)
+static int32_t GetCertInfoIS(int32_t osAccountId, const CJson *credAuthInfo, CertInfo *certInfo)
 {
     const char *userId = GetStringFromJson(credAuthInfo, FIELD_USER_ID);
     if (userId == NULL) {
@@ -308,7 +300,7 @@ static int32_t GetCertInfoIS(int32_t osAccountId, bool isClient, const CJson *cr
         LOGE("Failed to get algorithm type!");
         return IS_ERR_JSON_GET;
     }
-    ret = ConvertISAlgToCertAlg(sigAlg, isClient, &certInfo->signAlg);
+    ret = ConvertISAlgToCertAlg(sigAlg, &certInfo->signAlg);
     if (ret != IS_SUCCESS) {
         LOGE("unsupport algorithm type!");
         return ret;
@@ -354,7 +346,7 @@ static int32_t SetPreShareUrl(const CJson *context, const CJson *credAuthInfo, I
     return IS_SUCCESS;
 }
 
-static int32_t SetIdentityProof(const CJson *context, bool isClient, const CJson *credAuthInfo, IdentityInfo *info)
+static int32_t SetIdentityProof(const CJson *context, const CJson *credAuthInfo, IdentityInfo *info)
 {
     int32_t res = IS_ERROR;
     if (info->proofType == PRE_SHARED) {
@@ -368,7 +360,7 @@ static int32_t SetIdentityProof(const CJson *context, bool isClient, const CJson
             LOGE("Failed to get osAccountId!");
             return IS_ERR_JSON_GET;
         }
-        res = GetCertInfoIS(osAccountId, isClient, credAuthInfo, &info->proof.certInfo);
+        res = GetCertInfoIS(osAccountId, credAuthInfo, &info->proof.certInfo);
         if (res != IS_SUCCESS) {
             LOGE("Failed to get cert info!");
         }
@@ -414,7 +406,7 @@ static int32_t SetProtocolEntityIS(IdentityInfo *info)
     return IS_SUCCESS;
 }
 
-int32_t GetIdentityInfoIS(const CJson *context, bool isClient, bool isClient, IdentityInfo **returnInfo)
+int32_t GetIdentityInfoIS(const CJson *context, IdentityInfo **returnInfo)
 {
     if (context == NULL || returnInfo == NULL) {
         LOGE("Invalid input params!");
@@ -439,12 +431,12 @@ int32_t GetIdentityInfoIS(const CJson *context, bool isClient, bool isClient, Id
             LOGE("Get proofType fail.");
             break;
         }
-        res = ConvertISProofTypeToCertType(proofType, isClient, &info->proofType);
+        res = ConvertISProofTypeToCertType(proofType, &info->proofType);
         if (res != IS_SUCCESS) {
             LOGE("unsupport proof type!");
-            return res;
+            break;;
         }
-        res = SetIdentityProof(context, isClient, credAuthInfo, info);
+        res = SetIdentityProof(context, credAuthInfo, info);
         if (res != IS_SUCCESS) {
             LOGE("Failed to get protocol entity!");
             break;
