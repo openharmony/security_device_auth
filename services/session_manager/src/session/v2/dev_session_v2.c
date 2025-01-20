@@ -478,7 +478,8 @@ static int32_t AddCertCredInfo(SessionImpl *impl, IdentityInfo *cred, CJson *cre
     }
     int32_t res = HC_ERROR;
     if (cred->proof.certInfo.isPseudonym) {
-        res = AddPkInfoWithPdid(impl->context, credInfo, (const char *)cred->proof.certInfo.pkInfoStr.val);
+        res = AddPkInfoWithPdid(impl->context, credInfo, impl->isCredAuth,
+            (const char *)cred->proof.certInfo.pkInfoStr.val);
     }
     if (res != HC_SUCCESS && AddStringToJson(credInfo, FIELD_PK_INFO,
         (const char *)cred->proof.certInfo.pkInfoStr.val) != HC_SUCCESS) {

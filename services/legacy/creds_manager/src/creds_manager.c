@@ -243,6 +243,27 @@ int32_t GetSharedSecretByPeerCert(
     return authIdentity->getSharedSecretByPeerCert(in, peerCertInfo, protocolType, sharedSecret);
 }
 
+static int32_t ConvertISProofTypeToCertType(uint32_t protocolType, IdentityProofType *returnType)
+{
+    if (protocolType == PROOF_TYPE_PSK) {
+        *returnType = PRE_SHARED;
+        return HC_SUCCESS;
+    } else if (protocolType == PROOF_TYPE_PKI) {
+        *returnType = CERTIFICATED;
+        return HC_SUCCESS;
+    }
+    return HC_ERR_NOT_SUPPORT;
+}
+
+static int32_t ConvertISAlgToCertAlg(uint32_t alg, Algorithm *returnAlg)
+{
+    if (alg == ALGO_TYPE_P256) {
+        *returnAlg = P256;
+        return HC_SUCCESS;
+    }
+    return HC_ERR_NOT_SUPPORT;
+}
+
 static int32_t GetCertInfoIS(int32_t osAccountId, const CJson *credAuthInfo, CertInfo *certInfo)
 {
     const char *userId = GetStringFromJson(credAuthInfo, FIELD_USER_ID);
@@ -279,8 +300,12 @@ static int32_t GetCertInfoIS(int32_t osAccountId, const CJson *credAuthInfo, Cer
         LOGE("Failed to get algorithm type!");
         return HC_ERR_JSON_GET;
     }
-    certInfo->signAlg = signAlg;
-    certInfo->isPseudonym = true;
+    ret = ConvertISAlgToCertAlg(signAlg, &certInfo->signAlg);
+    if (ret != HC_SUCCESS) {
+        LOGE("unsupport algorithm type!");
+        return ret;
+    }
+    certInfo->isPseudonym = false;
     return HC_SUCCESS;
 }
 
@@ -402,9 +427,13 @@ int32_t GetIdentityInfoIS(const CJson *context, IdentityInfo **returnInfo)
     do {
         uint32_t proofType = 0;
         res = GetUnsignedIntFromJson(credAuthInfo, FIELD_PROOF_TYPE, &proofType);
-        info->proofType = proofType;
         if (res != HC_SUCCESS) {
             LOGE("Get proofType fail.");
+            break;
+        }
+        res = ConvertISProofTypeToCertType(proofType, &info->proofType);
+        if (res != HC_SUCCESS) {
+            LOGE("unsupport proof type!");
             break;
         }
         res = SetIdentityProof(context, credAuthInfo, info);
