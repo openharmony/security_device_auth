@@ -25,14 +25,14 @@
 static bool IsDirectAuth(const CJson *context)
 {
     bool isDirectAuth = false;
-    (void)GetBoolFromJson(context, FIELD_HC_DIRECT_AUTH, &isDirectAuth);
+    (void)GetBoolFromJson(context, FIELD_IS_DIRECT_AUTH, &isDirectAuth);
     return isDirectAuth;
 }
 
 static bool IsDeviceLevelAuth(const CJson *context)
 {
     bool isDeviceLevel = false;
-    (void)GetBoolFromJson(context, FIELD_HC_DEVICE_LEVEL, &isDeviceLevel);
+    (void)GetBoolFromJson(context, FIELD_IS_DEVICE_LEVEL, &isDeviceLevel);
     return isDeviceLevel;
 }
 
