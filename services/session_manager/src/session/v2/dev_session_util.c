@@ -89,7 +89,7 @@ static int32_t GetPdidByContext(const CJson *context, bool isCredAuth, char **re
         LOGE("Failed to get osAccountId!");
         return HC_ERR_JSON_GET;
     }
-    const char *userId = StringGet(&deviceEntry->userId);
+    const char *userId = NULL;
     int32_t res = isCredAuth? GetUserIdByISInfo(context, &userId)
         : GetUserIdByGroup(context, osAccountId, &userId);
     if (res != HC_SUCCESS) {
