@@ -225,8 +225,8 @@ bool IsOsAccountUnlocked(int32_t osAccountId)
     bool isUnlocked = false;
     OHOS::ErrCode res = OHOS::AccountSA::OsAccountManager::IsOsAccountVerified(osAccountId, isUnlocked);
     if (res != OHOS::ERR_OK) {
-        LOGE("[OsAccountNativeFwk][IsOsAccountVerified]: Check account verify status failed, res: %d,
-            accountId: %d", res, osAccountId);
+        LOGE("[OsAccountNativeFwk][IsOsAccountVerified]: Check account verify status failed, res: %d, accountId: %d",
+            res, osAccountId);
         return false;
     }
     return isUnlocked;
