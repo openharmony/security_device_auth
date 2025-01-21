@@ -29,10 +29,10 @@ int32_t GetFrontUserId(int32_t *userId)
     std::vector<int32_t> ids;
     int32_t errCode = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
     if (errCode != ERR_OK || ids.empty()) {
-        LOGE("QueryActiveOsAccountIds failed");
+        LOGE("[OsAccountNativeFwk][QueryActiveOsAccountIds]: failed");
         return ERR_FAILED;
     }
-    LOGI("QueryActiveOsAccountIds success");
+    LOGI("[OsAccountNativeFwk][QueryActiveOsAccountIds]: success");
     *userId = ids[0];
 #else
     LOGI("no os account part, set default user");

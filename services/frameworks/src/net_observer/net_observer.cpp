@@ -56,15 +56,15 @@ void NetObserver::StartObserver()
             }
             int32_t ret = NetConnClient::GetInstance().RegisterNetConnCallback(specifier, observer, 0);
             if (ret == NetConnResultCode::NET_CONN_SUCCESS) {
-                LOGI("[NetObserver]: Register net connection callback succeeded.");
+                LOGI("[NetMgrSubsysterm][RegisterNetConnCallback]: Register net connection callback succeeded.");
                 g_netCallback = observer;
                 return;
             }
             retryCount++;
-            LOGW("[NetObserver]: Register failed, errCode = %d, retry.", ret);
+            LOGW("[NetMgrSubsysterm][RegisterNetConnCallback]: Register failed, errCode = %d, retry.", ret);
             sleep(1);
         } while (retryCount < RETRY_MAX_TIMES);
-        LOGE("[NetObserver]: Register net connection callback failed!");
+        LOGE("[NetMgrSubsysterm][RegisterNetConnCallback]: Register net connection callback failed!");
     });
 }
 
@@ -126,7 +126,7 @@ void NetObserver::StopObserver()
     }
     int32_t ret = NetConnClient::GetInstance().UnregisterNetConnCallback(g_netCallback);
     if (ret == 0) {
-        LOGI("[NetObserver]: unregister net connection callback succeeded.");
+        LOGI("[NetMgrSubsysterm][UnregisterNetConnCallback]: unregister net connection callback succeeded.");
         g_netCallback = nullptr;
     }
 }
