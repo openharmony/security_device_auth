@@ -183,12 +183,12 @@ int32_t GetCurrentActiveOsAccountId(void)
     std::vector<int> activatedOsAccountIds;
     OHOS::ErrCode res = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(activatedOsAccountIds);
     if ((res != OHOS::ERR_OK) || (activatedOsAccountIds.size() <= 0)) {
-        LOGE("[OsAccountAdapter]: QueryActiveOsAccountIds fail. [Res]: %d", res);
+        LOGE("[OsAccountNativeFwk][QueryActiveOsAccountIds]: fail. [Res]: %d", res);
         return INVALID_OS_ACCOUNT;
     }
     int osAccountId = activatedOsAccountIds[0];
     if (osAccountId != SYSTEM_DEFAULT_USER) {
-        LOGI("[OsAccountAdapter]: Current active os accountId: %d", osAccountId);
+        LOGI("[OsAccountNativeFwk][QueryActiveOsAccountIds]: Current active os accountId: %d", osAccountId);
     }
     return osAccountId;
 }
@@ -225,7 +225,8 @@ bool IsOsAccountUnlocked(int32_t osAccountId)
     bool isUnlocked = false;
     OHOS::ErrCode res = OHOS::AccountSA::OsAccountManager::IsOsAccountVerified(osAccountId, isUnlocked);
     if (res != OHOS::ERR_OK) {
-        LOGE("[OsAccountAdapter]: Check account verify status failed, res: %d, accountId: %d", res, osAccountId);
+        LOGE("[OsAccountNativeFwk][IsOsAccountVerified]: Check account verify status failed, res: %d,
+            accountId: %d", res, osAccountId);
         return false;
     }
     return isUnlocked;
@@ -241,7 +242,7 @@ int32_t GetAllOsAccountIds(int32_t **osAccountIds, uint32_t *size)
     OHOS::ErrCode res = OHOS::AccountSA::OsAccountManager::QueryAllCreatedOsAccounts(osAccountInfos);
     uint32_t accountSize = osAccountInfos.size();
     if ((res != OHOS::ERR_OK) || (accountSize <= 0)) {
-        LOGE("[OsAccountAdapter]: QueryAllCreatedOsAccounts failed. [Res]: %d", res);
+        LOGE("[OsAccountNativeFwk][QueryAllCreatedOsAccounts]: failed. [Res]: %d", res);
         return HC_ERROR;
     }
     *osAccountIds = (int32_t *)HcMalloc(accountSize * sizeof(int32_t), 0);

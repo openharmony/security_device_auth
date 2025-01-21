@@ -87,12 +87,12 @@ int32_t CheckPermission(int32_t methodId)
     AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
     ATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
     if (tokenType != TOKEN_NATIVE) {
-        LOGE("Invalid token type: %d", tokenType);
+        LOGE("[AccessTokenKit][GetTokenTypeFlag]: Invalid token type: %d", tokenType);
         return HC_ERROR;
     }
     NativeTokenInfo findInfo;
     if (AccessTokenKit::GetNativeTokenInfo(tokenId, findInfo) != 0) {
-        LOGE("GetNativeTokenInfo failed!");
+        LOGE("[AccessTokenKit][GetNativeTokenInfo]: failed!");
         return HC_ERROR;
     }
     if ((findInfo.apl != APL_SYSTEM_CORE) && (findInfo.apl != APL_SYSTEM_BASIC)) {
