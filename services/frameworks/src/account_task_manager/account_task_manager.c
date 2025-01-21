@@ -227,13 +227,11 @@ int32_t LoadAccountAndAddTaskRecord(int32_t taskId)
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return HC_ERROR;
     }
-    (void)LockHcMutex(&g_taskMutex);
     LoadAccountAuthPlugin();
     int32_t res = AddAccountTaskRecord(taskId);
     if (res != HC_SUCCESS) {
         UnloadAccountAuthPlugin();
     }
-    UnlockHcMutex(&g_taskMutex);
     return res;
 }
 
@@ -243,10 +241,8 @@ void RemoveAccountTaskRecordAndUnload(int32_t taskId)
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return;
     }
-    (void)LockHcMutex(&g_taskMutex);
     RemoveAccountTaskRecord(taskId);
     UnloadAccountAuthPlugin();
-    UnlockHcMutex(&g_taskMutex);
 }
 
 void NotifyAsyncTaskStart(void)
@@ -255,14 +251,11 @@ void NotifyAsyncTaskStart(void)
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return;
     }
-    (void)LockHcMutex(&g_taskMutex);
     if (g_isAsyncTaskRunning) {
         LOGI("[ACCOUNT_TASK_MGR]: async task is already started.");
-        UnlockHcMutex(&g_taskMutex);
         return;
     }
     g_isAsyncTaskRunning = true;
-    UnlockHcMutex(&g_taskMutex);
 }
 
 void NotifyAsyncTaskStop(void)
@@ -271,13 +264,10 @@ void NotifyAsyncTaskStop(void)
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return;
     }
-    (void)LockHcMutex(&g_taskMutex);
     if (!g_isAsyncTaskRunning) {
         LOGI("[ACCOUNT_TASK_MGR]: async task is already stopped.");
-        UnlockHcMutex(&g_taskMutex);
         return;
     }
     g_isAsyncTaskRunning = false;
     UnloadAccountAuthPlugin();
-    UnlockHcMutex(&g_taskMutex);
 }
