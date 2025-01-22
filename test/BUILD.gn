@@ -61,6 +61,7 @@ group("deviceauth_test_build") {
       "fuzztest/session_manager/session/v2/expand_sub_session/expand_process_lib/savetrustedinfo_fuzzer:fuzztest",
       "fuzztest/session_manager/session/v2/expand_sub_session/expandsubsession_fuzzer:fuzztest",
       "unittest/deviceauth:device_auth_func_test",
+      "unittest/deviceauth:device_auth_identity_service_test",
       "unittest/deviceauth:device_auth_interface_test",
       "unittest/deviceauth:device_auth_ipc_test",
       "unittest/deviceauth:deviceauth_llt",
