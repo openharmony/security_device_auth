@@ -37,34 +37,42 @@ static AccountTaskRecordList g_taskList;
 static bool g_isPluginLoaded = false;
 static bool g_isAsyncTaskRunning = false;
 static bool g_hasAccountAuthPlugin = false;
-static HcMutex g_taskMutex;
+static HcMutex g_taskMutex = { 0 };
 static bool g_isInit = false;
 
 static void LoadAccountAuthPlugin(void)
 {
+    (void)LockHcMutex(&g_taskMutex);
     if (g_isPluginLoaded) {
+        UnlockHcMutex(&g_taskMutex);
         LOGI("[ACCOUNT_TASK_MGR]: plugin is loaded.");
         return;
     }
     DEV_AUTH_LOAD_PLUGIN();
     g_isPluginLoaded = true;
+    UnlockHcMutex(&g_taskMutex);
     LOGI("[ACCOUNT_TASK_MGR]: load plugin successfully.");
 }
 
 static bool IsPluginUnloadNeeded(void)
 {
+    (void)LockHcMutex(&g_taskMutex);
     if (!g_isPluginLoaded) {
+        UnlockHcMutex(&g_taskMutex);
         LOGI("[ACCOUNT_TASK_MGR]: plugin is unloaded.");
         return false;
     }
     if (g_isAsyncTaskRunning) {
+        UnlockHcMutex(&g_taskMutex);
         LOGI("[ACCOUNT_TASK_MGR]: async task is running, can't unload plugin.");
         return false;
     }
     if (g_taskList.size(&g_taskList) > 0) {
+        UnlockHcMutex(&g_taskMutex);
         LOGI("[ACCOUNT_TASK_MGR]: task exist.");
         return false;
     }
+    UnlockHcMutex(&g_taskMutex);
     return true;
 }
 
@@ -72,13 +80,13 @@ void *ExecuteUnload(void *arg)
 {
     LOGI("[ACCOUNT_TASK_MGR]: unload task execute.");
     sleep(UNLOAD_DELAY_TIME);
-    LockHcMutex(&g_taskMutex);
     if (IsPluginUnloadNeeded()) {
+        LockHcMutex(&g_taskMutex);
         DEV_AUTH_UNLOAD_PLUGIN();
         g_isPluginLoaded = false;
+        UnlockHcMutex(&g_taskMutex);
         LOGI("[ACCOUNT_TASK_MGR]: unload plugin successfully.");
     }
-    UnlockHcMutex(&g_taskMutex);
     return NULL;
 }
 
@@ -94,27 +102,33 @@ static void UnloadAccountAuthPlugin(void)
 
 static int32_t AddAccountTaskRecord(int32_t taskId)
 {
+    LockHcMutex(&g_taskMutex);
     AccountTaskRecord taskRecord;
     taskRecord.taskId = taskId;
     if (g_taskList.pushBackT(&g_taskList, taskRecord) == NULL) {
+        UnlockHcMutex(&g_taskMutex);
         LOGE("[ACCOUNT_TASK_MGR]: push task record failed, taskId: %d", taskId);
         return HC_ERR_MEMORY_COPY;
     }
+    UnlockHcMutex(&g_taskMutex);
     LOGI("[ACCOUNT_TASK_MGR]: add task record succeeded, taskId: %d", taskId);
     return HC_SUCCESS;
 }
 
 static void RemoveAccountTaskRecord(int32_t taskId)
 {
+    LockHcMutex(&g_taskMutex);
     uint32_t index;
     AccountTaskRecord *ptr;
     FOR_EACH_HC_VECTOR(g_taskList, index, ptr) {
         if (ptr->taskId == taskId) {
             HC_VECTOR_POPELEMENT(&g_taskList, ptr, index);
+            UnlockHcMutex(&g_taskMutex);
             LOGI("[ACCOUNT_TASK_MGR]: remove task record succeeded, taskId: %d", taskId);
             return;
         }
     }
+    UnlockHcMutex(&g_taskMutex);
     LOGI("[ACCOUNT_TASK_MGR]: task record not exist, taskId: %d", taskId);
 }
 
@@ -161,11 +175,9 @@ int32_t ExecuteAccountAuthCmd(int32_t osAccountId, int32_t cmdId, const CJson *i
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return HC_ERROR;
     }
-    (void)LockHcMutex(&g_taskMutex);
     LoadAccountAuthPlugin();
     int32_t res = ExcuteCredMgrCmd(osAccountId, cmdId, in, out);
     UnloadAccountAuthPlugin();
-    UnlockHcMutex(&g_taskMutex);
     return res;
 }
 
@@ -175,13 +187,11 @@ int32_t CreateAccountAuthSession(int32_t *sessionId, const CJson *in, CJson *out
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return HC_ERROR;
     }
-    (void)LockHcMutex(&g_taskMutex);
     LoadAccountAuthPlugin();
     int32_t res = CreateAuthSession(sessionId, in, out);
     if (res != HC_SUCCESS) {
         LOGE("[ACCOUNT_TASK_MGR]: create auth session failed!");
         UnloadAccountAuthPlugin();
-        UnlockHcMutex(&g_taskMutex);
         return res;
     }
     res = AddAccountTaskRecord(*sessionId);
@@ -189,7 +199,6 @@ int32_t CreateAccountAuthSession(int32_t *sessionId, const CJson *in, CJson *out
         DestroyAuthSession(*sessionId);
         UnloadAccountAuthPlugin();
     }
-    UnlockHcMutex(&g_taskMutex);
     return res;
 }
 
@@ -199,11 +208,8 @@ int32_t ProcessAccountAuthSession(int32_t *sessionId, const CJson *in, CJson *ou
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return HC_ERROR;
     }
-    (void)LockHcMutex(&g_taskMutex);
     LoadAccountAuthPlugin();
-    int32_t res = ProcessAuthSession(sessionId, in, out, status);
-    UnlockHcMutex(&g_taskMutex);
-    return res;
+    return ProcessAuthSession(sessionId, in, out, status);
 }
 
 int32_t DestroyAccountAuthSession(int32_t sessionId)
@@ -212,12 +218,10 @@ int32_t DestroyAccountAuthSession(int32_t sessionId)
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return HC_ERROR;
     }
-    (void)LockHcMutex(&g_taskMutex);
     LoadAccountAuthPlugin();
     int32_t res = DestroyAuthSession(sessionId);
     RemoveAccountTaskRecord(sessionId);
     UnloadAccountAuthPlugin();
-    UnlockHcMutex(&g_taskMutex);
     return res;
 }
 
@@ -251,11 +255,15 @@ void NotifyAsyncTaskStart(void)
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return;
     }
+    (void)LockHcMutex(&g_taskMutex);
     if (g_isAsyncTaskRunning) {
+        UnlockHcMutex(&g_taskMutex);
         LOGI("[ACCOUNT_TASK_MGR]: async task is already started.");
         return;
     }
     g_isAsyncTaskRunning = true;
+    UnlockHcMutex(&g_taskMutex);
+    LOGI("[ACCOUNT_TASK_MGR]: notify async task start successfully.");
 }
 
 void NotifyAsyncTaskStop(void)
@@ -264,10 +272,14 @@ void NotifyAsyncTaskStop(void)
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return;
     }
+    (void)LockHcMutex(&g_taskMutex);
     if (!g_isAsyncTaskRunning) {
+        UnlockHcMutex(&g_taskMutex);
         LOGI("[ACCOUNT_TASK_MGR]: async task is already stopped.");
         return;
     }
     g_isAsyncTaskRunning = false;
+    UnlockHcMutex(&g_taskMutex);
     UnloadAccountAuthPlugin();
+    LOGI("[ACCOUNT_TASK_MGR]: notify async task stop successfully.");
 }

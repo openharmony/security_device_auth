@@ -48,7 +48,7 @@ static void GetAccountRelatedCandidateGroups(int32_t osAccountId, const CJson *p
         return;
     }
     LOGI("Account related groups not found!");
-    if (HasAccountPlugin()) {
+    if (!HasAccountPlugin()) {
         return;
     }
     CJson *input = CreateJson();
