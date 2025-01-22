@@ -51,7 +51,6 @@ ohos_fuzztest("IsoAuthTaskFuzzTest") {
   defines = deviceauth_defines
   defines += [ "HILOG_ENABLE" ]
   defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
-  defines += [ "DEV_AUTH_PERMISSION_ENABLE" ]
   cflags = [
     "-g",
     "-O0",
