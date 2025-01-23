@@ -144,11 +144,11 @@ int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestPara
 
     QueryCredentialParams queryParams = InitQueryCredentialParams();
     SetQueryParamsFromJson(&queryParams, reqJson);
-    FreeJson(reqJson);
 
     CredentialVec credentialVec = CreateCredentialVec();
 
     int32_t ret = QueryCredentials(osAccountId, &queryParams, &credentialVec);
+    FreeJson(reqJson);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to query credentials");
         ClearCredentialVec(&credentialVec);
