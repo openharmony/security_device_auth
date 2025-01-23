@@ -17,6 +17,7 @@
 #include "identity_operation.h"
 #include "asy_token_manager.h"
 #include "cert_operation.h"
+#include "pseudonym_manager.h"
 
 #define FIELD_SP_CMDS "spCmds"
 
@@ -305,7 +306,8 @@ static int32_t GetCertInfoIS(int32_t osAccountId, const CJson *credAuthInfo, Cer
         LOGE("unsupport algorithm type!");
         return ret;
     }
-    certInfo->isPseudonym = false;
+    certInfo->isPseudonym = !(GetPseudonymInstance()
+        ->isNeedRefreshPseudonymId(osAccountId, userId));
     return HC_SUCCESS;
 }
 
@@ -388,6 +390,11 @@ static int32_t SetProtocolEntityIS(IdentityInfo *info)
 #ifdef ENABLE_ACCOUNT_AUTH_EC_SPEKE
         entity->protocolType = ALG_EC_SPEKE;
         entity->expandProcessCmds = 0;
+#ifdef ENABLE_PSEUDONYM
+    if (!(info->proof.certinfo.isPseudonym)) {
+        entity->expandProcessCmds |= CMD_MK_AGREE;
+    }
+#endif
 #else
         LOGE("ec speke not support!");
         HcFree(entity);
