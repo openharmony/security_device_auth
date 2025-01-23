@@ -391,7 +391,7 @@ static int32_t SetProtocolEntityIS(IdentityInfo *info)
         entity->protocolType = ALG_EC_SPEKE;
         entity->expandProcessCmds = 0;
 #ifdef ENABLE_PSEUDONYM
-    if (!(info->proof.certinfo.isPseudonym)) {
+    if (!(info->proof.certInfo.isPseudonym)) {
         entity->expandProcessCmds |= CMD_MK_AGREE;
     }
 #endif
