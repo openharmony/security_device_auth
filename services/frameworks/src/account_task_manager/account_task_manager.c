@@ -39,10 +39,12 @@ static bool g_isAsyncTaskRunning = false;
 static bool g_hasAccountAuthPlugin = false;
 static HcMutex g_taskMutex = { 0 };
 static bool g_isInit = false;
+static bool g_isUnloadState = false;
 
 static void LoadAccountAuthPlugin(void)
 {
     (void)LockHcMutex(&g_taskMutex);
+    g_isUnloadState = false;
     if (g_isPluginLoaded) {
         UnlockHcMutex(&g_taskMutex);
         LOGI("[ACCOUNT_TASK_MGR]: plugin is loaded.");
@@ -80,24 +82,31 @@ void *ExecuteUnload(void *arg)
 {
     LOGI("[ACCOUNT_TASK_MGR]: unload task execute.");
     sleep(UNLOAD_DELAY_TIME);
-    if (IsPluginUnloadNeeded()) {
-        LockHcMutex(&g_taskMutex);
+    LockHcMutex(&g_taskMutex);
+    if (IsPluginUnloadNeeded() && g_isUnloadState) {
         DEV_AUTH_UNLOAD_PLUGIN();
         g_isPluginLoaded = false;
-        UnlockHcMutex(&g_taskMutex);
+        g_isUnloadState = false;
         LOGI("[ACCOUNT_TASK_MGR]: unload plugin successfully.");
+    } else {
+        LOGI("[ACCOUNT_TASK_MGR]: no need to unload.");
     }
+    UnlockHcMutex(&g_taskMutex);
     return NULL;
 }
 
 static void UnloadAccountAuthPlugin(void)
 {
-    if (!IsPluginUnloadNeeded()) {
+    LockHcMutex(&g_taskMutex);
+    if (!IsPluginUnloadNeeded() || g_isUnloadState) {
+        UnlockHcMutex(&g_taskMutex);
         return;
     }
+    g_isUnloadState = true;
     pthread_t tid;
     pthread_create(&tid, NULL, ExecuteUnload, NULL);
     pthread_detach(tid);
+    UnlockHcMutex(&g_taskMutex);
 }
 
 static int32_t AddAccountTaskRecord(int32_t taskId)
