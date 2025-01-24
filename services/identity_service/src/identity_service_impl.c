@@ -33,36 +33,32 @@ static int32_t AddCredentialImplInner(int32_t osAccountId, CJson *reqJson, Crede
 {
     uint8_t method = DEFAULT_VAL;
     Uint8Buff keyValue = { NULL, 0 };
-    char *credIdStr = NULL;
-    int32_t ret = CheckAndSetCredInfo(credential, reqJson, osAccountId, &method, &keyValue);
+    int32_t ret = CheckAndSetCredInfo(osAccountId, credential, reqJson, &method, &keyValue);
     if (ret != IS_SUCCESS) {
         return ret;
     }
-    uint8_t credIdByteVal[SHA256_LEN] = { 0 };
-    Uint8Buff credIdByte = { credIdByteVal, sizeof(credIdByteVal) };
-    if ((ret = GenerateCredId(credential, osAccountId, &credIdByte, &credIdStr)) != IS_SUCCESS) {
+    Uint8Buff credIdByte = { NULL, 0 };
+    if ((ret = GenerateCredId(osAccountId, credential, &credIdByte)) != IS_SUCCESS) {
         HcFree(keyValue.val);
         return ret;
     }
-    if ((ret = AddKeyValueToHuks(credIdByte, credential, osAccountId, method, &keyValue)) != IS_SUCCESS) {
+    if ((ret = AddKeyValueToHuks(osAccountId, credIdByte, credential, method, keyValue)) != IS_SUCCESS) {
         HcFree(keyValue.val);
-        HcFree(credIdStr);
+        HcFree(credIdByte.val);
         return ret;
     }
     HcFree(keyValue.val);
+    HcFree(credIdByte.val);
     if ((ret = AddCredAndSaveDb(osAccountId, credential)) != IS_SUCCESS) {
-        HcFree(credIdStr);
         if (GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId) != IS_SUCCESS) {
             LOGE("Failed to delete key from HUKS");
         }
         return ret;
     }
-    if (DeepCopyString(credIdStr, returnData) != EOK) {
+    if (DeepCopyString(StringGet(&credential->credId), returnData) != EOK) {
         LOGE("Failed to return credId");
-        HcFree(credIdStr);
         return IS_ERR_MEMORY_COPY;
     }
-    HcFree(credIdStr);
     return IS_SUCCESS;
 }
 
@@ -90,32 +86,41 @@ int32_t ExportCredentialImpl(int32_t osAccountId, const char *credId, char **ret
     Credential *credential = NULL;
     int32_t ret = GetCredentialById(osAccountId, credId, &credential);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to get credential by credId, ret = %d", ret);
         return ret;
     }
     DestroyCredential(credential);
 
-    uint8_t credIdVal[SHA256_LEN] = { 0 };
-    Uint8Buff credIdHashBuff = { credIdVal, SHA256_LEN };
-    ret = CheckCredIdExistInHuks(osAccountId, credId, &credIdHashBuff);
+    uint32_t credIdByteLen = HcStrlen(credId) / BYTE_TO_HEX_OPER_LENGTH;
+    Uint8Buff credIdByte = { NULL, credIdByteLen };
+    credIdByte.val = (uint8_t *)HcMalloc(credIdByteLen, 0);
+    if (credIdByte.val == NULL) {
+        LOGE("Failed to malloc credIdByte");
+        return IS_ERR_ALLOC_MEMORY;
+    }
+
+    ret = CheckCredIdExistInHuks(osAccountId, credId, &credIdByte);
     if (ret == HAL_ERR_KEY_NOT_EXIST) {
         LOGE("Huks key not exist!");
         DelCredById(osAccountId, credId);
+        HcFree(credIdByte.val);
         return IS_ERR_HUKS_KEY_NOT_EXIST;
     }
     if (ret == HAL_ERR_HUKS) {
         LOGE("Huks check key exist failed");
+        HcFree(credIdByte.val);
         return IS_ERR_HUKS_CHECK_KEY_EXIST_FAILED;
     }
     if (ret != IS_SUCCESS) {
         LOGE("Failed to check key exist in HUKS");
+        HcFree(credIdByte.val);
         return ret;
     }
 
-    KeyParams keyParams = { { credIdHashBuff.val, credIdHashBuff.length, true }, false, osAccountId };
-    uint8_t pubKeyVal[PUB_KEY_LENGTH] = { 0 };
-    Uint8Buff keyValue = { pubKeyVal, PUB_KEY_LENGTH };
+    KeyParams keyParams = { { credIdByte.val, credIdByte.length, true }, false, osAccountId };
+    uint8_t pubKeyVal[KEY_VALUE_MAX_LENGTH] = { 0 };
+    Uint8Buff keyValue = { pubKeyVal, KEY_VALUE_MAX_LENGTH };
     ret = GetLoaderInstance()->exportPublicKey(&keyParams, &keyValue);
+    HcFree(credIdByte.val);
     if (ret == HAL_ERR_HUKS) {
         LOGE("Huks export key failed!");
         return IS_ERR_HUKS_EXPORT_KEY_FAILED;
@@ -127,10 +132,8 @@ int32_t ExportCredentialImpl(int32_t osAccountId, const char *credId, char **ret
 
     ret = AddKeyValueToReturn(keyValue, returnData);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to add pub key to return");
         return ret;
     }
-
     return IS_SUCCESS;
 }
 
@@ -235,15 +238,23 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *appId, const char 
     }
     DestroyCredential(credential);
 
-    uint8_t credIdVal[SHA256_LEN] = { 0 };
-    Uint8Buff credIdHashBuff = { credIdVal, SHA256_LEN };
-    ret = HexStringToByte(credId, credIdHashBuff.val, credIdHashBuff.length);
+    uint32_t credIdByteLen = HcStrlen(credId) / BYTE_TO_HEX_OPER_LENGTH;
+    Uint8Buff credIdByte = { NULL, credIdByteLen };
+    credIdByte.val = (uint8_t *)HcMalloc(credIdByteLen, 0);
+    if (credIdByte.val == NULL) {
+        LOGE("Failed to malloc credIdByte");
+        return IS_ERR_ALLOC_MEMORY;
+    }
+
+    ret = HexStringToByte(credId, credIdByte.val, credIdByte.length);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to convert credId to byte, error: %d", ret);
+        LOGE("Failed to convert credId to byte, invalid credId, ret: %d", ret);
+        HcFree(credIdByte.val);
         return ret;
     }
 
-    ret = GetLoaderInstance()->deleteKey(&credIdHashBuff, false, osAccountId);
+    ret = GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId);
+    HcFree(credIdByte.val);
     if (ret == HAL_ERR_HUKS) {
         LOGW("Huks delete key failed, error: %d, continue to delete local cred", IS_ERR_HUKS_DELETE_FAILED);
     }
@@ -253,7 +264,7 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *appId, const char 
         LOGE("Failed to delete local credential");
         return ret;
     }
-
+    LOGI("Delete credential success");
     return IS_SUCCESS;
 }
 
