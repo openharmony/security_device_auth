@@ -456,7 +456,7 @@ int32_t ISGetIdentityInfo(const CJson *context, bool isPseudonym, IdentityInfo *
         }
         res = ISSetCertProofAndEntity(context, credAuthInfo, isPseudonym, info);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to set cert proof and entity!");
+            LOGE("Failed to set cert proof and protocol entity!");
             break;
         }
     } while (0);
