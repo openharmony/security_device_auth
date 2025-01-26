@@ -141,35 +141,35 @@ static int32_t Uint8BuffToString(Uint8Buff *byte, char **str)
 
 static int32_t Sha256BaseCredId(const char *baseCredIdStr, Uint8Buff *credIdByte, char **credIdStr)
 {
-    Uint8Buff tempCredIdByte = { NULL, SHA256_LEN };
-    tempCredIdByte.val = (uint8_t *)HcMalloc(SHA256_LEN, 0);
-    if (tempCredIdByte.val == NULL) {
-        LOGE("Failed to malloc memory for tempCredIdByte");
+    Uint8Buff returnCredIdByte = { NULL, SHA256_LEN };
+    returnCredIdByte.val = (uint8_t *)HcMalloc(SHA256_LEN, 0);
+    if (returnCredIdByte.val == NULL) {
+        LOGE("Failed to malloc memory for returnCredIdByte");
         return IS_ERR_ALLOC_MEMORY;
     }
 
     Uint8Buff baseCredIdBuff = { (uint8_t *)baseCredIdStr, (uint32_t)HcStrlen(baseCredIdStr) };
-    int32_t ret = GetLoaderInstance()->sha256(&baseCredIdBuff, &tempCredIdByte);
+    int32_t ret = GetLoaderInstance()->sha256(&baseCredIdBuff, &returnCredIdByte);
     if (ret == HAL_ERR_HUKS) {
         LOGE("Huks sha256 error");
-        HcFree(tempCredIdByte.val);
+        HcFree(returnCredIdByte.val);
         return IS_ERR_HUKS_SHA256_FAILED;
     }
     if (ret != IS_SUCCESS) {
         LOGE("Failed to sha256 credId");
-        HcFree(tempCredIdByte.val);
+        HcFree(returnCredIdByte.val);
         return ret;
     }
 
     char *returnCredIdStr = NULL;
-    ret = Uint8BuffToString(&tempCredIdByte, &returnCredIdStr);
+    ret = Uint8BuffToString(&returnCredIdByte, &returnCredIdStr);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to convert credIdByte to credIdStr, ret = %d", ret);
-        HcFree(tempCredIdByte.val);
+        HcFree(returnCredIdByte.val);
         return ret;
     }
     *credIdStr = returnCredIdStr;
-    credIdByte->val = tempCredIdByte.val;
+    credIdByte->val = returnCredIdByte.val;
     credIdByte->length = SHA256_LEN;
     return IS_SUCCESS;
 }
