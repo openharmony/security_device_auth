@@ -1202,10 +1202,13 @@ static int32_t ClientCreateAuthSubSessionByCred(SessionImpl *impl, IdentityInfo 
     return HC_SUCCESS;
 }
 
-static int32_t GetCredInfoIS(SessionImpl *impl)
+static int32_t ISClientGetCredInfo(SessionImpl *impl)
 {
     IdentityInfo *info = NULL;
-    int32_t res = GetIdentityInfoIS(impl->context, &info);
+    int32_t res = HC_ERROR;
+#ifdef ENABLE_PSEUDONYM
+    //try enable pseudonym
+    res = ISGetIdentityInfo(impl->context, true, &info);
     if (res != HC_SUCCESS) {
         LOGE("Get Identity by credAuthInfo fail.");
         return res;
@@ -1215,8 +1218,56 @@ static int32_t GetCredInfoIS(SessionImpl *impl)
         LOGE("Failed to push protocol entity!");
         return HC_ERR_ALLOC_MEMORY;
     }
+    info = NULL;
+#endif
+    res = ISGetIdentityInfo(impl->context, false, &info);
+    if (res != HC_SUCCESS) {
+        LOGE("Get Identity by credAuthInfo fail.");
+        return res;
+    }
+    if (impl->credList.pushBack(&impl->credList, (const IdentityInfo **)&info) == NULL) {
+        DestroyIdentityInfo(info);
+        LOGE("Failed to push protocol entity!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    uint32_t credNum = HC_VECTOR_SIZE(&impl->credList);
+    if (credNum == 0) {
+        LOGE("No valid credentials with peer.");
+        return HC_ERR_INIT_FAILED;
+    }
     impl->credCurIndex = 0;
-    impl->credTotalNum = 1;
+    impl->credTotalNum = credNum;
+    return HC_SUCCESS;
+}
+
+static int32_t ISServerGetCredInfo(SessionImpl *impl, const CJson *inputData)
+{
+    const CJson *pkInfoStr = GetObjFromJson(inputData, FIELD_PK_INFO);
+    if (pkInfoStr == NULL) {
+        LOGE("Failed to get pkInfo!");
+        return HC_ERR_JSON_GET;
+    }
+    const char *pdid = GetStringFromJson(pkInfoStr, FIELD_PSEUDONYM_ID);
+    bool isPseudonym = (pdid != NULL);
+    IdentityInfo *info = NULL;
+    int32_t res = ISGetIdentityInfo(impl->context, isPseudonym, &info);
+    if (res != HC_SUCCESS) {
+        LOGE("Get Identity by credAuthInfo fail.");
+        return res;
+    }
+    if (impl->credList.pushBack(&impl->credList, (const IdentityInfo **)&info) == NULL) {
+        DestroyIdentityInfo(info);
+        LOGE("Failed to push protocol entity!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    
+    uint32_t credNum = HC_VECTOR_SIZE(&impl->credList);
+    if (credNum == 0) {
+        LOGE("No valid credentials with peer.");
+        return HC_ERR_INIT_FAILED;
+    }
+    impl->credCurIndex = 0;
+    impl->credTotalNum = credNum;
     return HC_SUCCESS;
 }
 
@@ -1224,7 +1275,7 @@ static int32_t ProcStartEventInner(SessionImpl *impl, CJson *sessionMsg)
 {
     int32_t res;
     if (impl->credTotalNum == 0) {
-        res = impl->isCredAuth ? GetCredInfoIS(impl)
+        res = impl->isCredAuth ? ISClientGetCredInfo(impl)
             : GetAllCredsWithPeer(impl);
         if (res != HC_SUCCESS) {
             LOGE("get all credentials with peer device fail.");
@@ -1589,7 +1640,7 @@ static int32_t ProcHandshakeReqEventInner(SessionImpl *impl, SessionEvent *input
     if (res != HC_SUCCESS) {
         return res;
     }
-    res = impl->isCredAuth ? GetCredInfoIS(impl) : GetSelfCredByInput(impl, inputEvent->data);
+    res = impl->isCredAuth ? ISServerGetCredInfo(impl, inputEvent->data) : GetSelfCredByInput(impl, inputEvent->data);
     if (res != HC_SUCCESS) {
         LOGE("get cred by input fail.");
         return res;

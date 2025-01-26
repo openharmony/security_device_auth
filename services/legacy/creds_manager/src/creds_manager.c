@@ -265,54 +265,107 @@ static int32_t ConvertISAlgToCertAlg(uint32_t alg, Algorithm *returnAlg)
     return HC_ERR_NOT_SUPPORT;
 }
 
-static int32_t GetCertInfoIS(int32_t osAccountId, const CJson *credAuthInfo, CertInfo *certInfo)
+static int32_t ISSetProtocolEntity(IdentityInfo *info, bool isNeedRefreshPseudonymId)
+{
+    ProtocolEntity *entity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
+    if (entity == NULL) {
+        LOGE("Failed to alloc memory for protocol entity!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (info->proofType == PRE_SHARED) {
+#ifdef ENABLE_ACCOUNT_AUTH_ISO
+        entity->protocolType = ALG_ISO;
+        entity->expandProcessCmds = 0;
+#else
+        LOGE("ISO not support!");
+        HcFree(entity);
+        return HC_ERR_NOT_SUPPORT;
+#endif
+    } else if (info->proofType == CERTIFICATED) {
+#ifdef ENABLE_ACCOUNT_AUTH_EC_SPEKE
+        entity->protocolType = ALG_EC_SPEKE;
+        entity->expandProcessCmds = 0;
+#ifdef ENABLE_PSEUDONYM
+    if (isNeedRefreshPseudonymId) {
+        entity->expandProcessCmds |= CMD_MK_AGREE;
+    }
+#endif
+#else
+        LOGE("ec speke not support!");
+        HcFree(entity);
+        return HC_ERR_NOT_SUPPORT;
+#endif
+    } else {
+        (void)isNeedRefreshPseudonymId;
+        LOGE("unknown proof type!");
+        HcFree(entity);
+        return HC_ERR_INVALID_PARAMS;
+    }
+    if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity) == NULL) {
+        HcFree(entity);
+        LOGE("Failed to push protocol entity!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *credAuthInfo, bool isPseudonym, IdentityInfo *info)
 {
     const char *userId = GetStringFromJson(credAuthInfo, FIELD_USER_ID);
     if (userId == NULL) {
         LOGE("Failed to get user ID!");
         return HC_ERR_JSON_GET;
     }
-
     const char *authId = GetStringFromJson(credAuthInfo, FIELD_DEVICE_ID);
     if (authId == NULL) {
         LOGE("Failed to get auth ID!");
         return HC_ERR_JSON_GET;
     }
-
     AccountToken *token = CreateAccountToken();
     if (token == NULL) {
         LOGE("Failed to create account token!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t ret = GetAccountAuthTokenManager()->getToken(osAccountId, token, userId, authId);
-    if (ret != HC_SUCCESS) {
+    int32_t res = GetAccountAuthTokenManager()->getToken(osAccountId, token, userId, authId);
+    if (res != HC_SUCCESS) {
         LOGE("Failed to get account token!");
         DestroyAccountToken(token);
-        return ret;
+        return res;
     }
-    ret = GenerateCertInfo(&token->pkInfoStr, &token->pkInfoSignature, certInfo);
+    res = GenerateCertInfo(&token->pkInfoStr, &token->pkInfoSignature, info->proof.certInfo);
     DestroyAccountToken(token);
-    if (ret != HC_SUCCESS) {
+    if (res != HC_SUCCESS) {
         LOGE("Failed to generate cert info!");
-        return ret;
+        return res;
     }
     uint32_t signAlg = 0;
     if (GetUnsignedIntFromJson(credAuthInfo, FIELD_ALGORITHM_TYPE, &signAlg) != HC_SUCCESS) {
         LOGE("Failed to get algorithm type!");
         return HC_ERR_JSON_GET;
     }
-    ret = ConvertISAlgToCertAlg(signAlg, &certInfo->signAlg);
-    if (ret != HC_SUCCESS) {
+    res = ConvertISAlgToCertAlg(signAlg, &info->proof.certInfo.signAlg);
+    if (res != HC_SUCCESS) {
         LOGE("unsupport algorithm type!");
-        return ret;
+        return res;
     }
-    certInfo->isPseudonym = !(GetPseudonymInstance()
-        ->isNeedRefreshPseudonymId(osAccountId, userId));
+    info->proof.certInfo.isPseudonym = isPseudonym;
+    bool isNeedRefreshPseudonymId = GetPseudonymInstance()
+        ->isNeedRefreshPseudonymId(osAccountId, userId);
+    res = ISSetProtocolEntity(info, isNeedRefreshPseudonymId);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to set protocol entity!");
+        return res;
+    }
     return HC_SUCCESS;
 }
 
-static int32_t SetPreShareUrl(const CJson *context, const CJson *credAuthInfo, IdentityInfo *info)
+static int32_t ISSetPreShareUrlAndEntity(const CJson *context, const CJson *credAuthInfo, IdentityInfo *info)
 {
+    int32_t res = ISSetProtocolEntity(info, false);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to set protocol entity!");
+        return res;
+    }
     CJson *preShareUrl = CreateJson();
     if (preShareUrl == NULL) {
         LOGE("create preShareUrl failed!");
@@ -348,11 +401,11 @@ static int32_t SetPreShareUrl(const CJson *context, const CJson *credAuthInfo, I
     return HC_SUCCESS;
 }
 
-static int32_t SetIdentityProof(const CJson *context, const CJson *credAuthInfo, IdentityInfo *info)
+static int32_t ISSetCertProofAndEntity(const CJson *context, const CJson *credAuthInfo, bool isPseudonym, IdentityInfo *info)
 {
     int32_t res = HC_ERROR;
     if (info->proofType == PRE_SHARED) {
-        res = SetPreShareUrl(context, credAuthInfo, info);
+        res = ISSetPreShareUrlAndEntity(context, credAuthInfo, info);
         if (res != HC_SUCCESS) {
             LOGE("Failed to set preshare url");
         }
@@ -362,7 +415,7 @@ static int32_t SetIdentityProof(const CJson *context, const CJson *credAuthInfo,
             LOGE("Failed to get osAccountId!");
             return HC_ERR_JSON_GET;
         }
-        res = GetCertInfoIS(osAccountId, credAuthInfo, &info->proof.certInfo);
+        res = ISSetCertInfoAndEntity(osAccountId, credAuthInfo, isPseudonym, &info->proof.certInfo);
         if (res != HC_SUCCESS) {
             LOGE("Failed to get cert info!");
         }
@@ -370,50 +423,7 @@ static int32_t SetIdentityProof(const CJson *context, const CJson *credAuthInfo,
     return res;
 }
 
-static int32_t SetProtocolEntityIS(IdentityInfo *info)
-{
-    ProtocolEntity *entity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
-    if (entity == NULL) {
-        LOGE("Failed to alloc memory for protocol entity!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    if (info->proofType == PRE_SHARED) {
-#ifdef ENABLE_ACCOUNT_AUTH_ISO
-        entity->protocolType = ALG_ISO;
-        entity->expandProcessCmds = 0;
-#else
-        LOGE("ISO not support!");
-        HcFree(entity);
-        return HC_ERR_NOT_SUPPORT;
-#endif
-    } else if (info->proofType == CERTIFICATED) {
-#ifdef ENABLE_ACCOUNT_AUTH_EC_SPEKE
-        entity->protocolType = ALG_EC_SPEKE;
-        entity->expandProcessCmds = 0;
-#ifdef ENABLE_PSEUDONYM
-    if (!(info->proof.certInfo.isPseudonym)) {
-        entity->expandProcessCmds |= CMD_MK_AGREE;
-    }
-#endif
-#else
-        LOGE("ec speke not support!");
-        HcFree(entity);
-        return HC_ERR_NOT_SUPPORT;
-#endif
-    } else {
-        LOGE("unknown proof type!");
-        HcFree(entity);
-        return HC_ERR_INVALID_PARAMS;
-    }
-    if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity) == NULL) {
-        HcFree(entity);
-        LOGE("Failed to push protocol entity!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    return HC_SUCCESS;
-}
-
-int32_t GetIdentityInfoIS(const CJson *context, IdentityInfo **returnInfo)
+int32_t ISGetIdentityInfo(const CJson *context, bool isPseudonym, IdentityInfo **returnInfo)
 {
     if (context == NULL || returnInfo == NULL) {
         LOGE("Invalid input params!");
@@ -443,14 +453,9 @@ int32_t GetIdentityInfoIS(const CJson *context, IdentityInfo **returnInfo)
             LOGE("unsupport proof type!");
             break;
         }
-        res = SetIdentityProof(context, credAuthInfo, info);
+        res = ISSetCertProofAndEntity(context, credAuthInfo, info, isPseudonym);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to get protocol entity!");
-            break;
-        }
-        res = SetProtocolEntityIS(info);
-        if (res != HC_SUCCESS) {
-            LOGE("Failed to get protocol entity!");
+            LOGE("Failed to set cert proof and entity!");
             break;
         }
     } while (0);
