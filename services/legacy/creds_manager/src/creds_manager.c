@@ -265,42 +265,49 @@ static int32_t ConvertISAlgToCertAlg(uint32_t alg, Algorithm *returnAlg)
     return HC_ERR_NOT_SUPPORT;
 }
 
-static int32_t ISSetProtocolEntity(IdentityInfo *info, bool isNeedRefreshPseudonymId)
+static int32_t ISSetISOEntity(IdentityInfo *info)
+{
+    ProtocolEntity *entity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
+    if (entity == NULL) {
+        LOGE("Failed to alloc memory for ISO protocol entity!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+#ifdef ENABLE_ACCOUNT_AUTH_ISO
+    entity->protocolType = ALG_ISO;
+    entity->expandProcessCmds = 0;
+#else
+    LOGE("ISO not support!");
+    HcFree(entity);
+    return HC_ERR_NOT_SUPPORT;
+#endif
+    if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity) == NULL) {
+        HcFree(entity);
+        LOGE("Failed to push protocol entity!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t ISSetEcSpekeEntity(IdentityInfo *info, bool isNeedRefreshPseudonymId)
 {
     ProtocolEntity *entity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
     if (entity == NULL) {
         LOGE("Failed to alloc memory for protocol entity!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    if (info->proofType == PRE_SHARED) {
-#ifdef ENABLE_ACCOUNT_AUTH_ISO
-        entity->protocolType = ALG_ISO;
-        entity->expandProcessCmds = 0;
-#else
-        LOGE("ISO not support!");
-        HcFree(entity);
-        return HC_ERR_NOT_SUPPORT;
-#endif
-    } else if (info->proofType == CERTIFICATED) {
 #ifdef ENABLE_ACCOUNT_AUTH_EC_SPEKE
-        entity->protocolType = ALG_EC_SPEKE;
-        entity->expandProcessCmds = 0;
+    entity->protocolType = ALG_EC_SPEKE;
+    entity->expandProcessCmds = 0;
 #ifdef ENABLE_PSEUDONYM
-        if (isNeedRefreshPseudonymId) {
-            entity->expandProcessCmds |= CMD_MK_AGREE;
-        }
+    if (isNeedRefreshPseudonymId) {
+        entity->expandProcessCmds |= CMD_MK_AGREE;
+    }
 #endif
 #else
-        LOGE("ec speke not support!");
-        HcFree(entity);
-        return HC_ERR_NOT_SUPPORT;
+    LOGE("ec speke not support!");
+    HcFree(entity);
+    return HC_ERR_NOT_SUPPORT;
 #endif
-    } else {
-        (void)isNeedRefreshPseudonymId;
-        LOGE("unknown proof type!");
-        HcFree(entity);
-        return HC_ERR_INVALID_PARAMS;
-    }
     if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity) == NULL) {
         HcFree(entity);
         LOGE("Failed to push protocol entity!");
@@ -352,7 +359,7 @@ static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *credAuth
     info->proof.certInfo.isPseudonym = isPseudonym;
     bool isNeedRefreshPseudonymId = GetPseudonymInstance()
         ->isNeedRefreshPseudonymId(osAccountId, userId);
-    res = ISSetProtocolEntity(info, isNeedRefreshPseudonymId);
+    res = ISSetEcSpekeEntity(info, isNeedRefreshPseudonymId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to set protocol entity!");
         return res;
@@ -362,7 +369,7 @@ static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *credAuth
 
 static int32_t ISSetPreShareUrlAndEntity(const CJson *context, const CJson *credAuthInfo, IdentityInfo *info)
 {
-    int32_t res = ISSetProtocolEntity(info, false);
+    int32_t res = ISSetISOEntity(info);
     if (res != HC_SUCCESS) {
         LOGE("Failed to set protocol entity!");
         return res;
