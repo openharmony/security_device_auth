@@ -286,9 +286,9 @@ static int32_t ISSetProtocolEntity(IdentityInfo *info, bool isNeedRefreshPseudon
         entity->protocolType = ALG_EC_SPEKE;
         entity->expandProcessCmds = 0;
 #ifdef ENABLE_PSEUDONYM
-    if (isNeedRefreshPseudonymId) {
-        entity->expandProcessCmds |= CMD_MK_AGREE;
-    }
+        if (isNeedRefreshPseudonymId) {
+            entity->expandProcessCmds |= CMD_MK_AGREE;
+        }
 #endif
 #else
         LOGE("ec speke not support!");
