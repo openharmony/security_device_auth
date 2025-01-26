@@ -292,7 +292,7 @@ static int32_t ISSetEcSpekeEntity(IdentityInfo *info, bool isNeedRefreshPseudony
 {
     ProtocolEntity *entity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
     if (entity == NULL) {
-        LOGE("Failed to alloc memory for protocol entity!");
+        LOGE("Failed to alloc memory for ec-speke protocol entity!");
         return HC_ERR_ALLOC_MEMORY;
     }
 #ifdef ENABLE_ACCOUNT_AUTH_EC_SPEKE
