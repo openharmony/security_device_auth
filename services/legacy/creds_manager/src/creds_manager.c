@@ -309,7 +309,8 @@ static int32_t ISSetProtocolEntity(IdentityInfo *info, bool isNeedRefreshPseudon
     return HC_SUCCESS;
 }
 
-static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *credAuthInfo, bool isPseudonym, IdentityInfo *info)
+static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *credAuthInfo,
+    bool isPseudonym, IdentityInfo *info)
 {
     const char *userId = GetStringFromJson(credAuthInfo, FIELD_USER_ID);
     if (userId == NULL) {
@@ -401,7 +402,8 @@ static int32_t ISSetPreShareUrlAndEntity(const CJson *context, const CJson *cred
     return HC_SUCCESS;
 }
 
-static int32_t ISSetCertProofAndEntity(const CJson *context, const CJson *credAuthInfo, bool isPseudonym, IdentityInfo *info)
+static int32_t ISSetCertProofAndEntity(const CJson *context, const CJson *credAuthInfo,
+    bool isPseudonym, IdentityInfo *info)
 {
     int32_t res = HC_ERROR;
     if (info->proofType == PRE_SHARED) {
