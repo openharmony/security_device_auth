@@ -332,7 +332,7 @@ static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *credAuth
         DestroyAccountToken(token);
         return res;
     }
-    res = GenerateCertInfo(&token->pkInfoStr, &token->pkInfoSignature, info->proof.certInfo);
+    res = GenerateCertInfo(&token->pkInfoStr, &token->pkInfoSignature, &info->proof.certInfo);
     DestroyAccountToken(token);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate cert info!");
@@ -401,7 +401,8 @@ static int32_t ISSetPreShareUrlAndEntity(const CJson *context, const CJson *cred
     return HC_SUCCESS;
 }
 
-static int32_t ISSetCertProofAndEntity(const CJson *context, const CJson *credAuthInfo, bool isPseudonym, IdentityInfo *info)
+static int32_t ISSetCertProofAndEntity(const CJson *context, const CJson *credAuthInfo,
+    bool isPseudonym, IdentityInfo *info)
 {
     int32_t res = HC_ERROR;
     if (info->proofType == PRE_SHARED) {
@@ -415,7 +416,7 @@ static int32_t ISSetCertProofAndEntity(const CJson *context, const CJson *credAu
             LOGE("Failed to get osAccountId!");
             return HC_ERR_JSON_GET;
         }
-        res = ISSetCertInfoAndEntity(osAccountId, credAuthInfo, isPseudonym, &info->proof.certInfo);
+        res = ISSetCertInfoAndEntity(osAccountId, credAuthInfo, isPseudonym, info);
         if (res != HC_SUCCESS) {
             LOGE("Failed to get cert info!");
         }
@@ -453,7 +454,7 @@ int32_t ISGetIdentityInfo(const CJson *context, bool isPseudonym, IdentityInfo *
             LOGE("unsupport proof type!");
             break;
         }
-        res = ISSetCertProofAndEntity(context, credAuthInfo, info, isPseudonym);
+        res = ISSetCertProofAndEntity(context, credAuthInfo, isPseudonym, info);
         if (res != HC_SUCCESS) {
             LOGE("Failed to set cert proof and entity!");
             break;
