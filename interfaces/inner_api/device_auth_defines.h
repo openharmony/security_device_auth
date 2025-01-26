@@ -171,6 +171,8 @@ enum {
 
     /* IS AddCredential imported credId existed */
     IS_ERR_IMPORTED_CRED_ID_EXISTED = 0x00010011,                             // 65553
+    /* IS invalid hex string*/
+    IS_ERR_INVALID_HEX_STRING = 0x00010012,                             // 65554
 
     // IS json error
     IS_ERR_JSON_FAILED = 0x00020001,                                      // 131073

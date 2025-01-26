@@ -156,7 +156,7 @@ static int32_t Sha256BaseCredId(const char *baseCredIdStr, Uint8Buff *credIdByte
         return IS_ERR_HUKS_SHA256_FAILED;
     }
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to sha256 credId");
+        LOGE("Failed to sha256 credId, ret = %d", ret);
         HcFree(returnCredIdByte.val);
         return ret;
     }
@@ -216,9 +216,9 @@ static int32_t UseImportedCredId(int32_t osAccountId, Credential *credential, Ui
 
     int32_t ret = HexStringToByte(StringGet(&credential->credId), returnCredIdByteVal, credIdByte->length);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to convert credId to byte");
+        LOGE("Failed to convert credId to byte, ret = %d", ret);
         HcFree(returnCredIdByteVal);
-        return ret;
+        return IS_ERR_INVALID_HEX_STRING;
     }
     credIdByte->val = returnCredIdByteVal;
     return IS_SUCCESS;
@@ -287,6 +287,7 @@ static int32_t CheckOutMaxCredSize(int32_t osAccountId, const char *credOwner)
         return IS_ERR_BEYOND_LIMIT;
     }
     ClearCredentialVec(&credentialVec);
+    LOGI("The number of credentials for this credOwner is within the limit");
     return IS_SUCCESS;
 }
 
@@ -372,7 +373,7 @@ int32_t CheckCredIdExistInHuks(int32_t osAccountId, const char *credId, Uint8Buf
     int32_t ret = HexStringToByte(credId, credIdHashBuff->val, credIdHashBuff->length);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to convert credId to byte, invalid credId, ret = %d", ret);
-        return ret;
+        return IS_ERR_INVALID_HEX_STRING;
     }
 
     return GetLoaderInstance()->checkKeyExist(credIdHashBuff, false, osAccountId);
@@ -820,11 +821,8 @@ int32_t CheckAndSetCredInfo(int32_t osAccountId,
     }
 
     ret = CheckOutMaxCredSize(osAccountId, StringGet(&credential->credOwner));
-    if (ret != IS_SUCCESS) {
-        return ret;
-    }
 
-    return IS_SUCCESS;
+    return ret;
 }
 
 int32_t SetQueryParamsFromJson(QueryCredentialParams *queryParams, CJson *json)

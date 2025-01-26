@@ -250,7 +250,7 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *appId, const char 
     if (ret != IS_SUCCESS) {
         LOGE("Failed to convert credId to byte, invalid credId, ret: %d", ret);
         HcFree(credIdByte.val);
-        return ret;
+        return IS_ERR_INVALID_HEX_STRING;
     }
 
     ret = GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId);
