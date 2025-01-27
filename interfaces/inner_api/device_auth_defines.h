@@ -169,6 +169,11 @@ enum {
     IS_AUTH_ERR_PIN_NOT_MATCH = 0x0001000F,                               // 65551
     IS_AUTH_ERR_PROOF_NOT_MATCH = 0x00010010,                             // 65552
 
+    /* IS AddCredential imported credId existed */
+    IS_ERR_IMPORTED_CRED_ID_EXISTED = 0x00010011,                             // 65553
+    /* IS invalid hex string*/
+    IS_ERR_INVALID_HEX_STRING = 0x00010012,                             // 65554
+
     // IS json error
     IS_ERR_JSON_FAILED = 0x00020001,                                      // 131073
     IS_ERR_JSON_CREATE = 0x00020002,                                      // 131074

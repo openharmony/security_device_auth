@@ -57,21 +57,24 @@ int32_t GetCredentialById(int32_t osAccountId, const char *credId, Credential **
         return IS_SUCCESS;
     }
     ClearCredentialVec(&credentialVec);
-    LOGI("No credential found!");
+    LOGI("This credId does not exist!");
     return IS_ERR_LOCAL_CRED_NOT_EXIST;
 }
 
 static int32_t int64ToString(int64_t num, char **result)
 {
     const int bufferSize = MAX_INT64_SIZE + 1;
-    *result = (char *)HcMalloc(bufferSize, 0);
-    if (*result == NULL) {
+    char *tempStr = (char *)HcMalloc(bufferSize, 0);
+    if (tempStr == NULL) {
+        LOGE("Failed to allocate memory!");
         return IS_ERR_ALLOC_MEMORY;
     }
-    if (sprintf_s(*result, bufferSize, "%" PRId64, num) < 0) {
-        HcFree(*result);
+    if (sprintf_s(tempStr, bufferSize, "%" PRId64, num) < 0) {
+        LOGE("Failed to convert int64 to string!");
+        HcFree(tempStr);
         return IS_ERR_CONVERT_FAILED;
     }
+    *result = tempStr;
     return IS_SUCCESS;
 }
 
@@ -88,50 +91,86 @@ static int32_t CombineBaseCredId(const char *credentialOwner, const char *device
         return ret;
     }
     size_t totalLength = HcStrlen(credentialOwner) + HcStrlen(deviceId) + HcStrlen(timeStr) + 1;
-    *baseCredIdStr = (char *)HcMalloc(totalLength, 0);
-    if (*baseCredIdStr == NULL) {
-        LOGE("Failed to allocate memory for baseCredIdStr!");
+    char *tempCredId = (char *)HcMalloc(totalLength, 0);
+    if (tempCredId == NULL) {
+        LOGE("Failed to allocate memory for tempCredId!");
         HcFree(timeStr);
         return IS_ERR_ALLOC_MEMORY;
     }
 
-    if (strcpy_s(*baseCredIdStr, totalLength, credentialOwner) != EOK) {
-        LOGE("Failed to copy credentialOwner to baseCredIdStr!");
+    if (strcpy_s(tempCredId, totalLength, credentialOwner) != EOK) {
+        LOGE("Failed to copy credentialOwner to tempCredId!");
         HcFree(timeStr);
-        HcFree(*baseCredIdStr);
+        HcFree(tempCredId);
         return IS_ERR_CONVERT_FAILED;
     }
-    if (strcat_s(*baseCredIdStr, totalLength, deviceId) != EOK) {
-        LOGE("Failed to concatenate deviceId to baseCredIdStr!");
+    if (strcat_s(tempCredId, totalLength, deviceId) != EOK) {
+        LOGE("Failed to concatenate deviceId to tempCredId!");
         HcFree(timeStr);
-        HcFree(*baseCredIdStr);
+        HcFree(tempCredId);
         return IS_ERR_CONVERT_FAILED;
     }
-    if (strcat_s(*baseCredIdStr, totalLength, timeStr) != EOK) {
-        LOGE("Failed to concatenate timeStr to baseCredIdStr!");
+    if (strcat_s(tempCredId, totalLength, timeStr) != EOK) {
+        LOGE("Failed to concatenate timeStr to tempCredId!");
         HcFree(timeStr);
-        HcFree(*baseCredIdStr);
+        HcFree(tempCredId);
         return IS_ERR_CONVERT_FAILED;
     }
     HcFree(timeStr);
-
+    *baseCredIdStr = tempCredId;
     return IS_SUCCESS;
 }
 
 static int32_t Uint8BuffToString(Uint8Buff *byte, char **str)
 {
     uint32_t strLen = byte->length * BYTE_TO_HEX_OPER_LENGTH + 1;
-    *str = (char *)HcMalloc(strLen, 0);
-    if (*str == NULL) {
-        LOGE("Failed to malloc str");
+    char *tempStr = (char *)HcMalloc(strLen, 0);
+    if (tempStr == NULL) {
+        LOGE("Failed to malloc tempStr");
         return IS_ERR_ALLOC_MEMORY;
     }
-    int32_t ret = ByteToHexString(byte->val, byte->length, *str, strLen);
+    int32_t ret = ByteToHexString(byte->val, byte->length, tempStr, strLen);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to convert byte to hex string");
-        HcFree(*str);
+        HcFree(tempStr);
         return ret;
     }
+    *str = tempStr;
+    return IS_SUCCESS;
+}
+
+static int32_t Sha256BaseCredId(const char *baseCredIdStr, Uint8Buff *credIdByte, char **credIdStr)
+{
+    Uint8Buff returnCredIdByte = { NULL, SHA256_LEN };
+    returnCredIdByte.val = (uint8_t *)HcMalloc(SHA256_LEN, 0);
+    if (returnCredIdByte.val == NULL) {
+        LOGE("Failed to malloc memory for returnCredIdByte");
+        return IS_ERR_ALLOC_MEMORY;
+    }
+
+    Uint8Buff baseCredIdBuff = { (uint8_t *)baseCredIdStr, (uint32_t)HcStrlen(baseCredIdStr) };
+    int32_t ret = GetLoaderInstance()->sha256(&baseCredIdBuff, &returnCredIdByte);
+    if (ret == HAL_ERR_HUKS) {
+        LOGE("Huks sha256 error");
+        HcFree(returnCredIdByte.val);
+        return IS_ERR_HUKS_SHA256_FAILED;
+    }
+    if (ret != IS_SUCCESS) {
+        LOGE("Failed to sha256 credId, ret = %d", ret);
+        HcFree(returnCredIdByte.val);
+        return ret;
+    }
+
+    char *returnCredIdStr = NULL;
+    ret = Uint8BuffToString(&returnCredIdByte, &returnCredIdStr);
+    if (ret != IS_SUCCESS) {
+        LOGE("Failed to convert credIdByte to credIdStr, ret = %d", ret);
+        HcFree(returnCredIdByte.val);
+        return ret;
+    }
+    *credIdStr = returnCredIdStr;
+    credIdByte->val = returnCredIdByte.val;
+    credIdByte->length = SHA256_LEN;
     return IS_SUCCESS;
 }
 
@@ -145,55 +184,88 @@ static int32_t GenerateCredIdInner(const char *credentialOwner, const char *devi
         return ret;
     }
     
-    Uint8Buff baseCredIdBuff = { (uint8_t *)baseCredIdStr, (uint32_t)HcStrlen(baseCredIdStr) };
-    ret = GetLoaderInstance()->sha256(&baseCredIdBuff, credIdByte);
+    ret = Sha256BaseCredId(baseCredIdStr, credIdByte, credIdStr);
     HcFree(baseCredIdStr);
-    if (ret == HAL_ERR_HUKS) {
-        LOGE("Huks sha256 failed");
-        return IS_ERR_HUKS_SHA256_FAILED;
+    return ret;
+}
+
+static bool isCredIdExist(int32_t osAccountId, const char *credIdStr)
+{
+    Credential *existedCredential = NULL;
+    int32_t ret = GetCredentialById(osAccountId, credIdStr, &existedCredential);
+    DestroyCredential(existedCredential);
+
+    return ret == IS_SUCCESS;
+}
+
+static int32_t UseImportedCredId(int32_t osAccountId, Credential *credential, Uint8Buff *credIdByte)
+{
+    if (isCredIdExist(osAccountId, StringGet(&credential->credId))) {
+        LOGE("Imported credId existed");
+        return IS_ERR_IMPORTED_CRED_ID_EXISTED;
     }
-    if (ret != IS_SUCCESS) {
-        LOGE("Failed to sha256 credId");
-        return ret;
-    }
-    ret = Uint8BuffToString(credIdByte, credIdStr);
-    if (ret != IS_SUCCESS) {
-        LOGE("Failed to convert credIdByte to credIdStr, ret = %d", ret);
-        return ret;
+    LOGI("Imported credId not existed in DB, use imported credId");
+
+    uint32_t credIdByteLen = HcStrlen(StringGet(&credential->credId)) / BYTE_TO_HEX_OPER_LENGTH;
+    credIdByte->length = credIdByteLen;
+    uint8_t *returnCredIdByteVal = (uint8_t *)HcMalloc(credIdByteLen, 0);
+    if (returnCredIdByteVal == NULL) {
+        LOGE("Failed to malloc memory for credIdByte");
+        return IS_ERR_ALLOC_MEMORY;
     }
 
+    int32_t ret = HexStringToByte(StringGet(&credential->credId), returnCredIdByteVal, credIdByte->length);
+    if (ret != IS_SUCCESS) {
+        LOGE("Failed to convert credId to byte, ret = %d", ret);
+        HcFree(returnCredIdByteVal);
+        return IS_ERR_INVALID_HEX_STRING;
+    }
+    credIdByte->val = returnCredIdByteVal;
     return IS_SUCCESS;
 }
 
-int32_t GenerateCredId(Credential *credential, int32_t osAccountId, Uint8Buff *credIdByte, char **credIdStr)
+static int32_t GenerateUniqueCredId(int32_t osAccountId,
+    Credential *credential, Uint8Buff *credIdByte, char **credIdStr)
 {
+    char *returnCredId = NULL;
     const char *credOwner = StringGet(&credential->credOwner);
     const char *deviceId = StringGet(&credential->deviceId);
-    int32_t ret = GenerateCredIdInner(credOwner, deviceId, credIdByte, credIdStr);
+    int32_t ret = GenerateCredIdInner(credOwner, deviceId, credIdByte, &returnCredId);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to generate credId!");
         return ret;
     }
-
-    Credential *existedCredential = NULL;
-    ret = GetCredentialById(osAccountId, *credIdStr, &existedCredential);
-    DestroyCredential(existedCredential);
-    
-    if (ret == IS_SUCCESS) {
+    if (isCredIdExist(osAccountId, returnCredId)) {
         LOGW("CredId already exists, regenerate credId");
-        HcFree(*credIdStr);
-        ret = GenerateCredIdInner(credOwner, deviceId, credIdByte, credIdStr);
+        HcFree(returnCredId);
+        returnCredId = NULL;
+        ret = GenerateCredIdInner(credOwner, deviceId, credIdByte, &returnCredId);
         if (ret != IS_SUCCESS) {
-            LOGE("Failed to regenerate credId!");
             return ret;
         }
     }
+    *credIdStr = returnCredId;
+    return IS_SUCCESS;
+}
 
-    if (!StringSetPointer(&credential->credId, *credIdStr)) {
+int32_t GenerateCredId(int32_t osAccountId, Credential *credential, Uint8Buff *credIdByte)
+{
+    if (HcStrlen(StringGet(&credential->credId)) > 0) {
+        return UseImportedCredId(osAccountId, credential, credIdByte); // credId is set by user
+    }
+
+    char *credIdStr = NULL;
+    int32_t ret = GenerateUniqueCredId(osAccountId, credential, credIdByte, &credIdStr);
+    if (ret != IS_SUCCESS) {
+        return ret;
+    }
+
+    if (!StringSetPointer(&credential->credId, credIdStr)) {
         LOGE("Failed to set credId");
-        HcFree(*credIdStr);
+        HcFree(credIdByte->val);
+        HcFree(credIdStr);
         return IS_ERR_MEMORY_COPY;
     }
+    HcFree(credIdStr);
     LOGI("Generate credId success");
     return IS_SUCCESS;
 }
@@ -215,60 +287,83 @@ static int32_t CheckOutMaxCredSize(int32_t osAccountId, const char *credOwner)
         return IS_ERR_BEYOND_LIMIT;
     }
     ClearCredentialVec(&credentialVec);
+    LOGI("The number of credentials for this credOwner is within the limit");
     return IS_SUCCESS;
 }
 
-static void GetAlgoFromCred(uint8_t algorithmType, Algorithm *algo)
+static Algorithm GetAlgoFromCred(uint8_t algorithmType)
 {
     switch (algorithmType) {
         case ALGO_TYPE_P256:
-            *algo = P256;
-            break;
+            return P256;
         case ALGO_TYPE_ED25519:
-            *algo = ED25519;
-            break;
+            return ED25519;
         default:
-            *algo = AES;
-            break;
+            return AES;
     }
 }
 
-int32_t AddKeyValueToHuks(Uint8Buff credIdByte, Credential *credential, int32_t osAccountId, uint8_t method,
-    Uint8Buff *keyValue)
+static int32_t GenerateKeyValue(int32_t osAccountId,
+    Credential *credential, KeyParams keyParams, Algorithm algo, ExtraInfo exInfo)
 {
+    Uint8Buff keyAlias = { keyParams.keyBuff.key, keyParams.keyBuff.keyLen };
+    if (GetLoaderInstance()->checkKeyExist(&keyAlias, false, osAccountId) != HAL_ERR_KEY_NOT_EXIST) {
+        LOGI("The keyValue corresponding to the credId already exists in HUKS, no need to generate.");
+        return IS_SUCCESS;
+    }
+    LOGI("The keyValue corresponding to the credId does not exist in HUKS, generate keyValue.");
+    uint32_t keyLen = (credential->algorithmType == ALGO_TYPE_AES_128) ? AES_128_KEY_LEN : SELE_ECC_KEY_LEN;
+    KeyPurpose purpose = (credential->algorithmType == ALGO_TYPE_ED25519) ?
+        KEY_PURPOSE_SIGN_VERIFY : KEY_PURPOSE_KEY_AGREE;
+    int32_t ret = GetLoaderInstance()->generateKeyPairWithStorage(&keyParams, keyLen, algo, purpose, &exInfo);
+    if (ret == HAL_ERR_HUKS) {
+        LOGE("Huks generateKeyPair failed!");
+        return IS_ERR_HUKS_GENERATE_KEY_FAILED;
+    }
+    if (ret != IS_SUCCESS) {
+        LOGE("Failed to generate key pair!");
+        return ret;
+    }
+    LOGI("Generate key pair success!");
+    return IS_SUCCESS;
+}
+
+static int32_t ImportKeyValue(KeyParams keyParams, Uint8Buff keyValue, Algorithm algo, ExtraInfo exInfo)
+{
+    int32_t ret = GetLoaderInstance()->importPublicKey(&keyParams, &keyValue, algo, &exInfo);
+    if (ret == HAL_ERR_HUKS) {
+        LOGE("Huks import key failed!");
+        return IS_ERR_HUKS_IMPORT_KEY_FAILED;
+    }
+    if (ret != IS_SUCCESS) {
+        LOGE("Failed to import key pair!");
+        return ret;
+    }
+    LOGI("Import key pair success!");
+    return IS_SUCCESS;
+}
+
+int32_t AddKeyValueToHuks(int32_t osAccountId, Uint8Buff credIdByte, Credential *credential, uint8_t method,
+    Uint8Buff keyValue)
+{
+    int32_t ret;
     KeyParams keyParams = { { credIdByte.val, credIdByte.length, true }, false, osAccountId };
     int32_t authId = 0;
     Uint8Buff authIdBuff = { (uint8_t *)&authId, sizeof(int32_t) };
     ExtraInfo exInfo = { authIdBuff, DEFAULT_EX_INFO_VAL, DEFAULT_EX_INFO_VAL };
-    int32_t ret;
-    Algorithm algo;
-    GetAlgoFromCred(credential->algorithmType, &algo);
+    Algorithm algo = GetAlgoFromCred(credential->algorithmType);
+    
     if (method == METHOD_GENERATE) {
-        uint32_t keyLen = (credential->algorithmType == ALGO_TYPE_AES_128) ? AES_128_KEY_LEN : SELE_ECC_KEY_LEN;
-        KeyPurpose purpose = (credential->algorithmType == ALGO_TYPE_ED25519) ?
-            KEY_PURPOSE_SIGN_VERIFY : KEY_PURPOSE_KEY_AGREE;
-        ret = GetLoaderInstance()->generateKeyPairWithStorage(&keyParams, keyLen, algo, purpose, &exInfo);
-        if (ret == HAL_ERR_HUKS) {
-            LOGE("Huks generateKeyPair failed!");
-            return IS_ERR_HUKS_GENERATE_KEY_FAILED;
-        }
+        ret = GenerateKeyValue(osAccountId, credential, keyParams, algo, exInfo);
         if (ret != IS_SUCCESS) {
-            LOGE("Failed to generate key pair!");
             return ret;
         }
-        LOGI("Generate key pair success!");
     }
     if (method == METHOD_IMPORT) {
-        ret = GetLoaderInstance()->importPublicKey(&keyParams, keyValue, algo, &exInfo);
-        if (ret == HAL_ERR_HUKS) {
-            LOGE("Huks import key failed!");
-            return IS_ERR_HUKS_IMPORT_KEY_FAILED;
-        }
+        ret = ImportKeyValue(keyParams, keyValue, algo, exInfo);
         if (ret != IS_SUCCESS) {
-            LOGE("Failed to import key pair!");
             return ret;
         }
-        LOGI("Import key pair success!");
     }
     return IS_SUCCESS;
 }
@@ -277,8 +372,8 @@ int32_t CheckCredIdExistInHuks(int32_t osAccountId, const char *credId, Uint8Buf
 {
     int32_t ret = HexStringToByte(credId, credIdHashBuff->val, credIdHashBuff->length);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to convert credId to byte");
-        return ret;
+        LOGE("Failed to convert credId to byte, invalid credId, ret = %d", ret);
+        return IS_ERR_INVALID_HEX_STRING;
     }
 
     return GetLoaderInstance()->checkKeyExist(credIdHashBuff, false, osAccountId);
@@ -532,16 +627,17 @@ static int32_t SetKeyValueFromJson(CJson *json, uint8_t method, Uint8Buff *keyVa
     }
     uint32_t keyValueLen = HcStrlen(keyValueStr) / BYTE_TO_HEX_OPER_LENGTH;
     keyValue->length = keyValueLen;
-    keyValue->val = (uint8_t *)HcMalloc(keyValueLen, 0);
-    if (keyValue->val == NULL) {
+    uint8_t *returnKeyVal = (uint8_t *)HcMalloc(keyValueLen, 0);
+    if (returnKeyVal == NULL) {
         LOGE("Failed to malloc memory for keyValue");
         return IS_ERR_ALLOC_MEMORY;
     }
-    if (GetByteFromJson(json, FIELD_KEY_VALUE, keyValue->val, keyValue->length) != IS_SUCCESS) {
+    if (GetByteFromJson(json, FIELD_KEY_VALUE, returnKeyVal, keyValue->length) != IS_SUCCESS) {
         LOGE("set keyValue fail.");
-        HcFree(keyValue->val);
+        HcFree(returnKeyVal);
         return IS_ERR_JSON_GET;
     }
+    keyValue->val = returnKeyVal;
     return IS_SUCCESS;
 }
 
@@ -554,7 +650,6 @@ static int32_t SetPeerUserSpaceId(Credential *credential, CJson *json, uint8_t m
         return IS_ERR_INVALID_PARAMS;
     }
     if (peerUserSpaceId == NULL) {
-        LOGI("peerUserSpaceId could be NULL when spcical case");
         return IS_SUCCESS;
     }
     if (!StringSetPointer(&credential->peerUserSpaceId, peerUserSpaceId)) {
@@ -592,6 +687,20 @@ static int32_t SetExtendInfo(Credential *credential, CJson *json)
     }
     if (!StringSetPointer(&credential->extendInfo, extendInfo)) {
         LOGW("Failed to set extendInfo!");
+    }
+    return IS_SUCCESS;
+}
+
+static int32_t SetCredIdFromJson(Credential *credential, CJson *json)
+{
+    const char *credIdStr = GetStringFromJson(json, FIELD_CRED_ID);
+    if (credIdStr == NULL || HcStrlen(credIdStr) == 0) {
+        LOGI("No imported credId in credReqParam, credId will be generated by IS.");
+        return IS_SUCCESS;
+    }
+    if (!StringSetPointer(&credential->credId, credIdStr)) {
+        LOGE("Failed to set credId");
+        return IS_ERR_ALLOC_MEMORY;
     }
     return IS_SUCCESS;
 }
@@ -685,11 +794,16 @@ static int32_t SetOptionalField(Credential *credential, CJson *json)
         return ret;
     }
 
+    ret = SetCredIdFromJson(credential, json);
+    if (ret != IS_SUCCESS) {
+        return ret;
+    }
+
     return IS_SUCCESS;
 }
 
-int32_t CheckAndSetCredInfo(Credential *credential,
-    CJson *json, int32_t osAccountId, uint8_t *method, Uint8Buff *keyValue)
+int32_t CheckAndSetCredInfo(int32_t osAccountId,
+    Credential *credential, CJson *json, uint8_t *method, Uint8Buff *keyValue)
 {
     int32_t ret = SetRequiredField(credential, json, method);
     if (ret != IS_SUCCESS) {
@@ -707,11 +821,8 @@ int32_t CheckAndSetCredInfo(Credential *credential,
     }
 
     ret = CheckOutMaxCredSize(osAccountId, StringGet(&credential->credOwner));
-    if (ret != IS_SUCCESS) {
-        return ret;
-    }
 
-    return IS_SUCCESS;
+    return ret;
 }
 
 int32_t SetQueryParamsFromJson(QueryCredentialParams *queryParams, CJson *json)
@@ -768,9 +879,16 @@ int32_t GetCredIdsFromCredVec(CredentialVec credentialVec, CJson *credIdJson, in
         }
         Credential *credential = (Credential *)(*ptr);
         const char *credId = StringGet(&credential->credId);
-        uint8_t credIdVal[SHA256_LEN] = {0};
-        Uint8Buff credIdHashBuff = { credIdVal, SHA256_LEN };
-        ret = CheckCredIdExistInHuks(osAccountId, credId, &credIdHashBuff);
+        uint32_t credIdByteLen = HcStrlen(credId) / BYTE_TO_HEX_OPER_LENGTH;
+        Uint8Buff credIdByte = { NULL, credIdByteLen };
+        credIdByte.val = (uint8_t *)HcMalloc(credIdByteLen, 0);
+        if (credIdByte.val == NULL) {
+            LOGE("Failed to malloc credIdByte");
+            return IS_ERR_ALLOC_MEMORY;
+        }
+
+        ret = CheckCredIdExistInHuks(osAccountId, credId, &credIdByte);
+        HcFree(credIdByte.val);
         if (ret == HAL_ERR_KEY_NOT_EXIST) {
             LOGE("Huks key not exist!");
             DelCredById(osAccountId, credId);
@@ -864,21 +982,21 @@ int32_t DelCredById(int32_t osAccountId, const char *credId)
 
 int32_t AddKeyValueToReturn(Uint8Buff keyValue, char **returnData)
 {
-    CJson *pubKeyJson = CreateJson();
-    if (pubKeyJson == NULL) {
-        LOGE("Failed to create pubKeyJson");
+    CJson *keyValueJson = CreateJson();
+    if (keyValueJson == NULL) {
+        LOGE("Failed to create keyValueJson");
         return IS_ERR_JSON_CREATE;
     }
-    int32_t ret = AddByteToJson(pubKeyJson, FIELD_KEY_VALUE, keyValue.val, keyValue.length);
+    int32_t ret = AddByteToJson(keyValueJson, FIELD_KEY_VALUE, keyValue.val, keyValue.length);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to add key to json");
-        FreeJson(pubKeyJson);
+        LOGE("Failed to add key value to json");
+        FreeJson(keyValueJson);
         return IS_ERR_JSON_ADD;
     }
-    *returnData = PackJsonToString(pubKeyJson);
-    FreeJson(pubKeyJson);
+    *returnData = PackJsonToString(keyValueJson);
+    FreeJson(keyValueJson);
     if (*returnData == NULL) {
-        LOGE("Failed to pack json to string");
+        LOGE("Failed to pack key value json to string");
         return IS_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     return IS_SUCCESS;

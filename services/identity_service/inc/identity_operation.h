@@ -40,7 +40,7 @@
 #define FIELD_INTERFACE_PERMISSION "ohos.permission.ACCESS_DEVICE_AUTH_CRED_MGR"
 #define DEFAULT_VAL 0
 #define RAND_NUM_LENGTH 16
-#define PUB_KEY_LENGTH 128
+#define KEY_VALUE_MAX_LENGTH 128
 #define PAKE_ED25519_KEY_PAIR_LEN 32
 #define MAX_INT64_SIZE 20
 #define MAX_CRED_SIZE 5000
@@ -99,18 +99,18 @@ enum {
 };
 
 int32_t AddCredAndSaveDb(int32_t osAccountId, Credential *credential);
-int32_t AddKeyValueToHuks(Uint8Buff credIdByte, Credential *credential, int32_t osAccountId, uint8_t method,
-    Uint8Buff *publicKey);
+int32_t AddKeyValueToHuks(int32_t osAccountId, Uint8Buff credIdByte, Credential *credential, uint8_t method,
+    Uint8Buff publicKey);
 int32_t AddKeyValueToReturn(Uint8Buff keyValue, char **returnData);
 int32_t CheckCredIdExistInHuks(int32_t osAccountId, const char *credId, Uint8Buff *credIdHashBuff);
 int32_t DelCredById(int32_t osAccountId, const char *credId);
 
-int32_t GenerateCredId(Credential *credential, int32_t osAccountId, Uint8Buff *credIdByte, char **credIdStr);
+int32_t GenerateCredId(int32_t osAccountId, Credential *credential, Uint8Buff *credIdByte);
 int32_t GenerateReturnEmptyArrayStr(char **returnVec);
 int32_t GetCredentialById(int32_t osAccountId, const char *credId, Credential **returnEntry);
 int32_t GetCredIdsFromCredVec(CredentialVec credentialVec, CJson *credIdJson, int32_t osAccountId);
 
-int32_t CheckAndSetCredInfo(Credential *credential, CJson *json, int32_t osAccountId, uint8_t *method,
+int32_t CheckAndSetCredInfo(int32_t osAccountId, Credential *credential, CJson *json, uint8_t *method,
     Uint8Buff *publicKey);
 int32_t SetQueryParamsFromJson(QueryCredentialParams *queryParams, CJson *json);
 int32_t UpdateInfoFromJson(Credential *credential, CJson *json);
