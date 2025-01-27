@@ -302,6 +302,8 @@ static int32_t ISSetEcSpekeEntity(IdentityInfo *info, bool isNeedRefreshPseudony
     if (isNeedRefreshPseudonymId) {
         entity->expandProcessCmds |= CMD_MK_AGREE;
     }
+#else
+    (void)isNeedRefreshPseudonymId;
 #endif
     if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity) == NULL) {
         HcFree(entity);
@@ -315,7 +317,6 @@ static int32_t ISSetEcSpekeEntity(IdentityInfo *info, bool isNeedRefreshPseudony
     LOGE("ec speke not support!");
     return HC_ERR_NOT_SUPPORT;
 #endif
-
 }
 
 static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *credAuthInfo,
