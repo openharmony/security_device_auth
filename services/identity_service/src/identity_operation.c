@@ -287,7 +287,6 @@ static int32_t CheckOutMaxCredSize(int32_t osAccountId, const char *credOwner)
         return IS_ERR_BEYOND_LIMIT;
     }
     ClearCredentialVec(&credentialVec);
-    LOGI("The number of credentials for this credOwner is within the limit");
     return IS_SUCCESS;
 }
 
