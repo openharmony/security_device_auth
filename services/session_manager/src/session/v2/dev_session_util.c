@@ -75,18 +75,18 @@ static int32_t GetUserIdByISInfo(const CJson *context, char **returnUserId)
     CJson *credAuthInfo = GetObjFromJson(context, FIELD_SELF_CREDENTIAL_OBJ);
     if (credAuthInfo == NULL) {
         LOGE("Get self credAuthInfo fail.");
-        return IS_ERR_JSON_GET;
+        return HC_ERR_JSON_GET;
     }
     const char *userId = GetStringFromJson(credAuthInfo, FIELD_USER_ID);
     if (userId == NULL) {
         LOGE("Failed to get user ID!");
-        return IS_ERR_JSON_GET;
+        return HC_ERR_JSON_GET;
     }
     if (DeepCopyString(userId, returnUserId) != HC_SUCCESS) {
         LOGE("Failed to copy userId!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    return IS_SUCCESS;
+    return HC_SUCCESS;
 }
 
 static int32_t GetPdidByContext(const CJson *context, bool isCredAuth, char **returnPdid)
