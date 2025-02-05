@@ -44,6 +44,8 @@ ohos_fuzztest("RegisteLogFuzzTest") {
   ldflags = [ "--coverage" ]
 
   sources = [ "registelog_fuzzer.cpp" ]
+  sources +=
+      [ "${deviceauth_path}/frameworks/deviceauth_lite/source/log/log.c" ]
   deps = [ "${deviceauth_path}/frameworks/deviceauth_lite/source:hichainsdk" ]
   external_deps = [ "bounds_checking_function:libsec_shared" ]
 }
