@@ -45,6 +45,7 @@ namespace OHOS {
             TestLogd,
         };
         registe_log(&logFunc);
+        DBG_OUT("data: %s size: %d", data, size);
         return true;
     }
 }

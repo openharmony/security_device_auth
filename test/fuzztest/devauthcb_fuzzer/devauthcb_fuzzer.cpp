@@ -30,6 +30,7 @@
 #include "nativetoken_kit.h"
 #include "securec.h"
 #include "token_setproc.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 namespace OHOS {
 const std::u16string DEV_AUTH_CB_INTERFACE_TOKEN = u"deviceauth.ICommIpcCallback";
@@ -70,7 +71,9 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     sptr<StubDevAuthCb> remoteSptr = remoteObj;
     MessageParcel datas;
     datas.WriteInterfaceToken(DEV_AUTH_CB_INTERFACE_TOKEN);
-    datas.WriteInt32(0);
+    FuzzedDataProvider fdp(data, size);
+    const int32_t fdpData = fdp.ConsumeIntegral<int32_t>();
+    datas.WriteInt32(fdpData);
     datas.WritePointer(0x0);
     datas.RewindRead(0);
     MessageParcel reply;
