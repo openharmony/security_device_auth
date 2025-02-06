@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
-#include "ipc_sdk.h"
+#include "identity_service_ipc_sdk.h"
 
 #include "common_defs.h"
 #include "device_auth_defines.h"
 #include "device_auth.h"
 #include "hc_log.h"
 #include "hc_mutex.h"
+#include "ipc_sdk_defines.h"
 
 #include "ipc_adapt.h"
 #include "securec.h"
@@ -761,6 +762,16 @@ static void InitIpcCaMethods(CredAuthManager *caMethodObj)
     caMethodObj->authCredential = IpcCmAuthCredential;
     caMethodObj->processCredData = IpcCmProcessCredData;
     return;
+}
+
+void InitISIpc(void)
+{
+    InitHcMutex(&g_ipcMutex, false);
+}
+
+void DeInitISIpc(void)
+{
+    DestroyHcMutex(&g_ipcMutex);
 }
 
 DEVICE_AUTH_API_PUBLIC const CredManager *GetCredMgrInstance(void)

@@ -1093,36 +1093,36 @@ int32_t SaveOsAccountCredDb(int32_t osAccountId)
 static void DumpCredential(int fd, const Credential *credential)
 {
     dprintf(fd, "||--------------------------Credential--------------------------|                  |\n");
-    dprintf(fd, "||%-16s = %-46.8s|                  |\n", "credId", StringGet(&credential->credId));
-    dprintf(fd, "||%-16s = %-46.8s|                  |\n", "deviceId", StringGet(&credential->deviceId));
-    dprintf(fd, "||%-16s = %-46.8s|                  |\n", "peerUserSpaceId", StringGet(&credential->peerUserSpaceId));
-    dprintf(fd, "||%-16s = %-46d|                  |\n", "subject", credential->subject);
-    dprintf(fd, "||%-16s = %-46.8s|                  |\n", "userId", StringGet(&credential->userId));
-    dprintf(fd, "||%-16s = %-46d|                  |\n", "issuer", credential->issuer);
-    dprintf(fd, "||%-16s = %-46d|                  |\n", "credType", credential->credType);
-    dprintf(fd, "||%-16s = %-46d|                  |\n", "keyFormat", credential->keyFormat);
-    dprintf(fd, "||%-16s = %-46d|                  |\n", "algorithmType", credential->algorithmType);
-    dprintf(fd, "||%-16s = %-46d|                  |\n", "proofType", credential->proofType);
+    dprintf(fd, "||%-16s = %-43.8s|                  |\n", "credId", StringGet(&credential->credId));
+    dprintf(fd, "||%-16s = %-43.8s|                  |\n", "deviceId", StringGet(&credential->deviceId));
+    dprintf(fd, "||%-16s = %-43.8s|                  |\n", "peerUserSpaceId", StringGet(&credential->peerUserSpaceId));
+    dprintf(fd, "||%-16s = %-43d|                  |\n", "subject", credential->subject);
+    dprintf(fd, "||%-16s = %-43.8s|                  |\n", "userId", StringGet(&credential->userId));
+    dprintf(fd, "||%-16s = %-43d|                  |\n", "issuer", credential->issuer);
+    dprintf(fd, "||%-16s = %-43d|                  |\n", "credType", credential->credType);
+    dprintf(fd, "||%-16s = %-43d|                  |\n", "keyFormat", credential->keyFormat);
+    dprintf(fd, "||%-16s = %-43d|                  |\n", "algorithmType", credential->algorithmType);
+    dprintf(fd, "||%-16s = %-43d|                  |\n", "proofType", credential->proofType);
     uint32_t index = 0;
     HcString *authorizedAccount = NULL;
     FOR_EACH_HC_VECTOR(credential->authorizedAccountList, index, authorizedAccount) {
         if (authorizedAccount == NULL) {
             continue;
         }
-        dprintf(fd, "||%-16s %d = %-46.8s|                  |\n", "account", index, StringGet(authorizedAccount));
+        dprintf(fd, "||%-16s %d = %-43.8s|                  |\n", "account", index, StringGet(authorizedAccount));
     }
-    dprintf(fd, "||%-16s = %-46d|                  |\n", "authorizedScope", credential->authorizedScope);
-    dprintf(fd, "||%-16s = %-46.8s|                  |\n", "credOwner", StringGet(&credential->credOwner));
-    dprintf(fd, "||%-16s = %-46.8s|                  |\n", "extendInfo", StringGet(&credential->extendInfo));
+    dprintf(fd, "||%-16s = %-43d|                  |\n", "authorizedScope", credential->authorizedScope);
+    dprintf(fd, "||%-16s = %-43.8s|                  |\n", "credOwner", StringGet(&credential->credOwner));
+    dprintf(fd, "||%-16s = %-43.8s|                  |\n", "extendInfo", StringGet(&credential->extendInfo));
     dprintf(fd, "||--------------------------Credential--------------------------|                  |\n");
 }
 
 static void DumpDb(int fd, const OsAccountCredInfo *db)
 {
     const CredentialVec *credentials = &db->credentials;
-    dprintf(fd, "|------------------------------------CRED-DataBase-------------------------------------|\n");
-    dprintf(fd, "|%-12s = %-67d|\n", "osAccountId", db->osAccountId);
-    dprintf(fd, "|%-12s = %-67d|\n", "credentialNum", credentials->size(credentials));
+    dprintf(fd, "|----------------------------------CRED-DataBase-----------------------------------|\n");
+    dprintf(fd, "|%-13s = %-67d|\n", "osAccountId", db->osAccountId);
+    dprintf(fd, "|%-13s = %-67d|\n", "credentialNum", credentials->size(credentials));
     uint32_t index;
     Credential **credential;
     FOR_EACH_HC_VECTOR(*credentials, index, credential) {
@@ -1131,7 +1131,7 @@ static void DumpDb(int fd, const OsAccountCredInfo *db)
         }
         DumpCredential(fd, *credential);
     }
-    dprintf(fd, "|------------------------------------CRED-DataBase-------------------------------------|\n");
+    dprintf(fd, "|----------------------------------CRED-DataBase-----------------------------------|\n");
 }
 
 static void LoadAllAccountsData(void)

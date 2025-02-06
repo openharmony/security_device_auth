@@ -20,7 +20,7 @@
 #include "hc_log.h"
 #include "ipc_skeleton.h"
 #include "ipc_adapt.h"
-#include "ipc_sdk.h"
+#include "ipc_sdk_defines.h"
 #include "securec.h"
 
 #ifdef __cplusplus

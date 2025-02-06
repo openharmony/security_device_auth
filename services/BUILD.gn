@@ -269,7 +269,7 @@ if (os_level == "mini" || os_level == "small") {
     sources = deviceauth_ipc_files
     sources += permission_adapter_files
     sources += [ "${frameworks_path}/src/ipc_sdk.c" ]
-    sources += [ "${frameworks_path}/src/IS_ipc_sdk.c" ]
+    sources += [ "${frameworks_path}/src/identity_service_ipc_sdk.c" ]
 
     defines = [
       "__LINUX__",

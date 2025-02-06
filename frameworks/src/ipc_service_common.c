@@ -20,7 +20,7 @@
 #include "device_auth.h"
 #include "hc_log.h"
 #include "ipc_adapt.h"
-#include "ipc_sdk.h"
+#include "ipc_sdk_defines.h"
 
 #ifdef __cplusplus
 extern "C" {
