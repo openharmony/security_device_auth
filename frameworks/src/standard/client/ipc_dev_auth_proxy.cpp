@@ -18,7 +18,7 @@
 #include "common_defs.h"
 #include "hc_log.h"
 #include "ipc_adapt.h"
-#include "ipc_sdk.h"
+#include "ipc_sdk_defines.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 

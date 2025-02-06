@@ -25,7 +25,7 @@
 #include "ipc_adapt.h"
 #include "ipc_callback_stub.h"
 #include "ipc_dev_auth_stub.h"
-#include "ipc_sdk.h"
+#include "ipc_sdk_defines.h"
 #include "ipc_service_common.h"
 #include "ipc_service_lite.h"
 #include "message_parcel.h"

@@ -19,7 +19,7 @@
 #include "hc_log.h"
 #include "ipc_adapt.h"
 #include "ipc_callback_stub.h"
-#include "ipc_sdk.h"
+#include "ipc_sdk_defines.h"
 #include "permission_adapter.h"
 #include "securec.h"
 #include "system_ability_definition.h"

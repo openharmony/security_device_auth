@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "accesstoken_kit.h"
-#include "ipc_sdk.h"
+#include "ipc_sdk_defines.h"
 #include "ipc_skeleton.h"
 
 #include "device_auth_defines.h"

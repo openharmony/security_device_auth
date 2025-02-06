@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,8 @@
 
 #include "common_defs.h"
 #include "device_auth_defines.h"
+#include "identity_service_ipc_sdk.h"
+#include "ipc_sdk_defines.h"
 #include "device_auth.h"
 #include "hc_log.h"
 #include "hc_mutex.h"
@@ -1914,6 +1916,7 @@ DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *
 DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 {
     InitHcMutex(&g_ipcMutex, false);
+    InitISIpc();
     return InitProxyAdapt();
 }
 
@@ -1921,6 +1924,7 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
 {
     UnInitProxyAdapt();
     DestroyHcMutex(&g_ipcMutex);
+    DeInitISIpc();
 }
 
 DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
