@@ -103,6 +103,7 @@ int32_t AddKeyValueToHuks(int32_t osAccountId, Uint8Buff credIdByte, Credential 
     Uint8Buff publicKey);
 int32_t AddKeyValueToReturn(Uint8Buff keyValue, char **returnData);
 int32_t CheckCredIdExistInHuks(int32_t osAccountId, const char *credId, Uint8Buff *credIdHashBuff);
+int32_t CheckOwnerUidPermission(Credential *credential);
 int32_t DelCredById(int32_t osAccountId, const char *credId);
 
 int32_t GenerateCredId(int32_t osAccountId, Credential *credential, Uint8Buff *credIdByte);

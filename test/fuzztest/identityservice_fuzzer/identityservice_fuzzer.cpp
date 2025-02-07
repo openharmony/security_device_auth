@@ -48,108 +48,93 @@ namespace OHOS {
 static const char *ADD_PARAMS =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
-    "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
+    "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *ADD_PARAMS1 =
     "{\"credType\":0,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
-    "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
+    "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *ADD_PARAMS2 =
     "{\"credType\":1,\"keyFormat\":0,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
-    "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
+    "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *ADD_PARAMS3 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":0,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
-    "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
+    "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *ADD_PARAMS4 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":0,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
-    "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
+    "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *ADD_PARAMS5 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":0,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
-    "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
+    "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *ADD_PARAMS6 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":0,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
-    "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
+    "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *ADD_PARAMS7 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":0,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *ADD_PARAMS8 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":0,\"userId\":\"TestUserId\","
-    "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
+    "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *ADD_PARAMS9 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
-    "\"keyValue\":\"TestKeyValue\",\"credOwner\":\"TestAppId\","
+    "\"credOwner\":\"TestAppId\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *ADD_PARAMS10 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
-    "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\","
+    "\"deviceId\":\"TestDeviceId\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *ADD_PARAMS11 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,"
-    "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
+    "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *ADD_PARAMS12 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":2,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *ADD_PARAMS13 =
     "{\"credType\":2,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":2,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"keyValue\":\"9A9A9A9A\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *ADD_PARAMS14 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
-    "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId1\","
+    "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId1\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
-
 static const char *REQUEST_PARAMS =
     "{\"authorizedScope\":1, \"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\","
     "\"TestName4\"],\"extendInfo\":\"\"}";
@@ -701,25 +686,7 @@ static int32_t IdentityServiceTestCase029(void)
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
-        ret = cm->deleteCredential(DEFAULT_OS_ACCOUNT, TEST_APP_ID, credId);
-        HcFree(credId);
-    } while (0);
-    DestroyDeviceAuthService();
-    return ret;
-}
-
-static int32_t IdentityServiceTestCase030(void)
-{
-    DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
-    do {
-        const CredManager *cm = GetCredMgrInstance();
-        char *credId = nullptr;
-        ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
-        ret = cm->deleteCredential(DEFAULT_OS_ACCOUNT, nullptr, credId);
+        ret = cm->deleteCredential(DEFAULT_OS_ACCOUNT, credId);
         HcFree(credId);
     } while (0);
     DestroyDeviceAuthService();
@@ -735,25 +702,7 @@ static int32_t IdentityServiceTestCase031(void)
     }
     do {
         const CredManager *cm = GetCredMgrInstance();
-        ret = cm->deleteCredential(DEFAULT_OS_ACCOUNT, TEST_APP_ID, nullptr);
-    } while (0);
-    DestroyDeviceAuthService();
-    return ret;
-}
-
-static int32_t IdentityServiceTestCase032(void)
-{
-    DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
-    do {
-        const CredManager *cm = GetCredMgrInstance();
-        char *credId = nullptr;
-        ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
-        ret = cm->deleteCredential(DEFAULT_OS_ACCOUNT, TEST_APP_ID1, credId);
-        HcFree(credId);
+        ret = cm->deleteCredential(DEFAULT_OS_ACCOUNT, nullptr);
     } while (0);
     DestroyDeviceAuthService();
     return ret;
@@ -770,7 +719,7 @@ static int32_t IdentityServiceTestCase033(void)
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
-        ret = cm->updateCredInfo(DEFAULT_OS_ACCOUNT, TEST_APP_ID, credId, REQUEST_PARAMS);
+        ret = cm->updateCredInfo(DEFAULT_OS_ACCOUNT, credId, REQUEST_PARAMS);
         HcFree(credId);
     } while (0);
     DestroyDeviceAuthService();
@@ -788,25 +737,7 @@ static int32_t IdentityServiceTestCase034(void)
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
-        ret = cm->updateCredInfo(DEFAULT_OS_ACCOUNT, TEST_APP_ID, credId, "");
-        HcFree(credId);
-    } while (0);
-    DestroyDeviceAuthService();
-    return ret;
-}
-
-static int32_t IdentityServiceTestCase035(void)
-{
-    DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
-    do {
-        const CredManager *cm = GetCredMgrInstance();
-        char *credId = nullptr;
-        ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
-        ret = cm->updateCredInfo(DEFAULT_OS_ACCOUNT, nullptr, credId, REQUEST_PARAMS);
+        ret = cm->updateCredInfo(DEFAULT_OS_ACCOUNT, credId, "");
         HcFree(credId);
     } while (0);
     DestroyDeviceAuthService();
@@ -824,25 +755,7 @@ static int32_t IdentityServiceTestCase036(void)
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
-        ret = cm->updateCredInfo(DEFAULT_OS_ACCOUNT, TEST_APP_ID, nullptr, REQUEST_PARAMS);
-        HcFree(credId);
-    } while (0);
-    DestroyDeviceAuthService();
-    return ret;
-}
-
-static int32_t IdentityServiceTestCase037(void)
-{
-    DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
-    do {
-        const CredManager *cm = GetCredMgrInstance();
-        char *credId = nullptr;
-        ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
-        ret = cm->updateCredInfo(DEFAULT_OS_ACCOUNT, TEST_APP_ID1, credId, REQUEST_PARAMS);
+        ret = cm->updateCredInfo(DEFAULT_OS_ACCOUNT, nullptr, REQUEST_PARAMS);
         HcFree(credId);
     } while (0);
     DestroyDeviceAuthService();
@@ -945,7 +858,7 @@ static int32_t IdentityServiceTestCase043(void)
         ret = cm->registerChangeListener(TEST_APP_ID, &g_credChangeListener);
         char *credId = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
-        ret = cm->updateCredInfo(DEFAULT_OS_ACCOUNT, TEST_APP_ID, credId, REQUEST_PARAMS);
+        ret = cm->updateCredInfo(DEFAULT_OS_ACCOUNT, credId, REQUEST_PARAMS);
         HcFree(credId);
     } while (0);
     DestroyDeviceAuthService();
@@ -965,7 +878,7 @@ static int32_t IdentityServiceTestCase044(void)
         ret = cm->registerChangeListener(TEST_APP_ID, &g_credChangeListener);
         char *credId = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
-        ret = cm->deleteCredential(DEFAULT_OS_ACCOUNT, TEST_APP_ID, credId);
+        ret = cm->deleteCredential(DEFAULT_OS_ACCOUNT, credId);
         HcFree(credId);
     } while (0);
     DestroyDeviceAuthService();
@@ -1062,18 +975,14 @@ static void QueryCredFuzzPart(void)
 static void DelCredFuzzPart(void)
 {
     (void)IdentityServiceTestCase029();
-    (void)IdentityServiceTestCase030();
     (void)IdentityServiceTestCase031();
-    (void)IdentityServiceTestCase032();
 }
 
 static void UpdateCredFuzzPart(void)
 {
     (void)IdentityServiceTestCase033();
     (void)IdentityServiceTestCase034();
-    (void)IdentityServiceTestCase035();
     (void)IdentityServiceTestCase036();
-    (void)IdentityServiceTestCase037();
 }
 
 static void CredListenerFuzzPart(void)

@@ -616,10 +616,14 @@ static int32_t SetUserId(Credential *credential, CJson *json)
 
 static int32_t SetKeyValueFromJson(CJson *json, uint8_t method, Uint8Buff *keyValue)
 {
+    const char *keyValueStr = GetStringFromJson(json, FIELD_KEY_VALUE);
     if (method == METHOD_GENERATE) {
+        if (HcStrlen(keyValueStr) > 0) {
+            LOGE("Invalid params, when method is generate, keyValue should not be passed in");
+            return IS_ERR_KEYVALUE_METHOD_CONFLICT;
+        }
         return IS_SUCCESS;
     }
-    const char *keyValueStr = GetStringFromJson(json, FIELD_KEY_VALUE);
     if (keyValueStr == NULL || HcStrlen(keyValueStr) <= 0) {
         LOGE("Invalid params, when method is imoprt, keyValue is NULL");
         return IS_ERR_INVALID_PARAMS;
@@ -1014,5 +1018,19 @@ int32_t GenerateReturnEmptyArrayStr(char **returnVec)
         LOGE("Failed to convert json to string!");
         return IS_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
+    return IS_SUCCESS;
+}
+
+int32_t CheckOwnerUidPermission(Credential *credential)
+{
+#ifdef DEV_AUTH_PERMISSION_ENABLE
+    int32_t currentUid = GetCallingUid();
+    if (currentUid != credential->ownerUid) {
+        LOGE("currentUid is not the same as the ownerUid of the credential");
+        return IS_ERR_OWNER_UID;
+    }
+#else
+    (void)credential;
+#endif
     return IS_SUCCESS;
 }

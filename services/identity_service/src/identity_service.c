@@ -26,7 +26,7 @@ int32_t AddCredential(int32_t osAccountId, const char *requestParams, char **ret
     SET_LOG_MODE(TRACE_MODE);
 
     if (requestParams == NULL || returnData == NULL) {
-        LOGE("Invalid params");
+        LOGE("Failed to add credential, NULL params!");
         return IS_ERR_INVALID_PARAMS;
     }
 
@@ -43,7 +43,7 @@ int32_t ExportCredential(int32_t osAccountId, const char *credId, char **returnD
     SET_LOG_MODE(TRACE_MODE);
 
     if (credId == NULL || returnData == NULL) {
-        LOGE("Failed to export credential, invalid params");
+        LOGE("Failed to export credential, NULL params!");
         return IS_ERR_INVALID_PARAMS;
     }
 
@@ -60,7 +60,7 @@ int32_t QueryCredentialByParams(int32_t osAccountId, const char *requestParams, 
     SET_LOG_MODE(TRACE_MODE);
 
     if (requestParams == NULL || returnData == NULL) {
-        LOGE("Failed to query credential by params, invalid params");
+        LOGE("Failed to query credential by params, NULL params!");
         return IS_ERR_INVALID_PARAMS;
     }
 
@@ -77,7 +77,7 @@ int32_t QueryCredInfoByCredId(int32_t osAccountId, const char *credId, char **re
     SET_LOG_MODE(TRACE_MODE);
 
     if (credId == NULL || returnData == NULL) {
-        LOGE("Failed to query credential info by credId, invalid params");
+        LOGE("Failed to query credential info by credId, NULL params!");
         return IS_ERR_INVALID_PARAMS;
     }
 
@@ -89,12 +89,12 @@ int32_t QueryCredInfoByCredId(int32_t osAccountId, const char *credId, char **re
     return QueryCredInfoByCredIdImpl(osAccountId, credId, returnData);
 }
 
-int32_t DeleteCredential(int32_t osAccountId, const char *appId, const char *credId)
+int32_t DeleteCredential(int32_t osAccountId, const char *credId)
 {
     SET_LOG_MODE(TRACE_MODE);
 
-    if (appId == NULL || credId == NULL) {
-        LOGE("Failed to delete credential, invalid params");
+    if (credId == NULL) {
+        LOGE("Failed to delete credential, NULL credId!");
         return IS_ERR_INVALID_PARAMS;
     }
 
@@ -103,15 +103,15 @@ int32_t DeleteCredential(int32_t osAccountId, const char *appId, const char *cre
         return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
 
-    return DeleteCredentialImpl(osAccountId, appId, credId);
+    return DeleteCredentialImpl(osAccountId, credId);
 }
 
-int32_t UpdateCredInfo(int32_t osAccountId, const char *appId, const char *credId, const char *requestParams)
+int32_t UpdateCredInfo(int32_t osAccountId, const char *credId, const char *requestParams)
 {
     SET_LOG_MODE(TRACE_MODE);
 
-    if (appId == NULL || credId == NULL || requestParams == NULL) {
-        LOGE("Failed to update credential, invalid params");
+    if (credId == NULL || requestParams == NULL) {
+        LOGE("Failed to update credential, NULL params!");
         return IS_ERR_INVALID_PARAMS;
     }
 
@@ -120,7 +120,7 @@ int32_t UpdateCredInfo(int32_t osAccountId, const char *appId, const char *credI
         return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
 
-    return UpdateCredInfoImpl(osAccountId, appId, credId, requestParams);
+    return UpdateCredInfoImpl(osAccountId, credId, requestParams);
 }
 
 int32_t RegisterChangeListener(const char *appId, CredChangeListener *listener)
