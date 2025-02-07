@@ -1464,7 +1464,6 @@ int32_t IpcServiceCmDeleteCredential(const IpcDataInfo *ipcParams, int32_t param
     int32_t osAccountId;
     int32_t inOutLen;
     const char *credId = NULL;
-    const char *appId = NULL;
     LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
@@ -1472,17 +1471,12 @@ int32_t IpcServiceCmDeleteCredential(const IpcDataInfo *ipcParams, int32_t param
         LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
         return ret;
     }
-    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
-    if (ret != HC_SUCCESS) {
-        LOGE("get param error, type %d", PARAM_TYPE_APPID);
-        return ret;
-    }
     ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_CRED_ID, (uint8_t *)&credId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_CRED_ID);
         return ret;
     }
-    callRet = g_devCredMgrMethod.deleteCredential(osAccountId, appId, credId);
+    callRet = g_devCredMgrMethod.deleteCredential(osAccountId, credId);
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
     return ret;
@@ -1495,18 +1489,12 @@ int32_t IpcServiceCmUpdateCredInfo(const IpcDataInfo *ipcParams, int32_t paramNu
     int32_t osAccountId;
     int32_t inOutLen;
     const char *credId = NULL;
-    const char *appId = NULL;
     const char *requestParams = NULL;
     LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
-        return ret;
-    }
-    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
-    if (ret != HC_SUCCESS) {
-        LOGE("get param error, type %d", PARAM_TYPE_APPID);
         return ret;
     }
     ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_CRED_ID, (uint8_t *)&credId, NULL);
@@ -1519,7 +1507,7 @@ int32_t IpcServiceCmUpdateCredInfo(const IpcDataInfo *ipcParams, int32_t paramNu
         LOGE("get param error, type %d", PARAM_TYPE_REQUEST_PARAMS);
         return ret;
     }
-    callRet = g_devCredMgrMethod.updateCredInfo(osAccountId, appId, credId, requestParams);
+    callRet = g_devCredMgrMethod.updateCredInfo(osAccountId, credId, requestParams);
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
     return ret;

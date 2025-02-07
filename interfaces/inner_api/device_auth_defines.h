@@ -173,6 +173,10 @@ enum {
     IS_ERR_IMPORTED_CRED_ID_EXISTED = 0x00010011,                             // 65553
     /* IS invalid hex string*/
     IS_ERR_INVALID_HEX_STRING = 0x00010012,                             // 65554
+    /* IS keyValue is passed in when method is generate*/
+    IS_ERR_KEYVALUE_METHOD_CONFLICT = 0x00010013,                             // 65555
+    /* IS ownerUid error*/
+    IS_ERR_OWNER_UID = 0x00010014,                             // 65556
 
     // IS json error
     IS_ERR_JSON_FAILED = 0x00020001,                                      // 131073

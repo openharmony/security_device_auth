@@ -222,7 +222,7 @@ int32_t QueryCredInfoByCredIdImpl(int32_t osAccountId, const char *credId, char 
     return IS_SUCCESS;
 }
 
-int32_t DeleteCredentialImpl(int32_t osAccountId, const char *appId, const char *credId)
+int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
 {
     Credential *credential = NULL;
     int32_t ret = GetCredentialById(osAccountId, credId, &credential);
@@ -230,13 +230,11 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *appId, const char 
         LOGE("Failed to get credential by credId, ret = %d", ret);
         return ret;
     }
-
-    if (strcmp(StringGet(&credential->credOwner), appId) != 0) {
-        LOGE("appId is not the same as the appId of the credential");
-        DestroyCredential(credential);
-        return IS_ERR_INVALID_PARAMS;
-    }
+    ret = CheckOwnerUidPermission(credential);
     DestroyCredential(credential);
+    if (ret != IS_SUCCESS) {
+        return ret;
+    }
 
     uint32_t credIdByteLen = HcStrlen(credId) / BYTE_TO_HEX_OPER_LENGTH;
     Uint8Buff credIdByte = { NULL, credIdByteLen };
@@ -268,7 +266,7 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *appId, const char 
     return IS_SUCCESS;
 }
 
-int32_t UpdateCredInfoImpl(int32_t osAccountId, const char *appId, const char *credId, const char *requestParams)
+int32_t UpdateCredInfoImpl(int32_t osAccountId, const char *credId, const char *requestParams)
 {
     Credential *credential = NULL;
     int32_t ret = GetCredentialById(osAccountId, credId, &credential);
@@ -277,10 +275,10 @@ int32_t UpdateCredInfoImpl(int32_t osAccountId, const char *appId, const char *c
         return ret;
     }
 
-    if (strcmp(StringGet(&credential->credOwner), appId) != 0) {
-        LOGE("appId is not the same as the appId of the credential");
+    ret = CheckOwnerUidPermission(credential);
+    if (ret != IS_SUCCESS) {
         DestroyCredential(credential);
-        return IS_ERR_INVALID_PARAMS;
+        return ret;
     }
 
     CJson *reqJson = CreateJsonFromString(requestParams);

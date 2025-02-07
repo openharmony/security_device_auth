@@ -493,18 +493,12 @@ static int32_t IpcCmQueryCredInfoByCredId(int32_t osAccountId, const char *credI
     return ret;
 }
 
-static int32_t EncodeDeleteCredentialParams(uintptr_t callCtx, int32_t osAccountId, const char *appId,
-    const char *credId)
+static int32_t EncodeDeleteCredentialParams(uintptr_t callCtx, int32_t osAccountId, const char *credId)
 {
     int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
         sizeof(osAccountId));
     if (ret != HC_SUCCESS) {
         LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_APPID, (const uint8_t *)appId, HcStrlen(appId) + 1);
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_APPID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_CRED_ID, (const uint8_t *)credId, HcStrlen(credId) + 1);
@@ -515,14 +509,14 @@ static int32_t EncodeDeleteCredentialParams(uintptr_t callCtx, int32_t osAccount
     return HC_SUCCESS;
 }
 
-static int32_t IpcCmDeleteCredential(int32_t osAccountId, const char *appId, const char *credId)
+static int32_t IpcCmDeleteCredential(int32_t osAccountId, const char *credId)
 {
     uintptr_t callCtx = 0x0;
     int32_t ret;
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (IsStrInvalid(appId) || IsStrInvalid(credId)) {
+    if (IsStrInvalid(credId)) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -531,7 +525,7 @@ static int32_t IpcCmDeleteCredential(int32_t osAccountId, const char *appId, con
         LOGE("CreateCallCtx failed, ret %d", ret);
         return HC_ERR_IPC_INIT;
     }
-    ret = EncodeDeleteCredentialParams(callCtx, osAccountId, appId, credId);
+    ret = EncodeDeleteCredentialParams(callCtx, osAccountId, credId);
     if (ret != HC_SUCCESS) {
         DestroyCallCtx(&callCtx, NULL);
         return ret;
@@ -551,18 +545,12 @@ static int32_t IpcCmDeleteCredential(int32_t osAccountId, const char *appId, con
     return ret;
 }
 
-static int32_t EncodeUpdateParams(uintptr_t callCtx, int32_t osAccountId, const char *credId, const char *appId,
-    const char *requestParams)
+static int32_t EncodeUpdateParams(uintptr_t callCtx, int32_t osAccountId, const char *credId, const char *requestParams)
 {
     int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
         sizeof(osAccountId));
     if (ret != HC_SUCCESS) {
         LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
-        return HC_ERR_IPC_BUILD_PARAM;
-    }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_APPID, (const uint8_t *)appId, HcStrlen(appId) + 1);
-    if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_APPID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_CRED_ID, (const uint8_t *)credId, HcStrlen(credId) + 1);
@@ -579,15 +567,14 @@ static int32_t EncodeUpdateParams(uintptr_t callCtx, int32_t osAccountId, const 
     return HC_SUCCESS;
 }
 
-static int32_t IpcCmUpdateCredInfo(int32_t osAccountId, const char *appId, const char *credId,
-    const char *requestParams)
+static int32_t IpcCmUpdateCredInfo(int32_t osAccountId, const char *credId, const char *requestParams)
 {
     uintptr_t callCtx = 0x0;
     int32_t ret;
     IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
-    if (IsStrInvalid(appId) || IsStrInvalid(credId) || IsStrInvalid(requestParams)) {
+    if (IsStrInvalid(credId) || IsStrInvalid(requestParams)) {
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -596,7 +583,7 @@ static int32_t IpcCmUpdateCredInfo(int32_t osAccountId, const char *appId, const
         LOGE("CreateCallCtx failed, ret %d", ret);
         return HC_ERR_IPC_INIT;
     }
-    ret = EncodeUpdateParams(callCtx, osAccountId, credId, appId, requestParams);
+    ret = EncodeUpdateParams(callCtx, osAccountId, credId, requestParams);
     if (ret != HC_SUCCESS) {
         DestroyCallCtx(&callCtx, NULL);
         return ret;

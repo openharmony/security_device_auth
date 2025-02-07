@@ -485,9 +485,9 @@ typedef struct {
 
     int32_t (*queryCredInfoByCredId)(int32_t osAccountId, const char *credId, char **returnData);
 
-    int32_t (*deleteCredential)(int32_t osAccountId, const char *appId, const char *credId);
+    int32_t (*deleteCredential)(int32_t osAccountId, const char *credId);
 
-    int32_t (*updateCredInfo)(int32_t osAccountId, const char *appId, const char *credId, const char *requestParams);
+    int32_t (*updateCredInfo)(int32_t osAccountId, const char *credId, const char *requestParams);
 
     int32_t (*registerChangeListener)(const char *appId, CredChangeListener *listener);
 
