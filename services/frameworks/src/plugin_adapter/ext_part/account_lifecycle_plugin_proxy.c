@@ -149,6 +149,7 @@ static int32_t InitAccountLifecyclePluginCtx(void)
     g_accountPluginCtx->deleteCredential = cmInstace->deleteCredential;
     g_accountPluginCtx->updateCredInfo = cmInstace->updateCredInfo;
     g_accountPluginCtx->queryCredInfoByCredId = cmInstace->queryCredInfoByCredId;
+    g_accountPluginCtx->queryCredentialByParams = cmInstace->queryCredentialByParams;
     return HC_SUCCESS;
 }
 
