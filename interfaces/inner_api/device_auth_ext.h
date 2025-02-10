@@ -142,6 +142,8 @@ typedef struct {
     int32_t (*updateCredInfo)(int32_t osAccountId, const char *credId, const char *requestParams);
     /** This interface is used to query credential data by cred id. */
     int32_t (*queryCredInfoByCredId)(int32_t osAccountId, const char *credId, char **returnData);
+    /** This interface is used to query credential data by cred param. */
+    int32_t (*queryCredentialByParams)(int32_t osAccountId, const char *requestParams, char **returnData);
 } AccountLifecyleExtPlugCtx;
 
 #ifdef __cplusplus
