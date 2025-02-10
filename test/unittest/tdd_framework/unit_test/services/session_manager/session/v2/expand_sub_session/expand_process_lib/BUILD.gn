@@ -208,7 +208,6 @@ ohos_unittest("save_trusted_info_test") {
   sources += account_auth_plugin_mock_files
   sources += account_task_manager_mock_files
   sources += group_database_manager_files
-  sources += cred_database_manager_files
   sources += save_trusted_info_files
   sources += privacy_enhancement_mock_files
   sources += mk_agree_mock_files

@@ -31,11 +31,18 @@ identity_service_path = "${services_path}/identity_service"
 enable_broadcast = true
 deviceauth_defines = []
 
-identity_service_inc = [ "${identity_service_path}/inc" ]
+identity_service_inc = [
+  "${identity_service_path}/inc",
+  "${cred_data_manager_path}/inc",
+  "${cred_listener_path}/inc",
+]
 identity_service_files = [
   "${identity_service_path}/src/identity_service.c",
   "${identity_service_path}/src/identity_operation.c",
   "${identity_service_path}/src/identity_service_impl.c",
+  "${cred_data_manager_path}/src/credential_data_manager.c",
+  "${cred_data_manager_path}/src/cred_tlv_parser.c",
+  "${cred_listener_path}/src/cred_listener.c",
 ]
 
 inc_path = [
@@ -44,8 +51,6 @@ inc_path = [
   "${ext_plugin_manager_path}/inc",
   "${ext_plugin_manager_path}/inc/account_related",
   "${group_data_manager_path}/inc",
-  "${cred_data_manager_path}/inc",
-  "${cred_listener_path}/inc",
   "${privacy_enhancement_path}/inc",
   "${group_auth_path}/inc",
   "${group_auth_path}/inc/account_unrelated_group_auth",
@@ -170,8 +175,6 @@ ext_plugin_manager_files =
 
 group_database_manager_files =
     [ "${group_data_manager_path}/src/group_data_manager.c" ]
-cred_database_manager_files =
-    [ "${cred_data_manager_path}/src/credential_data_manager.c" ]
 
 privacy_enhancement_files =
     [ "${privacy_enhancement_path}/src/pseudonym_manager.c" ]
@@ -292,8 +295,6 @@ broadcast_manager_mock_files = [
   "${group_manager_path}/src/broadcast_manager_mock/broadcast_manager_mock.c",
 ]
 
-cred_listener_files = [ "${cred_listener_path}/src/cred_listener.c" ]
-
 deviceauth_files = dev_frameworks_files + deviceauth_common_files +
                    session_manager_files + creds_manager_files
 
@@ -360,8 +361,7 @@ if (enable_p2p_pake_dl_prime_len_256 == true) {
 }
 
 deviceauth_files += group_auth_files + group_manager_files +
-                    group_database_manager_files + ext_plugin_manager_files +
-                    cred_database_manager_files + identity_service_files
+                    group_database_manager_files + ext_plugin_manager_files
 
 account_unrelated_deviceauth =
     enable_p2p_bind_lite_protocol || enable_p2p_auth_lite_protocol ||
@@ -430,9 +430,9 @@ if (device_auth_enable_soft_bus_channel == true) {
 }
 
 if (enable_broadcast == true) {
-  deviceauth_files += broadcast_manager_files + cred_listener_files
+  deviceauth_files += broadcast_manager_files
 } else {
-  deviceauth_files += broadcast_manager_mock_files + cred_listener_files
+  deviceauth_files += broadcast_manager_mock_files
 }
 
 if (!defined(ohos_lite) && (!defined(global_parts_info) ||

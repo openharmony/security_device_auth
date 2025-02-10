@@ -55,10 +55,7 @@ ohos_fuzztest("DevAuthFuncFuzzTest") {
 
   sources += dev_frameworks_files
   sources += deviceauth_common_files
-  sources += identity_service_files
-  sources += cred_listener_files
   sources += group_database_manager_files
-  sources += cred_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
   sources += session_v1_files
