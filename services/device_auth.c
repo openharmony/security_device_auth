@@ -21,7 +21,6 @@
 #include "common_defs.h"
 #include "ext_plugin_manager.h"
 #include "group_data_manager.h"
-#include "credential_data_manager.h"
 #include "dev_auth_module_manager.h"
 #include "dev_session_mgr.h"
 #include "group_manager.h"
@@ -43,11 +42,24 @@
 #include "identity_manager.h"
 #include "group_auth_manager.h"
 #include "account_task_manager.h"
+#ifdef DEV_AUTH_IS_ENABLE
+#include "credential_data_manager.h"
+#endif
 
 static GroupAuthManager *g_groupAuthManager =  NULL;
 static DeviceGroupManager *g_groupManagerInstance = NULL;
+
+#ifdef DEV_AUTH_IS_ENABLE
 static CredManager *g_credManager = NULL;
 static CredAuthManager *g_credAuthManager = NULL;
+#endif
+
+#define CLEAN_CRED 1
+#define CLEAN_MODULE 2
+#define CLEAN_CALLBACK 3
+#define CLEAN_GROUP_MANAGER 4
+#define CLEAN_IDENTITY_SERVICE 5
+#define CLEAN_ALL 6
 
 typedef struct {
     HcTaskBase base;
@@ -983,6 +995,7 @@ static int32_t AddDeviceIdToJson(CJson *context, const char *peerUdid)
     return HC_SUCCESS;
 }
 
+#ifdef DEV_AUTH_IS_ENABLE
 static int32_t QueryAndAddCredToContext(int32_t osAccountId, CJson *context, const char *credIdKey,
     const char *credObjKey)
 {
@@ -1021,6 +1034,7 @@ static int32_t QueryAndAddAllCredToContext(int32_t osAccountId, CJson *context)
     }
     return HC_SUCCESS;
 }
+#endif
 
 static const char *GetAppIdByContext(const CJson *context, bool isCredAuth)
 {
@@ -1086,11 +1100,11 @@ static int32_t BuildServerAuthContext(int64_t requestId, CJson *context, bool is
         LOGE("add isClient to context fail.");
         return HC_ERR_JSON_ADD;
     }
-    if (isCredAuth) {
-        if ((res = QueryAndAddAllCredToContext(osAccountId, context)) != HC_SUCCESS) {
-            return res;
-        }
+#ifdef DEV_AUTH_IS_ENABLE
+    if (isCredAuth && (res = QueryAndAddAllCredToContext(osAccountId, context)) != HC_SUCCESS) {
+        return res;
     }
+#endif
     const char *appId = GetAppIdByContext(context, isCredAuth);
     if (appId == NULL) {
         LOGE("get appId Fail.");
@@ -1309,6 +1323,7 @@ static int32_t ProcessData(int64_t authReqId, const uint8_t *data, uint32_t data
     return res;
 }
 
+#ifdef DEV_AUTH_IS_ENABLE
 static int32_t BuildClientAuthCredContext(int32_t osAccountId, int64_t requestId, const char *appId, CJson *context)
 {
     if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
@@ -1457,6 +1472,7 @@ static int32_t ProcessCredData(int64_t authReqId, const uint8_t *data, uint32_t 
     }
     return res;
 }
+#endif
 
 static void CancelRequest(int64_t requestId, const char *appId)
 {
@@ -1674,6 +1690,7 @@ static void DestroyGmAndGa(void)
     }
 }
 
+#ifdef DEV_AUTH_IS_ENABLE
 static int32_t AllocCredentialMgr(void)
 {
     if (g_credManager == NULL) {
@@ -1713,6 +1730,35 @@ static void DestroyCa(void)
         g_credAuthManager = NULL;
     }
 }
+#endif
+
+static void CleanAllModules(int32_t type)
+{
+    switch (type) {
+        case CLEAN_ALL:
+            DestroyDevSessionManager();
+        // fallthrough
+        case CLEAN_IDENTITY_SERVICE:
+#ifdef DEV_AUTH_IS_ENABLE
+            DestroyIdentityService();
+#endif
+        // fallthrough
+        case CLEAN_GROUP_MANAGER:
+            DestroyGroupManager();
+        // fallthrough
+        case CLEAN_CALLBACK:
+            DestroyCallbackManager();
+        // fallthrough
+        case CLEAN_MODULE:
+            DestroyModules();
+        // fallthrough
+        case CLEAN_CRED:
+            DestroyCredMgr();
+        // fallthrough
+        default:
+            break;
+    }
+}
 
 static int32_t InitAllModules(void)
 {
@@ -1721,45 +1767,45 @@ static int32_t InitAllModules(void)
         LOGE("[End]: [Service]: Failed to init algorithm module!");
         return res;
     }
-    if ((res = InitCredMgr()) != HC_SUCCESS) {
-        LOGE("[End]: [Service]: Failed to init cred mgr!");
-        return res;
-    }
-    if ((res = InitModules()) != HC_SUCCESS) {
-        LOGE("[End]: [Service]: Failed to init all authenticator modules!");
-        goto CLEAN_CRED;
-    }
-    if ((res = InitCallbackManager()) != HC_SUCCESS) {
-        LOGE("[End]: [Service]: Failed to init callback manage module!");
-        goto CLEAN_MODULE;
-    }
-    if ((res = InitGroupManager()) != HC_SUCCESS) {
-        goto CLEAN_CALLBACK;
-    }
-    if ((res = InitIdentityService()) != HC_SUCCESS) {
-        goto CLEAN_IDENTITY_SERVICE;
-    }
-    if ((res = InitDevSessionManager()) != HC_SUCCESS) {
-        goto CLEAN_GROUP_MANAGER;
-    }
-    (void)InitGroupAuthManager();
-    if ((res = InitTaskManager()) != HC_SUCCESS) {
-        LOGE("[End]: [Service]: Failed to init worker thread!");
-        goto CLEAN_ALL;
-    }
-    return res;
-CLEAN_ALL:
-    DestroyDevSessionManager();
-CLEAN_GROUP_MANAGER:
-    DestroyGroupManager();
-CLEAN_CALLBACK:
-    DestroyCallbackManager();
-CLEAN_MODULE:
-    DestroyModules();
-CLEAN_CRED:
-    DestroyCredMgr();
-CLEAN_IDENTITY_SERVICE:
-    DestroyIdentityService();
+    do {
+        if ((res = InitCredMgr()) != HC_SUCCESS) {
+            LOGE("[End]: [Service]: Failed to init cred mgr!");
+            break;
+        }
+        if ((res = InitModules()) != HC_SUCCESS) {
+            LOGE("[End]: [Service]: Failed to init all authenticator modules!");
+            CleanAllModules(CLEAN_CRED);
+            break;
+        }
+        if ((res = InitCallbackManager()) != HC_SUCCESS) {
+            LOGE("[End]: [Service]: Failed to init callback manage module!");
+            CleanAllModules(CLEAN_MODULE);
+            break;
+        }
+        if ((res = InitGroupManager()) != HC_SUCCESS) {
+            LOGE("[End]: [Service]: Failed to init group manage module!");
+            CleanAllModules(CLEAN_CALLBACK);
+            break;
+        }
+#ifdef DEV_AUTH_IS_ENABLE
+        if ((res = InitIdentityService()) != HC_SUCCESS) {
+            LOGE("[End]: [Service]: Failed to init IS module!");
+            CleanAllModules(CLEAN_GROUP_MANAGER);
+            break;
+        }
+#endif
+        if ((res = InitDevSessionManager()) != HC_SUCCESS) {
+            LOGE("[End]: [Service]: Failed to init dev session manager module!");
+            CleanAllModules(CLEAN_IDENTITY_SERVICE);
+            break;
+        }
+        (void)InitGroupAuthManager();
+        if ((res = InitTaskManager()) != HC_SUCCESS) {
+            LOGE("[End]: [Service]: Failed to init worker thread!");
+            CleanAllModules(CLEAN_ALL);
+            break;
+        }
+    } while (0);
     return res;
 }
 
@@ -1866,6 +1912,7 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     if (res != HC_SUCCESS) {
         return res;
     }
+#ifdef DEV_AUTH_IS_ENABLE
     res = AllocCa();
     if (res != HC_SUCCESS) {
         DestroyGmAndGa();
@@ -1877,12 +1924,15 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
         DestroyCa();
         return res;
     }
+#endif
     InitOsAccountAdapter();
     res = InitAllModules();
     if (res != HC_SUCCESS) {
         DestroyGmAndGa();
+#ifdef DEV_AUTH_IS_ENABLE
         DestroyCa();
         DestroyCredentialMgr();
+#endif
         return res;
     }
     INIT_PERFORMANCE_DUMPER();
@@ -1902,12 +1952,16 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
     }
     DestroyTaskManager();
     DestroyDevSessionManager();
-    DestroyGroupManager();
+#ifdef DEV_AUTH_IS_ENABLE
     DestroyIdentityService();
+#endif
+    DestroyGroupManager();
     DestroyGmAndGa();
     DestroyAccountTaskManager();
+#ifdef DEV_AUTH_IS_ENABLE
     DestroyCa();
     DestroyCredentialMgr();
+#endif
     DestroyModules();
     DestroyCredMgr();
     DestroyChannelManager();
@@ -1967,6 +2021,7 @@ DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
     return g_groupAuthManager;
 }
 
+#ifdef DEV_AUTH_IS_ENABLE
 DEVICE_AUTH_API_PUBLIC const CredManager *GetCredMgrInstance(void)
 {
     if (g_credManager == NULL) {
@@ -1998,3 +2053,4 @@ DEVICE_AUTH_API_PUBLIC const CredAuthManager *GetCredAuthInstance(void)
     g_credAuthManager->authCredential = AuthCredential;
     return g_credAuthManager;
 }
+#endif

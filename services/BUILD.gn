@@ -186,11 +186,13 @@ if (os_level == "mini" || os_level == "small") {
       sources += net_observer_files
     }
     sources += permission_adapter_files
+    sources += identity_service_files
     sources += hiview_adapter_files
     defines = deviceauth_defines
     defines += [ "HILOG_ENABLE" ]
     defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
     defines += [ "DEV_AUTH_PERMISSION_ENABLE" ]
+    defines += [ "DEV_AUTH_IS_ENABLE" ]
     cflags = build_flags
     cflags += [
       "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${device_auth_hichain_thread_stack_size}",

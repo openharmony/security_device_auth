@@ -30,60 +30,60 @@
 #include "cred_listener.h"
 
 typedef struct {
-    DECLARE_TLV_STRUCT(17)
-    TlvString credId;
-    TlvString deviceId;
-    TlvString peerUserSpaceId;
-    TlvUint8 subject;
-    TlvString userId;
-    TlvUint8 issuer;
-    TlvUint8 credType;
-    TlvUint8 keyFormat;
-    TlvUint8 algorithmType;
-    TlvUint8 proofType;
-    TlvBuffer authorizedAccountList;
-    TlvBuffer authorizedAppList;
-    TlvBuffer authorizedDeviceList;
-    TlvUint8 authorizedScope;
-    TlvString credOwner;
-    TlvInt32 ownerUid;
-    TlvString extendInfo;
+    DECLARE_CRED_TLV_STRUCT(17)
+    CredTlvString credId;
+    CredTlvString deviceId;
+    CredTlvString peerUserSpaceId;
+    CredTlvUint8 subject;
+    CredTlvString userId;
+    CredTlvUint8 issuer;
+    CredTlvUint8 credType;
+    CredTlvUint8 keyFormat;
+    CredTlvUint8 algorithmType;
+    CredTlvUint8 proofType;
+    CredTlvBuffer authorizedAccountList;
+    CredTlvBuffer authorizedAppList;
+    CredTlvBuffer authorizedDeviceList;
+    CredTlvUint8 authorizedScope;
+    CredTlvString credOwner;
+    CredTlvInt32 ownerUid;
+    CredTlvString extendInfo;
 } TlvCredentialElement;
-DECLEAR_INIT_FUNC(TlvCredentialElement)
-DECLARE_TLV_VECTOR(TlvCredentialVec, TlvCredentialElement)
+DECLEAR_CRED_INIT_FUNC(TlvCredentialElement)
+DECLARE_CRED_TLV_VECTOR(TlvCredentialVec, TlvCredentialElement)
 
 typedef struct {
-    DECLARE_TLV_STRUCT(2)
-    TlvInt32 version;
+    DECLARE_CRED_TLV_STRUCT(2)
+    CredTlvInt32 version;
     TlvCredentialVec credentials;
 } HCCredDataBaseV1;
-DECLEAR_INIT_FUNC(HCCredDataBaseV1)
+DECLEAR_CRED_INIT_FUNC(HCCredDataBaseV1)
 
-BEGIN_TLV_STRUCT_DEFINE(TlvCredentialElement, 0x0001)
-    TLV_MEMBER(TlvString, credId, 0x4001)
-    TLV_MEMBER(TlvString, deviceId, 0x4002)
-    TLV_MEMBER(TlvString, peerUserSpaceId, 0x4003)
-    TLV_MEMBER(TlvUint8, subject, 0x4004)
-    TLV_MEMBER(TlvString, userId, 0x4005)
-    TLV_MEMBER(TlvUint8, issuer, 0x4006)
-    TLV_MEMBER(TlvUint8, credType, 0x4007)
-    TLV_MEMBER(TlvUint8, keyFormat, 0x4008)
-    TLV_MEMBER(TlvUint8, algorithmType, 0x4009)
-    TLV_MEMBER(TlvUint8, proofType, 0x400A)
-    TLV_MEMBER(TlvBuffer, authorizedAccountList, 0x400B)
-    TLV_MEMBER(TlvBuffer, authorizedAppList, 0x400C)
-    TLV_MEMBER(TlvBuffer, authorizedDeviceList, 0x400D)
-    TLV_MEMBER(TlvUint8, authorizedScope, 0x400E)
-    TLV_MEMBER(TlvString, credOwner, 0x400F)
-    TLV_MEMBER(TlvInt32, ownerUid, 0x4010)
-    TLV_MEMBER(TlvString, extendInfo, 0x4011)
-END_TLV_STRUCT_DEFINE()
-IMPLEMENT_TLV_VECTOR(TlvCredentialVec, TlvCredentialElement, 1)
+BEGIN_CRED_TLV_STRUCT_DEFINE(TlvCredentialElement, 0x0001)
+    CRED_TLV_MEMBER(CredTlvString, credId, 0x4001)
+    CRED_TLV_MEMBER(CredTlvString, deviceId, 0x4002)
+    CRED_TLV_MEMBER(CredTlvString, peerUserSpaceId, 0x4003)
+    CRED_TLV_MEMBER(CredTlvUint8, subject, 0x4004)
+    CRED_TLV_MEMBER(CredTlvString, userId, 0x4005)
+    CRED_TLV_MEMBER(CredTlvUint8, issuer, 0x4006)
+    CRED_TLV_MEMBER(CredTlvUint8, credType, 0x4007)
+    CRED_TLV_MEMBER(CredTlvUint8, keyFormat, 0x4008)
+    CRED_TLV_MEMBER(CredTlvUint8, algorithmType, 0x4009)
+    CRED_TLV_MEMBER(CredTlvUint8, proofType, 0x400A)
+    CRED_TLV_MEMBER(CredTlvBuffer, authorizedAccountList, 0x400B)
+    CRED_TLV_MEMBER(CredTlvBuffer, authorizedAppList, 0x400C)
+    CRED_TLV_MEMBER(CredTlvBuffer, authorizedDeviceList, 0x400D)
+    CRED_TLV_MEMBER(CredTlvUint8, authorizedScope, 0x400E)
+    CRED_TLV_MEMBER(CredTlvString, credOwner, 0x400F)
+    CRED_TLV_MEMBER(CredTlvInt32, ownerUid, 0x4010)
+    CRED_TLV_MEMBER(CredTlvString, extendInfo, 0x4011)
+END_CRED_TLV_STRUCT_DEFINE()
+IMPLEMENT_CRED_TLV_VECTOR(TlvCredentialVec, TlvCredentialElement, 1)
 
-BEGIN_TLV_STRUCT_DEFINE(HCCredDataBaseV1, 0x0001)
-    TLV_MEMBER(TlvInt32, version, 0x6001)
-    TLV_MEMBER(TlvCredentialVec, credentials, 0x6002)
-END_TLV_STRUCT_DEFINE()
+BEGIN_CRED_TLV_STRUCT_DEFINE(HCCredDataBaseV1, 0x0001)
+    CRED_TLV_MEMBER(CredTlvInt32, version, 0x6001)
+    CRED_TLV_MEMBER(TlvCredentialVec, credentials, 0x6002)
+END_CRED_TLV_STRUCT_DEFINE()
 
 IMPLEMENT_HC_VECTOR(CredentialVec, Credential*, 1)
 
@@ -332,17 +332,17 @@ static bool ReadCredInfoFromParcel(HcParcel *parcel, OsAccountCredInfo *info)
 {
     bool ret = false;
     HCCredDataBaseV1 dbv1;
-    TLV_INIT(HCCredDataBaseV1, &dbv1)
-    if (DecodeTlvMessage((TlvBase *)&dbv1, parcel, false)) {
+    CRED_TLV_INIT(HCCredDataBaseV1, &dbv1)
+    if (DecodeCredTlvMessage((CredTlvBase *)&dbv1, parcel, false)) {
         if (!LoadCredentials(&dbv1, &info->credentials)) {
-            TLV_DEINIT(dbv1)
+            CRED_TLV_DEINIT(dbv1)
             return false;
         }
         ret = true;
     } else {
         LOGE("[CRED#DB]: Decode Tlv Message Failed!");
     }
-    TLV_DEINIT(dbv1)
+    CRED_TLV_DEINIT(dbv1)
     return ret;
 }
 
@@ -588,9 +588,9 @@ static bool SaveCredentials(const CredentialVec *vec, HCCredDataBaseV1 *db)
         if (element == NULL) {
             return false;
         }
-        TLV_INIT(TlvCredentialElement, element);
+        CRED_TLV_INIT(TlvCredentialElement, element);
         if (!SetCredentialElement(element, *entry)) {
-            TLV_DEINIT((*element));
+            CRED_TLV_DEINIT((*element));
             return false;
         }
     }
@@ -601,19 +601,19 @@ static bool SaveCredInfoToParcel(const OsAccountCredInfo *info, HcParcel *parcel
 {
     int32_t ret = false;
     HCCredDataBaseV1 dbv1;
-    TLV_INIT(HCCredDataBaseV1, &dbv1)
+    CRED_TLV_INIT(HCCredDataBaseV1, &dbv1)
     dbv1.version.data = 1;
     do {
         if (!SaveCredentials(&info->credentials, &dbv1)) {
             break;
         }
-        if (!EncodeTlvMessage((TlvBase *)&dbv1, parcel)) {
+        if (!EncodeCredTlvMessage((CredTlvBase *)&dbv1, parcel)) {
             LOGE("[CRED#DB]: Encode Tlv Message failed!");
             break;
         }
         ret = true;
     } while (0);
-    TLV_DEINIT(dbv1)
+    CRED_TLV_DEINIT(dbv1)
     return ret;
 }
 
@@ -1121,8 +1121,8 @@ static void DumpDb(int fd, const OsAccountCredInfo *db)
 {
     const CredentialVec *credentials = &db->credentials;
     dprintf(fd, "|----------------------------------CRED-DataBase-----------------------------------|\n");
-    dprintf(fd, "|%-13s = %-67d|\n", "osAccountId", db->osAccountId);
-    dprintf(fd, "|%-13s = %-67d|\n", "credentialNum", credentials->size(credentials));
+    dprintf(fd, "|%-13s = %-66d|\n", "osAccountId", db->osAccountId);
+    dprintf(fd, "|%-13s = %-66d|\n", "credentialNum", credentials->size(credentials));
     uint32_t index;
     Credential **credential;
     FOR_EACH_HC_VECTOR(*credentials, index, credential) {

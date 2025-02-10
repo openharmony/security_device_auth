@@ -17,10 +17,8 @@
 #define CREDENTIAL_DATA_MANAGER_H
 
 #include <stdbool.h>
-#include "hc_string.h"
 #include "hc_string_vector.h"
-#include "hc_tlv_parser.h"
-#include "hc_vector.h"
+#include "cred_tlv_parser.h"
 #include "json_utils.h"
 
 #define MAX_STRING_LEN 256
