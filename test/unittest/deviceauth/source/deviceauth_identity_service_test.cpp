@@ -136,6 +136,12 @@ static const char *ADD_PARAMS14 =
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId1\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
+static const char *ADD_PARAMS15 =
+    "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
+    "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
+    "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
+    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *REQUEST_PARAMS =
     "{\"authorizedScope\":1, \"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\","
     "\"TestName4\"],\"extendInfo\":\"\"}";
@@ -378,6 +384,15 @@ HWTEST_F(CredMgrAddCredentialTest, CredMgrAddCredentialTest016, TestSize.Level0)
     EXPECT_EQ(ret, IS_ERR_INVALID_PARAMS);
 }
 
+HWTEST_F(CredMgrAddCredentialTest, CredMgrAddCredentialTest017, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    char *returnData = nullptr;
+    int32_t ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS15, &returnData);
+    EXPECT_EQ(ret, IS_ERR_KEYVALUE_METHOD_CONFLICT);
+}
+
 class CredMgrExportCredentialTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -446,6 +461,7 @@ HWTEST_F(CredMgrExportCredentialTest, CredMgrExportCredentialTest004, TestSize.L
     ASSERT_NE(cm, nullptr);
     char *credId = nullptr;
     int32_t ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
+    HcFree(credId);
     EXPECT_EQ(ret, IS_SUCCESS);
     char *returnData = nullptr;
     ret = cm->exportCredential(DEFAULT_OS_ACCOUNT, nullptr, &returnData);
@@ -483,6 +499,7 @@ HWTEST_F(CredMgrQueryCredentialByParamsTest, CredMgrQueryCredentialByParamsTest0
     int32_t ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &returnData);
     EXPECT_EQ(ret, IS_SUCCESS);
     ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS14, &returnData);
+    HcFree(returnData);
     EXPECT_EQ(ret, IS_SUCCESS);
     char *credIdList = nullptr;
     ret = cm->queryCredentialByParams(DEFAULT_OS_ACCOUNT, QUERY_PARAMS, &credIdList);
@@ -517,6 +534,7 @@ HWTEST_F(CredMgrQueryCredentialByParamsTest, CredMgrQueryCredentialByParamsTest0
     ASSERT_NE(cm, nullptr);
     char *returnData = nullptr;
     int32_t ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &returnData);
+    HcFree(returnData);
     EXPECT_EQ(ret, IS_SUCCESS);
     char *credIdList = nullptr;
     ret = cm->queryCredentialByParams(DEFAULT_OS_ACCOUNT, QUERY_PARAMS1, &credIdList);
