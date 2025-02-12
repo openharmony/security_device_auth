@@ -497,6 +497,8 @@ HWTEST_F(CredMgrQueryCredentialByParamsTest, CredMgrQueryCredentialByParamsTest0
     ASSERT_NE(cm, nullptr);
     char *returnData = nullptr;
     int32_t ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &returnData);
+    HcFree(returnData);
+    returnData = nullptr;
     EXPECT_EQ(ret, IS_SUCCESS);
     ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS14, &returnData);
     HcFree(returnData);
