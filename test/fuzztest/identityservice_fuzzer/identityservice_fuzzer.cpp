@@ -135,6 +135,12 @@ static const char *ADD_PARAMS14 =
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId1\","
     "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
+static const char *ADD_PARAMS15 =
+    "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
+    "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
+    "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
+    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *REQUEST_PARAMS =
     "{\"authorizedScope\":1, \"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\","
     "\"TestName4\"],\"extendInfo\":\"\"}";
@@ -453,6 +459,23 @@ static int32_t IdentityServiceTestCase016(void)
     return ret;
 }
 
+static int32_t IdentityServiceTestCase048(void)
+{
+    DeleteDatabase();
+    int32_t ret = InitDeviceAuthService();
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    do {
+        const CredManager *cm = GetCredMgrInstance();
+        char *returnData = nullptr;
+        ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS15, &returnData);
+        HcFree(returnData);
+    } while (0);
+    DestroyDeviceAuthService();
+    return ret;
+}
+
 static int32_t IdentityServiceTestCase017(void)
 {
     DeleteDatabase();
@@ -522,6 +545,7 @@ static int32_t IdentityServiceTestCase020(void)
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
+        HcFree(credId);
         char *returnData = nullptr;
         ret = cm->exportCredential(DEFAULT_OS_ACCOUNT, nullptr, &returnData);
     } while (0);
@@ -541,6 +565,7 @@ static int32_t IdentityServiceTestCase021(void)
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &returnData);
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS14, &returnData);
+        HcFree(returnData);
         char *credIdList = nullptr;
         ret = cm->queryCredentialByParams(DEFAULT_OS_ACCOUNT, QUERY_PARAMS, &credIdList);
         CJson *jsonArr = CreateJsonFromString(credIdList);
@@ -593,6 +618,7 @@ static int32_t IdentityServiceTestCase024(void)
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &returnData);
+        HcFree(returnData);
         char *credIdList = nullptr;
         ret = cm->queryCredentialByParams(DEFAULT_OS_ACCOUNT, QUERY_PARAMS1, &credIdList);
         CJson *jsonArr = CreateJsonFromString(credIdList);
@@ -950,6 +976,7 @@ static void AddCredFuzzPart(void)
     (void)IdentityServiceTestCase014();
     (void)IdentityServiceTestCase015();
     (void)IdentityServiceTestCase016();
+    (void)IdentityServiceTestCase048();
 }
 
 static void ExportCredFuzzPart(void)
