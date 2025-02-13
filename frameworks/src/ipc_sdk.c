@@ -1916,7 +1916,9 @@ DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *
 DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 {
     InitHcMutex(&g_ipcMutex, false);
+#ifdef DEV_AUTH_IS_ENABLE
     InitISIpc();
+#endif
     return InitProxyAdapt();
 }
 
@@ -1924,7 +1926,9 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
 {
     UnInitProxyAdapt();
     DestroyHcMutex(&g_ipcMutex);
+#ifdef DEV_AUTH_IS_ENABLE
     DeInitISIpc();
+#endif
 }
 
 DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
