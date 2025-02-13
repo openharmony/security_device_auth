@@ -48,13 +48,14 @@ static int32_t AddCredentialImplInner(int32_t osAccountId, CJson *reqJson, Crede
         return ret;
     }
     HcFree(keyValue.val);
-    HcFree(credIdByte.val);
     if ((ret = AddCredAndSaveDb(osAccountId, credential)) != IS_SUCCESS) {
         if (GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId) != IS_SUCCESS) {
             LOGE("Failed to delete key from HUKS");
         }
+        HcFree(credIdByte.val);
         return ret;
     }
+    HcFree(credIdByte.val);
     if (DeepCopyString(StringGet(&credential->credId), returnData) != EOK) {
         LOGE("Failed to return credId");
         return IS_ERR_MEMORY_COPY;
