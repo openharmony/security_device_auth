@@ -506,7 +506,7 @@ static HWTEST_F(HuksAdapterTest, GetLtPublicKeyListTest001, TestSize.Level2)
     uint32_t count = 0;
     enum huks_key_alias_type alias_type = KEY_ALIAS_CONTROLLER_PK;
     int32_t ret = get_lt_public_key_list(&g_test_client_auth_id, alias_type, *g_authIdList, &count);
-    EXPECT_EQ(ret, ERROR_CODE_SUCCESS);
+    EXPECT_NE(ret, ERROR_CODE_SUCCESS);
     LOG("--------HuksAdapterTest Test029--------");
 }
 

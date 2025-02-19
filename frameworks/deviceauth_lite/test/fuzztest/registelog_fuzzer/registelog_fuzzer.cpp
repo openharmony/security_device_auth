@@ -31,6 +31,7 @@ namespace OHOS {
             va_end(ap);
             return;
         }
+        va_end(ap);
     }
 
     bool RegisteLogFuzz(const uint8_t *data, size_t size)
