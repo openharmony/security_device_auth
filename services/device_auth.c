@@ -745,6 +745,27 @@ static const char *GetAppIdFromReceivedMsg(const CJson *receivedMsg)
     return appId;
 }
 
+static int32_t CreateAppidJsonString(const char *appId, char **reqParames)
+{
+    CJson *reqJson= CreateJson();
+    if (reqJson == NULL) {
+        LOGE("Failed to create json!");
+        return HC_ERR_JSON_CREATE;
+    }
+    if (AddStringToJson(reqJson, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        LOGE("Failed to create json!");
+        FreeJson(reqJson);
+        return HC_ERR_JSON_ADD;
+    }
+    reqParames = PackJsonToString(reqJson);
+    FreeJson(reqJson);
+    if (reqParames == NULL) {
+        LOGE("Failed to reqParames string!");
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+    return HC_SUCCESS
+}
+
 static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg)
 {
     const char *appId = GetAppIdFromReceivedMsg(receivedMsg);
@@ -760,10 +781,11 @@ static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg
             LOGW("use default opCode.");
         }
     }
-    char *reqParames = PackJsonToString(receivedMsg);
-    if (reqParames == NULL) {
-        LOGE("Create reqParames from receivedMsg failed!");
-        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    char *reqParames = NULL;
+    int32_t res = CreateAppidJsonString(appId, &reqParames);
+    if (res != HC_SUCCESS) {
+        LOGE("Create reqParames from appid failed!");
+        return res;
     }
     char *returnDataStr = ProcessRequestCallback(requestId, opCode, reqParames, callback);
     FreeJsonString(reqParames);
@@ -777,7 +799,7 @@ static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg
         LOGE("Failed to create context from string!");
         return HC_ERR_JSON_FAIL;
     }
-    int32_t res = BuildServerBindContext(requestId, appId, opCode, receivedMsg, context);
+    res = BuildServerBindContext(requestId, appId, opCode, receivedMsg, context);
     if (res != HC_SUCCESS) {
         FreeJson(context);
         return res;
