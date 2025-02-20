@@ -133,7 +133,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest002, TestSize.L
         FreeJson(authParam);
         return;
     }
-    int32_t ret = HC_SUCCESS;
+    int32_t ret = HC_ERROR;
     (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, nullptr); // For unit test.
 
     CJson *sendToPeer = CreateJson();
@@ -159,7 +159,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest002, TestSize.L
 
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0021, TestSize.Level0)
 {
-    int32_t ret = HC_SUCCESS;
+    int32_t ret = HC_ERROR;
     CJson *authParam = CreateJson();
     if (authParam == nullptr) {
         return;
@@ -198,7 +198,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0021, TestSize.
 // OnAccountFinish -> ReturnSessionKey success branch.
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0022, TestSize.Level0)
 {
-    int32_t ret = HC_SUCCESS;
+    int32_t ret = HC_ERROR;
     CJson *authParam = CreateJson();
     if (authParam == nullptr) {
         return;
@@ -233,7 +233,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0022, TestSize.
 // OnAccountFinish -> AddTrustedDeviceForAccount success failed.
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0023, TestSize.Level0)
 {
-    int32_t ret = HC_SUCCESS;
+    int32_t ret = HC_ERROR;
     CJson *authParam = CreateJson();
     CJson *out = CreateJson();
     CJson *sendToPeer = CreateJson();
@@ -297,10 +297,11 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest004, TestSize.L
         return;
     }
 
-    (void)GetAccountRelatedGroupAuth()->fillDeviceAuthInfo(0, entry, localAuthInfo, paramsData); // For unit test.
+    int32_t res = GetAccountRelatedGroupAuth()->fillDeviceAuthInfo(0, entry,
+        localAuthInfo, paramsData); // For unit test.
 
     FreeJson(paramsData);
-    EXPECT_NE(entry, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
     DestroyGroupEntry(entry);
     DestroyDeviceEntry(localAuthInfo);
 }
@@ -323,12 +324,13 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0041, TestSize.
         return;
     }
 
-    (void)AddStringToJson(paramsData, FIELD_PEER_CONN_DEVICE_ID, "CONN_DEVICE_ID"); // For unit test.
+    int32_t res = AddStringToJson(paramsData, FIELD_PEER_CONN_DEVICE_ID, "CONN_DEVICE_ID"); // For unit test.
+    EXPECT_EQ(res, HC_SUCCESS);
+
     (void)GetAccountRelatedGroupAuth()->fillDeviceAuthInfo(0, entry,
         localAuthInfo, paramsData); // For unit test.
 
     FreeJson(paramsData);
-    EXPECT_NE(entry, nullptr);
     DestroyGroupEntry(entry);
     DestroyDeviceEntry(localAuthInfo);
 }
