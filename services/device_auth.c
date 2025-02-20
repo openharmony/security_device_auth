@@ -760,7 +760,13 @@ static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg
             LOGW("use default opCode.");
         }
     }
-    char *returnDataStr = ProcessRequestCallback(requestId, opCode, NULL, callback);
+    char *reqParames = PackJsonToString(receivedMsg);
+    if (reqParames == NULL) {
+        LOGE("Create reqParames from receivedMsg failed!");
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+    char *returnDataStr = ProcessRequestCallback(requestId, opCode, reqParames, callback);
+    FreeJsonString(reqParames);
     if (returnDataStr == NULL) {
         LOGE("The OnRequest callback is fail!");
         return HC_ERR_REQ_REJECTED;
