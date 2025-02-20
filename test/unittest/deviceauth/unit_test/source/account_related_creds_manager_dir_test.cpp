@@ -146,7 +146,10 @@ HWTEST_F(AsyTokenManagerTest, AsyTokenManagerTest004, TestSize.Level0)
 HWTEST_F(AsyTokenManagerTest, AsyTokenManagerTest005, TestSize.Level0)
 {
     AccountToken *token = nullptr;
+    CJson *in = CreateJson();
+    int32_t res = AddStringToJson(in, FIELD_USER_ID, "userId");
     DestroyAccountToken(token);
-    EXPECT_EQ(token, nullptr);
+    FreeJson(in);
+    EXPECT_EQ(res, HC_SUCCESS);
 }
 }

@@ -337,9 +337,12 @@ HWTEST_F(PakeV2AuthTaskCommonTest, PakeV2AuthTaskCommonTest107, TestSize.Level0)
 {
     PakeAuthParams *params = nullptr;
     InitTokenManager();
+    CJson *in = CreateJson();
+    int32_t ret = AddStringToJson(in, FIELD_AUTH_PK_INFO, "auth_pk_info");
     DestroyPakeAuthParams(params);
     DestroyTokenManager();
-    EXPECT_EQ(params, nullptr);
+    FreeJson(in);
+    EXPECT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(PakeV2AuthTaskCommonTest, PakeV2AuthTaskCommonTest108, TestSize.Level0)
