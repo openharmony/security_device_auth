@@ -753,17 +753,17 @@ static int32_t CreateAppidJsonString(const char *appId, char **reqParames)
         return HC_ERR_JSON_CREATE;
     }
     if (AddStringToJson(reqJson, FIELD_APP_ID, appId) != HC_SUCCESS) {
-        LOGE("Failed to create json!");
+        LOGE("Failed to add appId!");
         FreeJson(reqJson);
         return HC_ERR_JSON_ADD;
     }
     *reqParames = PackJsonToString(reqJson);
     FreeJson(reqJson);
     if (reqParames == NULL) {
-        LOGE("Failed to reqParames string!");
+        LOGE("Failed to create reqParames string!");
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
-    return HC_SUCCESS
+    return HC_SUCCESS;
 }
 
 static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg)
