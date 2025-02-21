@@ -748,7 +748,7 @@ static const char *GetAppIdFromReceivedMsg(const CJson *receivedMsg)
 static int32_t CreateAppIdJsonString(const char *appId, char **reqParames)
 {
     CJson *reqJson = CreateJson();
-    if (reqJson == NULL) {
+    if ((reqJson == NULL) || (reqParames == NULL)) {
         LOGE("Failed to create json!");
         return HC_ERR_JSON_CREATE;
     }
@@ -759,7 +759,7 @@ static int32_t CreateAppIdJsonString(const char *appId, char **reqParames)
     }
     *reqParames = PackJsonToString(reqJson);
     FreeJson(reqJson);
-    if (reqParames == NULL) {
+    if ((*reqParames) == NULL) {
         LOGE("Failed to create reqParames string!");
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
