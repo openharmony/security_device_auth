@@ -745,6 +745,27 @@ static const char *GetAppIdFromReceivedMsg(const CJson *receivedMsg)
     return appId;
 }
 
+static int32_t CreateAppIdJsonString(const char *appId, char **reqParames)
+{
+    CJson *reqJson = CreateJson();
+    if ((reqJson == NULL) || (reqParames == NULL)) {
+        LOGE("Failed to create json!");
+        return HC_ERR_JSON_CREATE;
+    }
+    if (AddStringToJson(reqJson, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        LOGE("Failed to add appId!");
+        FreeJson(reqJson);
+        return HC_ERR_JSON_ADD;
+    }
+    *reqParames = PackJsonToString(reqJson);
+    FreeJson(reqJson);
+    if ((*reqParames) == NULL) {
+        LOGE("Failed to create reqParames string!");
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg)
 {
     const char *appId = GetAppIdFromReceivedMsg(receivedMsg);
@@ -760,7 +781,14 @@ static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg
             LOGW("use default opCode.");
         }
     }
-    char *returnDataStr = ProcessRequestCallback(requestId, opCode, NULL, callback);
+    char *reqParames = NULL;
+    int32_t res = CreateAppIdJsonString(appId, &reqParames);
+    if (res != HC_SUCCESS) {
+        LOGE("Create reqParames from appid failed!");
+        return res;
+    }
+    char *returnDataStr = ProcessRequestCallback(requestId, opCode, reqParames, callback);
+    FreeJsonString(reqParames);
     if (returnDataStr == NULL) {
         LOGE("The OnRequest callback is fail!");
         return HC_ERR_REQ_REJECTED;
@@ -771,7 +799,7 @@ static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg
         LOGE("Failed to create context from string!");
         return HC_ERR_JSON_FAIL;
     }
-    int32_t res = BuildServerBindContext(requestId, appId, opCode, receivedMsg, context);
+    res = BuildServerBindContext(requestId, appId, opCode, receivedMsg, context);
     if (res != HC_SUCCESS) {
         FreeJson(context);
         return res;
