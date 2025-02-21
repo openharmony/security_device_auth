@@ -745,7 +745,7 @@ static const char *GetAppIdFromReceivedMsg(const CJson *receivedMsg)
     return appId;
 }
 
-static int32_t CreateAppidJsonString(const char *appId, char **reqParames)
+static int32_t CreateAppIdJsonString(const char *appId, char **reqParames)
 {
     CJson *reqJson = CreateJson();
     if (reqJson == NULL) {
@@ -782,7 +782,7 @@ static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg
         }
     }
     char *reqParames = NULL;
-    int32_t res = CreateAppidJsonString(appId, &reqParames);
+    int32_t res = CreateAppIdJsonString(appId, &reqParames);
     if (res != HC_SUCCESS) {
         LOGE("Create reqParames from appid failed!");
         return res;
