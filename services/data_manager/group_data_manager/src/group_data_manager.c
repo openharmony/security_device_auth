@@ -661,8 +661,12 @@ static void CheckAndRemoveUpgradeGroupEntry(const TrustedGroupEntry *groupEntry)
     LOGI("Delete group from db successfully!");
 }
 
-static void CheckAndRemoveUpgradeData(void)
+static void CheckAndRemoveUpgradeData(int32_t osAccountId)
 {
+    if (osAccountId != UPGRADE_OS_ACCOUNT_ID) {
+        LOGI("Current os accountId is %d, no need to check and remove.")
+        return;
+    }
     QueryGroupParams queryParams = InitQueryGroupParams();
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
     int32_t ret = QueryGroups(UPGRADE_OS_ACCOUNT_ID, &queryParams, &groupEntryVec);
@@ -688,7 +692,7 @@ static void OnOsAccountUnlocked(int32_t osAccountId)
     (void)LockHcMutex(g_databaseMutex);
     LoadOsAccountDbCe(osAccountId);
     UnlockHcMutex(g_databaseMutex);
-    CheckAndRemoveUpgradeData();
+    CheckAndRemoveUpgradeData(osAccountId);
 }
 
 static void OnOsAccountRemoved(int32_t osAccountId)
