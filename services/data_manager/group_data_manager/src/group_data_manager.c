@@ -664,7 +664,7 @@ static void CheckAndRemoveUpgradeGroupEntry(const TrustedGroupEntry *groupEntry)
 static void CheckAndRemoveUpgradeData(int32_t osAccountId)
 {
     if (osAccountId != UPGRADE_OS_ACCOUNT_ID) {
-        LOGI("Current os accountId is %d, no need to check and remove.")
+        LOGI("Current os accountId is %d, no need to check and remove.");
         return;
     }
     QueryGroupParams queryParams = InitQueryGroupParams();
