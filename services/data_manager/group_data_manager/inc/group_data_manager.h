@@ -24,7 +24,7 @@
 #include "json_utils.h"
 
 #define MAX_STRING_LEN 256
-#define MAX_EXPIRE_TIME 90
+#define MAX_EXPIRE_TIME 1095
 #define HC_TRUST_DEV_ENTRY_MAX_NUM 101
 #define HC_TRUST_GROUP_ENTRY_MAX_NUM 100
 
