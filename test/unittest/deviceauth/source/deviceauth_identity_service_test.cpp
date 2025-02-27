@@ -33,6 +33,8 @@
 #include <sys/stat.h>
 #include "hc_log.h"
 #include "hc_types.h"
+#include "../../../../services/identity_service/src/identity_operation.c"
+#include "cred_listener.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -42,10 +44,16 @@ namespace {
 #define TEST_APP_ID "TestAppId"
 #define TEST_APP_ID1 "TestAppId1"
 #define TEST_DEVICE_ID "TestDeviceId"
+#define TEST_CRED_ID "TestCredId"
+#define TEST_CRED_INFO_ID "TestCredInfoId"
 #define QUERY_RESULT_NUM 0
 #define QUERY_RESULT_NUM_2 2
+#define DATA_LEN 10
+#define DEFAULT_OS_ACCOUNT_ID 100
+#define DEFAULT_VAL 0
 
 #define TEST_CRED_DATA_PATH "/data/service/el1/public/deviceauthMock/hccredential.dat"
+static const char *TEST_DATA = "testData";
 static const char *ADD_PARAMS =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
@@ -215,6 +223,19 @@ HWTEST_F(GetCredMgrInstanceTest, GetCredMgrInstanceTest001, TestSize.Level0)
 {
     const CredManager *cm = GetCredMgrInstance();
     EXPECT_NE(cm, nullptr);
+}
+
+HWTEST_F(GetCredMgrInstanceTest, GetCredMgrInstanceTest002, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    EXPECT_NE(cm, nullptr);
+    char *returnData = nullptr;
+    cm->destroyInfo(nullptr);
+    cm->destroyInfo(&returnData);
+    returnData = static_cast<char *>(HcMalloc(DATA_LEN, 0));
+    int32_t ret = memcpy_s(returnData, DATA_LEN, TEST_DATA, HcStrlen(TEST_DATA));
+    cm->destroyInfo(&returnData);
+    EXPECT_EQ(ret, IS_SUCCESS);
 }
 
 class CredMgrAddCredentialTest : public testing::Test {
@@ -865,5 +886,132 @@ HWTEST_F(CredMgrUnRegCredListenerTest, CredMgrUnRegCredListenerTest003, TestSize
     ASSERT_NE(cm, nullptr);
     int32_t ret = cm->unregisterChangeListener(nullptr);
     EXPECT_EQ(ret, IS_ERR_INVALID_PARAMS);
+}
+
+class CredListenerTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+void CredListenerTest::SetUpTestCase() {}
+void CredListenerTest::TearDownTestCase() {}
+
+void CredListenerTest::SetUp()
+{
+    int32_t ret = InitCredListener();
+    EXPECT_EQ(ret, IS_SUCCESS);
+}
+
+void CredListenerTest::TearDown()
+{
+    DestroyCredListener();
+}
+
+HWTEST_F(CredListenerTest, CredListenerTest001, TestSize.Level0)
+{
+    OnCredAdd(nullptr, nullptr);
+    OnCredAdd(TEST_CRED_ID, TEST_CRED_INFO_ID);
+    OnCredDelete(nullptr, nullptr);
+    OnCredDelete(TEST_CRED_ID, TEST_CRED_INFO_ID);
+    OnCredUpdate(nullptr, nullptr);
+    OnCredUpdate(TEST_CRED_ID, TEST_CRED_INFO_ID);
+    int32_t ret = AddCredListener(nullptr, &g_credChangeListener);
+    EXPECT_NE(ret, IS_SUCCESS);
+    ret = AddCredListener(TEST_APP_ID, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(CredListenerTest, CredListenerTest002, TestSize.Level0)
+{
+    int32_t ret = RemoveCredListener(nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+class IdentityOperationTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+void IdentityOperationTest::SetUpTestCase() {}
+void IdentityOperationTest::TearDownTestCase() {}
+
+void IdentityOperationTest::SetUp()
+{
+}
+
+void IdentityOperationTest::TearDown()
+{
+}
+
+HWTEST_F(IdentityOperationTest, IdentityOperationTest001, TestSize.Level0)
+{
+    int32_t ret = GetCredentialById(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityOperationTest, IdentityOperationTest002, TestSize.Level0)
+{
+    char *credIdStr = nullptr;
+    char *deviceId = nullptr;
+    char *credOwner = nullptr;
+    Uint8Buff *credIdByte = nullptr;
+    int32_t ret = GenerateCredIdInner(nullptr, deviceId, credIdByte, &credIdStr);
+    EXPECT_NE(ret, IS_SUCCESS);
+    ret = GenerateCredIdInner(credOwner, nullptr, credIdByte, &credIdStr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityOperationTest, IdentityOperationTest003, TestSize.Level0)
+{
+    Credential *credetial = CreateCredential();
+    int32_t ret = SetAccListFromArray(credetial, nullptr);
+    DestroyCredential(credetial);
+    EXPECT_EQ(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityOperationTest, IdentityOperationTest004, TestSize.Level0)
+{
+    int32_t ret = SetMethodFromJson(nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityOperationTest, IdentityOperationTest005, TestSize.Level0)
+{
+    int32_t ret = SetCredType(nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityOperationTest, IdentityOperationTest006, TestSize.Level0)
+{
+    int32_t ret = SetKeyFormat(nullptr, nullptr, DEFAULT_VAL);
+    EXPECT_NE(ret, IS_SUCCESS);
+    Credential *credetial = CreateCredential();
+    CJson *json = CreateJson();
+    ret = AddIntToJson(json, FIELD_KEY_FORMAT, SYMMETRIC_KEY);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    ret = SetKeyFormat(credetial, json, DEFAULT_VAL);
+    EXPECT_NE(ret, IS_SUCCESS);
+
+    ret = AddIntToJson(json, FIELD_KEY_FORMAT, ASYMMETRIC_PUB_KEY);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    ret = SetKeyFormat(credetial, json, METHOD_GENERATE);
+    EXPECT_NE(ret, IS_SUCCESS);
+
+    ret = AddIntToJson(json, FIELD_KEY_FORMAT, ASYMMETRIC_KEY);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    ret = SetKeyFormat(credetial, json, METHOD_IMPORT);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityOperationTest, IdentityOperationTest007, TestSize.Level0)
+{
+    int32_t ret = SetAuthorizedScope(nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
 }
 }
