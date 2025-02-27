@@ -215,6 +215,14 @@ static int32_t ComputeHmac(const KeyParams *keyParams, const Uint8Buff *message,
     return HAL_SUCCESS;
 }
 
+static void DoAbortHks(struct HksBlob *handleDerive, struct HksParamSet *deriveParamSet)
+{
+    int32_t res = HksAbort(handleDerive, deriveParamSet);
+    if (res != HKS_SUCCESS) {
+        LOGE("Failed to abort huks, res:%d", res);
+    }
+}
+
 static int32_t ComputeHmacWithThreeStageInner(const KeyParams *keyParams, const Uint8Buff *message, Uint8Buff *outHmac)
 {
     struct HksParamSet *deriveParamSet = NULL;
@@ -222,7 +230,6 @@ static int32_t ComputeHmacWithThreeStageInner(const KeyParams *keyParams, const 
     if (res != HAL_SUCCESS) {
         return res;
     }
-
     struct HksParamSet *finishParamSet = NULL;
     res = ConstructFinishParamSet(keyParams, &finishParamSet);
     if (res != HAL_SUCCESS) {
@@ -232,31 +239,35 @@ static int32_t ComputeHmacWithThreeStageInner(const KeyParams *keyParams, const 
     uint8_t handle[sizeof(uint64_t)] = { 0 };
     struct HksBlob handleDerive = { sizeof(uint64_t), handle };
     struct HksBlob keyAliasBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
-    res = HksInit(&keyAliasBlob, deriveParamSet, &handleDerive, NULL);
-    if (res != HKS_SUCCESS) {
-        LOGE("Failed to init derive params!");
-        FreeParamSet(deriveParamSet);
-        FreeParamSet(finishParamSet);
-        return HAL_FAILED;
-    }
     uint8_t tmpOut[2048] = { 0 };
     struct HksBlob outData = { 2048, tmpOut };
     struct HksBlob inData = { 0, NULL };
-    res = HksUpdate(&handleDerive, deriveParamSet, &inData, &outData);
-    FreeParamSet(deriveParamSet);
-    if (res != HKS_SUCCESS) {
-        LOGE("Failed to update derive params!");
-        FreeParamSet(finishParamSet);
-        return HAL_FAILED;
-    }
     struct HksBlob hmacBlob = { outHmac->length, outHmac->val };
-    res = HksFinish(&handleDerive, finishParamSet, &inData, &hmacBlob);
+    do {
+        res = HksInit(&keyAliasBlob, deriveParamSet, &handleDerive, NULL);
+        if (res != HKS_SUCCESS) {
+            LOGE("Failed to init derive params!");
+            res = HAL_FAILED;
+            break;
+        }
+        res = HksUpdate(&handleDerive, deriveParamSet, &inData, &outData);
+        if (res != HKS_SUCCESS) {
+            LOGE("Failed to update derive params!");
+            DoAbortHks(&handleDerive, deriveParamSet);
+            res = HAL_FAILED;
+            break;
+        }
+        res = HksFinish(&handleDerive, finishParamSet, &inData, &hmacBlob);
+        if (res != HKS_SUCCESS || hmacBlob.size != HMAC_LEN) {
+            LOGE("Compute hmac with three stage failed! [Res]: %d, [size]: %d", res, hmacBlob.size);
+            DoAbortHks(&handleDerive, finishParamSet);
+            res = HAL_FAILED;
+            break;
+        }
+    } while (0);
+    FreeParamSet(deriveParamSet);
     FreeParamSet(finishParamSet);
-    if (res != HKS_SUCCESS || hmacBlob.size != HMAC_LEN) {
-        LOGE("Compute hmac with three stage failed! [Res]: %d, [size]: %d", res, hmacBlob.size);
-        return HAL_FAILED;
-    }
-    return HAL_SUCCESS;
+    return res;
 }
 
 static int32_t ComputeHmacWithThreeStage(const KeyParams *keyParams, const Uint8Buff *message, Uint8Buff *outHmac)
@@ -590,6 +601,7 @@ static int32_t AgreeSharedSecretWithStorageP256(const KeyParams *priKeyParams, c
         res = HksUpdate(&handleBlob, initParamSet, &pubKeyBlob, &outDataUpdateBlob);
         if (res != HKS_SUCCESS) {
             LOGE("Huks agree P256 key: HksUpdate failed, res = %d", res);
+            DoAbortHks(&handleBlob, initParamSet);
             res = HAL_ERR_HUKS;
             break;
         }
@@ -598,6 +610,7 @@ static int32_t AgreeSharedSecretWithStorageP256(const KeyParams *priKeyParams, c
         LOGI("[HUKS]: HksFinish quit. [Res]: %d", res);
         if (res != HKS_SUCCESS) {
             LOGE("[HUKS]: HksFinish fail. [Res]: %d", res);
+            DoAbortHks(&handleBlob, finishParamSet);
             res = HAL_ERR_HUKS;
             break;
         }
