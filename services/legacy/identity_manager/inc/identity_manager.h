@@ -37,6 +37,7 @@ typedef enum {
     AUTH_IDENTITY_TYPE_GROUP,
     AUTH_IDENTITY_TYPE_PIN,
     AUTH_IDENTITY_TYPE_P2P,
+    AUTH_IDENTITY_TYPE_CRED,
 } AuthIdentityType;
 
 typedef struct {
@@ -64,6 +65,7 @@ typedef struct {
 const AuthIdentity *GetGroupAuthIdentity(void);
 const AuthIdentity *GetPinAuthIdentity(void);
 const AuthIdentity *GetP2pAuthIdentity(void);
+const AuthIdentity *GetCredAuthIdentity(void);
 const AuthIdentity *GetAuthIdentityByType(AuthIdentityType type);
 const CredentialOperator *GetCredentialOperator(void);
 const AuthIdentityManager *GetAuthIdentityManager(void);

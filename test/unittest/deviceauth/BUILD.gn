@@ -52,6 +52,7 @@ ohos_unittest("deviceauth_llt") {
   ]
 
   sources += dev_frameworks_files
+  sources += identity_service_mock_files
   sources += deviceauth_common_files
   sources += group_database_manager_files
   sources += ext_plugin_manager_files
@@ -173,6 +174,7 @@ ohos_unittest("device_auth_func_test") {
   ]
 
   sources += dev_frameworks_files
+  sources += identity_service_mock_files
   sources += deviceauth_common_files
   sources += group_database_manager_files
   sources += ext_plugin_manager_files
@@ -439,6 +441,7 @@ ohos_unittest("device_auth_interface_test") {
   ]
 
   sources += dev_frameworks_files
+  sources += identity_service_mock_files
   sources += deviceauth_common_files
   sources += group_database_manager_files
   sources += ext_plugin_manager_files
@@ -564,6 +567,7 @@ ohos_unittest("deviceauth_unit_test") {
 
   include_dirs += identity_manager_inc
   sources += identity_manager_files
+  sources += identity_service_mock_files
   sources += dev_frameworks_files
   sources += deviceauth_common_files
   sources += group_database_manager_files

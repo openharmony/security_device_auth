@@ -13,20 +13,20 @@
  * limitations under the License.
  */
 
-#include "identity_service.h"
+#include "identity_service_impl.h"
 
 #include "alg_defs.h"
 #include "alg_loader.h"
 #include "clib_error.h"
 #include "common_defs.h"
 #include "credential_data_manager.h"
-#include "cred_listener.h"
 #include "device_auth.h"
 #include "device_auth_defines.h"
 #include "hal_error.h"
 #include "hc_log.h"
 
 #include "identity_operation.h"
+#include "identity_service_defines.h"
 
 static int32_t AddCredentialImplInner(int32_t osAccountId, CJson *reqJson, Credential *credential,
     char **returnData)
@@ -42,7 +42,7 @@ static int32_t AddCredentialImplInner(int32_t osAccountId, CJson *reqJson, Crede
         HcFree(keyValue.val);
         return ret;
     }
-    if ((ret = AddKeyValueToHuks(osAccountId, credIdByte, credential, method, keyValue)) != IS_SUCCESS) {
+    if ((ret = AddKeyValueToHuks(osAccountId, &credIdByte, credential, method, &keyValue)) != IS_SUCCESS) {
         HcFree(keyValue.val);
         HcFree(credIdByte.val);
         return ret;
@@ -91,29 +91,20 @@ int32_t ExportCredentialImpl(int32_t osAccountId, const char *credId, char **ret
     }
     DestroyCredential(credential);
 
-    uint32_t credIdByteLen = HcStrlen(credId) / BYTE_TO_HEX_OPER_LENGTH;
-    Uint8Buff credIdByte = { NULL, credIdByteLen };
-    credIdByte.val = (uint8_t *)HcMalloc(credIdByteLen, 0);
-    if (credIdByte.val == NULL) {
-        LOGE("Failed to malloc credIdByte");
-        return IS_ERR_ALLOC_MEMORY;
-    }
+    Uint8Buff credIdByte = { NULL, 0 };
 
-    ret = CheckCredIdExistInHuks(osAccountId, credId, &credIdByte);
+    ret = GetValidKeyAlias(osAccountId, credId, &credIdByte);
     if (ret == HAL_ERR_KEY_NOT_EXIST) {
         LOGE("Huks key not exist!");
         DelCredById(osAccountId, credId);
-        HcFree(credIdByte.val);
         return IS_ERR_HUKS_KEY_NOT_EXIST;
     }
     if (ret == HAL_ERR_HUKS) {
         LOGE("Huks check key exist failed");
-        HcFree(credIdByte.val);
         return IS_ERR_HUKS_CHECK_KEY_EXIST_FAILED;
     }
     if (ret != IS_SUCCESS) {
         LOGE("Failed to check key exist in HUKS");
-        HcFree(credIdByte.val);
         return ret;
     }
 
@@ -152,14 +143,15 @@ int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestPara
     CredentialVec credentialVec = CreateCredentialVec();
 
     int32_t ret = QueryCredentials(osAccountId, &queryParams, &credentialVec);
-    FreeJson(reqJson);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to query credentials");
+        FreeJson(reqJson);
         ClearCredentialVec(&credentialVec);
         return ret;
     }
     if (credentialVec.size(&credentialVec) == 0) {
         LOGW("No credential found");
+        FreeJson(reqJson);
         ClearCredentialVec(&credentialVec);
         return GenerateReturnEmptyArrayStr(returnData);
     }
@@ -167,14 +159,15 @@ int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestPara
     CJson *credIdJson = CreateJsonArray();
     if (credIdJson == NULL) {
         LOGE("Failed to create credIdJson object");
+        FreeJson(reqJson);
         ClearCredentialVec(&credentialVec);
         return IS_ERR_JSON_CREATE;
     }
 
-    ret = GetCredIdsFromCredVec(credentialVec, credIdJson, osAccountId);
+    ret = GetCredIdsFromCredVec(osAccountId, reqJson, &credentialVec, credIdJson);
+    FreeJson(reqJson);
     ClearCredentialVec(&credentialVec);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to get credIds from credentials");
         FreeJson(credIdJson);
         return ret;
     }
@@ -267,6 +260,78 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
     return IS_SUCCESS;
 }
 
+static int32_t DelCredsWithHash(int32_t osAccountId, CJson *reqJson, CredentialVec *credentialVec, CJson *credIdJson)
+{
+    Credential **ptr;
+    uint32_t index;
+    int32_t ret = IS_SUCCESS;
+    FOR_EACH_HC_VECTOR(*credentialVec, index, ptr) {
+        if (*ptr == NULL) {
+            continue;
+        }
+        Credential *credential = (Credential *)(*ptr);
+        const char *credId = StringGet(&credential->credId);
+        if (credId == NULL) {
+            LOGE("Failed to get credId");
+            continue;
+        }
+
+        if (!IsCredHashMatch(credential, reqJson)) {
+            continue;
+        }
+
+        ret = AddStringToArray(credIdJson, credId);
+        if (ret != IS_SUCCESS) {
+            LOGE("Failed to add credId to json");
+            return IS_ERR_JSON_ADD;
+        }
+        ret = DeleteCredentialImpl(osAccountId, credId);
+    }
+    return ret;
+}
+
+int32_t DeleteCredByParamsImpl(int32_t osAccountId, const char *requestParams, char **returnData)
+{
+    CJson *reqJson = CreateJsonFromString(requestParams);
+    if (reqJson == NULL) {
+        LOGE("Failed to create reqJson from string!");
+        return IS_ERR_JSON_CREATE;
+    }
+    QueryCredentialParams delParams = InitQueryCredentialParams();
+    SetQueryParamsFromJson(&delParams, reqJson);
+    CredentialVec credentialVec = CreateCredentialVec();
+
+    int32_t ret = QueryCredentials(osAccountId, &delParams, &credentialVec);
+    if (ret != IS_SUCCESS) {
+        LOGE("Failed to query credentials");
+        FreeJson(reqJson);
+        ClearCredentialVec(&credentialVec);
+        return ret;
+    }
+    CJson *credIdJson = CreateJsonArray();
+    if (credIdJson == NULL) {
+        LOGE("Failed to create credIdJson");
+        FreeJson(reqJson);
+        ClearCredentialVec(&credentialVec);
+        return IS_ERR_JSON_CREATE;
+    }
+    ret = DelCredsWithHash(osAccountId, reqJson, &credentialVec, credIdJson);
+    FreeJson(reqJson);
+    ClearCredentialVec(&credentialVec);
+    if (ret != IS_SUCCESS) {
+        LOGE("Failed to get and delete credential in vec");
+        FreeJson(credIdJson);
+        return ret;
+    }
+    *returnData = PackJsonToString(credIdJson);
+    FreeJson(credIdJson);
+    if (*returnData == NULL) {
+        LOGE("Failed to pack json to string");
+        return IS_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+    return ret;
+}
+
 int32_t UpdateCredInfoImpl(int32_t osAccountId, const char *credId, const char *requestParams)
 {
     Credential *credential = NULL;
@@ -304,6 +369,229 @@ int32_t UpdateCredInfoImpl(int32_t osAccountId, const char *credId, const char *
     }
 
     return IS_SUCCESS;
+}
+
+static int32_t AddUpdateCred(int32_t osAccountId, CJson *baseInfoJson, QueryCredentialParams *queryParams)
+{
+    int32_t ret = AddUpdateInfoToJson(queryParams, baseInfoJson);
+    if (ret != IS_SUCCESS) {
+        LOGE("Failed to add update info to json");
+        return ret;
+    }
+    char *addCredReq = PackJsonToString(baseInfoJson);
+    if (addCredReq == NULL) {
+        LOGE("Failed to pack baseInfoJson to addCredReq");
+        return IS_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+    char *addRetStr = NULL;
+    ret = AddCredentialImpl(osAccountId, addCredReq, &addRetStr);
+    HcFree(addCredReq);
+    HcFree(addRetStr);
+    return ret;
+}
+
+static int32_t DelCredInVec(int32_t osAccountId, CredentialVec *credVec)
+{
+    uint32_t index;
+    Credential **ptr;
+    int32_t ret = IS_SUCCESS;
+    FOR_EACH_HC_VECTOR(*credVec, index, ptr) {
+        if (*ptr == NULL) {
+            continue;
+        }
+        Credential *credential = (Credential *)(*ptr);
+        const char *credId = StringGet(&credential->credId);
+        if (credId == NULL) {
+            continue;
+        }
+        ret = DeleteCredentialImpl(osAccountId, credId);
+        if (ret != IS_SUCCESS) {
+            LOGE("Failed to delete credential, ret = %d", ret);
+            return ret;
+        }
+    }
+    return IS_SUCCESS;
+}
+
+static int32_t ProcessAbnormalCreds(int32_t osAccountId, CJson *baseInfoJson, QueryCredentialParams *queryParams)
+{
+    int32_t ret = DelCredential(osAccountId, queryParams);
+    if (ret != IS_SUCCESS) {
+        LOGE("Failed to delete abnormal credentials, ret = %d", ret);
+        return ret;
+    }
+    return AddUpdateCred(osAccountId, baseInfoJson, queryParams);
+}
+
+static int32_t HandleUpdateCredsBySize(int32_t osAccountId, CJson *baseInfoJson,
+    QueryCredentialParams *queryParams, CredentialVec *updateCredVec, CredentialVec *selfCredVec)
+{
+    int32_t ret = IS_ERROR;
+    uint32_t updateMatchSize = updateCredVec->size(updateCredVec);
+    switch (updateMatchSize) {
+        case UPDATE_MATCHED_NUM_ZERO:
+            ret = AddUpdateCred(osAccountId, baseInfoJson, queryParams); // == 0 need add
+            break;
+        case UPDATE_MATCHED_NUM_ONE:
+            ret = EraseUpdateCredIdInSelfVec(updateCredVec, selfCredVec); // update info exists in self vec
+            break;
+        default:
+            ret = ProcessAbnormalCreds(osAccountId, baseInfoJson, queryParams); // > 1 need del old
+            break;
+    }
+    return ret;
+}
+
+static int32_t ProcessUpdateInfo(int32_t osAccountId, CJson *updateInfoList,
+    CJson *baseInfoJson, QueryCredentialParams *queryParams, CredentialVec *selfCredVec)
+{
+    int32_t ret = IS_SUCCESS;
+    int32_t updateInfoNum = GetItemNum(updateInfoList);
+    for (int32_t i = 0; i < updateInfoNum; i++) {
+        CJson *item = GetItemFromArray(updateInfoList, i); // shallow copy
+        if (item == NULL) {
+            LOGE("updateInfoList item is NULL");
+            return IS_ERR_JSON_GET;
+        }
+        CredentialVec updateCredVec = CreateCredentialVec();
+        ret = GetUpdateCredVec(osAccountId, item, queryParams, &updateCredVec);
+        if (ret != IS_SUCCESS) {
+            ClearCredentialVec(&updateCredVec);
+            return ret;
+        }
+        ret = HandleUpdateCredsBySize(osAccountId, baseInfoJson, queryParams, &updateCredVec, selfCredVec);
+        ClearCredentialVec(&updateCredVec);
+        if (ret != IS_SUCCESS) {
+            return ret;
+        }
+    }
+    return ret;
+}
+
+static int32_t GetCurrentCredIds(int32_t osAccountId, CJson *baseInfoJson, char **returnData)
+{
+    char *queryStr = NULL;
+    int32_t ret = GetQueryJsonStr(baseInfoJson, &queryStr);
+    if (ret != IS_SUCCESS) {
+        return ret;
+    }
+    ret = QueryCredentialByParamsImpl(osAccountId, queryStr, returnData);
+    HcFree(queryStr);
+    return ret;
+}
+
+static int32_t BatchUpdateCredsImplInner(int32_t osAccountId,
+    CJson *baseInfoJson, CJson *updateInfoList, char **returnData)
+{
+    QueryCredentialParams queryParams = InitQueryCredentialParams();
+    int32_t ret = SetRequiredParamsFromJson(&queryParams, baseInfoJson);
+    if (ret != IS_SUCCESS) {
+        return ret;
+    }
+
+    CredentialVec selfCredVec = CreateCredentialVec();
+    ret = QueryCredentials(osAccountId, &queryParams, &selfCredVec);
+    if (ret != IS_SUCCESS) {
+        ClearCredentialVec(&selfCredVec);
+        return ret;
+    }
+
+    ret = ProcessUpdateInfo(osAccountId, updateInfoList, baseInfoJson, &queryParams, &selfCredVec);
+    if (ret != IS_SUCCESS) {
+        ClearCredentialVec(&selfCredVec);
+        return ret;
+    }
+
+    ret = DelCredInVec(osAccountId, &selfCredVec);
+    ClearCredentialVec(&selfCredVec);
+    if (ret != IS_SUCCESS) {
+        return ret;
+    }
+    return GetCurrentCredIds(osAccountId, baseInfoJson, returnData);
+}
+
+int32_t BatchUpdateCredsImpl(int32_t osAccountId, const char *requestParams, char **returnData)
+{
+    CJson *reqJson = CreateJsonFromString(requestParams);
+    if (reqJson == NULL) {
+        LOGE("Failed to create reqJson from string!");
+        return IS_ERR_JSON_CREATE;
+    }
+    CJson *baseInfoJson = GetObjFromJson(reqJson, FIELD_BASE_INFO);
+    CJson *updateInfoList = GetObjFromJson(reqJson, FIELD_UPDATE_LISTS);
+    if (baseInfoJson == NULL || updateInfoList == NULL) {
+        LOGE("baseInfoJson or updateLists is NULL");
+        FreeJson(reqJson);
+        return IS_ERR_INVALID_PARAMS;
+    }
+    int32_t ret = BatchUpdateCredsImplInner(osAccountId, baseInfoJson, updateInfoList, returnData);
+    FreeJson(reqJson);
+    return ret;
+}
+
+static int32_t AgreeCredentialImplInner(int32_t osAccountId, const char *selfCredId,
+    CJson *reqJson, Credential *agreeCredential, char **returnData)
+{
+    Uint8Buff keyValue = { NULL, 0 };
+    Uint8Buff agreeCredIdByte = { NULL, 0 };
+    int32_t ret = SetAgreeCredInfo(osAccountId, reqJson, agreeCredential, &keyValue, &agreeCredIdByte);
+    if (ret != IS_SUCCESS) {
+        return ret;
+    }
+
+    uint8_t peerKeyAliasVal[SHA256_LEN] = { 0 };
+    Uint8Buff peerKeyAlias = { peerKeyAliasVal, SHA256_LEN };
+    ret = ImportAgreeKeyValue(osAccountId, agreeCredential, &keyValue, &peerKeyAlias);
+    if (ret != IS_SUCCESS) {
+        HcFree(keyValue.val);
+        HcFree(agreeCredIdByte.val);
+        return ret;
+    }
+
+    Uint8Buff selfCredIdByte = { NULL, 0 };
+    ret = CheckAndDelInvalidCred(osAccountId, selfCredId, &selfCredIdByte);
+    if (ret != IS_SUCCESS) {
+        HcFree(keyValue.val);
+        HcFree(agreeCredIdByte.val);
+        return ret;
+    }
+
+    ret = ComputePskAndDelInvalidKey(osAccountId,
+        agreeCredential->algorithmType, &selfCredIdByte, &peerKeyAlias, &agreeCredIdByte);
+    HcFree(keyValue.val);
+    HcFree(selfCredIdByte.val);
+    HcFree(agreeCredIdByte.val);
+    if (ret != IS_SUCCESS) {
+        return ret;
+    }
+    ret = AddCredAndSaveDb(osAccountId, agreeCredential);
+    if (ret != IS_SUCCESS) {
+        return ret;
+    }
+    if (DeepCopyString(StringGet(&agreeCredential->credId), returnData) != EOK) {
+        LOGE("Failed to return credId");
+        return IS_ERR_MEMORY_COPY;
+    }
+    return IS_SUCCESS;
+}
+
+int32_t AgreeCredentialImpl(int32_t osAccountId, const char *selfCredId, const char *requestParams, char **returnData)
+{
+    CJson *reqJson = CreateJsonFromString(requestParams);
+    if (reqJson == NULL) {
+        LOGE("Failed to create reqJson from string!");
+        return IS_ERR_JSON_CREATE;
+    }
+    Credential *agreeCredential = CreateCredential();
+    if (agreeCredential == NULL) {
+        LOGE("Failed to malloc agreeCredential");
+        FreeJson(reqJson);
+        return IS_ERR_ALLOC_MEMORY;
+    }
+    int32_t ret = AgreeCredentialImplInner(osAccountId, selfCredId, reqJson, agreeCredential, returnData);
+    FreeJson(reqJson);
+    DestroyCredential(agreeCredential);
+    return ret;
 }
 
 int32_t RegCredListener(const char *appId, const CredChangeListener *listener)

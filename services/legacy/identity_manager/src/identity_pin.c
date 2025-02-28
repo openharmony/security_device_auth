@@ -40,7 +40,7 @@ static int32_t SetDlSpekeProtocol(IdentityInfo *info)
 #endif
 }
 
-static int32_t SetIsoProtocol(IdentityInfo *info)
+static int32_t SetIsoProtocol(const CJson *in, IdentityInfo *info)
 {
 #ifdef ENABLE_P2P_BIND_ISO
     ProtocolEntity *isoEntity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
@@ -49,7 +49,9 @@ static int32_t SetIsoProtocol(IdentityInfo *info)
         return HC_ERR_ALLOC_MEMORY;
     }
     isoEntity->protocolType = ALG_ISO;
-    isoEntity->expandProcessCmds = CMD_IMPORT_AUTH_CODE | CMD_ADD_TRUST_DEVICE;
+    bool isCredAuth = false;
+    (void)GetBoolFromJson(in, FIELD_IS_CRED_AUTH, &isCredAuth);
+    isoEntity->expandProcessCmds = isCredAuth ? 0 : CMD_IMPORT_AUTH_CODE | CMD_ADD_TRUST_DEVICE;
     if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&isoEntity) == NULL) {
         LOGE("Failed to push iso entity!");
         HcFree(isoEntity);
@@ -62,27 +64,27 @@ static int32_t SetIsoProtocol(IdentityInfo *info)
 #endif
 }
 
-static int32_t SetLiteProtocols(IdentityInfo *info)
+static int32_t SetLiteProtocols(const CJson *in, IdentityInfo *info)
 {
     int32_t res = SetDlSpekeProtocol(info);
     if (res != HC_SUCCESS) {
         return res;
     }
-    return SetIsoProtocol(info);
+    return SetIsoProtocol(in, info);
 }
 
 static int32_t SetLiteProtocolsForPinType(const CJson *in, IdentityInfo *info)
 {
 #ifndef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
     (void)in;
-    return SetLiteProtocols(info);
+    return SetLiteProtocols(in, info);
 #else
     int32_t protocolExpandVal = INVALID_PROTOCOL_EXPAND_VALUE;
     (void)GetIntFromJson(in, FIELD_PROTOCOL_EXPAND, &protocolExpandVal);
     int32_t res = HC_SUCCESS;
     if (protocolExpandVal == LITE_PROTOCOL_STANDARD_MODE ||
         protocolExpandVal == LITE_PROTOCOL_COMPATIBILITY_MODE) {
-        res = SetLiteProtocols(info);
+        res = SetLiteProtocols(in, info);
     }
     return res;
 #endif
@@ -97,7 +99,9 @@ static int32_t SetProtocolsForPinType(const CJson *in, IdentityInfo *info)
         return HC_ERR_ALLOC_MEMORY;
     }
     ecSpekeEntity->protocolType = ALG_EC_SPEKE;
-    ecSpekeEntity->expandProcessCmds = CMD_EXCHANGE_PK | CMD_ADD_TRUST_DEVICE;
+    bool isCredAuth = false;
+    (void)GetBoolFromJson(in, FIELD_IS_CRED_AUTH, &isCredAuth);
+    ecSpekeEntity->expandProcessCmds = isCredAuth ? 0 : CMD_EXCHANGE_PK | CMD_ADD_TRUST_DEVICE;
     if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&ecSpekeEntity) == NULL) {
         LOGE("Failed to push ec speke entity!");
         HcFree(ecSpekeEntity);

@@ -32,6 +32,7 @@ if (os_level == "mini" || os_level == "small") {
       "${dev_frameworks_path}/inc/hiview_adapter",
     ]
     sources = deviceauth_files
+    sources += identity_service_mock_files
     defines = [ "HILOG_ENABLE" ]
     defines += deviceauth_defines
 

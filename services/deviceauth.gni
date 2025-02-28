@@ -20,6 +20,7 @@ ext_plugin_manager_path = "${services_path}/ext_plugin_manager"
 group_data_manager_path = "${services_path}/data_manager/group_data_manager"
 cred_data_manager_path = "${services_path}/data_manager/cred_data_manager"
 cred_listener_path = "${services_path}/identity_service/listener"
+cred_session_path = "${services_path}/identity_service/session"
 privacy_enhancement_path = "${services_path}/privacy_enhancement"
 dev_frameworks_path = "${services_path}/frameworks"
 group_manager_path = "${services_path}/legacy/group_manager"
@@ -35,6 +36,7 @@ identity_service_inc = [
   "${identity_service_path}/inc",
   "${cred_data_manager_path}/inc",
   "${cred_listener_path}/inc",
+  "${cred_session_path}/inc",
 ]
 identity_service_files = [
   "${identity_service_path}/src/identity_service.c",
@@ -43,6 +45,14 @@ identity_service_files = [
   "${cred_data_manager_path}/src/credential_data_manager.c",
   "${cred_data_manager_path}/src/cred_tlv_parser.c",
   "${cred_listener_path}/src/cred_listener.c",
+  "${cred_session_path}/src/cred_session_util.c",
+]
+identity_service_mock_files = [
+  "${identity_service_path}/src/mock/identity_service_mock.c",
+  "${identity_service_path}/src/mock/identity_operation_mock.c",
+  "${cred_data_manager_path}/src/mock/credential_data_manager_mock.c",
+  "${cred_listener_path}/src/mock/cred_listener_mock.c",
+  "${cred_session_path}/src/mock/cred_session_util_mock.c",
 ]
 
 inc_path = [
@@ -491,6 +501,12 @@ if (enable_session_v2 == true) {
     "${identity_manager_path}/src/identity_p2p.c",
     "${identity_manager_path}/src/identity_pin.c",
   ]
+  if (enable_identity_service) {
+    identity_manager_files += [ "${identity_manager_path}/src/identity_cred.c" ]
+  } else {
+    identity_manager_files +=
+        [ "${identity_manager_path}/src/mock/identity_cred_mock.c" ]
+  }
 } else {
   identity_manager_files = [
     "${identity_manager_path}/src/mock/identity_manager_mock.c",

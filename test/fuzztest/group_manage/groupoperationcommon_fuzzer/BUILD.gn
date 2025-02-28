@@ -41,6 +41,7 @@ ohos_fuzztest("GroupOperationCommonFuzzTest") {
     include_dirs += [ "${dev_frameworks_path}/inc/net_observer" ]
   }
   sources = [ "groupoperationcommon_fuzzer.cpp" ]
+  sources += identity_service_mock_files
   sources += deviceauth_files
   sources += hal_common_files
   sources += hiview_adapter_files

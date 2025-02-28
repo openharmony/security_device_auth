@@ -83,6 +83,9 @@ static IpcCallMap g_ipcCallMaps[] = {
     {IpcServiceCmQueryCredentialByCredId, IPC_CALL_ID_CM_QUERY_CREDENTIAL_BY_CRED_ID},
     {IpcServiceCmDeleteCredential, IPC_CALL_ID_CM_DEL_CREDENTIAL},
     {IpcServiceCmUpdateCredInfo, IPC_CALL_ID_CM_UPDATE_CRED_INFO},
+    {IpcServiceCmAgreeCredential, IPC_CALL_ID_CM_AGREE_CREDENTIAL},
+    {IpcServiceCmDelCredByParams, IPC_CALL_ID_CM_DEL_CRED_BY_PARAMS},
+    {IpcServiceCmBatchUpdateCredentials, IPC_CALL_ID_CM_BATCH_UPDATE_CREDENTIALS},
     {IpcServiceCaAuthDevice, IPC_CALL_ID_CA_AUTH_DEVICE},
     {IpcServiceCaProcessCredData, IPC_CALL_ID_CA_PROCESS_CRED_DATA},
 };

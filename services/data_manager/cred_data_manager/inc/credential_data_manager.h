@@ -18,7 +18,6 @@
 
 #include <stdbool.h>
 #include "hc_string_vector.h"
-#include "cred_tlv_parser.h"
 #include "json_utils.h"
 
 #define MAX_STRING_LEN 256
@@ -73,7 +72,6 @@ extern "C" {
 int32_t InitCredDatabase(void);
 void DestroyCredDatabase(void);
 
-void ReloadOsAccountCredDb(int32_t osAccountId);
 int32_t AddCredToDb(int32_t osAccountId, const Credential *credential);
 int32_t DelCredential(int32_t osAccountId, const QueryCredentialParams *delParams);
 int32_t QueryCredentials(int32_t osAccountId, const QueryCredentialParams *queryParams,

@@ -59,6 +59,11 @@ const AuthIdentity *GetP2pAuthIdentity(void)
     return NULL;
 }
 
+const AuthIdentity *GetCredAuthIdentity(void)
+{
+    return NULL;
+}
+
 const CredentialOperator *GetCredentialOperator(void)
 {
     return NULL;

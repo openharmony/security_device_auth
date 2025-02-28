@@ -1962,4 +1962,10 @@ HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest010, TestSize.Level0)
     AddDemoMember();
     ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_ERROR);
 }
+
+HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest011, TestSize.Level0)
+{
+    const CredAuthManager *cm = GetCredAuthInstance();
+    ASSERT_NE(cm, nullptr);
+}
 } // namespace

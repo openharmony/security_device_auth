@@ -39,6 +39,7 @@ ohos_fuzztest("IsoAuthTaskFuzzTest") {
   include_dirs += identity_manager_inc
 
   sources = [ "isoauthtask_fuzzer.cpp" ]
+  sources += identity_service_mock_files
   sources += deviceauth_files
   if (support_os_account) {
     sources += account_subscriber_files

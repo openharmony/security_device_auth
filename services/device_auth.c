@@ -31,7 +31,6 @@
 #include "hc_time.h"
 #include "hisysevent_adapter.h"
 #include "hitrace_adapter.h"
-#include "identity_service.h"
 #include "json_utils.h"
 #include "key_manager.h"
 #include "os_account_adapter.h"
@@ -42,17 +41,17 @@
 #include "identity_manager.h"
 #include "group_auth_manager.h"
 #include "account_task_manager.h"
-#ifdef DEV_AUTH_IS_ENABLE
+
+#include "identity_service.h"
+#include "cred_session_util.h"
 #include "credential_data_manager.h"
-#endif
+#include "identity_service_defines.h"
 
 static GroupAuthManager *g_groupAuthManager =  NULL;
 static DeviceGroupManager *g_groupManagerInstance = NULL;
 
-#ifdef DEV_AUTH_IS_ENABLE
 static CredManager *g_credManager = NULL;
 static CredAuthManager *g_credAuthManager = NULL;
-#endif
 
 #define CLEAN_CRED 1
 #define CLEAN_MODULE 2
@@ -1023,87 +1022,8 @@ static int32_t AddDeviceIdToJson(CJson *context, const char *peerUdid)
     return HC_SUCCESS;
 }
 
-#ifdef DEV_AUTH_IS_ENABLE
-static int32_t QueryAndAddCredToContext(int32_t osAccountId, CJson *context, const char *credIdKey,
-    const char *credObjKey)
-{
-    const char *credId = GetStringFromJson(context, credIdKey);
-    if (credId == NULL) {
-        LOGE("get self credential id from json fail.");
-        return HC_ERR_JSON_GET;
-    }
-    char *credDataStr = NULL;
-    int32_t ret = QueryCredInfoByCredId(osAccountId, credId, &credDataStr);
-    if (ret != HC_SUCCESS) {
-        LOGE("No credential found.");
-        return ret;
-    }
-    CJson *credDataJson = CreateJsonFromString(credDataStr);
-    HcFree(credDataStr);
-    if (credDataJson == NULL) {
-        LOGE("Faild to create json from string");
-        return HC_ERR_JSON_FAIL;
-    }
-    if (AddObjToJson(context, credObjKey, credDataJson) != HC_SUCCESS) {
-        LOGE("add local credential object to context fail.");
-        FreeJson(credDataJson);
-        return HC_ERR_JSON_ADD;
-    }
-    FreeJson(credDataJson);
-    return HC_SUCCESS;
-}
-
-static int32_t QueryAndAddAllCredToContext(int32_t osAccountId, CJson *context)
-{
-    int32_t res = QueryAndAddCredToContext(osAccountId, context, FIELD_SELF_CRED_ID, FIELD_SELF_CREDENTIAL_OBJ);
-    if (res != HC_SUCCESS) {
-        LOGE("Get self credential fail.");
-        return res;
-    }
-    return HC_SUCCESS;
-}
-#endif
-
-static const char *GetAppIdByContext(const CJson *context, bool isCredAuth)
-{
-    if (isCredAuth) {
-        const CJson *json = GetObjFromJson(context, FIELD_SELF_CREDENTIAL_OBJ);
-        if (json == NULL) {
-            LOGE("get self credential info from json fail.");
-            return NULL;
-        }
-        const char *appId = GetStringFromJson(json, FIELD_CRED_OWNER);
-        if (appId == NULL) {
-            LOGE("get appId from json fail.");
-            return NULL;
-        }
-        return appId;
-    }
-    const char *appId = GetStringFromJson(context, FIELD_SERVICE_PKG_NAME);
-    if (appId == NULL) {
-        LOGE("get servicePkgName from json fail.");
-        return NULL;
-    }
-    return appId;
-}
-
-static int32_t AddPeerUdid(int32_t osAccountId, CJson *context, char **returnPeerUdid)
-{
-    const char *peerUdid = GetPeerUdidFromJson(osAccountId, context);
-    if (peerUdid == NULL) {
-        return HC_ERR_JSON_GET;
-    }
-    (void)DeepCopyString(peerUdid, returnPeerUdid);
-    PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
-    if (AddDeviceIdToJson(context, peerUdid) != HC_SUCCESS) {
-        LOGE("add deviceId to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t BuildServerAuthContext(int64_t requestId, CJson *context, bool isCredAuth,
-    char **returnPeerUdid, const char **returnAppId)
+static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const char *appId, CJson *context,
+    char **returnPeerUdid)
 {
     int32_t res = CheckConfirmationExist(context);
     if (res != HC_SUCCESS) {
@@ -1115,10 +1035,15 @@ static int32_t BuildServerAuthContext(int64_t requestId, CJson *context, bool is
     }
     int32_t osAccountId = ANY_OS_ACCOUNT;
     (void)GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId);
-    if (!isCredAuth) {
-        if ((res = AddPeerUdid(osAccountId, context, returnPeerUdid)) != HC_SUCCESS) {
-            return res;
-        }
+    const char *peerUdid = GetPeerUdidFromJson(osAccountId, context);
+    if (peerUdid == NULL) {
+        return HC_ERR_JSON_GET;
+    }
+    (void)DeepCopyString(peerUdid, returnPeerUdid);
+    PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
+    if (AddDeviceIdToJson(context, peerUdid) != HC_SUCCESS) {
+        LOGE("add deviceId to context fail.");
+        return HC_ERR_JSON_ADD;
     }
     if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
         LOGE("add isBind to context fail.");
@@ -1128,27 +1053,16 @@ static int32_t BuildServerAuthContext(int64_t requestId, CJson *context, bool is
         LOGE("add isClient to context fail.");
         return HC_ERR_JSON_ADD;
     }
-#ifdef DEV_AUTH_IS_ENABLE
-    if (isCredAuth && (res = QueryAndAddAllCredToContext(osAccountId, context)) != HC_SUCCESS) {
-        return res;
-    }
-#endif
-    const char *appId = GetAppIdByContext(context, isCredAuth);
-    if (appId == NULL) {
-        LOGE("get appId Fail.");
-        return HC_ERR_JSON_GET;
-    }
-    *returnAppId = appId;
-    if (AddBoolToJson(context, FIELD_IS_CRED_AUTH, isCredAuth) != HC_SUCCESS) {
-        LOGE("add isCredAuth to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
     if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
         LOGE("add requestId to context fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
         LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
+        LOGE("add opCode to context fail.");
         return HC_ERR_JSON_ADD;
     }
     return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
@@ -1205,7 +1119,7 @@ static int32_t BuildServerP2PAuthContext(int64_t requestId, int32_t opCode, cons
 }
 
 static int32_t OpenServerAuthSession(int64_t requestId, const CJson *receivedMsg, const DeviceAuthCallback *callback,
-    bool isCredAuth, char **returnPeerUdid)
+    char **returnPeerUdid)
 {
     int32_t opCode = AUTH_FORM_ACCOUNT_UNRELATED;
     if (GetIntFromJson(receivedMsg, FIELD_AUTH_FORM, &opCode) != HC_SUCCESS) {
@@ -1225,13 +1139,13 @@ static int32_t OpenServerAuthSession(int64_t requestId, const CJson *receivedMsg
         LOGE("Failed to create context from string!");
         return HC_ERR_JSON_FAIL;
     }
-    if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
-        LOGE("add opCode to context fail.");
+    const char *appId = GetStringFromJson(context, FIELD_SERVICE_PKG_NAME);
+    if (appId == NULL) {
+        LOGE("get appId from json fail.");
         FreeJson(context);
-        return HC_ERR_JSON_ADD;
+        return HC_ERR_JSON_GET;
     }
-    const char *appId = NULL;
-    int32_t res = BuildServerAuthContext(requestId, context, isCredAuth, returnPeerUdid, &appId);
+    int32_t res = BuildServerAuthContext(requestId, opCode, appId, context, returnPeerUdid);
     if (res != HC_SUCCESS) {
         FreeJson(context);
         return res;
@@ -1312,7 +1226,7 @@ static int32_t ProcessDataInner(int64_t authReqId, const uint8_t *data, uint32_t
     }
     int32_t res;
     if (!IsSessionExist(authReqId)) {
-        res = OpenServerAuthSession(authReqId, receivedMsg, gaCallback, false, returnPeerUdid);
+        res = OpenServerAuthSession(authReqId, receivedMsg, gaCallback, returnPeerUdid);
         if (res != HC_SUCCESS) {
             FreeJson(receivedMsg);
             return res;
@@ -1351,38 +1265,42 @@ static int32_t ProcessData(int64_t authReqId, const uint8_t *data, uint32_t data
     return res;
 }
 
-#ifdef DEV_AUTH_IS_ENABLE
-static int32_t BuildClientAuthCredContext(int32_t osAccountId, int64_t requestId, const char *appId, CJson *context)
+static int32_t OpenServerCredSession(int64_t requestId, const CJson *receivedMsg, const DeviceAuthCallback *callback,
+    char **returnPeerUdid)
 {
-    if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
-        LOGE("add isBind to context fail.");
-        return HC_ERR_JSON_ADD;
+    int32_t opCode = AUTH_FORM_ACCOUNT_UNRELATED;
+    if (GetIntFromJson(receivedMsg, FIELD_AUTH_FORM, &opCode) != HC_SUCCESS) {
+        if (GetIntFromJson(receivedMsg, FIELD_OP_CODE, &opCode) != HC_SUCCESS) {
+            opCode = AUTH_FORM_INVALID_TYPE;
+            LOGW("use default opCode.");
+        }
     }
-    if (AddBoolToJson(context, FIELD_IS_CLIENT, true) != HC_SUCCESS) {
-        LOGE("add isClient to context fail.");
-        return HC_ERR_JSON_ADD;
+    char *returnDataStr = ProcessRequestCallback(requestId, opCode, NULL, callback);
+    if (returnDataStr == NULL) {
+        LOGE("The OnRequest callback is fail!");
+        return HC_ERR_REQ_REJECTED;
     }
-    if (AddBoolToJson(context, FIELD_IS_CRED_AUTH, true) != HC_SUCCESS) {
-        LOGE("add isCredAuth to context fail.");
-        return HC_ERR_JSON_ADD;
+    CJson *context = CreateJsonFromString(returnDataStr);
+    FreeJsonString(returnDataStr);
+    if (context == NULL) {
+        LOGE("Failed to create context from string!");
+        return HC_ERR_JSON_FAIL;
     }
-    if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
-        LOGE("add osAccountId to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
-        LOGE("add requestId to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
-        LOGE("add appId to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddIntToJson(context, FIELD_OPERATION_CODE, AUTH_FORM_IDENTICAL_ACCOUNT) != HC_SUCCESS) {
+    if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
         LOGE("add opCode to context fail.");
+        FreeJson(context);
         return HC_ERR_JSON_ADD;
     }
-    return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
+    const char *appId = NULL;
+    int32_t res = BuildServerCredContext(requestId, context, returnPeerUdid, &appId);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+    SessionInitParams params = { context, *callback };
+    res = OpenDevSession(requestId, appId, &params);
+    FreeJson(context);
+    return res;
 }
 
 static int32_t AuthCredentialInner(int32_t osAccountId, int64_t authReqId, const char *authParams,
@@ -1410,18 +1328,8 @@ static int32_t AuthCredentialInner(int32_t osAccountId, int64_t authReqId, const
         LOGE("Failed to create json from string!");
         return HC_ERR_JSON_FAIL;
     }
-    int32_t res = QueryAndAddAllCredToContext(osAccountId, context);
-    if (res != HC_SUCCESS) {
-        FreeJson(context);
-        return res;
-    }
-    const char *appId = GetAppIdByContext(context, true);
-    if (appId == NULL) {
-        LOGE("get appId fail.");
-        FreeJson(context);
-        return HC_ERR_JSON_GET;
-    }
-    res = BuildClientAuthCredContext(osAccountId, authReqId, appId, context);
+    const char *appId = NULL;
+    int32_t res = BuildClientCredContext(osAccountId, authReqId, context, &appId);
     if (res != HC_SUCCESS) {
         FreeJson(context);
         return res;
@@ -1469,7 +1377,7 @@ static int32_t ProcessCredDataInner(int64_t authReqId, const uint8_t *data, uint
     }
     int32_t res;
     if (!IsSessionExist(authReqId)) {
-        res = OpenServerAuthSession(authReqId, receivedMsg, caCallback, true, returnPeerUdid);
+        res = OpenServerCredSession(authReqId, receivedMsg, caCallback, returnPeerUdid);
         if (res != HC_SUCCESS) {
             FreeJson(receivedMsg);
             return res;
@@ -1500,7 +1408,6 @@ static int32_t ProcessCredData(int64_t authReqId, const uint8_t *data, uint32_t 
     }
     return res;
 }
-#endif
 
 static void CancelRequest(int64_t requestId, const char *appId)
 {
@@ -1718,7 +1625,6 @@ static void DestroyGmAndGa(void)
     }
 }
 
-#ifdef DEV_AUTH_IS_ENABLE
 static int32_t AllocCredentialMgr(void)
 {
     if (g_credManager == NULL) {
@@ -1758,7 +1664,6 @@ static void DestroyCa(void)
         g_credAuthManager = NULL;
     }
 }
-#endif
 
 static void CleanAllModules(int32_t type)
 {
@@ -1767,9 +1672,7 @@ static void CleanAllModules(int32_t type)
             DestroyDevSessionManager();
         // fallthrough
         case CLEAN_IDENTITY_SERVICE:
-#ifdef DEV_AUTH_IS_ENABLE
             DestroyIdentityService();
-#endif
         // fallthrough
         case CLEAN_GROUP_MANAGER:
             DestroyGroupManager();
@@ -1815,13 +1718,11 @@ static int32_t InitAllModules(void)
             CleanAllModules(CLEAN_CALLBACK);
             break;
         }
-#ifdef DEV_AUTH_IS_ENABLE
         if ((res = InitIdentityService()) != HC_SUCCESS) {
             LOGE("[End]: [Service]: Failed to init IS module!");
             CleanAllModules(CLEAN_GROUP_MANAGER);
             break;
         }
-#endif
         if ((res = InitDevSessionManager()) != HC_SUCCESS) {
             LOGE("[End]: [Service]: Failed to init dev session manager module!");
             CleanAllModules(CLEAN_IDENTITY_SERVICE);
@@ -1940,7 +1841,6 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     if (res != HC_SUCCESS) {
         return res;
     }
-#ifdef DEV_AUTH_IS_ENABLE
     res = AllocCa();
     if (res != HC_SUCCESS) {
         DestroyGmAndGa();
@@ -1952,15 +1852,12 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
         DestroyCa();
         return res;
     }
-#endif
     InitOsAccountAdapter();
     res = InitAllModules();
     if (res != HC_SUCCESS) {
         DestroyGmAndGa();
-#ifdef DEV_AUTH_IS_ENABLE
         DestroyCa();
         DestroyCredentialMgr();
-#endif
         return res;
     }
     INIT_PERFORMANCE_DUMPER();
@@ -1980,16 +1877,12 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
     }
     DestroyTaskManager();
     DestroyDevSessionManager();
-#ifdef DEV_AUTH_IS_ENABLE
     DestroyIdentityService();
-#endif
     DestroyGroupManager();
     DestroyGmAndGa();
     DestroyAccountTaskManager();
-#ifdef DEV_AUTH_IS_ENABLE
     DestroyCa();
     DestroyCredentialMgr();
-#endif
     DestroyModules();
     DestroyCredMgr();
     DestroyChannelManager();
@@ -2049,7 +1942,6 @@ DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
     return g_groupAuthManager;
 }
 
-#ifdef DEV_AUTH_IS_ENABLE
 DEVICE_AUTH_API_PUBLIC const CredManager *GetCredMgrInstance(void)
 {
     if (g_credManager == NULL) {
@@ -2063,8 +1955,11 @@ DEVICE_AUTH_API_PUBLIC const CredManager *GetCredMgrInstance(void)
     g_credManager->queryCredInfoByCredId = QueryCredInfoByCredId;
     g_credManager->deleteCredential = DeleteCredential;
     g_credManager->updateCredInfo = UpdateCredInfo;
+    g_credManager->agreeCredential = AgreeCredential;
     g_credManager->registerChangeListener = RegisterChangeListener;
     g_credManager->unregisterChangeListener = UnregisterChangeListener;
+    g_credManager->deleteCredByParams = DeleteCredByParams;
+    g_credManager->batchUpdateCredentials = BatchUpdateCredentials;
     g_credManager->destroyInfo = DestroyInfo;
 
     return g_credManager;
@@ -2081,4 +1976,3 @@ DEVICE_AUTH_API_PUBLIC const CredAuthManager *GetCredAuthInstance(void)
     g_credAuthManager->authCredential = AuthCredential;
     return g_credAuthManager;
 }
-#endif

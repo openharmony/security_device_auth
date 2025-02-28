@@ -34,6 +34,7 @@
 #include "hc_log.h"
 #include "hc_types.h"
 #include "../../../../services/identity_service/src/identity_operation.c"
+#include "../../../../services/identity_service/src/identity_service_impl.c"
 #include "cred_listener.h"
 
 using namespace std;
@@ -58,104 +59,133 @@ static const char *ADD_PARAMS =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS1 =
     "{\"credType\":0,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS2 =
     "{\"credType\":1,\"keyFormat\":0,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS3 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":0,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS4 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":0,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS5 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":0,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS6 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":0,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS7 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":0,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS8 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":0,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS9 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS10 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS11 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,"
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS12 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":2,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS13 =
     "{\"credType\":2,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":2,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"keyValue\":\"9A9A9A9A\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS14 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId1\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS15 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
+static const char *ADD_PARAMS16 =
+    "{\"credId\":\"14993DDA9D\",\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
+    "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
+    "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
+    "\"peerUserSpaceId\":\"100\",\"extendInfo\":\"\"}";
+static const char *ADD_PARAMS17 =
+    "{\"credType\":2,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,"
+    "\"proofType\":1,\"method\":1,\"authorizedScope\":1,"
+    "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\"}";
+static const char *ADD_PARAMS18 =
+    "{\"credType\":3,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
+    "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId0\","
+    "\"deviceId\":\"TestDeviceId0\",\"credOwner\":\"TestAppId\"}";
 static const char *REQUEST_PARAMS =
-    "{\"authorizedScope\":1, \"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\","
+    "{\"authorizedScope\":1, \"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\","
     "\"TestName4\"],\"extendInfo\":\"\"}";
+static const char *AGREE_PARAMS =
+    "{\"credType\":2, \"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\",\"subject\":1,"
+    "\"keyFormat\":2,\"proofType\":1,\"authorizedScope\":1,\"algorithmType\":3,\"peerUserSpaceId\":\"100\","
+    "\"keyValue\":\"3059301306072a8648ce3d020106082a8648ce3d030107034200043bb1f8107c6306bddcdb70cd9fee0e581"
+    "5bbd305184871cd2880657eb2cc88aeece1a7f076d9fff7e1114e3bc9dfa45b061b2755b46fc282ef59763b4c0288bd\"}";
+static const char *BATCH_UPDATE_PARAMS =
+    "{\"baseInfo\":{\"credType\":3,\"keyFormat\":2,\"algorithmType\":3,\"subject\":2,\"authorizedScope\":2,"
+    "\"issuer\":1,\"proofType\":2,\"credOwner\":\"TestAppId\"},"
+    "\"updateLists\":[{\"userId\":\"TestUserId\",\"deviceId\":\"TestDeviceId\"}]}";
+static const char *BATCH_UPDATE_PARAMS1 =
+    "{\"baseInfo\":{\"credType\":1,\"keyFormat\":2,\"algorithmType\":3,\"subject\":2,\"authorizedScope\":2,"
+    "\"issuer\":1,\"proofType\":2,\"credOwner\":\"TestAppId\"},"
+    "\"updateLists\":[{\"userId\":\"TestUserId\",\"deviceId\":\"TestDeviceId\"}]}";
+
 
 static const char *QUERY_PARAMS = "{\"deviceId\":\"TestDeviceId\"}";
 static const char *QUERY_PARAMS1 = "{\"deviceId\":\"TestDeviceId1\"}";
+static const char *DEL_PARAMS = "{\"credOwner\":\"TestAppId\"}";
+static const char *DEL_PARAMS1 = "{\"credOwner\":\"TestAppId\",\"userIdHash\":\"12D2\",\"deviceIdHash\":\"12D2\"}";
 enum CredListenerStatus {
     CRED_LISTENER_INIT = 0,
     CRED_LISTENER_ON_ADD = 1,
@@ -412,6 +442,18 @@ HWTEST_F(CredMgrAddCredentialTest, CredMgrAddCredentialTest017, TestSize.Level0)
     char *returnData = nullptr;
     int32_t ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS15, &returnData);
     EXPECT_EQ(ret, IS_ERR_KEYVALUE_METHOD_CONFLICT);
+}
+
+HWTEST_F(CredMgrAddCredentialTest, CredMgrAddCredentialTest018, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    char *credId = nullptr;
+    int32_t ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS16, &credId);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    ret = cm->deleteCredential(DEFAULT_OS_ACCOUNT, credId);
+    HcFree(credId);
+    EXPECT_EQ(ret, IS_SUCCESS);
 }
 
 class CredMgrExportCredentialTest : public testing::Test {
@@ -888,6 +930,214 @@ HWTEST_F(CredMgrUnRegCredListenerTest, CredMgrUnRegCredListenerTest003, TestSize
     EXPECT_EQ(ret, IS_ERR_INVALID_PARAMS);
 }
 
+class CredMgrAgreeCredentialTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+
+void CredMgrAgreeCredentialTest::SetUpTestCase() {}
+void CredMgrAgreeCredentialTest::TearDownTestCase() {}
+
+void CredMgrAgreeCredentialTest::SetUp()
+{
+    DeleteDatabase();
+    int ret = InitDeviceAuthService();
+    EXPECT_EQ(ret, IS_SUCCESS);
+}
+
+void CredMgrAgreeCredentialTest::TearDown()
+{
+    DestroyDeviceAuthService();
+}
+
+HWTEST_F(CredMgrAgreeCredentialTest, CredMgrAgreeCredentialTest001, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    char *selfCredId = nullptr;
+    int32_t ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS17, &selfCredId);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    char *returnData = nullptr;
+    ret = cm->agreeCredential(DEFAULT_OS_ACCOUNT, selfCredId, AGREE_PARAMS, &returnData);
+    HcFree(selfCredId);
+    HcFree(returnData);
+    EXPECT_EQ(ret, IS_SUCCESS);
+}
+
+HWTEST_F(CredMgrAgreeCredentialTest, CredMgrAgreeCredentialTest002, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    char *returnData = nullptr;
+    int32_t ret = cm->agreeCredential(DEFAULT_OS_ACCOUNT, nullptr, AGREE_PARAMS, &returnData);
+    EXPECT_EQ(ret, IS_ERR_INVALID_PARAMS);
+}
+
+HWTEST_F(CredMgrAgreeCredentialTest, CredMgrAgreeCredentialTest003, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    char *returnData = nullptr;
+    int32_t ret = cm->agreeCredential(DEFAULT_OS_ACCOUNT, TEST_CRED_ID, nullptr, &returnData);
+    EXPECT_EQ(ret, IS_ERR_INVALID_PARAMS);
+}
+
+HWTEST_F(CredMgrAgreeCredentialTest, CredMgrAgreeCredentialTest004, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    int32_t ret = cm->agreeCredential(DEFAULT_OS_ACCOUNT, TEST_CRED_ID, AGREE_PARAMS, nullptr);
+    EXPECT_EQ(ret, IS_ERR_INVALID_PARAMS);
+}
+
+
+class CredMgrBatchUpdateCredsTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+void CredMgrBatchUpdateCredsTest::SetUpTestCase() {}
+void CredMgrBatchUpdateCredsTest::TearDownTestCase() {}
+
+void CredMgrBatchUpdateCredsTest::SetUp()
+{
+    DeleteDatabase();
+    int ret = InitDeviceAuthService();
+    EXPECT_EQ(ret, IS_SUCCESS);
+}
+
+void CredMgrBatchUpdateCredsTest::TearDown()
+{
+    DestroyDeviceAuthService();
+}
+
+HWTEST_F(CredMgrBatchUpdateCredsTest, CredMgrBatchUpdateCredsTest001, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    char *returnData = nullptr;
+    int32_t ret = cm->batchUpdateCredentials(DEFAULT_OS_ACCOUNT, BATCH_UPDATE_PARAMS, &returnData);
+    HcFree(returnData);
+    EXPECT_EQ(ret, IS_SUCCESS);
+}
+
+HWTEST_F(CredMgrBatchUpdateCredsTest, CredMgrBatchUpdateCredsTest002, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    char *returnData = nullptr;
+    int32_t ret = cm->batchUpdateCredentials(DEFAULT_OS_ACCOUNT, nullptr, &returnData);
+    EXPECT_EQ(ret, IS_ERR_INVALID_PARAMS);
+}
+
+HWTEST_F(CredMgrBatchUpdateCredsTest, CredMgrBatchUpdateCredsTest003, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    char *returnData = nullptr;
+    int32_t ret = cm->batchUpdateCredentials(DEFAULT_OS_ACCOUNT, BATCH_UPDATE_PARAMS1, &returnData);
+    EXPECT_EQ(ret, IS_ERR_NOT_SUPPORT);
+}
+
+HWTEST_F(CredMgrBatchUpdateCredsTest, CredMgrBatchUpdateCredsTest004, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    int32_t ret = cm->batchUpdateCredentials(DEFAULT_OS_ACCOUNT, BATCH_UPDATE_PARAMS, nullptr);
+    EXPECT_EQ(ret, IS_ERR_INVALID_PARAMS);
+}
+
+HWTEST_F(CredMgrBatchUpdateCredsTest, CredMgrBatchUpdateCredsTest005, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    char *credId = nullptr;
+    int32_t ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS18, &credId);
+    HcFree(credId);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    char *returnData = nullptr;
+    ret = cm->batchUpdateCredentials(DEFAULT_OS_ACCOUNT, BATCH_UPDATE_PARAMS, &returnData);
+    HcFree(returnData);
+    EXPECT_EQ(ret, IS_SUCCESS);
+}
+
+class CredMgrDelCredByParamsTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+void CredMgrDelCredByParamsTest::SetUpTestCase() {}
+void CredMgrDelCredByParamsTest::TearDownTestCase() {}
+
+void CredMgrDelCredByParamsTest::SetUp()
+{
+    DeleteDatabase();
+    int ret = InitDeviceAuthService();
+    EXPECT_EQ(ret, IS_SUCCESS);
+}
+
+void CredMgrDelCredByParamsTest::TearDown()
+{
+    DestroyDeviceAuthService();
+}
+
+HWTEST_F(CredMgrDelCredByParamsTest, CredMgrDelCredByParamsTest001, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    char *credId = nullptr;
+    int32_t ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
+    HcFree(credId);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    char *returnData = nullptr;
+    ret = cm->deleteCredByParams(DEFAULT_OS_ACCOUNT, DEL_PARAMS, &returnData);
+    HcFree(returnData);
+    EXPECT_EQ(ret, IS_SUCCESS);
+}
+
+HWTEST_F(CredMgrDelCredByParamsTest, CredMgrDelCredByParamsTest002, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    char *returnData = nullptr;
+    int32_t ret = cm->deleteCredByParams(DEFAULT_OS_ACCOUNT, nullptr, &returnData);
+    EXPECT_EQ(ret, IS_ERR_INVALID_PARAMS);
+}
+
+HWTEST_F(CredMgrDelCredByParamsTest, CredMgrDelCredByParamsTest003, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    int32_t ret = cm->deleteCredByParams(DEFAULT_OS_ACCOUNT, DEL_PARAMS, nullptr);
+    EXPECT_EQ(ret, IS_ERR_INVALID_PARAMS);
+}
+
+HWTEST_F(CredMgrDelCredByParamsTest, CredMgrDelCredByParamsTest004, TestSize.Level0)
+{
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    char *credId = nullptr;
+    int32_t ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
+    HcFree(credId);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    char *returnData = nullptr;
+    ret = cm->deleteCredByParams(DEFAULT_OS_ACCOUNT, DEL_PARAMS1, &returnData);
+    HcFree(returnData);
+    EXPECT_EQ(ret, IS_SUCCESS);
+}
+
+}
+
 class CredListenerTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -970,7 +1220,7 @@ HWTEST_F(IdentityOperationTest, IdentityOperationTest002, TestSize.Level0)
 HWTEST_F(IdentityOperationTest, IdentityOperationTest003, TestSize.Level0)
 {
     Credential *credetial = CreateCredential();
-    int32_t ret = SetAccListFromArray(credetial, nullptr);
+    int32_t ret = SetVectorFromList(&credetial->authorizedAppList, nullptr);
     DestroyCredential(credetial);
     EXPECT_EQ(ret, IS_SUCCESS);
 }
@@ -1007,6 +1257,8 @@ HWTEST_F(IdentityOperationTest, IdentityOperationTest006, TestSize.Level0)
     EXPECT_EQ(ret, IS_SUCCESS);
     ret = SetKeyFormat(credetial, json, METHOD_IMPORT);
     EXPECT_NE(ret, IS_SUCCESS);
+    DestroyCredential(credetial);
+    FreeJson(json);
 }
 
 HWTEST_F(IdentityOperationTest, IdentityOperationTest007, TestSize.Level0)
@@ -1014,4 +1266,112 @@ HWTEST_F(IdentityOperationTest, IdentityOperationTest007, TestSize.Level0)
     int32_t ret = SetAuthorizedScope(nullptr, nullptr);
     EXPECT_NE(ret, IS_SUCCESS);
 }
+
+HWTEST_F(IdentityOperationTest, IdentityOperationTest008, TestSize.Level0)
+{
+    int32_t ret = GetCredentialById(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
 }
+
+HWTEST_F(IdentityOperationTest, IdentityOperationTest009, TestSize.Level0)
+{
+    int32_t ret = CombineBaseCredId(nullptr, nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityOperationTest, IdentityOperationTest010, TestSize.Level0)
+{
+    int32_t ret = Sha256BaseCredId(nullptr, nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+class IdentityServiceImplTest : public testing::Test {
+    public:
+        static void SetUpTestCase();
+        static void TearDownTestCase();
+        void SetUp();
+        void TearDown();
+    };
+    
+    void IdentityServiceImplTest::SetUpTestCase() {}
+    void IdentityServiceImplTest::TearDownTestCase() {}
+    
+    void IdentityServiceImplTest::SetUp()
+    {
+        DeleteDatabase();
+        int ret = InitDeviceAuthService();
+        EXPECT_EQ(ret, IS_SUCCESS);
+    }
+    
+    void IdentityServiceImplTest::TearDown()
+    {
+        DestroyDeviceAuthService();
+    }
+    
+    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest001, TestSize.Level0)
+    {
+        int32_t ret = AddCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+        EXPECT_NE(ret, IS_SUCCESS);
+    }
+    
+    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest002, TestSize.Level0)
+    {
+        int32_t ret = ExportCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+        EXPECT_NE(ret, IS_SUCCESS);
+    }
+    
+    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest003, TestSize.Level0)
+    {
+        int32_t ret = QueryCredentialByParamsImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+        EXPECT_NE(ret, IS_SUCCESS);
+    }
+    
+    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest004, TestSize.Level0)
+    {
+        int32_t ret = QueryCredInfoByCredIdImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+        EXPECT_NE(ret, IS_SUCCESS);
+    }
+    
+    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest005, TestSize.Level0)
+    {
+        int32_t ret = DeleteCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr);
+        EXPECT_NE(ret, IS_SUCCESS);
+    }
+    
+    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest006, TestSize.Level0)
+    {
+        int32_t ret = DeleteCredByParamsImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+        EXPECT_NE(ret, IS_SUCCESS);
+    }
+    
+    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest007, TestSize.Level0)
+    {
+        int32_t ret = UpdateCredInfoImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+        EXPECT_NE(ret, IS_SUCCESS);
+    }
+    
+    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest008, TestSize.Level0)
+    {
+        QueryCredentialParams queryParam;
+        int32_t ret = AddUpdateCred(DEFAULT_OS_ACCOUNT_ID, nullptr, &queryParam);
+        EXPECT_NE(ret, IS_SUCCESS);
+    }
+    
+    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest009, TestSize.Level0)
+    {
+        QueryCredentialParams queryParam;
+        int32_t ret = ProcessAbnormalCreds(DEFAULT_OS_ACCOUNT_ID, nullptr, &queryParam);
+        EXPECT_NE(ret, IS_SUCCESS);
+    }
+    
+    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest010, TestSize.Level0)
+    {
+        int32_t ret = BatchUpdateCredsImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+        EXPECT_NE(ret, IS_SUCCESS);
+    }
+    
+    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest011, TestSize.Level0)
+    {
+        int32_t ret = AgreeCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr, nullptr);
+        EXPECT_NE(ret, IS_SUCCESS);
+    }

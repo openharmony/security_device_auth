@@ -72,7 +72,7 @@ static int32_t GetUserIdByGroup(const CJson *context, int32_t osAccountId, char 
 
 static int32_t GetUserIdByISInfo(const CJson *context, char **returnUserId)
 {
-    CJson *credAuthInfo = GetObjFromJson(context, FIELD_SELF_CREDENTIAL_OBJ);
+    CJson *credAuthInfo = GetObjFromJson(context, FIELD_CREDENTIAL_OBJ);
     if (credAuthInfo == NULL) {
         LOGE("Get self credAuthInfo fail.");
         return HC_ERR_JSON_GET;
@@ -282,6 +282,25 @@ static int32_t SetPeerAuthIdByDb(CJson *context, const char *groupId)
     return HC_SUCCESS;
 }
 
+static int32_t SetPeerAuthIdByCredAuthInfo(CJson *context)
+{
+    CJson *credAuthInfo = GetObjFromJson(context, FIELD_CREDENTIAL_OBJ);
+    if (credAuthInfo == NULL) {
+        LOGE("Get self credAuthInfo fail.");
+        return HC_ERR_JSON_GET;
+    }
+    const char *peerAuthId = GetStringFromJson(context, FIELD_DEVICE_ID);
+    if (peerAuthId == NULL) {
+        LOGE("Get peer authId fail.");
+        return HC_ERR_JSON_GET;
+    }
+    if (AddStringToJson(context, FIELD_PEER_AUTH_ID, peerAuthId) != HC_SUCCESS) {
+        LOGE("Failed to add peer authId to context!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 int32_t FillPeerAuthIdIfNeeded(bool isClient, const CJson *context, CJson *inputData)
 {
     const char *peerAuthId = GetStringFromJson(context, FIELD_PEER_AUTH_ID);
@@ -332,7 +351,7 @@ bool IsP2pAuth(const IdentityInfo *info)
     return trustType == TRUST_TYPE_P2P;
 }
 
-int32_t SetPeerAuthIdToContextIfNeeded(CJson *context, const IdentityInfo *info)
+int32_t SetPeerAuthIdToContextIfNeeded(CJson *context, bool isCredAuth, const IdentityInfo *info)
 {
     if (!IsP2pAuth(info)) {
         LOGI("Not p2p auth, no need to set peer authId!");
@@ -343,6 +362,9 @@ int32_t SetPeerAuthIdToContextIfNeeded(CJson *context, const IdentityInfo *info)
     (void)GetBoolFromJson(context, FIELD_IS_DIRECT_AUTH, &isDirectAuth);
     if (isDirectAuth) {
         return HC_SUCCESS;
+    }
+    if (isCredAuth) {
+        return SetPeerAuthIdByCredAuthInfo(context);
     }
     CJson *urlJson = CreateJsonFromString((const char *)info->proof.preSharedUrl.val);
     if (urlJson == NULL) {

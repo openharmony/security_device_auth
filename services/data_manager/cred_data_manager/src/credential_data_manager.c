@@ -28,6 +28,7 @@
 #include "security_label_adapter.h"
 #include "account_task_manager.h"
 #include "cred_listener.h"
+#include "cred_tlv_parser.h"
 
 typedef struct {
     DECLARE_CRED_TLV_STRUCT(17)
@@ -194,24 +195,24 @@ static bool GetOsAccountCredInfoPath(int32_t osAccountId, char *infoPath, uint32
     }
 }
 
-static bool GenerateAuthorizedAccountList(const Credential *entry, Credential *returnEntry)
+static bool GenerateAuthorizedAppList(const Credential *entry, Credential *returnEntry)
 {
     uint32_t index = 0;
-    HcString *authorizedAccount = NULL;
-    FOR_EACH_HC_VECTOR(entry->authorizedAccountList, index, authorizedAccount) {
-        if (authorizedAccount == NULL) {
+    HcString *authorizedApp = NULL;
+    FOR_EACH_HC_VECTOR(entry->authorizedAppList, index, authorizedApp) {
+        if (authorizedApp == NULL) {
             continue;
         }
-        HcString returnAuthorizedAccount = CreateString();
-        if (!StringSet(&returnAuthorizedAccount, *authorizedAccount)) {
-            DeleteString(&returnAuthorizedAccount);
-            LOGE("[CRED#DB]: Failed to copy authorizedAccount!");
+        HcString returnAuthorizedApp = CreateString();
+        if (!StringSet(&returnAuthorizedApp, *authorizedApp)) {
+            DeleteString(&returnAuthorizedApp);
+            LOGE("[CRED#DB]: Failed to copy authorizedApp!");
             return false;
         }
-        if (returnEntry->authorizedAccountList.pushBack(&returnEntry->authorizedAccountList, &returnAuthorizedAccount)
+        if (returnEntry->authorizedAppList.pushBack(&returnEntry->authorizedAppList, &returnAuthorizedApp)
             == NULL) {
-            LOGE("[CRED#DB]: Failed to push authorizedAccount to list!");
-            DeleteString(&returnAuthorizedAccount);
+            LOGE("[CRED#DB]: Failed to push authorizedApp to list!");
+            DeleteString(&returnAuthorizedApp);
             return false;
         }
     }
@@ -240,7 +241,7 @@ bool GenerateCredFromCred(const Credential *entry, Credential *returnEntry)
         LOGE("[CRED#DB]: Failed to copy credOwner!");
         return false;
     }
-    if (!GenerateAuthorizedAccountList(entry, returnEntry)) {
+    if (!GenerateAuthorizedAppList(entry, returnEntry)) {
         return false;
     }
     if (!StringSet(&returnEntry->extendInfo, entry->extendInfo)) {
@@ -282,6 +283,14 @@ static bool GenerateCredentialFromTlv(TlvCredentialElement *credential, Credenti
     }
     if (!LoadStringVectorFromParcel(&entry->authorizedAccountList, &credential->authorizedAccountList.data)) {
         LOGE("[CRED#DB]: Failed to load authorizedAccountList from tlv!");
+        return false;
+    }
+    if (!LoadStringVectorFromParcel(&entry->authorizedDeviceList, &credential->authorizedDeviceList.data)) {
+        LOGE("[CRED#DB]: Failed to load authorizedDeviceList from tlv!");
+        return false;
+    }
+    if (!LoadStringVectorFromParcel(&entry->authorizedAppList, &credential->authorizedAppList.data)) {
+        LOGE("[CRED#DB]: Failed to load authorizedAppList from tlv!");
         return false;
     }
     if (!StringSet(&entry->extendInfo, credential->extendInfo.data)) {
@@ -560,6 +569,14 @@ static bool SetCredentialElement(TlvCredentialElement *element, Credential *entr
         LOGE("[CRED#DB]: Failed to copy authorizedAccountList!");
         return false;
     }
+    if (!SaveStringVectorToParcel(&entry->authorizedDeviceList, &element->authorizedDeviceList.data)) {
+        LOGE("[CRED#DB]: Failed to copy authorizedDeviceList!");
+        return false;
+    }
+    if (!SaveStringVectorToParcel(&entry->authorizedAppList, &element->authorizedAppList.data)) {
+        LOGE("[CRED#DB]: Failed to copy authorizedAppList!");
+        return false;
+    }
     if (!StringSet(&element->extendInfo.data, entry->extendInfo)) {
         LOGE("[CRED#DB]: Failed to copy extendInfo!");
         return false;
@@ -656,30 +673,6 @@ static Credential **QueryCredentialPtrIfMatch(const CredentialVec *vec, const Qu
         }
     }
     return NULL;
-}
-
-static void PostCredAddMsg(const Credential *entry)
-{
-    if (!IsCredListenerSupported()) {
-        return;
-    }
-    OnCredAdd(StringGet(&entry->credId), NULL);
-}
-
-static void PostCredUpdateMsg(const Credential *entry)
-{
-    if (!IsCredListenerSupported()) {
-        return;
-    }
-    OnCredUpdate(StringGet(&entry->credId), NULL);
-}
-
-static void PostCredDeleteMsg(const Credential *entry)
-{
-    if (!IsCredListenerSupported()) {
-        return;
-    }
-    OnCredDelete(StringGet(&entry->credId), NULL);
 }
 
 QueryCredentialParams InitQueryCredentialParams(void)
@@ -903,7 +896,7 @@ static int32_t AddPeerUserSpaceIdToReturn(const Credential *credInfo, CJson *jso
     return IS_SUCCESS;
 }
 
-static int32_t AddAuthorizedAccountListToReturn(const Credential *credInfo, CJson *json)
+static int32_t AddAuthorizedAppListToReturn(const Credential *credInfo, CJson *json)
 {
     CJson *arr = CreateJsonArray();
     if (json == NULL) {
@@ -911,20 +904,20 @@ static int32_t AddAuthorizedAccountListToReturn(const Credential *credInfo, CJso
         return IS_ERR_JSON_CREATE;
     }
     uint32_t index = 0;
-    HcString *authorizedAccount = NULL;
-    FOR_EACH_HC_VECTOR(credInfo->authorizedAccountList, index, authorizedAccount) {
-        if (authorizedAccount == NULL) {
+    HcString *authorizedApp = NULL;
+    FOR_EACH_HC_VECTOR(credInfo->authorizedAppList, index, authorizedApp) {
+        if (authorizedApp == NULL) {
             continue;
         }
-        if (AddStringToArray(arr, StringGet(authorizedAccount)) != IS_SUCCESS) {
+        if (AddStringToArray(arr, StringGet(authorizedApp)) != IS_SUCCESS) {
             FreeJson(arr);
-            LOGE("[CRED#DB]: Failed to add authorizedAccount to json!");
+            LOGE("[CRED#DB]: Failed to add authorizedApp to json!");
             return IS_ERR_JSON_ADD;
         }
     }
-    if (AddObjToJson(json, FIELD_AUTHORIZED_ACCOUNT_LIST, arr) != IS_SUCCESS) {
+    if (AddObjToJson(json, FIELD_AUTHORIZED_APP_LIST, arr) != IS_SUCCESS) {
         FreeJson(arr);
-        LOGE("[CRED#DB]: Failed to add authorizedAccountList to json!");
+        LOGE("[CRED#DB]: Failed to add authorizedApp to json!");
         return IS_ERR_JSON_ADD;
     }
     FreeJson(arr);
@@ -945,11 +938,84 @@ int32_t GenerateReturnCredInfo(const Credential *credential, CJson *returnJson)
         ((result = AddAlgorithmTypeToReturn(credential, returnJson)) != IS_SUCCESS) ||
         ((result = AddProofTypeToReturn(credential, returnJson)) != IS_SUCCESS) ||
         ((result = AddCredOwnerToReturn(credential, returnJson)) != IS_SUCCESS) ||
-        ((result = AddAuthorizedAccountListToReturn(credential, returnJson)) != IS_SUCCESS) ||
+        ((result = AddAuthorizedAppListToReturn(credential, returnJson)) != IS_SUCCESS) ||
         ((result = AddExtendInfoToReturn(credential, returnJson)) != IS_SUCCESS)) {
         return result;
     }
     return IS_SUCCESS;
+}
+
+static int32_t GenerateCredChangedInfo(const Credential *entry, char **returnCredInfo)
+{
+    CJson *credInfo = CreateJson();
+    if (AddCredTypeToReturn(entry, credInfo) != IS_SUCCESS) {
+        LOGE("add cretype to json failed.");
+        FreeJson(credInfo);
+        return IS_ERR_JSON_ADD;
+    }
+    if (AddDeviceIdToReturn(entry, credInfo) != IS_SUCCESS) {
+        LOGE("add deviceId to json failed.");
+        FreeJson(credInfo);
+        return IS_ERR_JSON_ADD;
+    }
+    if (AddUserIdToReturn(entry, credInfo) != IS_SUCCESS) {
+        LOGE("add userId to json failed.");
+        FreeJson(credInfo);
+        return IS_ERR_JSON_ADD;
+    }
+    if (AddSubjectToReturn(entry, credInfo) != IS_SUCCESS) {
+        LOGE("add userId to json failed.");
+        FreeJson(credInfo);
+        return IS_ERR_JSON_ADD;
+    }
+    char *credInfoJsonStr = PackJsonToString(credInfo);
+    FreeJson(credInfo);
+    if (credInfoJsonStr == NULL) {
+        LOGE("pack json to string failed.");
+        return IS_ERR_ALLOC_MEMORY;
+    }
+    *returnCredInfo = credInfoJsonStr;
+    return IS_SUCCESS;
+}
+
+
+static void PostCredAddMsg(const Credential *entry)
+{
+    if (!IsCredListenerSupported()) {
+        return;
+    }
+    char *returnCredInfo = NULL;
+    if (GenerateCredChangedInfo(entry, &returnCredInfo) != IS_SUCCESS) {
+        return;
+    }
+    OnCredAdd(StringGet(&entry->credId), returnCredInfo);
+    FreeJsonString(returnCredInfo);
+}
+
+static void PostCredUpdateMsg(const Credential *entry)
+{
+    if (!IsCredListenerSupported()) {
+        return;
+    }
+    char *returnCredInfo = NULL;
+    if (GenerateCredChangedInfo(entry, &returnCredInfo) != IS_SUCCESS) {
+        return;
+    }
+    OnCredUpdate(StringGet(&entry->credId), returnCredInfo);
+    FreeJsonString(returnCredInfo);
+}
+
+static void PostCredDeleteMsg(const Credential *entry)
+{
+    if (!IsCredListenerSupported()) {
+        return;
+    }
+    char *returnCredInfo = NULL;
+    if (GenerateCredChangedInfo(entry, &returnCredInfo) != IS_SUCCESS) {
+        return;
+    }
+    OnCredDelete(StringGet(&entry->credId), returnCredInfo);
+    FreeJsonString(returnCredInfo);
 }
 
 int32_t AddCredToDb(int32_t osAccountId, const Credential *entry)
@@ -1104,12 +1170,12 @@ static void DumpCredential(int fd, const Credential *credential)
     dprintf(fd, "||%-16s = %-43d|                  |\n", "algorithmType", credential->algorithmType);
     dprintf(fd, "||%-16s = %-43d|                  |\n", "proofType", credential->proofType);
     uint32_t index = 0;
-    HcString *authorizedAccount = NULL;
-    FOR_EACH_HC_VECTOR(credential->authorizedAccountList, index, authorizedAccount) {
-        if (authorizedAccount == NULL) {
+    HcString *authorizedApp = NULL;
+    FOR_EACH_HC_VECTOR(credential->authorizedAppList, index, authorizedApp) {
+        if (authorizedApp == NULL) {
             continue;
         }
-        dprintf(fd, "||%-16s %d = %-43.8s|                  |\n", "account", index, StringGet(authorizedAccount));
+        dprintf(fd, "||%-16s %d = %-43.8s|                  |\n", "app", index, StringGet(authorizedApp));
     }
     dprintf(fd, "||%-16s = %-43d|                  |\n", "authorizedScope", credential->authorizedScope);
     dprintf(fd, "||%-16s = %-43.8s|                  |\n", "credOwner", StringGet(&credential->credOwner));

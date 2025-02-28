@@ -41,6 +41,7 @@ ohos_fuzztest("StandardExchangeTaskFuzzTest") {
 
   sources = [ "standardexchangetask_fuzzer.cpp" ]
   sources += deviceauth_ipc_files
+  sources += identity_service_mock_files
   sources += deviceauth_files
   sources += identity_manager_files
   sources += permission_adapter_files

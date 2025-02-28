@@ -1513,6 +1513,114 @@ int32_t IpcServiceCmUpdateCredInfo(const IpcDataInfo *ipcParams, int32_t paramNu
     return ret;
 }
 
+int32_t IpcServiceCmAgreeCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t callRet;
+    int32_t ret;
+    int32_t osAccountId;
+    int32_t inOutLen;
+    const char *selfCredId = NULL;
+    const char *requestParams = NULL;
+    char *agreeCredId = NULL;
+
+    LOGI("starting ...");
+    inOutLen = sizeof(int32_t);
+    ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
+        return ret;
+    }
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_CRED_ID, (uint8_t *)&selfCredId, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_CRED_ID);
+        return ret;
+    }
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_REQUEST_PARAMS, (uint8_t *)&requestParams, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_REQUEST_PARAMS);
+        return ret;
+    }
+    callRet = g_devCredMgrMethod.agreeCredential(osAccountId, selfCredId, requestParams, &agreeCredId);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_1, sizeof(int32_t));
+    if (agreeCredId != NULL) {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_CRED_ID, (const uint8_t *)agreeCredId,
+            HcStrlen(agreeCredId) + 1);
+    } else {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_CRED_ID, NULL, 0);
+    }
+    g_devCredMgrMethod.destroyInfo(&agreeCredId);
+    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
+    return ret;
+}
+
+int32_t IpcServiceCmDelCredByParams(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t callRet;
+    int32_t ret;
+    int32_t osAccountId;
+    int32_t inOutLen;
+    const char *requestParams = NULL;
+    char *returnCredList = NULL;
+    LOGI("starting ...");
+    inOutLen = sizeof(int32_t);
+    ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
+        return ret;
+    }
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_REQUEST_PARAMS, (uint8_t *)&requestParams, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_REQUEST_PARAMS);
+        return ret;
+    }
+    callRet = g_devCredMgrMethod.deleteCredByParams(osAccountId, requestParams, &returnCredList);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_1, sizeof(int32_t));
+    if (returnCredList != NULL) {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_CRED_INFO_LIST, (const uint8_t *)returnCredList,
+            HcStrlen(returnCredList) + 1);
+    } else {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_CRED_INFO_LIST, NULL, 0);
+    }
+    g_devCredMgrMethod.destroyInfo(&returnCredList);
+    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
+    return ret;
+}
+
+int32_t IpcServiceCmBatchUpdateCredentials(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    int32_t callRet;
+    int32_t ret;
+    int32_t osAccountId;
+    int32_t inOutLen;
+    const char *requestParams = NULL;
+    char *returnCredList = NULL;
+    LOGI("starting ...");
+    inOutLen = sizeof(int32_t);
+    ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
+        return ret;
+    }
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_REQUEST_PARAMS, (uint8_t *)&requestParams, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %d", PARAM_TYPE_REQUEST_PARAMS);
+        return ret;
+    }
+    callRet = g_devCredMgrMethod.batchUpdateCredentials(osAccountId, requestParams, &returnCredList);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_1, sizeof(int32_t));
+    if (returnCredList != NULL) {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_CRED_INFO_LIST, (const uint8_t *)returnCredList,
+            HcStrlen(returnCredList) + 1);
+    } else {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_CRED_INFO_LIST, NULL, 0);
+    }
+    g_devCredMgrMethod.destroyInfo(&returnCredList);
+    LOGI("process done, call ret %d, ipc ret %d", callRet, ret);
+    return ret;
+}
 
 int32_t IpcServiceCaAuthDevice(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
 {

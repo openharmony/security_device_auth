@@ -1094,11 +1094,8 @@ static int32_t AddAuthInfoToContextByCert(SessionImpl *impl)
     }
 }
 
-static int32_t AddAuthInfoToContextIS(SessionImpl *impl, IdentityInfo *cred)
+static int32_t ISAddAuthInfoToContext(SessionImpl *impl, IdentityInfo *cred)
 {
-    if (cred->proofType == PRE_SHARED) {
-        return HC_SUCCESS;
-    }
     char selfUdid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
@@ -1106,8 +1103,30 @@ static int32_t AddAuthInfoToContextIS(SessionImpl *impl, IdentityInfo *cred)
         return res;
     }
     PRINT_SENSITIVE_DATA("SelfUdid", selfUdid);
+    if (cred->proofType == CERTIFICATED) {
+        if (AddStringToJson(impl->context, FIELD_AUTH_ID, selfUdid) != HC_SUCCESS) {
+            LOGE("add selfAuthId to json fail.");
+            return HC_ERR_JSON_ADD;
+        }
+        return HC_SUCCESS;
+    }
+    CJson *urlJson = CreateJsonFromString((const char *)cred->proof.preSharedUrl.val);
+    if (urlJson == NULL) {
+        LOGE("create urlJson from string fail.");
+        return HC_ERR_JSON_CREATE;
+    }
+    int32_t trustType;
+    if (GetIntFromJson(urlJson, PRESHARED_URL_TRUST_TYPE, &trustType) != HC_SUCCESS) {
+        LOGE("Failed to get trust type!");
+        FreeJson(urlJson);
+        return HC_ERR_JSON_GET;
+    }
+    FreeJson(urlJson);
+    if (trustType == TRUST_TYPE_PIN) {
+        return HC_SUCCESS;
+    }
     if (AddStringToJson(impl->context, FIELD_AUTH_ID, selfUdid) != HC_SUCCESS) {
-        LOGE("add selfAuthId to json fail.");
+        LOGE("Failed to add authId to params!");
         return HC_ERR_JSON_ADD;
     }
     return HC_SUCCESS;
@@ -1186,7 +1205,7 @@ static int32_t ClientCreateAuthSubSessionByCred(SessionImpl *impl, IdentityInfo 
         LOGE("The credential does not have a valid protocol.");
         return HC_ERR_UNSUPPORTED_VERSION;
     }
-    int32_t res = impl->isCredAuth? AddAuthInfoToContextIS(impl, cred)
+    int32_t res = impl->isCredAuth? ISAddAuthInfoToContext(impl, cred)
         : AddAuthInfoToContextByCred(impl, cred);
     if (res != HC_SUCCESS) {
         return res;
@@ -1202,81 +1221,11 @@ static int32_t ClientCreateAuthSubSessionByCred(SessionImpl *impl, IdentityInfo 
     return HC_SUCCESS;
 }
 
-static int32_t ISClientGetCredInfo(SessionImpl *impl)
-{
-    IdentityInfo *info = NULL;
-    int32_t res = HC_ERROR;
-#ifdef ENABLE_PSEUDONYM
-    //try enable pseudonym
-    res = ISGetIdentityInfo(impl->context, true, &info);
-    if (res != HC_SUCCESS) {
-        LOGE("Get Identity by credAuthInfo fail.");
-        return res;
-    }
-    if (impl->credList.pushBack(&impl->credList, (const IdentityInfo **)&info) == NULL) {
-        DestroyIdentityInfo(info);
-        LOGE("Failed to push protocol entity!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    info = NULL;
-#endif
-    res = ISGetIdentityInfo(impl->context, false, &info);
-    if (res != HC_SUCCESS) {
-        LOGE("Get Identity by credAuthInfo fail.");
-        return res;
-    }
-    if (impl->credList.pushBack(&impl->credList, (const IdentityInfo **)&info) == NULL) {
-        DestroyIdentityInfo(info);
-        LOGE("Failed to push protocol entity!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    uint32_t credNum = HC_VECTOR_SIZE(&impl->credList);
-    if (credNum == 0) {
-        LOGE("No valid credentials with peer.");
-        return HC_ERR_INIT_FAILED;
-    }
-    impl->credCurIndex = 0;
-    impl->credTotalNum = credNum;
-    return HC_SUCCESS;
-}
-
-static int32_t ISServerGetCredInfo(SessionImpl *impl, const CJson *inputData)
-{
-    const CJson *pkInfoStr = GetObjFromJson(inputData, FIELD_PK_INFO);
-    if (pkInfoStr == NULL) {
-        LOGE("Failed to get pkInfo!");
-        return HC_ERR_JSON_GET;
-    }
-    const char *pdid = GetStringFromJson(pkInfoStr, FIELD_PSEUDONYM_ID);
-    bool isPseudonym = (pdid != NULL);
-    IdentityInfo *info = NULL;
-    int32_t res = ISGetIdentityInfo(impl->context, isPseudonym, &info);
-    if (res != HC_SUCCESS) {
-        LOGE("Get Identity by credAuthInfo fail.");
-        return res;
-    }
-    if (impl->credList.pushBack(&impl->credList, (const IdentityInfo **)&info) == NULL) {
-        DestroyIdentityInfo(info);
-        LOGE("Failed to push protocol entity!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    
-    uint32_t credNum = HC_VECTOR_SIZE(&impl->credList);
-    if (credNum == 0) {
-        LOGE("No valid credentials with peer.");
-        return HC_ERR_INIT_FAILED;
-    }
-    impl->credCurIndex = 0;
-    impl->credTotalNum = credNum;
-    return HC_SUCCESS;
-}
-
 static int32_t ProcStartEventInner(SessionImpl *impl, CJson *sessionMsg)
 {
     int32_t res;
     if (impl->credTotalNum == 0) {
-        res = impl->isCredAuth ? ISClientGetCredInfo(impl)
-            : GetAllCredsWithPeer(impl);
+        res = GetAllCredsWithPeer(impl);
         if (res != HC_SUCCESS) {
             LOGE("get all credentials with peer device fail.");
             return res;
@@ -1390,7 +1339,7 @@ static int32_t ServerCreateAuthSubSessionByCred(SessionImpl *impl, const CJson *
     if (res != HC_SUCCESS) {
         return res;
     }
-    res = impl->isCredAuth? AddAuthInfoToContextIS(impl, cred)
+    res = impl->isCredAuth? ISAddAuthInfoToContext(impl, cred)
         : AddAuthInfoToContextByCred(impl, cred);
     if (res != HC_SUCCESS) {
         return res;
@@ -1640,7 +1589,7 @@ static int32_t ProcHandshakeReqEventInner(SessionImpl *impl, SessionEvent *input
     if (res != HC_SUCCESS) {
         return res;
     }
-    res = impl->isCredAuth ? ISServerGetCredInfo(impl, inputEvent->data) : GetSelfCredByInput(impl, inputEvent->data);
+    res = GetSelfCredByInput(impl, inputEvent->data);
     if (res != HC_SUCCESS) {
         LOGE("get cred by input fail.");
         return res;
@@ -1652,11 +1601,9 @@ static int32_t ProcHandshakeReqEventInner(SessionImpl *impl, SessionEvent *input
         LOGE("Failed to add isDirectAuth to context!");
         return HC_ERR_JSON_ADD;
     }
-    if (!impl->isCredAuth) {
-        res = SetPeerAuthIdToContextIfNeeded(impl->context, selfCred);
-        if (res != HC_SUCCESS) {
-            return res;
-        }
+    res = SetPeerAuthIdToContextIfNeeded(impl->context, impl->isCredAuth, selfCred);
+    if (res != HC_SUCCESS) {
+        return res;
     }
     res = CredNegotiate(impl, inputEvent->data, selfCred);
     if (res != HC_SUCCESS) {
@@ -1714,7 +1661,7 @@ static int32_t ProcHandshakeRspEventInner(SessionImpl *impl, SessionEvent *input
         LOGE("Failed to add isDirectAuth to context!");
         return HC_ERR_JSON_ADD;
     }
-    int32_t res = SetPeerAuthIdToContextIfNeeded(impl->context, selfCred);
+    int32_t res = SetPeerAuthIdToContextIfNeeded(impl->context, impl->isCredAuth, selfCred);
     if (res != HC_SUCCESS) {
         return res;
     }
