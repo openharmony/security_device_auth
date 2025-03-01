@@ -105,7 +105,7 @@ static const char *GetAppIdByContext(const CJson *context)
     return appId;
 }
 
-static int32_t ReplaceUserIdToHashHexString(CJson *credAuthInfo)
+static int32_t AddUserIdHashHexStringToContext(CJson *context, CJson *credAuthInfo)
 {
     uint8_t credType = ACCOUNT_UNRELATED;
     if (GetUint8FromJson(credAuthInfo, FIELD_CRED_TYPE, &credType) != HC_SUCCESS) {
@@ -140,7 +140,7 @@ static int32_t ReplaceUserIdToHashHexString(CJson *credAuthInfo)
         HcFree(userIdHash);
     }
     //replace userId plain to hash hex string
-    if (AddStringToJson(credAuthInfo, FIELD_USER_ID, userIdHash) != HC_SUCCESS) {
+    if (AddStringToJson(context, FIELD_USER_ID, userIdHash) != HC_SUCCESS) {
         LOGE("Failed to add userIdHash");
         return HC_ERR_JSON_ADD;
     }
@@ -167,7 +167,7 @@ static int32_t QueryAndAddSelfCredToContext(int32_t osAccountId, CJson *context)
         LOGE("Faild to create json from string");
         return HC_ERR_JSON_FAIL;
     }
-    int32_t res = ReplaceUserIdToHashHexString(credDataJson);
+    int32_t res = AddUserIdHashHexStringToContext(context, credDataJson);
     if (res != HC_SUCCESS) {
         LOGE("Failed to replace userId plain to hash hex string!");
         return res;
@@ -265,6 +265,12 @@ static int32_t SetContextOpCode(CJson *context)
         case ACCOUNT_RELATED:
             if (AddIntToJson(context, FIELD_OPERATION_CODE, AUTH_FORM_IDENTICAL_ACCOUNT) != HC_SUCCESS) {
                 LOGE("add identical account code to context fail.");
+                return HC_ERR_JSON_ADD;
+            }
+            break;
+        case ACCOUNT_UNRELATED:
+            if (AddIntToJson(context, FIELD_OPERATION_CODE, AUTH_FORM_ACCOUNT_UNRELATED) != HC_SUCCESS) {
+                LOGE("add account unrelated code to context fail.");
                 return HC_ERR_JSON_ADD;
             }
             break;

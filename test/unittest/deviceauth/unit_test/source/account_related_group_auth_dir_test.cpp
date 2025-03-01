@@ -17,12 +17,20 @@
 #include <cinttypes>
 #include <unistd.h>
 #include <gtest/gtest.h>
-
+#include "../../../../../services/legacy/group_auth/src/group_auth_manager/account_related_group_auth/account_related_group_auth.c"
 using namespace std;
 using namespace testing::ext;
 
 namespace {
 // Beginning for account_related_group_auth.c test.
+#define TEST_OS_ACCOUNT_ID 0
+#define TEST_USER_ID "UserId"
+#define TEST_AUTH_FORM (-1)
+#define TEST_EXT_DATA "testExtData"
+#define TEST_DEVICE_ID "testDeviceId"
+#define TEST_GROUP_ID "testGroupId"
+#define TEST_REQUEST_ID 123
+
 class AccountRelatedGroupAuthTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -504,5 +512,129 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0071, TestSize.
     FreeJson(confirmationJson);
     FreeJson(dataFromClient);
 }
+
+HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest008, TestSize.Level0)
+{
+    CJson *in = CreateJson();
+    int32_t ret = GetUserIdForAccount(in, in);
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest009, TestSize.Level0)
+{
+    char *userIdDb = nullptr;
+    char *peerUserIdInDb = nullptr;
+    bool ret = IsUserIdEqual(userIdDb, peerUserIdInDb);
+    EXPECT_NE(ret, true);
+}
+
+HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest010, TestSize.Level0)
+{
+    TrustedGroupEntry *entry = CreateGroupEntry();
+    bool ret = IsPeerInAccountRelatedGroup(entry, nullptr, ALL_GROUP);
+    EXPECT_NE(ret, true);
+
+    QueryGroupParams params = {
+        .groupId = nullptr,
+        .groupName = nullptr,
+        .ownerName = nullptr,
+        .userId = nullptr,
+        .groupType = ALL_GROUP,
+        .groupVisibility = ALL_GROUP_VISIBILITY
+    };
+    GaGetAccountGroup(TEST_OS_ACCOUNT_ID, IDENTICAL_ACCOUNT_GROUP, nullptr, &params, nullptr);
+    DestroyGroupEntry(entry);
+}
+
+HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest011, TestSize.Level0)
+{
+    int32_t ret = QueryAuthGroupForServer(TEST_OS_ACCOUNT_ID, nullptr, nullptr);
+    EXPECT_NE(ret, HC_SUCCESS);
+    CJson *in = CreateJson();
+    (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID);
+    ret = QueryAuthGroupForServer(TEST_OS_ACCOUNT_ID, nullptr, in);
+    EXPECT_NE(ret, HC_SUCCESS);
+    (void)AddIntToJson(in, FIELD_AUTH_FORM, TEST_AUTH_FORM);
+    ret = QueryAuthGroupForServer(TEST_OS_ACCOUNT_ID, nullptr, in);
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest012, TestSize.Level0)
+{
+    CJson *in = CreateJson();
+    char *peerUserId = nullptr;
+    int32_t ret = GetPeerUserIdFromReceivedData(in, &peerUserId);
+    EXPECT_NE(ret, HC_SUCCESS);
+    (void)AddStringToJson(in, FIELD_PLUGIN_EXT_DATA, TEST_EXT_DATA);
+    ret = GetPeerUserIdFromReceivedData(in, &peerUserId);
+    EXPECT_NE(ret, HC_SUCCESS);
+    (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID);
+    ret = GetPeerUserIdFromReceivedData(in, &peerUserId);
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest013, TestSize.Level0)
+{
+    CJson *in = CreateJson();
+    int32_t ret = QueryGroupForAccountPlugin(TEST_OS_ACCOUNT_ID, nullptr, in);
+    EXPECT_NE(ret, HC_SUCCESS);
+    (void)AddIntToJson(in, FIELD_AUTH_FORM, TEST_AUTH_FORM);
+    ret = QueryGroupForAccountPlugin(TEST_OS_ACCOUNT_ID, nullptr, in);
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest014, TestSize.Level0)
+{
+    CJson *in = CreateJson();
+    TrustedGroupEntry *entry = CreateGroupEntry();
+    int32_t ret = AddSelfDevInfoForServer(TEST_OS_ACCOUNT_ID, entry, in);
+    EXPECT_NE(ret, HC_SUCCESS);
+    DestroyGroupEntry(entry);
+    AddServerParamsForAccountPlugin(in);
+    (void)AddIntToJson(in, FIELD_OS_ACCOUNT_ID, TEST_OS_ACCOUNT_ID);
+    AddServerParamsForAccountPlugin(in);
+    FreeJson(in);
+}
+
+HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest015, TestSize.Level0)
+{
+    CJson *in = CreateJson();
+    int32_t ret = AddSelfAccountInfoForServer(in);
+    EXPECT_NE(ret, HC_SUCCESS);
+    (void)AddIntToJson(in, FIELD_OS_ACCOUNT_ID, TEST_OS_ACCOUNT_ID);
+    ret = AddSelfAccountInfoForServer(in);
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest016, TestSize.Level0)
+{
+    CJson *in = CreateJson();
+    int32_t ret = AddTrustedDeviceForAccount(in, in);
+    EXPECT_NE(ret, HC_SUCCESS);
+    (void)AddIntToJson(in, FIELD_OS_ACCOUNT_ID, TEST_OS_ACCOUNT_ID);
+    ret = AddTrustedDeviceForAccount(in, in);
+    EXPECT_NE(ret, HC_SUCCESS);
+    (void)AddStringToJson(in, FIELD_PEER_CONN_DEVICE_ID, TEST_DEVICE_ID);
+    ret = AddTrustedDeviceForAccount(in, in);
+    EXPECT_NE(ret, HC_SUCCESS);
+    (void)AddStringToJson(in, FIELD_GROUP_ID, TEST_GROUP_ID);
+    ret = AddTrustedDeviceForAccount(in, in);
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest017, TestSize.Level0)
+{
+    CJson *in = CreateJson();
+    int32_t ret = AccountOnFinishToSelf(TEST_REQUEST_ID, in, in, nullptr);
+    EXPECT_NE(ret, HC_SUCCESS);
+    FreeJson(in);
+}
+
 // Ending for account_related_group_auth.c test.
 }

@@ -121,7 +121,7 @@ static int32_t ISSetEcSpekeEntity(IdentityInfo *info, bool isNeedRefreshPseudony
 #endif
 }
 
-static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *credAuthInfo,
+static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *context, const CJson *credAuthInfo,
     bool isPseudonym, IdentityInfo *info)
 {
     const char *authId = GetStringFromJson(credAuthInfo, FIELD_DEVICE_ID);
@@ -134,7 +134,7 @@ static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *credAuth
         LOGE("Failed to create account token!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    const char *userId = GetStringFromJson(credAuthInfo, FIELD_USER_ID);
+    const char *userId = GetStringFromJson(context, FIELD_USER_ID);
     if (userId == NULL) {
         LOGE("Failed to get user ID!");
         return HC_ERR_JSON_GET;
@@ -226,7 +226,7 @@ static int32_t ISSetCertProofAndEntity(const CJson *context, const CJson *credAu
             LOGE("Failed to get osAccountId!");
             return HC_ERR_JSON_GET;
         }
-        res = ISSetCertInfoAndEntity(osAccountId, credAuthInfo, isPseudonym, info);
+        res = ISSetCertInfoAndEntity(osAccountId, context, credAuthInfo, isPseudonym, info);
         if (res != HC_SUCCESS) {
             LOGE("Failed to get cert info!");
         }
@@ -401,10 +401,10 @@ static int32_t ComputeAuthToken(int32_t osAccountId, const char *userId, const U
     return ret;
 }
 
-static int32_t GenerateAuthTokenForAccessory(int32_t osAccountId, const char *credId, const CJson *credAuthInfo,
+static int32_t GenerateAuthTokenForAccessory(int32_t osAccountId, const char *credId, const CJson *in,
     Uint8Buff *authToken)
 {
-    const char *userIdSelf = GetStringFromJson(credAuthInfo, FIELD_USER_ID);
+    const char *userIdSelf = GetStringFromJson(in, FIELD_USER_ID);
     if (userIdSelf == NULL) {
         LOGE("Failed to get self user ID!");
         return HC_ERR_JSON_GET;
@@ -469,7 +469,7 @@ static int32_t GenerateAuthTokenByDevType(int32_t osAccountId, const CJson *in, 
     int32_t ret = HC_ERROR;
     if (localDevType == SUBJECT_ACCESSORY_DEVICE) {
         *isTokenStored = false;
-        ret = GenerateAuthTokenForAccessory(osAccountId, credId, credAuthInfo, authToken);
+        ret = GenerateAuthTokenForAccessory(osAccountId, credId, in, authToken);
     } else {
         ret = GenerateTokenAliasForController(osAccountId, credId, authToken);
     }

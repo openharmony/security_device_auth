@@ -72,12 +72,7 @@ static int32_t GetUserIdByGroup(const CJson *context, int32_t osAccountId, char 
 
 static int32_t GetUserIdByISInfo(const CJson *context, char **returnUserId)
 {
-    CJson *credAuthInfo = GetObjFromJson(context, FIELD_CREDENTIAL_OBJ);
-    if (credAuthInfo == NULL) {
-        LOGE("Get self credAuthInfo fail.");
-        return HC_ERR_JSON_GET;
-    }
-    const char *userId = GetStringFromJson(credAuthInfo, FIELD_USER_ID);
+    const char *userId = GetStringFromJson(context, FIELD_USER_ID);
     if (userId == NULL) {
         LOGE("Failed to get user ID!");
         return HC_ERR_JSON_GET;
@@ -630,7 +625,7 @@ int32_t BuildPeerCertInfo(const char *pkInfoStr, const char *pkInfoSignHexStr, i
         ClearFreeUint8Buff(&peerCert->pkInfoSignature);
         return HC_ERR_JSON_ADD;
     }
-    peerCert->signAlg = signAlg;
+    peerCert->signAlg = (Algorithm)signAlg;
     return HC_SUCCESS;
 }
 

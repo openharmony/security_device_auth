@@ -342,7 +342,7 @@ HWTEST_F(PakeV2AuthTaskCommonTest, PakeV2AuthTaskCommonTest107, TestSize.Level0)
     DestroyPakeAuthParams(params);
     DestroyTokenManager();
     FreeJson(in);
-    EXPECT_NE(ret, HC_SUCCESS);
+    EXPECT_EQ(ret, HC_SUCCESS);
 }
 
 HWTEST_F(PakeV2AuthTaskCommonTest, PakeV2AuthTaskCommonTest108, TestSize.Level0)

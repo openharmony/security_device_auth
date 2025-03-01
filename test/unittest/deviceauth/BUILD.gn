@@ -87,6 +87,7 @@ ohos_unittest("deviceauth_llt") {
   sources -= [
     "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
     "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
+    "${deviceauth_account_group_auth_path}/src/group_auth_manager/account_related_group_auth/account_related_group_auth.c",
   ]
 
   sources += [
@@ -228,8 +229,6 @@ ohos_unittest("device_auth_func_test") {
     "source/os_account_adapter_mock.c",
     "source/protocol_task_main_mock.c",
     "source/standard_exchange_task_test.cpp",
-    "unit_test/source/account_related_group_auth_dir_test.cpp",
-    "unit_test/source/pake_v2_auth_task_test.cpp",
   ]
   defines = [
     "P2P_PAKE_DL_PRIME_LEN_384",
@@ -484,6 +483,10 @@ ohos_unittest("device_auth_interface_test") {
     "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin_proxy.c",
     "source/device_auth_ext_mock.c",
     "source/os_account_adapter_mock.c",
+  ]
+  sources -= [
+    "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_protocol_task/pake_v1_protocol_task_common.c",
+    "${session_manager_path}/src/session/v2/dev_session_util.c",
   ]
   defines = [
     "P2P_PAKE_DL_PRIME_LEN_384",
