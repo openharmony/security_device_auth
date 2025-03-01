@@ -54,7 +54,8 @@
 #include "dev_session_util.h"
 #include "pake_v2_protocol_common.h"
 #include "iso_task_common.h"
-
+#include "../../../../services/legacy/authenticators/src/account_unrelated/pake_task/pake_v1_task/pake_v1_protocol_task/pake_v1_protocol_task_common.c"
+#include "../../../../services/session_manager/src/session/v2/dev_session_util.c"
 using namespace std;
 using namespace testing::ext;
 
@@ -65,7 +66,18 @@ namespace {
 #define TEST_TRANSMIT_DATA "TestTransmitData"
 #define TEST_APP_ID "TestAppId"
 #define TEST_GROUP_ID "E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21"
+#define TEST_PK_INFO "TestPkInfo"
+#define TEST_PK_INFO_SIGN "TestPkInfoSign"
 #define TEST_AUTH_ID "TestAuthId"
+#define TEST_KEY_LEN_1 10
+#define TEST_KEY_LEN_2 40
+#define TEST_OS_ACCOUNT_ID 0
+static const char *EXT_INFO =
+    "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
+    "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
+    "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
+    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 
 class DeviceAuthInterfaceTest : public testing::Test {
 public:
@@ -296,6 +308,87 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest004, TestSize.Level0)
     ASSERT_NE(res, HC_SUCCESS);
     FreeJson(in);
     FreeJson(payload);
+    DestroyDasPakeV1Params(params);
+    HcFree(params);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0041, TestSize.Level0)
+{
+    // pake_v1_protocol_task_common.c static interface test
+    PakeParams *params = (PakeParams *)HcMalloc(sizeof(PakeParams), 0);
+    params->opCode = OP_UNBIND;
+    CJson *in = CreateJson();
+    (void)AddIntToJson(in, FIELD_KEY_LENGTH, TEST_KEY_LEN_1);
+    int32_t res = AllocReturnKey(params, in);
+    EXPECT_EQ(res, HC_SUCCESS);
+
+    params->opCode = CODE_NULL;
+    (void)AddIntToJson(in, FIELD_KEY_LENGTH, TEST_KEY_LEN_1);
+    res = AllocReturnKey(params, in);
+    EXPECT_NE(res, HC_SUCCESS);
+
+    (void)AddIntToJson(in, FIELD_KEY_LENGTH, TEST_KEY_LEN_2);
+    res = AllocReturnKey(params, in);
+    EXPECT_NE(res, HC_SUCCESS);
+
+    DestroyDasPakeV1Params(params);
+    HcFree(params);
+    FreeJson(in);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0042, TestSize.Level0)
+{
+    // pake_v1_protocol_task_common.c static interface test
+    char *outStr = nullptr;
+    int32_t res = RemoveEscapeForExtInfo(EXT_INFO, &outStr);
+    EXPECT_EQ(res, HC_SUCCESS);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0043, TestSize.Level0)
+{
+    // pake_v1_protocol_task_common.c static interface test
+    PakeParams *params = (PakeParams *)HcMalloc(sizeof(PakeParams), 0);
+    params->pseudonymExtInfo.selfNextPseudonymId.val = (uint8_t *)HcMalloc(16, 0);
+    EXPECT_NE(params->pseudonymExtInfo.selfNextPseudonymId.val, nullptr);
+    params->pseudonymExtInfo.selfNextPseudonymChallenge.val = (uint8_t *)HcMalloc(16, 0);
+    EXPECT_NE(params->pseudonymExtInfo.selfNextPseudonymChallenge.val, nullptr);
+    params->pseudonymExtInfo.peerNextPseudonymId.val = (uint8_t *)HcMalloc(16, 0);
+    EXPECT_NE(params->pseudonymExtInfo.peerNextPseudonymId.val, nullptr);
+    CJson *in = CreateJson();
+    uint8_t *selfNextIdVal = reinterpret_cast<uint8_t *>(HcMalloc(PSEUDONYM_ID_LEN, 0));
+    (void)AddByteToJson(in, FIELD_SELF_NEXT_PSEUDONYM_ID, selfNextIdVal, PSEUDONYM_ID_LEN);
+    int32_t res = FillPseudonymPskExtInfo(&params->pseudonymExtInfo, in);
+    EXPECT_NE(res, HC_SUCCESS);
+    HcFree(selfNextIdVal);
+    DestroyDasPakeV1Params(params);
+    HcFree(params);
+    FreeJson(in);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0044, TestSize.Level0)
+{
+    // pake_v1_protocol_task_common.c static interface test
+    PakeParams *params = (PakeParams *)HcMalloc(sizeof(PakeParams), 0);
+    CJson *in = CreateJson();
+    int32_t res = CheckPseudonymId(params, in);
+    EXPECT_NE(res, HC_SUCCESS);
+    FreeJson(in);
+    DestroyDasPakeV1Params(params);
+    HcFree(params);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0045, TestSize.Level0)
+{
+    // pake_v1_protocol_task_common.c static interface test
+    PakeParams *params = (PakeParams *)HcMalloc(sizeof(PakeParams), 0);
+    params->pseudonymExtInfo.selfNextPseudonymId.val = (uint8_t *)HcMalloc(16, 0);
+    EXPECT_NE(params->pseudonymExtInfo.selfNextPseudonymId.val, nullptr);
+    params->pseudonymExtInfo.selfNextPseudonymChallenge.val = (uint8_t *)HcMalloc(16, 0);
+    EXPECT_NE(params->pseudonymExtInfo.selfNextPseudonymChallenge.val, nullptr);
+    params->pseudonymExtInfo.peerNextPseudonymId.val = (uint8_t *)HcMalloc(16, 0);
+    EXPECT_NE(params->pseudonymExtInfo.peerNextPseudonymId.val, nullptr);
+    int32_t res = SaveNextPseudonymIdAndChallenge(params);
+    EXPECT_NE(res, HC_SUCCESS);
     DestroyDasPakeV1Params(params);
     HcFree(params);
 }
@@ -874,6 +967,17 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest016, TestSize.Level0)
     HcFree(baseParams);
 }
 
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0161, TestSize.Level0)
+{
+    // iso_protocol_common.c static interface test
+    int32_t res = InitIsoBaseParams(nullptr, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    CJson *in = CreateJson();
+    res = InitIsoBaseParams(in, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    FreeJson(in);
+}
+
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest017, TestSize.Level0)
 {
     // das_lite_token_manager.c interface test
@@ -1297,6 +1401,95 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest028, TestSize.Level0)
     res = GetRealPkInfoStr(DEFAULT_OS_ACCOUNT, credJson, nullptr, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
     FreeJson(credJson);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0281, TestSize.Level0)
+{
+    // dev_session_util.c static interface test
+    CJson *in = CreateJson();
+    TrustedDeviceEntry *entry = GetPeerDeviceEntryByContext(TEST_OS_ACCOUNT_ID, in);
+    EXPECT_EQ(entry, nullptr);
+    (void)AddStringToJson(in, FIELD_GROUP_ID, TEST_GROUP_ID);
+    entry = GetPeerDeviceEntryByContext(TEST_OS_ACCOUNT_ID, in);
+    EXPECT_EQ(entry, nullptr);
+    (void)AddStringToJson(in, FIELD_PEER_AUTH_ID, TEST_AUTH_ID);
+    entry = GetPeerDeviceEntryByContext(TEST_OS_ACCOUNT_ID, in);
+    EXPECT_EQ(entry, nullptr);
+    FreeJson(in);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0282, TestSize.Level0)
+{
+    // dev_session_util.c static interface test
+    CJson *in = CreateJson();
+    int32_t res = SetPeerAuthIdByDb(in, TEST_GROUP_ID);
+    EXPECT_NE(res, HC_SUCCESS);
+    (void)AddIntToJson(in, FIELD_OS_ACCOUNT_ID, TEST_OS_ACCOUNT_ID);
+    res = SetPeerAuthIdByDb(in, TEST_GROUP_ID);
+    EXPECT_NE(res, HC_SUCCESS);
+    (void)AddStringToJson(in, FIELD_PEER_UDID, TEST_AUTH_ID);
+    res = SetPeerAuthIdByDb(in, TEST_GROUP_ID);
+    EXPECT_NE(res, HC_SUCCESS);
+
+    FreeJson(in);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0283, TestSize.Level0)
+{
+    // dev_session_util.c static interface test
+    CJson *in = CreateJson();
+    CJson *inputData = CreateJson();
+    (void)AddStringToJson(in, FIELD_PEER_AUTH_ID, TEST_AUTH_ID);
+    int32_t res = FillPeerAuthIdIfNeeded(true, in, inputData);
+    EXPECT_NE(res, HC_SUCCESS);
+    FreeJson(in);
+    FreeJson(inputData);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0284, TestSize.Level0)
+{
+    // dev_session_util.c static interface test
+    int32_t res = BuildPeerCertInfo(nullptr, nullptr, 0, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    res = BuildPeerCertInfo(TEST_PK_INFO, nullptr, 0, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    res = BuildPeerCertInfo(TEST_PK_INFO, TEST_PK_INFO_SIGN, 0, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0285, TestSize.Level0)
+{
+    // dev_session_util.c static interface test
+    CJson *in = CreateJson();
+    int32_t res = GetPeerCertInfo(nullptr, nullptr, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    res = GetPeerCertInfo(in, nullptr, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    res = GetPeerCertInfo(in, in, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    (void)AddIntToJson(in, FIELD_OS_ACCOUNT_ID, TEST_OS_ACCOUNT_ID);
+    CertInfo certInfo = { { nullptr, 0 }, { nullptr, 0 }, P256 };
+    res = GetPeerCertInfo(in, in, &certInfo);
+    EXPECT_NE(res, HC_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0286, TestSize.Level0)
+{
+    // dev_session_util.c static interface test
+    CJson *in = CreateJson();
+    int32_t res = AddMsgToSessionMsg(0, nullptr, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    res = AddMsgToSessionMsg(0, in, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0287, TestSize.Level0)
+{
+    // dev_session_util.c static interface test
+    int32_t res = IsPeerSameUserId(TEST_OS_ACCOUNT_ID, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
 }
 
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest029, TestSize.Level0)
