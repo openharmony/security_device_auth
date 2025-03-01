@@ -40,6 +40,24 @@ typedef const AuthModuleBase *(*GetAuthModulePluginFunc)(void);
 static void *g_handle = NULL;
 static ExtPartProxy g_pluginFunc;
 
+#ifdef DEVAUTH_ENABLE_RUN_ON_DEMAND_QOS
+#include <unistd.h>
+#include <sys/resource.h>
+#include <sys/syscall.h>
+
+static const int OPEN_SO_PRIO = -20;
+static const int NORMAL_PRIO = 0;
+
+static void SetThreadPrio(int priority)
+{
+    id_t tid = syscall(SYS_gettid);
+    LOGI("set tid:%d priority:%d.", tid, priority);
+    if (setpriority(PRIO_PROCESS, tid, priority) != 0) {
+        LOGE("set tid:%d priority:%d failed.", tid, priority);
+    }
+}
+#endif
+
 static const ExtPartProxy *GetPluginFuncFromLib(void *handle)
 {
     do {
@@ -132,7 +150,13 @@ void LoadExtendPlugin(void)
         LOGE("[Plugin]: The plugin has been loaded.");
         return;
     }
+#ifdef DEVAUTH_ENABLE_RUN_ON_DEMAND_QOS
+    SetThreadPrio(OPEN_SO_PRIO);
+#endif
     g_handle = DevAuthDlopen(LIBDEVICE_AUTH_EXT);
+#ifdef DEVAUTH_ENABLE_RUN_ON_DEMAND_QOS
+    SetThreadPrio(NORMAL_PRIO);
+#endif
     if (g_handle == NULL) {
         LOGI("[Plugin]: There are no plugin that need to be loaded.");
         return;

@@ -415,6 +415,10 @@ if (enable_account == true) {
                       account_related_creds_manager_mock_files
 }
 
+if (device_auth_enable_run_on_demand_qos == true) {
+  deviceauth_defines += [ "DEVAUTH_ENABLE_RUN_ON_DEMAND_QOS" ]
+}
+
 if (enable_extend_plugin) {
   deviceauth_files += account_auth_plugin_files
   deviceauth_files += account_task_manager_files

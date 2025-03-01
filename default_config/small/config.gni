@@ -35,4 +35,6 @@ declare_args() {
 
   max_auth_session_count = 10
   device_auth_hichain_thread_stack_size = 102400
+
+  device_auth_enable_run_on_demand_qos = false
 }
