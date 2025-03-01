@@ -608,7 +608,7 @@ int32_t BuildPeerCertInfo(const char *pkInfoStr, const char *pkInfoSignHexStr, i
         ClearFreeUint8Buff(&peerCert->pkInfoSignature);
         return HC_ERR_JSON_ADD;
     }
-    peerCert->signAlg = signAlg;
+    peerCert->signAlg = (Algorithm)signAlg;
     return HC_SUCCESS;
 }
 
