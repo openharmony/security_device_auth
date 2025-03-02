@@ -49,100 +49,100 @@ static const char *ADD_PARAMS =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS1 =
     "{\"credType\":0,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS2 =
     "{\"credType\":1,\"keyFormat\":0,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS3 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":0,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS4 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":0,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS5 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":0,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS6 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":0,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS7 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":0,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS8 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":0,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS9 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS10 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS11 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,"
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS12 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":2,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS13 =
     "{\"credType\":2,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":2,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"keyValue\":\"9A9A9A9A\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS14 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId1\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS15 =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"keyValue\":\"TestKeyValue\",\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
-    "\"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 static const char *REQUEST_PARAMS =
-    "{\"authorizedScope\":1, \"authorizedAccoutList\":[\"TestName1\",\"TestName2\",\"TestName3\","
+    "{\"authorizedScope\":1, \"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\","
     "\"TestName4\"],\"extendInfo\":\"\"}";
 
 static const char *QUERY_PARAMS = "{\"deviceId\":\"TestDeviceId\"}";

@@ -38,6 +38,7 @@ ohos_fuzztest("CredsManagerFuzzTest") {
   include_dirs += identity_manager_inc
 
   sources = [ "credsmanager_fuzzer.cpp" ]
+  sources += identity_service_mock_files
   sources += deviceauth_files
   sources += hal_common_files
   sources += hiview_adapter_files

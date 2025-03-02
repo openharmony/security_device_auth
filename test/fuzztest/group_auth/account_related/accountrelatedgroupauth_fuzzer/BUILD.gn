@@ -58,6 +58,7 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
   include_dirs += identity_manager_inc
   sources += identity_manager_files
   sources += dev_frameworks_files
+  sources += identity_service_mock_files
   sources += deviceauth_common_files
   sources += group_database_manager_files
   sources += ext_plugin_manager_files

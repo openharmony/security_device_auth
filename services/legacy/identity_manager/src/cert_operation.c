@@ -663,7 +663,7 @@ int32_t GetAccountRelatedCredInfo(
 }
 
 static int32_t GetSharedSecretByPeerCertFromPlugin(
-    int32_t osAccountId, const char *peerUserId, const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
+    int32_t osAccountId, const char *credId, const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
 {
     CJson *input = CreateJson();
     if (input == NULL) {
@@ -677,8 +677,8 @@ static int32_t GetSharedSecretByPeerCertFromPlugin(
         return HC_ERR_JSON_CREATE;
     }
     int32_t res = HC_ERR_JSON_ADD;
-    if ((peerUserId != NULL) && (AddStringToJson(input, FIELD_PEER_USER_ID, peerUserId) != HC_SUCCESS)) {
-        LOGE("peer user id eixsts, but add peer user id to json failed!");
+    if ((credId != NULL) && (AddStringToJson(input, FIELD_ACROSS_ACCOUNT_CRED_ID, credId) != HC_SUCCESS)) {
+        LOGE("across account cred eixsts, but add cred id to json failed!");
         goto ERR;
     }
     GOTO_ERR_AND_SET_RET(AddCertInfoToJson(peerCertInfo, input), res);
@@ -707,7 +707,7 @@ ERR:
     return res;
 }
 
-int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *peerUserId, const CertInfo *peerCertInfo,
+int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *credId, const CertInfo *peerCertInfo,
     Uint8Buff *sharedSecret)
 {
     if (peerCertInfo == NULL || sharedSecret == NULL) {
@@ -715,7 +715,7 @@ int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *peerUserId, 
         return HC_ERR_INVALID_PARAMS;
     }
     if (HasAccountPlugin()) {
-        return GetSharedSecretByPeerCertFromPlugin(osAccountId, peerUserId, peerCertInfo, sharedSecret);
+        return GetSharedSecretByPeerCertFromPlugin(osAccountId, credId, peerCertInfo, sharedSecret);
     }
     TrustedDeviceEntry *deviceEntry = CreateDeviceEntry();
     if (deviceEntry == NULL) {

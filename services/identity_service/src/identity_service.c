@@ -106,6 +106,22 @@ int32_t DeleteCredential(int32_t osAccountId, const char *credId)
     return DeleteCredentialImpl(osAccountId, credId);
 }
 
+int32_t DeleteCredByParams(int32_t osAccountId, const char *requestParams, char **returnData)
+{
+    SET_LOG_MODE(TRACE_MODE);
+
+    if (requestParams == NULL || returnData == NULL) {
+        LOGE("Failed to batch delete credential, NULL params!");
+        return IS_ERR_INVALID_PARAMS;
+    }
+
+    if (!IsOsAccountUnlocked(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
+    return DeleteCredByParamsImpl(osAccountId, requestParams, returnData);
+}
+
 int32_t UpdateCredInfo(int32_t osAccountId, const char *credId, const char *requestParams)
 {
     SET_LOG_MODE(TRACE_MODE);
@@ -121,6 +137,39 @@ int32_t UpdateCredInfo(int32_t osAccountId, const char *credId, const char *requ
     }
 
     return UpdateCredInfoImpl(osAccountId, credId, requestParams);
+}
+
+int32_t BatchUpdateCredentials(int32_t osAccountId, const char *requestParams, char **returnData)
+{
+    SET_LOG_MODE(TRACE_MODE);
+
+    if (requestParams == NULL || returnData == NULL) {
+        LOGE("Failed to batch update credential, NULL params!");
+        return IS_ERR_INVALID_PARAMS;
+    }
+
+    if (!IsOsAccountUnlocked(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
+    return BatchUpdateCredsImpl(osAccountId, requestParams, returnData);
+}
+
+int32_t AgreeCredential(int32_t osAccountId, const char *selfCredId, const char *requestParams, char **returnData)
+{
+    SET_LOG_MODE(TRACE_MODE);
+
+    if (selfCredId == NULL || requestParams == NULL || returnData == NULL) {
+        LOGE("Failed to agree credential, NULL params!");
+        return IS_ERR_INVALID_PARAMS;
+    }
+    
+    if (!IsOsAccountUnlocked(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
+
+    return AgreeCredentialImpl(osAccountId, selfCredId, requestParams, returnData);
 }
 
 int32_t RegisterChangeListener(const char *appId, CredChangeListener *listener)

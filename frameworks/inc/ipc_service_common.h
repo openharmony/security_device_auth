@@ -69,6 +69,9 @@ int32_t IpcServiceCmQueryCredentialByParams(const IpcDataInfo *ipcParams, int32_
 int32_t IpcServiceCmQueryCredentialByCredId(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
 int32_t IpcServiceCmDeleteCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
 int32_t IpcServiceCmUpdateCredInfo(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+int32_t IpcServiceCmAgreeCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+int32_t IpcServiceCmDelCredByParams(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+int32_t IpcServiceCmBatchUpdateCredentials(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
 int32_t IpcServiceCaAuthDevice(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
 int32_t IpcServiceCaProcessCredData(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
 

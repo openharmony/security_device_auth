@@ -44,6 +44,8 @@ const AuthIdentity *GetAuthIdentityByType(AuthIdentityType type)
             return GetPinAuthIdentity();
         case AUTH_IDENTITY_TYPE_P2P:
             return GetP2pAuthIdentity();
+        case AUTH_IDENTITY_TYPE_CRED:
+            return GetCredAuthIdentity();
         default:
             LOGE("unknow AuthIdentityType: %d", type);
             return NULL;

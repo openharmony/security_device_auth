@@ -31,6 +31,7 @@ ohos_fuzztest("DevAuthServIsDeviceInGroupFuzzTest") {
     "${dev_frameworks_path}/inc/hiview_adapter",
   ]
   sources = [ "devauthservisdeviceingroup_fuzzer.cpp" ]
+  sources += identity_service_mock_files
   sources += deviceauth_files
   sources += hiview_adapter_files
   if (device_auth_enable_soft_bus_channel == true) {

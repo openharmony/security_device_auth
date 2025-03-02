@@ -80,10 +80,7 @@
 #define FIELD_IS_PEER_FROM_UPGRADE "isPeerFromUpgrade"
 #define FIELD_IS_CRED_AUTH "isCredAuth"
 #define FIELD_CRED_ID "credId"
-#define FIELD_SELF_CRED_ID "selfCredId"
-#define FIELD_PEER_CRED_ID "peerCredId"
-#define FIELD_SELF_CREDENTIAL_OBJ "selfCredentialObject"
-#define FIELD_PEER_CREDENTIAL_OBJ "peerCredentialObject"
+#define FIELD_CREDENTIAL_OBJ "credentialObject"
 #define FIELD_CREDENTIAL_FORMAT "credentialFormat"
 #define FIELD_SUBJECT "subject"
 #define FIELD_ISSUER "issuer"
@@ -94,6 +91,13 @@
 #define FIELD_AUTHORIZED_ACCOUNT_LIST "authorizedAccountList"
 #define FIELD_PROTOCOL_TYPE "protocolType"
 #define FIELD_EXTEND_INFO "extendInfo"
+#define FIELD_AUTHORIZED_DEVICE_LIST "authorizedDeviceList"
+#define FIELD_AUTHORIZED_APP_LIST "authorizedAppList"
+#define FIELD_ACROSS_ACCOUNT_CRED_ID "acrossAccountCredId"
+#define FIELD_DEVICE_ID_HASH "deviceIdHash"
+#define FIELD_USER_ID_HASH "userIdHash"
+#define FIELD_BASE_INFO "baseInfo"
+#define FIELD_UPDATE_LISTS "updateLists"
 
 /**
  * @brief protocol expand value for bind
@@ -489,9 +493,16 @@ typedef struct {
 
     int32_t (*updateCredInfo)(int32_t osAccountId, const char *credId, const char *requestParams);
 
+    int32_t (*agreeCredential)(int32_t osAccountId, const char *selfCredId, const char *requestParams,
+        char **returnData);
+
     int32_t (*registerChangeListener)(const char *appId, CredChangeListener *listener);
 
     int32_t (*unregisterChangeListener)(const char *appId);
+
+    int32_t (*deleteCredByParams)(int32_t osAccountId, const char *requestParams, char **returnData);
+
+    int32_t (*batchUpdateCredentials)(int32_t osAccountId, const char *requestParams, char **returnData);
 
     void (*destroyInfo)(char **returnData);
 } CredManager;

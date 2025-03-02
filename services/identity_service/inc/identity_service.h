@@ -28,7 +28,13 @@ int32_t QueryCredInfoByCredId(int32_t osAccountId, const char *credId, char **re
 
 int32_t DeleteCredential(int32_t osAccountId, const char *credId);
 
+int32_t DeleteCredByParams(int32_t osAccountId, const char *requestParams, char **returnData);
+
 int32_t UpdateCredInfo(int32_t osAccountId, const char *credId, const char *requestParams);
+
+int32_t BatchUpdateCredentials(int32_t osAccountId, const char *requestParams, char **returnData);
+
+int32_t AgreeCredential(int32_t osAccountId, const char *selfCredId, const char *requestParams, char **returnData);
 
 int32_t RegisterChangeListener(const char *appId, CredChangeListener *listener);
 

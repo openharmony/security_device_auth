@@ -35,6 +35,7 @@ ohos_unittest("auth_code_import_test") {
   sources += [ "auth_code_import_test.cpp" ]
 
   include_dirs += identity_manager_inc
+  include_dirs += identity_service_inc
   include_dirs += [
     "${dev_frameworks_path}/inc",
     "${group_manager_path}/inc",
@@ -144,6 +145,7 @@ ohos_unittest("pub_key_exchange_test") {
     "${mk_agree_path}/src/mock/key_manager_mock.c",
     "${privacy_enhancement_path}/src/mock/pseudonym_manager_mock.c",
   ]
+  include_dirs += identity_service_inc
   include_dirs += identity_manager_inc
   include_dirs += [
     "${dev_frameworks_path}/inc",
@@ -196,6 +198,7 @@ ohos_unittest("save_trusted_info_test") {
     "${mk_agree_path}/inc",
     "${privacy_enhancement_path}/inc",
   ]
+  include_dirs += identity_service_inc
 
   include_dirs += [
     "${tdd_framework_path}/tdd_helper/exception_controller/inc",

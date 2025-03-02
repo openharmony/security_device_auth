@@ -44,6 +44,7 @@ ohos_fuzztest("AuthCodeImportFuzzTest") {
   }
   deps = [ "${deps_adapter_path}:${hal_module_test_name}" ]
   include_dirs += identity_manager_inc
+  include_dirs += identity_service_inc
   include_dirs += [
     "${dev_frameworks_path}/inc",
     "${group_manager_path}/inc",

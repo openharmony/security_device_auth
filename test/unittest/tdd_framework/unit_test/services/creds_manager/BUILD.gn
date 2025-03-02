@@ -26,6 +26,7 @@ ohos_unittest("creds_manager_test") {
   ]
 
   sources = deviceauth_files
+  sources += identity_service_mock_files
   sources += [ "creds_manager_test.cpp" ]
   sources += hal_common_files
   sources += hiview_adapter_files

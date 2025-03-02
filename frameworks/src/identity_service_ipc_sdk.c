@@ -160,6 +160,27 @@ static int32_t AddCredentialIpcResult(const IpcDataInfo *replies, int32_t cacheN
     return HC_SUCCESS;
 }
 
+static int32_t AgreeCredentialIpcResult(const IpcDataInfo *replies, int32_t cacheNum, char **returnData)
+{
+    int32_t inOutLen;
+    int32_t ret;
+
+    inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_IPC_RESULT_NUM, (uint8_t *)&ret, &inOutLen);
+    if ((ret < IPC_RESULT_NUM_1) || (inOutLen != sizeof(int32_t))) {
+        return HC_ERR_IPC_OUT_DATA_NUM;
+    }
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_CRED_ID, (uint8_t *)returnData, NULL);
+    if (*returnData == NULL) {
+        return HC_ERR_IPC_OUT_DATA;
+    }
+    *returnData = strdup(*returnData);
+    if (*returnData == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t IpcCmAddCredential(int32_t osAccountId, const char *requestParams, char **returnData)
 {
     uintptr_t callCtx = 0x0;
@@ -603,6 +624,229 @@ static int32_t IpcCmUpdateCredInfo(int32_t osAccountId, const char *credId, cons
     return ret;
 }
 
+static int32_t EncodeAgreeCredentialParams(uintptr_t callCtx, int32_t osAccountId, const char *selfCredId,
+    const char *requestParams)
+{
+    int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
+        sizeof(osAccountId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_CRED_ID, (const uint8_t *)selfCredId, HcStrlen(selfCredId) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_CRED_ID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQUEST_PARAMS, (const uint8_t *)requestParams,
+        HcStrlen(requestParams) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQUEST_PARAMS);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t IpcCmAgreeCredential(int32_t osAccountId, const char *selfCredId, const char *requestParams,
+    char **returnData)
+{
+    uintptr_t callCtx = 0x0;
+    int32_t ret;
+    IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
+
+    LOGI("starting ...");
+    if (IsStrInvalid(selfCredId) || IsStrInvalid(requestParams) || returnData == NULL) {
+        LOGE("invalid params");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    ret = CreateCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("CreateCallCtx failed, ret %d", ret);
+        return HC_ERR_IPC_INIT;
+    }
+    ret = EncodeAgreeCredentialParams(callCtx, osAccountId, selfCredId, requestParams);
+    if (ret != HC_SUCCESS) {
+        DestroyCallCtx(&callCtx, NULL);
+        return ret;
+    }
+    ret = DoBinderCall(callCtx, IPC_CALL_ID_CM_AGREE_CREDENTIAL, true);
+    if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
+        LOGE("ipc call failed");
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_PROC_FAILED;
+    }
+    DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
+    ret = HC_ERR_IPC_UNKNOW_REPLY;
+    int32_t inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        DestroyCallCtx(&callCtx, NULL);
+        return ret;
+    }
+    ret = AgreeCredentialIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
+    DestroyCallCtx(&callCtx, NULL);
+    LOGI("process done, ret %d", ret);
+    return ret;
+}
+
+static int32_t EncodeDelCredByParams(uintptr_t callCtx, int32_t osAccountId, const char *requestParams)
+{
+    int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
+        sizeof(osAccountId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQUEST_PARAMS, (const uint8_t *)requestParams,
+        HcStrlen(requestParams) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQUEST_PARAMS);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t DelCredByParamsIpcResult(const IpcDataInfo *replies, int32_t cacheNum, char **returnData)
+{
+    int32_t inOutLen;
+    int32_t ret;
+
+    inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_IPC_RESULT_NUM, (uint8_t *)&ret, &inOutLen);
+    if ((ret < IPC_RESULT_NUM_1) || (inOutLen != sizeof(int32_t))) {
+        return HC_ERR_IPC_OUT_DATA_NUM;
+    }
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_CRED_INFO_LIST, (uint8_t *)returnData, NULL);
+    if (*returnData == NULL) {
+        return HC_ERR_IPC_OUT_DATA;
+    }
+    *returnData = strdup(*returnData);
+    if (*returnData == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t IpcCmDelCredByParams(int32_t osAccountId, const char *requestParams, char **returnData)
+{
+    uintptr_t callCtx = 0x0;
+    int32_t ret;
+    IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
+
+    LOGI("starting ...");
+    if (IsStrInvalid(requestParams) || returnData == NULL) {
+        LOGE("invalid params");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    ret = CreateCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("CreateCallCtx failed, ret %d", ret);
+        return HC_ERR_IPC_INIT;
+    }
+    ret = EncodeDelCredByParams(callCtx, osAccountId, requestParams);
+    if (ret != HC_SUCCESS) {
+        DestroyCallCtx(&callCtx, NULL);
+        return ret;
+    }
+    ret = DoBinderCall(callCtx, IPC_CALL_ID_CM_DEL_CRED_BY_PARAMS, true);
+    if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
+        LOGE("ipc call failed");
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_PROC_FAILED;
+    }
+    DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
+    ret = HC_ERR_IPC_UNKNOW_REPLY;
+    int32_t inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        DestroyCallCtx(&callCtx, NULL);
+        return ret;
+    }
+    ret = DelCredByParamsIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
+    DestroyCallCtx(&callCtx, NULL);
+    LOGI("process done, ret %d", ret);
+    return ret;
+}
+
+static int32_t EncodeBatchUpdateParam(uintptr_t callCtx, int32_t osAccountId, const char *requestParams)
+{
+    int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
+        sizeof(osAccountId));
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQUEST_PARAMS, (const uint8_t *)requestParams,
+        HcStrlen(requestParams) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQUEST_PARAMS);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t BatchUpdateCredIpcResult(const IpcDataInfo *replies, int32_t cacheNum, char **returnData)
+{
+    int32_t inOutLen;
+    int32_t ret;
+
+    inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_IPC_RESULT_NUM, (uint8_t *)&ret, &inOutLen);
+    if ((ret < IPC_RESULT_NUM_1) || (inOutLen != sizeof(int32_t))) {
+        return HC_ERR_IPC_OUT_DATA_NUM;
+    }
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_CRED_INFO_LIST, (uint8_t *)returnData, NULL);
+    if (*returnData == NULL) {
+        return HC_ERR_IPC_OUT_DATA;
+    }
+    *returnData = strdup(*returnData);
+    if (*returnData == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t IpcCmBatchUpdateCredentials(int32_t osAccountId, const char *requestParams, char **returnData)
+{
+    uintptr_t callCtx = 0x0;
+    int32_t ret;
+    IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
+
+    LOGI("starting ...");
+    if (IsStrInvalid(requestParams) || returnData == NULL) {
+        LOGE("invalid params");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    ret = CreateCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("CreateCallCtx failed, ret %d", ret);
+        return HC_ERR_IPC_INIT;
+    }
+    ret = EncodeBatchUpdateParam(callCtx, osAccountId, requestParams);
+    if (ret != HC_SUCCESS) {
+        DestroyCallCtx(&callCtx, NULL);
+        return ret;
+    }
+    ret = DoBinderCall(callCtx, IPC_CALL_ID_CM_BATCH_UPDATE_CREDENTIALS, true);
+    if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
+        LOGE("ipc call failed");
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_PROC_FAILED;
+    }
+    DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
+    ret = HC_ERR_IPC_UNKNOW_REPLY;
+    int32_t inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        DestroyCallCtx(&callCtx, NULL);
+        return ret;
+    }
+    ret = BatchUpdateCredIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
+    DestroyCallCtx(&callCtx, NULL);
+    LOGI("process done, ret %d", ret);
+    return ret;
+}
+
 static void InitIpcCmMethods(CredManager *cmMethodObj)
 {
     cmMethodObj->addCredential = IpcCmAddCredential;
@@ -613,6 +857,9 @@ static void InitIpcCmMethods(CredManager *cmMethodObj)
     cmMethodObj->queryCredInfoByCredId = IpcCmQueryCredInfoByCredId;
     cmMethodObj->deleteCredential = IpcCmDeleteCredential;
     cmMethodObj->updateCredInfo = IpcCmUpdateCredInfo;
+    cmMethodObj->agreeCredential = IpcCmAgreeCredential;
+    cmMethodObj->deleteCredByParams = IpcCmDelCredByParams;
+    cmMethodObj->batchUpdateCredentials = IpcCmBatchUpdateCredentials;
     return;
 }
 
