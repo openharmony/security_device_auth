@@ -56,6 +56,8 @@
 #include "iso_task_common.h"
 #include "../../../../services/legacy/authenticators/src/account_unrelated/pake_task/pake_v1_task/pake_v1_protocol_task/pake_v1_protocol_task_common.c"
 #include "../../../../services/session_manager/src/session/v2/dev_session_util.c"
+#include "../../../../services/legacy/group_manager/src/group_operation/identical_account_group/identical_account_group.c"
+
 using namespace std;
 using namespace testing::ext;
 
@@ -66,6 +68,7 @@ namespace {
 #define TEST_TRANSMIT_DATA "TestTransmitData"
 #define TEST_APP_ID "TestAppId"
 #define TEST_GROUP_ID "E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21"
+#define TEST_USER_ID "testUserId"
 #define TEST_PK_INFO "TestPkInfo"
 #define TEST_PK_INFO_SIGN "TestPkInfoSign"
 #define TEST_AUTH_ID "TestAuthId"
@@ -837,6 +840,96 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest014, TestSize.Level0)
     (void)AddStringToJson(jsonParams, FIELD_GROUP_ID, TEST_GROUP_ID);
     res = group->base.deleteGroup(DEFAULT_OS_ACCOUNT, jsonParams, &returnJsonStr);
     ASSERT_EQ(res, HC_SUCCESS);
+    DestroyDatabase();
+    DestroyBroadcastManager();
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0141, TestSize.Level0)
+{
+    // identical_account_group.c static interface test
+    (void)InitDatabase();
+    (void)InitBroadcastManager();
+    int32_t res = GenerateGroupParams(nullptr, nullptr, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    res = GenerateGroupId(nullptr, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    res = GenerateIdenticalGroupId(nullptr, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    CJson *in = CreateJson();
+    (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID);
+    res = GenerateIdenticalGroupId(in, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    FreeJson(in);
+    DestroyDatabase();
+    DestroyBroadcastManager();
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0142, TestSize.Level0)
+{
+    // identical_account_group.c static interface test
+    (void)InitDatabase();
+    (void)InitBroadcastManager();
+    CJson *in = CreateJson();
+    int32_t res = ImportSelfToken(TEST_OS_ACCOUNT_ID, in);
+    EXPECT_NE(res, HC_SUCCESS);
+    (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID);
+    res = ImportSelfToken(TEST_OS_ACCOUNT_ID, in);
+    EXPECT_NE(res, HC_SUCCESS);
+    res = DelSelfToken(TEST_OS_ACCOUNT_ID, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    FreeJson(in);
+    DestroyDatabase();
+    DestroyBroadcastManager();
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0143, TestSize.Level0)
+{
+    // identical_account_group.c static interface test
+    (void)InitDatabase();
+    (void)InitBroadcastManager();
+    CJson *in = CreateJson();
+    int32_t res = GenerateAddTokenParams(in, in);
+    EXPECT_NE(res, HC_SUCCESS);
+    res = CheckUserIdValid(TEST_OS_ACCOUNT_ID, in, in);
+    EXPECT_NE(res, HC_SUCCESS);
+    (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID);
+    res = GenerateAddTokenParams(in, in);
+    EXPECT_NE(res, HC_SUCCESS);
+    res = CheckUserIdValid(TEST_OS_ACCOUNT_ID, in, in);
+    EXPECT_NE(res, HC_SUCCESS);
+    res = GenerateTrustedDevParams(nullptr, nullptr, nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    (void)AddStringToJson(in, FIELD_GROUP_ID, TEST_GROUP_ID);
+    res = CheckUserIdValid(TEST_OS_ACCOUNT_ID, in, in);
+    EXPECT_NE(res, HC_SUCCESS);
+
+    FreeJson(in);
+    DestroyDatabase();
+    DestroyBroadcastManager();
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0144, TestSize.Level0)
+{
+    // identical_account_group.c static interface test
+    (void)InitDatabase();
+    (void)InitBroadcastManager();
+    int32_t res = CheckPeerDeviceNotSelf(nullptr);
+    EXPECT_NE(res, HC_SUCCESS);
+    CJson *in = CreateJson();
+    res = AddDeviceAndToken(TEST_OS_ACCOUNT_ID, in, in);
+    EXPECT_NE(res, HC_SUCCESS);
+    res = DelPeerDevice(TEST_OS_ACCOUNT_ID, in, in, true);
+    EXPECT_NE(res, HC_SUCCESS);
+    UpdateTrustedDeviceForMetaNode(TEST_OS_ACCOUNT_ID, nullptr, nullptr);
+
+    (void)AddStringToJson(in, FIELD_GROUP_ID, TEST_GROUP_ID);
+    res = AddDeviceAndToken(TEST_OS_ACCOUNT_ID, in, in);
+    EXPECT_NE(res, HC_SUCCESS);
+    UpdateTrustedDeviceForMetaNode(TEST_OS_ACCOUNT_ID, in, nullptr);
+
+    res = DelPeerDevice(TEST_OS_ACCOUNT_ID, in, in, true);
+    EXPECT_NE(res, HC_SUCCESS);
+    FreeJson(in);
     DestroyDatabase();
     DestroyBroadcastManager();
 }
