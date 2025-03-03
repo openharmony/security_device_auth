@@ -486,6 +486,7 @@ ohos_unittest("device_auth_interface_test") {
   ]
   sources -= [
     "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_protocol_task/pake_v1_protocol_task_common.c",
+    "${deviceauth_account_group_manager_path}/src/group_operation/identical_account_group/identical_account_group.c",
     "${session_manager_path}/src/session/v2/dev_session_util.c",
   ]
   defines = [
