@@ -47,7 +47,7 @@ const AuthIdentity *GetAuthIdentityByType(AuthIdentityType type)
         case AUTH_IDENTITY_TYPE_CRED:
             return GetCredAuthIdentity();
         default:
-            LOGE("unknow AuthIdentityType: %d", type);
+            LOGE("unknow AuthIdentityType: %" LOG_PUB "d", type);
             return NULL;
     }
 }

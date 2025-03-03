@@ -40,7 +40,7 @@ const IClientProxy *GetProxyInstance(const char *serviceName)
     }
     ret = iUnknown->QueryInterface(iUnknown, CLIENT_PROXY_VER, (void **)&clientProxy);
     if ((ret != 0) || (clientProxy == NULL)) {
-        LOGE("QueryInterface failed, result %d", ret);
+        LOGE("QueryInterface failed, result %" LOG_PUB "d", ret);
         clientProxy = NULL;
     }
     return (const IClientProxy *)clientProxy;
@@ -67,12 +67,12 @@ int32_t FinalCallRequest(ProxyDevAuthData *dataCtx, int32_t methodId)
 
     dataLen = GetIpcIoDataLength((const IpcIo *)(dataCtx->tmpData));
     if (dataLen <= 0) {
-        LOGE("data invalid, dataLen %d", dataLen);
+        LOGE("data invalid, dataLen %" LOG_PUB "d", dataLen);
         return HC_ERROR;
     }
     ioPtr = dataCtx->data;
-    LOGI("method id %d, param num %d, data length %d, flag %u, io offset %d",
-        methodId, dataCtx->paramCnt, dataLen, ioPtr->flag, dataCtx->ioBuffOffset);
+    LOGI("method id %" LOG_PUB "d, param num %" LOG_PUB "d, data length %" LOG_PUB "d, flag %" LOG_PUB "u, io offset %"
+        LOG_PUB "d", methodId, dataCtx->paramCnt, dataLen, ioPtr->flag, dataCtx->ioBuffOffset);
     /* request data length = number of params + params information */
     WriteInt32(ioPtr, methodId);
     WriteInt32(ioPtr, dataLen + sizeof(int32_t));
@@ -95,7 +95,7 @@ int32_t FinalCallRequest(ProxyDevAuthData *dataCtx, int32_t methodId)
         if (!WriteRemoteObject(ioPtr, &(dataCtx->cbSvc))) {
             return HC_FALSE;
         }
-        LOGI("ipc call with callback, data flag %u", ioPtr->flag);
+        LOGI("ipc call with callback, data flag %" LOG_PUB "u", ioPtr->flag);
     }
     dataCtx->withCallback = false;
     return HC_SUCCESS;
@@ -121,7 +121,7 @@ static int32_t CliInvokeRetCallback(IOwner owner, int32_t code, IpcIo *reply)
         return -1;
     }
     dstReply->bufferLeft = reply->bufferLeft;
-    LOGI("done, reply data length %zu", dstReply->bufferLeft);
+    LOGI("done, reply data length %" LOG_PUB "zu", dstReply->bufferLeft);
     return 0;
 }
 
@@ -136,10 +136,10 @@ int32_t ActCall(const IClientProxy *clientInst, ProxyDevAuthData *dataCtx)
     LOGI("start to invoke ipc call...");
     ipcRet = clientInst->Invoke((IClientProxy *)clientInst, DEV_AUTH_CALL_REQUEST,
         dataCtx->data, (IOwner)(dataCtx->reply), CliInvokeRetCallback);
-    LOGI("invoke call done, ipc result(%d)", ipcRet);
+    LOGI("invoke call done, ipc result(%" LOG_PUB "d)", ipcRet);
     ret = HC_ERROR;
     ReadInt32(dataCtx->reply, &ret);
-    LOGI("service call result(%d)", ret);
+    LOGI("service call result(%" LOG_PUB "d)", ret);
     return ((ipcRet == 0) && (ret == HC_SUCCESS)) ? HC_SUCCESS : HC_ERR_IPC_INTERNAL_FAILED;
 }
 

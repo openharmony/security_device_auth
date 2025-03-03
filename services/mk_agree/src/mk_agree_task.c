@@ -224,7 +224,7 @@ static int32_t AddSelfUdidToSendData(CJson *sendData)
     char udid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return res;
     }
     return AddStringToJson(sendData, FIELD_PEER_UDID, udid);

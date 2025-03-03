@@ -72,7 +72,7 @@ int32_t ParsePakeRequestMessage(PakeParams *params, const CJson *in)
     if (params->opCode == AUTHENTICATE || params->opCode == AUTH_KEY_AGREEMENT) {
         int32_t res = GetAndCheckKeyLenOnServer(in, params->returnKey.length);
         if (res != HC_SUCCESS) {
-            LOGE("GetAndCheckKeyLenOnServer failed, res: %d.", res);
+            LOGE("GetAndCheckKeyLenOnServer failed, res: %" LOG_PUB "d.", res);
             return res;
         }
     }
@@ -84,23 +84,23 @@ int32_t PackagePakeResponseData(const PakeParams *params, CJson *payload)
 {
     int32_t res = AddByteToJson(payload, FIELD_SALT, params->baseParams.salt.val, params->baseParams.salt.length);
     if (res != HC_SUCCESS) {
-        LOGE("Add salt failed, res: %d.", res);
+        LOGE("Add salt failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = AddByteToJson(payload, FIELD_EPK, params->baseParams.epkSelf.val, params->baseParams.epkSelf.length);
     if (res != HC_SUCCESS) {
-        LOGE("Add epkSelf failed, res: %d.", res);
+        LOGE("Add epkSelf failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     if (params->opCode == AUTHENTICATE || params->opCode == OP_UNBIND) {
         res = AddByteToJson(payload, FIELD_NONCE, params->nonce.val, params->nonce.length);
         if (res != HC_SUCCESS) {
-            LOGE("Add nonce failed, res: %d.", res);
+            LOGE("Add nonce failed, res: %" LOG_PUB "d.", res);
             return res;
         }
         res = AddIntToJson(payload, FIELD_PEER_USER_TYPE, params->userType);
         if (res != HC_SUCCESS) {
-            LOGE("Add userType failed, res: %d.", res);
+            LOGE("Add userType failed, res: %" LOG_PUB "d.", res);
             return res;
         }
     }
@@ -116,12 +116,12 @@ static int32_t GetDasEpkPeerFromJson(PakeParams *params, const CJson *in)
     }
     int res = InitSingleParam(&(params->baseParams.epkPeer), HcStrlen(epkPeerHex) / BYTE_TO_HEX_OPER_LENGTH);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for epkPeer failed, res: %d.", res);
+        LOGE("InitSingleParam for epkPeer failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = HexStringToByte(epkPeerHex, params->baseParams.epkPeer.val, params->baseParams.epkPeer.length);
     if (res != HC_SUCCESS) {
-        LOGE("Convert epkPeer from hex string to byte failed, res: %d.", res);
+        LOGE("Convert epkPeer from hex string to byte failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     PRINT_DEBUG_MSG(params->baseParams.epkPeer.val, params->baseParams.epkPeer.length, "epkPeer");
@@ -132,18 +132,18 @@ int32_t ParsePakeResponseMessage(PakeParams *params, const CJson *in)
 {
     int32_t res = GetByteFromJson(in, FIELD_SALT, params->baseParams.salt.val, params->baseParams.salt.length);
     if (res != HC_SUCCESS) {
-        LOGE("Get salt failed, res: %d.", res);
+        LOGE("Get salt failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = GetDasEpkPeerFromJson(params, in);
     if (res != HC_SUCCESS) {
-        LOGE("GetDasEpkPeerFromJson failed, res: %d.", res);
+        LOGE("GetDasEpkPeerFromJson failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     if (params->opCode == AUTHENTICATE || params->opCode == OP_UNBIND) {
         res = GetByteFromJson(in, FIELD_NONCE, params->nonce.val, params->nonce.length);
         if (res != HC_SUCCESS) {
-            LOGE("Get nonce failed, res: %d.", res);
+            LOGE("Get nonce failed, res: %" LOG_PUB "d.", res);
             return res;
         }
     }
@@ -155,12 +155,12 @@ int32_t PackagePakeClientConfirmData(const PakeParams *params, CJson *payload)
 {
     int32_t res = AddByteToJson(payload, FIELD_EPK, params->baseParams.epkSelf.val, params->baseParams.epkSelf.length);
     if (res != HC_SUCCESS) {
-        LOGE("Add epkSelf failed, res: %d.", res);
+        LOGE("Add epkSelf failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = AddByteToJson(payload, FIELD_KCF_DATA, params->baseParams.kcfData.val, params->baseParams.kcfData.length);
     if (res != HC_SUCCESS) {
-        LOGE("Add kcfData failed, res: %d.", res);
+        LOGE("Add kcfData failed, res: %" LOG_PUB "d.", res);
         return res;
     }
 
@@ -172,13 +172,13 @@ int32_t ParsePakeClientConfirmMessage(PakeParams *params, const CJson *in)
     int32_t res = GetByteFromJson(in, FIELD_KCF_DATA, params->baseParams.kcfDataPeer.val,
         params->baseParams.kcfDataPeer.length);
     if (res != HC_SUCCESS) {
-        LOGE("Get kcfDataPeer failed, res: %d.", res);
+        LOGE("Get kcfDataPeer failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     PRINT_DEBUG_MSG(params->baseParams.kcfDataPeer.val, params->baseParams.kcfDataPeer.length, "kcfDataPeer");
     res = GetDasEpkPeerFromJson(params, in);
     if (res != HC_SUCCESS) {
-        LOGE("GetDasEpkPeerFromJson failed, res: %d.", res);
+        LOGE("GetDasEpkPeerFromJson failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     return res;
@@ -189,7 +189,7 @@ int32_t PackagePakeServerConfirmData(const PakeParams *params, CJson *payload)
     int32_t res = AddByteToJson(payload, FIELD_KCF_DATA,
         params->baseParams.kcfData.val, params->baseParams.kcfData.length);
     if (res != HC_SUCCESS) {
-        LOGE("Add kcfData failed, res: %d.", res);
+        LOGE("Add kcfData failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     return res;
@@ -200,7 +200,7 @@ int32_t ParsePakeServerConfirmMessage(PakeParams *params, const CJson *in)
     int32_t res = GetByteFromJson(in, FIELD_KCF_DATA, params->baseParams.kcfDataPeer.val,
         params->baseParams.kcfDataPeer.length);
     if (res != HC_SUCCESS) {
-        LOGE("Get kcfDataPeer failed, res: %d.", res);
+        LOGE("Get kcfDataPeer failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     PRINT_DEBUG_MSG(params->baseParams.kcfDataPeer.val, params->baseParams.kcfDataPeer.length, "kcfDataPeer");

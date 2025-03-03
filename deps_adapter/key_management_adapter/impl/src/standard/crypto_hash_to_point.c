@@ -395,7 +395,7 @@ int32_t OpensslHashToPoint(const struct HksBlob *hash, struct HksBlob *point)
     int32_t ret = HAL_FAILED;
     uint8_t *copyData = HcMalloc(hash->size, 0);
     if (copyData == NULL) {
-        LOGE("malloc size %u failed", hash->size);
+        LOGE("malloc size %" LOG_PUB "u failed", hash->size);
         return HKS_ERROR_MALLOC_FAIL;
     }
     struct HksBlob hashCopy = { hash->size, copyData};

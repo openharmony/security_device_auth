@@ -41,19 +41,19 @@ int32_t ConstructOutJson(const PakeParams *params, CJson *out)
     if (params->opCode == AUTHENTICATE) {
         res = AddIntToJson(sendToPeer, FIELD_AUTH_FORM, AUTH_FORM_ACCOUNT_UNRELATED);
         if (res != HC_SUCCESS) {
-            LOGE("Add authForm failed, res: %d.", res);
+            LOGE("Add authForm failed, res: %" LOG_PUB "d.", res);
             goto ERR;
         }
     }
     res = AddObjToJson(sendToPeer, FIELD_PAYLOAD, payload);
     if (res != HC_SUCCESS) {
-        LOGE("Add payload to sendToPeer failed, res: %d.", res);
+        LOGE("Add payload to sendToPeer failed, res: %" LOG_PUB "d.", res);
         goto ERR;
     }
 
     res = AddObjToJson(out, FIELD_SEND_TO_PEER, sendToPeer);
     if (res != HC_SUCCESS) {
-        LOGE("Add sendToPeer to out failed, res: %d.", res);
+        LOGE("Add sendToPeer to out failed, res: %" LOG_PUB "d.", res);
         goto ERR;
     }
 ERR:
@@ -95,7 +95,7 @@ int32_t SendResultToSelf(PakeParams *params, CJson *out)
     if (params->returnKey.length != 0) { /* keyLen == 0 means that returnKey needn't to be generated. */
         res = GenerateOutputKey(params);
         if (res != HC_SUCCESS) {
-            LOGE("GenerateOutputKey failed, res: %x.", res);
+            LOGE("GenerateOutputKey failed, res: %" LOG_PUB "x.", res);
             goto ERR;
         }
         GOTO_ERR_AND_SET_RET(AddByteToJson(sendToSelf, FIELD_SESSION_KEY, params->returnKey.val,
@@ -124,7 +124,7 @@ static int32_t FillPskWithPin(PakeParams *params, const CJson *in)
 
     int res = InitSingleParam(&(params->baseParams.psk), HcStrlen(pinString));
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for psk failed, res: %d.", res);
+        LOGE("InitSingleParam for psk failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     if (memcpy_s(params->baseParams.psk.val, params->baseParams.psk.length,
@@ -146,7 +146,7 @@ static int32_t FillAuthId(PakeParams *params, const CJson *in)
     }
     uint32_t authIdLen = HcStrlen(authId);
     if (authIdLen == 0 || authIdLen > MAX_AUTH_ID_LEN) {
-        LOGE("Invalid self authId length: %d.", authIdLen);
+        LOGE("Invalid self authId length: %" LOG_PUB "d.", authIdLen);
         return HC_ERR_INVALID_LEN;
     }
     params->baseParams.idSelf.length = authIdLen;
@@ -168,7 +168,7 @@ static int32_t FillAuthId(PakeParams *params, const CJson *in)
         }
         authIdLen = HcStrlen(authId);
         if (authIdLen == 0 || authIdLen > MAX_AUTH_ID_LEN) {
-            LOGE("Invalid peer authId length: %d.", authIdLen);
+            LOGE("Invalid peer authId length: %" LOG_PUB "d.", authIdLen);
             return HC_ERR_INVALID_LEN;
         }
         params->baseParams.idPeer.length = authIdLen;
@@ -260,7 +260,7 @@ int32_t FillDasPakeParams(PakeParams *params, const CJson *in)
     }
     if (params->opCode != OP_BIND && params->opCode != OP_UNBIND &&
         params->opCode != AUTHENTICATE && params->opCode != AUTH_KEY_AGREEMENT) {
-        LOGE("Unsupported opCode: %d.", params->opCode);
+        LOGE("Unsupported opCode: %" LOG_PUB "d.", params->opCode);
         return HC_ERR_NOT_SUPPORT;
     }
 

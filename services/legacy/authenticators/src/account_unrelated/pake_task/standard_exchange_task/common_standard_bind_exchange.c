@@ -341,7 +341,7 @@ static int32_t ParseAuthInfo(PakeParams *pakeParams, const StandardBindExchangeP
     res = GetIdPeer(authInfoJson, FIELD_AUTH_ID,
         &pakeParams->baseParams.idSelf, &pakeParams->baseParams.idPeer);
     if (res != HC_SUCCESS) {
-        LOGE("GetIdPeer failed, res: %d.", res);
+        LOGE("GetIdPeer failed, res: %" LOG_PUB "d.", res);
         goto ERR;
     }
 ERR:
@@ -412,8 +412,8 @@ static int32_t SaveAuthInfo(const PakeParams *pakeParams, const StandardBindExch
         LOGE("generateKeyAlias failed");
         return res;
     }
-    LOGI("PubKey alias(HEX): %x%x%x%x****.", keyAliasPeerVal[0], keyAliasPeerVal[1],
-        keyAliasPeerVal[2], keyAliasPeerVal[3]);
+    LOGI("PubKey alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.", keyAliasPeerVal[0],
+        keyAliasPeerVal[1], keyAliasPeerVal[2], keyAliasPeerVal[3]);
     Algorithm alg = (pakeParams->baseParams.curveType == CURVE_256) ? P256 : ED25519;
     ExtraInfo exInfo = { pakeParams->baseParams.idPeer, pakeParams->userType, PAIR_TYPE_BIND };
     KeyParams keyParams = { { keyAlias.val, keyAlias.length, true }, false, pakeParams->baseParams.osAccountId };
@@ -424,7 +424,7 @@ static int32_t SaveAuthInfo(const PakeParams *pakeParams, const StandardBindExch
     }
     res = GetStandardTokenManagerInstance()->computeAndSavePsk(pakeParams);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeAndSavePsk failed, res: %x.", res);
+        LOGE("ComputeAndSavePsk failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     LOGI("Save pubKey and psk success.");

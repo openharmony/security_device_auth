@@ -320,7 +320,7 @@ static void DelAllPeerTokens(int32_t osAccountId, const DeviceEntryVec *vec)
         }
         res = DelPeerDeviceToken(osAccountId, *entry);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to delete peer device token! res: %d", res);
+            LOGE("Failed to delete peer device token! res: %" LOG_PUB "d", res);
         }
     }
 }
@@ -409,12 +409,12 @@ static int32_t AddDeviceAndToken(int32_t osAccountId, const CJson *jsonParams, C
     }
     res = ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId, IMPORT_TRUSTED_CREDENTIALS, credential, NULL);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to import device token! res: %d", res);
+        LOGE("Failed to import device token! res: %" LOG_PUB "d", res);
         return res;
     }
     res = AddDeviceToDatabaseByJson(osAccountId, GenerateTrustedDevParams, deviceInfo, groupId);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to add device to database! res: %d", res);
+        LOGE("Failed to add device to database! res: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -443,14 +443,14 @@ static int32_t DelPeerDeviceAndToken(int32_t osAccountId, CJson *jsonParams, CJs
     }
     int32_t res = DelDeviceById(osAccountId, groupId, deviceId, false);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to delete device from database! res: %d", res);
+        LOGE("Failed to delete device from database! res: %" LOG_PUB "d", res);
         DestroyDeviceEntry(entry);
         return res;
     }
     res = DelPeerDeviceToken(osAccountId, entry);
     DestroyDeviceEntry(entry);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to delete token! res: %d", res);
+        LOGE("Failed to delete token! res: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -598,8 +598,8 @@ static int32_t AddMultiMembersToGroup(int32_t osAccountId, const char *appId, CJ
         LOGE("Failed to save database!");
         return res;
     }
-    LOGI("[End]: Add multiple members to a across account group successfully! [ListNum]: %d, [AddedNum]: %d",
-        deviceNum, addedCount);
+    LOGI("[End]: Add multiple members to a across account group successfully! [ListNum]: %" LOG_PUB "d, [AddedNum]: %"
+        LOG_PUB "d", deviceNum, addedCount);
     return HC_SUCCESS;
 }
 
@@ -636,8 +636,8 @@ static int32_t DelMultiMembersFromGroup(int32_t osAccountId, const char *appId, 
         LOGE("Failed to save database!");
         return res;
     }
-    LOGI("[End]: Delete multiple members from a across account group successfully! [ListNum]: %d, [DeletedNum]: %d",
-        deviceNum, deletedCount);
+    LOGI("[End]: Delete multiple members from a across account group successfully! [ListNum]: %" LOG_PUB
+        "d, [DeletedNum]: %" LOG_PUB "d", deviceNum, deletedCount);
     return HC_SUCCESS;
 }
 

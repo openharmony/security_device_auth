@@ -42,14 +42,14 @@ static void DestroyPakeV1ProtocolClientTask(struct AsyBaseCurTaskT *task)
 static int PakeRequest(AsyBaseCurTask *task, PakeParams *params, CJson *out, int *status)
 {
     if (task->taskStatus != TASK_STATUS_CLIENT_PAKE_BEGIN) {
-        LOGI("The message is repeated, ignore it, status: %d", task->taskStatus);
+        LOGI("The message is repeated, ignore it, status: %" LOG_PUB "d", task->taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
 
     int res = ConstructOutJson(params, out);
     if (res != HC_SUCCESS) {
-        LOGE("ConstructOutJson failed, res: %d.", res);
+        LOGE("ConstructOutJson failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     CJson *payload = GetObjFromJson(out, FIELD_PAYLOAD);
@@ -59,7 +59,7 @@ static int PakeRequest(AsyBaseCurTask *task, PakeParams *params, CJson *out, int
     }
     res = PackagePakeRequestData(params, payload);
     if (res != HC_SUCCESS) {
-        LOGE("PackagePakeRequestData failed, res: %d.", res);
+        LOGE("PackagePakeRequestData failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     // package differentiated data
@@ -71,14 +71,14 @@ static int PakeRequest(AsyBaseCurTask *task, PakeParams *params, CJson *out, int
                 params->baseParams.idSelf.length);
         }
         if (res != HC_SUCCESS) {
-            LOGE("Add idSelf failed, res: %d.", res);
+            LOGE("Add idSelf failed, res: %" LOG_PUB "d.", res);
             return res;
         }
     }
     if (params->opCode == AUTHENTICATE || params->opCode == OP_UNBIND || params->opCode == AUTH_KEY_AGREEMENT) {
         res = AddIntToJson(payload, FIELD_KEY_LENGTH, params->returnKey.length);
         if (res != HC_SUCCESS) {
-            LOGE("Add keyLength failed, res: %d.", res);
+            LOGE("Add keyLength failed, res: %" LOG_PUB "d.", res);
             return res;
         }
     }
@@ -92,14 +92,14 @@ static int ParseMsgForClientConfirm(PakeParams *params, const CJson *in)
 {
     int res = ParsePakeResponseMessage(params, in);
     if (res != HC_SUCCESS) {
-        LOGE("ParsePakeResponseMessage failed, res: %d.", res);
+        LOGE("ParsePakeResponseMessage failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     // parse differentiated data
     res = GetByteFromJson(in, FIELD_CHALLENGE, params->baseParams.challengePeer.val,
         params->baseParams.challengePeer.length);
     if (res != HC_SUCCESS) {
-        LOGE("Get challengePeer failed, res: %d.", res);
+        LOGE("Get challengePeer failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     PRINT_DEBUG_MSG(params->baseParams.challengePeer.val, params->baseParams.challengePeer.length, "challengePeer");
@@ -110,7 +110,7 @@ static int ParseMsgForClientConfirm(PakeParams *params, const CJson *in)
             res = GetAndCheckAuthIdPeer(in, &(params->baseParams.idSelf), &(params->baseParams.idPeer));
         }
         if (res != HC_SUCCESS) {
-            LOGE("GetAndCheckAuthIdPeer failed, res: %d.", res);
+            LOGE("GetAndCheckAuthIdPeer failed, res: %" LOG_PUB "d.", res);
             return res;
         }
     }
@@ -121,7 +121,7 @@ static int PackageMsgForClientConfirm(PakeParams *params, CJson *out)
 {
     int res = ConstructOutJson(params, out);
     if (res != HC_SUCCESS) {
-        LOGE("ConstructOutJson failed, res: %d.", res);
+        LOGE("ConstructOutJson failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     CJson *payload = GetObjFromJson(out, FIELD_PAYLOAD);
@@ -131,14 +131,14 @@ static int PackageMsgForClientConfirm(PakeParams *params, CJson *out)
     }
     res = PackagePakeClientConfirmData(params, payload);
     if (res != HC_SUCCESS) {
-        LOGE("PackagePakeClientConfirmData failed, res: %d.", res);
+        LOGE("PackagePakeClientConfirmData failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     // differentiated data
     res = AddByteToJson(payload, FIELD_CHALLENGE, params->baseParams.challengeSelf.val,
         params->baseParams.challengeSelf.length);
     if (res != HC_SUCCESS) {
-        LOGE("Add challengeSelf failed, res: %d.", res);
+        LOGE("Add challengeSelf failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     return res;
@@ -148,24 +148,24 @@ static int PakeClientConfirm(AsyBaseCurTask *task, PakeParams *params, const CJs
 {
     int res;
     if (task->taskStatus < TASK_STATUS_CLIENT_PAKE_REQUEST) {
-        LOGE("Invalid taskStatus: %d", task->taskStatus);
+        LOGE("Invalid taskStatus: %" LOG_PUB "d", task->taskStatus);
         return HC_ERR_BAD_MESSAGE;
     }
     if (task->taskStatus > TASK_STATUS_CLIENT_PAKE_REQUEST) {
-        LOGI("The message is repeated, ignore it, status: %d", task->taskStatus);
+        LOGI("The message is repeated, ignore it, status: %" LOG_PUB "d", task->taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
 
     res = ParseMsgForClientConfirm(params, in);
     if (res != HC_SUCCESS) {
-        LOGE("ParseMsgForClientConfirm failed, res: %d.", res);
+        LOGE("ParseMsgForClientConfirm failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     if (params->isPskSupported && (params->opCode == AUTHENTICATE || params->opCode == OP_UNBIND)) {
         res = FillPskWithDerivedKeyHex(params);
         if (res != HC_SUCCESS) {
-            LOGE("FillPskWithDerivedKeyHex failed, res: %x.", res);
+            LOGE("FillPskWithDerivedKeyHex failed, res: %" LOG_PUB "x.", res);
             return res;
         }
     }
@@ -173,13 +173,13 @@ static int PakeClientConfirm(AsyBaseCurTask *task, PakeParams *params, const CJs
     // execute
     res = ClientConfirmPakeV1Protocol(&(params->baseParams));
     if (res != HC_SUCCESS) {
-        LOGE("ClientConfirmPakeV1Protocol failed, res:%d", res);
+        LOGE("ClientConfirmPakeV1Protocol failed, res:%" LOG_PUB "d", res);
         return res;
     }
 
     res = PackageMsgForClientConfirm(params, out);
     if (res != HC_SUCCESS) {
-        LOGE("PackageMsgForClientConfirm failed, res: %d.", res);
+        LOGE("PackageMsgForClientConfirm failed, res: %" LOG_PUB "d.", res);
         return res;
     }
 
@@ -191,11 +191,11 @@ static int PakeClientConfirm(AsyBaseCurTask *task, PakeParams *params, const CJs
 static int PakeClientVerifyConfirm(AsyBaseCurTask *task, PakeParams *params, const CJson *in, int *status)
 {
     if (task->taskStatus < TASK_STATUS_CLIENT_PAKE_CONFIRM) {
-        LOGE("Invalid taskStatus: %d", task->taskStatus);
+        LOGE("Invalid taskStatus: %" LOG_PUB "d", task->taskStatus);
         return HC_ERR_BAD_MESSAGE;
     }
     if (task->taskStatus > TASK_STATUS_CLIENT_PAKE_CONFIRM) {
-        LOGI("The message is repeated, ignore it, status: %d", task->taskStatus);
+        LOGI("The message is repeated, ignore it, status: %" LOG_PUB "d", task->taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
@@ -203,14 +203,14 @@ static int PakeClientVerifyConfirm(AsyBaseCurTask *task, PakeParams *params, con
     // parse message
     int res = ParsePakeServerConfirmMessage(params, in);
     if (res != HC_SUCCESS) {
-        LOGE("ParsePakeServerConfirmMessage failed, res: %d.", res);
+        LOGE("ParsePakeServerConfirmMessage failed, res: %" LOG_PUB "d.", res);
         return res;
     }
 
     // execute
     res = ClientVerifyConfirmPakeV1Protocol(&params->baseParams);
     if (res != HC_SUCCESS) {
-        LOGE("ClientVerifyConfirmPakeV1Protocol failed, res: %d.", res);
+        LOGE("ClientVerifyConfirmPakeV1Protocol failed, res: %" LOG_PUB "d.", res);
         return res;
     }
 
@@ -243,13 +243,13 @@ static int Process(struct AsyBaseCurTaskT *task, PakeParams *params, const CJson
     }
 OUT:
     if (res != HC_SUCCESS) {
-        LOGE("Process step:%d failed, res: %x.", step, res);
+        LOGE("Process step:%" LOG_PUB "d failed, res: %" LOG_PUB "x.", step, res);
         return res;
     }
     if (step != STEP_THREE) {
         res = ClientProtocolMessageOut(out, params->opCode, step);
         if (res != HC_SUCCESS) {
-            LOGE("ClientProtocolMessageOut failed, res: %x.", res);
+            LOGE("ClientProtocolMessageOut failed, res: %" LOG_PUB "x.", res);
         }
     }
     return res;

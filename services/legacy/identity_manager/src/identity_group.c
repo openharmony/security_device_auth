@@ -72,7 +72,7 @@ static void GetGroupInfoByGroupId(int32_t osAccountId, const char *groupId, Grou
     queryParams.groupId = groupId;
     int32_t ret = QueryGroups(osAccountId, &queryParams, groupEntryVec);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to query groups for groupId: %s!", groupId);
+        LOGE("Failed to query groups for groupId: %" LOG_PUB "s!", groupId);
     }
 }
 
@@ -308,7 +308,7 @@ static int32_t GetIdentityInfos(
             AddNoPseudonymIdentityInfo(osAccountId, groupEntry, deviceId, isUdid, identityInfoVec);
         }
     }
-    LOGI("The identity info size is: %u", identityInfoVec->size(identityInfoVec));
+    LOGI("The identity info size is: %" LOG_PUB "u", identityInfoVec->size(identityInfoVec));
     return HC_SUCCESS;
 }
 
@@ -773,8 +773,8 @@ static int32_t GeneratePskAliasAndCheckExist(const CJson *in, const char *groupI
             return ret;
         }
     }
-    LOGI("psk alias: %x %x %x %x****.", pskKeyAlias->val[DEV_AUTH_ZERO], pskKeyAlias->val[DEV_AUTH_ONE],
-        pskKeyAlias->val[DEV_AUTH_TWO], pskKeyAlias->val[DEV_AUTH_THREE]);
+    LOGI("psk alias: %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x****.", pskKeyAlias->val[DEV_AUTH_ZERO],
+        pskKeyAlias->val[DEV_AUTH_ONE], pskKeyAlias->val[DEV_AUTH_TWO], pskKeyAlias->val[DEV_AUTH_THREE]);
     if (GetLoaderInstance()->checkKeyExist(pskKeyAlias, isPeerFromUpgrade, osAccountId) != HC_SUCCESS) {
         ret = ComputeAndSavePsk(osAccountId, groupId, deviceEntry, pskKeyAlias);
     }
@@ -845,10 +845,10 @@ static int32_t GetSharedSecretForP2p(
     int32_t ret;
     if (protocolType == ALG_ISO) {
         ret = GetSharedSecretForP2pInIso(in, groupId, sharedSecret);
-        LOGI("get shared secret for p2p in iso result: %d", ret);
+        LOGI("get shared secret for p2p in iso result: %" LOG_PUB "d", ret);
     } else {
         ret = GetSharedSecretForP2pInPake(in, groupId, sharedSecret);
-        LOGI("get shared secret for p2p in pake result: %d", ret);
+        LOGI("get shared secret for p2p in pake result: %" LOG_PUB "d", ret);
     }
     return ret;
 }

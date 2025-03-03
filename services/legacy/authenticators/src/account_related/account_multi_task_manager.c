@@ -25,11 +25,11 @@ static bool IsManagerHasTaskId(int32_t taskId)
 {
     for (uint32_t i = 0; i < ACCOUNT_MULTI_TASK_MAX_SIZE; ++i) {
         if (g_taskManager.taskArray[i] != NULL && taskId == g_taskManager.taskArray[i]->taskId) {
-            LOGD("Task already exists, taskId: %d.", taskId);
+            LOGD("Task already exists, taskId: %" LOG_PUB "d.", taskId);
             return true;
         }
     }
-    LOGD("Multi auth manager do not has task id(%d).", taskId);
+    LOGD("Multi auth manager do not has task id(%" LOG_PUB "d).", taskId);
     return false;
 }
 
@@ -84,7 +84,7 @@ static AccountTask *GetTaskFromManager(int32_t taskId)
             return g_taskManager.taskArray[i];
         }
     }
-    LOGE("Task does not exist, taskId: %d.", taskId);
+    LOGE("Task does not exist, taskId: %" LOG_PUB "d.", taskId);
     return NULL;
 }
 

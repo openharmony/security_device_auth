@@ -26,12 +26,12 @@
 namespace OHOS {
     static void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn)
     {
-        LOGE("error return: %s", errorReturn);
+        LOGE("error return: %" LOG_PUB "s", errorReturn);
     }
 
     static void OnFinish(int64_t requestId, int operationCode, const char *authReturn)
     {
-        LOGI("return value: %s", authReturn);
+        LOGI("return value: %" LOG_PUB "s", authReturn);
     }
 
     static void OnSessionKeyReturned(int64_t requestId, const uint8_t *sessionKey, uint32_t sessionKeyLen) {}

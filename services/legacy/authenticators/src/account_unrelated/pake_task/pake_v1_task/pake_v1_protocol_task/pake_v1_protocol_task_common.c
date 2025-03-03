@@ -73,7 +73,7 @@ static int32_t AllocReturnKey(PakeParams *params, const CJson *in)
     }
     int32_t res = GetIntFromJson(in, FIELD_KEY_LENGTH, (int *)&(params->returnKey.length));
     if (res != HC_SUCCESS) {
-        LOGD("Get key length failed, use default, res: %d", res);
+        LOGD("Get key length failed, use default, res: %" LOG_PUB "d", res);
         params->returnKey.length = DEFAULT_RETURN_KEY_LENGTH;
     }
     if (params->returnKey.length < MIN_OUTPUT_KEY_LEN || params->returnKey.length > MAX_OUTPUT_KEY_LEN) {
@@ -82,7 +82,7 @@ static int32_t AllocReturnKey(PakeParams *params, const CJson *in)
     }
     res = InitSingleParam(&params->returnKey, params->returnKey.length);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for returnKey failed, res: %d.", res);
+        LOGE("InitSingleParam for returnKey failed, res: %" LOG_PUB "d.", res);
     }
     return res;
 }
@@ -195,13 +195,13 @@ int32_t InitDasPakeV1Params(PakeParams *params, const CJson *in)
     }
     int32_t res = InitPakeV1BaseParams(osAccountId, &(params->baseParams));
     if (res != HC_SUCCESS) {
-        LOGE("InitPakeV1BaseParams failed, res: %d.", res);
+        LOGE("InitPakeV1BaseParams failed, res: %" LOG_PUB "d.", res);
         goto ERR;
     }
 
     res = FillDasPakeParams(params, in);
     if (res != HC_SUCCESS) {
-        LOGE("FillDasPakeParams failed, res: %d.", res);
+        LOGE("FillDasPakeParams failed, res: %" LOG_PUB "d.", res);
         goto ERR;
     }
     (void)GetBoolFromJson(in, FIELD_IS_SELF_FROM_UPGRADE, &params->isSelfFromUpgrade);
@@ -222,7 +222,7 @@ int32_t InitDasPakeV1Params(PakeParams *params, const CJson *in)
 
     res = AllocReturnKey(params, in);
     if (res != HC_SUCCESS) {
-        LOGE("AllocReturnKey failed, res: %d.", res);
+        LOGE("AllocReturnKey failed, res: %" LOG_PUB "d.", res);
         goto ERR;
     }
 
@@ -245,7 +245,7 @@ static int32_t ConvertPakeV1Psk(const Uint8Buff *srcPsk, PakeParams *params)
 {
     int res = InitSingleParam(&(params->baseParams.psk), PAKE_PSK_LEN * BYTE_TO_HEX_OPER_LENGTH + 1);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for psk failed, res: %d.", res);
+        LOGE("InitSingleParam for psk failed, res: %" LOG_PUB "d.", res);
         return res;
     }
 
@@ -268,7 +268,7 @@ static int32_t GeneratePskAlias(const PakeParams *params, Uint8Buff *pskKeyAlias
     int32_t res = GenerateKeyAlias(&packageName, &serviceType, KEY_ALIAS_PSK, &(params->baseParams.idPeer),
         pskKeyAlias);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateKeyAlias for psk failed, res: %d.", res);
+        LOGE("GenerateKeyAlias for psk failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     if (params->isPeerFromUpgrade) {
@@ -287,7 +287,7 @@ int32_t FillPskWithDerivedKeyHex(PakeParams *params)
     if (!(params->baseParams.isClient)) {
         res = params->baseParams.loader->generateRandom(&(params->nonce));
         if (res != HC_SUCCESS) {
-            LOGE("Generate nonce failed, res: %d.", res);
+            LOGE("Generate nonce failed, res: %" LOG_PUB "d.", res);
             return res;
         }
     }
@@ -298,14 +298,14 @@ int32_t FillPskWithDerivedKeyHex(PakeParams *params)
         return res;
     }
 
-    LOGI("Psk alias(HEX): %x%x%x%x****.", pskAliasVal[DEV_AUTH_ZERO], pskAliasVal[DEV_AUTH_ONE],
-        pskAliasVal[DEV_AUTH_TWO], pskAliasVal[DEV_AUTH_THREE]);
+    LOGI("Psk alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.", pskAliasVal[DEV_AUTH_ZERO],
+        pskAliasVal[DEV_AUTH_ONE], pskAliasVal[DEV_AUTH_TWO], pskAliasVal[DEV_AUTH_THREE]);
     bool isDeStorage = params->isSelfFromUpgrade;
     if (params->baseParams.loader->checkKeyExist(&pskAlias, isDeStorage, params->baseParams.osAccountId) !=
         HC_SUCCESS) {
         res = GetStandardTokenManagerInstance()->computeAndSavePsk(params);
         if (res != HC_SUCCESS) {
-            LOGE("ComputeAndSavePsk failed, res: %d.", res);
+            LOGE("ComputeAndSavePsk failed, res: %" LOG_PUB "d.", res);
             return res;
         }
     }
@@ -317,14 +317,14 @@ int32_t FillPskWithDerivedKeyHex(PakeParams *params)
     PRINT_DEBUG_MSG(params->nonce.val, params->nonce.length, "nonceValue");
     res = params->baseParams.loader->computeHkdf(&keyParams, &(params->nonce), &keyInfo, &pskByte);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeHkdf for psk failed, res: %d.", res);
+        LOGE("ComputeHkdf for psk failed, res: %" LOG_PUB "d.", res);
         FreeAndCleanKey(&(params->baseParams.psk));
         return res;
     }
 
     res = ConvertPakeV1Psk(&pskByte, params);
     if (res != HC_SUCCESS) {
-        LOGE("ConvertPakeV1Psk failed, res: %d.", res);
+        LOGE("ConvertPakeV1Psk failed, res: %" LOG_PUB "d.", res);
         FreeAndCleanKey(&(params->baseParams.psk));
     }
     return res;

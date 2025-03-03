@@ -181,7 +181,7 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
     if (!params->isClient) {
         res = params->loader->generateRandom(&(params->salt));
         if (res != HC_SUCCESS) {
-            LOGE("Generate salt failed, res: %x.", res);
+            LOGE("Generate salt failed, res: %" LOG_PUB "x.", res);
             goto CLEAN_UP;
         }
     }
@@ -189,7 +189,7 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
 
     res = params->loader->generateRandom(&(params->challengeSelf));
     if (res != HC_SUCCESS) {
-        LOGE("Generate challengeSelf failed, res: %x.", res);
+        LOGE("Generate challengeSelf failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     PRINT_DEBUG_MSG(params->challengeSelf.val, params->challengeSelf.length, "challengeSelf");
@@ -200,7 +200,7 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
     PRINT_SENSITIVE_DATA("pskValue", (char *)params->psk.val);
     PRINT_DEBUG_MSG(secret.val, secret.length, "secretValue");
     if (res != HC_SUCCESS) {
-        LOGE("Derive secret from psk failed, res: %x.", res);
+        LOGE("Derive secret from psk failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     FreeAndCleanKey(&params->psk);
@@ -213,7 +213,8 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
         res = HC_ERR_INVALID_ALG;
     }
     if (res != HC_SUCCESS) {
-        LOGE("GeneratePakeParams failed, pakeAlgType: 0x%x, res: %x.", params->supportedPakeAlg, res);
+        LOGE("GeneratePakeParams failed, pakeAlgType: 0x%" LOG_PUB "x, res: %" LOG_PUB "x.",
+            params->supportedPakeAlg, res);
         goto CLEAN_UP;
     }
     FreeAndCleanKey(&params->base);
@@ -245,7 +246,7 @@ static int32_t DeriveKeyFromSharedSecret(PakeBaseParams *params)
     };
     res = params->loader->computeHkdf(&keyParams, &(params->salt), &keyInfo, &unionKey);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeHkdf for unionKey failed, res: %x.", res);
+        LOGE("ComputeHkdf for unionKey failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     PRINT_DEBUG_MSG(unionKey.val, unionKey.length, "unionKey");
@@ -272,7 +273,7 @@ static int32_t GenerateSessionKey(PakeBaseParams *params)
 {
     int32_t res = InitSingleParam(&params->sharedSecret, params->innerKeyLen);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for sharedSecret failed, res: %x.", res);
+        LOGE("InitSingleParam for sharedSecret failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
@@ -284,14 +285,15 @@ static int32_t GenerateSessionKey(PakeBaseParams *params)
         res = HC_ERR_INVALID_ALG;
     }
     if (res != HC_SUCCESS) {
-        LOGE("AgreeDlSharedSecret failed, pakeAlgType: 0x%x, res: %x.", params->supportedPakeAlg, res);
+        LOGE("AgreeDlSharedSecret failed, pakeAlgType: 0x%" LOG_PUB "x, res: %" LOG_PUB "x.",
+            params->supportedPakeAlg, res);
         goto CLEAN_UP;
     }
     FreeAndCleanKey(&params->eskSelf);
 
     res = DeriveKeyFromSharedSecret(params);
     if (res != HC_SUCCESS) {
-        LOGE("DeriveKeyFromSharedSecret failed, res: %x.", res);
+        LOGE("DeriveKeyFromSharedSecret failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     return res;
@@ -322,7 +324,7 @@ static int32_t GenerateProof(PakeBaseParams *params)
     KeyParams keyParams = { { params->hmacKey.val, params->hmacKey.length, false }, false, params->osAccountId };
     res = params->loader->computeHmac(&keyParams, &challenge, &(params->kcfData));
     if (res != HC_SUCCESS) {
-        LOGE("Compute hmac for kcfData failed, res: %x.", res);
+        LOGE("Compute hmac for kcfData failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     PRINT_DEBUG_MSG(params->kcfData.val, params->kcfData.length, "kcfData");
@@ -355,7 +357,7 @@ static int32_t VerifyProof(PakeBaseParams *params)
     KeyParams keyParams = { { params->hmacKey.val, params->hmacKey.length, false }, false, params->osAccountId };
     res = params->loader->computeHmac(&keyParams, &challenge, &verifyProof);
     if (res != HC_SUCCESS) {
-        LOGE("Compute hmac for kcfData failed, res: %x.", res);
+        LOGE("Compute hmac for kcfData failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     PRINT_DEBUG_MSG(verifyProof.val, verifyProof.length, "verifyProof");
@@ -379,19 +381,19 @@ int32_t ClientConfirmPakeV1Protocol(PakeBaseParams *params)
     }
     int32_t res = GeneratePakeParams(params);
     if (res != HC_SUCCESS) {
-        LOGE("GeneratePakeParams failed, res: %x.", res);
+        LOGE("GeneratePakeParams failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
     res = GenerateSessionKey(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateSessionKey failed, res: %x.", res);
+        LOGE("GenerateSessionKey failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
     res = GenerateProof(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateProof failed, res: %x.", res);
+        LOGE("GenerateProof failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     return res;
@@ -408,7 +410,7 @@ int32_t ClientVerifyConfirmPakeV1Protocol(PakeBaseParams *params)
     }
     int32_t res = VerifyProof(params);
     if (res != HC_SUCCESS) {
-        LOGE("VerifyProof failed, res: %x.", res);
+        LOGE("VerifyProof failed, res: %" LOG_PUB "x.", res);
         CleanPakeSensitiveKeys(params);
     }
     return res;
@@ -422,7 +424,7 @@ int32_t ServerResponsePakeV1Protocol(PakeBaseParams *params)
     }
     int32_t res = GeneratePakeParams(params);
     if (res != HC_SUCCESS) {
-        LOGE("GeneratePakeParams failed, res: %x.", res);
+        LOGE("GeneratePakeParams failed, res: %" LOG_PUB "x.", res);
         CleanPakeSensitiveKeys(params);
     }
     return res;
@@ -436,19 +438,19 @@ int32_t ServerConfirmPakeV1Protocol(PakeBaseParams *params)
     }
     int32_t res = GenerateSessionKey(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateSessionKey failed, res: %x.", res);
+        LOGE("GenerateSessionKey failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
     res = VerifyProof(params);
     if (res != HC_SUCCESS) {
-        LOGE("VerifyProof failed, res: %x.", res);
+        LOGE("VerifyProof failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
     res = GenerateProof(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateProof failed, res: %x.", res);
+        LOGE("GenerateProof failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 

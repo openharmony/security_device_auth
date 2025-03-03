@@ -127,13 +127,13 @@ static int32_t EncodeAddCredentialParams(uintptr_t callCtx, int32_t osAccountId,
     int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
         sizeof(osAccountId));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQUEST_PARAMS, (const uint8_t *)requestParams,
         HcStrlen(requestParams) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQUEST_PARAMS);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_REQUEST_PARAMS);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     return HC_SUCCESS;
@@ -194,7 +194,7 @@ static int32_t IpcCmAddCredential(int32_t osAccountId, const char *requestParams
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("CreateCallCtx failed, ret %d", ret);
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeAddCredentialParams(callCtx, osAccountId, requestParams);
@@ -218,7 +218,7 @@ static int32_t IpcCmAddCredential(int32_t osAccountId, const char *requestParams
     }
     ret = AddCredentialIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
     DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %d", ret);
+    LOGI("process done, ret %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -234,20 +234,20 @@ static int32_t IpcCmRegChangeListener(const char *appId, CredChangeListener *lis
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("CreateCallCtx failed, ret %d", ret);
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_APPID, (const uint8_t *)appId,
         HcStrlen(appId) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_APPID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_APPID);
         DestroyCallCtx(&callCtx, NULL);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_LISTERNER, (const uint8_t *)listener,
         sizeof(*listener));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_LISTERNER);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_LISTERNER);
         DestroyCallCtx(&callCtx, NULL);
         return HC_ERR_IPC_BUILD_PARAM;
     }
@@ -258,7 +258,7 @@ static int32_t IpcCmRegChangeListener(const char *appId, CredChangeListener *lis
         AddIpcCliCallbackCtx(appId, 0, &g_ipcCredListenerCbList);
     }
     DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %d", ret);
+    LOGI("process done, ret %" LOG_PUB "d", ret);
     return (ret == HC_SUCCESS) ? HC_SUCCESS : HC_ERR_IPC_PROC_FAILED;
 }
 
@@ -274,13 +274,13 @@ static int32_t IpcCmUnRegChangeListener(const char *appId)
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("CreateCallCtx failed, ret %d", ret);
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_APPID, (const uint8_t *)appId,
         HcStrlen(appId) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_APPID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_APPID);
         DestroyCallCtx(&callCtx, NULL);
         return HC_ERR_IPC_BUILD_PARAM;
     }
@@ -289,7 +289,7 @@ static int32_t IpcCmUnRegChangeListener(const char *appId)
         DelIpcCliCallbackCtx(appId, &g_ipcCredListenerCbList);
     }
     DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %d", ret);
+    LOGI("process done, ret %" LOG_PUB "d", ret);
     return HC_SUCCESS;
 }
 
@@ -298,13 +298,13 @@ static int32_t EncodeExportCredentialParams(uintptr_t callCtx, int32_t osAccount
     int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
         sizeof(osAccountId));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_CRED_ID, (const uint8_t *)credId,
         HcStrlen(credId) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_CRED_ID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_CRED_ID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     return HC_SUCCESS;
@@ -344,7 +344,7 @@ static int32_t IpcCmExportCredential(int32_t osAccountId, const char *credId, ch
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("CreateCallCtx failed, ret %d", ret);
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeExportCredentialParams(callCtx, osAccountId, credId);
@@ -368,7 +368,7 @@ static int32_t IpcCmExportCredential(int32_t osAccountId, const char *credId, ch
     }
     ret = ExportCredentialIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
     DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %d", ret);
+    LOGI("process done, ret %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -405,20 +405,20 @@ static int32_t IpcCmQueryCredByParams(int32_t osAccountId, const char *requestPa
     }
     int32_t ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("CreateCallCtx failed, ret %d", ret);
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
         sizeof(osAccountId));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         DestroyCallCtx(&callCtx, NULL);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_QUERY_PARAMS, (const uint8_t *)requestParams,
         HcStrlen(requestParams) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_QUERY_PARAMS);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_QUERY_PARAMS);
         DestroyCallCtx(&callCtx, NULL);
         return HC_ERR_IPC_BUILD_PARAM;
     }
@@ -439,7 +439,7 @@ static int32_t IpcCmQueryCredByParams(int32_t osAccountId, const char *requestPa
     }
     ret = SearchCredsIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnCredList);
     DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %d", ret);
+    LOGI("process done, ret %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -476,20 +476,20 @@ static int32_t IpcCmQueryCredInfoByCredId(int32_t osAccountId, const char *credI
     }
     int32_t ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("CreateCallCtx failed, ret %d", ret);
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
         sizeof(osAccountId));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         DestroyCallCtx(&callCtx, NULL);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_CRED_ID, (const uint8_t *)credId,
         HcStrlen(credId) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_QUERY_PARAMS);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_QUERY_PARAMS);
         DestroyCallCtx(&callCtx, NULL);
         return HC_ERR_IPC_BUILD_PARAM;
     }
@@ -509,7 +509,7 @@ static int32_t IpcCmQueryCredInfoByCredId(int32_t osAccountId, const char *credI
         return ret;
     }
     ret = SearchCredInfoIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnCredInfo);
-    LOGI("process done, ret %d", ret);
+    LOGI("process done, ret %" LOG_PUB "d", ret);
     DestroyCallCtx(&callCtx, NULL);
     return ret;
 }
@@ -519,12 +519,12 @@ static int32_t EncodeDeleteCredentialParams(uintptr_t callCtx, int32_t osAccount
     int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
         sizeof(osAccountId));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_CRED_ID, (const uint8_t *)credId, HcStrlen(credId) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_CRED_ID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_CRED_ID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     return HC_SUCCESS;
@@ -543,7 +543,7 @@ static int32_t IpcCmDeleteCredential(int32_t osAccountId, const char *credId)
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("CreateCallCtx failed, ret %d", ret);
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeDeleteCredentialParams(callCtx, osAccountId, credId);
@@ -562,7 +562,7 @@ static int32_t IpcCmDeleteCredential(int32_t osAccountId, const char *credId)
     int32_t inOutLen = sizeof(int32_t);
     GetIpcReplyByType(&replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %d", ret);
+    LOGI("process done, ret %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -571,18 +571,18 @@ static int32_t EncodeUpdateParams(uintptr_t callCtx, int32_t osAccountId, const 
     int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
         sizeof(osAccountId));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_CRED_ID, (const uint8_t *)credId, HcStrlen(credId) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_CRED_ID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_CRED_ID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQUEST_PARAMS, (const uint8_t *)requestParams,
         HcStrlen(requestParams) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQUEST_PARAMS);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_REQUEST_PARAMS);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     return HC_SUCCESS;
@@ -601,7 +601,7 @@ static int32_t IpcCmUpdateCredInfo(int32_t osAccountId, const char *credId, cons
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("CreateCallCtx failed, ret %d", ret);
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeUpdateParams(callCtx, osAccountId, credId, requestParams);
@@ -620,7 +620,7 @@ static int32_t IpcCmUpdateCredInfo(int32_t osAccountId, const char *credId, cons
     int32_t inOutLen = sizeof(int32_t);
     GetIpcReplyByType(&replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %d", ret);
+    LOGI("process done, ret %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -630,18 +630,18 @@ static int32_t EncodeAgreeCredentialParams(uintptr_t callCtx, int32_t osAccountI
     int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
         sizeof(osAccountId));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_CRED_ID, (const uint8_t *)selfCredId, HcStrlen(selfCredId) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_CRED_ID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_CRED_ID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQUEST_PARAMS, (const uint8_t *)requestParams,
         HcStrlen(requestParams) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQUEST_PARAMS);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_REQUEST_PARAMS);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     return HC_SUCCESS;
@@ -661,7 +661,7 @@ static int32_t IpcCmAgreeCredential(int32_t osAccountId, const char *selfCredId,
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("CreateCallCtx failed, ret %d", ret);
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeAgreeCredentialParams(callCtx, osAccountId, selfCredId, requestParams);
@@ -685,7 +685,7 @@ static int32_t IpcCmAgreeCredential(int32_t osAccountId, const char *selfCredId,
     }
     ret = AgreeCredentialIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
     DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %d", ret);
+    LOGI("process done, ret %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -694,13 +694,13 @@ static int32_t EncodeDelCredByParams(uintptr_t callCtx, int32_t osAccountId, con
     int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
         sizeof(osAccountId));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQUEST_PARAMS, (const uint8_t *)requestParams,
         HcStrlen(requestParams) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQUEST_PARAMS);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_REQUEST_PARAMS);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     return HC_SUCCESS;
@@ -740,7 +740,7 @@ static int32_t IpcCmDelCredByParams(int32_t osAccountId, const char *requestPara
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("CreateCallCtx failed, ret %d", ret);
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeDelCredByParams(callCtx, osAccountId, requestParams);
@@ -764,7 +764,7 @@ static int32_t IpcCmDelCredByParams(int32_t osAccountId, const char *requestPara
     }
     ret = DelCredByParamsIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
     DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %d", ret);
+    LOGI("process done, ret %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -773,13 +773,13 @@ static int32_t EncodeBatchUpdateParam(uintptr_t callCtx, int32_t osAccountId, co
     int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
         sizeof(osAccountId));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQUEST_PARAMS, (const uint8_t *)requestParams,
         HcStrlen(requestParams) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_REQUEST_PARAMS);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_REQUEST_PARAMS);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     return HC_SUCCESS;
@@ -819,7 +819,7 @@ static int32_t IpcCmBatchUpdateCredentials(int32_t osAccountId, const char *requ
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("CreateCallCtx failed, ret %d", ret);
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeBatchUpdateParam(callCtx, osAccountId, requestParams);
@@ -843,7 +843,7 @@ static int32_t IpcCmBatchUpdateCredentials(int32_t osAccountId, const char *requ
     }
     ret = BatchUpdateCredIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
     DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %d", ret);
+    LOGI("process done, ret %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -870,23 +870,23 @@ static int32_t EncodeAuthDeviceParams(uintptr_t callCtx, int32_t osAccountId, in
     int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, (const uint8_t *)&osAccountId,
         sizeof(osAccountId));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, param id %d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)(&authReqId), sizeof(authReqId));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_REQID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, type %" LOG_PUB "d", ret, PARAM_TYPE_REQID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_AUTH_PARAMS, (const uint8_t *)authParams,
         HcStrlen(authParams) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_AUTH_PARAMS);
+        LOGE("set request param failed, ret %" LOG_PUB "d, type %" LOG_PUB "d", ret, PARAM_TYPE_AUTH_PARAMS);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_DEV_AUTH_CB, (const uint8_t *)callback, sizeof(*callback));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_DEV_AUTH_CB);
+        LOGE("set request param failed, ret %" LOG_PUB "d, type %" LOG_PUB "d", ret, PARAM_TYPE_DEV_AUTH_CB);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_AUTH_ID);
@@ -908,7 +908,7 @@ static int32_t IpcCmAuthCredential(int32_t osAccountId, int64_t authReqId, const
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("CreateCallCtx failed, ret %d", ret);
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeAuthDeviceParams(callCtx, osAccountId, authReqId, authParams, caCallback);
@@ -926,7 +926,7 @@ static int32_t IpcCmAuthCredential(int32_t osAccountId, int64_t authReqId, const
     ret = HC_ERR_IPC_UNKNOW_REPLY;
     inOutLen = sizeof(int32_t);
     GetIpcReplyByType(&replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
-    LOGI("process done, ret %d", ret);
+    LOGI("process done, ret %" LOG_PUB "d", ret);
     DestroyCallCtx(&callCtx, NULL);
     return ret;
 }
@@ -936,17 +936,17 @@ static int32_t EncodeProcessDataParams(uintptr_t callCtx, int64_t authReqId,
 {
     int32_t ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_REQID, (const uint8_t *)(&authReqId), sizeof(authReqId));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_REQID);
+        LOGE("set request param failed, ret %" LOG_PUB "d, type %" LOG_PUB "d", ret, PARAM_TYPE_REQID);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_COMM_DATA, (const uint8_t *)data, dataLen);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_COMM_DATA);
+        LOGE("set request param failed, ret %" LOG_PUB "d, type %" LOG_PUB "d", ret, PARAM_TYPE_COMM_DATA);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_DEV_AUTH_CB, (const uint8_t *)callback, sizeof(*callback));
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %d, type %d", ret, PARAM_TYPE_DEV_AUTH_CB);
+        LOGE("set request param failed, ret %" LOG_PUB "d, type %" LOG_PUB "d", ret, PARAM_TYPE_DEV_AUTH_CB);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     SetCbCtxToDataCtx(callCtx, 0x0);
@@ -968,7 +968,7 @@ static int32_t IpcCmProcessCredData(int64_t authReqId, const uint8_t *data, uint
     }
     ret = CreateCallCtx(&callCtx, NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("CreateCallCtx failed, ret %d", ret);
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeProcessDataParams(callCtx, authReqId, data, dataLen, callback);
@@ -986,7 +986,7 @@ static int32_t IpcCmProcessCredData(int64_t authReqId, const uint8_t *data, uint
     ret = HC_ERR_IPC_UNKNOW_REPLY;
     inOutLen = sizeof(int32_t);
     GetIpcReplyByType(&replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
-    LOGI("process done, ret %d", ret);
+    LOGI("process done, ret %" LOG_PUB "d", ret);
     DestroyCallCtx(&callCtx, NULL);
     return ret;
 }

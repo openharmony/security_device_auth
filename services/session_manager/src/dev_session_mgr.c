@@ -60,8 +60,9 @@ static void RemoveTimeoutSession(void)
             continue;
         }
         DevSession *session = sessionInfo->session;
-        LOGI("session timeout. [AppId]: %s, [Id]: %" PRId64, session->appId, session->id);
-        LOGI("session timeout. [TimeLimit(/s)]: %d, [RunningTime(/s)]: %" PRId64, TIME_OUT_VALUE, runningTime);
+        LOGI("session timeout. [AppId]: %" LOG_PUB "s, [Id]: %" LOG_PUB PRId64, session->appId, session->id);
+        LOGI("session timeout. [TimeLimit(/s)]: %" LOG_PUB "d, [RunningTime(/s)]: %" LOG_PUB PRId64,
+            TIME_OUT_VALUE, runningTime);
         ProcessErrorCallback(session->id, session->opCode, HC_ERR_TIME_OUT, NULL, &session->callback);
         session->destroy(session);
         g_sessionInfoList.eraseElement(&(g_sessionInfoList), sessionInfo, index);
@@ -73,12 +74,12 @@ static int32_t CheckEnvForOpenSession(int64_t sessionId)
     SessionInfo *sessionInfo;
     int32_t res = GetSessionInfo(sessionId, &sessionInfo);
     if (res == HC_SUCCESS) {
-        LOGE("session has existed. [Id]: %" PRId64, sessionId);
+        LOGE("session has existed. [Id]: %" LOG_PUB PRId64, sessionId);
         return HC_ERR_REQUEST_EXIST;
     }
     uint32_t curSessionNum = HC_VECTOR_SIZE(&g_sessionInfoList);
     if (curSessionNum >= MAX_AUTH_SESSION_COUNT) {
-        LOGE("The number of sessions has reached the maximum limit. [CurNum]: %u, [NumLimit]: %d",
+        LOGE("The number of sessions has reached the maximum limit. [CurNum]: %" LOG_PUB "u, [NumLimit]: %" LOG_PUB "d",
             curSessionNum, MAX_AUTH_SESSION_COUNT);
         return HC_ERR_SESSION_IS_FULL;
     }
@@ -146,7 +147,7 @@ int32_t OpenDevSession(int64_t sessionId, const char *appId, SessionInitParams *
     DevSession *session;
     res = CreateDevSession(sessionId, appId, params, &session);
     if (res != HC_SUCCESS) {
-        LOGE("create session fail. [AppId]: %s, [Id]: %" PRId64, appId, sessionId);
+        LOGE("create session fail. [AppId]: %" LOG_PUB "s, [Id]: %" LOG_PUB PRId64, appId, sessionId);
         UnlockHcMutex(&g_sessionMutex);
         return res;
     }
@@ -156,7 +157,7 @@ int32_t OpenDevSession(int64_t sessionId, const char *appId, SessionInitParams *
         UnlockHcMutex(&g_sessionMutex);
         return res;
     }
-    LOGI("create session success. [AppId]: %s, [CurNum]: %u, [Id]: %" PRId64,
+    LOGI("create session success. [AppId]: %" LOG_PUB "s, [CurNum]: %" LOG_PUB "u, [Id]: %" LOG_PUB PRId64,
         appId, HC_VECTOR_SIZE(&g_sessionInfoList), sessionId);
     UnlockHcMutex(&g_sessionMutex);
     return HC_SUCCESS;
@@ -169,7 +170,7 @@ int32_t StartDevSession(int64_t sessionId)
     SessionInfo *sessionInfo;
     int32_t res = GetSessionInfo(sessionId, &sessionInfo);
     if (res != HC_SUCCESS) {
-        LOGE("session not found. [Id]: %" PRId64, sessionId);
+        LOGE("session not found. [Id]: %" LOG_PUB PRId64, sessionId);
         UnlockHcMutex(&g_sessionMutex);
         return res;
     }
@@ -190,7 +191,7 @@ int32_t ProcessDevSession(int64_t sessionId, const CJson *receviedMsg, bool *isF
     SessionInfo *sessionInfo;
     int32_t res = GetSessionInfo(sessionId, &sessionInfo);
     if (res != HC_SUCCESS) {
-        LOGE("session not found. [Id]: %" PRId64, sessionId);
+        LOGE("session not found. [Id]: %" LOG_PUB PRId64, sessionId);
         UnlockHcMutex(&g_sessionMutex);
         return res;
     }
@@ -211,12 +212,13 @@ void CloseDevSession(int64_t sessionId)
         if (session->id == sessionId) {
             session->destroy(session);
             HC_VECTOR_POPELEMENT(&g_sessionInfoList, ptr, index);
-            LOGI("close session success. [CurNum]: %u, [Id]: %" PRId64, HC_VECTOR_SIZE(&g_sessionInfoList), sessionId);
+            LOGI("close session success. [CurNum]: %" LOG_PUB "u, [Id]: %" LOG_PUB PRId64,
+                HC_VECTOR_SIZE(&g_sessionInfoList), sessionId);
             UnlockHcMutex(&g_sessionMutex);
             return;
         }
     }
-    LOGI("session not exist. [Id]: %" PRId64, sessionId);
+    LOGI("session not exist. [Id]: %" LOG_PUB PRId64, sessionId);
     UnlockHcMutex(&g_sessionMutex);
 }
 
@@ -235,11 +237,12 @@ void CancelDevSession(int64_t sessionId, const char *appId)
         if (session->id == sessionId && strcmp(session->appId, appId) == 0) {
             session->destroy(session);
             HC_VECTOR_POPELEMENT(&g_sessionInfoList, ptr, index);
-            LOGI("cancel session success. [CurNum]: %u, [Id]: %" PRId64, HC_VECTOR_SIZE(&g_sessionInfoList), sessionId);
+            LOGI("cancel session success. [CurNum]: %" LOG_PUB "u, [Id]: %" LOG_PUB PRId64,
+                HC_VECTOR_SIZE(&g_sessionInfoList), sessionId);
             UnlockHcMutex(&g_sessionMutex);
             return;
         }
     }
-    LOGI("session not exist. [Id]: %" PRId64, sessionId);
+    LOGI("session not exist. [Id]: %" LOG_PUB PRId64, sessionId);
     UnlockHcMutex(&g_sessionMutex);
 }

@@ -76,11 +76,12 @@ static int CreateNextTask(PakeV1ServerTask *realTask, const CJson *in, CJson *ou
         case AUTHENTICATE:
             break;
         default:
-            LOGE("Unsupported opCode: %d.", realTask->params.opCode);
+            LOGE("Unsupported opCode: %" LOG_PUB "d.", realTask->params.opCode);
             res = HC_ERR_NOT_SUPPORT;
     }
     if (res != HC_SUCCESS) {
-        LOGE("Create and process next task failed, opcode: %d, res: %d.", realTask->params.opCode, res);
+        LOGE("Create and process next task failed, opcode: %" LOG_PUB "d, res: %" LOG_PUB "d.",
+            realTask->params.opCode, res);
         return res;
     }
     if (*status != FINISH) {
@@ -88,10 +89,10 @@ static int CreateNextTask(PakeV1ServerTask *realTask, const CJson *in, CJson *ou
     }
     res = SendResultToSelf(&realTask->params, out);
     if (res != HC_SUCCESS) {
-        LOGE("SendResultToSelf failed, res: %d", res);
+        LOGE("SendResultToSelf failed, res: %" LOG_PUB "d", res);
         return res;
     }
-    LOGI("End server task successfully, opcode: %d.", realTask->params.opCode);
+    LOGI("End server task successfully, opcode: %" LOG_PUB "d.", realTask->params.opCode);
     return res;
 }
 
@@ -107,7 +108,7 @@ static int Process(struct SubTaskBaseT *task, const CJson *in, CJson *out, int *
     realTask->params.isPskSupported = IsSupportedPsk(&(realTask->taskBase.curVersion));
     int res = realTask->curTask->process(realTask->curTask, &(realTask->params), in, out, status);
     if (res != HC_SUCCESS) {
-        LOGE("CurTask processes failed, res: %x.", res);
+        LOGE("CurTask processes failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     if (*status != FINISH) {
@@ -130,7 +131,7 @@ SubTaskBase *CreatePakeV1ServerTask(const CJson *in)
 
     int res = InitDasPakeV1Params(&(task->params), in);
     if (res != HC_SUCCESS) {
-        LOGE("Init das pake params failed, res: %d.", res);
+        LOGE("Init das pake params failed, res: %" LOG_PUB "d.", res);
         DestroyPakeV1ServerTask((struct SubTaskBaseT *)task);
         return NULL;
     }

@@ -42,7 +42,7 @@ int32_t InitTaskManager(void)
     }
     int32_t res = InitHcTaskThread(g_taskThread, DEV_AUTH_WORK_THREAD_STACK_SIZE, "DevAuthWork");
     if (res != HC_SUCCESS) {
-        LOGE("Failed to init task thread! res: %d", res);
+        LOGE("Failed to init task thread! res: %" LOG_PUB "d", res);
         HcFree(g_taskThread);
         g_taskThread = NULL;
         return HC_ERR_INIT_FAILED;
@@ -52,7 +52,7 @@ int32_t InitTaskManager(void)
         DestroyHcTaskThread(g_taskThread);
         HcFree(g_taskThread);
         g_taskThread = NULL;
-        LOGE("Failed to start thread! res: %d", res);
+        LOGE("Failed to start thread! res: %" LOG_PUB "d", res);
         return HC_ERR_INIT_FAILED;
     }
     return HC_SUCCESS;

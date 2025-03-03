@@ -155,7 +155,7 @@ static int32_t ImportSelfToken(int32_t osAccountId, CJson *jsonParams)
         LOGD("No deviceId is found. The default value is udid!");
         int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to get local udid! res: %d", res);
+            LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
             return HC_ERR_DB;
         }
         deviceId = udid;
@@ -256,7 +256,7 @@ static void DelAllTokens(int32_t osAccountId, const DeviceEntryVec *vec)
             res = DelDeviceToken(osAccountId, *entry, false);
         }
         if (res != HC_SUCCESS) {
-            LOGE("Failed to delete token! res: %d", res);
+            LOGE("Failed to delete token! res: %" LOG_PUB "d", res);
         }
     }
 }
@@ -272,7 +272,7 @@ static void DelAllPeerTokens(int32_t osAccountId, const DeviceEntryVec *vec)
         }
         res = DelDeviceToken(osAccountId, *entry, false);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to delete peer device token! res: %d", res);
+            LOGE("Failed to delete peer device token! res: %" LOG_PUB "d", res);
         }
     }
 }
@@ -378,12 +378,12 @@ static int32_t AddDeviceAndToken(int32_t osAccountId, const CJson *jsonParams, C
     }
     res = ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId, IMPORT_TRUSTED_CREDENTIALS, credential, NULL);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to import device token! res: %d", res);
+        LOGE("Failed to import device token! res: %" LOG_PUB "d", res);
         return res;
     }
     res = AddDeviceToDatabaseByJson(osAccountId, GenerateTrustedDevParams, deviceInfo, groupId);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to add device to database! res: %d", res);
+        LOGE("Failed to add device to database! res: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -412,7 +412,7 @@ static int32_t DelPeerDevice(int32_t osAccountId, CJson *jsonParams, CJson *devi
     }
     int32_t res = DelDeviceById(osAccountId, groupId, deviceId, false);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to delete device from database! res: %d", res);
+        LOGE("Failed to delete device from database! res: %" LOG_PUB "d", res);
         DestroyDeviceEntry(entry);
         return res;
     }
@@ -421,7 +421,7 @@ static int32_t DelPeerDevice(int32_t osAccountId, CJson *jsonParams, CJson *devi
     }
     DestroyDeviceEntry(entry);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to delete token! res: %d", res);
+        LOGE("Failed to delete token! res: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -602,17 +602,17 @@ static void UpdateTrustedDeviceForMetaNode(int32_t osAccountId, CJson *jsonParam
                 }
                 break;
             default:
-                LOGE("Unknown group operate code: %d!", opCode);
+                LOGE("Unknown group operate code: %" LOG_PUB "d!", opCode);
                 break;
         }
     }
     if (addedCount > 0) {
-        LOGI("Add multiple members to a identical account group successfully! [ListNum]: %d, [AddedNum]: %d",
-            deviceNum, addedCount);
+        LOGI("Add multiple members to a identical account group successfully! [ListNum]: %" LOG_PUB "d, [AddedNum]: %"
+            LOG_PUB "d", deviceNum, addedCount);
     }
     if (deletedCount > 0) {
-        LOGI("Delete multiple members from a identical account group successfully! [ListNum]: %d, [DeletedNum]: %d",
-            deviceNum, deletedCount);
+        LOGI("Delete multiple members from a identical account group successfully! [ListNum]: %"
+            LOG_PUB "d, [DeletedNum]: %" LOG_PUB "d", deviceNum, deletedCount);
     }
 }
 
@@ -626,7 +626,7 @@ static int32_t AddMetaNodeDeviceToGroup(int32_t osAccountId, CJson *jsonParams)
     }
     int32_t res = ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId, IMPORT_TRUSTED_CREDENTIALS, jsonParams, processResult);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to import device token! res: %d", res);
+        LOGE("Failed to import device token! res: %" LOG_PUB "d", res);
         FreeJson(processResult);
         return res;
     }
@@ -663,7 +663,7 @@ static int32_t AddMultiMembersToGroup(int32_t osAccountId, const char *appId, CJ
 
     const char *metaNodeType = GetStringFromJson(jsonParams, FIELD_META_NODE_TYPE);
     if (metaNodeType != NULL) {
-        LOGI("Find MetaNodeType: %s", metaNodeType);
+        LOGI("Find MetaNodeType: %" LOG_PUB "s", metaNodeType);
         return AddMetaNodeDeviceToGroup(osAccountId, jsonParams);
     }
 
@@ -692,8 +692,8 @@ static int32_t AddMultiMembersToGroup(int32_t osAccountId, const char *appId, CJ
         LOGE("Failed to save database!");
         return res;
     }
-    LOGI("[End]: Add multiple members to a identical account group successfully! [ListNum]: %d, [AddedNum]: %d",
-        deviceNum, addedCount);
+    LOGI("[End]: Add multiple members to a identical account group successfully! [ListNum]: %" LOG_PUB
+        "d, [AddedNum]: %" LOG_PUB "d", deviceNum, addedCount);
     return HC_SUCCESS;
 }
 
@@ -730,8 +730,8 @@ static int32_t DelMultiMembersFromGroup(int32_t osAccountId, const char *appId, 
         LOGE("Failed to save database!");
         return res;
     }
-    LOGI("[End]: Delete multiple members from a identical account group successfully! [ListNum]: %d, [DeletedNum]: %d",
-        deviceNum, deletedCount);
+    LOGI("[End]: Delete multiple members from a identical account group successfully! [ListNum]: %" LOG_PUB
+        "d, [DeletedNum]: %" LOG_PUB "d", deviceNum, deletedCount);
     return HC_SUCCESS;
 }
 

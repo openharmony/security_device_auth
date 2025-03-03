@@ -34,7 +34,7 @@ static int ExchangeStart(AsyBaseCurTask *task, PakeParams *params, CJson *out, i
 {
     int res = HC_SUCCESS;
     if (task->taskStatus != TASK_STATUS_SERVER_BIND_EXCHANGE_BEGIN) {
-        LOGI("The message is repeated, ignore it, status: %d", task->taskStatus);
+        LOGI("The message is repeated, ignore it, status: %" LOG_PUB "d", task->taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
@@ -72,7 +72,7 @@ static int ExchangeResponse(AsyBaseCurTask *task, PakeParams *params, const CJso
         return HC_ERR_BAD_MESSAGE;
     }
     if (task->taskStatus > TASK_STATUS_SERVER_BIND_EXCHANGE_START) {
-        LOGI("The message is repeated, ignore it, status: %d", task->taskStatus);
+        LOGI("The message is repeated, ignore it, status: %" LOG_PUB "d", task->taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }

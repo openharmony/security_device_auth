@@ -47,7 +47,7 @@ int32_t ProxyDevAuth::DoCallRequest(MessageParcel &dataParcel, MessageParcel &re
     ret = remote->SendRequest(static_cast<uint32_t>(DevAuthInterfaceCode::DEV_AUTH_CALL_REQUEST),
         dataParcel, replyParcel, option);
     if (ret != ERR_NONE) {
-        LOGE("ProxyDevAuth::DoCallRequest SendRequest fail. ret = %d", ret);
+        LOGE("ProxyDevAuth::DoCallRequest SendRequest fail. ret = %" LOG_PUB "d", ret);
         ret = HC_ERR_IPC_INTERNAL_FAILED;
     } else {
         replyParcel.ReadInt32(ret);

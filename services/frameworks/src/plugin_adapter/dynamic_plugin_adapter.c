@@ -51,9 +51,9 @@ static const int NORMAL_PRIO = 0;
 static void SetThreadPrio(int priority)
 {
     id_t tid = syscall(SYS_gettid);
-    LOGI("set tid:%d priority:%d.", tid, priority);
+    LOGI("set tid:%" LOG_PUB "d priority:%" LOG_PUB "d.", tid, priority);
     if (setpriority(PRIO_PROCESS, tid, priority) != 0) {
-        LOGE("set tid:%d priority:%d failed.", tid, priority);
+        LOGE("set tid:%" LOG_PUB "d priority:%" LOG_PUB "d failed.", tid, priority);
     }
 }
 #endif
@@ -109,7 +109,7 @@ static int32_t LoadDynamicPlugin(void *handle)
     if (credPlugin != NULL) {
         res = AddCredPlugin(credPlugin);
         if (res != HC_SUCCESS) {
-            LOGE("[Plugin]: init cred plugin fail. [Res]: %d", res);
+            LOGE("[Plugin]: init cred plugin fail. [Res]: %" LOG_PUB "d", res);
             return res;
         }
     }
@@ -117,7 +117,7 @@ static int32_t LoadDynamicPlugin(void *handle)
     if (authModulePlugin != NULL) {
         res = AddAuthModulePlugin(authModulePlugin);
         if (res != HC_SUCCESS) {
-            LOGE("[Plugin]: init auth module plugin fail. [Res]: %d", res);
+            LOGE("[Plugin]: init auth module plugin fail. [Res]: %" LOG_PUB "d", res);
             return res;
         }
     }
@@ -125,7 +125,7 @@ static int32_t LoadDynamicPlugin(void *handle)
     if (pluginFunc != NULL) {
         res = AddExtPlugin(pluginFunc);
         if (res != HC_SUCCESS) {
-            LOGE("[Plugin]: init ext plugin fail. [Res]: %d", res);
+            LOGE("[Plugin]: init ext plugin fail. [Res]: %" LOG_PUB "d", res);
             return res;
         }
     }

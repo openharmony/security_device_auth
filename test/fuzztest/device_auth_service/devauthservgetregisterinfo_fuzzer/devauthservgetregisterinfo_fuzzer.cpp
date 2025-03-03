@@ -42,7 +42,7 @@ namespace OHOS {
         FreeJson(reqJson);
         const DeviceGroupManager *gmInstance = GetGmInstance();
         char *returnJsonStr = nullptr;
-        LOGI("reqJsonStr: %s", reqJsonStr);
+        LOGI("reqJsonStr: %" LOG_PUB "s", reqJsonStr);
         gmInstance->getRegisterInfo(reqJsonStr, &returnJsonStr);
         if (returnJsonStr != nullptr) {
             gmInstance->destroyInfo(&returnJsonStr);

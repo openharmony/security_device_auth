@@ -513,7 +513,7 @@ static int32_t ISGetAccountSymSharedSecret(const CJson *in, Uint8Buff *sharedSec
     ret = GetLoaderInstance()->computeHmac(&keyParams, &seedBuff, sharedSecret);
     FreeBuffData(&authToken);
     if (ret != HC_SUCCESS) {
-        LOGE("ComputeHmac for psk failed, ret: %d.", ret);
+        LOGE("ComputeHmac for psk failed, ret: %" LOG_PUB "d.", ret);
         FreeBuffData(sharedSecret);
     }
     return ret;
@@ -604,12 +604,12 @@ static int32_t GetSharedSecretForP2pInPake(const CJson *in, Uint8Buff *sharedSec
     }
     int32_t ret = HexStringToByte(credId, credIdByte.val, credIdByte.length);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to convert credId to byte, invalid credId, ret = %d", ret);
+        LOGE("Failed to convert credId to byte, invalid credId, ret = %" LOG_PUB "d", ret);
         HcFree(credIdByte.val);
         return IS_ERR_INVALID_HEX_STRING;
     }
-    LOGI("psk alias: %x %x %x %x****.", credIdByte.val[DEV_AUTH_ZERO], credIdByte.val[DEV_AUTH_ONE],
-        credIdByte.val[DEV_AUTH_TWO], credIdByte.val[DEV_AUTH_THREE]);
+    LOGI("psk alias: %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x****.", credIdByte.val[DEV_AUTH_ZERO],
+        credIdByte.val[DEV_AUTH_ONE], credIdByte.val[DEV_AUTH_TWO], credIdByte.val[DEV_AUTH_THREE]);
 
     ret = GetLoaderInstance()->checkKeyExist(&credIdByte, false, osAccountId);
     if (ret != HC_SUCCESS) {
@@ -632,10 +632,10 @@ static int32_t GetSharedSecretForP2p(
     int32_t ret;
     if (protocolType == ALG_ISO) {
         ret = GetSharedSecretForP2pInIso(in, sharedSecret);
-        LOGI("get shared secret for p2p in iso result: %d", ret);
+        LOGI("get shared secret for p2p in iso result: %" LOG_PUB "d", ret);
     } else {
         ret = GetSharedSecretForP2pInPake(in, sharedSecret);
-        LOGI("get shared secret for p2p in pake result: %d", ret);
+        LOGI("get shared secret for p2p in pake result: %" LOG_PUB "d", ret);
     }
     return ret;
 }

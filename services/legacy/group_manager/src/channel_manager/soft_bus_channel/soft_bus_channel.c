@@ -151,7 +151,7 @@ static int OnChannelOpenedCb(int sessionId, int result)
 
 static void OnChannelClosedCb(int sessionId)
 {
-    LOGI("[SoftBus][Out]: OnChannelClosed! sessionId: %d", sessionId);
+    LOGI("[SoftBus][Out]: OnChannelClosed! sessionId: %" LOG_PUB "d", sessionId);
     if (IsServer(sessionId)) {
         return;
     }
@@ -165,7 +165,7 @@ static void OnBytesReceivedCb(int sessionId, const void *data, unsigned int data
         LOGE("Invalid input params!");
         return;
     }
-    LOGI("[Start]: OnMsgReceived! [ChannelId]: %d", sessionId);
+    LOGI("[Start]: OnMsgReceived! [ChannelId]: %" LOG_PUB "d", sessionId);
     int64_t requestId = DEFAULT_REQUEST_ID;
     char *recvDataStr = GenRecvData(sessionId, data, dataLen, &requestId);
     if (recvDataStr == NULL) {
@@ -183,7 +183,7 @@ static int32_t OpenSoftBusChannel(const char *connectParams, int64_t requestId, 
     }
     LOGI("[SoftBus][In]: OpenChannel!");
     int64_t channelId = (int64_t)OpenAuthSession(GROUP_MANAGER_PACKAGE_NAME, NULL, 0, connectParams);
-    LOGI("[SoftBus][Out]: OpenChannel! channelId: %" PRId64, channelId);
+    LOGI("[SoftBus][Out]: OpenChannel! channelId: %" LOG_PUB PRId64, channelId);
     /* If the value of channelId is less than 0, the soft bus fails to open the channel */
     if (channelId < 0) {
         LOGE("Failed to open soft bus channel!");
@@ -212,7 +212,7 @@ static int32_t SendSoftBusMsg(int64_t channelId, const uint8_t *data, uint32_t d
 {
     LOGI("[SoftBus][In]: SendMsg!");
     int32_t res = SendBytes(channelId, data, dataLen);
-    LOGI("[SoftBus][Out]: SendMsg! res: %d", res);
+    LOGI("[SoftBus][Out]: SendMsg! res: %" LOG_PUB "d", res);
     if (res != HC_SUCCESS) {
         LOGE("An error occurs when the softbus sends data!");
         return HC_ERR_SOFT_BUS;
@@ -261,7 +261,7 @@ int32_t InitSoftBusChannelModule(ChannelProxy *channelProxy)
     };
     LOGI("[SoftBus][In]: CreateSessionServer!");
     int32_t res = CreateSessionServer(GROUP_MANAGER_PACKAGE_NAME, GROUP_MANAGER_PACKAGE_NAME, &softBusListener);
-    LOGI("[SoftBus][Out]: CreateSessionServer! res: %d", res);
+    LOGI("[SoftBus][Out]: CreateSessionServer! res: %" LOG_PUB "d", res);
     return res;
 }
 
@@ -275,7 +275,7 @@ void DestroySoftBusChannelModule(void)
     g_channelMutex = NULL;
     LOGI("[SoftBus][In]: RemoveSessionServer!");
     int32_t res = RemoveSessionServer(GROUP_MANAGER_PACKAGE_NAME, GROUP_MANAGER_PACKAGE_NAME);
-    LOGI("[SoftBus][Out]: RemoveSessionServer! res: %d", res);
+    LOGI("[SoftBus][Out]: RemoveSessionServer! res: %" LOG_PUB "d", res);
 }
 
 SoftBus *GetSoftBusInstance(void)

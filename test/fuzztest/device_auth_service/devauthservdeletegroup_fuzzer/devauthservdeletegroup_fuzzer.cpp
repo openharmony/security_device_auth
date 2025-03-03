@@ -27,12 +27,12 @@ namespace OHOS {
 
     static void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn)
     {
-        LOGE("error return: %s", errorReturn);
+        LOGE("error return: %" LOG_PUB "s", errorReturn);
     }
 
     static void OnFinish(int64_t requestId, int operationCode, const char *authReturn)
     {
-        LOGI("return value: %s", authReturn);
+        LOGI("return value: %" LOG_PUB "s", authReturn);
         if (operationCode == GROUP_CREATE) {
             CJson *json = CreateJsonFromString(authReturn);
             if (json != nullptr) {
@@ -91,7 +91,7 @@ namespace OHOS {
         AddStringToJson(deleteParamsJson, FIELD_GROUP_ID, g_groupId);
         char *deleteParams = PackJsonToString(deleteParamsJson);
         FreeJson(deleteParamsJson);
-        LOGI("delete params str:%s", deleteParams);
+        LOGI("delete params str:%" LOG_PUB "s", deleteParams);
         gmInstance->deleteGroup(0, reqId, appId.c_str(), deleteParams);
         sleep(1);
         ClearAndFreeJsonString(deleteParams);

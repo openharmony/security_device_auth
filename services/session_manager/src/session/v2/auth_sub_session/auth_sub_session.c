@@ -149,7 +149,7 @@ int32_t CreateAuthSubSession(int32_t protocolType, void *params, bool isClient, 
     }
     const ProtocolComponent *component = GetProtocolComponent(protocolType);
     if (component == NULL) {
-        LOGE("no protocol component found. type = %d.", protocolType);
+        LOGE("no protocol component found. type = %" LOG_PUB "d.", protocolType);
         return HC_ERR_UNSUPPORTED_VERSION;
     }
     BaseProtocol *protocol;

@@ -148,7 +148,7 @@ static int32_t CheckAuthIdAndUserTypeValid(int32_t osAccountId, int userType, co
     char udid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return res;
     }
     TrustedDeviceEntry *deviceInfo = CreateDeviceEntry();
@@ -187,7 +187,7 @@ static int32_t AddAuthIdAndUserTypeIfValidOrDefault(int32_t osAccountId, const c
         LOGI("authId is not found, use udid by default!");
         int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to get local udid! res: %d", res);
+            LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
             return res;
         }
         authId = udid;
@@ -212,7 +212,7 @@ static int32_t AddUdid(CJson *params)
     char udid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return res;
     }
     if (AddStringToJson(params, FIELD_CONN_DEVICE_ID, udid) != HC_SUCCESS) {
@@ -313,7 +313,7 @@ static int32_t AddDevInfoByDatabase(int32_t osAccountId, const char *groupId, CJ
     char udid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return res;
     }
     TrustedDeviceEntry *devAuthParams = CreateDeviceEntry();
@@ -580,7 +580,7 @@ static int32_t GenerateCompatibleInfo(CJson *groupInfo)
     char udid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return res;
     }
     if (AddStringToJson(groupInfo, FIELD_DEVICE_ID, udid) != HC_SUCCESS) {

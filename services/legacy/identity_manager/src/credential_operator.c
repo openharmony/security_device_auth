@@ -181,7 +181,7 @@ static int32_t GenerateKeyAliasInner(
     Uint8Buff serviceIdBuff = { serviceId, SHA256_LEN };
     int32_t res = CombineServiceId(&pkgNameBuff, &serviceTypeBuff, &serviceIdBuff);
     if (res != HC_SUCCESS) {
-        LOGE("CombineServiceId failed, res: %x.", res);
+        LOGE("CombineServiceId failed, res: %" LOG_PUB "x.", res);
         HcFree(authIdBuff.val);
         return res;
     }
@@ -190,7 +190,7 @@ static int32_t GenerateKeyAliasInner(
     res = CombineKeyAliasForPake(&serviceIdBuff, &keyTypeBuff, &authIdBuff, outKeyAlias);
     HcFree(authIdBuff.val);
     if (res != HC_SUCCESS) {
-        LOGE("CombineKeyAlias failed, keyType: %d, res: %d", keyAliasType, res);
+        LOGE("CombineKeyAlias failed, keyType: %" LOG_PUB "d, res: %" LOG_PUB "d", keyAliasType, res);
     }
     return res;
 }
@@ -237,13 +237,13 @@ static int32_t DecodeServiceTypeAndPublicKey(CredentialRequestParamT *param, CJs
     const char *publicKeyStr = GetStringFromJson(reqJson, FIELD_PUBLIC_KEY);
     if (publicKeyStr != NULL && HcStrlen(publicKeyStr) > 0) {
         if (HcStrlen(publicKeyStr) > PAKE_ED25519_KEY_STR_LEN) {
-            LOGE("public key longer then %d.", PAKE_ED25519_KEY_STR_LEN);
+            LOGE("public key longer then %" LOG_PUB "d.", PAKE_ED25519_KEY_STR_LEN);
             return HC_ERR_INVALID_LEN;
         }
         param->publicKey = (Uint8Buff *)HcMalloc(sizeof(Uint8Buff), 0);
         int32_t res = InitUint8Buff(param->publicKey, PAKE_ED25519_KEY_PAIR_LEN);
         if (res != HC_SUCCESS) {
-            LOGE("allocate publicKey memory fail. res: %d", res);
+            LOGE("allocate publicKey memory fail. res: %" LOG_PUB "d", res);
             return HC_ERR_ALLOC_MEMORY;
         }
         if (GetByteFromJson(reqJson, FIELD_PUBLIC_KEY, param->publicKey->val, param->publicKey->length) !=
@@ -383,8 +383,8 @@ static int32_t IsKeyExistReturnAliasIfNeeded(CredentialRequestParamT *param, Uin
         LOGE("Failed to generate identity keyPair alias!");
         return res;
     }
-    LOGI("KeyPair alias(HEX): %x%x%x%x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
-        keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
+    LOGI("KeyPair alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.", keyAliasVal[DEV_AUTH_ZERO],
+        keyAliasVal[DEV_AUTH_ONE], keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
 
     if ((outKeyAlias != NULL) &&
         (memcpy_s(outKeyAlias->val, outKeyAlias->length, keyAliasBuff.val, keyAliasBuff.length) != EOK)) {
@@ -513,7 +513,7 @@ static int32_t ComputeAndSavePsk(int32_t osAccountId, const char *peerServiceTyp
     char selfAuthId[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)selfAuthId, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return HC_ERR_DB;
     }
 
@@ -522,16 +522,16 @@ static int32_t ComputeAndSavePsk(int32_t osAccountId, const char *peerServiceTyp
         LOGE("generateKeyAlias self failed");
         return res;
     }
-    LOGI("selfKeyAlias(HEX): %x%x%x%x****", selfKeyAliasVal[DEV_AUTH_ZERO], selfKeyAliasVal[DEV_AUTH_ONE],
-        selfKeyAliasVal[DEV_AUTH_TWO], selfKeyAliasVal[DEV_AUTH_THREE]);
+    LOGI("selfKeyAlias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****", selfKeyAliasVal[DEV_AUTH_ZERO],
+        selfKeyAliasVal[DEV_AUTH_ONE], selfKeyAliasVal[DEV_AUTH_TWO], selfKeyAliasVal[DEV_AUTH_THREE]);
 
     res = GenerateKeyAliasInner(DEFAULT_PACKAGE_NAME, peerServiceType, peerAuthId, keyType, &peerKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generateKeyAlias peer failed");
         return res;
     }
-    LOGI("peerKeyAlias(HEX): %x%x%x%x****", peerKeyAliasVal[DEV_AUTH_ZERO], peerKeyAliasVal[DEV_AUTH_ONE],
-        peerKeyAliasVal[DEV_AUTH_TWO], peerKeyAliasVal[DEV_AUTH_THREE]);
+    LOGI("peerKeyAlias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****", peerKeyAliasVal[DEV_AUTH_ZERO],
+        peerKeyAliasVal[DEV_AUTH_ONE], peerKeyAliasVal[DEV_AUTH_TWO], peerKeyAliasVal[DEV_AUTH_THREE]);
     res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, false, osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("self auth keyPair not exist .");
@@ -550,8 +550,8 @@ static int32_t ComputeAndSavePsk(int32_t osAccountId, const char *peerServiceTyp
         LOGE("generateKeyAlias psk failed");
         return res;
     }
-    LOGI("psk alias(HEX): %x%x%x%x****", sharedKeyAliasVal[DEV_AUTH_ZERO], sharedKeyAliasVal[DEV_AUTH_ONE],
-        sharedKeyAliasVal[DEV_AUTH_TWO], sharedKeyAliasVal[DEV_AUTH_THREE]);
+    LOGI("psk alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****", sharedKeyAliasVal[DEV_AUTH_ZERO],
+        sharedKeyAliasVal[DEV_AUTH_ONE], sharedKeyAliasVal[DEV_AUTH_TWO], sharedKeyAliasVal[DEV_AUTH_THREE]);
 
     KeyParams selfKeyParams = { { selfKeyAlias.val, selfKeyAlias.length, true }, false, osAccountId };
     KeyBuff peerKeyBuff = { peerKeyAlias.val, peerKeyAlias.length, true };
@@ -570,7 +570,7 @@ static int32_t IsSelfKeyPairExist(int32_t osAccountId, int keyType)
     char selfAuthId[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)selfAuthId, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return HC_ERR_DB;
     }
 
@@ -579,8 +579,8 @@ static int32_t IsSelfKeyPairExist(int32_t osAccountId, int keyType)
         LOGE("generateKeyAlias self failed");
         return res;
     }
-    LOGI("selfKeyAlias(HEX): %x%x%x%x****", selfKeyAliasVal[DEV_AUTH_ZERO], selfKeyAliasVal[DEV_AUTH_ONE],
-        selfKeyAliasVal[DEV_AUTH_TWO], selfKeyAliasVal[DEV_AUTH_THREE]);
+    LOGI("selfKeyAlias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****", selfKeyAliasVal[DEV_AUTH_ZERO],
+        selfKeyAliasVal[DEV_AUTH_ONE], selfKeyAliasVal[DEV_AUTH_TWO], selfKeyAliasVal[DEV_AUTH_THREE]);
 
     res = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, false, osAccountId);
     if (res != HC_SUCCESS) {

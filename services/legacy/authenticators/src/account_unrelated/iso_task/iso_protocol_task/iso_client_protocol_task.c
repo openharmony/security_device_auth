@@ -80,23 +80,23 @@ ERR:
 static int IsoClientStart(SymBaseCurTask *task, IsoParams *params, CJson *out, int32_t *status)
 {
     if (task->taskStatus != TASK_STATUS_BEGIN) {
-        LOGI("The message is repeated, ignore it, status: %d", task->taskStatus);
+        LOGI("The message is repeated, ignore it, status: %" LOG_PUB "d", task->taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
     int res = IsoClientGenRandom(&params->baseParams);
     if (res != 0) {
-        LOGE("IsoClientGenRandom failed, res: %x.", res);
+        LOGE("IsoClientGenRandom failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     res = GenerateSeed(params);
     if (res != 0) {
-        LOGE("GenerateSeed failed, res: %x.", res);
+        LOGE("GenerateSeed failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     res = IsoClientStartPackData(out, params);
     if (res != 0) {
-        LOGE("IsoClientStartPackData failed, res: %x.", res);
+        LOGE("IsoClientStartPackData failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     task->taskStatus = TASK_STATUS_SERVER_RES_TOKEN;
@@ -153,12 +153,12 @@ static int CalculateTokenClient(SymBaseCurTask *task, IsoParams *params, const C
 {
     int res;
     if (task->taskStatus < TASK_STATUS_SERVER_RES_TOKEN) {
-        LOGE("Invalid taskStatus: %d", task->taskStatus);
+        LOGE("Invalid taskStatus: %" LOG_PUB "d", task->taskStatus);
         return HC_ERR_BAD_MESSAGE;
     }
 
     if (task->taskStatus > TASK_STATUS_SERVER_RES_TOKEN) {
-        LOGI("The message is repeated, ignore it, status: %d", task->taskStatus);
+        LOGI("The message is repeated, ignore it, status: %" LOG_PUB "d", task->taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
@@ -172,26 +172,26 @@ static int CalculateTokenClient(SymBaseCurTask *task, IsoParams *params, const C
 
     res = ParseServerStartMessage(params, in, &peerTokenBuf);
     if (res != 0) {
-        LOGE("ParseServerStartMessage failed, res: %x.", res);
+        LOGE("ParseServerStartMessage failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     res = GeneratePsk(in, params);
     if (res != 0) {
-        LOGE("GeneratePsk failed, res: %x.", res);
+        LOGE("GeneratePsk failed, res: %" LOG_PUB "x.", res);
         return res;
     }
 
     // execute
     res = IsoClientCheckAndGenToken(&params->baseParams, &peerTokenBuf, &selfTokenBuf);
     if (res != HC_SUCCESS) {
-        LOGE("IsoClientCheckAndGenToken failed, res: %x.", res);
+        LOGE("IsoClientCheckAndGenToken failed, res: %" LOG_PUB "x.", res);
         return res;
     }
 
     // package message
     res = PackDataForCalToken(params, &selfTokenBuf, out);
     if (res != 0) {
-        LOGE("PackDataForCalToken failed, res: %d", res);
+        LOGE("PackDataForCalToken failed, res: %" LOG_PUB "d", res);
         return res;
     }
     task->taskStatus = TASK_STATUS_GEN_SESSION_KEY;
@@ -202,12 +202,12 @@ static int CalculateTokenClient(SymBaseCurTask *task, IsoParams *params, const C
 static int GenerateSessionKey(SymBaseCurTask *task, IsoParams *params, const CJson *in, int32_t *status)
 {
     if (task->taskStatus < TASK_STATUS_GEN_SESSION_KEY) {
-        LOGE("Invalid taskStatus: %d", task->taskStatus);
+        LOGE("Invalid taskStatus: %" LOG_PUB "d", task->taskStatus);
         return HC_ERR_BAD_MESSAGE;
     }
 
     if (task->taskStatus > TASK_STATUS_GEN_SESSION_KEY) {
-        LOGI("The message is repeated, ignore it, status: %d", task->taskStatus);
+        LOGI("The message is repeated, ignore it, status: %" LOG_PUB "d", task->taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
@@ -227,7 +227,7 @@ static int GenerateSessionKey(SymBaseCurTask *task, IsoParams *params, const CJs
     // execute
     res = IsoClientGenSessionKey(&params->baseParams, 0, hmac, HMAC_LEN);
     if (res != 0) {
-        LOGE("IsoClientGenSessionKey failed, res: %x.", res);
+        LOGE("IsoClientGenSessionKey failed, res: %" LOG_PUB "x.", res);
         goto ERR;
     }
 
@@ -262,13 +262,13 @@ static int Process(struct SymBaseCurTaskT *task, IsoParams *params, const CJson 
     }
 OUT_FUNC:
     if (res != HC_SUCCESS) {
-        LOGE("Process step:%d failed, res: %x.", step, res);
+        LOGE("Process step:%" LOG_PUB "d failed, res: %" LOG_PUB "x.", step, res);
         return res;
     }
     if (step != STEP_THREE) {
         res = ClientProtocolMessageOut(out, params->opCode, step);
         if (res != HC_SUCCESS) {
-            LOGE("ClientProtocolMessageOut failed, res: %x.", res);
+            LOGE("ClientProtocolMessageOut failed, res: %" LOG_PUB "x.", res);
         }
     }
     return res;

@@ -71,7 +71,7 @@ static int32_t ReturnSessionKey(int64_t requestId, const CJson *out, const Devic
         LOGI("Begin invoke onSessionKeyReturned.");
         UPDATE_PERFORM_DATA_BY_INPUT_INDEX(requestId, ON_SESSION_KEY_RETURN_TIME, HcGetCurTimeInMillis());
         callback->onSessionKeyReturned(requestId, sessionKey, keyLen);
-        LOGI("End invoke onSessionKeyReturned, res = %d.", res);
+        LOGI("End invoke onSessionKeyReturned, res = %" LOG_PUB "d.", res);
     } while (0);
     (void)memset_s(sessionKey, keyLen, 0, keyLen);
     HcFree(sessionKey);

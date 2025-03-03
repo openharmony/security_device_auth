@@ -129,7 +129,7 @@ static int IsoCalSelfToken(const IsoBaseParams *params, Uint8Buff *outHmac)
     KeyParams keyParams = { { pskBuf.val, pskBuf.length, false }, false, params->osAccountId };
     res = params->loader->computeHmac(&keyParams, &messageBuf, outHmac);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeHmac failed, res: %x.", res);
+        LOGE("ComputeHmac failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 CLEAN_UP:
@@ -176,7 +176,7 @@ static int IsoCalPeerToken(const IsoBaseParams *params, Uint8Buff *selfToken)
     KeyParams keyParams = { { pskBuf.val, pskBuf.length, false }, false, params->osAccountId };
     res = params->loader->computeHmac(&keyParams, &messageBufSelf, selfToken);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeHmac for selfToken failed, res: %x.", res);
+        LOGE("ComputeHmac for selfToken failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 CLEAN_UP:
@@ -221,7 +221,7 @@ static int IsoGenSessionKey(IsoBaseParams *params, Uint8Buff *pskBuf, bool isCli
     Uint8Buff hkdfSaltBuf = { hkdfSalt, hkdfSaltLen };
     int res = IsoCombineHkdfSalt(params, &hkdfSaltBuf, isClient);
     if (res != HC_SUCCESS) {
-        LOGE("IsoCombineHkdfSalt failed, res: %x.", res);
+        LOGE("IsoCombineHkdfSalt failed, res: %" LOG_PUB "x.", res);
         HcFree(hkdfSalt);
         return res;
     }
@@ -230,7 +230,7 @@ static int IsoGenSessionKey(IsoBaseParams *params, Uint8Buff *pskBuf, bool isCli
     KeyParams keyParams = { { pskBuf->val, pskBuf->length, false }, false, params->osAccountId };
     res = params->loader->computeHkdf(&keyParams, &hkdfSaltBuf, &keyInfoBuf, &params->sessionKey);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeHkdf for sessionKey failed, res: %x.", res);
+        LOGE("ComputeHkdf for sessionKey failed, res: %" LOG_PUB "x.", res);
         FreeAndCleanKey(&params->sessionKey);
     }
     HcFree(hkdfSalt);
@@ -245,7 +245,7 @@ int IsoClientGenRandom(IsoBaseParams *params)
     }
     int32_t res = params->loader->generateRandom(&params->randSelf);
     if (res != HC_SUCCESS) {
-        LOGE("Generate randSelf failed, res: %x.", res);
+        LOGE("Generate randSelf failed, res: %" LOG_PUB "x.", res);
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
     }
     return res;
@@ -267,7 +267,7 @@ int IsoClientCheckAndGenToken(IsoBaseParams *params, const Uint8Buff *peerToken,
     Uint8Buff outHmac = { hmacPeer, sizeof(hmacPeer) };
     int res = IsoCalSelfToken(params, &outHmac);
     if (res != HC_SUCCESS) {
-        LOGE("IsoCalSelfToken failed, res: %x.", res);
+        LOGE("IsoCalSelfToken failed, res: %" LOG_PUB "x.", res);
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
         return res;
     }
@@ -278,7 +278,7 @@ int IsoClientCheckAndGenToken(IsoBaseParams *params, const Uint8Buff *peerToken,
     }
     res = IsoCalPeerToken(params, selfToken);
     if (res != HC_SUCCESS) {
-        LOGE("IsoCalPeerToken failed, res: %x.", res);
+        LOGE("IsoCalPeerToken failed, res: %" LOG_PUB "x.", res);
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
     }
     return res;
@@ -303,7 +303,7 @@ int IsoClientGenSessionKey(IsoBaseParams *params, int returnResult, const uint8_
     KeyParams keyParams = { { pskBuf.val, pskBuf.length, false }, false, params->osAccountId };
     int res = params->loader->computeHmac(&keyParams, &hmacMessage, &outHmacBuf);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeHmac for returnResult failed, res: %x.", res);
+        LOGE("ComputeHmac for returnResult failed, res: %" LOG_PUB "x.", res);
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
         return res;
     }
@@ -315,7 +315,7 @@ int IsoClientGenSessionKey(IsoBaseParams *params, int returnResult, const uint8_
 
     res = IsoGenSessionKey(params, &pskBuf, true);
     if (res != HC_SUCCESS) {
-        LOGE("IsoGenSessionKey failed, res: %x.", res);
+        LOGE("IsoGenSessionKey failed, res: %" LOG_PUB "x.", res);
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
     }
 
@@ -335,13 +335,13 @@ int IsoServerGenRandomAndToken(IsoBaseParams *params, Uint8Buff *selfTokenBuf)
     }
     int res = params->loader->generateRandom(&params->randSelf);
     if (res != HC_SUCCESS) {
-        LOGE("Generate randSelf failed, res: %x.", res);
+        LOGE("Generate randSelf failed, res: %" LOG_PUB "x.", res);
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
         return res;
     }
     res = IsoCalPeerToken(params, selfTokenBuf);
     if (res != HC_SUCCESS) {
-        LOGE("IsoCalPeerToken failed, res: %x.", res);
+        LOGE("IsoCalPeerToken failed, res: %" LOG_PUB "x.", res);
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
     }
     return res;
@@ -363,7 +363,7 @@ int IsoServerGenSessionKeyAndCalToken(IsoBaseParams *params, const Uint8Buff *to
     Uint8Buff outHmac = { hmacPeer, sizeof(hmacPeer) };
     int res = IsoCalSelfToken(params, &outHmac);
     if (res != HC_SUCCESS) {
-        LOGE("IsoCalSelfToken failed, res: %x.", res);
+        LOGE("IsoCalSelfToken failed, res: %" LOG_PUB "x.", res);
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
         return res;
     }
@@ -376,7 +376,7 @@ int IsoServerGenSessionKeyAndCalToken(IsoBaseParams *params, const Uint8Buff *to
     Uint8Buff pskBuf = { params->psk, sizeof(params->psk) };
     res = IsoGenSessionKey(params, &pskBuf, false);
     if (res != HC_SUCCESS) {
-        LOGE("IsoGenSessionKey failed, res: %x.", res);
+        LOGE("IsoGenSessionKey failed, res: %" LOG_PUB "x.", res);
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
         return res;
     }
@@ -386,7 +386,7 @@ int IsoServerGenSessionKeyAndCalToken(IsoBaseParams *params, const Uint8Buff *to
     KeyParams keyParams = { { pskBuf.val, pskBuf.length, false }, false, params->osAccountId };
     res = params->loader->computeHmac(&keyParams, &messageBuf, tokenToPeer);
     if (res != HC_SUCCESS) {
-        LOGE("Compute hmac for returnCode failed, res: %x.", res);
+        LOGE("Compute hmac for returnCode failed, res: %" LOG_PUB "x.", res);
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
         FreeAndCleanKey(&params->sessionKey);
     }

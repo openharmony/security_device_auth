@@ -140,7 +140,7 @@ static int32_t DecodeCallRequest(MessageParcel &data, IpcDataInfo *paramsCache, 
     }
     data.ReadInt32(inParamNum);
     if ((inParamNum < 0) || (inParamNum > cacheNum)) {
-        LOGE("param number invalid, inParamNum - %d", inParamNum);
+        LOGE("param number invalid, inParamNum - %" LOG_PUB "d", inParamNum);
         return HC_ERR_IPC_BAD_PARAM_NUM;
     }
 
@@ -148,7 +148,7 @@ static int32_t DecodeCallRequest(MessageParcel &data, IpcDataInfo *paramsCache, 
         ret = DecodeIpcData(reinterpret_cast<uintptr_t>(&data), &(paramsCache[i].type),
             &(paramsCache[i].val), &(paramsCache[i].valSz));
         if (ret != HC_SUCCESS) {
-            LOGE("decode failed, ret %d", ret);
+            LOGE("decode failed, ret %" LOG_PUB "d", ret);
             return ret;
         }
     }
@@ -184,7 +184,7 @@ static void WithObject(int32_t methodId, MessageParcel &data, IpcDataInfo &ipcDa
     ipcData.idx = ServiceDevAuth::SetRemoteObject(tmp);
     if (ipcData.idx >= 0) {
         ipcData.val = reinterpret_cast<uint8_t *>(&(ipcData.idx));
-        LOGI("object trans success, set id %d", ipcData.idx);
+        LOGI("object trans success, set id %" LOG_PUB "d", ipcData.idx);
         cnt++;
     }
 }
@@ -211,7 +211,7 @@ int32_t ServiceDevAuth::HandleRestoreCall(MessageParcel &data, MessageParcel &re
 #ifdef DEV_AUTH_SERVICE_BUILD
     int32_t osAccountId = DEFAULT_UPGRADE_OS_ACCOUNT_ID;
     data.ReadInt32(osAccountId);
-    LOGI("Begin to upgrade data for osAccountId: %d.", osAccountId);
+    LOGI("Begin to upgrade data for osAccountId: %" LOG_PUB "d.", osAccountId);
     int32_t res = ExecuteAccountAuthCmd(osAccountId, UPGRADE_DATA, nullptr, nullptr);
     ReloadOsAccountDb(osAccountId);
     if (res != HC_SUCCESS) {
@@ -249,13 +249,13 @@ int32_t ServiceDevAuth::HandleDeviceAuthCall(uint32_t code, MessageParcel &data,
             }
             serviceCall = GetCallMethodByMethodId(methodId);
             if (serviceCall == nullptr) {
-                LOGE("ServiceDevAuth::HandleDeviceAuthCall serviceCall is nullptr, methodId: %d", methodId);
+                LOGE("ServiceDevAuth::HandleDeviceAuthCall serviceCall is nullptr, methodId: %" LOG_PUB "d", methodId);
                 ret = HC_ERR_IPC_METHOD_ID_INVALID;
                 break;
             }
             ret = DecodeCallRequest(data, reqParams, MAX_REQUEST_PARAMS_NUM, reqParamNum);
             if (ret != HC_SUCCESS) {
-                LOGE("ServiceDevAuth::HandleDeviceAuthCall DecodeCallRequest ret: %d", ret);
+                LOGE("ServiceDevAuth::HandleDeviceAuthCall DecodeCallRequest ret: %" LOG_PUB "d", ret);
                 break;
             }
             if (reqParamNum < (MAX_REQUEST_PARAMS_NUM - 1)) {
@@ -352,7 +352,7 @@ int32_t ServiceDevAuth::SetRemoteObject(sptr<IRemoteObject> &object)
             break;
         }
     }
-    LOGI("remote object cache index %d", idx);
+    LOGI("remote object cache index %" LOG_PUB "d", idx);
     if (idx == -1) {
         return -1;
     }
@@ -375,14 +375,14 @@ void ServiceDevAuth::AddCbDeathRecipient(int32_t cbStubIdx, int32_t cbDataIdx)
         return;
     }
     bRet = g_cbStub[cbStubIdx].cbStub->AddDeathRecipient(deathRecipient);
-    LOGI("AddDeathRecipient %s, callback stub idx %d", bRet ? "success" : "failed", cbStubIdx);
+    LOGI("AddDeathRecipient %" LOG_PUB "s, callback stub idx %" LOG_PUB "d", bRet ? "success" : "failed", cbStubIdx);
     return;
 }
 
 void ServiceDevAuth::ResetRemoteObject(int32_t idx)
 {
     if ((idx >= 0) && (idx < MAX_CBSTUB_SIZE)) {
-        LOGI("remote object used done, idx %d", idx);
+        LOGI("remote object used done, idx %" LOG_PUB "d", idx);
         std::lock_guard<std::mutex> autoLock(g_cBMutex);
         g_cbStub[idx].inUse = false;
     }
@@ -393,7 +393,7 @@ void ServiceDevAuth::ActCallback(int32_t objIdx, int32_t callbackId, bool sync,
     uintptr_t cbHook, MessageParcel &dataParcel, MessageParcel &reply)
 {
     if ((objIdx < 0) || (objIdx >= MAX_CBSTUB_SIZE) || (!g_cbStub[objIdx].inUse)) {
-        LOGW("nothing to do, callback id %d, remote object id %d", callbackId, objIdx);
+        LOGW("nothing to do, callback id %" LOG_PUB "d, remote object id %" LOG_PUB "d", callbackId, objIdx);
         return;
     }
     MessageOption option(MessageOption::TF_SYNC);

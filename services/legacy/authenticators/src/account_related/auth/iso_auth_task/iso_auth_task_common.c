@@ -135,7 +135,7 @@ static int32_t SetChallenge(IsoAuthParams *params)
         }
         return HC_SUCCESS;
     }
-    LOGE("Invalid credentialType: %d", params->credentialType);
+    LOGE("Invalid credentialType: %" LOG_PUB "d", params->credentialType);
     return HC_ERR_INVALID_PARAMS;
 }
 
@@ -151,7 +151,7 @@ static int32_t GenerateAuthTokenForAccessory(const IsoAuthParams *params, Uint8B
     }
     res = InitSingleParam(outKey, AUTH_TOKEN_SIZE_BYTE);
     if (res != HC_SUCCESS) {
-        LOGE("Malloc for authToken failed, res: %d.", res);
+        LOGE("Malloc for authToken failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     Uint8Buff userIdSelfBuff = {
@@ -171,7 +171,7 @@ static int32_t GenerateTokenAliasForController(const IsoAuthParams *params, Uint
 {
     int32_t res = InitSingleParam(authTokenAlias, SHA256_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Malloc for authToken alias failed, res: %d.", res);
+        LOGE("Malloc for authToken alias failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = GetSymTokenManager()->generateKeyAlias(params->userIdPeer, (const char *)(params->devIdPeer.val),
@@ -198,7 +198,7 @@ int32_t AccountAuthGeneratePsk(IsoAuthParams *params)
         res = GenerateTokenAliasForController(params, &authToken);
     }
     if (res != HC_SUCCESS) {
-        LOGE("Failed to generate token-related info, res = %d.", res);
+        LOGE("Failed to generate token-related info, res = %" LOG_PUB "d.", res);
         return res;
     }
     Uint8Buff pskBuf = { params->isoBaseParams.psk, PSK_SIZE };
@@ -211,7 +211,7 @@ int32_t AccountAuthGeneratePsk(IsoAuthParams *params)
     res = params->isoBaseParams.loader->computeHmac(&keyParams, &seedBuf, &pskBuf);
     FreeAndCleanKey(&authToken);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeHmac for psk failed, res: %d.", res);
+        LOGE("ComputeHmac for psk failed, res: %" LOG_PUB "d.", res);
     }
     return res;
 }
@@ -234,23 +234,23 @@ int32_t InitIsoAuthParams(const CJson *in, IsoAuthParams *params, const AccountV
     }
     res = InitIsoBaseParams(in, &params->isoBaseParams);
     if (res != HC_SUCCESS) {
-        LOGE("InitIsoBaseParams failed, res: %x.", res);
+        LOGE("InitIsoBaseParams failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     res = FillUserId(in, params);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to fill userId info, res = %d.", res);
+        LOGE("Failed to fill userId info, res = %" LOG_PUB "d.", res);
         goto CLEAN_UP;
     }
     res = FillPayload(in, params);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to fill payload info, res = %d.", res);
+        LOGE("Failed to fill payload info, res = %" LOG_PUB "d.", res);
         goto CLEAN_UP;
     }
     if (params->localDevType == DEVICE_TYPE_ACCESSORY) {
         res = SetChallenge(params);
         if (res != HC_SUCCESS) {
-            LOGE("SetChallenge failed, res = %d.", res);
+            LOGE("SetChallenge failed, res = %" LOG_PUB "d.", res);
             goto CLEAN_UP;
         }
     }
@@ -336,7 +336,7 @@ static int32_t ExtractPeerAuthId(IsoAuthParams *params, const CJson *in)
     }
     int32_t res = InitSingleParam(&(params->isoBaseParams.authIdPeer), HcStrlen(payloadHex) / BYTE_TO_HEX_OPER_LENGTH);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for payload peer failed, res: %d.", res);
+        LOGE("InitSingleParam for payload peer failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     if (HexStringToByte(payloadHex, params->isoBaseParams.authIdPeer.val,
@@ -351,12 +351,12 @@ int32_t ExtractAndVerifyPayload(IsoAuthParams *params, const CJson *in)
 {
     int32_t res = ExtractPeerAuthId(params, in);
     if (res != HC_SUCCESS) {
-        LOGE("ExtractPeerAuthId failed, res: %d.", res);
+        LOGE("ExtractPeerAuthId failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = GetPayloadValue(params, in);
     if (res != HC_SUCCESS) {
-        LOGE("GetPayloadValue failed, res: %d.", res);
+        LOGE("GetPayloadValue failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     uint32_t deviceIdPeerLen = HcStrlen(params->deviceIdPeer);

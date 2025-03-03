@@ -261,7 +261,7 @@ static int32_t ProcessClientTask(TaskBase *task, const CJson *in, CJson *out, in
         LOGE("error occurred and send error");
         return res;
     }
-    LOGI("End process client, step = %d", step);
+    LOGI("End process client, step = %" LOG_PUB "d", step);
     return HC_SUCCESS;
 }
 

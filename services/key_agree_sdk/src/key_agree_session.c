@@ -54,12 +54,12 @@ static int32_t GetIdPeer(const CJson *in, const char *peerIdKey, const Uint8Buff
     }
     uint32_t authIdLen = HcStrlen(authIdStr) / BYTE_TO_HEX_OPER_LENGTH;
     if (authIdLen == 0 || authIdLen > MAX_AUTH_ID_LEN) {
-        LOGE("Invalid authIdPeerLen: %u.", authIdLen);
+        LOGE("Invalid authIdPeerLen: %" LOG_PUB "u.", authIdLen);
         return HC_ERR_INVALID_LEN;
     }
     int32_t res = InitSingleParam(authIdPeer, authIdLen);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for peer authId failed, res: %d.", res);
+        LOGE("InitSingleParam for peer authId failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     if (HexStringToByte(authIdStr, authIdPeer->val, authIdPeer->length) != HC_SUCCESS) {
@@ -171,7 +171,7 @@ static int32_t VersionToString(const VersionStruct *version, char *verStr, uint3
     }
     uint32_t tmpStrLen = HcStrlen(tmpStr);
     if (len < tmpStrLen + 1) {
-        LOGE("The length of verStr is too short, len: %u.", len);
+        LOGE("The length of verStr is too short, len: %" LOG_PUB "u.", len);
         return HC_ERR_INVALID_LEN;
     }
     if (memcpy_s(verStr, len, tmpStr, tmpStrLen + 1) != 0) {
@@ -266,7 +266,7 @@ int32_t GetAuthIdPeerFromPayload(const CJson *in, const Uint8Buff *authIdSelf, U
     }
     int32_t res = GetIdPeer(payload, FIELD_PEER_AUTH_ID, authIdSelf, authIdPeer);
     if (res != HC_SUCCESS) {
-        LOGE("GetIdPeer failed, res: %d.", res);
+        LOGE("GetIdPeer failed, res: %" LOG_PUB "d.", res);
     }
     return res;
 }
@@ -276,7 +276,7 @@ static int32_t ParsePakeServerConfirmMessage(PakeBaseParams *baseParams, const C
     int32_t res = GetByteFromJson(in, FIELD_KCF_DATA, baseParams->kcfDataPeer.val,
         baseParams->kcfDataPeer.length);
     if (res != HC_SUCCESS) {
-        LOGE("Get kcfDataPeer failed, res: %d.", res);
+        LOGE("Get kcfDataPeer failed, res: %" LOG_PUB "d.", res);
         return HC_ERR_JSON_GET;
     }
     return HC_SUCCESS;
@@ -286,7 +286,7 @@ static int32_t PackagePakeServerConfirmData(const PakeBaseParams *baseParams, CJ
 {
     int32_t res = AddByteToJson(payload, FIELD_KCF_DATA, baseParams->kcfData.val, baseParams->kcfData.length);
     if (res != HC_SUCCESS) {
-        LOGE("Add kcfData failed, res: %d.", res);
+        LOGE("Add kcfData failed, res: %" LOG_PUB "d.", res);
         return HC_ERR_JSON_ADD;
     }
     return HC_SUCCESS;
@@ -301,12 +301,12 @@ static int32_t GetDasEpkPeerFromJson(PakeBaseParams *baseParams, const CJson *in
     }
     int32_t res = InitSingleParam(&(baseParams->epkPeer), HcStrlen(epkPeerHex) / BYTE_TO_HEX_OPER_LENGTH);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for epkPeer failed, res: %d.", res);
+        LOGE("InitSingleParam for epkPeer failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = HexStringToByte(epkPeerHex, baseParams->epkPeer.val, baseParams->epkPeer.length);
     if (res != HC_SUCCESS) {
-        LOGE("Convert epkPeer from hex string to byte failed, res: %d.", res);
+        LOGE("Convert epkPeer from hex string to byte failed, res: %" LOG_PUB "d.", res);
         return HC_ERR_CONVERT_FAILED;
     }
     return HC_SUCCESS;
@@ -316,12 +316,12 @@ static int32_t ParsePakeClientConfirmMessage(PakeBaseParams *baseParams, const C
 {
     int32_t res = GetByteFromJson(in, FIELD_KCF_DATA, baseParams->kcfDataPeer.val, baseParams->kcfDataPeer.length);
     if (res != HC_SUCCESS) {
-        LOGE("Get kcfDataPeer failed, res: %d.", res);
+        LOGE("Get kcfDataPeer failed, res: %" LOG_PUB "d.", res);
         return HC_ERR_JSON_GET;
     }
     res = GetDasEpkPeerFromJson(baseParams, in);
     if (res != HC_SUCCESS) {
-        LOGE("GetDasEpkPeerFromJson failed, res: %d.", res);
+        LOGE("GetDasEpkPeerFromJson failed, res: %" LOG_PUB "d.", res);
     }
     return res;
 }
@@ -330,17 +330,17 @@ static int32_t PackagePakeClientConfirmData(const PakeBaseParams *baseParams, CJ
 {
     int32_t res = AddByteToJson(payload, FIELD_EPK, baseParams->epkSelf.val, baseParams->epkSelf.length);
     if (res != HC_SUCCESS) {
-        LOGE("Add epkSelf failed, res: %d.", res);
+        LOGE("Add epkSelf failed, res: %" LOG_PUB "d.", res);
         return HC_ERR_JSON_ADD;
     }
     res = AddByteToJson(payload, FIELD_KCF_DATA, baseParams->kcfData.val, baseParams->kcfData.length);
     if (res != HC_SUCCESS) {
-        LOGE("Add kcfData failed, res: %d.", res);
+        LOGE("Add kcfData failed, res: %" LOG_PUB "d.", res);
         return HC_ERR_JSON_ADD;
     }
     res = AddByteToJson(payload, FIELD_PEER_AUTH_ID, baseParams->idSelf.val, baseParams->idSelf.length);
     if (res != HC_SUCCESS) {
-        LOGE("Add idSelf failed, res: %d.", res);
+        LOGE("Add idSelf failed, res: %" LOG_PUB "d.", res);
         return HC_ERR_JSON_ADD;
     }
     return HC_SUCCESS;
@@ -350,12 +350,12 @@ static int32_t ParsePakeResponseMessage(PakeBaseParams *baseParams, const CJson 
 {
     int32_t res = GetByteFromJson(in, FIELD_SALT, baseParams->salt.val, baseParams->salt.length);
     if (res != HC_SUCCESS) {
-        LOGE("Get salt failed, res: %d.", res);
+        LOGE("Get salt failed, res: %" LOG_PUB "d.", res);
         return HC_ERR_JSON_GET;
     }
     res = GetDasEpkPeerFromJson(baseParams, in);
     if (res != HC_SUCCESS) {
-        LOGE("GetDasEpkPeerFromJson failed, res: %d.", res);
+        LOGE("GetDasEpkPeerFromJson failed, res: %" LOG_PUB "d.", res);
     }
     return res;
 }
@@ -377,7 +377,7 @@ static int32_t FillExtraData(SpekeSession *spekeSession, const CJson *jsonMessag
     do {
         res = InitSingleParam(&(spekeSession->baseParam.extraData), versionStrLength);
         if (res != HC_SUCCESS) {
-            LOGE("InitSingleParam for extraData failed, res: %d.", res);
+            LOGE("InitSingleParam for extraData failed, res: %" LOG_PUB "d.", res);
             break;
         }
         res = memcpy_s(spekeSession->baseParam.extraData.val, spekeSession->baseParam.extraData.length,
@@ -403,7 +403,7 @@ static int32_t FillPskAndDeviceId(SpekeSession *spekeSession)
 
     int32_t res = InitSingleParam(&(spekeSession->baseParam.psk), spekeSession->sharedSecret.length);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for psk failed, res: %d.", res);
+        LOGE("InitSingleParam for psk failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     if (memcpy_s(spekeSession->baseParam.psk.val, spekeSession->baseParam.psk.length,
@@ -415,7 +415,7 @@ static int32_t FillPskAndDeviceId(SpekeSession *spekeSession)
 
     res = InitSingleParam(&(spekeSession->baseParam.idSelf), spekeSession->deviceId.length);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for idSelf failed, res: %d.", res);
+        LOGE("InitSingleParam for idSelf failed, res: %" LOG_PUB "d.", res);
         FreeAndCleanKey(&spekeSession->baseParam.psk);
         return res;
     }
@@ -449,12 +449,12 @@ static int32_t ConstructOutJson(CJson *out)
         }
         res = AddObjToJson(sendToPeer, FIELD_SDK_PAYLOAD, payload);
         if (res != HC_SUCCESS) {
-            LOGE("Add payload to sendToPeer failed, res: %d.", res);
+            LOGE("Add payload to sendToPeer failed, res: %" LOG_PUB "d.", res);
             break;
         }
         res = AddObjToJson(out, FIELD_SDK_SEND_TO_PEER, sendToPeer);
         if (res != HC_SUCCESS) {
-            LOGE("Add sendToPeer to out failed, res: %d.", res);
+            LOGE("Add sendToPeer to out failed, res: %" LOG_PUB "d.", res);
             break;
         }
     } while (0);
@@ -467,17 +467,17 @@ static int32_t PackagePakeResponseData(const PakeBaseParams *baseParams, CJson *
 {
     int32_t res = AddByteToJson(payload, FIELD_SALT, baseParams->salt.val, baseParams->salt.length);
     if (res != HC_SUCCESS) {
-        LOGE("Add salt failed, res: %d.", res);
+        LOGE("Add salt failed, res: %" LOG_PUB "d.", res);
         return HC_ERR_JSON_ADD;
     }
     res = AddByteToJson(payload, FIELD_EPK, baseParams->epkSelf.val, baseParams->epkSelf.length);
     if (res != HC_SUCCESS) {
-        LOGE("Add epkSelf failed, res: %d.", res);
+        LOGE("Add epkSelf failed, res: %" LOG_PUB "d.", res);
         return HC_ERR_JSON_ADD;
     }
     res = AddByteToJson(payload, FIELD_PEER_AUTH_ID, baseParams->idSelf.val, baseParams->idSelf.length);
     if (res != HC_SUCCESS) {
-        LOGE("Add idSelf failed, res: %d.", res);
+        LOGE("Add idSelf failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     return HC_SUCCESS;
@@ -487,7 +487,7 @@ static int32_t PackageMsgForPakeResponse(SpekeSession *spekeSession, CJson *outJ
 {
     int32_t res = ConstructOutJson(outJson);
     if (res != HC_SUCCESS) {
-        LOGE("ConstructOutJson failed, res: %d.", res);
+        LOGE("ConstructOutJson failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     CJson *payload = GetObjFromJson(outJson, FIELD_SDK_PAYLOAD);
@@ -497,22 +497,22 @@ static int32_t PackageMsgForPakeResponse(SpekeSession *spekeSession, CJson *outJ
     }
     res = (*packageExtraData)(&spekeSession->baseParam, payload);
     if (res != HC_SUCCESS) {
-        LOGE("PackagePakeResponseData failed, res: %d.", res);
+        LOGE("PackagePakeResponseData failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = AddIntToJson(payload, FIELD_SDK_STEP, spekeSession->step);
     if (res != HC_SUCCESS) {
-        LOGE("Add step failed, res: %d.", res);
+        LOGE("Add step failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = AddIntToJson(outJson, FIELD_SDK_ERROR_CODE, KEYAGREE_SUCCESS);
     if (res != HC_SUCCESS) {
-        LOGE("Add errorCode failed, res: %d.", res);
+        LOGE("Add errorCode failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = AddVersionToJson(outJson, &(spekeSession->versionInfo.curVersion));
     if (res != HC_SUCCESS) {
-        LOGE("AddVersionToOut failed, res: %d.", res);
+        LOGE("AddVersionToOut failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     return res;
@@ -527,7 +527,7 @@ static int32_t BuildAndPutOutMessage(SpekeSession *spekeSession, KeyAgreeBlob *o
     }
     int32_t res = PackageMsgForPakeResponse(spekeSession, outJson, packageExtraData);
     if (res != HC_SUCCESS) {
-        LOGE("PackageMsgForResponse failed, res: %d.", res);
+        LOGE("PackageMsgForResponse failed, res: %" LOG_PUB "d.", res);
         FreeJson(outJson);
         return res;
     }
@@ -553,17 +553,17 @@ static int32_t PakeResponse(SpekeSession *spekeSession, KeyAgreeBlob *out)
     spekeSession->baseParam.isClient = false;
     int32_t res = FillPskAndDeviceId(spekeSession);
     if (res != HC_SUCCESS) {
-        LOGE("FillPskAndDeviceId failed, res: %d.", res);
+        LOGE("FillPskAndDeviceId failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = ServerResponsePakeV2Protocol(&spekeSession->baseParam);
     if (res != HC_SUCCESS) {
-        LOGE("ServerResponsePakeV2Protocol failed, res:%d", res);
+        LOGE("ServerResponsePakeV2Protocol failed, res:%" LOG_PUB "d", res);
         return res;
     }
     res = BuildAndPutOutMessage(spekeSession, out, PackagePakeResponseData);
     if (res != HC_SUCCESS) {
-        LOGE("BuildAndPutOutMessage failed, res:%d", res);
+        LOGE("BuildAndPutOutMessage failed, res:%" LOG_PUB "d", res);
         return res;
     }
     return res;
@@ -574,12 +574,12 @@ static int32_t CheckPeerProtocolVersion(SpekeSession *spekeSession, CJson *inPar
     VersionStruct curVersionPeer = { 0, 0, 0 };
     int32_t res = GetVersionFromJson(inParams, &curVersionPeer);
     if (res != HC_SUCCESS) {
-        LOGE("Get peer version info failed, res: %d.", res);
+        LOGE("Get peer version info failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = NegotiateVersion(&curVersionPeer, &(spekeSession->versionInfo.curVersion));
     if (res != HC_SUCCESS) {
-        LOGE("NegotiateVersion failed, res: %d.", res);
+        LOGE("NegotiateVersion failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     return HC_SUCCESS;
@@ -595,27 +595,27 @@ static int32_t PakeConfirm(SpekeSession *spekeSession, CJson *inParams, KeyAgree
     spekeSession->baseParam.isClient = true;
     res = FillPskAndDeviceId(spekeSession);
     if (res != HC_SUCCESS) {
-        LOGE("FillPskAndDeviceId failed, res: %d.", res);
+        LOGE("FillPskAndDeviceId failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = GetAuthIdPeerFromPayload(inParams, &(spekeSession->baseParam.idSelf), &(spekeSession->baseParam.idPeer));
     if (res != HC_SUCCESS) {
-        LOGE("Get peer authId failed, res: %d.", res);
+        LOGE("Get peer authId failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = ParsePakeResponseMessage(&(spekeSession->baseParam), inParams);
     if (res != HC_SUCCESS) {
-        LOGE("ParsePakeResponseMessage failed, res: %d.", res);
+        LOGE("ParsePakeResponseMessage failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = ClientConfirmPakeV2Protocol(&(spekeSession->baseParam));
     if (res != HC_SUCCESS) {
-        LOGE("ClientConfirmPakeV2Protocol failed, res:%d", res);
+        LOGE("ClientConfirmPakeV2Protocol failed, res:%" LOG_PUB "d", res);
         return res;
     }
     res = BuildAndPutOutMessage(spekeSession, out, PackagePakeClientConfirmData);
     if (res != HC_SUCCESS) {
-        LOGE("BuildAndPutOutMessage failed, res:%d", res);
+        LOGE("BuildAndPutOutMessage failed, res:%" LOG_PUB "d", res);
         return res;
     }
     return res;
@@ -625,22 +625,22 @@ static int32_t PakeServerConfirm(SpekeSession *spekeSession, CJson *inParams, Ke
 {
     int32_t res = ParsePakeClientConfirmMessage(&(spekeSession->baseParam), inParams);
     if (res != HC_SUCCESS) {
-        LOGE("ParsePakeClientConfirmMessage failed, res: %d", res);
+        LOGE("ParsePakeClientConfirmMessage failed, res: %" LOG_PUB "d", res);
         return res;
     }
     res = GetAuthIdPeerFromPayload(inParams, &(spekeSession->baseParam.idSelf), &(spekeSession->baseParam.idPeer));
     if (res != HC_SUCCESS) {
-        LOGE("Get peer authId failed, res: %d.", res);
+        LOGE("Get peer authId failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = ServerConfirmPakeV2Protocol(&(spekeSession->baseParam));
     if (res != HC_SUCCESS) {
-        LOGE("ServerConfirmPakeV2Protocol failed, res:%d", res);
+        LOGE("ServerConfirmPakeV2Protocol failed, res:%" LOG_PUB "d", res);
         return res;
     }
     res = BuildAndPutOutMessage(spekeSession, out, PackagePakeServerConfirmData);
     if (res != HC_SUCCESS) {
-        LOGE("BuildAndPutOutMessage failed, res:%d", res);
+        LOGE("BuildAndPutOutMessage failed, res:%" LOG_PUB "d", res);
         return res;
     }
     spekeSession->isFinish = true;
@@ -651,12 +651,12 @@ static int32_t PakeClientVerifyConfirm(SpekeSession *spekeSession, CJson *inPara
 {
     int32_t res = ParsePakeServerConfirmMessage(&(spekeSession->baseParam), inParams);
     if (res != HC_SUCCESS) {
-        LOGE("ParsePakeServerConfirmMessage failed, res: %d.", res);
+        LOGE("ParsePakeServerConfirmMessage failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = ClientVerifyConfirmPakeV2Protocol(&(spekeSession->baseParam));
     if (res != HC_SUCCESS) {
-        LOGE("ClientVerifyConfirmPakeV2Protocol failed, res: %d.", res);
+        LOGE("ClientVerifyConfirmPakeV2Protocol failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     FreeAndCleanKey(&spekeSession->sharedSecret);
@@ -668,7 +668,7 @@ static int32_t PakeClientVerifyConfirm(SpekeSession *spekeSession, CJson *inPara
 static int32_t ProcessStep(ProtocolStep step, SpekeSession *spekeSession, CJson *inParams, KeyAgreeBlob *out)
 {
     int32_t res = HC_SUCCESS;
-    LOGI("In key agree step: %d.", step);
+    LOGI("In key agree step: %" LOG_PUB "d.", step);
     switch (step) {
         case STEP_ONE:
             if (PakeResponse(spekeSession, out) != HC_SUCCESS) {
@@ -788,19 +788,19 @@ static int32_t ProcessProtocolInitial(SpekeSession *spekeSession, KeyAgreeBlob *
     }
     int32_t res = AddVersionToJson(outJsonMessage, &(spekeSession->versionInfo.curVersion));
     if (res != HC_SUCCESS) {
-        LOGE("AddVersionToOut failed, res: %d.", res);
+        LOGE("AddVersionToOut failed, res: %" LOG_PUB "d.", res);
         FreeJson(outJsonMessage);
         return HC_ERR_JSON_ADD;
     }
     res = AddIntToJson(outJsonMessage, FIELD_SDK_ERROR_CODE, KEYAGREE_SUCCESS);
     if (res != HC_SUCCESS) {
-        LOGE("Add errorCode failed, res: %d.", res);
+        LOGE("Add errorCode failed, res: %" LOG_PUB "d.", res);
         FreeJson(outJsonMessage);
         return res;
     }
     res = FillExtraData(spekeSession, outJsonMessage);
     if (res != HC_SUCCESS) {
-        LOGE("Fill extra data failed, res: %d.", res);
+        LOGE("Fill extra data failed, res: %" LOG_PUB "d.", res);
         FreeJson(outJsonMessage);
         return res;
     }
@@ -847,12 +847,12 @@ static int32_t ProcessProtocolConfirm(SpekeSession *spekeSession, const KeyAgree
     res = GetVersionFromJson(inJsonMessage, &curVersionPeer);
     FreeJson(inJsonMessage);
     if (res != HC_SUCCESS) {
-        LOGE("Get peer version info failed, res: %d.", res);
+        LOGE("Get peer version info failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = NegotiateVersion(&curVersionPeer, &(spekeSession->versionInfo.curVersion));
     if (res != HC_SUCCESS) {
-        LOGE("NegotiateVersion failed, res: %d.", res);
+        LOGE("NegotiateVersion failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     KeyAgreeProtocol protocolType = GetKegAgreeProtocolType(&(spekeSession->versionInfo.curVersion));
@@ -885,7 +885,7 @@ static int32_t ProcessProtocolAgree(SpekeSession *spekeSession, const KeyAgreeBl
         LOGI("Version is decided, no need do protocol agree!");
     }
     if (res != HC_SUCCESS) {
-        LOGE("ProcessProtocolAgree failed, versionStatus is: %d, res: %d.",
+        LOGE("ProcessProtocolAgree failed, versionStatus is: %" LOG_PUB "d, res: %" LOG_PUB "d.",
             spekeSession->versionInfo.versionStatus, res);
     }
     return res;

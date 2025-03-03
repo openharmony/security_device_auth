@@ -65,7 +65,7 @@ static void BuildErrorMessage(KeyAgreeResult errorCode, KeyAgreeBlob *out)
     }
     int32_t res = AddIntToJson(outJson, FIELD_SDK_ERROR_CODE, errorCode);
     if (res != HC_SUCCESS) {
-        LOGE("Add errorCode failed, res: %d.", res);
+        LOGE("Add errorCode failed, res: %" LOG_PUB "d.", res);
         FreeJson(outJson);
         return;
     }
@@ -98,7 +98,7 @@ static bool IsErrorMessage(const KeyAgreeBlob *in)
     }
     FreeJson(inJson);
     if (errorCode != KEYAGREE_SUCCESS) {
-        LOGE("Peer is onError, errorCode: %d.!", errorCode);
+        LOGE("Peer is onError, errorCode: %" LOG_PUB "d.!", errorCode);
         return true;
     }
     return false;

@@ -25,7 +25,7 @@ SaSubscriber::SaSubscriber(const SaEventNotifier &notifier) : notifier_(notifier
 void SaSubscriber::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     (void)deviceId;
-    LOGI("[SaSubscriber]: OnAddSystemAbility systemAbilityId: %d.", systemAbilityId);
+    LOGI("[SaSubscriber]: OnAddSystemAbility systemAbilityId: %" LOG_PUB "d.", systemAbilityId);
     notifier_.notifySystemAbilityAdded(systemAbilityId);
 }
 

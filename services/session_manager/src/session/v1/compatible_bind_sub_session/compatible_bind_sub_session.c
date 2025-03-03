@@ -235,7 +235,7 @@ static int32_t CheckPeerStatus(const CJson *params, bool *isNeedInform)
 {
     int32_t errorCode = HC_SUCCESS;
     if (GetIntFromJson(params, FIELD_GROUP_ERROR_MSG, &errorCode) == HC_SUCCESS) {
-        LOGE("An error occurs in the peer device! [ErrorCode]: %d", errorCode);
+        LOGE("An error occurs in the peer device! [ErrorCode]: %" LOG_PUB "d", errorCode);
         *isNeedInform = false;
         return errorCode;
     }
@@ -458,7 +458,7 @@ static int32_t AddGroupAndLocalDevIfNotExist(const char *groupId, const Compatib
     char udid[INPUT_UDID_LEN] = { 0 };
     int32_t result = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
     if (result != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", result);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", result);
         return result;
     }
     result = AddGroupToDatabase(session);
@@ -482,10 +482,10 @@ static int32_t AddPeerDevToGroup(const char *peerAuthId, const char *peerUdid,
     (void)GetIntFromJson(session->params, FIELD_PEER_USER_TYPE, &peerUserType);
     int32_t result = AddTrustDevToDatabase(session->osAccountId, peerAuthId, peerUdid, groupId, peerUserType);
     if (result != HC_SUCCESS) {
-        LOGE("Failed to add the peer trusted device information! RequestId: %" PRId64, session->reqId);
+        LOGE("Failed to add the peer trusted device information! RequestId: %" LOG_PUB PRId64, session->reqId);
         return result;
     }
-    LOGI("The peer trusted device is added to the database successfully! RequestId: %" PRId64, session->reqId);
+    LOGI("The peer trusted device is added to the database successfully! RequestId: %" LOG_PUB PRId64, session->reqId);
     return HC_SUCCESS;
 }
 
@@ -557,7 +557,7 @@ static int32_t OnSessionFinish(const CompatibleBindSubSession *session, CJson *j
         LOGE("An error occurred when processing different end operations!");
         return result;
     }
-    LOGI("The session completed successfully! [ReqId]: %" PRId64, session->reqId);
+    LOGI("The session completed successfully! [ReqId]: %" LOG_PUB PRId64, session->reqId);
     NotifyBindResult((ChannelType)session->channelType, session->channelId);
     CloseChannel((ChannelType)session->channelType, session->channelId);
     return HC_SUCCESS;
@@ -590,12 +590,12 @@ static void InformPeerModuleError(CJson *out, const CompatibleBindSubSession *se
 
 static int32_t ProcessModule(const CompatibleBindSubSession *session, const CJson *in, CJson *out, int32_t *status)
 {
-    LOGI("Start to process module task! [ModuleType]: %d", session->moduleType);
+    LOGI("Start to process module task! [ModuleType]: %" LOG_PUB "d", session->moduleType);
     DEV_AUTH_START_TRACE(TRACE_TAG_PROCESS_AUTH_TASK);
     int32_t res = ProcessTask(session->base.curTaskId, in, out, status, session->moduleType);
     DEV_AUTH_FINISH_TRACE();
     if (res != HC_SUCCESS) {
-        LOGE("Failed to process module task! res: %d", res);
+        LOGE("Failed to process module task! res: %" LOG_PUB "d", res);
         return res;
     }
     LOGI("Process module task successfully!");
@@ -645,7 +645,7 @@ static int32_t ProcessBindTask(CompatibleBindSubSession *session, CJson *in, int
         InformPeerGroupErrorIfNeeded(isNeedInform, result, session);
         return result;
     }
-    LOGI("Process bind session successfully! [ReqId]: %" PRId64, session->reqId);
+    LOGI("Process bind session successfully! [ReqId]: %" LOG_PUB PRId64, session->reqId);
     if (*status == FINISH) {
         return FINISH;
     }

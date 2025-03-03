@@ -54,7 +54,7 @@ static int CreateNextTask(IsoServerTask *realTask, const CJson *in, CJson *out, 
     switch (realTask->params.opCode) {
         case OP_BIND:
             if (message != ISO_CLIENT_BIND_EXCHANGE_CMD) {
-                LOGI("The message is repeated, ignore it message: %d.", message);
+                LOGI("The message is repeated, ignore it message: %" LOG_PUB "d.", message);
                 *status = IGNORE_MSG;
                 break;
             }
@@ -66,23 +66,23 @@ static int CreateNextTask(IsoServerTask *realTask, const CJson *in, CJson *out, 
             break;
         case AUTHENTICATE:
             if (message != ISO_RESULT_CONFIRM_CMD) {
-                LOGI("The message is repeated, ignore it message: %d.", message);
+                LOGI("The message is repeated, ignore it message: %" LOG_PUB "d.", message);
                 *status = IGNORE_MSG;
                 break;
             }
             if ((res = CheckEncResult(&(realTask->params), in, RESULT_AAD)) != 0) {
-                LOGE("CheckEncResult failed, res: %d.", res);
+                LOGE("CheckEncResult failed, res: %" LOG_PUB "d.", res);
                 break;
             }
             if ((res = SendResultToFinalSelf(&(realTask->params), out, true)) != 0) {
-                LOGE("SendResultToFinalSelf failed, res: %d.", res);
+                LOGE("SendResultToFinalSelf failed, res: %" LOG_PUB "d.", res);
                 break;
             }
             LOGD("Authenticate task end.");
             *status = FINISH;
             break;
         default:
-            LOGE("Unsupported opCode: %d.", realTask->params.opCode);
+            LOGE("Unsupported opCode: %" LOG_PUB "d.", realTask->params.opCode);
             res = HC_ERR_NOT_SUPPORT;
     }
 
@@ -95,7 +95,7 @@ static int Process(struct SubTaskBaseT *task, const CJson *in, CJson *out, int32
     if (realTask->curTask != NULL) {
         int res = realTask->curTask->process(realTask->curTask, &(realTask->params), in, out, status);
         if (res != HC_SUCCESS) {
-            LOGE("CurTask processes failed, res: %x.", res);
+            LOGE("CurTask processes failed, res: %" LOG_PUB "x.", res);
         }
         if (*status == FINISH && (realTask->curTask->getCurTaskType() == TASK_TYPE_ISO_PROTOCOL)) {
             realTask->curTask->destroyTask(realTask->curTask);
@@ -122,7 +122,7 @@ SubTaskBase *CreateIsoServerTask(const CJson *in)
 
     int res = InitIsoParams(&(task->params), in);
     if (res != 0) {
-        LOGE("InitIsoParams failed, res: %x.", res);
+        LOGE("InitIsoParams failed, res: %" LOG_PUB "x.", res);
         DestroyIsoServerTask((struct SubTaskBaseT *)task);
         return NULL;
     }

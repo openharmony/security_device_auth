@@ -26,7 +26,7 @@ static int32_t GetSecurityLabel(const char *filePath, char **returnLabel)
 {
     int32_t labelSize = getxattr(filePath, SECURITY_LABEL_XATTR_KEY, NULL, 0);
     if (labelSize <= 0 || errno == ENOTSUP) {
-        LOGE("Failed to get security label size, labelSize: %d, [errno]: %d", labelSize, errno);
+        LOGE("Failed to get security label size, labelSize: %" LOG_PUB "d, [errno]: %" LOG_PUB "d", labelSize, errno);
         return HC_ERROR;
     }
     char *label = (char *)HcMalloc(labelSize + 1, 0);
@@ -36,7 +36,7 @@ static int32_t GetSecurityLabel(const char *filePath, char **returnLabel)
     }
     labelSize = getxattr(filePath, SECURITY_LABEL_XATTR_KEY, label, labelSize);
     if (labelSize <= 0 || errno == ENOTSUP) {
-        LOGE("Failed to get security label, labelSize: %d, [errno]: %d", labelSize, errno);
+        LOGE("Failed to get security label, labelSize: %" LOG_PUB "d, [errno]: %" LOG_PUB "d", labelSize, errno);
         HcFree(label);
         return HC_ERROR;
     }
@@ -66,5 +66,5 @@ void SetSecurityLabel(const char *filePath, const char *labelToSet)
     }
     int32_t res = setxattr(filePath, SECURITY_LABEL_XATTR_KEY, labelToSet,
         HcStrlen(labelToSet), 0);
-    LOGI("Set security label [Res]: %d", res);
+    LOGI("Set security label [Res]: %" LOG_PUB "d", res);
 }

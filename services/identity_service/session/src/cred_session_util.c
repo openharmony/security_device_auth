@@ -125,7 +125,7 @@ static int32_t AddUserIdHashHexStringToContext(CJson *context, CJson *credAuthIn
     Uint8Buff userIdHashBuf = { userIdHashByte, sizeof(userIdHashByte) };
     int32_t res = GetLoaderInstance()->sha256(&userIdBuf, &userIdHashBuf);
     if (res != HC_SUCCESS) {
-        LOGE("sha256 failed, res:%d", res);
+        LOGE("sha256 failed, res:%" LOG_PUB "d", res);
         return res;
     }
     uint32_t userIdHashLen = SHA256_LEN * BYTE_TO_HEX_OPER_LENGTH + 1;
@@ -136,7 +136,7 @@ static int32_t AddUserIdHashHexStringToContext(CJson *context, CJson *credAuthIn
     }
     res = ByteToHexString(userIdHashByte, SHA256_LEN, userIdHash, userIdHashLen);
     if (res != HC_SUCCESS) {
-        LOGE("Byte to hexString failed, res:%d", res);
+        LOGE("Byte to hexString failed, res:%" LOG_PUB "d", res);
         HcFree(userIdHash);
     }
     //replace userId plain to hash hex string
@@ -199,7 +199,7 @@ static int32_t AddAuthIdToCredContext(CJson *context)
         LOGD("No authId is found. The default value is udid!");
         int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to get local udid! res: %d", res);
+            LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
             return HC_ERR_DB;
         }
         authId = udid;
@@ -352,7 +352,7 @@ static int32_t AddOsAccountIdToContextIfValid(CJson *context)
     int32_t osAccountId = ANY_OS_ACCOUNT;
     (void)GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId);
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    LOGI("[OsAccountId]: %d", osAccountId);
+    LOGI("[OsAccountId]: %" LOG_PUB "d", osAccountId);
     if (osAccountId == INVALID_OS_ACCOUNT) {
         return HC_ERR_INVALID_PARAMS;
     }

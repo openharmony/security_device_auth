@@ -47,7 +47,7 @@ static int32_t ProcessAsyTokens(int32_t osAccountId, int32_t cmdId, CJson *in, C
             }
             return GetAccountAuthTokenManager()->getRegisterProof(osAccountId, in, out);
         default:
-            LOGE("Operation is not supported for: %d.", cmdId);
+            LOGE("Operation is not supported for: %" LOG_PUB "d.", cmdId);
             return HC_ERR_NOT_SUPPORT;
     }
 }
@@ -74,7 +74,7 @@ static int32_t ProcessSymTokens(int32_t osAccountId, int32_t cmdId, CJson *in, C
             return GetSymTokenManager()->deleteToken(osAccountId, userId, deviceId);
         }
         default:
-            LOGE("Operation is not supported for: %d.", cmdId);
+            LOGE("Operation is not supported for: %" LOG_PUB "d.", cmdId);
             return HC_ERR_NOT_SUPPORT;
     }
 }
@@ -98,7 +98,7 @@ static int32_t ProcessAccountCredentials(int32_t osAccountId, int32_t cmdId, CJs
     } else if (credentialType == SYMMETRIC_CRED) {
         return ProcessSymTokens(osAccountId, cmdId, in, out);
     } else {
-        LOGE("Invalid credential type! [CredType]: %d", credentialType);
+        LOGE("Invalid credential type! [CredType]: %" LOG_PUB "d", credentialType);
         return HC_ERR_NOT_SUPPORT;
     }
 }

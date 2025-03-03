@@ -161,19 +161,19 @@ static int32_t GenerateGroupErrorMsg(int32_t errorCode, int64_t requestId, const
 
 int32_t CreateAndProcessBindTask(CompatibleBindSubSession *session, const CJson *in, CJson *out, int32_t *status)
 {
-    LOGI("Start to create and process module task! [ModuleType]: %d", session->moduleType);
+    LOGI("Start to create and process module task! [ModuleType]: %" LOG_PUB "d", session->moduleType);
     DEV_AUTH_START_TRACE(TRACE_TAG_CREATE_AUTH_TASK);
     int32_t res = CreateTask(&(session->base.curTaskId), in, out, session->moduleType);
     DEV_AUTH_FINISH_TRACE();
     if (res != HC_SUCCESS) {
-        LOGE("Failed to create module task! res: %d", res);
+        LOGE("Failed to create module task! res: %" LOG_PUB "d", res);
         return res;
     }
     DEV_AUTH_START_TRACE(TRACE_TAG_PROCESS_AUTH_TASK);
     res = ProcessTask(session->base.curTaskId, in, out, status, session->moduleType);
     DEV_AUTH_FINISH_TRACE();
     if (res != HC_SUCCESS) {
-        LOGE("Failed to process module task! res: %d", res);
+        LOGE("Failed to process module task! res: %" LOG_PUB "d", res);
         return res;
     }
     LOGI("Create and process module task successfully!");
@@ -194,7 +194,7 @@ int32_t TransmitBindSessionData(const CompatibleBindSubSession *session, const C
     DEV_AUTH_FINISH_TRACE();
     FreeJsonString(sendDataStr);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to send msg to peer device! res: %d", res);
+        LOGE("Failed to send msg to peer device! res: %" LOG_PUB "d", res);
         return res;
     }
     return HC_SUCCESS;

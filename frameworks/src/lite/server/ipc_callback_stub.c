@@ -43,7 +43,7 @@ static void DoCallBack(int32_t callbackId, uintptr_t cbHook, IpcIo *data, IpcIo 
         ret = DecodeIpcData((uintptr_t)(data), &(cbDataCache[i].type),
             &(cbDataCache[i].val), &(cbDataCache[i].valSz));
         if (ret != HC_SUCCESS) {
-            LOGE("decode failed, ret %d", ret);
+            LOGE("decode failed, ret %" LOG_PUB "d", ret);
             return;
         }
     }
@@ -63,7 +63,7 @@ int32_t CbStubOnRemoteRequest(uint32_t code, IpcIo *data, IpcIo *reply, MessageO
         return -1;
     }
 
-    LOGI("receive ipc transact code(%u)", code);
+    LOGI("receive ipc transact code(%" LOG_PUB "u)", code);
     switch (code) {
         case DEV_AUTH_CALLBACK_REQUEST:
             ReadInt32(data, &callbackId);
@@ -71,10 +71,10 @@ int32_t CbStubOnRemoteRequest(uint32_t code, IpcIo *data, IpcIo *reply, MessageO
             DoCallBack(callbackId, cbHook, data, reply);
             break;
         default:
-            LOGE("Invoke callback cmd code(%u) error", code);
+            LOGE("Invoke callback cmd code(%" LOG_PUB "u) error", code);
             break;
     }
-    LOGI("Invoke callback done, result(%d)", HC_SUCCESS);
+    LOGI("Invoke callback done, result(%" LOG_PUB "d)", HC_SUCCESS);
     return HC_SUCCESS;
 }
 

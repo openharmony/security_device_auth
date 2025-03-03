@@ -108,7 +108,7 @@ static void GetGroupInfoByGroupId(int32_t osAccountId, const char *groupId,
     QueryGroupParams queryParams = InitQueryGroupParams();
     queryParams.groupId = groupId;
     if (QueryGroups(osAccountId, &queryParams, groupEntryVec) != HC_SUCCESS) {
-        LOGE("Failed to query groups for groupId: %s!", groupId);
+        LOGE("Failed to query groups for groupId: %" LOG_PUB "s!", groupId);
     }
 }
 
@@ -264,10 +264,10 @@ static int32_t FillAuthParams(int32_t osAccountId, const CJson *param,
             continue;
         }
         PRINT_SENSITIVE_DATA("GroupId", groupId);
-        LOGI("Group type is %d.", groupInfo->type);
+        LOGI("Group type is %" LOG_PUB "d.", groupInfo->type);
         paramsVec->pushBack(paramsVec, (const void **)&paramsData);
     }
-    LOGI("The candidate group size is: %u", paramsVec->size(paramsVec));
+    LOGI("The candidate group size is: %" LOG_PUB "u", paramsVec->size(paramsVec));
     return HC_SUCCESS;
 }
 
@@ -482,7 +482,7 @@ static int32_t ReturnTransmitData(const CompatibleAuthSubSession *session, CJson
 
     int32_t authForm = AUTH_FORM_INVALID_TYPE;
     if (GetIntFromJson(sendToPeer, FIELD_AUTH_FORM, &authForm) == HC_SUCCESS) {
-        LOGI("AuthForm is %d.", authForm);
+        LOGI("AuthForm is %" LOG_PUB "d.", authForm);
     }
 
     const DeviceAuthCallback *callback = session->base.callback;

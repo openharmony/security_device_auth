@@ -27,14 +27,14 @@
 static int HcFileOpenRead(const char *path)
 {
     int ret = UtilsFileOpen(path, O_RDONLY, 0);
-    LOGI("ret = %d", ret);
+    LOGI("ret = %" LOG_PUB "d", ret);
     return ret;
 }
 
 static int HcFileOpenWrite(const char *path)
 {
     int ret = UtilsFileOpen(path, O_RDWR_FS | O_CREAT_FS | O_TRUNC_FS, 0);
-    LOGI("ret = %d", ret);
+    LOGI("ret = %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -62,7 +62,7 @@ int HcFileSize(FileHandle file)
 {
     int fileSize = 0;
     int ret = UtilsFileStat(file.filePath, (unsigned int *)&fileSize);
-    LOGI("ret = %d, fileSize = %d\n", ret, fileSize);
+    LOGI("ret = %" LOG_PUB "d, fileSize = %" LOG_PUB "d\n", ret, fileSize);
     if (ret == HAL_SUCCESS) {
         return fileSize;
     }
@@ -76,7 +76,7 @@ int HcFileRead(FileHandle file, void *dst, int dstSize)
         return HAL_FAILED;
     }
     int ret = UtilsFileRead(fp, (char *)dst, dstSize);
-    LOGI("ret = %d", ret);
+    LOGI("ret = %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -87,7 +87,7 @@ int HcFileWrite(FileHandle file, const void *src, int srcSize)
         return HAL_FAILED;
     }
     int ret = UtilsFileWrite(fp, src, srcSize);
-    LOGI("ret = %d", ret);
+    LOGI("ret = %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -98,7 +98,7 @@ void HcFileClose(FileHandle file)
         return;
     }
     int ret = UtilsFileClose(fp);
-    LOGI("ret = %d", ret);
+    LOGI("ret = %" LOG_PUB "d", ret);
 }
 
 void HcFileRemove(const char *path)
@@ -108,7 +108,7 @@ void HcFileRemove(const char *path)
         return;
     }
     int ret = UtilsFileDelete(path);
-    LOGI("File delete result:%d", ret);
+    LOGI("File delete result:%" LOG_PUB "d", ret);
 }
 
 void HcFileGetSubFileName(const char *path, StringVector *nameVec)

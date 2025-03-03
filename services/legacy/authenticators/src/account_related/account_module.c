@@ -46,13 +46,13 @@ static bool IsAccountMsgNeedIgnore(const CJson *in)
     } else if (opCode == AUTHENTICATE) {
         key = FIELD_STEP;
     } else {
-        LOGE("Invalid opCode: %d.", opCode);
+        LOGE("Invalid opCode: %" LOG_PUB "d.", opCode);
         return true;
     }
     uint32_t message;
     if (GetIntFromJson(in, key, (int32_t *)&message) == HC_SUCCESS) {
         if ((message & ACCOUNT_CLIENT_STEP_MASK) != ACCOUNT_CLIENT_FIRST_MESSAGE) {
-            LOGI("The message is repeated, ignore it, code: %u", message);
+            LOGI("The message is repeated, ignore it, code: %" LOG_PUB "u", message);
             return true;
         }
     }
@@ -87,7 +87,7 @@ static int CreateAccountTask(int32_t *taskId, const CJson *in, CJson *out)
     }
     int32_t res = authManager->addTaskToManager(newTask);
     if (res != HC_SUCCESS) {
-        LOGE("Add new task into task manager failed, res: %d.", res);
+        LOGE("Add new task into task manager failed, res: %" LOG_PUB "d.", res);
         newTask->destroyTask(newTask);
     }
     return res;
@@ -105,10 +105,10 @@ static int ProcessAccountTask(int32_t taskId, const CJson *in, CJson *out, int32
     }
     AccountTask *currentTask = authManager->getTaskFromManager(taskId);
     if (currentTask == NULL) {
-        LOGE("Get task from manager failed, taskId: %d.", taskId);
+        LOGE("Get task from manager failed, taskId: %" LOG_PUB "d.", taskId);
         return HC_ERR_TASK_ID_IS_NOT_MATCH;
     }
-    LOGD("Begin process account related task, taskId: %d.", taskId);
+    LOGD("Begin process account related task, taskId: %" LOG_PUB "d.", taskId);
     return currentTask->processTask(currentTask, in, out, status);
 }
 
@@ -123,7 +123,7 @@ static void DestroyAccountTask(int taskId)
         LOGE("Get multi auth manager instance failed.");
         return;
     }
-    LOGI("Delete taskId:%d from task manager.", taskId);
+    LOGI("Delete taskId:%" LOG_PUB "d from task manager.", taskId);
     authManager->deleteTaskFromManager(taskId);
 }
 

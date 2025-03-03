@@ -111,7 +111,7 @@ int32_t VersionToString(const VersionStruct *version, char *verStr, uint32_t len
     }
     uint32_t tmpStrLen = HcStrlen(tmpStr);
     if (len < tmpStrLen + 1) {
-        LOGE("The length of verStr is too short, len: %u.", len);
+        LOGE("The length of verStr is too short, len: %" LOG_PUB "u.", len);
         return HC_ERR_INVALID_LEN;
     }
 
@@ -131,7 +131,7 @@ int32_t AddSingleVersionToJson(CJson *jsonObj, const VersionStruct *version)
     char versionStr[TMP_VERSION_STR_LEN] = { 0 };
     int32_t ret = VersionToString(version, versionStr, TMP_VERSION_STR_LEN);
     if (ret != HC_SUCCESS) {
-        LOGE("VersionToString failed, res: %x.", ret);
+        LOGE("VersionToString failed, res: %" LOG_PUB "x.", ret);
         return ret;
     }
 
@@ -160,7 +160,7 @@ int32_t GetSingleVersionFromJson(const CJson* jsonObj, VersionStruct *version)
 
     int32_t ret = StringToVersion(versionStr, version);
     if (ret != HC_SUCCESS) {
-        LOGE("StringToVersion failed, res: %x.", ret);
+        LOGE("StringToVersion failed, res: %" LOG_PUB "x.", ret);
         return ret;
     }
     return HC_SUCCESS;
@@ -297,7 +297,7 @@ ProtocolType GetPrototolType(VersionStruct *curVersion, OperationCode opCode)
         case OP_UNBIND:
             return GetAuthPrototolType(curVersion);
         default:
-            LOGE("Unsupported opCode: %d.", opCode);
+            LOGE("Unsupported opCode: %" LOG_PUB "d.", opCode);
     }
     return PROTOCOL_TYPE_NONE;
 }
@@ -312,7 +312,7 @@ PakeAlgType GetSupportedPakeAlg(VersionStruct *curVersion, ProtocolType protocol
         pakeAlgType = ((curVersion->third & EC_PAKE_V1) >> ALG_OFFSET_FOR_PAKE_V1) |
             ((curVersion->third & DL_PAKE_V1) >> ALG_OFFSET_FOR_PAKE_V1);
     } else {
-        LOGE("Invalid protocolType: %d.", protocolType);
+        LOGE("Invalid protocolType: %" LOG_PUB "d.", protocolType);
     }
     return pakeAlgType;
 }

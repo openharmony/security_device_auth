@@ -44,7 +44,7 @@ void StubDevAuthCb::DoCallBack(int32_t callbackId, uintptr_t cbHook,
         ret = DecodeIpcData(reinterpret_cast<uintptr_t>(&dataParcel), &(cbDataCache[i].type),
             &(cbDataCache[i].val), &(cbDataCache[i].valSz));
         if (ret != HC_SUCCESS) {
-            LOGE("decode failed, ret %d", ret);
+            LOGE("decode failed, ret %" LOG_PUB "d", ret);
             return;
         }
     }
@@ -73,7 +73,7 @@ int32_t StubDevAuthCb::OnRemoteRequest(uint32_t code,
             StubDevAuthCb::DoCallBack(callbackId, cbHook, data, reply, option);
             break;
         default:
-            LOGE("Invoke call back cmd id error, %u", code);
+            LOGE("Invoke call back cmd id error, %" LOG_PUB "u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     return 0;

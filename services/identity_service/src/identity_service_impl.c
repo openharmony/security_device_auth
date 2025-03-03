@@ -187,7 +187,7 @@ int32_t QueryCredInfoByCredIdImpl(int32_t osAccountId, const char *credId, char 
     Credential *credential = NULL;
     int32_t ret = GetCredentialById(osAccountId, credId, &credential);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to get credential by credId, ret = %d", ret);
+        LOGE("Failed to get credential by credId, ret = %" LOG_PUB "d", ret);
         return ret;
     }
 
@@ -221,7 +221,7 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
     Credential *credential = NULL;
     int32_t ret = GetCredentialById(osAccountId, credId, &credential);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to get credential by credId, ret = %d", ret);
+        LOGE("Failed to get credential by credId, ret = %" LOG_PUB "d", ret);
         return ret;
     }
     ret = CheckOwnerUidPermission(credential);
@@ -240,7 +240,7 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
 
     ret = HexStringToByte(credId, credIdByte.val, credIdByte.length);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to convert credId to byte, invalid credId, ret: %d", ret);
+        LOGE("Failed to convert credId to byte, invalid credId, ret: %" LOG_PUB "d", ret);
         HcFree(credIdByte.val);
         return IS_ERR_INVALID_HEX_STRING;
     }
@@ -248,7 +248,7 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
     ret = GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId);
     HcFree(credIdByte.val);
     if (ret == HAL_ERR_HUKS) {
-        LOGW("Huks delete key failed, error: %d, continue to delete local cred", IS_ERR_HUKS_DELETE_FAILED);
+        LOGW("Huks delete key failed, error: %" LOG_PUB "d, continue to delete local cred", IS_ERR_HUKS_DELETE_FAILED);
     }
 
     ret = DelCredById(osAccountId, credId);
@@ -337,7 +337,7 @@ int32_t UpdateCredInfoImpl(int32_t osAccountId, const char *credId, const char *
     Credential *credential = NULL;
     int32_t ret = GetCredentialById(osAccountId, credId, &credential);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to get credential by credId, ret: %d", ret);
+        LOGE("Failed to get credential by credId, ret: %" LOG_PUB "d", ret);
         return ret;
     }
 
@@ -406,7 +406,7 @@ static int32_t DelCredInVec(int32_t osAccountId, CredentialVec *credVec)
         }
         ret = DeleteCredentialImpl(osAccountId, credId);
         if (ret != IS_SUCCESS) {
-            LOGE("Failed to delete credential, ret = %d", ret);
+            LOGE("Failed to delete credential, ret = %" LOG_PUB "d", ret);
             return ret;
         }
     }
@@ -417,7 +417,7 @@ static int32_t ProcessAbnormalCreds(int32_t osAccountId, CJson *baseInfoJson, Qu
 {
     int32_t ret = DelCredential(osAccountId, queryParams);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to delete abnormal credentials, ret = %d", ret);
+        LOGE("Failed to delete abnormal credentials, ret = %" LOG_PUB "d", ret);
         return ret;
     }
     return AddUpdateCred(osAccountId, baseInfoJson, queryParams);

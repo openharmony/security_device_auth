@@ -732,7 +732,7 @@ int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *credId, cons
     const char *selfAuthId = StringGet(&deviceEntry->authId);
     ret = VerifyPeerCertInfo(osAccountId, selfUserId, selfAuthId, peerCertInfo);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to verify peer cert! [Res]: %d", ret);
+        LOGE("Failed to verify peer cert! [Res]: %" LOG_PUB "d", ret);
         DestroyDeviceEntry(deviceEntry);
         return ret;
     }
@@ -778,7 +778,7 @@ int32_t GetAccountSymSharedSecret(const CJson *in, const CJson *urlJson, Uint8Bu
     ret = GetLoaderInstance()->computeHmac(&keyParams, &seedBuff, sharedSecret);
     FreeBuffData(&authToken);
     if (ret != HC_SUCCESS) {
-        LOGE("ComputeHmac for psk failed, ret: %d.", ret);
+        LOGE("ComputeHmac for psk failed, ret: %" LOG_PUB "d.", ret);
         FreeBuffData(sharedSecret);
     }
     return ret;

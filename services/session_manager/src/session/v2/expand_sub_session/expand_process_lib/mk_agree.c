@@ -103,7 +103,7 @@ static int32_t AddEventByState(const BaseCmd *cmd, CJson *sendData)
 
 static int32_t ProcessMkAgreeTask(BaseCmd *cmd, const CJson *in, CJson **out)
 {
-    LOGI("process mk agree task, current state is: %d", cmd->curState);
+    LOGI("process mk agree task, current state is: %" LOG_PUB "d", cmd->curState);
     CJson *sendData = CreateJson();
     if (sendData == NULL) {
         LOGE("Failed to create sendData!");
@@ -179,13 +179,15 @@ static int32_t SwitchState(BaseCmd *cmd, const CJson *in, CJson **out, CmdState 
                 cmd->curState = cmd->failState;
                 return res;
             }
-            LOGI("event: %d, curState: %d, nextState: %d", eventType, cmd->curState, STATE_MACHINE[i].nextState);
+            LOGI("event: %" LOG_PUB "d, curState: %" LOG_PUB "d, nextState: %" LOG_PUB "d", eventType,
+                cmd->curState, STATE_MACHINE[i].nextState);
             cmd->curState = STATE_MACHINE[i].nextState;
             *returnState = (cmd->curState == cmd->finishState) ? CMD_STATE_FINISH : CMD_STATE_CONTINUE;
             return HC_SUCCESS;
         }
     }
-    LOGI("Unsupported event type. Ignore process. [Event]: %d, [CurState]: %d", eventType, cmd->curState);
+    LOGI("Unsupported event type. Ignore process. [Event]: %" LOG_PUB "d, [CurState]: %" LOG_PUB "d",
+        eventType, cmd->curState);
     return HC_SUCCESS;
 }
 

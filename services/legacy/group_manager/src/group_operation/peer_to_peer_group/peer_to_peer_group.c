@@ -55,7 +55,8 @@ static int32_t CheckGroupName(int32_t osAccountId, const char *appId, const CJso
     }
 
     if (IsSameNameGroupExist(osAccountId, appId, groupName)) {
-        LOGE("A group with the same group name has been created! [AppId]: %s, [GroupName]: %s", appId, groupName);
+        LOGE("A group with the same group name has been created! [AppId]: %" LOG_PUB "s, [GroupName]: %" LOG_PUB "s",
+            appId, groupName);
         return HC_ERR_INVALID_PARAMS;
     }
     return HC_SUCCESS;
@@ -82,7 +83,7 @@ static int32_t GenerateGroupId(const char *groupName, const char *appId, char **
     result = GetHashResult(hashMessage, messageSize, *returnGroupId, hashStrLen);
     HcFree(hashMessage);
     if (result != HC_SUCCESS) {
-        LOGE("Failed to get hash for groupId! [AppId]: %s, [GroupName]: %s", appId, groupName);
+        LOGE("Failed to get hash for groupId! [AppId]: %" LOG_PUB "s, [GroupName]: %" LOG_PUB "s", appId, groupName);
         HcFree(*returnGroupId);
         *returnGroupId = NULL;
         return HC_ERR_HASH_FAIL;
@@ -104,7 +105,7 @@ static int32_t GeneratePeerToPeerGroupId(const CJson *jsonParams, char **returnG
     }
     int32_t result = GenerateGroupId(groupName, appId, returnGroupId);
     if (result != HC_SUCCESS) {
-        LOGE("Failed to generate groupId! [GroupName]: %s, [AppId]: %s", groupName, appId);
+        LOGE("Failed to generate groupId! [GroupName]: %" LOG_PUB "s, [AppId]: %" LOG_PUB "s", groupName, appId);
         return result;
     }
     return HC_SUCCESS;
@@ -231,7 +232,7 @@ static int32_t DelPeerDevAndKeyInfo(int32_t osAccountId, const char *groupId, co
     };
     result = DeletePeerAuthInfo(&params, DAS_MODULE);
     if (result != HC_SUCCESS) {
-        LOGD("delete peer key fail! res: %d", result);
+        LOGD("delete peer key fail! res: %" LOG_PUB "d", result);
     } else {
         LOGD("delete peer key success!");
     }
@@ -276,7 +277,7 @@ static int32_t AddAuthIdAndUserTypeToParams(int32_t osAccountId, const char *gro
     char localUdid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)localUdid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         DestroyDeviceEntry(deviceInfo);
         return HC_ERR_DB;
     }
@@ -316,7 +317,7 @@ static int32_t DelGroupAndSelfKeyInfo(int32_t osAccountId, const char *groupId, 
         result = ProcessKeyPair(osAccountId, DELETE_KEY_PAIR, jsonParams, groupId);
     }
     if (result != HC_SUCCESS) {
-        LOGW("delete self key fail! res: %d", result);
+        LOGW("delete self key fail! res: %" LOG_PUB "d", result);
     } else {
         LOGI("delete self key success!");
     }

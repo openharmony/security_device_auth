@@ -89,7 +89,7 @@ int GenerateEncResult(const IsoParams *params, int message, CJson *sendToPeer, c
     Uint8Buff nonceBuf = { nonce, sizeof(nonce) };
     int ret = params->baseParams.loader->generateRandom(&nonceBuf);
     if (ret != 0) {
-        LOGE("Generate nonce failed, res: %x.", ret);
+        LOGE("Generate nonce failed, res: %" LOG_PUB "x.", ret);
         return ret;
     }
 
@@ -152,7 +152,7 @@ int SendResultToFinalSelf(IsoParams *params, CJson *out, bool isNeedReturnKey)
         }
         res = GenerateReturnKey(params, returnSessionKey, params->keyLen);
         if (res != 0) {
-            LOGE("gen return key failed, res:%d", res);
+            LOGE("gen return key failed, res:%" LOG_PUB "d", res);
             goto ERR;
         }
         GOTO_ERR_AND_SET_RET(AddByteToJson(sendToSelf, FIELD_SESSION_KEY, returnSessionKey, params->keyLen), res);
@@ -196,7 +196,7 @@ int GenEncResult(IsoParams *params, int message, CJson *out, const char *aad, bo
         }
         res = GenerateReturnKey(params, returnKey, params->keyLen);
         if (res != 0) {
-            LOGE("gen return key failed, res:%d", res);
+            LOGE("gen return key failed, res:%" LOG_PUB "d", res);
             goto ERR;
         }
         GOTO_ERR_AND_SET_RET(AddByteToJson(sendToSelf, FIELD_SESSION_KEY, returnKey,
@@ -250,7 +250,7 @@ int CheckEncResult(IsoParams *params, const CJson *in, const char *aad)
     };
     res = params->baseParams.loader->aesGcmDecrypt(&keyParams, &encResultBuf, &gcmParam, &outBuf);
     if (res != 0) {
-        LOGE("decrypt result failed, res:%d", res);
+        LOGE("decrypt result failed, res:%" LOG_PUB "d", res);
         goto ERR;
     }
 ERR:
@@ -300,7 +300,8 @@ void DeleteAuthCode(const IsoParams *params)
         LOGE("Failed to generate iso key alias!");
         return;
     }
-    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAliasBuff.val[DEV_AUTH_ZERO], keyAliasBuff.val[DEV_AUTH_ONE],
+    LOGI("AuthCode alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.",
+        keyAliasBuff.val[DEV_AUTH_ZERO], keyAliasBuff.val[DEV_AUTH_ONE],
         keyAliasBuff.val[DEV_AUTH_TWO], keyAliasBuff.val[DEV_AUTH_THREE]);
     res = params->baseParams.loader->deleteKey(&keyAliasBuff, params->isPeerFromUpgrade,
         params->baseParams.osAccountId);
@@ -346,7 +347,7 @@ static int FillAuthId(IsoParams *params, const CJson *in)
     }
     uint32_t authIdLen = HcStrlen(authId);
     if (authIdLen == 0 || authIdLen > MAX_AUTH_ID_LEN) {
-        LOGE("Invalid authIdSelfLen: %d.", authIdLen);
+        LOGE("Invalid authIdSelfLen: %" LOG_PUB "d.", authIdLen);
         return HC_ERR_INVALID_PARAMS;
     }
     params->baseParams.authIdSelf.length = authIdLen;
@@ -372,7 +373,7 @@ static int FillAuthId(IsoParams *params, const CJson *in)
         }
         authIdLen = HcStrlen(authId);
         if (authIdLen == 0 || authIdLen > MAX_AUTH_ID_LEN) {
-            LOGE("Invalid authIdPeerLen %d.", authIdLen);
+            LOGE("Invalid authIdPeerLen %" LOG_PUB "d.", authIdLen);
             return HC_ERR_INVALID_PARAMS;
         }
         params->baseParams.authIdPeer.length = authIdLen;
@@ -484,13 +485,13 @@ static int GetUserType(IsoParams *params, const CJson *in)
 {
     int res = GetIntFromJson(in, FIELD_SELF_TYPE, &(params->selfUserType));
     if (res != 0) {
-        LOGE("get userType failed: %d", res);
+        LOGE("get userType failed: %" LOG_PUB "d", res);
         return res;
     }
 
     res = GetIntFromJson(in, FIELD_PEER_USER_TYPE, &(params->peerUserType));
     if (res != 0) {
-        LOGD("get peer Type failed use default, res: %d", res);
+        LOGD("get peer Type failed use default, res: %" LOG_PUB "d", res);
         params->peerUserType = 0; /* fill default value */
         res = HC_SUCCESS;
     }
@@ -510,7 +511,7 @@ static int32_t GetUpgradeFlagAndKeyLength(IsoParams *params, const CJson *in)
         params->keyLen = DEFAULT_RETURN_KEY_LENGTH;
     }
     if (params->keyLen < MIN_OUTPUT_KEY_LEN || params->keyLen > MAX_OUTPUT_KEY_LEN) {
-        LOGE("Output key length is invalid, keyLen: %d.", params->keyLen);
+        LOGE("Output key length is invalid, keyLen: %" LOG_PUB "d.", params->keyLen);
         return HC_ERR_INVALID_LEN;
     }
     return HC_SUCCESS;
@@ -524,7 +525,7 @@ int InitIsoParams(IsoParams *params, const CJson *in)
         params->opCode = AUTHENTICATE;
     }
     if (params->opCode != OP_BIND && params->opCode != OP_UNBIND && params->opCode != AUTHENTICATE) {
-        LOGE("Unsupported opCode: %d.", params->opCode);
+        LOGE("Unsupported opCode: %" LOG_PUB "d.", params->opCode);
         res = HC_ERR_NOT_SUPPORT;
         goto ERR;
     }
@@ -535,7 +536,7 @@ int InitIsoParams(IsoParams *params, const CJson *in)
     }
     res = InitIsoBaseParams(in, &params->baseParams);
     if (res != HC_SUCCESS) {
-        LOGE("InitIsoBaseParams failed, res: %x.", res);
+        LOGE("InitIsoBaseParams failed, res: %" LOG_PUB "x.", res);
         goto ERR;
     }
     res = GetUpgradeFlagAndKeyLength(params, in);
@@ -583,8 +584,8 @@ static int AuthGeneratePsk(const Uint8Buff *seed, IsoParams *params)
         return res;
     }
 
-    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias.val[DEV_AUTH_ZERO], keyAlias.val[DEV_AUTH_ONE],
-        keyAlias.val[DEV_AUTH_TWO], keyAlias.val[DEV_AUTH_THREE]);
+    LOGI("AuthCode alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.", keyAlias.val[DEV_AUTH_ZERO],
+        keyAlias.val[DEV_AUTH_ONE], keyAlias.val[DEV_AUTH_TWO], keyAlias.val[DEV_AUTH_THREE]);
     Uint8Buff pskBuf = { params->baseParams.psk, sizeof(params->baseParams.psk) };
     if (params->isPeerFromUpgrade) {
         KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, true, params->baseParams.osAccountId };
@@ -603,7 +604,7 @@ static int AuthGeneratePskUsePin(const Uint8Buff *seed, IsoParams *params, const
     Uint8Buff hashBuf = { hash, sizeof(hash) };
     int res = params->baseParams.loader->sha256(&messageBuf, &hashBuf);
     if (res != 0) {
-        LOGE("sha256 failed, res:%d", res);
+        LOGE("sha256 failed, res:%" LOG_PUB "d", res);
         return res;
     }
     KeyParams keyParams = { { hashBuf.val, hashBuf.length, false }, false, params->baseParams.osAccountId };
@@ -648,7 +649,7 @@ int GeneratePsk(const CJson *in, IsoParams *params)
         }
     }
     if (res != HC_SUCCESS) {
-        LOGE("Generate psk failed, res: %x.", res);
+        LOGE("Generate psk failed, res: %" LOG_PUB "x.", res);
         goto ERR;
     }
     return res;
@@ -667,7 +668,7 @@ int GenerateSeed(IsoParams *params)
     Uint8Buff randomBuf = { random, SEED_LEN };
     int res = params->baseParams.loader->generateRandom(&randomBuf);
     if (res != 0) {
-        LOGE("generate random failed, res:%d", res);
+        LOGE("generate random failed, res:%" LOG_PUB "d", res);
         HcFree(random);
         return res;
     }

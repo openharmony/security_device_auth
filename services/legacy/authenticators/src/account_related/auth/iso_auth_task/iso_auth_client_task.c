@@ -125,7 +125,7 @@ static int32_t AccountAuthGenSeed(IsoAuthParams *params)
     Uint8Buff seedBuff = { params->seed, sizeof(params->seed) };
     int32_t res = params->isoBaseParams.loader->generateRandom(&seedBuff);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateRandom for seed failed, res: %d.", res);
+        LOGE("GenerateRandom for seed failed, res: %" LOG_PUB "d.", res);
     }
     return res;
 }
@@ -134,7 +134,7 @@ static int32_t IsoAuthClientBegin(TaskBase *task, const CJson *in, CJson *out, i
 {
     (void)in;
     if (task->taskStatus != TASK_STATUS_ISO_MAIN_BEGIN) {
-        LOGD("The message is repeated, ignore it, taskStatus: %d.", task->taskStatus);
+        LOGD("The message is repeated, ignore it, taskStatus: %" LOG_PUB "d.", task->taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
@@ -142,19 +142,19 @@ static int32_t IsoAuthClientBegin(TaskBase *task, const CJson *in, CJson *out, i
     IsoAuthClientTask *innerTask = (IsoAuthClientTask *)task;
     int32_t ret = IsoClientGenRandom(&innerTask->params.isoBaseParams);
     if (ret != HC_SUCCESS) {
-        LOGE("IsoClientGenRandom failed, res: %d.", ret);
+        LOGE("IsoClientGenRandom failed, res: %" LOG_PUB "d.", ret);
         return ret;
     }
     ret = AccountAuthGenSeed(&innerTask->params);
     if (ret != HC_SUCCESS) {
-        LOGE("AccountAuthGenSeed failed, res: %d.", ret);
+        LOGE("AccountAuthGenSeed failed, res: %" LOG_PUB "d.", ret);
         return ret;
     }
 
     // Send params to server.
     ret = PackIsoAuthClientBeginMsg(&innerTask->params, out);
     if (ret != HC_SUCCESS) {
-        LOGE("PackIsoAuthClientBeginMsg failed, ret: %d.", ret);
+        LOGE("PackIsoAuthClientBeginMsg failed, ret: %" LOG_PUB "d.", ret);
         return ret;
     }
 
@@ -185,7 +185,7 @@ static int32_t ParseIsoAuthServerGetTokenMsg(IsoAuthParams *params, const CJson 
     }
     int32_t res = ExtractAndVerifyPayload(params, in);
     if (res != HC_SUCCESS) {
-        LOGE("ExtractAndVerifyPayload failed for client, res: %d.", res);
+        LOGE("ExtractAndVerifyPayload failed for client, res: %" LOG_PUB "d.", res);
     }
     return res;
 }
@@ -237,11 +237,11 @@ static int32_t IsoAuthClientGetToken(TaskBase *task, const CJson *in, CJson *out
 {
     IsoAuthClientTask *innerTask = (IsoAuthClientTask *)task;
     if (innerTask->taskBase.taskStatus < TASK_STATUS_ISO_MAIN_STEP_ONE) {
-        LOGE("Message code is not match with task status, taskStatus: %d", innerTask->taskBase.taskStatus);
+        LOGE("Message code is not match with task status, taskStatus: %" LOG_PUB "d", innerTask->taskBase.taskStatus);
         return HC_ERR_BAD_MESSAGE;
     }
     if (innerTask->taskBase.taskStatus > TASK_STATUS_ISO_MAIN_STEP_ONE) {
-        LOGI("The message is repeated, ignore it, taskStatus: %d.", innerTask->taskBase.taskStatus);
+        LOGI("The message is repeated, ignore it, taskStatus: %" LOG_PUB "d.", innerTask->taskBase.taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
@@ -251,27 +251,27 @@ static int32_t IsoAuthClientGetToken(TaskBase *task, const CJson *in, CJson *out
     Uint8Buff peerTokenBuf = { peerToken, HMAC_TOKEN_SIZE };
     int32_t res = ParseIsoAuthServerGetTokenMsg(&innerTask->params, in, &peerTokenBuf);
     if (res != HC_SUCCESS) {
-        LOGE("ParseIsoAuthServerGetTokenMsg failed, res: %d.", res);
+        LOGE("ParseIsoAuthServerGetTokenMsg failed, res: %" LOG_PUB "d.", res);
         return res;
     }
 
     // Get psk and process hmacToken.
     res = AccountAuthGeneratePsk(&innerTask->params);
     if (res != HC_SUCCESS) {
-        LOGE("AccountAuthGeneratePsk failed, res: %d.", res);
+        LOGE("AccountAuthGeneratePsk failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     Uint8Buff selfTokenBuf = { innerTask->params.hmacToken, HMAC_TOKEN_SIZE };
     res = IsoClientCheckAndGenToken(&(innerTask->params.isoBaseParams), &peerTokenBuf, &selfTokenBuf);
     if (res != HC_SUCCESS) {
-        LOGE("IsoClientCheckAndGenToken failed, res: %d.", res);
+        LOGE("IsoClientCheckAndGenToken failed, res: %" LOG_PUB "d.", res);
         return res;
     }
 
     // Send params to server.
     res = PackIsoAuthClientGetTokenMsg(&innerTask->params, out);
     if (res != HC_SUCCESS) {
-        LOGE("PackIsoAuthClientGetTokenMsg failed, res: %d.", res);
+        LOGE("PackIsoAuthClientGetTokenMsg failed, res: %" LOG_PUB "d.", res);
         return res;
     }
 
@@ -284,11 +284,11 @@ static int32_t IsoAuthClientGetSessionKey(TaskBase *task, const CJson *in, CJson
 {
     IsoAuthClientTask *innerTask = (IsoAuthClientTask *)task;
     if (innerTask->taskBase.taskStatus < TASK_STATUS_ISO_MAIN_STEP_TWO) {
-        LOGE("Message code is not match with task status, taskStatus: %d", innerTask->taskBase.taskStatus);
+        LOGE("Message code is not match with task status, taskStatus: %" LOG_PUB "d", innerTask->taskBase.taskStatus);
         return HC_ERR_BAD_MESSAGE;
     }
     if (innerTask->taskBase.taskStatus > TASK_STATUS_ISO_MAIN_STEP_TWO) {
-        LOGI("The message is repeated, ignore it, taskStatus: %d", innerTask->taskBase.taskStatus);
+        LOGI("The message is repeated, ignore it, taskStatus: %" LOG_PUB "d", innerTask->taskBase.taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
@@ -303,13 +303,13 @@ static int32_t IsoAuthClientGetSessionKey(TaskBase *task, const CJson *in, CJson
     // Generate and verify the HMAC, then generate session key.
     int32_t res = IsoClientGenSessionKey(&(innerTask->params.isoBaseParams), 0, authResultHmac, sizeof(authResultHmac));
     if (res != HC_SUCCESS) {
-        LOGE("IsoClientGenSessionKey failed, res: %d.", res);
+        LOGE("IsoClientGenSessionKey failed, res: %" LOG_PUB "d.", res);
         return res;
     }
 
     res = AuthIsoSendFinalToOut(&innerTask->params, out);
     if (res != HC_SUCCESS) {
-        LOGE("AuthIsoSendFinalToOut failed, res: %d.", res);
+        LOGE("AuthIsoSendFinalToOut failed, res: %" LOG_PUB "d.", res);
         return res;
     }
 
@@ -324,7 +324,7 @@ static int32_t ProcessClientTask(TaskBase *task, const CJson *in, CJson *out, in
     if (task->taskStatus == TASK_STATUS_ISO_MAIN_BEGIN) {
         res = IsoAuthClientBegin(task, in, out, status);
         if (res != HC_SUCCESS) {
-            LOGE("IsoAuthClientBegin failed, res: %d.", res);
+            LOGE("IsoAuthClientBegin failed, res: %" LOG_PUB "d.", res);
         }
         return res;
     }
@@ -345,7 +345,7 @@ static int32_t ProcessClientTask(TaskBase *task, const CJson *in, CJson *out, in
             res = HC_ERR_BAD_MESSAGE;
     }
     if (res != HC_SUCCESS) {
-        LOGE("Process iso auth client failed, step: %d, res: %d.", authStep, res);
+        LOGE("Process iso auth client failed, step: %" LOG_PUB "d, res: %" LOG_PUB "d.", authStep, res);
     }
     return res;
 }
@@ -377,7 +377,7 @@ TaskBase *CreateIsoAuthClientTask(const CJson *in, CJson *out, const AccountVers
 
     int32_t res = InitIsoAuthParams(in, &(task->params), verInfo);
     if (res != HC_SUCCESS) {
-        LOGE("InitIsoAuthParams failed, res: %d.", res);
+        LOGE("InitIsoAuthParams failed, res: %" LOG_PUB "d.", res);
         DestroyAuthClientAuthTask((TaskBase *)task);
         return NULL;
     }

@@ -174,7 +174,7 @@ static int32_t IsoCalToken(const IsoProtocol *protocol, Uint8Buff *token, bool i
     res = GetLoaderInstance()->computeHmac(&keyParams, &messageBuf, token);
     HcFree(message);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeHmac for token failed, res: %x.", res);
+        LOGE("ComputeHmac for token failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     return HC_SUCCESS;
@@ -217,7 +217,7 @@ static int32_t IsoGenSessionKey(IsoProtocol *impl, bool isClient)
     Uint8Buff hkdfSaltBuf = { hkdfSalt, hkdfSaltLen };
     int32_t res = IsoCombineHkdfSalt(&impl->params, &hkdfSaltBuf, isClient);
     if (res != HC_SUCCESS) {
-        LOGE("IsoCombineHkdfSalt failed, res: %d", res);
+        LOGE("IsoCombineHkdfSalt failed, res: %" LOG_PUB "d", res);
         HcFree(hkdfSalt);
         return res;
     }
@@ -232,7 +232,7 @@ static int32_t IsoGenSessionKey(IsoProtocol *impl, bool isClient)
     res = GetLoaderInstance()->computeHkdf(&keyParams, &hkdfSaltBuf, &keyInfoBuf, &sessionKey);
     HcFree(hkdfSalt);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeHkdf for sessionKey failed, res: %d", res);
+        LOGE("ComputeHkdf for sessionKey failed, res: %" LOG_PUB "d", res);
         return res;
     }
     if (DeepCopyUint8Buff(&sessionKey, &impl->base.sessionKey) != HC_SUCCESS) {
@@ -251,7 +251,7 @@ static int32_t IsoGenAuthResultMac(const IsoParams *params, Uint8Buff *authResul
     KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false, params->osAccountId };
     int32_t res = GetLoaderInstance()->computeHmac(&keyParams, &messageBuf, authResultMac);
     if (res != HC_SUCCESS) {
-        LOGE("Compute authResultMac failed, res: %x.", res);
+        LOGE("Compute authResultMac failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     return HC_SUCCESS;
@@ -263,7 +263,7 @@ static int32_t ClientGenRandomProcEvent(IsoParams *params)
     Uint8Buff randC = { randCVal, RAND_BYTE_LEN };
     int32_t res = GetLoaderInstance()->generateRandom(&randC);
     if (res != HC_SUCCESS) {
-        LOGE("Generate randSelf failed, res: %x.", res);
+        LOGE("Generate randSelf failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     if (DeepCopyUint8Buff(&randC, &params->randSelf) != HC_SUCCESS) {
@@ -325,7 +325,7 @@ static int32_t ServerGenTokenParseEvent(const CJson *inputEvent, IsoParams *para
     }
     uint32_t authIdCLen = HcStrlen(authIdCStr) / BYTE_TO_HEX_OPER_LENGTH;
     if (authIdCLen == 0 || authIdCLen > ISO_AUTH_ID_MAX_LEN) {
-        LOGE("Invalid authIdCLen: %u.", authIdCLen);
+        LOGE("Invalid authIdCLen: %" LOG_PUB "u.", authIdCLen);
         return HC_ERR_CONVERT_FAILED;
     }
     uint8_t authIdCVal[ISO_AUTH_ID_MAX_LEN] = { 0 };
@@ -351,7 +351,7 @@ static int32_t ServerGenTokenProcEvent(IsoProtocol *impl)
     Uint8Buff randS = { randSVal, RAND_BYTE_LEN };
     int32_t res = GetLoaderInstance()->generateRandom(&randS);
     if (res != HC_SUCCESS) {
-        LOGE("Generate randSelf failed, res: %x.", res);
+        LOGE("Generate randSelf failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     if (DeepCopyUint8Buff(&randS, &impl->params.randSelf) != HC_SUCCESS) {
@@ -362,7 +362,7 @@ static int32_t ServerGenTokenProcEvent(IsoProtocol *impl)
     Uint8Buff tokenS = { tokenValS, SHA256_LEN };
     res = IsoCalToken(impl, &tokenS, true);
     if (res != HC_SUCCESS) {
-        LOGE("IsoCalServerToken failed, res: %x.", res);
+        LOGE("IsoCalServerToken failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     if (DeepCopyUint8Buff(&tokenS, &impl->params.tokenSelf) != HC_SUCCESS) {
@@ -432,7 +432,7 @@ static int32_t ClientGenTokenParseEvent(const CJson *inputEvent, IsoParams *para
     }
     uint32_t authIdSLen = HcStrlen(authIdSStr) / BYTE_TO_HEX_OPER_LENGTH;
     if (authIdSLen == 0 || authIdSLen > ISO_AUTH_ID_MAX_LEN) {
-        LOGE("Invalid authIdSLen: %u.", authIdSLen);
+        LOGE("Invalid authIdSLen: %" LOG_PUB "u.", authIdSLen);
         return HC_ERR_CONVERT_FAILED;
     }
     uint8_t authIdSVal[ISO_AUTH_ID_MAX_LEN] = { 0 };
@@ -468,7 +468,7 @@ static int32_t ClientGenTokenProcEvent(IsoProtocol *impl)
     Uint8Buff tokenS = { tokenValS, SHA256_LEN };
     int32_t res = IsoCalToken(impl, &tokenS, false);
     if (res != HC_SUCCESS) {
-        LOGE("IsoCalServerToken failed, res: %d", res);
+        LOGE("IsoCalServerToken failed, res: %" LOG_PUB "d", res);
         return res;
     }
     if ((impl->params.tokenPeer.length != tokenS.length) ||
@@ -480,7 +480,7 @@ static int32_t ClientGenTokenProcEvent(IsoProtocol *impl)
     Uint8Buff tokenC = { tokenValC, SHA256_LEN };
     res = IsoCalToken(impl, &tokenC, true);
     if (res != HC_SUCCESS) {
-        LOGE("IsoCalClientToken failed, res: %d", res);
+        LOGE("IsoCalClientToken failed, res: %" LOG_PUB "d", res);
         return res;
     }
     if (DeepCopyUint8Buff(&tokenC, &impl->params.tokenSelf) != HC_SUCCESS) {
@@ -545,7 +545,7 @@ static int32_t ServerGenSessKeyProcEvent(IsoProtocol *impl)
     Uint8Buff tokenC = { tokenValC, SHA256_LEN };
     int32_t res = IsoCalToken(impl, &tokenC, false);
     if (res != HC_SUCCESS) {
-        LOGE("IsoCalClientToken failed, res: %d", res);
+        LOGE("IsoCalClientToken failed, res: %" LOG_PUB "d", res);
         return res;
     }
     if ((impl->params.tokenPeer.length != tokenC.length) ||
@@ -565,7 +565,7 @@ static int32_t ServerGenSessKeyProcEvent(IsoProtocol *impl)
     }
     res = IsoGenSessionKey(impl, false);
     if (res != HC_SUCCESS) {
-        LOGE("IsoGenSessionKey failed, res: %d", res);
+        LOGE("IsoGenSessionKey failed, res: %" LOG_PUB "d", res);
         return res;
     }
     return HC_SUCCESS;
@@ -636,7 +636,7 @@ static int32_t ClientGenSessKeyProcEvent(IsoProtocol *impl)
     }
     res = IsoGenSessionKey(impl, true);
     if (res != HC_SUCCESS) {
-        LOGE("IsoGenSessionKey failed, res: %x.", res);
+        LOGE("IsoGenSessionKey failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     return HC_SUCCESS;
@@ -686,7 +686,7 @@ static int32_t ThrowException(IsoProtocol *impl, const CJson *inputEvent, CJson 
     (void)outputEvent;
     int32_t peerErrorCode = HC_ERR_PEER_ERROR;
     (void)GetIntFromJson(inputEvent, FIELD_ERR_CODE, &peerErrorCode);
-    LOGE("An exception occurred in the peer protocol. [Code]: %d", peerErrorCode);
+    LOGE("An exception occurred in the peer protocol. [Code]: %" LOG_PUB "d", peerErrorCode);
     return peerErrorCode;
 }
 
@@ -729,12 +729,14 @@ static int32_t IsoProtocolSwitchState(BaseProtocol *self, const CJson *receviedM
                 self->curState = self->failState;
                 return res;
             }
-            LOGI("event: %d, curState: %d, nextState: %d", eventType, self->curState, STATE_MACHINE[i].nextState);
+            LOGI("event: %" LOG_PUB "d, curState: %" LOG_PUB "d, nextState: %" LOG_PUB "d", eventType, self->curState,
+                STATE_MACHINE[i].nextState);
             self->curState = STATE_MACHINE[i].nextState;
             return HC_SUCCESS;
         }
     }
-    LOGI("Unsupported event type. Ignore process. [Event]: %d, [CurState]: %d", eventType, self->curState);
+    LOGI("Unsupported event type. Ignore process. [Event]: %" LOG_PUB "d, [CurState]: %" LOG_PUB "d",
+        eventType, self->curState);
     return HC_SUCCESS;
 }
 

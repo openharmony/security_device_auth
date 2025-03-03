@@ -40,7 +40,7 @@ static int HcMutexLock(HcMutex *mutex)
         res = pthread_mutex_lock(&mutex->mutex);
     }
     if (res != 0) {
-        LOGW("[OS]: pthread_mutex_lock fail. [Res]: %d", res);
+        LOGW("[OS]: pthread_mutex_lock fail. [Res]: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -66,7 +66,7 @@ static void HcMutexUnlock(HcMutex *mutex)
         res = pthread_mutex_unlock(&mutex->mutex);
     }
     if (res != 0) {
-        LOGW("[OS]: pthread_mutex_unlock fail. [Res]: %d", res);
+        LOGW("[OS]: pthread_mutex_unlock fail. [Res]: %" LOG_PUB "d", res);
     }
 }
 
@@ -77,7 +77,7 @@ int32_t InitHcMutex(struct HcMutexT *mutex, bool isReentrant)
     }
     int res = pthread_mutex_init(&mutex->mutex, NULL);
     if (res != 0) {
-        LOGE("[OS]: pthread_mutex_init fail. [Res]: %d", res);
+        LOGE("[OS]: pthread_mutex_init fail. [Res]: %" LOG_PUB "d", res);
         return res;
     }
     mutex->lock = HcMutexLock;
@@ -98,7 +98,7 @@ void DestroyHcMutex(struct HcMutexT *mutex)
     mutex->isReentrant = false;
     int res = pthread_mutex_destroy(&mutex->mutex);
     if (res != 0) {
-        LOGW("[OS]: pthread_mutex_destroy fail. [Res]: %d", res);
+        LOGW("[OS]: pthread_mutex_destroy fail. [Res]: %" LOG_PUB "d", res);
     }
 }
 

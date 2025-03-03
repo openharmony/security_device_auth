@@ -919,7 +919,7 @@ static void LoadOsAccountTokenDb(int32_t osAccountId)
         LOGE("Failed to push osAccountInfo to database!");
         ClearAccountTokenVec(&info.tokens);
     }
-    LOGI("Load os account db successfully! [Id]: %d", osAccountId);
+    LOGI("Load os account db successfully! [Id]: %" LOG_PUB "d", osAccountId);
 }
 
 static void TryMoveDeDataToCe(int32_t osAccountId)
@@ -989,7 +989,7 @@ static void LoadOsAccountTokenDbCe(int32_t osAccountId)
 
 static void OnOsAccountUnlocked(int32_t osAccountId)
 {
-    LOGI("Os account is unlocked, osAccountId: %d", osAccountId);
+    LOGI("Os account is unlocked, osAccountId: %" LOG_PUB "d", osAccountId);
     (void)LockHcMutex(g_accountDbMutex);
     LoadOsAccountTokenDbCe(osAccountId);
     UnlockHcMutex(g_accountDbMutex);
@@ -997,7 +997,7 @@ static void OnOsAccountUnlocked(int32_t osAccountId)
 
 static void OnOsAccountRemoved(int32_t osAccountId)
 {
-    LOGI("Os account is removed, osAccountId: %d", osAccountId);
+    LOGI("Os account is removed, osAccountId: %" LOG_PUB "d", osAccountId);
     (void)LockHcMutex(g_accountDbMutex);
     RemoveOsAccountTokenInfo(osAccountId);
     UnlockHcMutex(g_accountDbMutex);
@@ -1020,7 +1020,7 @@ static void LoadDataIfNotLoaded(int32_t osAccountId)
     if (IsOsAccountDataLoaded(osAccountId)) {
         return;
     }
-    LOGI("Data has not been loaded, load it, osAccountId: %d", osAccountId);
+    LOGI("Data has not been loaded, load it, osAccountId: %" LOG_PUB "d", osAccountId);
     LoadOsAccountTokenDbCe(osAccountId);
 }
 
@@ -1036,7 +1036,7 @@ static OsAccountTokenInfo *GetTokenInfoByOsAccountId(int32_t osAccountId)
             return info;
         }
     }
-    LOGI("Create a new os account database cache! [Id]: %d", osAccountId);
+    LOGI("Create a new os account database cache! [Id]: %" LOG_PUB "d", osAccountId);
     OsAccountTokenInfo newInfo;
     newInfo.osAccountId = osAccountId;
     newInfo.tokens = CreateAccountTokenVec();
@@ -1069,7 +1069,7 @@ static int32_t SaveOsAccountTokenDb(int32_t osAccountId)
         return ret;
     }
     UnlockHcMutex(g_accountDbMutex);
-    LOGI("Save an os account database successfully! [Id]: %d", osAccountId);
+    LOGI("Save an os account database successfully! [Id]: %" LOG_PUB "d", osAccountId);
     return HC_SUCCESS;
 }
 
@@ -1163,7 +1163,7 @@ static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, const c
         LOGE("No token deleted");
         return HC_ERROR;
     }
-    LOGI("Number of tokens deleted: %d", count);
+    LOGI("Number of tokens deleted: %" LOG_PUB "d", count);
     return HC_SUCCESS;
 }
 
@@ -1247,13 +1247,13 @@ static int32_t DeleteToken(int32_t osAccountId, const char *userId, const char *
     AccountTokenVec deleteTokens = CreateAccountTokenVec();
     int32_t ret = DeleteTokenInner(osAccountId, userId, deviceId, &deleteTokens);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to delete token inner, account id is: %d", osAccountId);
+        LOGE("Failed to delete token inner, account id is: %" LOG_PUB "d", osAccountId);
         DestroyAccountTokenVec(&deleteTokens);
         return ret;
     }
     ret = SaveOsAccountTokenDb(osAccountId);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to save token to db, account id is: %d", osAccountId);
+        LOGE("Failed to save token to db, account id is: %" LOG_PUB "d", osAccountId);
         ClearAccountTokenVec(&deleteTokens);
         return ret;
     }

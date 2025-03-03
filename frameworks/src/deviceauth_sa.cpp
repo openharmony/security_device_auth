@@ -174,7 +174,7 @@ void DeviceAuthAbility::OnStart()
     LOGI("DeviceAuthAbility starting ...");
     int32_t ret = InitDeviceAuthService();
     if (ret != HC_SUCCESS) {
-        LOGE("DeviceAuthAbility InitDeviceAuthService failed, ret %d", ret);
+        LOGE("DeviceAuthAbility InitDeviceAuthService failed, ret %" LOG_PUB "d", ret);
         return;
     }
 

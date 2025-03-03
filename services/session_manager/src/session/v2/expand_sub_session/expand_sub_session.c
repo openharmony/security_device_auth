@@ -265,7 +265,7 @@ static int32_t ProcRecvCmd(ExpandSubSessionImpl *impl, const CJson *recvCmd, CJs
         popCmd->destroy(popCmd);
         return res;
     }
-    LOGE("cmd not found. [Cmd]: %d", cmdType);
+    LOGE("cmd not found. [Cmd]: %" LOG_PUB "d", cmdType);
     return HC_ERR_JSON_GET;
 }
 
@@ -284,7 +284,7 @@ static int32_t ProcAllRecvCmds(ExpandSubSessionImpl *impl, const CJson *recevied
             return res;
         }
     }
-    LOGI("proc all recv cmd success. [CmdNum]: %u", cmdNum);
+    LOGI("proc all recv cmd success. [CmdNum]: %" LOG_PUB "u", cmdNum);
     FreeJson(recvCmdList);
     return HC_SUCCESS;
 }
@@ -294,7 +294,7 @@ static int32_t StartCmd(BaseCmd *cmd, CJson *sendCmdList)
     CJson *sendCmdData = NULL;
     int32_t res = cmd->start(cmd, &sendCmdData);
     if (res != HC_SUCCESS) {
-        LOGE("start cmd error. [Cmd]: %d", cmd->type);
+        LOGE("start cmd error. [Cmd]: %" LOG_PUB "d", cmd->type);
         if (sendCmdData != NULL) {
             (void)AddSendCmdDataToList(cmd->type, sendCmdData, sendCmdList);
             FreeJson(sendCmdData);
@@ -389,12 +389,12 @@ static int32_t AddExpandProcess(ExpandSubSession *self, int32_t cmdType, void *p
     }
     ExpandSubSessionImpl *impl = (ExpandSubSessionImpl *)self;
     if (impl->base.state != EXPAND_STATE_INIT) {
-        LOGE("invalid state. [State]: %d", impl->base.state);
+        LOGE("invalid state. [State]: %" LOG_PUB "d", impl->base.state);
         return HC_ERR_UNSUPPORTED_OPCODE;
     }
     const CmdComponent *component = GetCmdComponent(cmdType);
     if (component == NULL) {
-        LOGE("no cmd component found. cmdType = %d.", cmdType);
+        LOGE("no cmd component found. cmdType = %" LOG_PUB "d.", cmdType);
         return HC_ERR_UNSUPPORTED_OPCODE;
     }
     BaseCmd *instance = component->createCmdFunc(params, isCaller, strategy);
@@ -407,7 +407,8 @@ static int32_t AddExpandProcess(ExpandSubSession *self, int32_t cmdType, void *p
         instance->destroy(instance);
         return HC_ERR_ALLOC_MEMORY;
     }
-    LOGI("add expand process success. [Cmd]: %d, [IsCaller]: %s", cmdType, isCaller ? "Client" : "Server");
+    LOGI("add expand process success. [Cmd]: %" LOG_PUB "d, [IsCaller]: %" LOG_PUB "s",
+        cmdType, isCaller ? "Client" : "Server");
     return HC_SUCCESS;
 }
 
@@ -419,7 +420,7 @@ static int32_t StartExpandSubSession(ExpandSubSession *self, CJson **returnSendM
     }
     ExpandSubSessionImpl *impl = (ExpandSubSessionImpl *)self;
     if (impl->base.state != EXPAND_STATE_INIT) {
-        LOGE("invalid state. [State]: %d", impl->base.state);
+        LOGE("invalid state. [State]: %" LOG_PUB "d", impl->base.state);
         return HC_ERR_UNSUPPORTED_OPCODE;
     }
     if (HC_VECTOR_SIZE(&impl->cmdList) == 0) {
@@ -456,7 +457,7 @@ static int32_t ProcessExpandSubSession(ExpandSubSession *self, const CJson *rece
     }
     ExpandSubSessionImpl *impl = (ExpandSubSessionImpl *)self;
     if ((impl->base.state != EXPAND_STATE_INIT) && (impl->base.state != EXPAND_STATE_RUNNING)) {
-        LOGE("invalid state. [State]: %d", impl->base.state);
+        LOGE("invalid state. [State]: %" LOG_PUB "d", impl->base.state);
         return HC_ERR_UNSUPPORTED_OPCODE;
     }
     CJson *sendCmdList = CreateJsonArray();

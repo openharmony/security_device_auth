@@ -64,8 +64,9 @@ static int32_t UnregisterLocalIdentityStd(const TokenManagerParams *params)
         LOGE("Failed to generate identity keyPair alias!");
         return res;
     }
-    LOGI("KeyPair alias(HEX): %x%x%x%x****.", pakeKeyAliasVal[DEV_AUTH_ZERO], pakeKeyAliasVal[DEV_AUTH_ONE],
-        pakeKeyAliasVal[DEV_AUTH_TWO], pakeKeyAliasVal[DEV_AUTH_THREE]);
+    LOGI("KeyPair alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.",
+        pakeKeyAliasVal[DEV_AUTH_ZERO], pakeKeyAliasVal[DEV_AUTH_ONE], pakeKeyAliasVal[DEV_AUTH_TWO],
+        pakeKeyAliasVal[DEV_AUTH_THREE]);
 
     const AlgLoader *loader = GetLoaderInstance();
     res = loader->deleteKey(&pakeKeyAliasBuff, false, params->osAccountId);
@@ -88,8 +89,9 @@ static int32_t UnregisterLocalIdentityStd(const TokenManagerParams *params)
             LOGE("Failed to convert self key alias to lower case!");
             return res;
         }
-        LOGI("Upgrade key pair alias(HEX): %x%x%x%x****.", pakeKeyAliasVal[DEV_AUTH_ZERO],
-            pakeKeyAliasVal[DEV_AUTH_ONE], pakeKeyAliasVal[DEV_AUTH_TWO], pakeKeyAliasVal[DEV_AUTH_THREE]);
+        LOGI("Upgrade key pair alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.",
+            pakeKeyAliasVal[DEV_AUTH_ZERO], pakeKeyAliasVal[DEV_AUTH_ONE], pakeKeyAliasVal[DEV_AUTH_TWO],
+            pakeKeyAliasVal[DEV_AUTH_THREE]);
         res = loader->deleteKey(&pakeKeyAliasBuff, true, params->osAccountId);
         if (res != HC_SUCCESS) {
             LOGE("Failed to delete upgrade key pair!");
@@ -111,8 +113,8 @@ static int32_t DeletePeerPubKey(int32_t osAccountId, const Uint8Buff *pkgNameBuf
         LOGE("Failed to generate peer pub key alias!");
         return res;
     }
-    LOGI("PubKey alias(HEX): %x%x%x%x****.", pakeKeyAliasVal[DEV_AUTH_ZERO], pakeKeyAliasVal[DEV_AUTH_ONE],
-        pakeKeyAliasVal[DEV_AUTH_TWO], pakeKeyAliasVal[DEV_AUTH_THREE]);
+    LOGI("PubKey alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.", pakeKeyAliasVal[DEV_AUTH_ZERO],
+        pakeKeyAliasVal[DEV_AUTH_ONE], pakeKeyAliasVal[DEV_AUTH_TWO], pakeKeyAliasVal[DEV_AUTH_THREE]);
     const AlgLoader *loader = GetLoaderInstance();
     res = loader->deleteKey(&pakeKeyAliasBuff, false, osAccountId);
     if (res != HC_SUCCESS) {
@@ -143,8 +145,8 @@ static int32_t DeleteAuthPsk(int32_t osAccountId, const Uint8Buff *pkgNameBuff, 
         LOGE("Failed to generate psk alias!");
         return res;
     }
-    LOGI("Psk alias(HEX): %x%x%x%x****.", pakeKeyAliasVal[DEV_AUTH_ZERO], pakeKeyAliasVal[DEV_AUTH_ONE],
-        pakeKeyAliasVal[DEV_AUTH_TWO], pakeKeyAliasVal[DEV_AUTH_THREE]);
+    LOGI("Psk alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.", pakeKeyAliasVal[DEV_AUTH_ZERO],
+        pakeKeyAliasVal[DEV_AUTH_ONE], pakeKeyAliasVal[DEV_AUTH_TWO], pakeKeyAliasVal[DEV_AUTH_THREE]);
     const AlgLoader *loader = GetLoaderInstance();
     res = loader->deleteKey(&pakeKeyAliasBuff, false, osAccountId);
     if (res != HC_SUCCESS) {
@@ -358,7 +360,9 @@ static int32_t ComputeAndSavePskStd(const PakeParams *params)
         return res;
     }
 
-    LOGI("PubKey alias(HEX): %x%x%x%x****, priKey alias(HEX): %x%x%x%x****, psk alias(HEX): %x%x%x%x****.",
+    LOGI("PubKey alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****, priKey alias(HEX): %"
+        LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****, psk alias(HEX): %"
+        LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.",
         peerKeyAliasVal[DEV_AUTH_ZERO], peerKeyAliasVal[DEV_AUTH_ONE],
         peerKeyAliasVal[DEV_AUTH_TWO], peerKeyAliasVal[DEV_AUTH_THREE],
         selfKeyAliasVal[DEV_AUTH_ZERO], selfKeyAliasVal[DEV_AUTH_ONE],

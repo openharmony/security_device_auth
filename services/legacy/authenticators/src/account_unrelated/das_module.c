@@ -60,7 +60,7 @@ static bool IsDasMsgNeedIgnore(const CJson *in)
         return false;
     }
 
-    LOGI("The message needs to ignore, message: %d.", message);
+    LOGI("The message needs to ignore, message: %" LOG_PUB "d.", message);
     return true;
 }
 
@@ -102,7 +102,7 @@ static int ProcessDasTask(int32_t taskId, const CJson* in, CJson* out, int32_t *
         }
     }
 
-    LOGE("Task doesn't exist, taskId: %d.", taskId);
+    LOGE("Task doesn't exist, taskId: %" LOG_PUB "d.", taskId);
     return HC_ERR_TASK_ID_IS_NOT_MATCH;
 }
 

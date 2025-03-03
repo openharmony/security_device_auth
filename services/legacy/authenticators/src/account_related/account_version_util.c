@@ -76,7 +76,7 @@ static const AccountVersionInfo *NegotiateForAuth(int32_t credentialType)
     } else if (credentialType == ASYMMETRIC_CRED) {
         versionNo = AUTH_PAKE_V2_EC_P256;
     } else {
-        LOGE("Invalid credential type for auth: %d.", credentialType);
+        LOGE("Invalid credential type for auth: %" LOG_PUB "d.", credentialType);
         return NULL;
     }
     uint32_t index;

@@ -34,13 +34,13 @@ void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
 {
     const OHOS::AAFwk::Want& want = eventData.GetWant();
     std::string action = want.GetAction();
-    LOGI("[AccountSubscriber]: OnReceiveEvent action: %s.", action.c_str());
+    LOGI("[AccountSubscriber]: OnReceiveEvent action: %" LOG_PUB "s.", action.c_str());
 
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
-        LOGI("[AccountSubscriber]: user unlocked, userId: %d.", eventData.GetCode());
+        LOGI("[AccountSubscriber]: user unlocked, userId: %" LOG_PUB "d.", eventData.GetCode());
         notifier_.notifyOsAccountUnlocked(eventData.GetCode());
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED) {
-        LOGI("[AccountSubscriber]: user removed, userId: %d.", eventData.GetCode());
+        LOGI("[AccountSubscriber]: user removed, userId: %" LOG_PUB "d.", eventData.GetCode());
         notifier_.notifyOsAccountRemoved(eventData.GetCode());
     } else {
         LOGI("[AccountSubscriber]: receive other event.");
@@ -62,7 +62,7 @@ void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
     }
     int32_t res = ExecuteAccountAuthCmd(DEFAULT_OS_ACCOUNT, HANDLE_COMMON_EVENT, cmdParamJson, nullptr);
     FreeJson(cmdParamJson);
-    LOGI("[AccountSubscriber]: handle common event res: %d", res);
+    LOGI("[AccountSubscriber]: handle common event res: %" LOG_PUB "d", res);
 }
 }  // namespace DevAuth
 }  // namespace OHOS

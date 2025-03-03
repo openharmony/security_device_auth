@@ -116,11 +116,11 @@ static int32_t AddAccountTaskRecord(int32_t taskId)
     taskRecord.taskId = taskId;
     if (g_taskList.pushBackT(&g_taskList, taskRecord) == NULL) {
         UnlockHcMutex(&g_taskMutex);
-        LOGE("[ACCOUNT_TASK_MGR]: push task record failed, taskId: %d", taskId);
+        LOGE("[ACCOUNT_TASK_MGR]: push task record failed, taskId: %" LOG_PUB "d", taskId);
         return HC_ERR_MEMORY_COPY;
     }
     UnlockHcMutex(&g_taskMutex);
-    LOGI("[ACCOUNT_TASK_MGR]: add task record succeeded, taskId: %d", taskId);
+    LOGI("[ACCOUNT_TASK_MGR]: add task record succeeded, taskId: %" LOG_PUB "d", taskId);
     return HC_SUCCESS;
 }
 
@@ -133,12 +133,12 @@ static void RemoveAccountTaskRecord(int32_t taskId)
         if (ptr->taskId == taskId) {
             HC_VECTOR_POPELEMENT(&g_taskList, ptr, index);
             UnlockHcMutex(&g_taskMutex);
-            LOGI("[ACCOUNT_TASK_MGR]: remove task record succeeded, taskId: %d", taskId);
+            LOGI("[ACCOUNT_TASK_MGR]: remove task record succeeded, taskId: %" LOG_PUB "d", taskId);
             return;
         }
     }
     UnlockHcMutex(&g_taskMutex);
-    LOGI("[ACCOUNT_TASK_MGR]: task record not exist, taskId: %d", taskId);
+    LOGI("[ACCOUNT_TASK_MGR]: task record not exist, taskId: %" LOG_PUB "d", taskId);
 }
 
 int32_t InitAccountTaskManager(void)

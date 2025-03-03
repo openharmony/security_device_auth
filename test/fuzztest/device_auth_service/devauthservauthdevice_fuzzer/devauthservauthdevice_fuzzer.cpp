@@ -29,12 +29,12 @@ namespace OHOS {
 
     static void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn)
     {
-        LOGE("error return: %s", errorReturn);
+        LOGE("error return: %" LOG_PUB "s", errorReturn);
     }
 
     static void OnFinish(int64_t requestId, int operationCode, const char *authReturn)
     {
-        LOGI("return value: %s", authReturn);
+        LOGI("return value: %" LOG_PUB "s", authReturn);
         if (operationCode == GROUP_CREATE) {
             CJson *json = CreateJsonFromString(authReturn);
             if (json != nullptr) {
@@ -102,7 +102,7 @@ namespace OHOS {
         GenerateAuthParamsJson(authParamsJson, deviceId.c_str());
         char *authParams = PackJsonToString(authParamsJson);
         FreeJson(authParamsJson);
-        LOGI("auth params str:%s", authParams);
+        LOGI("auth params str:%" LOG_PUB "s", authParams);
         const GroupAuthManager *gaInstance = GetGaInstance();
         gaInstance->authDevice(0, reqId, authParams, &g_devAuthCallback);
         sleep(1);

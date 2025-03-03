@@ -35,7 +35,7 @@ int32_t ProcCred(int32_t pluginName, int32_t osAccountId, int32_t cmdId, CJson *
             return (*pluginPtr)->procCred(osAccountId, cmdId, in, out);
         }
     }
-    LOGE("[CredMgr]: There is no matched cred plugin. [Name]: %d", pluginName);
+    LOGE("[CredMgr]: There is no matched cred plugin. [Name]: %" LOG_PUB "d", pluginName);
     return HC_ERR_NOT_SUPPORT;
 }
 
@@ -52,7 +52,7 @@ int32_t InitCredMgr(void)
                 return HC_ERR_ALLOC_MEMORY;
             }
         } else {
-            LOGW("[CredMgr]: Init account related cred plugin fail. [Res]: %d", res);
+            LOGW("[CredMgr]: Init account related cred plugin fail. [Res]: %" LOG_PUB "d", res);
         }
     }
     LOGI("[CredMgr]: Init success!");
@@ -78,7 +78,7 @@ int32_t AddCredPlugin(const CredPlugin *plugin)
     }
     int32_t res = plugin->init();
     if (res != HC_SUCCESS) {
-        LOGE("[CredMgr]: Init cred plugin fail. [Res]: %d", res);
+        LOGE("[CredMgr]: Init cred plugin fail. [Res]: %" LOG_PUB "d", res);
         return HC_ERR_INIT_FAILED;
     }
     bool isNeedReplace = false;
@@ -96,10 +96,10 @@ int32_t AddCredPlugin(const CredPlugin *plugin)
         return HC_ERR_ALLOC_MEMORY;
     }
     if (isNeedReplace) {
-        LOGI("[CredMgr]: Replace cred plugin. [Name]: %d", plugin->pluginName);
+        LOGI("[CredMgr]: Replace cred plugin. [Name]: %" LOG_PUB "d", plugin->pluginName);
         HC_VECTOR_POPELEMENT(&g_credPluginVec, pluginPtr, index);
     } else {
-        LOGI("[CredMgr]: Add new cred plugin. [Name]: %d", plugin->pluginName);
+        LOGI("[CredMgr]: Add new cred plugin. [Name]: %" LOG_PUB "d", plugin->pluginName);
     }
     return HC_SUCCESS;
 }
@@ -110,7 +110,7 @@ void DelCredPlugin(int32_t pluginName)
     CredPlugin **pluginPtr;
     FOR_EACH_HC_VECTOR(g_credPluginVec, index, pluginPtr) {
         if ((*pluginPtr)->pluginName == pluginName) {
-            LOGI("[CredMgr]: Delete cred plugin success. [Name]: %d", pluginName);
+            LOGI("[CredMgr]: Delete cred plugin success. [Name]: %" LOG_PUB "d", pluginName);
             (*pluginPtr)->destroy();
             HC_VECTOR_POPELEMENT(&g_credPluginVec, pluginPtr, index);
             break;

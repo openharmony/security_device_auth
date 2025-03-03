@@ -243,7 +243,7 @@ static int32_t ProcessServerTask(TaskBase *task, const CJson *in, CJson *out, in
         LOGE("server no auth step");
         return HC_ERR_JSON_GET;
     }
-    LOGI("ProcessServerTask step: %d", step);
+    LOGI("ProcessServerTask step: %" LOG_PUB "d", step);
     int32_t res;
     switch (step) {
         case CMD_PAKE_AUTH_MAIN_ONE:
@@ -259,7 +259,7 @@ static int32_t ProcessServerTask(TaskBase *task, const CJson *in, CJson *out, in
             break;
     }
     if (res != HC_SUCCESS) {
-        LOGE("Server ProcessServerTask failed, step: %d.", step);
+        LOGE("Server ProcessServerTask failed, step: %" LOG_PUB "d.", step);
     }
     return res;
 }

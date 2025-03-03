@@ -43,7 +43,7 @@ static void PostOnGroupCreated(const char *messageStr)
     (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onGroupCreated != NULL) {
-            LOGI("[Broadcaster]: PostOnGroupCreated! [AppId]: %s", entry->appId);
+            LOGI("[Broadcaster]: PostOnGroupCreated! [AppId]: %" LOG_PUB "s", entry->appId);
             entry->listener->onGroupCreated(messageStr);
         }
     }
@@ -61,7 +61,7 @@ static void PostOnGroupDeleted(const char *messageStr)
     (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onGroupDeleted != NULL) {
-            LOGI("[Broadcaster]: PostOnGroupDeleted! [AppId]: %s", entry->appId);
+            LOGI("[Broadcaster]: PostOnGroupDeleted! [AppId]: %" LOG_PUB "s", entry->appId);
             entry->listener->onGroupDeleted(messageStr);
         }
     }
@@ -79,7 +79,7 @@ static void PostOnDeviceBound(const char *peerUdid, const char *messageStr)
     (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onDeviceBound != NULL) {
-            LOGI("[Broadcaster]: PostOnDeviceBound! [AppId]: %s", entry->appId);
+            LOGI("[Broadcaster]: PostOnDeviceBound! [AppId]: %" LOG_PUB "s", entry->appId);
             entry->listener->onDeviceBound(peerUdid, messageStr);
         }
     }
@@ -97,7 +97,7 @@ static void PostOnDeviceUnBound(const char *peerUdid, const char *messageStr)
     (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onDeviceUnBound != NULL) {
-            LOGI("[Broadcaster]: PostOnDeviceUnBound! [AppId]: %s", entry->appId);
+            LOGI("[Broadcaster]: PostOnDeviceUnBound! [AppId]: %" LOG_PUB "s", entry->appId);
             entry->listener->onDeviceUnBound(peerUdid, messageStr);
         }
     }
@@ -115,7 +115,7 @@ static void PostOnDeviceNotTrusted(const char *peerUdid)
     (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onDeviceNotTrusted != NULL) {
-            LOGI("[Broadcaster]: PostOnDeviceNotTrusted! [AppId]: %s", entry->appId);
+            LOGI("[Broadcaster]: PostOnDeviceNotTrusted! [AppId]: %" LOG_PUB "s", entry->appId);
             entry->listener->onDeviceNotTrusted(peerUdid);
         }
     }
@@ -133,7 +133,8 @@ static void PostOnLastGroupDeleted(const char *peerUdid, int groupType)
     (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onLastGroupDeleted != NULL) {
-            LOGI("[Broadcaster]: PostOnLastGroupDeleted! [AppId]: %s, [GroupType]: %d", entry->appId, groupType);
+            LOGI("[Broadcaster]: PostOnLastGroupDeleted! [AppId]: %" LOG_PUB "s, [GroupType]: %" LOG_PUB "d",
+                entry->appId, groupType);
             entry->listener->onLastGroupDeleted(peerUdid, groupType);
         }
     }
@@ -147,7 +148,7 @@ static void PostOnTrustedDeviceNumChanged(int curTrustedDeviceNum)
     (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (entry->listener->onTrustedDeviceNumChanged != NULL) {
-            LOGI("[Broadcaster]: PostOnTrustedDeviceNumChanged! [AppId]: %s", entry->appId);
+            LOGI("[Broadcaster]: PostOnTrustedDeviceNumChanged! [AppId]: %" LOG_PUB "s", entry->appId);
             entry->listener->onTrustedDeviceNumChanged(curTrustedDeviceNum);
         }
     }
@@ -168,7 +169,7 @@ static int32_t UpdateListenerIfExist(const char *appId, const DataChangeListener
                 return HC_ERR_MEMORY_COPY;
             }
             UnlockHcMutex(g_broadcastMutex);
-            LOGI("Successfully updated a listener. [AppId]: %s", appId);
+            LOGI("Successfully updated a listener. [AppId]: %" LOG_PUB "s", appId);
             return HC_SUCCESS;
         }
     }
@@ -214,7 +215,7 @@ static int32_t AddListenerIfNotExist(const char *appId, const DataChangeListener
         return HC_ERR_ALLOC_MEMORY;
     }
     UnlockHcMutex(g_broadcastMutex);
-    LOGI("Successfully added a listener. [AppId]: %s", appId);
+    LOGI("Successfully added a listener. [AppId]: %" LOG_PUB "s", appId);
     return HC_SUCCESS;
 }
 
@@ -300,10 +301,10 @@ int32_t RemoveListener(const char *appId)
             HcFree(entry->listener);
             ListenerEntry tempEntry;
             HC_VECTOR_POPELEMENT(&g_listenerEntryVec, &tempEntry, index);
-            LOGI("Successfully removed a listener. [AppId]: %s", appId);
+            LOGI("Successfully removed a listener. [AppId]: %" LOG_PUB "s", appId);
             return HC_SUCCESS;
         }
     }
-    LOGI("The listener does not exist! [AppId]: %s", appId);
+    LOGI("The listener does not exist! [AppId]: %" LOG_PUB "s", appId);
     return HC_SUCCESS;
 }
