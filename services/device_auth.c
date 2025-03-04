@@ -1006,7 +1006,8 @@ static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const c
     return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
 }
 
-static int32_t PackServerP2PAuthDataToContext(int32_t opCode, const char *appId, CJson *context)
+static int32_t PackServerP2PAuthDataToContext(int32_t osAccountId, int64_t requestId, int32_t opCode,
+    const char *appId, CJson *context)
 {
     if (AddBoolToJson(context, FIELD_IS_SINGLE_CRED, true) != HC_SUCCESS) {
         LOGE("add isSingleCred to context fail.");
@@ -1064,7 +1065,7 @@ static int32_t BuildServerP2PAuthContext(int64_t requestId, int32_t opCode, cons
             return HC_ERR_JSON_ADD;
         }
     }
-    if (PackServerP2PAuthDataToContext(opCode, appId, context) != HC_SUCCESS) {
+    if (PackServerP2PAuthDataToContext(osAccountId, requestId, opCode, appId, context) != HC_SUCCESS) {
         LOGE("add server P2P auth data to context fail.");
         return HC_ERR_JSON_ADD;
     }
