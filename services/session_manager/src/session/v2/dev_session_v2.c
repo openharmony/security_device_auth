@@ -232,7 +232,9 @@ static void ResetSessionState(SessionImpl *impl)
 
 static int32_t RestartSession(SessionImpl *impl, JumpPolicy *policy)
 {
-    if (!HasNextCredInfo(impl)) {
+    bool isSingleCred = false;
+    (void)GetBoolFromJson(impl->context, FIELD_IS_SINGLE_CRED, &isSingleCred);
+    if (!HasNextCredInfo(impl) || isSingleCred) {
         LOGE("session has no next available credential, session failed.");
         return HC_ERR_NO_CANDIDATE_GROUP;
     }

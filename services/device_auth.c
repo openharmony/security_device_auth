@@ -629,6 +629,20 @@ static int32_t CheckAndGetValidOsAccountId(const CJson *context, int32_t *osAcco
     return HC_SUCCESS;
 }
 
+static int32_t AddOsAccountIdToContext(CJson *context)
+{
+    int32_t osAccountId = ANY_OS_ACCOUNT;
+    int32_t ret = CheckAndGetValidOsAccountId(context, &osAccountId);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
+        LOGE("add osAccountId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t AddServerReqInfoToContext(int64_t requestId, const char *appId, int32_t opCode,
     const CJson *receivedMsg, CJson *context)
 {
@@ -636,6 +650,10 @@ static int32_t AddServerReqInfoToContext(int64_t requestId, const char *appId, i
     if (groupId == NULL) {
         LOGE("get groupId from json fail.");
         return HC_ERR_JSON_GET;
+    }
+    if (AddBoolToJson(context, FIELD_IS_SINGLE_CRED, true) != HC_SUCCESS) {
+        LOGE("add isSingleCred to context fail.");
+        return HC_ERR_JSON_ADD;
     }
     if (AddBoolToJson(context, FIELD_IS_BIND, true) != HC_SUCCESS) {
         LOGE("add isBind to context fail.");
@@ -645,14 +663,9 @@ static int32_t AddServerReqInfoToContext(int64_t requestId, const char *appId, i
         LOGE("add isClient to context fail.");
         return HC_ERR_JSON_ADD;
     }
-    int32_t osAccountId = ANY_OS_ACCOUNT;
-    int32_t ret = CheckAndGetValidOsAccountId(context, &osAccountId);
+    int32_t ret = AddOsAccountIdToContext(context);
     if (ret != HC_SUCCESS) {
         return ret;
-    }
-    if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
-        LOGE("add osAccountId to context fail.");
-        return HC_ERR_JSON_ADD;
     }
     if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
         LOGE("add requestId to context fail.");
@@ -666,17 +679,16 @@ static int32_t AddServerReqInfoToContext(int64_t requestId, const char *appId, i
         LOGE("add opCode to context fail.");
         return HC_ERR_JSON_ADD;
     }
-    int32_t res;
     if (opCode == MEMBER_INVITE) {
-        res = AddGroupInfoToContextByInput(receivedMsg, context);
-        if (res != HC_SUCCESS) {
-            return res;
+        ret = AddGroupInfoToContextByInput(receivedMsg, context);
+        if (ret != HC_SUCCESS) {
+            return ret;
         }
         return AddDevInfoToContextByInput(context);
     }
-    res = AddGroupInfoToContextByDb(groupId, context);
-    if (res != HC_SUCCESS) {
-        return res;
+    ret = AddGroupInfoToContextByDb(groupId, context);
+    if (ret != HC_SUCCESS) {
+        return ret;
     }
     return AddDevInfoToContextByDb(groupId, context);
 }
@@ -994,6 +1006,40 @@ static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const c
     return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
 }
 
+static int32_t PackServerP2PAuthDataToContext(int32_t osAccountId, int64_t requestId, int32_t opCode,
+    const char *appId, CJson *context)
+{
+    if (AddBoolToJson(context, FIELD_IS_SINGLE_CRED, true) != HC_SUCCESS) {
+        LOGE("add isSingleCred to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
+        LOGE("add isBind to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddBoolToJson(context, FIELD_IS_CLIENT, false) != HC_SUCCESS) {
+        LOGE("add isClient to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
+        LOGE("add operationCode to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
+        LOGE("add requestId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
+        LOGE("add opCode to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t BuildServerP2PAuthContext(int64_t requestId, int32_t opCode, const char *appId, CJson *context)
 {
     int32_t osAccountId = ANY_OS_ACCOUNT;
@@ -1019,28 +1065,8 @@ static int32_t BuildServerP2PAuthContext(int64_t requestId, int32_t opCode, cons
             return HC_ERR_JSON_ADD;
         }
     }
-    if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
-        LOGE("add isBind to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddBoolToJson(context, FIELD_IS_CLIENT, false) != HC_SUCCESS) {
-        LOGE("add isClient to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
-        LOGE("add operationCode to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
-        LOGE("add requestId to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
-        LOGE("add appId to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
-        LOGE("add opCode to context fail.");
+    if (PackServerP2PAuthDataToContext(osAccountId, requestId, opCode, appId, context) != HC_SUCCESS) {
+        LOGE("add server P2P auth data to context fail.");
         return HC_ERR_JSON_ADD;
     }
     return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);

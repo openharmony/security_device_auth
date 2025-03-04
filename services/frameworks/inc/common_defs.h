@@ -130,6 +130,7 @@
 #define FIELD_LOCAL_DEVICE_TYPE "localDeviceType"
 #define FIELD_PLUGIN_EXT_DATA "originPeerData"
 #define FIELD_META_NODE_TYPE "metaNodeType"
+#define FIELD_IS_SINGLE_CRED "isSingleCred"
 
 #define INVALID_MODULE_TYPE (-1)
 #define GROUP_ERR_MSG 0x8080
