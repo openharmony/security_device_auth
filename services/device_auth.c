@@ -637,6 +637,10 @@ static int32_t AddServerReqInfoToContext(int64_t requestId, const char *appId, i
         LOGE("get groupId from json fail.");
         return HC_ERR_JSON_GET;
     }
+    if (AddBoolToJson(context, FIELD_IS_SINGLE_CRED, true) != HC_SUCCESS) {
+        LOGE("add isSingleCred to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
     if (AddBoolToJson(context, FIELD_IS_BIND, true) != HC_SUCCESS) {
         LOGE("add isBind to context fail.");
         return HC_ERR_JSON_ADD;
@@ -1018,6 +1022,10 @@ static int32_t BuildServerP2PAuthContext(int64_t requestId, int32_t opCode, cons
             LOGE("add deviceId to context fail.");
             return HC_ERR_JSON_ADD;
         }
+    }
+    if (AddBoolToJson(context, FIELD_IS_SINGLE_CRED, true) != HC_SUCCESS) {
+        LOGE("add isSingleCred to context fail.");
+        return HC_ERR_JSON_ADD;
     }
     if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
         LOGE("add isBind to context fail.");

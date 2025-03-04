@@ -425,7 +425,9 @@ static inline bool HasNextAuthGroup(const CJson *receviedMsg)
 
 static void OnV1SessionError(SessionImpl *impl, int32_t errorCode, const CJson *receviedMsg)
 {
-    if (HasNextAuthGroup(receviedMsg)) {
+    bool isSingleCred = false;
+    (void)GetBoolFromJson(impl->context, FIELD_IS_SINGLE_CRED, &isSingleCred);
+    if (HasNextAuthGroup(receviedMsg) && !isSingleCred) {
         return;
     }
     ProcessErrorCallback(impl->base.id, impl->base.opCode, errorCode, NULL, &impl->base.callback);
