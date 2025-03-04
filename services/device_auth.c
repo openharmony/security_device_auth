@@ -629,6 +629,20 @@ static int32_t CheckAndGetValidOsAccountId(const CJson *context, int32_t *osAcco
     return HC_SUCCESS;
 }
 
+static int32_t AddOsAccountIdToContext(CJson *context)
+{
+    int32_t osAccountId = ANY_OS_ACCOUNT;
+    int32_t ret = CheckAndGetValidOsAccountId(context, &osAccountId);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
+        LOGE("add osAccountId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t AddServerReqInfoToContext(int64_t requestId, const char *appId, int32_t opCode,
     const CJson *receivedMsg, CJson *context)
 {
@@ -649,14 +663,9 @@ static int32_t AddServerReqInfoToContext(int64_t requestId, const char *appId, i
         LOGE("add isClient to context fail.");
         return HC_ERR_JSON_ADD;
     }
-    int32_t osAccountId = ANY_OS_ACCOUNT;
-    int32_t ret = CheckAndGetValidOsAccountId(context, &osAccountId);
+    int32_t ret = AddOsAccountIdToContext(context);
     if (ret != HC_SUCCESS) {
         return ret;
-    }
-    if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
-        LOGE("add osAccountId to context fail.");
-        return HC_ERR_JSON_ADD;
     }
     if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
         LOGE("add requestId to context fail.");
@@ -670,17 +679,16 @@ static int32_t AddServerReqInfoToContext(int64_t requestId, const char *appId, i
         LOGE("add opCode to context fail.");
         return HC_ERR_JSON_ADD;
     }
-    int32_t res;
     if (opCode == MEMBER_INVITE) {
-        res = AddGroupInfoToContextByInput(receivedMsg, context);
-        if (res != HC_SUCCESS) {
-            return res;
+        ret = AddGroupInfoToContextByInput(receivedMsg, context);
+        if (ret != HC_SUCCESS) {
+            return ret;
         }
         return AddDevInfoToContextByInput(context);
     }
-    res = AddGroupInfoToContextByDb(groupId, context);
-    if (res != HC_SUCCESS) {
-        return res;
+    ret = AddGroupInfoToContextByDb(groupId, context);
+    if (ret != HC_SUCCESS) {
+        return ret;
     }
     return AddDevInfoToContextByDb(groupId, context);
 }
@@ -998,31 +1006,8 @@ static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const c
     return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
 }
 
-static int32_t BuildServerP2PAuthContext(int64_t requestId, int32_t opCode, const char *appId, CJson *context)
+static int32_t PackServerP2PAuthDataToContext(int32_t opCode, const char *appId, CJson *context)
 {
-    int32_t osAccountId = ANY_OS_ACCOUNT;
-    (void)GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId);
-    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    if (osAccountId == INVALID_OS_ACCOUNT) {
-        return HC_ERR_INVALID_PARAMS;
-    }
-    if (!IsOsAccountUnlocked(osAccountId)) {
-        LOGE("Os account is not unlocked!");
-        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
-    }
-    const char *peerUdid = GetStringFromJson(context, FIELD_PEER_CONN_DEVICE_ID);
-    const char *pinCode = GetStringFromJson(context, FIELD_PIN_CODE);
-    if (peerUdid == NULL && pinCode == NULL) {
-        LOGE("need peerConnDeviceId or pinCode!");
-        return HC_ERR_JSON_GET;
-    }
-    if (peerUdid != NULL) {
-        PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
-        if (AddDeviceIdToJson(context, peerUdid) != HC_SUCCESS) {
-            LOGE("add deviceId to context fail.");
-            return HC_ERR_JSON_ADD;
-        }
-    }
     if (AddBoolToJson(context, FIELD_IS_SINGLE_CRED, true) != HC_SUCCESS) {
         LOGE("add isSingleCred to context fail.");
         return HC_ERR_JSON_ADD;
@@ -1049,6 +1034,38 @@ static int32_t BuildServerP2PAuthContext(int64_t requestId, int32_t opCode, cons
     }
     if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
         LOGE("add opCode to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t BuildServerP2PAuthContext(int64_t requestId, int32_t opCode, const char *appId, CJson *context)
+{
+    int32_t osAccountId = ANY_OS_ACCOUNT;
+    (void)GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId);
+    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
+    if (osAccountId == INVALID_OS_ACCOUNT) {
+        return HC_ERR_INVALID_PARAMS;
+    }
+    if (!IsOsAccountUnlocked(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
+    const char *peerUdid = GetStringFromJson(context, FIELD_PEER_CONN_DEVICE_ID);
+    const char *pinCode = GetStringFromJson(context, FIELD_PIN_CODE);
+    if (peerUdid == NULL && pinCode == NULL) {
+        LOGE("need peerConnDeviceId or pinCode!");
+        return HC_ERR_JSON_GET;
+    }
+    if (peerUdid != NULL) {
+        PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
+        if (AddDeviceIdToJson(context, peerUdid) != HC_SUCCESS) {
+            LOGE("add deviceId to context fail.");
+            return HC_ERR_JSON_ADD;
+        }
+    }
+    if (PackServerP2PAuthDataToContext(opCode, appId, context) != HC_SUCCESS) {
+        LOGE("add server P2P auth data to context fail.");
         return HC_ERR_JSON_ADD;
     }
     return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
