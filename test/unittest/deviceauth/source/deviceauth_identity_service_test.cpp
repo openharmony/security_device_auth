@@ -18,12 +18,14 @@
 #include <gtest/gtest.h>
 #include "alg_loader.h"
 #include "common_defs.h"
+#include "compatible_sub_session.h"
 #include "device_auth.h"
 #include "device_auth_defines.h"
 #include "device_auth_ext.h"
 #include "hc_dev_info_mock.h"
 #include "json_utils_mock.h"
 #include "json_utils.h"
+#include "permission_adapter.h"
 #include "protocol_task_main_mock.h"
 #include "securec.h"
 #include "hc_file.h"
@@ -297,7 +299,7 @@ HWTEST_F(CredMgrAddCredentialTest, CredMgrAddCredentialTest001, TestSize.Level0)
     ASSERT_NE(cm, nullptr);
     char *returnData = nullptr;
     int32_t ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &returnData);
-    HcFree(returnData);
+    cm->destroyInfo(&returnData);
     EXPECT_EQ(ret, IS_SUCCESS);
 }
 
@@ -490,7 +492,7 @@ HWTEST_F(CredMgrExportCredentialTest, CredMgrExportCredentialTest001, TestSize.L
     char *returnData = nullptr;
     ret = cm->exportCredential(DEFAULT_OS_ACCOUNT, credId, &returnData);
     HcFree(credId);
-    HcFree(returnData);
+    cm->destroyInfo(&returnData);
     EXPECT_EQ(ret, IS_SUCCESS);
 }
 
@@ -1375,3 +1377,85 @@ class IdentityServiceImplTest : public testing::Test {
         int32_t ret = AgreeCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr, nullptr);
         EXPECT_NE(ret, IS_SUCCESS);
     }
+
+class SessionV1Test : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+void SessionV1Test::SetUpTestCase() {}
+void SessionV1Test::TearDownTestCase() {}
+
+void SessionV1Test::SetUp()
+{
+}
+
+void SessionV1Test::TearDown()
+{
+}
+
+HWTEST_F(SessionV1Test, SessionV1Test001, TestSize.Level0)
+{
+    int32_t ret = CheckPermission(DEFAULT_VAL);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(SessionV1Test, SessionV1Test002, TestSize.Level0)
+{
+    SubSessionTypeValue subSessionType = TYPE_CLIENT_BIND_SUB_SESSION;
+    int32_t ret = CreateCompatibleSubSession(subSessionType, nullptr, nullptr, nullptr);
+    EXPECT_EQ(ret, HC_ERR_INVALID_PARAMS);
+
+    CJson *json = CreateJson();
+    ASSERT_NE(json, nullptr);
+    DeviceAuthCallback *callback;
+    CompatibleBaseSubSession *subSession;
+
+    ret = CreateCompatibleSubSession(subSessionType, json, nullptr, nullptr);
+    EXPECT_EQ(ret, HC_ERR_INVALID_PARAMS);
+    ret = CreateCompatibleSubSession(subSessionType, nullptr, callback, nullptr);
+    EXPECT_EQ(ret, HC_ERR_INVALID_PARAMS);
+    ret = CreateCompatibleSubSession(subSessionType, nullptr, nullptr, &subSession);
+    EXPECT_EQ(ret, HC_ERR_INVALID_PARAMS);
+
+    ret = CreateCompatibleSubSession(subSessionType, json, callback, nullptr);
+    EXPECT_EQ(ret, HC_ERR_INVALID_PARAMS);
+    ret = CreateCompatibleSubSession(subSessionType, json, nullptr, &subSession);
+    EXPECT_EQ(ret, HC_ERR_INVALID_PARAMS);
+    ret = CreateCompatibleSubSession(subSessionType, nullptr, callback, &subSession);
+    EXPECT_EQ(ret, HC_ERR_INVALID_PARAMS);
+
+    ret = CreateCompatibleSubSession(subSessionType, json, callback, &subSession);
+    FreeJson(json);
+    EXPECT_NE(ret, HC_SUCCESS);
+}
+
+HWTEST_F(SessionV1Test, SessionV1Test003, TestSize.Level0)
+{
+    int32_t ret = ProcessCompatibleSubSession(nullptr, nullptr, nullptr, nullptr);
+    DestroyCompatibleSubSession(nullptr);
+    EXPECT_EQ(ret, HC_ERR_INVALID_PARAMS);
+    CompatibleBaseSubSession subSession;
+    subSession.type = DEFAULT_VAL;
+    CJson *in = CreateJson();
+    ASSERT_NE(in, nullptr);
+    CJson *out = CreateJson();
+    ASSERT_NE(out, nullptr);
+    int32_t *status = DEFAULT_VAL;
+
+    ret = ProcessCompatibleSubSession(&subSession, nullptr, nullptr, nullptr);
+    EXPECT_EQ(ret, HC_ERR_INVALID_PARAMS);
+    ret = ProcessCompatibleSubSession(&subSession, in, nullptr, nullptr);
+    EXPECT_EQ(ret, HC_ERR_INVALID_PARAMS);
+    ret = ProcessCompatibleSubSession(&subSession, in, &out, nullptr);
+    EXPECT_EQ(ret, HC_ERR_INVALID_PARAMS);
+    ret = ProcessCompatibleSubSession(&subSession, in, &out, status);
+    DestroyCompatibleSubSession(&subSession);
+    EXPECT_NE(ret, HC_SUCCESS);
+
+    FreeJson(in);
+    FreeJson(out);
+}

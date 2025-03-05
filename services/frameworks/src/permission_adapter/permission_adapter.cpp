@@ -116,14 +116,3 @@ int32_t GetCallingUid(void)
 {
     return IPCSkeleton::GetCallingUid();
 }
-
-int32_t CheckInterfacePermission(const char *permission)
-{
-    AccessTokenID accessTokenId = IPCSkeleton::GetCallingTokenID();
-    int result = AccessTokenKit::VerifyAccessToken(accessTokenId, permission);
-    if (result != PERMISSION_GRANTED) {
-        LOGE("The permission is not granted!");
-        return HC_ERROR;
-    }
-    return HC_SUCCESS;
-}

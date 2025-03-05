@@ -186,12 +186,26 @@ int32_t UnregisterChangeListener(const char *appId)
     return IsCredListenerSupported() ? UnRegCredListener(appId) : HC_ERR_NOT_SUPPORT;
 }
 
+static bool IsJsonString(const char *str)
+{
+    CJson *json = CreateJsonFromString(str);
+    if (json == NULL) {
+        return false;
+    }
+    FreeJson(json);
+    return true;
+}
+
 void DestroyInfo(char **returnData)
 {
     if (returnData == NULL || *returnData == NULL) {
         return;
     }
-    FreeJsonString(*returnData);
+    if (IsJsonString(*returnData)) {
+        FreeJsonString(*returnData);
+    } else {
+        HcFree(*returnData);
+    }
     *returnData = NULL;
 }
 
