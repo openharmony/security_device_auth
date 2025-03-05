@@ -18,6 +18,9 @@
 
 #include "cred_listener.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 int32_t AddCredential(int32_t osAccountId, const char *requestParams, char **returnData);
 
 int32_t ExportCredential(int32_t osAccountId, const char *credId, char **returnData);
@@ -46,4 +49,7 @@ int32_t InitIdentityService(void);
 
 void DestroyIdentityService(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // IDENTITY_SERVICE_H
