@@ -88,6 +88,7 @@ ohos_unittest("deviceauth_llt") {
     "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
     "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
     "${deviceauth_account_group_auth_path}/src/group_auth_manager/account_related_group_auth/account_related_group_auth.c",
+    "${identity_manager_path}/src/identity_cred.c",
   ]
 
   sources += [
@@ -347,6 +348,7 @@ ohos_unittest("device_auth_identity_service_test") {
   sources -= [
     "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
     "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
+    "${identity_service_path}/session/src/cred_session_util.c",
     "${identity_service_path}/src/identity_operation.c",
   ]
 

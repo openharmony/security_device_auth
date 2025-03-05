@@ -24,8 +24,8 @@
 #include "device_auth_ext.h"
 #include "hc_dev_info_mock.h"
 #include "json_utils_mock.h"
-#include "json_utils.h"
 #include "permission_adapter.h"
+#include "json_utils.h"
 #include "protocol_task_main_mock.h"
 #include "securec.h"
 #include "hc_file.h"
@@ -37,6 +37,7 @@
 #include "hc_types.h"
 #include "../../../../services/identity_service/src/identity_operation.c"
 #include "../../../../services/identity_service/src/identity_service_impl.c"
+#include "../../../../services/identity_service/session/src/cred_session_util.c"
 #include "cred_listener.h"
 
 using namespace std;
@@ -47,13 +48,21 @@ namespace {
 #define TEST_APP_ID "TestAppId"
 #define TEST_APP_ID1 "TestAppId1"
 #define TEST_DEVICE_ID "TestDeviceId"
+#define TEST_USER_ID "TestUserId"
 #define TEST_CRED_ID "TestCredId"
+#define TEST_CRED_TYPE 1
+#define TEST_CRED_TYPE_1 2
+#define TEST_CRED_TYPE_2 3
+#define TEST_CRED_TYPE_3 4
 #define TEST_CRED_INFO_ID "TestCredInfoId"
+#define TEST_PIN_CODE "123456"
+#define TEST_PIN_CODE_1 ""
 #define QUERY_RESULT_NUM 0
 #define QUERY_RESULT_NUM_2 2
 #define DATA_LEN 10
 #define DEFAULT_OS_ACCOUNT_ID 100
 #define DEFAULT_VAL 0
+#define DEFAULT_CHANNEL_TYPE 0
 
 #define TEST_CRED_DATA_PATH "/data/service/el1/public/deviceauthMock/hccredential.dat"
 static const char *TEST_DATA = "testData";
@@ -183,6 +192,15 @@ static const char *BATCH_UPDATE_PARAMS1 =
     "\"issuer\":1,\"proofType\":2,\"credOwner\":\"TestAppId\"},"
     "\"updateLists\":[{\"userId\":\"TestUserId\",\"deviceId\":\"TestDeviceId\"}]}";
 
+static const char *CRED_DATA =
+    "{\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
+    "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
+    "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
+static const char *CRED_DATA_1 =
+    "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
+    "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
+    "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
+    "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
 
 static const char *QUERY_PARAMS = "{\"deviceId\":\"TestDeviceId\"}";
 static const char *QUERY_PARAMS1 = "{\"deviceId\":\"TestDeviceId1\"}";
@@ -1138,8 +1156,6 @@ HWTEST_F(CredMgrDelCredByParamsTest, CredMgrDelCredByParamsTest004, TestSize.Lev
     EXPECT_EQ(ret, IS_SUCCESS);
 }
 
-}
-
 class CredListenerTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -1288,95 +1304,95 @@ HWTEST_F(IdentityOperationTest, IdentityOperationTest010, TestSize.Level0)
 }
 
 class IdentityServiceImplTest : public testing::Test {
-    public:
-        static void SetUpTestCase();
-        static void TearDownTestCase();
-        void SetUp();
-        void TearDown();
-    };
-    
-    void IdentityServiceImplTest::SetUpTestCase() {}
-    void IdentityServiceImplTest::TearDownTestCase() {}
-    
-    void IdentityServiceImplTest::SetUp()
-    {
-        DeleteDatabase();
-        int ret = InitDeviceAuthService();
-        EXPECT_EQ(ret, IS_SUCCESS);
-    }
-    
-    void IdentityServiceImplTest::TearDown()
-    {
-        DestroyDeviceAuthService();
-    }
-    
-    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest001, TestSize.Level0)
-    {
-        int32_t ret = AddCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
-        EXPECT_NE(ret, IS_SUCCESS);
-    }
-    
-    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest002, TestSize.Level0)
-    {
-        int32_t ret = ExportCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
-        EXPECT_NE(ret, IS_SUCCESS);
-    }
-    
-    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest003, TestSize.Level0)
-    {
-        int32_t ret = QueryCredentialByParamsImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
-        EXPECT_NE(ret, IS_SUCCESS);
-    }
-    
-    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest004, TestSize.Level0)
-    {
-        int32_t ret = QueryCredInfoByCredIdImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
-        EXPECT_NE(ret, IS_SUCCESS);
-    }
-    
-    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest005, TestSize.Level0)
-    {
-        int32_t ret = DeleteCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr);
-        EXPECT_NE(ret, IS_SUCCESS);
-    }
-    
-    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest006, TestSize.Level0)
-    {
-        int32_t ret = DeleteCredByParamsImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
-        EXPECT_NE(ret, IS_SUCCESS);
-    }
-    
-    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest007, TestSize.Level0)
-    {
-        int32_t ret = UpdateCredInfoImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
-        EXPECT_NE(ret, IS_SUCCESS);
-    }
-    
-    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest008, TestSize.Level0)
-    {
-        QueryCredentialParams queryParam;
-        int32_t ret = AddUpdateCred(DEFAULT_OS_ACCOUNT_ID, nullptr, &queryParam);
-        EXPECT_NE(ret, IS_SUCCESS);
-    }
-    
-    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest009, TestSize.Level0)
-    {
-        QueryCredentialParams queryParam;
-        int32_t ret = ProcessAbnormalCreds(DEFAULT_OS_ACCOUNT_ID, nullptr, &queryParam);
-        EXPECT_NE(ret, IS_SUCCESS);
-    }
-    
-    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest010, TestSize.Level0)
-    {
-        int32_t ret = BatchUpdateCredsImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
-        EXPECT_NE(ret, IS_SUCCESS);
-    }
-    
-    HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest011, TestSize.Level0)
-    {
-        int32_t ret = AgreeCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr, nullptr);
-        EXPECT_NE(ret, IS_SUCCESS);
-    }
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+void IdentityServiceImplTest::SetUpTestCase() {}
+void IdentityServiceImplTest::TearDownTestCase() {}
+
+void IdentityServiceImplTest::SetUp()
+{
+    DeleteDatabase();
+    int ret = InitDeviceAuthService();
+    EXPECT_EQ(ret, IS_SUCCESS);
+}
+
+void IdentityServiceImplTest::TearDown()
+{
+    DestroyDeviceAuthService();
+}
+
+HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest001, TestSize.Level0)
+{
+    int32_t ret = AddCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest002, TestSize.Level0)
+{
+    int32_t ret = ExportCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest003, TestSize.Level0)
+{
+    int32_t ret = QueryCredentialByParamsImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest004, TestSize.Level0)
+{
+    int32_t ret = QueryCredInfoByCredIdImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest005, TestSize.Level0)
+{
+    int32_t ret = DeleteCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest006, TestSize.Level0)
+{
+    int32_t ret = DeleteCredByParamsImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest007, TestSize.Level0)
+{
+    int32_t ret = UpdateCredInfoImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest008, TestSize.Level0)
+{
+    QueryCredentialParams queryParam;
+    int32_t ret = AddUpdateCred(DEFAULT_OS_ACCOUNT_ID, nullptr, &queryParam);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest009, TestSize.Level0)
+{
+    QueryCredentialParams queryParam;
+    int32_t ret = ProcessAbnormalCreds(DEFAULT_OS_ACCOUNT_ID, nullptr, &queryParam);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest010, TestSize.Level0)
+{
+    int32_t ret = BatchUpdateCredsImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest011, TestSize.Level0)
+{
+    int32_t ret = AgreeCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
 
 class SessionV1Test : public testing::Test {
 public:
@@ -1459,3 +1475,199 @@ HWTEST_F(SessionV1Test, SessionV1Test003, TestSize.Level0)
     FreeJson(in);
     FreeJson(out);
 }
+
+class CredSessionUtilTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+void CredSessionUtilTest::SetUpTestCase() {}
+void CredSessionUtilTest::TearDownTestCase() {}
+
+void CredSessionUtilTest::SetUp() {}
+
+void CredSessionUtilTest::TearDown() {}
+
+HWTEST_F(CredSessionUtilTest, CredSessionUtilTest001, TestSize.Level0)
+{
+    int32_t ret = AddChannelInfoToContext(DEFAULT_CHANNEL_TYPE, DEFAULT_CHANNEL_ID, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+    CJson *in = CreateJson();
+    ret = AddChannelInfoToContext(DEFAULT_CHANNEL_TYPE, DEFAULT_CHANNEL_ID, in);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(CredSessionUtilTest, CredSessionUtilTest002, TestSize.Level0)
+{
+    int32_t ret = AddCredIdToContextIfNeeded(nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+    CJson *in = CreateJson();
+    CJson *credDataJson = CreateJsonFromString(CRED_DATA);
+    (void)AddObjToJson(in, FIELD_CREDENTIAL_OBJ, credDataJson);
+    FreeJson(credDataJson);
+    ret = AddCredIdToContextIfNeeded(in);
+    EXPECT_NE(ret, IS_SUCCESS);
+
+    credDataJson = CreateJsonFromString(CRED_DATA_1);
+    (void)AddObjToJson(in, FIELD_CREDENTIAL_OBJ, credDataJson);
+    FreeJson(credDataJson);
+    ret = AddCredIdToContextIfNeeded(in);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(CredSessionUtilTest, CredSessionUtilTest003, TestSize.Level0)
+{
+    int32_t ret = CheckConfirmationExist(nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+    CJson *in = CreateJson();
+    (void)AddIntToJson(in, FIELD_CONFIRMATION, REQUEST_REJECTED);
+    ret = CheckConfirmationExist(in);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    (void)AddIntToJson(in, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
+    ret = CheckConfirmationExist(in);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(CredSessionUtilTest, CredSessionUtilTest004, TestSize.Level0)
+{
+    const char *ret = GetAppIdByContext(nullptr);
+    EXPECT_EQ(ret, nullptr);
+    CJson *in = CreateJson();
+    CJson *credDataJson = CreateJsonFromString(CRED_DATA);
+    (void)AddObjToJson(in, FIELD_CREDENTIAL_OBJ, credDataJson);
+    FreeJson(credDataJson);
+    ret = GetAppIdByContext(in);
+    EXPECT_EQ(ret, nullptr);
+
+    credDataJson = CreateJsonFromString(CRED_DATA_1);
+    (void)AddObjToJson(in, FIELD_CREDENTIAL_OBJ, credDataJson);
+    FreeJson(credDataJson);
+    ret = GetAppIdByContext(in);
+    EXPECT_NE(ret, nullptr);
+
+    (void)AddStringToJson(in, FIELD_PIN_CODE, TEST_PIN_CODE);
+    ret = GetAppIdByContext(in);
+    EXPECT_EQ(ret, nullptr);
+    (void)AddStringToJson(in, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
+    ret = GetAppIdByContext(in);
+    EXPECT_NE(ret, nullptr);
+    FreeJson(in);
+}
+
+HWTEST_F(CredSessionUtilTest, CredSessionUtilTest005, TestSize.Level0)
+{
+    int32_t ret = AddUserIdHashHexStringToContext(nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+    CJson *in = CreateJson();
+    (void)AddIntToJson(in, FIELD_CRED_TYPE, TEST_CRED_TYPE_1);
+    ret = AddUserIdHashHexStringToContext(nullptr, in);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    (void)AddIntToJson(in, FIELD_CRED_TYPE, TEST_CRED_TYPE);
+    ret = AddUserIdHashHexStringToContext(nullptr, in);
+    EXPECT_NE(ret, IS_SUCCESS);
+
+    (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID);
+    ret = AddUserIdHashHexStringToContext(nullptr, in);
+    EXPECT_NE(ret, IS_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(CredSessionUtilTest, CredSessionUtilTest006, TestSize.Level0)
+{
+    int32_t ret = QueryAndAddSelfCredToContext(DEFAULT_OS_ACCOUNT_ID, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+    CJson *in = CreateJson();
+    (void)AddStringToJson(in, FIELD_CRED_ID, TEST_CRED_ID);
+    ret = QueryAndAddSelfCredToContext(DEFAULT_OS_ACCOUNT_ID, in);
+    EXPECT_NE(ret, IS_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(CredSessionUtilTest, CredSessionUtilTest007, TestSize.Level0)
+{
+    bool ret = CheckIsCredBind(nullptr);
+    EXPECT_NE(ret, true);
+    CJson *in = CreateJson();
+    (void)AddStringToJson(in, FIELD_PIN_CODE, TEST_PIN_CODE_1);
+    ret = CheckIsCredBind(in);
+    EXPECT_NE(ret, true);
+
+    (void)AddStringToJson(in, FIELD_PIN_CODE, TEST_PIN_CODE);
+    ret = CheckIsCredBind(in);
+    EXPECT_EQ(ret, true);
+    FreeJson(in);
+}
+
+HWTEST_F(CredSessionUtilTest, CredSessionUtilTest008, TestSize.Level0)
+{
+    int32_t ret = AddAuthIdToCredContext(nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+    CJson *in = CreateJson();
+    ret = AddAuthIdToCredContext(in);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(CredSessionUtilTest, CredSessionUtilTest009, TestSize.Level0)
+{
+    int32_t ret = BuildClientCredBindContext(DEFAULT_OS_ACCOUNT_ID, DEFAULT_REQUEST_ID, nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+    CJson *in = CreateJson();
+    (void)AddStringToJson(in, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
+    const char *returnAppId = nullptr;
+    ret = BuildClientCredBindContext(DEFAULT_OS_ACCOUNT_ID, DEFAULT_REQUEST_ID, in, &returnAppId);
+    EXPECT_NE(ret, IS_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(CredSessionUtilTest, CredSessionUtilTest010, TestSize.Level0)
+{
+    int32_t ret = SetContextOpCode(nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+    CJson *in = CreateJson();
+    (void)AddIntToJson(in, FIELD_CRED_TYPE, TEST_CRED_TYPE);
+    ret = SetContextOpCode(in);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    (void)AddIntToJson(in, FIELD_CRED_TYPE, TEST_CRED_TYPE_1);
+    ret = SetContextOpCode(in);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    (void)AddIntToJson(in, FIELD_CRED_TYPE, TEST_CRED_TYPE_2);
+    ret = SetContextOpCode(in);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    (void)AddIntToJson(in, FIELD_CRED_TYPE, TEST_CRED_TYPE_3);
+    ret = SetContextOpCode(in);
+    EXPECT_NE(ret, IS_SUCCESS);
+    FreeJson(in);
+}
+
+HWTEST_F(CredSessionUtilTest, CredSessionUtilTest011, TestSize.Level0)
+{
+    int32_t ret = BuildClientCredAuthContext(DEFAULT_OS_ACCOUNT_ID, DEFAULT_REQUEST_ID, nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+}
+
+HWTEST_F(CredSessionUtilTest, CredSessionUtilTest012, TestSize.Level0)
+{
+    int32_t ret = BuildClientCredContext(DEFAULT_OS_ACCOUNT_ID, DEFAULT_REQUEST_ID,
+        nullptr, nullptr);
+    EXPECT_NE(ret, IS_SUCCESS);
+    CJson *in = CreateJson();
+    (void)AddStringToJson(in, FIELD_PIN_CODE, TEST_PIN_CODE);
+    const char *returnAppId = nullptr;
+    ret = BuildClientCredContext(DEFAULT_OS_ACCOUNT_ID, DEFAULT_REQUEST_ID, in, &returnAppId);
+    EXPECT_NE(ret, IS_SUCCESS);
+    ret = BuildServerCredBindContext(DEFAULT_REQUEST_ID, in, nullptr, &returnAppId);
+    EXPECT_NE(ret, IS_SUCCESS);
+    ret = BuildServerCredAuthContext(DEFAULT_REQUEST_ID, in, nullptr, &returnAppId);
+    EXPECT_NE(ret, IS_SUCCESS);
+    ret = BuildServerCredContext(DEFAULT_REQUEST_ID, nullptr, nullptr, &returnAppId);
+    EXPECT_NE(ret, IS_SUCCESS);
+    FreeJson(in);
+}
+} // namespace
