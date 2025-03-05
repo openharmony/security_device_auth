@@ -439,12 +439,12 @@ HWTEST_F(CommonLibTest, HcJsonGetTest003, TestSize.Level0)
     EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
     ret = GetByteFromJson(jsonObj, "name", nullptr, TEST_BUFFER_SIZE);
     EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
-    ret = GetStringFromJson(jsonObj, nullptr);
-    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
-    ret = GetObjFromJson(jsonObj, nullptr);
-    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    const char *retStr = GetStringFromJson(jsonObj, nullptr);
+    EXPECT_EQ(retStr, nullptr);
     FreeJsonString(nullptr);
     CJson *retJson = DetachItemFromJson(jsonObj, nullptr);
+    EXPECT_EQ(retJson, nullptr);
+    retJson = GetObjFromJson(jsonObj, nullptr);
     EXPECT_EQ(retJson, nullptr);
     DeleteAllItemExceptOne(jsonObj, nullptr);
     DeleteItemFromJson(jsonObj, nullptr);
@@ -579,6 +579,7 @@ HWTEST_F(CommonLibTest, HcClearJsonTest001, TestSize.Level0)
     ClearSensitiveStringInJson(nullptr, "name");
     ClearSensitiveStringInJson(jsonObj, "gender");
     ClearSensitiveStringInJson(jsonObj, "name");
+    ClearSensitiveStringInJson(jsonObj, nullptr);
     FreeJson(jsonObj);
 }
 
