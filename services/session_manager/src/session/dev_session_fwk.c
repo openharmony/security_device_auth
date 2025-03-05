@@ -547,7 +547,9 @@ static void GenerateErrorReturn(const CJson *receviedMsg, char **errorReturn)
 
 static void OnV1SessionError(SessionImpl *impl, int32_t errorCode, const CJson *receviedMsg)
 {
-    if (HasNextAuthGroup(receviedMsg)) {
+    bool isSingleCred = false;
+    (void)GetBoolFromJson(impl->context, FIELD_IS_SINGLE_CRED, &isSingleCred);
+    if (HasNextAuthGroup(receviedMsg) && !isSingleCred) {
         return;
     }
     char *errorReturn = NULL;
