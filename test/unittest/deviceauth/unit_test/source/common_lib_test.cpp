@@ -404,6 +404,27 @@ HWTEST_F(CommonLibTest, HcJsonGetTest002, TestSize.Level0)
     FreeJson(validJson);
 }
 
+HWTEST_F(CommonLibTest, HcJsonGetTest003, TestSize.Level0)
+{
+    CJson jsonObj = CreateJson();
+    int data = 1;
+    uint8_t = value = 0;
+    int_t ret = AddIntToJson(jsonObj, "test", data);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    ret = GetUint8FromJson(nullptr, "test", &value);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetUint8FromJson(jsonObj, nullptr, &value);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetUint8FromJson(jsonObj, "test", nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetUint8FromJson(jsonObj, "test", &value);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    DeleteItemFromJson(jsonObj, "test");
+    ret = GetUint8FromJson(jsonObj, "test", &value);
+    EXPECT_EQ(ret, CLIB_ERR_JSON_GET);
+    FreeJson(&jsonObj);
+}
+
 HWTEST_F(CommonLibTest, HcJsonAddTest001, TestSize.Level0)
 {
     CJson *jsonArr = CreateJsonFromString(TEST_JSON_STR_ARR);
@@ -483,14 +504,28 @@ HWTEST_F(CommonLibTest, HcClearJsonTest001, TestSize.Level0)
     FreeJson(jsonObj);
 }
 
+HWTEST_F(CommonLibTest, HcClearJsonTest002, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJsonFromString(TEST_JSON_STR);
+    EXPECT_NE(jsonObj, nullptr);
+    char *jsonStr = PackJsonToString(jsonObj);
+    EXPECT_NE(jsonStr, nullptr);
+    ClearAndFreeJsonString(nullptr);
+    ClearAndFreeJsonString(jsonStr);
+    FreeJson(jsonObj);
+}
+
 HWTEST_F(CommonLibTest, HcStringUtilTest001, TestSize.Level0)
 {
     const uint8_t byteData[] = "1234";
     const char hexData[] = "ABCD";
     const char invalidData[] = "GHJK";
+    const char inValidLenData[] = "ABC";
     uint32_t byteSize = sizeof(byteData);
     char hexStr[TEST_BUFFER_SIZE] = { 0 };
     int32_t ret = ByteToHexString(nullptr, byteSize, hexStr, TEST_BUFFER_SIZE);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = ByteToHexString(byteData, byteSize, nullptr, TEST_BUFFER_SIZE);
     EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
     ret = ByteToHexString(byteData, byteSize, hexStr, TEST_LENGTH_ZERO);
     EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
@@ -499,6 +534,10 @@ HWTEST_F(CommonLibTest, HcStringUtilTest001, TestSize.Level0)
     uint8_t byteStr[TEST_BUFFER_SIZE] = { 0 };
     ret = HexStringToByte(nullptr, byteStr, TEST_BUFFER_SIZE);
     EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = HexStringToByte(byteStr, nullptr, TEST_BUFFER_SIZE);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = HexStringToByte(inValidLenData, byteStr, TEST_BUFFER_SIZE);
+    EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
     ret = HexStringToByte(hexData, byteStr, TEST_LENGTH_ZERO);
     EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
     ret = HexStringToByte(invalidData, byteStr, TEST_BUFFER_SIZE);
@@ -507,9 +546,47 @@ HWTEST_F(CommonLibTest, HcStringUtilTest001, TestSize.Level0)
     EXPECT_EQ(ret, CLIB_SUCCESS);
     const char intStr[] = "10";
     int64_t int64Res = StringToInt64(intStr);
-    EXPECT_EQ(ret, 0);
-    int64Res = StringToInt64(intStr);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(int64Res, 10);
+    int64Res = StringToInt64(nullptr);
+    EXPECT_EQ(int64Res, 0);
+}
+
+HWTEST_F(CommonLibTest, HcStringUtilTest002, TestSize.Level0)
+{
+    const char oriData[] = "abcd";
+    const char inValidData[] = "";
+    char *desData = nullptr;
+    int32_t ret = ToUpperCase(nullptr, &desData);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = ToUpperCase(oriData, nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = DeepCopyString(nullptr, &desData);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = DeepCopyString(inValidData, &desData);
+    EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
+}
+
+HWTEST_F(CommonLibTest, HcStringUtilTest003, TestSize.Level0)
+{
+    const uint8_t byteData[] = "1234";
+    uint32_t byteSize = sizeof(byteData);
+    const char tag[] = "TEST";
+    PrintBuffer(byteData, byteSize, tag);
+    EXPECT_NE(byteData, nullptr);
+}
+
+HWTEST_F(CommonLibTest, HcStringUtilTest004, TestSize.Level0)
+{
+    const char oriData[] = "abcd";
+    const char anonymousData[MIN_ANONYMOUS_LEN + 2] = { 0 };
+    int32_t ret = GetAnonymousString(oriData, nullptr, MIN_ANONYMOUS_LEN + 1);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetAnonymousString(oriData, anonymousData, MIN_ANONYMOUS_LEN - 1);
+    EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
+    ret = GetAnonymousString(oriData, anonymousData, MIN_ANONYMOUS_LEN + 1);
+    EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
+    ret = GetAnonymousString(oriData, anonymousData, MIN_ANONYMOUS_LEN + 2);
+    EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
 }
 
 HWTEST_F(CommonLibTest, ParseTlvHeadTest001, TestSize.Level0)
