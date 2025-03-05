@@ -26,6 +26,7 @@ using namespace testing::ext;
 
 namespace {
 static const uint32_t TEST_BUFFER_SIZE = 16;
+static const uint32_t TEST_MIN_ANONYMOUS_LEN = 12;
 static const uint32_t TEST_INVALID_BUFFER_SIZE = 0;
 static const uint32_t TEST_LENGTH_ZERO = 0;
 static const uint32_t TEST_SRC_DATA = 4;
@@ -406,23 +407,70 @@ HWTEST_F(CommonLibTest, HcJsonGetTest002, TestSize.Level0)
 
 HWTEST_F(CommonLibTest, HcJsonGetTest003, TestSize.Level0)
 {
-    CJson jsonObj = CreateJson();
+    CJson *jsonObj = CreateJson();
     int data = 1;
-    uint8_t = value = 0;
-    int_t ret = AddIntToJson(jsonObj, "test", data);
+    uint8_t value = 0;
+    int32_t ret = AddIntToJson(jsonObj, "name", data);
     EXPECT_EQ(ret, CLIB_SUCCESS);
-    ret = GetUint8FromJson(nullptr, "test", &value);
+    ret = GetUint8FromJson(nullptr, "name", &value);
     EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
     ret = GetUint8FromJson(jsonObj, nullptr, &value);
     EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
-    ret = GetUint8FromJson(jsonObj, "test", nullptr);
+    ret = GetUint8FromJson(jsonObj, "name", nullptr);
     EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
-    ret = GetUint8FromJson(jsonObj, "test", &value);
+    ret = GetUint8FromJson(jsonObj, "name", &value);
     EXPECT_EQ(ret, CLIB_SUCCESS);
-    DeleteItemFromJson(jsonObj, "test");
-    ret = GetUint8FromJson(jsonObj, "test", &value);
+    DeleteItemFromJson(jsonObj, "name");
+    ret = GetUint8FromJson(jsonObj, "name", &value);
     EXPECT_EQ(ret, CLIB_ERR_JSON_GET);
-    FreeJson(&jsonObj);
+    ret = GetBoolFromJson(jsonObj, nullptr, nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetBoolFromJson(jsonObj, "name", nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetUnsignedIntFromJson(jsonObj, nullptr, nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetUnsignedIntFromJson(jsonObj, "name", nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetIntFromJson(jsonObj, nullptr, nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetIntFromJson(jsonObj, "name", nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetByteFromJson(jsonObj, nullptr, nullptr, TEST_BUFFER_SIZE);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetByteFromJson(jsonObj, "name", nullptr, TEST_BUFFER_SIZE);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetStringFromJson(jsonObj, nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetObjFromJson(jsonObj, nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    FreeJsonString(nullptr);
+    CJson *retJson = DetachItemFromJson(jsonObj, nullptr);
+    EXPECT_EQ(retJson, nullptr);
+    DeleteAllItemExceptOne(jsonObj, nullptr);
+    DeleteItemFromJson(jsonObj, nullptr);
+    retJson = DuplicateJson(nullptr);
+    EXPECT_EQ(retJson, nullptr);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(CommonLibTest, HcJsonGetTest004, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    uint32_t byteLen = 0;
+    char byteData[] = "test_byte";
+    int32_t ret = AddByteToJson(jsonObj, "name", reinterpret_cast<uint8_t *>(byteData), sizeof(byteData));
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    ret = GetByteLenFromJson(nullptr, "name", &byteLen);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetByteLenFromJson(jsonObj, nullptr, &byteLen);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetByteLenFromJson(jsonObj, "name", nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = GetByteLenFromJson(jsonObj, "name", &byteLen);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    ret = GetByteLenFromJson(jsonObj, "test", &byteLen);
+    EXPECT_EQ(ret, CLIB_ERR_JSON_GET);
+    FreeJson(jsonObj);
 }
 
 HWTEST_F(CommonLibTest, HcJsonAddTest001, TestSize.Level0)
@@ -494,6 +542,36 @@ HWTEST_F(CommonLibTest, HcJsonAddTest002, TestSize.Level0)
     EXPECT_EQ(ret, CLIB_SUCCESS);
 }
 
+HWTEST_F(CommonLibTest, HcJsonAddTest003, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    int32_t ret = AddBoolToJson(jsonObj, nullptr, false);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = AddByteToJson(jsonObj, nullptr, nullptr, TEST_BUFFER_SIZE);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = AddByteToJson(jsonObj, "name", nullptr, TEST_BUFFER_SIZE);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = AddIntToJson(jsonObj, nullptr, 0);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = AddStringArrayToJson(jsonObj, nullptr, nullptr, TEST_BUFFER_SIZE);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = AddStringArrayToJson(jsonObj, "name", nullptr, TEST_BUFFER_SIZE);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = AddStringToJson(jsonObj, nullptr, nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = AddStringToJson(jsonObj, "name", nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = AddStringToArray(jsonObj, nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = AddObjToArray(jsonObj, nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = AddObjToJson(jsonObj, nullptr, nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    ret = AddObjToJson(jsonObj, "name", nullptr);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    FreeJson(jsonObj);
+}
+
 HWTEST_F(CommonLibTest, HcClearJsonTest001, TestSize.Level0)
 {
     CJson *jsonObj = CreateJsonFromString(TEST_JSON_STR);
@@ -534,7 +612,7 @@ HWTEST_F(CommonLibTest, HcStringUtilTest001, TestSize.Level0)
     uint8_t byteStr[TEST_BUFFER_SIZE] = { 0 };
     ret = HexStringToByte(nullptr, byteStr, TEST_BUFFER_SIZE);
     EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
-    ret = HexStringToByte(byteStr, nullptr, TEST_BUFFER_SIZE);
+    ret = HexStringToByte(hexData, nullptr, TEST_BUFFER_SIZE);
     EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
     ret = HexStringToByte(inValidLenData, byteStr, TEST_BUFFER_SIZE);
     EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
@@ -578,14 +656,14 @@ HWTEST_F(CommonLibTest, HcStringUtilTest003, TestSize.Level0)
 HWTEST_F(CommonLibTest, HcStringUtilTest004, TestSize.Level0)
 {
     const char oriData[] = "abcd";
-    const char anonymousData[MIN_ANONYMOUS_LEN + 2] = { 0 };
-    int32_t ret = GetAnonymousString(oriData, nullptr, MIN_ANONYMOUS_LEN + 1);
+    char anonymousData[TEST_MIN_ANONYMOUS_LEN + 2] = { 0 };
+    int32_t ret = GetAnonymousString(oriData, nullptr, TEST_MIN_ANONYMOUS_LEN + 1);
     EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
-    ret = GetAnonymousString(oriData, anonymousData, MIN_ANONYMOUS_LEN - 1);
+    ret = GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN - 1);
     EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
-    ret = GetAnonymousString(oriData, anonymousData, MIN_ANONYMOUS_LEN + 1);
+    ret = GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN + 1);
     EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
-    ret = GetAnonymousString(oriData, anonymousData, MIN_ANONYMOUS_LEN + 2);
+    ret = GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN + 2);
     EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
 }
 
