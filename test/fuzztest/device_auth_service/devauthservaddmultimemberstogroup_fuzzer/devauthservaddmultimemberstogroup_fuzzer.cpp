@@ -27,12 +27,12 @@ namespace OHOS {
 
     static void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn)
     {
-        LOGE("error return: %s", errorReturn);
+        LOGE("error return: %" LOG_PUB "s", errorReturn);
     }
 
     static void OnFinish(int64_t requestId, int operationCode, const char *authReturn)
     {
-        LOGI("return value: %s", authReturn);
+        LOGI("return value: %" LOG_PUB "s", authReturn);
         if (operationCode == GROUP_CREATE) {
             CJson *json = CreateJsonFromString(authReturn);
             if (json != nullptr) {
@@ -98,7 +98,7 @@ namespace OHOS {
         GenerateAddMultiMemberParamsJson(addMultiMemberJson);
         char *addMultiMembersParams = PackJsonToString(addMultiMemberJson);
         FreeJson(addMultiMemberJson);
-        LOGI("add multi members params str:%s", addMultiMembersParams);
+        LOGI("add multi members params str:%" LOG_PUB "s", addMultiMembersParams);
         gmInstance->addMultiMembersToGroup(0, appId.c_str(), addMultiMembersParams);
         sleep(1);
         ClearAndFreeJsonString(addMultiMembersParams);

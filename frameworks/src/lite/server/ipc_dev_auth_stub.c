@@ -94,7 +94,7 @@ static int32_t DecodeCallRequest(IpcIo *data, IpcDataInfo *paramsCache, int32_t 
 
     ReadInt32(data, inParamNum);
     if ((*inParamNum < 0) || (*inParamNum > cacheNum)) {
-        LOGE("param number invalid, inParamNum(%d)", *inParamNum);
+        LOGE("param number invalid, inParamNum(%" LOG_PUB "d)", *inParamNum);
         return HC_ERR_IPC_BAD_PARAM_NUM;
     }
 
@@ -103,7 +103,7 @@ static int32_t DecodeCallRequest(IpcIo *data, IpcDataInfo *paramsCache, int32_t 
     for (i = 0; i < *inParamNum; i++) {
         ret = DecodeIpcData((uintptr_t)data, &(paramsCache[i].type), &(paramsCache[i].val), &(paramsCache[i].valSz));
         if (ret != HC_SUCCESS) {
-            LOGE("decode failed, ret %d", ret);
+            LOGE("decode failed, ret %" LOG_PUB "d", ret);
             return ret;
         }
     }
@@ -126,14 +126,14 @@ static void WithObject(int32_t methodId, IpcIo *data, IpcDataInfo *ipcData, int3
     SvcIdentity tmp;
     bool ret = ReadRemoteObject(data, &tmp);
     if (!ret || (ipcData->type != PARAM_TYPE_CB_OBJECT)) {
-        LOGE("should with remote object, but failed, param type %d", ipcData->type);
+        LOGE("should with remote object, but failed, param type %" LOG_PUB "d", ipcData->type);
         return;
     }
     ShowIpcSvcInfo(&tmp);
     ipcData->idx = SetRemoteObject(&tmp);
     if (ipcData->idx >= 0) {
         ipcData->val = (uint8_t *)(&(ipcData->idx));
-        LOGI("object trans success, set id %d", ipcData->idx);
+        LOGI("object trans success, set id %" LOG_PUB "d", ipcData->idx);
         (*cnt)++;
     }
 }
@@ -171,7 +171,7 @@ static int32_t DevAuthRequestCall(void *origin, IpcIo *req, IpcIo *reply)
     (void)origin;
     ret = GetMethodId(req, &methodId);
     if (ret != HC_SUCCESS || methodId <= 0) {
-        LOGE("GetMethodId failed, ret = %d", ret);
+        LOGE("GetMethodId failed, ret = %" LOG_PUB "d", ret);
         return HC_ERR_IPC_METHOD_ID_INVALID;
     }
     serviceCall = GetCallMethodByMethodId(methodId);
@@ -206,7 +206,7 @@ int32_t OnRemoteInvoke(IServerProxy *iProxy, int32_t reqId, void *origin, IpcIo 
 
     (void)origin;
     (void)iProxy;
-    LOGI("request code %u", reqId);
+    LOGI("request code %" LOG_PUB "u", reqId);
     n = sizeof(g_reqCallMaps) / sizeof(g_reqCallMaps[0]);
     for (i = 0; i < n; i++) {
         if ((int32_t)reqId == g_reqCallMaps[i].reqId) {
@@ -228,10 +228,10 @@ int32_t OnRemoteInvoke(IServerProxy *iProxy, int32_t reqId, void *origin, IpcIo 
                 LOGI("WriteBuffer faild");
                 return HC_ERROR;
             }
-            LOGI("form service result done, result length(%d)", n);
+            LOGI("form service result done, result length(%" LOG_PUB "d)", n);
         }
     }
-    LOGI("done, request code %d, call result %d", reqId, ret);
+    LOGI("done, request code %" LOG_PUB "d, call result %" LOG_PUB "d", reqId, ret);
     return 0;
 }
 
@@ -284,7 +284,7 @@ int32_t SetRemoteObject(const SvcIdentity *object)
             break;
         }
     }
-    LOGI("remote object cache index %d", idx);
+    LOGI("remote object cache index %" LOG_PUB "d", idx);
     if (idx == -1) {
         UnLockCbStubTable();
         return -1;
@@ -323,14 +323,14 @@ void AddCbDeathRecipient(int32_t cbStubIdx, int32_t cbDataIdx)
         g_cbStub[cbStubIdx].cbDieId = cbId;
     }
     UnLockCbStubTable();
-    LOGI("done, ret %d, callback stub idx %d", ret, cbStubIdx);
+    LOGI("done, ret %" LOG_PUB "d, callback stub idx %" LOG_PUB "d", ret, cbStubIdx);
     return;
 }
 
 void ResetRemoteObject(int32_t idx)
 {
     if ((idx >= 0) && (idx < MAX_CBSTUB_SIZE)) {
-        LOGI("object idx %d", idx);
+        LOGI("object idx %" LOG_PUB "d", idx);
         LockCbStubTable();
         if (!g_cbStub[idx].inUse) {
             UnLockCbStubTable();
@@ -340,7 +340,7 @@ void ResetRemoteObject(int32_t idx)
         (void)memset_s(&(g_cbStub[idx].cbStub), sizeof(g_cbStub[idx].cbStub), 0, sizeof(g_cbStub[idx].cbStub));
         g_cbStub[idx].inUse = false;
         UnLockCbStubTable();
-        LOGI("remote object used done, idx %d", idx);
+        LOGI("remote object used done, idx %" LOG_PUB "d", idx);
     }
     return;
 }
@@ -348,7 +348,7 @@ void ResetRemoteObject(int32_t idx)
 void ActCallback(int32_t objIdx, int32_t callbackId, uintptr_t cbHook, IpcIo *dataParcel, IpcIo *reply)
 {
     if ((objIdx < 0) || (objIdx >= MAX_CBSTUB_SIZE) || (!g_cbStub[objIdx].inUse)) {
-        LOGW("nothing to do, callback id %d, remote object id %d", callbackId, objIdx);
+        LOGW("nothing to do, callback id %" LOG_PUB "d, remote object id %" LOG_PUB "d", callbackId, objIdx);
         return;
     }
 

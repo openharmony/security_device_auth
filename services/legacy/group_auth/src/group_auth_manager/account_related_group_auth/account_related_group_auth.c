@@ -83,7 +83,7 @@ static int32_t ReturnSessionKey(int64_t requestId, const CJson *out, const Devic
         LOGI("Begin invoke onSessionKeyReturned.");
         UPDATE_PERFORM_DATA_BY_INPUT_INDEX(requestId, ON_SESSION_KEY_RETURN_TIME, HcGetCurTimeInMillis());
         callback->onSessionKeyReturned(requestId, sessionKey, keyLen);
-        LOGI("End invoke onSessionKeyReturned, res = %d.", res);
+        LOGI("End invoke onSessionKeyReturned, res = %" LOG_PUB "d.", res);
     } while (0);
     (void)memset_s(sessionKey, keyLen, 0, keyLen);
     HcFree(sessionKey);
@@ -135,7 +135,7 @@ static int32_t GetUserIdForAccount(const CJson *sendToSelf, CJson *returnToSelf)
 static bool IsPeerUidLenValid(uint32_t peerUserIdLen)
 {
     if ((peerUserIdLen < UID_HEX_STRING_LEN_MIN) || (peerUserIdLen > UID_HEX_STRING_LEN_MAX)) {
-        LOGE("The input userId len is invalid, input userId in hex string len = %d", peerUserIdLen);
+        LOGE("The input userId len is invalid, input userId in hex string len = %" LOG_PUB "d", peerUserIdLen);
         return false;
     }
     return true;
@@ -214,7 +214,7 @@ static bool IsPeerInIdenticalGroup(int32_t osAccountId, const char *peerUserId)
 static void GaGetAccountGroup(int32_t osAccountId, GroupType type, const char *peerUserId,
     QueryGroupParams *queryParams, GroupEntryVec *vec)
 {
-    LOGI("Try to get account group info, groupType: %d.", type);
+    LOGI("Try to get account group info, groupType: %" LOG_PUB "d.", type);
     queryParams->groupType = type;
     if (QueryGroups(osAccountId, queryParams, vec) != HC_SUCCESS) {
         LOGD("Database don't have local device's across-account group info!");
@@ -237,7 +237,7 @@ static void GaGetAccountGroup(int32_t osAccountId, GroupType type, const char *p
         HC_VECTOR_POPELEMENT(vec, &tempEntry, index);
         DestroyGroupEntry((TrustedGroupEntry *)tempEntry);
     }
-    LOGI("The candidate account group size is: %u", vec->size(vec));
+    LOGI("The candidate account group size is: %" LOG_PUB "u", vec->size(vec));
 }
 
 static void GetAccountCandidateGroup(int32_t osAccountId, const CJson *param,
@@ -274,7 +274,7 @@ static int32_t FillAccountCredentialInfo(int32_t osAccountId, const char *peerUd
     int32_t authCredential = localAuthInfo->credential;
     int32_t res = GaGetTrustedDeviceEntryById(osAccountId, peerUdid, true, groupId, peerDevInfo);
     if ((res != HC_SUCCESS) || (peerDevInfo->source == SELF_CREATED)) {
-        LOGI("Peer device's query result = %d, pass local device info to account authenticator.", res);
+        LOGI("Peer device's query result = %" LOG_PUB "d, pass local device info to account authenticator.", res);
         localDevType = DEVICE_TYPE_ACCESSORY; /* Controller has peer device info, which is added by caller. */
     }
     if ((res == HC_SUCCESS) && (peerDevInfo->source == IMPORTED_FROM_CLOUD)) {
@@ -378,7 +378,7 @@ static int32_t QueryAuthGroupForServer(int32_t osAccountId, GroupEntryVec *accou
     }
     int32_t groupType = AuthFormToGroupType(authForm);
     if (groupType == GROUP_TYPE_INVALID) {
-        LOGE("Invalid authForm, authForm = %d.", authForm);
+        LOGE("Invalid authForm, authForm = %" LOG_PUB "d.", authForm);
         return HC_ERR_INVALID_PARAMS;
     }
     QueryGroupParams queryParams = InitQueryGroupParams();
@@ -494,7 +494,7 @@ static int32_t QueryGroupForAccountPlugin(int32_t osAccountId, GroupEntryVec *ac
         }
         int32_t groupType = AuthFormToGroupType(authForm);
         if (groupType == GROUP_TYPE_INVALID) {
-            LOGE("Invalid authForm: %d.", authForm);
+            LOGE("Invalid authForm: %" LOG_PUB "d.", authForm);
             res = HC_ERR_INVALID_PARAMS;
             break;
         }

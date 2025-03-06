@@ -157,7 +157,7 @@ static int32_t Sha256BaseCredId(const char *baseCredIdStr, Uint8Buff *credIdByte
         return IS_ERR_HUKS_SHA256_FAILED;
     }
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to sha256 credId, ret = %d", ret);
+        LOGE("Failed to sha256 credId, ret = %" LOG_PUB "d", ret);
         HcFree(returnCredIdByte.val);
         return ret;
     }
@@ -165,7 +165,7 @@ static int32_t Sha256BaseCredId(const char *baseCredIdStr, Uint8Buff *credIdByte
     char *returnCredIdStr = NULL;
     ret = Uint8BuffToString(&returnCredIdByte, &returnCredIdStr);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to convert credIdByte to credIdStr, ret = %d", ret);
+        LOGE("Failed to convert credIdByte to credIdStr, ret = %" LOG_PUB "d", ret);
         HcFree(returnCredIdByte.val);
         return ret;
     }
@@ -217,7 +217,7 @@ static int32_t UseImportedCredId(int32_t osAccountId, Credential *credential, Ui
 
     int32_t ret = HexStringToByte(StringGet(&credential->credId), returnCredIdByteVal, credIdByte->length);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to convert credId to byte, ret = %d", ret);
+        LOGE("Failed to convert credId to byte, ret = %" LOG_PUB "d", ret);
         HcFree(returnCredIdByteVal);
         return IS_ERR_INVALID_HEX_STRING;
     }
@@ -383,7 +383,7 @@ int32_t GetValidKeyAlias(int32_t osAccountId, const char *credId, Uint8Buff *cre
     }
     int32_t ret = HexStringToByte(credId, returnCredIdByte.val, returnCredIdByte.length);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to convert credId to byte, invalid credId, ret = %d", ret);
+        LOGE("Failed to convert credId to byte, invalid credId, ret = %" LOG_PUB "d", ret);
         HcFree(returnCredIdByte.val);
         return IS_ERR_INVALID_HEX_STRING;
     }
@@ -407,7 +407,7 @@ int32_t AddCredAndSaveDb(int32_t osAccountId, Credential *credential)
     }
     ret = SaveOsAccountCredDb(osAccountId);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to save CredDb, ret: %d", ret);
+        LOGE("Failed to save CredDb, ret: %" LOG_PUB "d", ret);
         return ret;
     }
     return IS_SUCCESS;
@@ -783,7 +783,7 @@ static int32_t SetRequiredField(Credential *credential, CJson *json, uint8_t *me
     }
 #ifdef DEV_AUTH_PERMISSION_ENABLE
     credential->ownerUid = GetCallingUid();
-    LOGI("UID: %d", credential->ownerUid);
+    LOGI("UID: %" LOG_PUB "d", credential->ownerUid);
 #endif
     return IS_SUCCESS;
 }
@@ -905,7 +905,7 @@ static int32_t IsOriginalStrHashMatch(const char *originalStr, const char *subHa
     Uint8Buff hashedStrBuffer = { hashedStrBytes, sizeof(hashedStrBytes) };
     int32_t result = GetLoaderInstance()->sha256(&originalStrBuffer, &hashedStrBuffer);
     if (result != IS_SUCCESS) {
-        LOGE("sha256 failed, ret:%d", result);
+        LOGE("sha256 failed, ret:%" LOG_PUB "d", result);
         return result;
     }
     uint32_t hashedStrHexLength = SHA256_LEN * BYTE_TO_HEX_OPER_LENGTH + 1;
@@ -916,7 +916,7 @@ static int32_t IsOriginalStrHashMatch(const char *originalStr, const char *subHa
     }
     result = ByteToHexString(hashedStrBytes, SHA256_LEN, hashedStrHex, hashedStrHexLength);
     if (result != IS_SUCCESS) {
-        LOGE("Byte to hexString failed, ret:%d", result);
+        LOGE("Byte to hexString failed, ret:%" LOG_PUB "d", result);
         HcFree(hashedStrHex);
         return result;
     }
@@ -970,7 +970,7 @@ static int32_t CheckCredKeyExist(int32_t osAccountId, const Credential *credenti
     }
     int32_t ret = HexStringToByte(credId, credIdByte.val, credIdByte.length);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to convert credId to byte, invalid credId, ret = %d", ret);
+        LOGE("Failed to convert credId to byte, invalid credId, ret = %" LOG_PUB "d", ret);
         HcFree(credIdByte.val);
         return IS_ERR_INVALID_HEX_STRING;
     }
@@ -1076,12 +1076,12 @@ int32_t DelCredById(int32_t osAccountId, const char *credId)
     delParams.credId = credId;
     int32_t ret = DelCredential(osAccountId, &delParams);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to delete credential, ret: %d", ret);
+        LOGE("Failed to delete credential, ret: %" LOG_PUB "d", ret);
         return ret;
     }
     ret = SaveOsAccountCredDb(osAccountId);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to save CredDb, ret: %d", ret);
+        LOGE("Failed to save CredDb, ret: %" LOG_PUB "d", ret);
         return ret;
     }
     return IS_SUCCESS;
@@ -1276,7 +1276,7 @@ int32_t SetRequiredParamsFromJson(QueryCredentialParams *queryParams, CJson *bas
         return IS_ERR_JSON_GET;
     }
     if (queryParams->credType != ACCOUNT_SHARED) {
-        LOGE("Not support for credType %d, only support for ACCOUNT_SHARED", queryParams->credType);
+        LOGE("Not support for credType %" LOG_PUB "d, only support for ACCOUNT_SHARED", queryParams->credType);
         return IS_ERR_NOT_SUPPORT;
     }
     const char *credOwner = GetStringFromJson(baseInfoJson, FIELD_CRED_OWNER);

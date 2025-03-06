@@ -24,9 +24,9 @@ int32_t InitHks(void)
 {
     LOGI("[HUKS]: HksInitialize enter.");
     int32_t res = HksInitialize();
-    LOGI("[HUKS]: HksInitialize quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksInitialize quit. [Res]: %" LOG_PUB "d", res);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksInitialize fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksInitialize fail. [Res]: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -35,7 +35,7 @@ int32_t HashToPointX25519(const Uint8Buff *hash, Uint8Buff *outEcPoint)
 {
     int32_t res = MbedtlsHashToPoint25519(hash, outEcPoint);
     if (res != 0) {
-        LOGE("Hks hashToPoint failed, res: %d", res);
+        LOGE("Hks hashToPoint failed, res: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
 

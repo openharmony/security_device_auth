@@ -100,7 +100,7 @@ static int CombineJson(CJson *desObj, const CJson *srcObj)
         if (strcmp(key, FIELD_PAYLOAD) == 0 && payload != NULL) {
             res = CombineJson(payload, item);
             if (res != HC_SUCCESS) {
-                LOGE("Combine payload failed, res: %x.", res);
+                LOGE("Combine payload failed, res: %" LOG_PUB "x.", res);
                 return res;
             }
         } else {
@@ -147,14 +147,14 @@ static int ProcessMultiTask(Task *task, const CJson *in, CJson *out, int32_t *st
         }
         res = ((SubTaskBase *)(*ptr))->process((*ptr), in, tmpOut, status);
         if (res != HC_SUCCESS) {
-            LOGE("Process subTask failed, index: %u, res: %x.", index, res);
+            LOGE("Process subTask failed, index: %" LOG_PUB "u, res: %" LOG_PUB "x.", index, res);
             goto ERR;
         }
 
         CJson *tmpSendToPeer = GetObjFromJson(tmpOut, FIELD_SEND_TO_PEER);
         res = CombineJson(combinedSendToPeer, tmpSendToPeer);
         if (res != HC_SUCCESS) {
-            LOGE("CombineJson failed, res: %x.", res);
+            LOGE("CombineJson failed, res: %" LOG_PUB "x.", res);
             goto ERR;
         }
         FreeJson(tmpOut);
@@ -177,12 +177,12 @@ static int NegotiateAndProcessTask(Task *task, const CJson *in, CJson *out, int3
     VersionStruct minVersionPeer = { 0, 0, 0 };
     int res = GetVersionFromJson(in, &minVersionPeer, &curVersionPeer);
     if (res != HC_SUCCESS) {
-        LOGE("Get peer version info failed, res: %x.", res);
+        LOGE("Get peer version info failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     res = NegotiateVersion(&minVersionPeer, &curVersionPeer, &(task->versionInfo.curVersion));
     if (res != HC_SUCCESS) {
-        LOGE("NegotiateVersion failed, res: %x.", res);
+        LOGE("NegotiateVersion failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     if (!IsVersionEqual(&(task->versionInfo.curVersion), &curVersionPeer)) {
@@ -190,7 +190,7 @@ static int NegotiateAndProcessTask(Task *task, const CJson *in, CJson *out, int3
         return HC_ERR_UNSUPPORTED_VERSION;
     }
     ProtocolType protocolType = GetPrototolType(&(task->versionInfo.curVersion), task->versionInfo.opCode);
-    LOGI("Client select protocolType: %d", protocolType);
+    LOGI("Client select protocolType: %" LOG_PUB "d", protocolType);
 
     SubTaskBase *subTask = NULL;
     uint32_t index = 0;
@@ -213,7 +213,7 @@ static int NegotiateAndProcessTask(Task *task, const CJson *in, CJson *out, int3
     subTask->curVersion = task->versionInfo.curVersion;
     res = subTask->process(subTask, in, out, status);
     if (res != HC_SUCCESS) {
-        LOGE("Process subTask failed, res: %x.", res);
+        LOGE("Process subTask failed, res: %" LOG_PUB "x.", res);
     }
     return res;
 }
@@ -239,7 +239,7 @@ static int ProcessTaskT(Task *task, const CJson *in, CJson *out, int32_t *status
 {
     int32_t res;
     if (IsPeerErrMessage(in, &res)) {
-        LOGE("Receive error message from peer, errCode: %x.", res);
+        LOGE("Receive error message from peer, errCode: %" LOG_PUB "x.", res);
         DasSendErrMsgToSelf(out, HC_ERR_PEER_ERROR);
         return HC_ERR_PEER_ERROR;
     }
@@ -252,14 +252,14 @@ static int ProcessTaskT(Task *task, const CJson *in, CJson *out, int32_t *status
     if (task->versionInfo.versionStatus == INITIAL) {
         res = ProcessMultiTask(task, in, out, status);
         if (res != HC_SUCCESS) {
-            LOGE("ProcessMultiTask failed, res: %x.", res);
+            LOGE("ProcessMultiTask failed, res: %" LOG_PUB "x.", res);
             goto ERR;
         }
         task->versionInfo.versionStatus = VERSION_CONFIRM;
     } else if (task->versionInfo.versionStatus == VERSION_CONFIRM) {
         res = NegotiateAndProcessTask(task, in, out, status);
         if (res != HC_SUCCESS) {
-            LOGE("NegotiateAndProcessTask failed, res: %x.", res);
+            LOGE("NegotiateAndProcessTask failed, res: %" LOG_PUB "x.", res);
             goto ERR;
         }
         task->versionInfo.versionStatus = VERSION_DECIDED;
@@ -267,14 +267,14 @@ static int ProcessTaskT(Task *task, const CJson *in, CJson *out, int32_t *status
         SubTaskBase *subTask = HC_VECTOR_GET(&(task->vec), 0);
         res = subTask->process(subTask, in, out, status);
         if (res != HC_SUCCESS) {
-            LOGE("Process subTask failed, res: %x.", res);
+            LOGE("Process subTask failed, res: %" LOG_PUB "x.", res);
             goto ERR;
         }
     }
 
     res = AddVersionToOut(&(task->versionInfo), out);
     if (res != HC_SUCCESS) {
-        LOGE("AddVersionToOut failed, res: %x.", res);
+        LOGE("AddVersionToOut failed, res: %" LOG_PUB "x.", res);
         goto ERR;
     }
     return res;
@@ -314,7 +314,7 @@ static int CreateMultiSubTask(Task *task, const CJson *in)
     #endif
         SubTaskBase *subTask = temp->createSubTask(in);
         if (subTask == NULL) {
-            LOGE("Create subTask failed, protocolType: %d.", temp->type);
+            LOGE("Create subTask failed, protocolType: %" LOG_PUB "d.", temp->type);
             return HC_ERR_ALLOC_MEMORY;
         }
         subTask->curVersion = task->versionInfo.curVersion;
@@ -333,19 +333,19 @@ static int CreateSingleSubTask(Task *task, const CJson *in)
     VersionStruct minVersionPeer = { 0, 0, 0 };
     int res = GetVersionFromJson(in, &minVersionPeer, &curVersionPeer);
     if (res != HC_SUCCESS) {
-        LOGE("Get peer version info failed, res: %x.", res);
+        LOGE("Get peer version info failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     InitVersionInfo(&(task->versionInfo));
     res = NegotiateVersion(&minVersionPeer, &curVersionPeer, &(task->versionInfo.curVersion));
     if (res != HC_SUCCESS) {
-        LOGE("NegotiateVersion failed, res: %x.", res);
+        LOGE("NegotiateVersion failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     task->versionInfo.versionStatus = VERSION_DECIDED;
 
     ProtocolType protocolType = GetPrototolType(&(task->versionInfo.curVersion), task->versionInfo.opCode);
-    LOGI("Server select protocolType: %d", protocolType);
+    LOGI("Server select protocolType: %" LOG_PUB "d", protocolType);
 
     uint32_t index;
     void **ptr = NULL;
@@ -415,7 +415,7 @@ Task *CreateTaskT(int32_t *taskId, const CJson *in, CJson *out)
         res = CreateSingleSubTask(task, in);
     }
     if (res != HC_SUCCESS) {
-        LOGE("Create sub task failed, res: %x.", res);
+        LOGE("Create sub task failed, res: %" LOG_PUB "x.", res);
         goto ERR;
     }
     return task;
@@ -437,12 +437,12 @@ int32_t RegisterLocalIdentityInTask(const TokenManagerParams *params)
     FOR_EACH_HC_VECTOR(g_protocolEntityVec, index, ptr) {
         DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
         if ((temp->tokenManagerInstance == NULL) || (temp->tokenManagerInstance->registerLocalIdentity == NULL)) {
-            LOGD("Protocol type: %d, unsupported method!", temp->type);
+            LOGD("Protocol type: %" LOG_PUB "d, unsupported method!", temp->type);
             continue;
         }
         res = temp->tokenManagerInstance->registerLocalIdentity(params);
         if (res != HC_SUCCESS) {
-            LOGE("Protocol type: %d, registerLocalIdentity failed, res: %d!", temp->type, res);
+            LOGE("Protocol type: %" LOG_PUB "d, registerLocalIdentity failed, res: %" LOG_PUB "d!", temp->type, res);
             return HC_ERR_GENERATE_KEY_FAILED;
         }
     }
@@ -457,12 +457,12 @@ int32_t UnregisterLocalIdentityInTask(const TokenManagerParams *params)
     FOR_EACH_HC_VECTOR(g_protocolEntityVec, index, ptr) {
         DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
         if ((temp->tokenManagerInstance == NULL) || (temp->tokenManagerInstance->unregisterLocalIdentity == NULL)) {
-            LOGD("Protocol type: %d, unsupported method!", temp->type);
+            LOGD("Protocol type: %" LOG_PUB "d, unsupported method!", temp->type);
             continue;
         }
         res = temp->tokenManagerInstance->unregisterLocalIdentity(params);
         if (res != HC_SUCCESS) {
-            LOGE("Protocol type: %d, unregisterLocalIdentity failed, res: %d!", temp->type, res);
+            LOGE("Protocol type: %" LOG_PUB "d, unregisterLocalIdentity failed, res: %" LOG_PUB "d!", temp->type, res);
             return res;
         }
     }
@@ -477,12 +477,12 @@ int32_t DeletePeerAuthInfoInTask(const TokenManagerParams *params)
     FOR_EACH_HC_VECTOR(g_protocolEntityVec, index, ptr) {
         DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
         if ((temp->tokenManagerInstance == NULL) || (temp->tokenManagerInstance->deletePeerAuthInfo == NULL)) {
-            LOGD("Protocol type: %d, unsupported method!", temp->type);
+            LOGD("Protocol type: %" LOG_PUB "d, unsupported method!", temp->type);
             continue;
         }
         res = temp->tokenManagerInstance->deletePeerAuthInfo(params);
         if (res != HC_SUCCESS) {
-            LOGE("Protocol type: %d, deletePeerAuthInfo failed, res: %d!", temp->type, res);
+            LOGE("Protocol type: %" LOG_PUB "d, deletePeerAuthInfo failed, res: %" LOG_PUB "d!", temp->type, res);
             return res;
         }
     }
@@ -496,7 +496,7 @@ int32_t GetPublicKeyInTask(const TokenManagerParams *params, Uint8Buff *returnPk
     FOR_EACH_HC_VECTOR(g_protocolEntityVec, index, ptr) {
         DasProtocolEntity *temp = (DasProtocolEntity *)(*ptr);
         if ((temp->tokenManagerInstance == NULL) || (temp->tokenManagerInstance->getPublicKey == NULL)) {
-            LOGD("Protocol type: %d, unsupported method!", temp->type);
+            LOGD("Protocol type: %" LOG_PUB "d, unsupported method!", temp->type);
             continue;
         }
         return temp->tokenManagerInstance->getPublicKey(params, returnPk);

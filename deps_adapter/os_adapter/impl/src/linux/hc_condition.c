@@ -28,7 +28,7 @@ int Wait(pthread_cond_t* cond, HcMutex* mutex)
     }
     int res = pthread_cond_wait(cond, &mutex->mutex);
     if (res != 0) {
-        LOGE("[OS]: pthread_cond_wait fail. [Res]: %d", res);
+        LOGE("[OS]: pthread_cond_wait fail. [Res]: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -40,7 +40,7 @@ void Notify(pthread_cond_t* cond)
     }
     int res = pthread_cond_signal(cond);
     if (res != 0) {
-        LOGW("[OS]: pthread_cond_signal fail. [Res]: %d", res);
+        LOGW("[OS]: pthread_cond_signal fail. [Res]: %" LOG_PUB "d", res);
     }
 }
 
@@ -135,7 +135,7 @@ int32_t InitHcCond(HcCondition* hcCond, HcMutex* mutex)
     int res = pthread_cond_init(&hcCond->cond, &attr);
     pthread_condattr_destroy(&attr);
     if (res != 0) {
-        LOGE("[OS]: pthread_cond_init fail. [Res]: %d", res);
+        LOGE("[OS]: pthread_cond_init fail. [Res]: %" LOG_PUB "d", res);
         return -1;
     }
 
@@ -172,7 +172,7 @@ void DestroyHcCond(HcCondition* hcCond)
     }
     int res = pthread_cond_destroy(&hcCond->cond);
     if (res != 0) {
-        LOGW("[OS]: pthread_cond_destroy fail. [Res]: %d", res);
+        LOGW("[OS]: pthread_cond_destroy fail. [Res]: %" LOG_PUB "d", res);
     }
 }
 

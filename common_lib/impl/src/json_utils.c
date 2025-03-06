@@ -50,7 +50,7 @@ CJson *CreateJsonFromString(const char *jsonStr)
     }
     int32_t depth = GetCjsonMaxDepth(jsonStr);
     if (depth > MAX_DEPTH) {
-        LOGE("jsonStr depth %d over 10", depth);
+        LOGE("jsonStr depth %" LOG_PUB "d over 10", depth);
         return NULL;
     }
     return cJSON_Parse(jsonStr);

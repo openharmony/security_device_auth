@@ -75,7 +75,7 @@ ERR:
 static int IsoServerStart(SymBaseCurTask *task, IsoParams *params, const CJson *in, CJson *out, int32_t *status)
 {
     if (task->taskStatus != TASK_STATUS_BEGIN) {
-        LOGI("The message is repeated, ignore it, status: %d", task->taskStatus);
+        LOGI("The message is repeated, ignore it, status: %" LOG_PUB "d", task->taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
@@ -98,12 +98,12 @@ static int IsoServerStart(SymBaseCurTask *task, IsoParams *params, const CJson *
         params->baseParams.randPeer.length), res);
     res = GeneratePsk(in, params);
     if (res != 0) {
-        LOGE("Generate psk failed, res:%d", res);
+        LOGE("Generate psk failed, res:%" LOG_PUB "d", res);
         goto ERR;
     }
     res = IsoServerGenRandomAndToken(&params->baseParams, &selfTokenBuf);
     if (res != 0) {
-        LOGE("IsoServerGenRandomAndToken failed, res:%d", res);
+        LOGE("IsoServerGenRandomAndToken failed, res:%" LOG_PUB "d", res);
         goto ERR;
     }
 
@@ -159,12 +159,12 @@ static int CalTokenAndGenSessionKey(SymBaseCurTask *task, IsoParams *params, con
     uint8_t *tokenSelf = NULL;
 
     if (task->taskStatus < TASK_STATUS_CMD_RES_TOKEN) {
-        LOGE("Invalid taskStatus: %d", task->taskStatus);
+        LOGE("Invalid taskStatus: %" LOG_PUB "d", task->taskStatus);
         return HC_ERR_BAD_MESSAGE;
     }
 
     if (task->taskStatus > TASK_STATUS_CMD_RES_TOKEN) {
-        LOGI("The message is repeated, ignore it, status: %d", task->taskStatus);
+        LOGI("The message is repeated, ignore it, status: %" LOG_PUB "d", task->taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
@@ -190,14 +190,14 @@ static int CalTokenAndGenSessionKey(SymBaseCurTask *task, IsoParams *params, con
     // execute
     res = IsoServerGenSessionKeyAndCalToken(&params->baseParams, &tokenFromPeer, &tokenToPeer);
     if (res != 0) {
-        LOGE("IsoServerGenSessionKeyAndCalToken failed, res:%d", res);
+        LOGE("IsoServerGenSessionKeyAndCalToken failed, res:%" LOG_PUB "d", res);
         goto ERR;
     }
 
     // package message
     res = PackDataForCalTokenServer(params, &tokenToPeer, out);
     if (res != 0) {
-        LOGE("PackDataForCalTokenServer failed, res:%d", res);
+        LOGE("PackDataForCalTokenServer failed, res:%" LOG_PUB "d", res);
         goto ERR;
     }
     task->taskStatus = TASK_STATUS_GEN_SESSION_KEY;
@@ -229,12 +229,12 @@ static int Process(struct SymBaseCurTaskT *task, IsoParams *params, const CJson 
     }
 OUT_FUNC:
     if (res != HC_SUCCESS) {
-        LOGE("Process step:%d failed, res: %x.", step, res);
+        LOGE("Process step:%" LOG_PUB "d failed, res: %" LOG_PUB "x.", step, res);
         return res;
     }
     res = ServerProtocolMessageOut(out, params->opCode, step);
     if (res != HC_SUCCESS) {
-        LOGE("ServerProtocolMessageOut failed, res: %x.", res);
+        LOGE("ServerProtocolMessageOut failed, res: %" LOG_PUB "x.", res);
     }
     return res;
 }

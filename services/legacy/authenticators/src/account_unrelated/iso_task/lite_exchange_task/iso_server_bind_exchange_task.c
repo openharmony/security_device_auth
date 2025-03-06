@@ -46,7 +46,7 @@ static int Process(struct SymBaseCurTaskT *task, IsoParams *params, const CJson 
     }
 
     if (realTask->taskBase.taskStatus > TASK_TYPE_BEGIN) {
-        LOGI("The message is repeated, ignore it, status: %d", realTask->taskBase.taskStatus);
+        LOGI("The message is repeated, ignore it, status: %" LOG_PUB "d", realTask->taskBase.taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
@@ -58,13 +58,13 @@ static int Process(struct SymBaseCurTaskT *task, IsoParams *params, const CJson 
     }
     res = CheckEncResult(params, in, RESULT_AAD);
     if (res != 0) {
-        LOGE("CheckEncResult failed, res:%d", res);
+        LOGE("CheckEncResult failed, res:%" LOG_PUB "d", res);
         DeleteAuthCode(params);
         return res;
     }
     res = SendResultToFinalSelf(params, out, false);
     if (res != 0) {
-        LOGE("SendResultToFinalSelf failed, res:%d", res);
+        LOGE("SendResultToFinalSelf failed, res:%" LOG_PUB "d", res);
         DeleteAuthCode(params);
         return res;
     }
@@ -106,7 +106,7 @@ static int DecryptChallenge(const IsoParams *params, const CJson *in, uint8_t *c
     };
     res = params->baseParams.loader->aesGcmDecrypt(&keyParams, &encDataBuf, &gcmParam, &challengeBuf);
     if (res != 0) {
-        LOGE("decrypt challenge failed, res:%d", res);
+        LOGE("decrypt challenge failed, res:%" LOG_PUB "d", res);
         goto ERR;
     }
 ERR:
@@ -124,13 +124,13 @@ static int32_t ImportAuthCode(const IsoParams *params, const Uint8Buff *authCode
     }
     int32_t res = GenerateKeyAliasInIso(params, keyAlias, ISO_KEY_ALIAS_LEN, true);
     if (res != 0) {
-        LOGE("GenerateKeyAliasInIso failed, res:%d", res);
+        LOGE("GenerateKeyAliasInIso failed, res:%" LOG_PUB "d", res);
         HcFree(keyAlias);
         return res;
     }
 
-    LOGI("AuthCode alias(HEX): %x%x%x%x****.", keyAlias[DEV_AUTH_ZERO], keyAlias[DEV_AUTH_ONE],
-        keyAlias[DEV_AUTH_TWO], keyAlias[DEV_AUTH_THREE]);
+    LOGI("AuthCode alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.", keyAlias[DEV_AUTH_ZERO],
+        keyAlias[DEV_AUTH_ONE], keyAlias[DEV_AUTH_TWO], keyAlias[DEV_AUTH_THREE]);
     Uint8Buff keyAliasBuf = { keyAlias, ISO_KEY_ALIAS_LEN };
     ExtraInfo exInfo = { { params->baseParams.authIdPeer.val, params->baseParams.authIdPeer.length },
         params->peerUserType, PAIR_TYPE_BIND };
@@ -152,13 +152,13 @@ static int GenAndEncAuthCode(const IsoParams *params, Uint8Buff *nonceBuf, const
     Uint8Buff authCodeBuf = { authCode, AUTH_CODE_LEN };
     res = params->baseParams.loader->generateRandom(&authCodeBuf);
     if (res != 0) {
-        LOGE("generate auth code failed, res:%d", res);
+        LOGE("generate auth code failed, res:%" LOG_PUB "d", res);
         goto ERR;
     }
 
     res = params->baseParams.loader->generateRandom(nonceBuf);
     if (res != 0) {
-        LOGE("generate nonce failed, res:%d", res);
+        LOGE("generate nonce failed, res:%" LOG_PUB "d", res);
         goto ERR;
     }
     GcmParam gcmParam = { nonceBuf->val, nonceBuf->length, challengeBuf->val, challengeBuf->length };
@@ -169,13 +169,13 @@ static int GenAndEncAuthCode(const IsoParams *params, Uint8Buff *nonceBuf, const
     };
     res = params->baseParams.loader->aesGcmEncrypt(&keyParams, &authCodeBuf, &gcmParam, encAuthCodeBuf);
     if (res != 0) {
-        LOGE("encrypt auth code failed, res:%d", res);
+        LOGE("encrypt auth code failed, res:%" LOG_PUB "d", res);
         goto ERR;
     }
 
     res = ImportAuthCode(params, &authCodeBuf);
     if (res != 0) {
-        LOGE("Import auth code failed, res: %x.", res);
+        LOGE("Import auth code failed, res: %" LOG_PUB "x.", res);
         goto ERR;
     }
 ERR:
@@ -207,7 +207,7 @@ static int GenerateAuthCodeAndImport(const IsoParams *params, CJson *out, uint8_
 
     res = GenAndEncAuthCode(params, &nonceBuf, &challengeBuf, &encAuthCodeBuf);
     if (res != 0) {
-        LOGE("GenAndEncAuthCode failed, res:%d", res);
+        LOGE("GenAndEncAuthCode failed, res:%" LOG_PUB "d", res);
         goto ERR;
     }
     payload = CreateJson();
@@ -245,12 +245,12 @@ static int ServerBindExchangeStart(const IsoParams *params, IsoServerBindExchang
     }
     res = DecryptChallenge(params, in, challenge, CHALLENGE_SIZE);
     if (res != 0) {
-        LOGE("decrypt challenge failed, res:%d", res);
+        LOGE("decrypt challenge failed, res:%" LOG_PUB "d", res);
         goto ERR;
     }
     res = GenerateAuthCodeAndImport(params, out, challenge, CHALLENGE_SIZE);
     if (res != 0) {
-        LOGE("GenerateAuthCodeAndImport failed, res:%d", res);
+        LOGE("GenerateAuthCodeAndImport failed, res:%" LOG_PUB "d", res);
         goto ERR;
     }
     task->taskBase.taskStatus = TASK_TYPE_BEGIN;

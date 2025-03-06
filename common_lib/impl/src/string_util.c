@@ -144,7 +144,7 @@ void PrintBuffer(const uint8_t *msgBuff, uint32_t msgLen, const char *msgTag)
         return;
     }
     (void)ByteToHexString(msgBuff, msgLen, hexStr, hexLen);
-    LOGD("%s value is: %s", msgTag, hexStr);
+    LOGD("%" LOG_PUB "s value is: %" LOG_PUB "s", msgTag, hexStr);
     HcFree(hexStr);
 }
 

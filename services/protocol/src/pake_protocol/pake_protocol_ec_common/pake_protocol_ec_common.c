@@ -37,7 +37,7 @@ static int32_t GenerateEsk(PakeBaseParams *params)
     } else if (params->curveType == CURVE_25519) {
         res = params->loader->generateRandom(&(params->eskSelf));
         if (res != HC_SUCCESS) {
-            LOGE("CURVE_25519: GenerateRandom for eskSelf failed, res: %x.", res);
+            LOGE("CURVE_25519: GenerateRandom for eskSelf failed, res: %" LOG_PUB "x.", res);
             return res;
         }
         params->eskSelf.val[PAKE_EC_KEY_LEN - 1] &= PAKE_PRIVATE_KEY_AND_MASK_HIGH;
@@ -45,7 +45,7 @@ static int32_t GenerateEsk(PakeBaseParams *params)
         params->eskSelf.val[0] |= PAKE_PRIVATE_KEY_OR_MASK_LOW;
         return HC_SUCCESS;
     } else {
-        LOGE("Unsupported curve: %d.", params->curveType);
+        LOGE("Unsupported curve: %" LOG_PUB "d.", params->curveType);
         return HC_ERR_UNSUPPORTED_CURVE;
     }
 }
@@ -58,17 +58,17 @@ static int32_t InitEcPakeParams(PakeBaseParams *params)
     uint32_t keyBufferLen = (params->curveType == CURVE_256) ? (params->innerKeyLen * 2) : (params->innerKeyLen);
     int32_t res = InitSingleParam(&(params->eskSelf), params->eskSelf.length);
     if (res !=  HC_SUCCESS) {
-        LOGE("InitSingleParam for eskSelf failed, res: %x.", res);
+        LOGE("InitSingleParam for eskSelf failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     res = InitSingleParam(&(params->epkSelf), keyBufferLen);
     if (res !=  HC_SUCCESS) {
-        LOGE("InitSingleParam for epkSelf failed, res: %x.", res);
+        LOGE("InitSingleParam for epkSelf failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     res = InitSingleParam(&(params->base), keyBufferLen);
     if (res !=  HC_SUCCESS) {
-        LOGE("InitSingleParam for base failed, res: %x.", res);
+        LOGE("InitSingleParam for base failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     return res;
@@ -78,20 +78,20 @@ int32_t GenerateEcPakeParams(PakeBaseParams *params, Uint8Buff *secret)
 {
     int32_t res = InitEcPakeParams(params);
     if (res != HC_SUCCESS) {
-        LOGE("InitEcPakeParams failed, res: %x.", res);
+        LOGE("InitEcPakeParams failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
     res = GenerateEsk(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateEsk failed, res: %x.", res);
+        LOGE("GenerateEsk failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
     Algorithm alg = (params->curveType == CURVE_256) ? P256 : X25519;
     res = params->loader->hashToPoint(secret, alg, &params->base);
     if (res != HC_SUCCESS) {
-        LOGE("HashToPoint from secret to base failed, res: %x.", res);
+        LOGE("HashToPoint from secret to base failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     PRINT_DEBUG_MSG(params->base.val, params->base.length, "baseValue");
@@ -100,7 +100,7 @@ int32_t GenerateEcPakeParams(PakeBaseParams *params, Uint8Buff *secret)
     PRINT_DEBUG_MSG(params->eskSelf.val, params->eskSelf.length, "eskSelf");
     res = params->loader->agreeSharedSecret(&eskSelfParams, &baseBuff, alg, &params->epkSelf);
     if (res != HC_SUCCESS) {
-        LOGE("AgreeSharedSecret failed, res: %x.", res);
+        LOGE("AgreeSharedSecret failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     PRINT_DEBUG_MSG(params->epkSelf.val, params->epkSelf.length, "epkSelf");
@@ -116,7 +116,7 @@ int32_t AgreeEcSharedSecret(PakeBaseParams *params, Uint8Buff *sharedSecret)
     /* P256 requires buffer for both X and Y coordinates. */
     uint32_t validKeyBufferLen = (params->curveType == CURVE_256) ? (PAKE_EC_KEY_LEN * 2) : (PAKE_EC_KEY_LEN);
     if (params->epkPeer.length != validKeyBufferLen) {
-        LOGE("Invalid epkPeer length: %u.", params->epkPeer.length);
+        LOGE("Invalid epkPeer length: %" LOG_PUB "u.", params->epkPeer.length);
         res = HC_ERR_INVALID_LEN;
         goto CLEAN_UP;
     }
@@ -132,7 +132,7 @@ int32_t AgreeEcSharedSecret(PakeBaseParams *params, Uint8Buff *sharedSecret)
     KeyBuff epkPeerBuff = { params->epkPeer.val, params->epkPeer.length, false };
     res = params->loader->agreeSharedSecret(&eskSelfParams, &epkPeerBuff, alg, sharedSecret);
     if (res != HC_SUCCESS) {
-        LOGE("AgreeSharedSecret failed, res: %x.", res);
+        LOGE("AgreeSharedSecret failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     PRINT_DEBUG_MSG(sharedSecret->val, sharedSecret->length, "sharedSecret");

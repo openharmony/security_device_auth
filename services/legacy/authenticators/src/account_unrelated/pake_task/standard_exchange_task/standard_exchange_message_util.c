@@ -97,12 +97,12 @@ int32_t GenerateSelfChallenge(PakeParams *params)
 {
     int res = InitSingleParam(&(params->baseParams.challengeSelf), PAKE_CHALLENGE_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for challengeSelf failed, res: %d.", res);
+        LOGE("InitSingleParam for challengeSelf failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = params->baseParams.loader->generateRandom(&(params->baseParams.challengeSelf));
     if (res != HC_SUCCESS) {
-        LOGE("GenerateRandom for challengeSelf failed, res: %d.", res);
+        LOGE("GenerateRandom for challengeSelf failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     return res;
@@ -112,13 +112,13 @@ int32_t GetPeerChallenge(PakeParams *params, const CJson *in)
 {
     int res = InitSingleParam(&(params->baseParams.challengePeer), PAKE_CHALLENGE_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for challengePeer failed, res: %d.", res);
+        LOGE("InitSingleParam for challengePeer failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     res = GetByteFromJson(in, FIELD_CHALLENGE,
         params->baseParams.challengePeer.val, params->baseParams.challengePeer.length);
     if (res != HC_SUCCESS) {
-        LOGE("Get challengePeer failed, res: %d.", res);
+        LOGE("Get challengePeer failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     return res;

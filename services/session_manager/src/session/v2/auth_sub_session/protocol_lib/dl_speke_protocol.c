@@ -141,7 +141,7 @@ static int32_t GetAuthIdPeerFromInput(const CJson *inputData, DlSpekeParams *par
     }
     uint32_t authIdPeerStrLen = HcStrlen(authIdPeerStr) / BYTE_TO_HEX_OPER_LENGTH;
     if (authIdPeerStrLen == 0 || authIdPeerStrLen > DL_SPEKE_AUTH_ID_MAX_LEN) {
-        LOGE("Invalid authIdPeerStrLen: %u.", authIdPeerStrLen);
+        LOGE("Invalid authIdPeerStrLen: %" LOG_PUB "u.", authIdPeerStrLen);
         return HC_ERR_CONVERT_FAILED;
     }
     if (InitUint8Buff(&params->authIdPeer, authIdPeerStrLen) != HC_SUCCESS) {
@@ -226,7 +226,7 @@ static int32_t SetSelfKeyLenByMod(const CJson *inputData, DlSpekeParams *params)
         params->innerKeyLen = DL_SPEKE_PRIME_SMALL_LEN;
         return HC_SUCCESS;
     }
-    LOGE("Unsupported DL SPEKE mod: %x.", params->primeMod);
+    LOGE("Unsupported DL SPEKE mod: %" LOG_PUB "x.", params->primeMod);
     return HC_ERR_NOT_SUPPORT;
 }
 
@@ -247,7 +247,7 @@ static int32_t CalSalt(DlSpekeParams *params)
     }
     int32_t res = GetLoaderInstance()->generateRandom(&params->salt);
     if (res != HC_SUCCESS) {
-        LOGE("Generate salt failed, res: %x.", res);
+        LOGE("Generate salt failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     return HC_SUCCESS;
@@ -259,7 +259,7 @@ static int32_t CalSecret(DlSpekeParams *params, Uint8Buff *secret)
     KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false, params->osAccountId };
     int32_t res = GetLoaderInstance()->computeHkdf(&keyParams, &(params->salt), &keyInfo, secret);
     if (res != HC_SUCCESS) {
-        LOGE("Derive secret from psk failed, res: %x.", res);
+        LOGE("Derive secret from psk failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     ClearFreeUint8Buff(&params->psk);
@@ -280,7 +280,8 @@ static int32_t SetSelfKeyLenByEpkPeerAndMod(DlSpekeParams *params)
         params->innerKeyLen = DL_SPEKE_PRIME_SMALL_LEN;
         return HC_SUCCESS;
     }
-    LOGE("DL SPEKE mod: %x, Invalid epkPeer length: %u.", params->primeMod, params->epkPeer.length);
+    LOGE("DL SPEKE mod: %" LOG_PUB "x, Invalid epkPeer length: %" LOG_PUB "u.",
+        params->primeMod, params->epkPeer.length);
     return HC_ERR_INVALID_LEN;
 }
 
@@ -296,7 +297,7 @@ static int32_t DlSpekeCalBase(DlSpekeParams *params, Uint8Buff *secret)
         LARGE_PRIME_NUMBER_HEX_256 : LARGE_PRIME_NUMBER_HEX_384;
     int32_t res = GetLoaderInstance()->bigNumExpMod(secret, &exp, params->largePrimeNumHex, &params->base);
     if (res != HC_SUCCESS) {
-        LOGE("BigNumExpMod for base failed, res: %x.", res);
+        LOGE("BigNumExpMod for base failed, res: %" LOG_PUB "x.", res);
     }
     return res;
 }
@@ -309,7 +310,7 @@ static int32_t DlSpekeCalEskSelf(DlSpekeParams *params)
     }
     int res = GetLoaderInstance()->generateRandom(&(params->eskSelf));
     if (res != HC_SUCCESS) {
-        LOGE("GenerateRandom for eskSelf failed, res: %x.", res);
+        LOGE("GenerateRandom for eskSelf failed, res: %" LOG_PUB "x.", res);
     }
     return res;
 }
@@ -323,7 +324,7 @@ static int32_t DlSpekeCalEpkSelf(DlSpekeParams *params)
     int32_t res = GetLoaderInstance()->bigNumExpMod(&params->base, &(params->eskSelf),
         params->largePrimeNumHex, &(params->epkSelf));
     if (res != HC_SUCCESS) {
-        LOGE("BigNumExpMod for epkSelf failed, res: %x.", res);
+        LOGE("BigNumExpMod for epkSelf failed, res: %" LOG_PUB "x.", res);
     }
     return res;
 }
@@ -338,7 +339,7 @@ static bool IsEpkPeerLenValid(DlSpekeParams *params)
         (((uint32_t)params->primeMod & DL_SPEKE_PRIME_MOD_256) != 0)) {
         return true;
     }
-    LOGE("Invalid epkPeer length: %u.", params->epkPeer.length);
+    LOGE("Invalid epkPeer length: %" LOG_PUB "u.", params->epkPeer.length);
     return false;
 }
 
@@ -359,7 +360,7 @@ static int32_t CalTmpSharedSecret(DlSpekeParams *params, Uint8Buff *tmpSharedSec
     int32_t res = GetLoaderInstance()->bigNumExpMod(&(params->epkPeer), &(params->eskSelf),
         params->largePrimeNumHex, tmpSharedSecret);
     if (res != HC_SUCCESS) {
-        LOGE("Cal tmpSharedSecret failed, res: %x", res);
+        LOGE("Cal tmpSharedSecret failed, res: %" LOG_PUB "x", res);
     }
     return res;
 }
@@ -386,7 +387,7 @@ static int32_t CalSidSelf(DlSpekeParams *params, Uint8Buff *sidSelf)
     int32_t res = GetLoaderInstance()->sha256(&sidSelfMsg, sidSelf);
     ClearFreeUint8Buff(&sidSelfMsg);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for sidSelf failed, res: %x", res);
+        LOGE("Sha256 for sidSelf failed, res: %" LOG_PUB "x", res);
         return res;
     }
     return HC_SUCCESS;
@@ -414,7 +415,7 @@ static int32_t CalSidPeer(DlSpekeParams *params, Uint8Buff *sidPeer)
     int32_t res = GetLoaderInstance()->sha256(&sidPeerMsg, sidPeer);
     ClearFreeUint8Buff(&sidPeerMsg);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for sidPeer failed, res: %x", res);
+        LOGE("Sha256 for sidPeer failed, res: %" LOG_PUB "x", res);
         return res;
     }
     return HC_SUCCESS;
@@ -522,7 +523,7 @@ static int32_t CalSharedSecret(DlSpekeParams *params)
     res = GetLoaderInstance()->sha256(&sharedSecretMsg, &params->sharedSecret);
     ClearFreeUint8Buff(&sharedSecretMsg);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for sharedSecret failed, res: %x", res);
+        LOGE("Sha256 for sharedSecret failed, res: %" LOG_PUB "x", res);
     }
     return res;
 }
@@ -610,7 +611,7 @@ static int32_t CalKcfDataSelf(DlSpekeProtocol *impl, bool isClient)
     res = GetLoaderInstance()->sha256(&kcfDataMsg, &impl->params.kcfDataSelf);
     ClearFreeUint8Buff(&kcfDataMsg);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for kcfDataSelf failed, res: %x", res);
+        LOGE("Sha256 for kcfDataSelf failed, res: %" LOG_PUB "x", res);
     }
     return res;
 }
@@ -635,7 +636,7 @@ static int32_t VerifyKcfDataPeer(DlSpekeProtocol *impl, bool isClient)
     res = GetLoaderInstance()->sha256(&kcfDataMsg, &kcfDataPeer);
     ClearFreeUint8Buff(&kcfDataMsg);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for kcfDataPeer failed, res: %x", res);
+        LOGE("Sha256 for kcfDataPeer failed, res: %" LOG_PUB "x", res);
         return res;
     }
     if (memcmp(kcfDataPeer.val, impl->params.kcfDataPeer.val, kcfDataPeer.length) != 0) {
@@ -663,7 +664,7 @@ static int32_t CalSessionKey(DlSpekeProtocol *impl)
     ClearFreeUint8Buff(&impl->params.salt);
     ClearFreeUint8Buff(&impl->params.sharedSecret);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeHkdf for sessionKey failed, res: %x", res);
+        LOGE("ComputeHkdf for sessionKey failed, res: %" LOG_PUB "x", res);
     }
     return res;
 }
@@ -948,7 +949,7 @@ static int32_t ThrowException(DlSpekeProtocol *impl, const CJson *inputData, CJs
     (void)outputData;
     int32_t peerErrorCode = HC_ERR_PEER_ERROR;
     (void)GetIntFromJson(inputData, FIELD_ERR_CODE, &peerErrorCode);
-    LOGE("An exception occurred in the peer protocol. [Code]: %d", peerErrorCode);
+    LOGE("An exception occurred in the peer protocol. [Code]: %" LOG_PUB "d", peerErrorCode);
     return peerErrorCode;
 }
 
@@ -991,12 +992,14 @@ static int32_t DlSpekeProtocolSwitchState(BaseProtocol *self, const CJson *recev
                 self->curState = self->failState;
                 return res;
             }
-            LOGI("event: %d, curState: %d, nextState: %d", eventType, self->curState, STATE_MACHINE[i].nextState);
+            LOGI("event: %" LOG_PUB "d, curState: %" LOG_PUB "d, nextState: %" LOG_PUB "d", eventType, self->curState,
+                STATE_MACHINE[i].nextState);
             self->curState = STATE_MACHINE[i].nextState;
             return HC_SUCCESS;
         }
     }
-    LOGI("Unsupported event type. Ignore process. [Event]: %d, [CurState]: %d", eventType, self->curState);
+    LOGI("Unsupported event type. Ignore process. [Event]: %" LOG_PUB "d, [CurState]: %" LOG_PUB "d",
+        eventType, self->curState);
     return HC_SUCCESS;
 }
 

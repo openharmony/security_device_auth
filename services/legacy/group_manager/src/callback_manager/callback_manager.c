@@ -46,7 +46,7 @@ static int32_t UpdateCallbackIfExist(const char *appId, const DeviceAuthCallback
                 return HC_ERR_MEMORY_COPY;
             }
             UnlockHcMutex(g_callbackMutex);
-            LOGI("Successfully updated a callback! [AppId]: %s", appId);
+            LOGI("Successfully updated a callback! [AppId]: %" LOG_PUB "s", appId);
             return HC_SUCCESS;
         }
     }
@@ -91,19 +91,20 @@ static int32_t AddCallbackIfNotExist(const char *appId, const DeviceAuthCallback
         return HC_ERR_MEMORY_COPY;
     }
     UnlockHcMutex(g_callbackMutex);
-    LOGI("Successfully added a callback! [AppId]: %s", appId);
+    LOGI("Successfully added a callback! [AppId]: %" LOG_PUB "s", appId);
     return HC_SUCCESS;
 }
 
 bool ProcessTransmitCallback(int64_t reqId, const uint8_t *data, uint32_t dataLen, const DeviceAuthCallback *callback)
 {
     if ((callback != NULL) && (callback->onTransmit != NULL)) {
-        LOGI("[Service][In]: ProcessTransmitCallback! [DataLen]: %u, [ReqId]: %" PRId64, dataLen, reqId);
+        LOGI("[Service][In]: ProcessTransmitCallback! [DataLen]: %" LOG_PUB "u, [ReqId]: %" LOG_PUB PRId64,
+            dataLen, reqId);
         bool res = callback->onTransmit(reqId, data, dataLen);
         LOGI("[Service][Out]: ProcessTransmitCallback!");
         return res;
     }
-    LOGE("[OnTransmit]: Currently, the service callback is NULL! [ReqId]: %" PRId64, reqId);
+    LOGE("[OnTransmit]: Currently, the service callback is NULL! [ReqId]: %" LOG_PUB PRId64, reqId);
     return false;
 }
 
@@ -111,48 +112,48 @@ void ProcessSessionKeyCallback(int64_t reqId, const uint8_t *sessionKey, uint32_
     const DeviceAuthCallback *callback)
 {
     if ((callback != NULL) && (callback->onSessionKeyReturned != NULL)) {
-        LOGI("[Service][In]: ProcessSessionKeyCallback! [ReqId]: %" PRId64, reqId);
+        LOGI("[Service][In]: ProcessSessionKeyCallback! [ReqId]: %" LOG_PUB PRId64, reqId);
         callback->onSessionKeyReturned(reqId, sessionKey, sessionKeyLen);
         LOGI("[Service][Out]: ProcessSessionKeyCallback!");
         return;
     }
-    LOGE("[OnSessionKeyReturned]: Currently, the service callback is NULL! [ReqId]: %" PRId64, reqId);
+    LOGE("[OnSessionKeyReturned]: Currently, the service callback is NULL! [ReqId]: %" LOG_PUB PRId64, reqId);
 }
 
 void ProcessFinishCallback(int64_t reqId, int operationCode, const char *returnData,
     const DeviceAuthCallback *callback)
 {
     if ((callback != NULL) && (callback->onFinish != NULL)) {
-        LOGI("[Service][In]: ProcessFinishCallback! [ReqId]: %" PRId64, reqId);
+        LOGI("[Service][In]: ProcessFinishCallback! [ReqId]: %" LOG_PUB PRId64, reqId);
         callback->onFinish(reqId, operationCode, returnData);
         LOGI("[Service][Out]: ProcessFinishCallback!");
         return;
     }
-    LOGE("[OnFinish]: Currently, the service callback is NULL! [ReqId]: %" PRId64, reqId);
+    LOGE("[OnFinish]: Currently, the service callback is NULL! [ReqId]: %" LOG_PUB PRId64, reqId);
 }
 
 void ProcessErrorCallback(int64_t reqId, int operationCode, int errorCode, const char *errorReturn,
     const DeviceAuthCallback *callback)
 {
     if ((callback != NULL) && (callback->onError != NULL)) {
-        LOGI("[Service][In]: ProcessErrorCallback! [ReqId]: %" PRId64, reqId);
+        LOGI("[Service][In]: ProcessErrorCallback! [ReqId]: %" LOG_PUB PRId64, reqId);
         callback->onError(reqId, operationCode, errorCode, errorReturn);
         LOGI("[Service][Out]: ProcessErrorCallback!");
         return;
     }
-    LOGE("[OnError]: Currently, the service callback is NULL! [ReqId]: %" PRId64, reqId);
+    LOGE("[OnError]: Currently, the service callback is NULL! [ReqId]: %" LOG_PUB PRId64, reqId);
 }
 
 char *ProcessRequestCallback(int64_t reqId, int operationCode, const char *reqParams,
     const DeviceAuthCallback *callback)
 {
     if ((callback != NULL) && (callback->onRequest != NULL)) {
-        LOGI("[Service][In]: ProcessRequestCallback! [ReqId]: %" PRId64, reqId);
+        LOGI("[Service][In]: ProcessRequestCallback! [ReqId]: %" LOG_PUB PRId64, reqId);
         char *returnData = callback->onRequest(reqId, operationCode, reqParams);
         LOGI("[Service][Out]: ProcessRequestCallback!");
         return returnData;
     }
-    LOGE("[OnRequest]: Currently, the service callback is NULL! [ReqId]: %" PRId64, reqId);
+    LOGE("[OnRequest]: Currently, the service callback is NULL! [ReqId]: %" LOG_PUB PRId64, reqId);
     return NULL;
 }
 
@@ -200,12 +201,12 @@ int32_t UnRegGroupManagerCallback(const char *appId)
             CallbackEntry tempEntry;
             HC_VECTOR_POPELEMENT(&g_callbackVec, &tempEntry, index);
             UnlockHcMutex(g_callbackMutex);
-            LOGI("Successfully removed a callback. [AppId]: %s", appId);
+            LOGI("Successfully removed a callback. [AppId]: %" LOG_PUB "s", appId);
             return HC_SUCCESS;
         }
     }
     UnlockHcMutex(g_callbackMutex);
-    LOGI("The callback does not exist! [AppId]: %s", appId);
+    LOGI("The callback does not exist! [AppId]: %" LOG_PUB "s", appId);
     return HC_SUCCESS;
 }
 

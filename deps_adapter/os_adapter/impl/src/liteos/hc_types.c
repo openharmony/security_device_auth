@@ -33,7 +33,7 @@ void *HcMalloc(uint32_t size, char val)
     void *addr = malloc(size);
 #endif
     if (addr == NULL) {
-        LOGE("[OS]: malloc fail. [Size]: %u", size);
+        LOGE("[OS]: malloc fail. [Size]: %" LOG_PUB "u", size);
         return NULL;
     }
     (void)memset_s(addr, size, val, size);

@@ -30,7 +30,7 @@ int32_t HcGetUdid(uint8_t *udid, int32_t udidLen)
     }
     int32_t res = GetDevUdid((char *)udid, udidLen);
     if (res != 0) {
-        LOGE("[UDID]: GetDevUdid fail. [Res]: %d", res);
+        LOGE("[UDID]: GetDevUdid fail. [Res]: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
     return HAL_SUCCESS;

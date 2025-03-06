@@ -46,7 +46,7 @@ static bool IsGroupTypeSupported(int groupType)
         ((groupType == ACROSS_ACCOUNT_AUTHORIZE_GROUP) && (IsAcrossAccountGroupSupported()))) {
         return true;
     }
-    LOGE("The group type is not supported! [GroupType]: %d", groupType);
+    LOGE("The group type is not supported! [GroupType]: %" LOG_PUB "d", groupType);
     return false;
 }
 
@@ -363,7 +363,7 @@ static int32_t GeneratePkInfoList(int32_t osAccountId, const CJson *params, CJso
     if (isSelfPk) {
         res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to get local udid! res: %d", res);
+            LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
             ClearGroupEntryVec(&groupEntryVec);
             return HC_ERR_DB;
         }
@@ -444,7 +444,7 @@ static void DoCreateGroup(HcTaskBase *baseTask)
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(task->reqId);
-    LOGI("[Start]: DoCreateGroup! [ReqId]: %" PRId64, task->reqId);
+    LOGI("[Start]: DoCreateGroup! [ReqId]: %" LOG_PUB PRId64, task->reqId);
     char *returnJsonStr = NULL;
     int32_t result = CreateGroup(task->osAccountId, task->params, &returnJsonStr);
     if (result != HC_SUCCESS) {
@@ -460,7 +460,7 @@ static void DoDeleteGroup(HcTaskBase *baseTask)
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(task->reqId);
-    LOGI("[Start]: DoDeleteGroup! [ReqId]: %" PRId64, task->reqId);
+    LOGI("[Start]: DoDeleteGroup! [ReqId]: %" LOG_PUB PRId64, task->reqId);
     char *returnJsonStr = NULL;
     int32_t result = DeleteGroup(task->osAccountId, task->params, &returnJsonStr);
     if (result != HC_SUCCESS) {
@@ -476,7 +476,7 @@ static void DoDeleteMember(HcTaskBase *baseTask)
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(task->reqId);
-    LOGI("[Start]: DoDeleteMember! [ReqId]: %" PRId64, task->reqId);
+    LOGI("[Start]: DoDeleteMember! [ReqId]: %" LOG_PUB PRId64, task->reqId);
     (void)DeleteMemberFromPeerToPeerGroup(task->osAccountId, task->reqId, task->params, task->cb);
 }
 
@@ -491,7 +491,7 @@ static int32_t CreateGroupInner(int32_t osAccountId, int64_t requestId, const ch
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("[Start]: [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
+    LOGI("[Start]: [AppId]: %" LOG_PUB "s, [ReqId]: %" LOG_PUB PRId64, appId, requestId);
     CJson *params = CreateJsonFromString(createParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -549,7 +549,8 @@ static int32_t RequestCreateGroup(int32_t osAccountId, int64_t requestId, const 
     int32_t res = CreateGroupInner(osAccountId, requestId, appId, createParams);
     int64_t endTime = HcGetCurTimeInMillis();
     int64_t elapsedTime = endTime - startTime;
-    LOGI("CreateGroup elapsed time:  %" PRId64 " milliseconds, [OsAccountId]: %d", elapsedTime, osAccountId);
+    LOGI("CreateGroup elapsed time:  %" LOG_PUB PRId64 " milliseconds, [OsAccountId]: %" LOG_PUB "d",
+        elapsedTime, osAccountId);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, createParams, appId, CREATE_GROUP_EVENT);
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData = BuildCallEventData(appId, CREATE_GROUP_EVENT, osAccountId,
@@ -572,7 +573,7 @@ static int32_t DeleteGroupInner(int32_t osAccountId, int64_t requestId, const ch
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("[Start]: [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
+    LOGI("[Start]: [AppId]: %" LOG_PUB "s, [ReqId]: %" LOG_PUB PRId64, appId, requestId);
     CJson *params = CreateJsonFromString(disbandParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -597,7 +598,7 @@ static int32_t RequestDeleteGroup(int32_t osAccountId, int64_t requestId, const 
     int32_t res = DeleteGroupInner(osAccountId, requestId, appId, disbandParams);
     int64_t endTime = HcGetCurTimeInMillis();
     int64_t elapsedTime = endTime - startTime;
-    LOGI("DeleteGroup elapsed time:  %" PRId64 " milliseconds", elapsedTime);
+    LOGI("DeleteGroup elapsed time:  %" LOG_PUB PRId64 " milliseconds", elapsedTime);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, disbandParams, appId, DELETE_GROUP_EVENT);
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData = BuildCallEventData(appId, DELETE_GROUP_EVENT, osAccountId,
@@ -620,7 +621,7 @@ static int32_t DeleteMemberFromGroupInner(int32_t osAccountId, int64_t requestId
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("[Start]: [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
+    LOGI("[Start]: [AppId]: %" LOG_PUB "s, [ReqId]: %" LOG_PUB PRId64, appId, requestId);
     CJson *params = CreateJsonFromString(deleteParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -646,7 +647,7 @@ static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t request
     int32_t res = DeleteMemberFromGroupInner(osAccountId, requestId, appId, deleteParams);
     int64_t endTime = HcGetCurTimeInMillis();
     int64_t elapsedTime = endTime - startTime;
-    LOGI("DeleteMemberFromGroup elapsed time:  %" PRId64 " milliseconds", elapsedTime);
+    LOGI("DeleteMemberFromGroup elapsed time:  %" LOG_PUB PRId64 " milliseconds", elapsedTime);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, deleteParams, appId, DEL_MEMBER_EVENT);
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData = BuildCallEventData(appId, DEL_MEMBER_EVENT, osAccountId,
@@ -668,7 +669,7 @@ static int32_t AddMultiMembersToGroupInner(int32_t osAccountId, const char *appI
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("[Start]: [AppId]: %s", appId);
+    LOGI("[Start]: [AppId]: %" LOG_PUB "s", appId);
     CJson *params = CreateJsonFromString(addParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -692,11 +693,11 @@ static int32_t AddMultiMembersToGroupInner(int32_t osAccountId, const char *appI
         AcrossAccountGroup *instance = (AcrossAccountGroup *)GetAcrossAccountGroupInstance();
         res = instance->addMultiMembersToGroup(osAccountId, appId, params);
     } else {
-        LOGE("The input groupType is invalid! [GroupType]: %d", groupType);
+        LOGE("The input groupType is invalid! [GroupType]: %" LOG_PUB "d", groupType);
         res = HC_ERR_INVALID_PARAMS;
     }
     FreeJson(params);
-    LOGI("[End]: [Res]: %d!", res);
+    LOGI("[End]: [Res]: %" LOG_PUB "d!", res);
     return res;
 }
 
@@ -745,7 +746,7 @@ static int32_t DelMultiMembersFromGroupInner(int32_t osAccountId, const char *ap
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("[Start]: [AppId]: %s", appId);
+    LOGI("[Start]: [AppId]: %" LOG_PUB "s", appId);
     CJson *params = CreateJsonFromString(deleteParams);
     if (params == NULL) {
         LOGE("Failed to create json from string!");
@@ -769,11 +770,11 @@ static int32_t DelMultiMembersFromGroupInner(int32_t osAccountId, const char *ap
         AcrossAccountGroup *instance = (AcrossAccountGroup *)GetAcrossAccountGroupInstance();
         res = instance->delMultiMembersFromGroup(osAccountId, appId, params);
     } else {
-        LOGE("The input groupType is invalid! [GroupType]: %d", groupType);
+        LOGE("The input groupType is invalid! [GroupType]: %" LOG_PUB "d", groupType);
         res = HC_ERR_INVALID_PARAMS;
     }
     FreeJson(params);
-    LOGI("[End]: [Res]: %d!", res);
+    LOGI("[End]: [Res]: %" LOG_PUB "d!", res);
     return res;
 }
 
@@ -1193,7 +1194,7 @@ static int32_t GetPkInfoList(int32_t osAccountId, const char *appId, const char 
     }
     *returnInfoList = pkInfoListStr;
     *returnInfoNum = pkInfoNum;
-    LOGI("[End]: Get pk list successfully! [PkInfoNum]: %" PRId32, pkInfoNum);
+    LOGI("[End]: Get pk list successfully! [PkInfoNum]: %" LOG_PUB "" PRId32, pkInfoNum);
     return HC_SUCCESS;
 }
 
@@ -1303,7 +1304,7 @@ int32_t BindCallbackToTask(GroupManagerTask *task, const CJson *jsonParams)
     }
     task->cb = GetGMCallbackByAppId(appId);
     if (task->cb == NULL) {
-        LOGE("Failed to find callback by appId! [AppId]: %s", appId);
+        LOGE("Failed to find callback by appId! [AppId]: %" LOG_PUB "s", appId);
         return HC_ERR_CALLBACK_NOT_FOUND;
     }
     return HC_SUCCESS;

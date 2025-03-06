@@ -65,7 +65,7 @@ const char *GetStoragePath(void)
 #else
     const char *storageFile = "/storage/deviceauth/hcgroup.dat";
 #endif
-    LOGI("[OS]: storageFile: %s", storageFile);
+    LOGI("[OS]: storageFile: %" LOG_PUB "s", storageFile);
     return storageFile;
 }
 
@@ -81,7 +81,7 @@ const char *GetStorageDirPath(void)
 #else
     const char *storageFile = "/storage/deviceauth";
 #endif
-    LOGI("[OS]: storageDirFile: %s", storageFile);
+    LOGI("[OS]: storageDirFile: %" LOG_PUB "s", storageFile);
     return storageFile;
 }
 
@@ -95,7 +95,7 @@ const char *GetAccountStoragePath(void)
 #else
     const char *storageFile = "/storage/deviceauth/account";
 #endif
-    LOGI("[OS]: Account storage dir: %s", storageFile);
+    LOGI("[OS]: Account storage dir: %" LOG_PUB "s", storageFile);
     return storageFile;
 }
 

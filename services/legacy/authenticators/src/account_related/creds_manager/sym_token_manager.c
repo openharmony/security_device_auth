@@ -398,7 +398,7 @@ static int32_t ImportSymTokenToKeyManager(int32_t osAccountId, const SymToken *t
     res = GetLoaderInstance()->importSymmetricKey(&keyParams, &authCodeBuff, purpose, NULL);
     HcFree(keyAliasVal);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to import sym token! res: %d", res);
+        LOGE("Failed to import sym token! res: %" LOG_PUB "d", res);
     } else {
         LOGI("Import sym token success!");
     }
@@ -428,7 +428,7 @@ static int32_t DeleteSymTokenFromKeyManager(int32_t osAccountId, const SymToken 
     res = GetLoaderInstance()->deleteKey(&keyAlias, false, osAccountId);
     HcFree(keyAliasVal);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to delete sym token! res: %d", res);
+        LOGE("Failed to delete sym token! res: %" LOG_PUB "d", res);
     } else {
         LOGI("Delete sym token success!");
     }
@@ -453,7 +453,7 @@ static void LoadOsSymTokensDb(int32_t osAccountId)
         LOGE("Failed to push osAccountInfo to database!");
         ClearSymTokenVec(&info.tokens);
     }
-    LOGI("Load os account db successfully! [Id]: %d", osAccountId);
+    LOGI("Load os account db successfully! [Id]: %" LOG_PUB "d", osAccountId);
 }
 
 static void TryMoveDeDataToCe(int32_t osAccountId)
@@ -523,7 +523,7 @@ static void LoadOsSymTokensDbCe(int32_t osAccountId)
 
 static void OnOsAccountUnlocked(int32_t osAccountId)
 {
-    LOGI("Os account is unlocked, osAccountId: %d", osAccountId);
+    LOGI("Os account is unlocked, osAccountId: %" LOG_PUB "d", osAccountId);
     (void)LockHcMutex(g_dataMutex);
     LoadOsSymTokensDbCe(osAccountId);
     UnlockHcMutex(g_dataMutex);
@@ -531,7 +531,7 @@ static void OnOsAccountUnlocked(int32_t osAccountId)
 
 static void OnOsAccountRemoved(int32_t osAccountId)
 {
-    LOGI("Os account is removed, osAccountId: %d", osAccountId);
+    LOGI("Os account is removed, osAccountId: %" LOG_PUB "d", osAccountId);
     (void)LockHcMutex(g_dataMutex);
     RemoveOsSymTokensInfo(osAccountId);
     UnlockHcMutex(g_dataMutex);
@@ -554,7 +554,7 @@ static void LoadDataIfNotLoaded(int32_t osAccountId)
     if (IsOsAccountDataLoaded(osAccountId)) {
         return;
     }
-    LOGI("Data has not been loaded, load it, osAccountId: %d", osAccountId);
+    LOGI("Data has not been loaded, load it, osAccountId: %" LOG_PUB "d", osAccountId);
     LoadOsSymTokensDbCe(osAccountId);
 }
 
@@ -570,7 +570,7 @@ static OsSymTokensInfo *GetTokensInfoByOsAccountId(int32_t osAccountId)
             return info;
         }
     }
-    LOGI("Create a new os account database cache! [Id]: %d", osAccountId);
+    LOGI("Create a new os account database cache! [Id]: %" LOG_PUB "d", osAccountId);
     OsSymTokensInfo newInfo;
     newInfo.osAccountId = osAccountId;
     newInfo.tokens = CreateSymTokenVec();
@@ -591,7 +591,7 @@ static int32_t SaveOsSymTokensDb(int32_t osAccountId)
     }
     OsSymTokensInfo *info = GetTokensInfoByOsAccountId(osAccountId);
     if (info == NULL) {
-        LOGE("Failed to get tokens by os account id. [OsAccountId]: %d", osAccountId);
+        LOGE("Failed to get tokens by os account id. [OsAccountId]: %" LOG_PUB "d", osAccountId);
         return HC_ERR_INVALID_PARAMS;
     }
     int32_t ret = SaveTokensToFile(&info->tokens, tokenPath);
@@ -599,7 +599,7 @@ static int32_t SaveOsSymTokensDb(int32_t osAccountId)
         LOGE("Save tokens to file failed");
         return ret;
     }
-    LOGI("Save an os account database successfully! [Id]: %d", osAccountId);
+    LOGI("Save an os account database successfully! [Id]: %" LOG_PUB "d", osAccountId);
     return HC_SUCCESS;
 }
 
@@ -608,7 +608,7 @@ static int32_t AddSymTokenToVec(int32_t osAccountId, SymToken *token)
     LOGI("Start to add a token to database!");
     OsSymTokensInfo *info = GetTokensInfoByOsAccountId(osAccountId);
     if (info == NULL) {
-        LOGE("Failed to get tokens by os account id. [OsAccountId]: %d", osAccountId);
+        LOGE("Failed to get tokens by os account id. [OsAccountId]: %" LOG_PUB "d", osAccountId);
         return HC_ERR_INVALID_PARAMS;
     }
     SymToken **oldTokenPtr = QueryTokenPtrIfMatch(&info->tokens, token->userId, token->deviceId);
@@ -631,7 +631,7 @@ static SymToken *PopSymTokenFromVec(int32_t osAccountId, const char *userId, con
     LOGI("Start to pop token from database!");
     OsSymTokensInfo *info = GetTokensInfoByOsAccountId(osAccountId);
     if (info == NULL) {
-        LOGE("Failed to get tokens by os account id. [OsAccountId]: %d", osAccountId);
+        LOGE("Failed to get tokens by os account id. [OsAccountId]: %" LOG_PUB "d", osAccountId);
         return NULL;
     }
     uint32_t index = 0;
@@ -710,7 +710,7 @@ static int32_t DeleteToken(int32_t osAccountId, const char *userId, const char *
     res = SaveOsSymTokensDb(osAccountId);
     UnlockHcMutex(g_dataMutex);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to save token to db, account id is: %d", osAccountId);
+        LOGE("Failed to save token to db, account id is: %" LOG_PUB "d", osAccountId);
         return res;
     }
     LOGI("[Token]: Delete sym token success");

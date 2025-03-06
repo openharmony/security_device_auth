@@ -61,7 +61,7 @@ void NetObserver::StartObserver()
                 return;
             }
             retryCount++;
-            LOGW("[NetMgrSubsysterm][RegisterNetConnCallback]: Register failed, errCode = %d, retry.", ret);
+            LOGW("[NetMgrSubsysterm][RegisterNetConnCallback]: Register failed, errCode = %" LOG_PUB "d, retry.", ret);
             sleep(1);
         } while (retryCount < RETRY_MAX_TIMES);
         LOGE("[NetMgrSubsysterm][RegisterNetConnCallback]: Register net connection callback failed!");
@@ -94,13 +94,13 @@ int32_t NetObserver::HandleNetAllCap(const NetAllCapabilities &netAllCap)
     if (netAllCap.netCaps_.count(NET_CAPABILITY_INTERNET) <= 0 ||
         netAllCap.netCaps_.count(NET_CAPABILITY_VALIDATED) <= 0) {
         for (auto netCap : netAllCap.netCaps_) {
-            LOGI("[NetObserver]: No net, netCap is: %d", static_cast<int32_t>(netCap));
+            LOGI("[NetObserver]: No net, netCap is: %" LOG_PUB "d", static_cast<int32_t>(netCap));
         }
         return 0;
     }
     LOGI("[NetObserver]: Net available.");
     int32_t res = ExecuteAccountAuthCmd(DEFAULT_OS_ACCOUNT, RELOAD_CRED_MGR, nullptr, nullptr);
-    LOGI("[NetObserver]: Reload credential manager res: %d", res);
+    LOGI("[NetObserver]: Reload credential manager res: %" LOG_PUB "d", res);
     return 0;
 }
 

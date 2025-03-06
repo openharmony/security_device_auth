@@ -81,7 +81,7 @@ static const AuthIdentity *getAuthIdentity(const CJson *in, const Uint8Buff *pre
             identityType = isCredAuth ? AUTH_IDENTITY_TYPE_CRED : AUTH_IDENTITY_TYPE_GROUP;
         }
     }
-    LOGD("AuthIdentityType: %d", identityType);
+    LOGD("AuthIdentityType: %" LOG_PUB "d", identityType);
 
     if (identityType == AUTH_IDENTITY_TYPE_INVALID) {
         LOGE("invalid AuthIdentityType !");
@@ -113,7 +113,7 @@ int32_t GetCredInfosByPeerIdentity(CJson *in, IdentityInfoVec *vec)
         LOGE("invalid AuthIdentityType !");
         return HC_ERR_INVALID_PARAMS;
     }
-    LOGD("AuthIdentityType: %d", identityType);
+    LOGD("AuthIdentityType: %" LOG_PUB "d", identityType);
     const AuthIdentity *authIdentity = GetAuthIdentityByType(identityType);
     if (authIdentity == NULL) {
         LOGI("getAuthIdentity failed.");

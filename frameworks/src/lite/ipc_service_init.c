@@ -77,14 +77,14 @@ void ServiceInit(void)
     sleep(1); /* delay 1 second on boot */
 #endif
     if (!SAMGR_GetInstance()->RegisterService((Service *)&service)) {
-        LOGE("%s, RegisterService failed", DEV_AUTH_SERVICE_NAME);
+        LOGE("%" LOG_PUB "s, RegisterService failed", DEV_AUTH_SERVICE_NAME);
         return;
     }
     if (!SAMGR_GetInstance()->RegisterDefaultFeatureApi(DEV_AUTH_SERVICE_NAME, GET_IUNKNOWN(service))) {
-        LOGE("%s, RegisterDefaultFeatureApi failed", DEV_AUTH_SERVICE_NAME);
+        LOGE("%" LOG_PUB "s, RegisterDefaultFeatureApi failed", DEV_AUTH_SERVICE_NAME);
         return;
     }
-    LOGI("%s, init success", DEV_AUTH_SERVICE_NAME);
+    LOGI("%" LOG_PUB "s, init success", DEV_AUTH_SERVICE_NAME);
     return;
 }
 SYS_SERVICE_INIT(ServiceInit);

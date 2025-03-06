@@ -113,7 +113,7 @@ static int32_t GetAuthIdPeerFromInput(const CJson *inputEvent, EcSpekeParams *pa
     }
     uint32_t authIdPeerStrLen = HcStrlen(authIdPeerStr) / BYTE_TO_HEX_OPER_LENGTH;
     if (authIdPeerStrLen == 0 || authIdPeerStrLen > EC_SPEKE_AUTH_ID_MAX_LEN) {
-        LOGE("Invalid authIdPeerStrLen: %u.", authIdPeerStrLen);
+        LOGE("Invalid authIdPeerStrLen: %" LOG_PUB "u.", authIdPeerStrLen);
         return HC_ERR_CONVERT_FAILED;
     }
     if (InitUint8Buff(&params->authIdPeer, authIdPeerStrLen) != HC_SUCCESS) {
@@ -195,7 +195,7 @@ static int32_t CalSalt(EcSpekeParams *params)
     }
     int32_t res = GetLoaderInstance()->generateRandom(&params->salt);
     if (res != HC_SUCCESS) {
-        LOGE("Generate salt failed, res: %x.", res);
+        LOGE("Generate salt failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     PRINT_DEBUG_MSG(params->salt.val, params->salt.length, "saltValue");
@@ -208,7 +208,7 @@ static int32_t CalSecret(EcSpekeParams *params, Uint8Buff *secret)
     KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false, params->osAccountId };
     int32_t res = GetLoaderInstance()->computeHkdf(&keyParams, &(params->salt), &keyInfo, secret);
     if (res != HC_SUCCESS) {
-        LOGE("Derive secret from psk failed, res: %x.", res);
+        LOGE("Derive secret from psk failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     PRINT_DEBUG_MSG(secret->val, secret->length, "secretValue");
@@ -228,7 +228,7 @@ static int32_t EcSpekeCalBase(EcSpekeParams *params, Uint8Buff *secret)
         algo = X25519;
         res = InitUint8Buff(&params->base, EC_SPEKE_EC_KEY_LEN);
     } else {
-        LOGE("Unsupported curve type: %d", params->curveType);
+        LOGE("Unsupported curve type: %" LOG_PUB "d", params->curveType);
         return HC_ERR_UNSUPPORTED_VERSION;
     }
     if (res != HC_SUCCESS) {
@@ -237,7 +237,7 @@ static int32_t EcSpekeCalBase(EcSpekeParams *params, Uint8Buff *secret)
     }
     res = GetLoaderInstance()->hashToPoint(secret, algo, &params->base);
     if (res != HC_SUCCESS) {
-        LOGE("HashToPoint from secret to base failed, res: %x", res);
+        LOGE("HashToPoint from secret to base failed, res: %" LOG_PUB "x", res);
         return res;
     }
     PRINT_DEBUG_MSG(params->base.val, params->base.length, "baseValue");
@@ -254,20 +254,20 @@ static int32_t EcSpekeCalEskSelf(EcSpekeParams *params)
     if (params->curveType == CURVE_TYPE_256) {
         res = GetLoaderInstance()->generateRandom(&(params->eskSelf));
         if (res != HC_SUCCESS) {
-            LOGE("GenerateRandom for eskSelf failed, res: %x", res);
+            LOGE("GenerateRandom for eskSelf failed, res: %" LOG_PUB "x", res);
             return res;
         }
     } else if (params->curveType == CURVE_TYPE_25519) {
         res = GetLoaderInstance()->generateRandom(&(params->eskSelf));
         if (res != HC_SUCCESS) {
-            LOGE("GenerateRandom for eskSelf failed, res: %x", res);
+            LOGE("GenerateRandom for eskSelf failed, res: %" LOG_PUB "x", res);
             return res;
         }
         params->eskSelf.val[EC_SPEKE_EC_KEY_LEN - 1] &= EC_SPEKE_PRIVATE_KEY_AND_MASK_HIGH;
         params->eskSelf.val[0] &= EC_SPEKE_PRIVATE_KEY_AND_MASK_LOW;
         params->eskSelf.val[0] |= EC_SPEKE_PRIVATE_KEY_OR_MASK_LOW;
     } else {
-        LOGE("Unsupported curve type: %d", params->curveType);
+        LOGE("Unsupported curve type: %" LOG_PUB "d", params->curveType);
         return HC_ERR_UNSUPPORTED_VERSION;
     }
     PRINT_DEBUG_MSG(params->eskSelf.val, params->eskSelf.length, "eskSelf");
@@ -286,7 +286,7 @@ static int32_t EcSpekeCalEpkSelf(EcSpekeParams *params)
         algo = X25519;
         res = InitUint8Buff(&params->epkSelf, EC_SPEKE_EC_KEY_LEN);
     } else {
-        LOGE("Unsupported curve type: %d", params->curveType);
+        LOGE("Unsupported curve type: %" LOG_PUB "d", params->curveType);
         return HC_ERR_UNSUPPORTED_VERSION;
     }
     if (res != HC_SUCCESS) {
@@ -297,7 +297,7 @@ static int32_t EcSpekeCalEpkSelf(EcSpekeParams *params)
     KeyBuff baseBuff = { params->base.val, params->base.length, false };
     res = GetLoaderInstance()->agreeSharedSecret(&eskSelfParams, &baseBuff, algo, &params->epkSelf);
     if (res != HC_SUCCESS) {
-        LOGE("AgreeSharedSecret for epkSelf failed, res: %x", res);
+        LOGE("AgreeSharedSecret for epkSelf failed, res: %" LOG_PUB "x", res);
         return res;
     }
     PRINT_DEBUG_MSG(params->epkSelf.val, params->epkSelf.length, "epkSelf");
@@ -310,7 +310,7 @@ static int32_t CheckEpkPeerValid(EcSpekeParams *params)
     uint32_t epkPeerValidLen = (params->curveType == CURVE_TYPE_256) ?
         (2 * EC_SPEKE_EC_KEY_LEN) : EC_SPEKE_EC_KEY_LEN;
     if (params->epkPeer.length != epkPeerValidLen) {
-        LOGE("Invalid epkPeer length: %u", params->epkPeer.length);
+        LOGE("Invalid epkPeer length: %" LOG_PUB "u", params->epkPeer.length);
         return HC_ERR_BAD_MESSAGE;
     }
     Algorithm algo = (params->curveType == CURVE_TYPE_256) ? P256 : X25519;
@@ -329,7 +329,7 @@ static int32_t CalP(EcSpekeParams *params, Uint8Buff *p)
     int32_t res = GetLoaderInstance()->agreeSharedSecret(&eskSelfParams, &epkPeerBuff, algo, p);
     ClearFreeUint8Buff(&params->eskSelf);
     if (res != HC_SUCCESS) {
-        LOGE("AgreeSharedSecret for p failed, res: %x", res);
+        LOGE("AgreeSharedSecret for p failed, res: %" LOG_PUB "x", res);
         return res;
     }
     return HC_SUCCESS;
@@ -357,7 +357,7 @@ static int32_t CalSidSelf(EcSpekeParams *params, Uint8Buff *sidSelf)
     int32_t res = GetLoaderInstance()->sha256(&sidSelfMsg, sidSelf);
     ClearFreeUint8Buff(&sidSelfMsg);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for sidSelf failed, res: %x", res);
+        LOGE("Sha256 for sidSelf failed, res: %" LOG_PUB "x", res);
         return res;
     }
     return HC_SUCCESS;
@@ -385,7 +385,7 @@ static int32_t CalSidPeer(EcSpekeParams *params, Uint8Buff *sidPeer)
     int32_t res = GetLoaderInstance()->sha256(&sidPeerMsg, sidPeer);
     ClearFreeUint8Buff(&sidPeerMsg);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for sidPeer failed, res: %x", res);
+        LOGE("Sha256 for sidPeer failed, res: %" LOG_PUB "x", res);
         return res;
     }
     return HC_SUCCESS;
@@ -505,7 +505,7 @@ static int32_t CalSharedSecret(EcSpekeParams *params)
     res = GetLoaderInstance()->sha256(&sharedSecretMsg, &params->sharedSecret);
     ClearFreeUint8Buff(&sharedSecretMsg);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for sharedSecret failed, res: %x", res);
+        LOGE("Sha256 for sharedSecret failed, res: %" LOG_PUB "x", res);
         return res;
     }
     PRINT_DEBUG_MSG(params->sharedSecret.val, params->sharedSecret.length, "sharedSecret");
@@ -599,7 +599,7 @@ static int32_t CalKcfDataSelf(EcSpekeProtocol *impl, bool isClient)
     res = GetLoaderInstance()->sha256(&kcfDataMsg, &impl->params.kcfDataSelf);
     ClearFreeUint8Buff(&kcfDataMsg);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for kcfDataSelf failed, res: %x", res);
+        LOGE("Sha256 for kcfDataSelf failed, res: %" LOG_PUB "x", res);
         return res;
     }
     PRINT_DEBUG_MSG(impl->params.kcfDataSelf.val, impl->params.kcfDataSelf.length, "kcfDataSelf");
@@ -630,7 +630,7 @@ static int32_t VerifyKcfDataPeer(EcSpekeProtocol *impl, bool isClient)
     res = GetLoaderInstance()->sha256(&kcfDataMsg, &kcfDataPeer);
     ClearFreeUint8Buff(&kcfDataMsg);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for kcfDataPeer failed, res: %x", res);
+        LOGE("Sha256 for kcfDataPeer failed, res: %" LOG_PUB "x", res);
         return res;
     }
     PRINT_DEBUG_MSG(kcfDataPeer.val, kcfDataPeer.length, "kcfDataPeer");
@@ -659,7 +659,7 @@ static int32_t CalSessionKey(EcSpekeProtocol *impl)
     ClearFreeUint8Buff(&impl->params.salt);
     ClearFreeUint8Buff(&impl->params.sharedSecret);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeHkdf for sessionKey failed, res: %x", res);
+        LOGE("ComputeHkdf for sessionKey failed, res: %" LOG_PUB "x", res);
         return res;
     }
     PRINT_DEBUG_MSG(impl->base.sessionKey.val, impl->base.sessionKey.length, "sessionKey");
@@ -942,7 +942,7 @@ static int32_t ThrowException(EcSpekeProtocol *impl, const CJson *inputEvent, CJ
     (void)outputEvent;
     int32_t peerErrorCode = HC_ERR_PEER_ERROR;
     (void)GetIntFromJson(inputEvent, FIELD_ERR_CODE, &peerErrorCode);
-    LOGE("An exception occurred in the peer protocol. [Code]: %d", peerErrorCode);
+    LOGE("An exception occurred in the peer protocol. [Code]: %" LOG_PUB "d", peerErrorCode);
     return peerErrorCode;
 }
 
@@ -985,12 +985,14 @@ static int32_t EcSpekeProtocolSwitchState(BaseProtocol *self, const CJson *recev
                 self->curState = self->failState;
                 return res;
             }
-            LOGI("event: %d, curState: %d, nextState: %d", eventType, self->curState, STATE_MACHINE[i].nextState);
+            LOGI("event: %" LOG_PUB "d, curState: %" LOG_PUB "d, nextState: %" LOG_PUB "d", eventType, self->curState,
+                STATE_MACHINE[i].nextState);
             self->curState = STATE_MACHINE[i].nextState;
             return HC_SUCCESS;
         }
     }
-    LOGI("Unsupported event type. Ignore process. [Event]: %d, [CurState]: %d", eventType, self->curState);
+    LOGI("Unsupported event type. Ignore process. [Event]: %" LOG_PUB "d, [CurState]: %" LOG_PUB "d",
+        eventType, self->curState);
     return HC_SUCCESS;
 }
 
@@ -1137,7 +1139,7 @@ int32_t CreateEcSpekeProtocol(const void *baseParams, bool isClient, BaseProtoco
         return HC_ERR_INVALID_PARAMS;
     }
     if (!IsCurveTypeValid(params->curveType)) {
-        LOGE("invalid curve type. [CurveType]: %d", params->curveType);
+        LOGE("invalid curve type. [CurveType]: %" LOG_PUB "d", params->curveType);
         return HC_ERR_INVALID_PARAMS;
     }
     EcSpekeProtocol *instance = (EcSpekeProtocol *)HcMalloc(sizeof(EcSpekeProtocol), 0);

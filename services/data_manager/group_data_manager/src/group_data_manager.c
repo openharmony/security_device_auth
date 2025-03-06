@@ -534,7 +534,7 @@ static void LoadOsAccountDb(int32_t osAccountId)
         ClearDeviceEntryVec(&info.devices);
         return;
     }
-    LOGI("[DB]: Load os account db successfully! [Id]: %d", osAccountId);
+    LOGI("[DB]: Load os account db successfully! [Id]: %" LOG_PUB "d", osAccountId);
 }
 
 static void TryMoveDeDataToCe(int32_t osAccountId)
@@ -664,7 +664,7 @@ static void CheckAndRemoveUpgradeGroupEntry(const TrustedGroupEntry *groupEntry)
 static void CheckAndRemoveUpgradeData(int32_t osAccountId)
 {
     if (osAccountId != UPGRADE_OS_ACCOUNT_ID) {
-        LOGI("Current os accountId is %d, no need to check and remove.", osAccountId);
+        LOGI("Current os accountId is %" LOG_PUB "d, no need to check and remove.", osAccountId);
         return;
     }
     QueryGroupParams queryParams = InitQueryGroupParams();
@@ -697,7 +697,7 @@ static void OnOsAccountUnlocked(int32_t osAccountId)
 
 static void OnOsAccountRemoved(int32_t osAccountId)
 {
-    LOGI("[DB]: os account is removed, osAccountId: %d", osAccountId);
+    LOGI("[DB]: os account is removed, osAccountId: %" LOG_PUB "d", osAccountId);
     (void)LockHcMutex(g_databaseMutex);
     RemoveOsAccountTrustedInfo(osAccountId);
     UnlockHcMutex(g_databaseMutex);
@@ -720,7 +720,7 @@ static void LoadDataIfNotLoaded(int32_t osAccountId)
     if (IsOsAccountDataLoaded(osAccountId)) {
         return;
     }
-    LOGI("[DB]: data has not been loaded, load it, osAccountId: %d", osAccountId);
+    LOGI("[DB]: data has not been loaded, load it, osAccountId: %" LOG_PUB "d", osAccountId);
     LoadOsAccountDbCe(osAccountId);
 }
 
@@ -736,7 +736,7 @@ static OsAccountTrustedInfo *GetTrustedInfoByOsAccountId(int32_t osAccountId)
             return info;
         }
     }
-    LOGI("[DB]: Create a new os account database cache! [Id]: %d", osAccountId);
+    LOGI("[DB]: Create a new os account database cache! [Id]: %" LOG_PUB "d", osAccountId);
     OsAccountTrustedInfo newInfo;
     newInfo.osAccountId = osAccountId;
     newInfo.groups = CreateGroupEntryVec();
@@ -1180,7 +1180,7 @@ static bool IsSelfDeviceEntry(const TrustedDeviceEntry *deviceEntry)
     char selfUdid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return false;
     }
     const char *entryUdid = StringGet(&deviceEntry->udid);
@@ -1439,7 +1439,7 @@ int32_t GenerateReturnDevInfo(const TrustedDeviceEntry *deviceEntry, CJson *retu
 
 int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
 {
-    LOGI("[DB]: Start to add a group to database! [OsAccountId]: %d", osAccountId);
+    LOGI("[DB]: Start to add a group to database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
     if (groupEntry == NULL) {
         LOGE("[DB]: The input groupEntry is NULL!");
         return HC_ERR_NULL_PTR;
@@ -1463,7 +1463,7 @@ int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
         *oldEntryPtr = newEntry;
         PostGroupCreatedMsg(newEntry);
         UnlockHcMutex(g_databaseMutex);
-        LOGI("[DB]: Replace an old group successfully! [GroupType]: %u", groupEntry->type);
+        LOGI("[DB]: Replace an old group successfully! [GroupType]: %" LOG_PUB "u", groupEntry->type);
         return HC_SUCCESS;
     }
     if (info->groups.pushBackT(&info->groups, newEntry) == NULL) {
@@ -1474,13 +1474,13 @@ int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
     }
     PostGroupCreatedMsg(newEntry);
     UnlockHcMutex(g_databaseMutex);
-    LOGI("[DB]: Add a group to database successfully! [GroupType]: %u", groupEntry->type);
+    LOGI("[DB]: Add a group to database successfully! [GroupType]: %" LOG_PUB "u", groupEntry->type);
     return HC_SUCCESS;
 }
 
 int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEntry)
 {
-    LOGI("[DB]: Start to add a trusted device to database! [OsAccountId]: %d", osAccountId);
+    LOGI("[DB]: Start to add a trusted device to database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
     if (deviceEntry == NULL) {
         LOGE("[DB]: The input deviceEntry is NULL!");
         return HC_ERR_NULL_PTR;
@@ -1522,7 +1522,7 @@ int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEn
 
 int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params)
 {
-    LOGI("[DB]: Start to delete groups from database! [OsAccountId]: %d", osAccountId);
+    LOGI("[DB]: Start to delete groups from database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
     if (params == NULL) {
         LOGE("[DB]: The input params is NULL!");
         return HC_ERR_NULL_PTR;
@@ -1545,18 +1545,18 @@ int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params)
         TrustedGroupEntry *popEntry;
         HC_VECTOR_POPELEMENT(&info->groups, &popEntry, index);
         PostGroupDeletedMsg(popEntry);
-        LOGI("[DB]: Delete a group from database successfully! [GroupType]: %u", popEntry->type);
+        LOGI("[DB]: Delete a group from database successfully! [GroupType]: %" LOG_PUB "u", popEntry->type);
         DestroyGroupEntry(popEntry);
         count++;
     }
     UnlockHcMutex(g_databaseMutex);
-    LOGI("[DB]: Number of groups deleted: %d", count);
+    LOGI("[DB]: Number of groups deleted: %" LOG_PUB "d", count);
     return HC_SUCCESS;
 }
 
 int32_t DelTrustedDevice(int32_t osAccountId, const QueryDeviceParams *params)
 {
-    LOGI("[DB]: Start to delete devices from database! [OsAccountId]: %d", osAccountId);
+    LOGI("[DB]: Start to delete devices from database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
     if (params == NULL) {
         LOGE("[DB]: The input params is NULL!");
         return HC_ERR_NULL_PTR;
@@ -1585,7 +1585,7 @@ int32_t DelTrustedDevice(int32_t osAccountId, const QueryDeviceParams *params)
         count++;
     }
     UnlockHcMutex(g_databaseMutex);
-    LOGI("[DB]: Number of trusted devices deleted: %d", count);
+    LOGI("[DB]: Number of trusted devices deleted: %" LOG_PUB "d", count);
     return HC_SUCCESS;
 }
 
@@ -1678,7 +1678,7 @@ int32_t SaveOsAccountDb(int32_t osAccountId)
     }
     DeleteParcel(&parcel);
     UnlockHcMutex(g_databaseMutex);
-    LOGI("[DB]: Save an os account database successfully! [Id]: %d", osAccountId);
+    LOGI("[DB]: Save an os account database successfully! [Id]: %" LOG_PUB "d", osAccountId);
     return HC_SUCCESS;
 }
 
@@ -1752,7 +1752,7 @@ static void LoadAllAccountsData(void)
     uint32_t size = 0;
     int32_t ret = GetAllOsAccountIds(&accountIds, &size);
     if (ret != HC_SUCCESS) {
-        LOGE("[DB]: Failed to get all os account ids, [res]: %d", ret);
+        LOGE("[DB]: Failed to get all os account ids, [res]: %" LOG_PUB "d", ret);
         return;
     }
     for (uint32_t index = 0; index < size; index++) {

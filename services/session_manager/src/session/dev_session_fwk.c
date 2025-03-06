@@ -47,14 +47,14 @@ static int32_t StartV1Session(SessionImpl *impl, CJson **sendMsg)
         if (isDeviceLevel && res == HC_ERR_NO_CANDIDATE_GROUP) {
             LOGI("create compatibleSubSession fail. no candidate group");
         } else {
-            LOGE("create compatibleSubSession fail. [Res]: %d", res);
+            LOGE("create compatibleSubSession fail. [Res]: %" LOG_PUB "d", res);
         }
         return res;
     }
     int32_t status;
     res = ProcessCompatibleSubSession(impl->compatibleSubSession, impl->context, sendMsg, &status);
     if (res != HC_SUCCESS) {
-        LOGE("process compatibleSubSession fail. [Res]: %d", res);
+        LOGE("process compatibleSubSession fail. [Res]: %" LOG_PUB "d", res);
         DestroyCompatibleSubSession(impl->compatibleSubSession);
         impl->compatibleSubSession = NULL;
         return res;
@@ -439,7 +439,7 @@ static int32_t ParseAllRecvEvent(SessionImpl *impl, const CJson *receviedMsg)
             LOGE("push event fail.");
             return HC_ERR_ALLOC_MEMORY;
         }
-        LOGI("push event success. [Type]: %d", eventType);
+        LOGI("push event success. [Type]: %" LOG_PUB "d", eventType);
     }
     return HC_SUCCESS;
 }
@@ -541,7 +541,7 @@ static int32_t InitServerV1Session(SessionImpl *impl, const CJson *receviedMsg)
     res = CreateCompatibleSubSession(subSessionType, (CJson *)receviedMsg, &impl->base.callback,
         &impl->compatibleSubSession);
     if (res != HC_SUCCESS) {
-        LOGE("create compatibleSubSession fail. [Res]: %d", res);
+        LOGE("create compatibleSubSession fail. [Res]: %" LOG_PUB "d", res);
         return res;
     }
     return HC_SUCCESS;
@@ -560,7 +560,7 @@ static int32_t ProcV1SessionMsg(SessionImpl *impl, const CJson *receviedMsg, boo
             *isFinish = true;
             return HC_SUCCESS;
         } else {
-            LOGE("process compatibleSubSession fail. [Res]: %d", res);
+            LOGE("process compatibleSubSession fail. [Res]: %" LOG_PUB "d", res);
             return res;
         }
     }

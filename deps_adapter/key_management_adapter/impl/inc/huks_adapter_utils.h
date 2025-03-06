@@ -31,7 +31,7 @@
 #define CHECK_LEN_ZERO_RETURN_ERROR_CODE(len, paramTag) \
     do { \
         if ((len) == 0) { \
-            LOGE("%s is invalid length.", (paramTag)); \
+            LOGE("%" LOG_PUB "s is invalid length.", (paramTag)); \
             return HAL_ERR_INVALID_LEN; \
         } \
     } while (0)
@@ -39,7 +39,7 @@
 #define CHECK_PTR_RETURN_HAL_ERROR_CODE(ptr, paramTag) \
     do { \
         if ((ptr) == NULL) { \
-            LOGE("%s is null.", (paramTag)); \
+            LOGE("%" LOG_PUB "s is null.", (paramTag)); \
             return HAL_ERR_NULL_PTR; \
         } \
     } while (0)
@@ -47,7 +47,7 @@
 #define CHECK_LEN_LOWER_RETURN(len, min, paramTag) \
     do { \
         if ((len) < (min)) { \
-            LOGE("%s is invalid length.", (paramTag)); \
+            LOGE("%" LOG_PUB "s is invalid length.", (paramTag)); \
             return HAL_ERR_INVALID_LEN; \
         } \
     } while (0)
@@ -55,7 +55,7 @@
 #define CHECK_LEN_HIGHER_RETURN(len, max, paramTag) \
     do { \
         if ((len) > (max)) { \
-            LOGE("%s is invalid length.", (paramTag)); \
+            LOGE("%" LOG_PUB "s is invalid length.", (paramTag)); \
             return HAL_ERR_INVALID_LEN; \
         } \
     } while (0)
@@ -63,7 +63,7 @@
 #define CHECK_LEN_EQUAL_RETURN(len, value, paramTag) \
     do { \
         if ((len) != (value)) { \
-            LOGE("%s is invalid length.", (paramTag)); \
+            LOGE("%" LOG_PUB "s is invalid length.", (paramTag)); \
             return HAL_ERR_INVALID_LEN; \
         } \
     } while (0)

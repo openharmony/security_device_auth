@@ -53,7 +53,7 @@ static int32_t GenerateEsk(PakeBaseParams *params)
 {
     int res = params->loader->generateRandom(&(params->eskSelf));
     if (res != HC_SUCCESS) {
-        LOGE("GenerateRandom for eskSelf failed, res: %x.", res);
+        LOGE("GenerateRandom for eskSelf failed, res: %" LOG_PUB "x.", res);
     }
     return res;
 }
@@ -72,7 +72,8 @@ static int FillDlKeysLenAccordingToEpkPeer(PakeBaseParams *params)
         params->innerKeyLen = PAKE_DL_PRIME_SMALL_LEN;
         return HC_SUCCESS;
     }
-    LOGE("PAKE DL mod: %x, Invalid epkPeer length: %u.", params->supportedDlPrimeMod, params->epkPeer.length);
+    LOGE("PAKE DL mod: %" LOG_PUB "x, Invalid epkPeer length: %" LOG_PUB "u.",
+        params->supportedDlPrimeMod, params->epkPeer.length);
     return HC_ERR_INVALID_LEN;
 }
 
@@ -88,7 +89,7 @@ static int FillDlKeysLenAccordingToMod(PakeBaseParams *params)
         params->innerKeyLen = PAKE_DL_PRIME_SMALL_LEN;
         return HC_SUCCESS;
     }
-    LOGE("Unsupported PAKE DL mod: %x.", params->supportedDlPrimeMod);
+    LOGE("Unsupported PAKE DL mod: %" LOG_PUB "x.", params->supportedDlPrimeMod);
     return HC_ERR_NOT_SUPPORT;
 }
 
@@ -101,22 +102,22 @@ static int32_t InitDlPakeParams(PakeBaseParams *params)
         res = FillDlKeysLenAccordingToMod(params);
     }
     if (res != HC_SUCCESS) {
-        LOGE("FillDlKeysLen failed, res: %x.", res);
+        LOGE("FillDlKeysLen failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     res = InitSingleParam(&(params->eskSelf), params->eskSelf.length);
     if (res !=  HC_SUCCESS) {
-        LOGE("InitSingleParam for eskSelf failed, res: %x.", res);
+        LOGE("InitSingleParam for eskSelf failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     res = InitSingleParam(&(params->epkSelf), params->innerKeyLen);
     if (res !=  HC_SUCCESS) {
-        LOGE("InitSingleParam for epkSelf failed, res: %x.", res);
+        LOGE("InitSingleParam for epkSelf failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     res = InitSingleParam(&(params->base), params->innerKeyLen);
     if (res !=  HC_SUCCESS) {
-        LOGE("InitSingleParam for base failed, res: %x.", res);
+        LOGE("InitSingleParam for base failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     return res;
@@ -126,12 +127,12 @@ int32_t GenerateDlPakeParams(PakeBaseParams *params, const Uint8Buff *secret)
 {
     int32_t res = InitDlPakeParams(params);
     if (res != HC_SUCCESS) {
-        LOGE("InitDlPakeParams failed, res: %x.", res);
+        LOGE("InitDlPakeParams failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     res = GenerateEsk(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateEsk failed, res: %x.", res);
+        LOGE("GenerateEsk failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     uint8_t expVal[PAKE_DL_EXP_LEN] = { 2 };
@@ -140,13 +141,13 @@ int32_t GenerateDlPakeParams(PakeBaseParams *params, const Uint8Buff *secret)
         g_largePrimeNumberHex256 : g_largePrimeNumberHex384;
     res = params->loader->bigNumExpMod(secret, &exp, params->largePrimeNumHex, &params->base);
     if (res != HC_SUCCESS) {
-        LOGE("BigNumExpMod for base failed, res: %x.", res);
+        LOGE("BigNumExpMod for base failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
     res = params->loader->bigNumExpMod(&params->base, &(params->eskSelf), params->largePrimeNumHex, &(params->epkSelf));
     if (res != HC_SUCCESS) {
-        LOGE("BigNumExpMod for epkSelf failed, res: %x.", res);
+        LOGE("BigNumExpMod for epkSelf failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     return res;
@@ -165,7 +166,7 @@ static bool IsEpkPeerLenInvalid(PakeBaseParams *params)
         (((uint32_t)params->supportedDlPrimeMod & DL_PRIME_MOD_256) != 0)) {
         return false;
     }
-    LOGE("Invalid epkPeer length: %u.", params->epkPeer.length);
+    LOGE("Invalid epkPeer length: %" LOG_PUB "u.", params->epkPeer.length);
     return true;
 }
 
@@ -183,7 +184,7 @@ int32_t AgreeDlSharedSecret(PakeBaseParams *params, Uint8Buff *sharedSecret)
     }
     res = params->loader->bigNumExpMod(&(params->epkPeer), &(params->eskSelf), params->largePrimeNumHex, sharedSecret);
     if (res != HC_SUCCESS) {
-        LOGE("BigNumExpMod for sharedSecret failed, res: %x.", res);
+        LOGE("BigNumExpMod for sharedSecret failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     return res;

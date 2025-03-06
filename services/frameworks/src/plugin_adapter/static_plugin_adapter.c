@@ -51,12 +51,12 @@ void LoadExtendPlugin(void)
     }
     int32_t res = AddCredPlugin(credPlugin);
     if (res != HC_SUCCESS) {
-        LOGE("[Plugin]: init cred plugin fail. [Res]: %d", res);
+        LOGE("[Plugin]: init cred plugin fail. [Res]: %" LOG_PUB "d", res);
         return;
     }
     res = AddAuthModulePlugin(authModulePlugin);
     if (res != HC_SUCCESS) {
-        LOGE("[Plugin]: init auth module plugin fail. [Res]: %d", res);
+        LOGE("[Plugin]: init auth module plugin fail. [Res]: %" LOG_PUB "d", res);
         DelCredPlugin(credPlugin->pluginName);
         return;
     }

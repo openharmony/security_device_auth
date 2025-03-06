@@ -175,7 +175,7 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
     if (!params->isClient) {
         res = params->loader->generateRandom(&(params->salt));
         if (res != HC_SUCCESS) {
-            LOGE("Generate salt failed, res: %x.", res);
+            LOGE("Generate salt failed, res: %" LOG_PUB "x.", res);
             goto CLEAN_UP;
         }
     }
@@ -184,7 +184,7 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
     KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false, params->osAccountId };
     res = params->loader->computeHkdf(&keyParams, &(params->salt), &keyInfo, &secret);
     if (res != HC_SUCCESS) {
-        LOGE("Derive secret from psk failed, res: %x.", res);
+        LOGE("Derive secret from psk failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     FreeAndCleanKey(&params->psk);
@@ -197,7 +197,8 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
         res = HC_ERR_INVALID_ALG;
     }
     if (res != HC_SUCCESS) {
-        LOGE("GeneratePakeParams failed, pakeAlgType: 0x%x, res: 0x%x.", params->supportedPakeAlg, res);
+        LOGE("GeneratePakeParams failed, pakeAlgType: 0x%" LOG_PUB "x, res: 0x%" LOG_PUB "x.",
+            params->supportedPakeAlg, res);
         goto CLEAN_UP;
     }
     (void)memset_s(secret.val, secret.length, 0, secret.length);
@@ -232,7 +233,7 @@ static int32_t ComputeSidSelf(const PakeBaseParams *params, Uint8Buff *sidSelf)
     }
     res = params->loader->sha256(&idSelfMsg, sidSelf);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for idSelfMsg failed, res: %x.", res);
+        LOGE("Sha256 for idSelfMsg failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 CLEAN_UP:
@@ -264,7 +265,7 @@ static int32_t ComputeSidPeer(const PakeBaseParams *params, Uint8Buff *sidPeer)
     }
     res = params->loader->sha256(&idPeerMsg, sidPeer);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for idPeerMsg failed, res: %x.", res);
+        LOGE("Sha256 for idPeerMsg failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 CLEAN_UP:
@@ -291,13 +292,13 @@ static int32_t ComputeSid(const PakeBaseParams *params, Uint8Buff *sid)
 
     res = ComputeSidSelf(params, &sidSelf);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeSidSelf failed, res: %x", res);
+        LOGE("ComputeSidSelf failed, res: %" LOG_PUB "x", res);
         goto CLEAN_UP;
     }
 
     res = ComputeSidPeer(params, &sidPeer);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeSidPeer failed, res: %x", res);
+        LOGE("ComputeSidPeer failed, res: %" LOG_PUB "x", res);
         goto CLEAN_UP;
     }
 
@@ -362,7 +363,7 @@ static int32_t ComputeSharedSecret(PakeBaseParams *params, const Uint8Buff *sid,
 
     res = params->loader->sha256(&sharedSecretMsg, &params->sharedSecret);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for sharedSecretMsg failed, res: %x.", res);
+        LOGE("Sha256 for sharedSecretMsg failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 CLEAN_UP:
@@ -399,7 +400,8 @@ static int32_t GenerateSharedSecret(PakeBaseParams *params)
         res = HC_ERR_INVALID_ALG;
     }
     if (res != HC_SUCCESS) {
-        LOGE("Agree intermediate sharedSecret failed, pakeAlgType: 0x%x, res: %x.", params->supportedPakeAlg, res);
+        LOGE("Agree intermediate sharedSecret failed, pakeAlgType: 0x%" LOG_PUB "x, res: %" LOG_PUB "x.",
+            params->supportedPakeAlg, res);
         goto CLEAN_UP;
     }
     FreeAndCleanKey(&params->eskSelf);
@@ -411,12 +413,12 @@ static int32_t GenerateSharedSecret(PakeBaseParams *params)
     }
     res = ComputeSid(params, &sid);
     if (res != HC_SUCCESS) {
-        LOGE("Compute sid failed, res: %x.", res);
+        LOGE("Compute sid failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     res = ComputeSharedSecret(params, &sid, &tmpSharedSecret);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeSharedSecret failed, res: %x.", res);
+        LOGE("ComputeSharedSecret failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     goto OUT;
@@ -468,7 +470,7 @@ static int32_t CombineProofMsg(const PakeBaseParams *params, Uint8Buff *proofMsg
         res = CombineEpk(&params->epkPeer, &params->epkSelf, params->innerKeyLen, proofMsg, &usedLen);
     }
     if (res != HC_SUCCESS) {
-        LOGE("CombineEpk failed, res: %x.", res);
+        LOGE("CombineEpk failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     if (memcpy_s(proofMsg->val + usedLen, proofMsg->length - usedLen,
@@ -509,12 +511,12 @@ static int32_t GenerateProof(PakeBaseParams *params)
     }
     res = CombineProofMsg(params, &proofMsg, false);
     if (res != HC_SUCCESS) {
-        LOGE("CombineProofMsg failed, res: %x.", res);
+        LOGE("CombineProofMsg failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     res = params->loader->sha256(&proofMsg, &params->kcfData);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for proofMsg failed, res: %x.", res);
+        LOGE("Sha256 for proofMsg failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     goto OUT;
@@ -539,7 +541,7 @@ static int32_t VerifyProof(PakeBaseParams *params)
     }
     res = CombineProofMsg(params, &proofMsg, true);
     if (res != HC_SUCCESS) {
-        LOGE("CombineProofMsg failed, res: %x.", res);
+        LOGE("CombineProofMsg failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
@@ -547,7 +549,7 @@ static int32_t VerifyProof(PakeBaseParams *params)
     Uint8Buff tmpKcfData = { tmpKcfDataVal, SHA256_LEN };
     res = params->loader->sha256(&proofMsg, &tmpKcfData);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for proofMsg failed, res: %x.", res);
+        LOGE("Sha256 for proofMsg failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     if (memcmp(tmpKcfData.val, params->kcfDataPeer.val, tmpKcfData.length) != EOK) {
@@ -573,7 +575,7 @@ static int32_t GenerateSessionKey(PakeBaseParams *params)
     };
     int res = params->loader->computeHkdf(&keyParams, &params->salt, &keyInfo, &params->sessionKey);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeHkdf for sessionKey failed, res: %x.", res);
+        LOGE("ComputeHkdf for sessionKey failed, res: %" LOG_PUB "x.", res);
         CleanPakeSensitiveKeys(params);
     }
     FreeAndCleanKey(&params->base);
@@ -589,17 +591,17 @@ int32_t ClientConfirmPakeV2Protocol(PakeBaseParams *params)
     }
     int32_t res = GeneratePakeParams(params);
     if (res != HC_SUCCESS) {
-        LOGE("GeneratePakeParams failed, res: %x.", res);
+        LOGE("GeneratePakeParams failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     res = GenerateSharedSecret(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateSharedSecret failed, res: %x.", res);
+        LOGE("GenerateSharedSecret failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     res = GenerateProof(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateProof failed, res: %x.", res);
+        LOGE("GenerateProof failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     return res;
@@ -616,13 +618,13 @@ int32_t ClientVerifyConfirmPakeV2Protocol(PakeBaseParams *params)
     }
     int32_t res = VerifyProof(params);
     if (res != HC_SUCCESS) {
-        LOGE("VerifyProof failed, res: %x.", res);
+        LOGE("VerifyProof failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
     res = GenerateSessionKey(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateSessionKey failed, res: %x.", res);
+        LOGE("GenerateSessionKey failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     return res;
@@ -639,7 +641,7 @@ int32_t ServerResponsePakeV2Protocol(PakeBaseParams *params)
     }
     int32_t res = GeneratePakeParams(params);
     if (res != HC_SUCCESS) {
-        LOGE("GeneratePakeParams failed, res: %x.", res);
+        LOGE("GeneratePakeParams failed, res: %" LOG_PUB "x.", res);
         CleanPakeSensitiveKeys(params);
     }
     return res;
@@ -653,22 +655,22 @@ int32_t ServerConfirmPakeV2Protocol(PakeBaseParams *params)
     }
     int32_t res = GenerateSharedSecret(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateSharedSecret failed, res: %x.", res);
+        LOGE("GenerateSharedSecret failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     res = VerifyProof(params);
     if (res != HC_SUCCESS) {
-        LOGE("VerifyProof failed, res: %x.", res);
+        LOGE("VerifyProof failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     res = GenerateProof(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateProof failed, res: %x.", res);
+        LOGE("GenerateProof failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     res = GenerateSessionKey(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateSessionKey failed, res: %x.", res);
+        LOGE("GenerateSessionKey failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     return res;

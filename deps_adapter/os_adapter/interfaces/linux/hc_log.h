@@ -32,8 +32,8 @@ typedef enum {
         if (HcStrlen((str)) < DESENSITIZATION_LEN) { \
             LOGW("[" tag "]: sensitive str is too short."); \
         } else { \
-            LOGI("[" tag "]: %c%c%c%c****", (str)[DEV_AUTH_ZERO], (str)[DEV_AUTH_ONE], \
-                (str)[DEV_AUTH_TWO], (str)[DEV_AUTH_THREE]); \
+            LOGI("[" tag "]: %" LOG_PUB "c%" LOG_PUB "c%" LOG_PUB "c%" LOG_PUB "c****", (str)[DEV_AUTH_ZERO], \
+                (str)[DEV_AUTH_ONE], (str)[DEV_AUTH_TWO], (str)[DEV_AUTH_THREE]); \
         } \
     } while (0)
 
@@ -57,10 +57,30 @@ typedef enum {
 #define LOG_TAG "[DEVAUTH]"
 #endif
 
-#define LOGD(fmt, ...) (DevAuthLogPrint(DEV_AUTH_LOG_LEVEL_DEBUG, __FUNCTION__, fmt, ##__VA_ARGS__))
-#define LOGI(fmt, ...) (DevAuthLogPrint(DEV_AUTH_LOG_LEVEL_INFO, __FUNCTION__, fmt, ##__VA_ARGS__))
-#define LOGW(fmt, ...) (DevAuthLogPrint(DEV_AUTH_LOG_LEVEL_WARN, __FUNCTION__, fmt, ##__VA_ARGS__))
-#define LOGE(fmt, ...) (DevAuthLogPrint(DEV_AUTH_LOG_LEVEL_ERROR, __FUNCTION__, fmt, ##__VA_ARGS__))
+#ifdef DEV_AUTH_DEBUG_PRINTF
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define LOG_PUB ""
+
+#define LOGD(fmt, ...) printf("[D][DEVAUTH]: %s" fmt "\n", __FUNCTION__, ##__VA_ARGS__)
+#define LOGI(fmt, ...) printf("[I][DEVAUTH]: %s" fmt "\n", __FUNCTION__, ##__VA_ARGS__)
+#define LOGW(fmt, ...) printf("[W][DEVAUTH]: %s" fmt "\n", __FUNCTION__, ##__VA_ARGS__)
+#define LOGE(fmt, ...) printf("[E][DEVAUTH]: %s" fmt "\n", __FUNCTION__, ##__VA_ARGS__)
+
+#else
+
+#include "hilog/log.h"
+
+#define LOG_PUB "{public}"
+
+#define LOGD(fmt, ...) HILOG_DEBUG(LOG_CORE, "%" LOG_PUB "s: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOGI(fmt, ...) HILOG_INFO(LOG_CORE, "%" LOG_PUB "s: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOGW(fmt, ...) HILOG_WARN(LOG_CORE, "%" LOG_PUB "s: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOGE(fmt, ...) HILOG_ERROR(LOG_CORE, "%" LOG_PUB "s: " fmt, __FUNCTION__, ##__VA_ARGS__)
+
+#endif
 
 #define SET_LOG_MODE(mode) SetLogMode(mode)
 #define SET_TRACE_ID(traceId) SetTraceId(traceId)
@@ -82,6 +102,8 @@ void SetTraceId(int64_t traceId);
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+
+#define LOG_PUB ""
 
 #define LOGD(fmt, ...) printf("[D][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
 #define LOGI(fmt, ...) printf("[I][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)

@@ -33,8 +33,9 @@ static int32_t UnregisterLocalIdentityLite(const TokenManagerParams *params)
         LOGE("Failed to generate authtoken alias!");
         return res;
     }
-    LOGI("AuthCode alias(HEX): %x%x%x%x****.", isoKeyAliasVal[DEV_AUTH_ZERO], isoKeyAliasVal[DEV_AUTH_ONE],
-        isoKeyAliasVal[DEV_AUTH_TWO], isoKeyAliasVal[DEV_AUTH_THREE]);
+    LOGI("AuthCode alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.",
+        isoKeyAliasVal[DEV_AUTH_ZERO], isoKeyAliasVal[DEV_AUTH_ONE], isoKeyAliasVal[DEV_AUTH_TWO],
+        isoKeyAliasVal[DEV_AUTH_THREE]);
 
     const AlgLoader *loader = GetLoaderInstance();
     res = loader->deleteKey(&isoKeyAliasBuff, false, params->osAccountId);
@@ -61,8 +62,9 @@ static int32_t DeletePeerAuthInfoLite(const TokenManagerParams *params)
         LOGE("Failed to generate authtoken alias!");
         return res;
     }
-    LOGI("AuthCode alias(HEX): %x%x%x%x****.", isoKeyAliasVal[DEV_AUTH_ZERO], isoKeyAliasVal[DEV_AUTH_ONE],
-        isoKeyAliasVal[DEV_AUTH_TWO], isoKeyAliasVal[DEV_AUTH_THREE]);
+    LOGI("AuthCode alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.",
+        isoKeyAliasVal[DEV_AUTH_ZERO], isoKeyAliasVal[DEV_AUTH_ONE], isoKeyAliasVal[DEV_AUTH_TWO],
+        isoKeyAliasVal[DEV_AUTH_THREE]);
 
     const AlgLoader *loader = GetLoaderInstance();
     res = loader->deleteKey(&isoKeyAliasBuff, false, params->osAccountId);
@@ -85,8 +87,8 @@ static int32_t DeletePeerAuthInfoLite(const TokenManagerParams *params)
         LOGE("Failed to convert peer key alias to lower case!");
         return res;
     }
-    LOGI("Upgrade auth code alias(HEX): %x%x%x%x****.", isoUpgradeKeyAliasVal[DEV_AUTH_ZERO],
-        isoUpgradeKeyAliasVal[DEV_AUTH_ONE], isoUpgradeKeyAliasVal[DEV_AUTH_TWO],
+    LOGI("Upgrade auth code alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.",
+        isoUpgradeKeyAliasVal[DEV_AUTH_ZERO], isoUpgradeKeyAliasVal[DEV_AUTH_ONE], isoUpgradeKeyAliasVal[DEV_AUTH_TWO],
         isoUpgradeKeyAliasVal[DEV_AUTH_THREE]);
     res = loader->deleteKey(&isoUpgradeKeyAliasBuff, true, params->osAccountId);
     if (res != HC_SUCCESS) {

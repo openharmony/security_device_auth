@@ -63,14 +63,14 @@ static int CreateNextTask(IsoClientTask *realTask, const CJson *in, CJson *out, 
         case AUTHENTICATE:
             res = GenEncResult(&(realTask->params), ISO_RESULT_CONFIRM_CMD, out, RESULT_AAD, true);
             if (res != HC_SUCCESS) {
-                LOGE("GenEncResult failed, res:%d", res);
+                LOGE("GenEncResult failed, res:%" LOG_PUB "d", res);
                 return res;
             }
             LOGI("Authenticate task end successfully.");
             *status = FINISH;
             break;
         default:
-            LOGE("Unsupported opCode: %d.", realTask->params.opCode);
+            LOGE("Unsupported opCode: %" LOG_PUB "d.", realTask->params.opCode);
             res = HC_ERR_NOT_SUPPORT;
     }
     return res;
@@ -85,7 +85,7 @@ static int Process(struct SubTaskBaseT *task, const CJson *in, CJson *out, int32
     }
     int res = realTask->curTask->process(realTask->curTask, &(realTask->params), in, out, status);
     if (res != HC_SUCCESS) {
-        LOGE("CurTask process failed, res: %x.", res);
+        LOGE("CurTask process failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     if (*status != FINISH) {
@@ -108,7 +108,7 @@ SubTaskBase *CreateIsoClientTask(const CJson *in)
 
     int res = InitIsoParams(&(task->params), in);
     if (res != HC_SUCCESS) {
-        LOGE("InitIsoParams failed, res: %x.", res);
+        LOGE("InitIsoParams failed, res: %" LOG_PUB "x.", res);
         DestroyIsoClientTask((struct SubTaskBaseT *)task);
         return NULL;
     }

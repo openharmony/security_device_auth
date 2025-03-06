@@ -191,7 +191,7 @@ bool IsLocalDevice(const char *udid)
     char localUdid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)localUdid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return true;
     }
     return (strcmp(localUdid, udid) == 0);
@@ -472,7 +472,7 @@ int32_t CheckUserTypeIfExist(const CJson *jsonParams)
     int32_t userType = DEVICE_TYPE_ACCESSORY;
     (void)GetIntFromJson(jsonParams, FIELD_USER_TYPE, &userType);
     if (!IsUserTypeValid(userType)) {
-        LOGE("The input userType is invalid! [UserType]: %d", userType);
+        LOGE("The input userType is invalid! [UserType]: %" LOG_PUB "d", userType);
         return HC_ERR_INVALID_PARAMS;
     }
     return HC_SUCCESS;
@@ -483,7 +483,7 @@ int32_t CheckGroupVisibilityIfExist(const CJson *jsonParams)
     int32_t groupVisibility = GROUP_VISIBILITY_PUBLIC;
     (void)GetIntFromJson(jsonParams, FIELD_GROUP_VISIBILITY, &groupVisibility);
     if (!IsGroupVisibilityValid(groupVisibility)) {
-        LOGE("The input groupVisibility is invalid! [GroupVisibility]: %d", groupVisibility);
+        LOGE("The input groupVisibility is invalid! [GroupVisibility]: %" LOG_PUB "d", groupVisibility);
         return HC_ERR_INVALID_PARAMS;
     }
     return HC_SUCCESS;
@@ -494,7 +494,7 @@ int32_t CheckExpireTimeIfExist(const CJson *jsonParams)
     int32_t expireTime = DEFAULT_EXPIRE_TIME;
     (void)GetIntFromJson(jsonParams, FIELD_EXPIRE_TIME, &expireTime);
     if (!IsExpireTimeValid(expireTime)) {
-        LOGE("Invalid group expire time! [ExpireTime]: %d", expireTime);
+        LOGE("Invalid group expire time! [ExpireTime]: %" LOG_PUB "d", expireTime);
         return HC_ERR_INVALID_PARAMS;
     }
     return HC_SUCCESS;
@@ -594,7 +594,7 @@ int32_t AddSelfUdidToParams(TrustedDeviceEntry *devParams)
     char udid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return HC_ERR_DB;
     }
     if (!StringSetPointer(&devParams->udid, udid)) {
@@ -626,7 +626,7 @@ int32_t AddAuthIdToParamsOrDefault(const CJson *jsonParams, TrustedDeviceEntry *
         LOGD("No authId is found. The default value is udid!");
         int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to get local udid! res: %d", res);
+            LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
             return HC_ERR_DB;
         }
         authId = udid;
@@ -739,7 +739,7 @@ int32_t AssertPeerDeviceNotSelf(const char *peerUdid)
     char udid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return HC_ERR_DB;
     }
     if (strcmp(peerUdid, udid) == 0) {
@@ -756,7 +756,7 @@ int32_t CheckGroupExist(int32_t osAccountId, const char *groupId)
         return HC_ERR_NULL_PTR;
     }
     if (!IsGroupExistByGroupId(osAccountId, groupId)) {
-        LOGE("The group does not exist! [GroupId]: %s", groupId);
+        LOGE("The group does not exist! [GroupId]: %" LOG_PUB "s", groupId);
         return HC_ERR_GROUP_NOT_EXIST;
     }
     return HC_SUCCESS;
@@ -855,7 +855,7 @@ int32_t DelDeviceFromDb(int32_t osAccountId, const char *groupId, const TrustedD
     queryDeviceParams.udid = udid;
     int32_t result = DelTrustedDevice(osAccountId, &queryDeviceParams);
     if (result != HC_SUCCESS) {
-        LOGW("delete device failed, result:%d", result);
+        LOGW("delete device failed, result:%" LOG_PUB "d", result);
         return result;
     }
     return SaveOsAccountDb(osAccountId);
@@ -968,7 +968,7 @@ int32_t ProcessKeyPair(int32_t osAccountId, int action, const CJson *jsonParams,
         LOGD("No authId is found. The default value is udid!");
         int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to get local udid! res: %d", res);
+            LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
             return HC_ERR_DB;
         }
         authId = udid;
@@ -1077,7 +1077,7 @@ int32_t GetAppIdFromJson(const CJson *jsonParams, const char **appId)
 int32_t AssertGroupTypeMatch(int32_t inputType, int32_t targetType)
 {
     if (inputType != targetType) {
-        LOGE("Invalid group type! [InputType]: %d, [TargetType]: %d", inputType, targetType);
+        LOGE("Invalid group type! [InputType]: %" LOG_PUB "d, [TargetType]: %" LOG_PUB "d", inputType, targetType);
         return HC_ERR_INVALID_PARAMS;
     }
     return HC_SUCCESS;
@@ -1172,7 +1172,7 @@ int32_t AddDevInfoToContextByDb(const char *groupId, CJson *context)
     char udid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return HC_ERR_DB;
     }
     TrustedDeviceEntry *devAuthParams = CreateDeviceEntry();
@@ -1236,7 +1236,7 @@ int32_t AddDevInfoToContextByInput(CJson *context)
         LOGD("No authId is found. The default value is udid!");
         int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to get local udid! res: %d", res);
+            LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
             return HC_ERR_DB;
         }
         authId = udid;

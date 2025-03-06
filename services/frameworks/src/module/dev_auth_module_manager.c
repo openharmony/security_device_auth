@@ -39,7 +39,7 @@ static AuthModuleBase *GetModule(int moduleType)
             return *module;
         }
     }
-    LOGE("There is no matched module, moduleType: %d", moduleType);
+    LOGE("There is no matched module, moduleType: %" LOG_PUB "d", moduleType);
     return NULL;
 }
 
@@ -47,7 +47,7 @@ static bool IsParamsForDasTokenManagerValid(const char *pkgName, const char *ser
     int userType, int moduleType)
 {
     if (moduleType != DAS_MODULE) {
-        LOGE("Unsupported method in the module, moduleType: %d", moduleType);
+        LOGE("Unsupported method in the module, moduleType: %" LOG_PUB "d", moduleType);
         return false;
     }
     if (pkgName == NULL || serviceType == NULL || authId == NULL || authId->val == NULL) {
@@ -60,7 +60,7 @@ static bool IsParamsForDasTokenManagerValid(const char *pkgName, const char *ser
         return false;
     }
     if (userType < DEVICE_TYPE_ACCESSORY || userType > DEVICE_TYPE_PROXY) {
-        LOGE("Invalid userType, userType: %d", userType);
+        LOGE("Invalid userType, userType: %" LOG_PUB "d", userType);
         return false;
     }
     return true;
@@ -88,7 +88,7 @@ int32_t RegisterLocalIdentity(const AuthModuleParams *moduleParams, int moduleTy
     };
     int32_t res = dasModule->registerLocalIdentity(&params);
     if (res != HC_SUCCESS) {
-        LOGE("Register local identity failed, res: %x", res);
+        LOGE("Register local identity failed, res: %" LOG_PUB "x", res);
         return res;
     }
     return HC_SUCCESS;
@@ -116,7 +116,7 @@ int32_t UnregisterLocalIdentity(const AuthModuleParams *moduleParams, int module
     };
     int32_t res = dasModule->unregisterLocalIdentity(&params);
     if (res != HC_SUCCESS) {
-        LOGE("Unregister local identity failed, res: %x", res);
+        LOGE("Unregister local identity failed, res: %" LOG_PUB "x", res);
         return res;
     }
     return HC_SUCCESS;
@@ -144,7 +144,7 @@ int32_t DeletePeerAuthInfo(const AuthModuleParams *moduleParams, int moduleType)
     };
     int32_t res = dasModule->deletePeerAuthInfo(&params);
     if (res != HC_SUCCESS) {
-        LOGE("Delete peer authInfo failed, res: %x", res);
+        LOGE("Delete peer authInfo failed, res: %" LOG_PUB "x", res);
         return res;
     }
     return HC_SUCCESS;
@@ -173,7 +173,7 @@ int32_t GetPublicKey(int moduleType, AuthModuleParams *moduleParams, Uint8Buff *
     };
     int32_t res = dasModule->getPublicKey(&params, returnPk);
     if (res != HC_SUCCESS) {
-        LOGE("Get public key failed, res: %d", res);
+        LOGE("Get public key failed, res: %" LOG_PUB "d", res);
         return res;
     }
     return HC_SUCCESS;
@@ -199,7 +199,7 @@ int32_t CreateTask(int32_t *taskId, const CJson *in, CJson *out, int moduleType)
         LOGE("Params is null.");
         return HC_ERR_NULL_PTR;
     }
-    LOGI("Start to create task, moduleType: %d", moduleType);
+    LOGI("Start to create task, moduleType: %" LOG_PUB "d", moduleType);
     AuthModuleBase *module = GetModule(moduleType);
     if (module == NULL) {
         LOGE("Failed to get module!");
@@ -207,10 +207,11 @@ int32_t CreateTask(int32_t *taskId, const CJson *in, CJson *out, int moduleType)
     }
     int32_t res = module->createTask(taskId, in, out);
     if (res != HC_SUCCESS) {
-        LOGE("Create task failed, taskId: %d, moduleType: %d, res: %d", *taskId, moduleType, res);
+        LOGE("Create task failed, taskId: %" LOG_PUB "d, moduleType: %" LOG_PUB "d, res: %" LOG_PUB "d", *taskId,
+            moduleType, res);
         return res;
     }
-    LOGI("Create task success, taskId: %d, moduleType: %d", *taskId, moduleType);
+    LOGI("Create task success, taskId: %" LOG_PUB "d, moduleType: %" LOG_PUB "d", *taskId, moduleType);
     return HC_SUCCESS;
 }
 
@@ -227,15 +228,16 @@ int32_t ProcessTask(int taskId, const CJson *in, CJson *out, int32_t *status, in
     }
     int32_t res = module->processTask(taskId, in, out, status);
     if (res != HC_SUCCESS) {
-        LOGE("Process task failed, taskId: %d, moduleType: %d, res: %d.", taskId, moduleType, res);
+        LOGE("Process task failed, taskId: %" LOG_PUB "d, moduleType: %" LOG_PUB "d, res: %" LOG_PUB "d.",
+            taskId, moduleType, res);
         return res;
     }
     res = AddSingleVersionToJson(out, &g_version);
     if (res != HC_SUCCESS) {
-        LOGE("AddSingleVersionToJson failed, res: %x.", res);
+        LOGE("AddSingleVersionToJson failed, res: %" LOG_PUB "x.", res);
         return res;
     }
-    LOGI("Process task success, taskId: %d, moduleType: %d.", taskId, moduleType);
+    LOGI("Process task success, taskId: %" LOG_PUB "d, moduleType: %" LOG_PUB "d.", taskId, moduleType);
     return res;
 }
 
@@ -257,7 +259,7 @@ int32_t InitModules(void)
     if (dasModule != NULL) {
         res = dasModule->init();
         if (res != HC_SUCCESS) {
-            LOGE("[ModuleMgr]: Init das module fail. [Res]: %d", res);
+            LOGE("[ModuleMgr]: Init das module fail. [Res]: %" LOG_PUB "d", res);
             DestroyModules();
             return res;
         }
@@ -272,7 +274,7 @@ int32_t InitModules(void)
     if (accountModule != NULL) {
         res = accountModule->init();
         if (res != HC_SUCCESS) {
-            LOGE("[ModuleMgr]: Init account module fail. [Res]: %d", res);
+            LOGE("[ModuleMgr]: Init account module fail. [Res]: %" LOG_PUB "d", res);
             DestroyModules();
             return res;
         }
@@ -307,7 +309,7 @@ int32_t AddAuthModulePlugin(const AuthModuleBase *plugin)
     }
     int32_t res = plugin->init();
     if (res != HC_SUCCESS) {
-        LOGE("[ModuleMgr]: Init module plugin fail. [Res]: %d", res);
+        LOGE("[ModuleMgr]: Init module plugin fail. [Res]: %" LOG_PUB "d", res);
         return HC_ERR_INIT_FAILED;
     }
     bool isNeedReplace = false;
@@ -325,10 +327,10 @@ int32_t AddAuthModulePlugin(const AuthModuleBase *plugin)
         return HC_ERR_ALLOC_MEMORY;
     }
     if (isNeedReplace) {
-        LOGI("[ModuleMgr]: Replace module plugin. [Name]: %d", plugin->moduleType);
+        LOGI("[ModuleMgr]: Replace module plugin. [Name]: %" LOG_PUB "d", plugin->moduleType);
         HC_VECTOR_POPELEMENT(&g_authModuleVec, pluginPtr, index);
     } else {
-        LOGI("[ModuleMgr]: Add new module plugin. [Name]: %d", plugin->moduleType);
+        LOGI("[ModuleMgr]: Add new module plugin. [Name]: %" LOG_PUB "d", plugin->moduleType);
     }
     return HC_SUCCESS;
 }
@@ -339,7 +341,7 @@ void DelAuthModulePlugin(int32_t moduleType)
     AuthModuleBase **pluginPtr;
     FOR_EACH_HC_VECTOR(g_authModuleVec, index, pluginPtr) {
         if ((*pluginPtr)->moduleType == moduleType) {
-            LOGI("[ModuleMgr]: Delete module plugin success. [Name]: %d", moduleType);
+            LOGI("[ModuleMgr]: Delete module plugin success. [Name]: %" LOG_PUB "d", moduleType);
             (*pluginPtr)->destroy();
             HC_VECTOR_POPELEMENT(&g_authModuleVec, pluginPtr, index);
             break;

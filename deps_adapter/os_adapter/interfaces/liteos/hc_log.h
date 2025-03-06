@@ -29,6 +29,8 @@ typedef enum {
     TRACE_MODE = 1,
 } LogMode;
 
+#define LOG_PUB ""
+
 #define SET_LOG_MODE(mode)
 #define SET_TRACE_ID(traceId)
 
@@ -43,8 +45,8 @@ typedef enum {
         if (HcStrlen((str)) < DESENSITIZATION_LEN) { \
             LOGW("[" tag "]: sensitive str is too short."); \
         } else { \
-            LOGI("[" tag "]: %c%c%c%c****", (str)[DEV_AUTH_ZERO], (str)[DEV_AUTH_ONE], \
-                (str)[DEV_AUTH_TWO], (str)[DEV_AUTH_THREE]); \
+            LOGI("[" tag "]: %" LOG_PUB "c%" LOG_PUB "c%" LOG_PUB "c%" LOG_PUB "c****", (str)[DEV_AUTH_ZERO], \
+                (str)[DEV_AUTH_ONE], (str)[DEV_AUTH_TWO], (str)[DEV_AUTH_THREE]); \
         } \
     } while (0)
 

@@ -252,7 +252,7 @@ static int32_t LoadPseudonymDataFromFile(int32_t osAccountId, PseudonymInfoVec *
     FileHandle file = { 0 };
     int32_t ret = OpenPseudonymFile(osAccountId, &file, MODE_FILE_READ);
     if (ret != HC_SUCCESS) {
-        LOGE("Open pseudonym data file failed, ret:%d", ret);
+        LOGE("Open pseudonym data file failed, ret:%" LOG_PUB "d", ret);
         return ret;
     }
     int32_t fileSize = HcFileSize(file);
@@ -409,12 +409,12 @@ static void LoadOsAccountPseudonymDb(int32_t osAccountId)
         LOGE("Failed to push osAccountInfo to database!");
         ClearPseudonymInfoVec(&info.pseudonymInfoVec);
     }
-    LOGI("Load pseudonym os account db successfully! [Id]: %d", osAccountId);
+    LOGI("Load pseudonym os account db successfully! [Id]: %" LOG_PUB "d", osAccountId);
 }
 
 static void OnOsAccountUnlocked(int32_t osAccountId)
 {
-    LOGI("Os account is unlocked, osAccountId: %d", osAccountId);
+    LOGI("Os account is unlocked, osAccountId: %" LOG_PUB "d", osAccountId);
     (void)LockHcMutex(g_mutex);
     LoadOsAccountPseudonymDb(osAccountId);
     UnlockHcMutex(g_mutex);
@@ -436,7 +436,7 @@ static void RemoveOsAccountPseudonymInfo(int32_t osAccountId)
 
 static void OnOsAccountRemoved(int32_t osAccountId)
 {
-    LOGI("Os account is removed, osAccountId: %d", osAccountId);
+    LOGI("Os account is removed, osAccountId: %" LOG_PUB "d", osAccountId);
     (void)LockHcMutex(g_mutex);
     RemoveOsAccountPseudonymInfo(osAccountId);
     UnlockHcMutex(g_mutex);
@@ -459,7 +459,7 @@ static void LoadDataIfNotLoaded(int32_t osAccountId)
     if (IsOsAccountDataLoaded(osAccountId)) {
         return;
     }
-    LOGI("Data has not been loaded, load it, osAccountId: %d", osAccountId);
+    LOGI("Data has not been loaded, load it, osAccountId: %" LOG_PUB "d", osAccountId);
     LoadOsAccountPseudonymDb(osAccountId);
 }
 
@@ -475,7 +475,7 @@ static OsAccountPseudonymInfo *GetPseudonymInfoByOsAccountId(int32_t osAccountId
             return info;
         }
     }
-    LOGI("Create a new os account database cache! [Id]: %d", osAccountId);
+    LOGI("Create a new os account database cache! [Id]: %" LOG_PUB "d", osAccountId);
     OsAccountPseudonymInfo newInfo;
     newInfo.osAccountId = osAccountId;
     newInfo.pseudonymInfoVec = CreatePseudonymInfoVec();
@@ -503,7 +503,7 @@ static int32_t SaveOsAccountPseudonymDb(int32_t osAccountId)
         return ret;
     }
     UnlockHcMutex(g_mutex);
-    LOGI("Save an os account database successfully! [Id]: %d", osAccountId);
+    LOGI("Save an os account database successfully! [Id]: %" LOG_PUB "d", osAccountId);
     return HC_SUCCESS;
 }
 
@@ -542,7 +542,7 @@ static int32_t DeletePseudonymInner(int32_t osAccountId, const char *dataTodelet
         LOGE("No pseudonym info deleted");
         return HC_ERROR;
     }
-    LOGI("Number of pseudonym info deleted: %d", count);
+    LOGI("Number of pseudonym info deleted: %" LOG_PUB "d", count);
     return HC_SUCCESS;
 }
 
@@ -746,13 +746,13 @@ static int32_t DeleteAllPseudonymId(int32_t osAccountId, const char *deviceId)
     PseudonymInfoVec deletePseudonymIdVec = CreatePseudonymInfoVec();
     int32_t ret = DeletePseudonymInner(osAccountId, deviceId, &deletePseudonymIdVec, FIELD_DEVICE_ID);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to delete pseudonym inner, account id is: %d", osAccountId);
+        LOGE("Failed to delete pseudonym inner, account id is: %" LOG_PUB "d", osAccountId);
         DestroyPseudonymInfoVec(&deletePseudonymIdVec);
         return ret;
     }
     ret = SaveOsAccountPseudonymDb(osAccountId);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to save pseudonym data to db, account id is: %d", osAccountId);
+        LOGE("Failed to save pseudonym data to db, account id is: %" LOG_PUB "d", osAccountId);
         ClearPseudonymInfoVec(&deletePseudonymIdVec);
         return ret;
     }
@@ -770,13 +770,13 @@ static int32_t DeletePseudonymId(int32_t osAccountId, const char *indexKey)
     PseudonymInfoVec deletePseudonymIdVec = CreatePseudonymInfoVec();
     int32_t ret = DeletePseudonymInner(osAccountId, indexKey, &deletePseudonymIdVec, FIELD_INDEX_KEY);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to delete pseudonym inner, account id is: %d", osAccountId);
+        LOGE("Failed to delete pseudonym inner, account id is: %" LOG_PUB "d", osAccountId);
         DestroyPseudonymInfoVec(&deletePseudonymIdVec);
         return ret;
     }
     ret = SaveOsAccountPseudonymDb(osAccountId);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to save pseudonym data to db, account id is: %d", osAccountId);
+        LOGE("Failed to save pseudonym data to db, account id is: %" LOG_PUB "d", osAccountId);
         ClearPseudonymInfoVec(&deletePseudonymIdVec);
         return ret;
     }

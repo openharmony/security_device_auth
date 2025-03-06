@@ -228,8 +228,8 @@ static int32_t ComputeAndSaveDirectAuthPsk(int32_t osAccountId, const char *self
         LOGE("Failed to generate self key alias!");
         return ret;
     }
-    LOGI("selfKeyAlias: %x %x %x %x****.", selfKeyAlias.val[DEV_AUTH_ZERO], selfKeyAlias.val[DEV_AUTH_ONE],
-        selfKeyAlias.val[DEV_AUTH_TWO], selfKeyAlias.val[DEV_AUTH_THREE]);
+    LOGI("selfKeyAlias: %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x****.", selfKeyAlias.val[DEV_AUTH_ZERO],
+        selfKeyAlias.val[DEV_AUTH_ONE], selfKeyAlias.val[DEV_AUTH_TWO], selfKeyAlias.val[DEV_AUTH_THREE]);
 
     Uint8Buff peerServiceTypeBuff = { (uint8_t *)peerServiceType, HcStrlen(peerServiceType) };
     KeyAliasType keyTypePeer = KEY_ALIAS_P2P_AUTH;
@@ -241,8 +241,8 @@ static int32_t ComputeAndSaveDirectAuthPsk(int32_t osAccountId, const char *self
         LOGE("Failed to generate peer key alias!");
         return ret;
     }
-    LOGI("peerKeyAlias: %x %x %x %x****.", peerKeyAlias.val[DEV_AUTH_ZERO], peerKeyAlias.val[DEV_AUTH_ONE],
-        peerKeyAlias.val[DEV_AUTH_TWO], peerKeyAlias.val[DEV_AUTH_THREE]);
+    LOGI("peerKeyAlias: %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x****.", peerKeyAlias.val[DEV_AUTH_ZERO],
+        peerKeyAlias.val[DEV_AUTH_ONE], peerKeyAlias.val[DEV_AUTH_TWO], peerKeyAlias.val[DEV_AUTH_THREE]);
 
     ret = GetLoaderInstance()->checkKeyExist(&selfKeyAlias, false, osAccountId);
     if (ret != HC_SUCCESS) {
@@ -291,8 +291,8 @@ static int32_t GetDirectAuthPskAliasCreateIfNeeded(const CJson *in, Uint8Buff *p
         LOGE("Failed to generate psk key alias!");
         return ret;
     }
-    LOGI("psk alias: %x %x %x %x****.", pskKeyAlias->val[DEV_AUTH_ZERO], pskKeyAlias->val[DEV_AUTH_ONE],
-        pskKeyAlias->val[DEV_AUTH_TWO], pskKeyAlias->val[DEV_AUTH_THREE]);
+    LOGI("psk alias: %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x****.", pskKeyAlias->val[DEV_AUTH_ZERO],
+        pskKeyAlias->val[DEV_AUTH_ONE], pskKeyAlias->val[DEV_AUTH_TWO], pskKeyAlias->val[DEV_AUTH_THREE]);
     ret = GetLoaderInstance()->checkKeyExist(pskKeyAlias, false, osAccountId);
     if (ret != HC_SUCCESS) {
         ret = ComputeAndSaveDirectAuthPsk(osAccountId, selfAuthId, peerAuthId, peerServieType, pskKeyAlias);

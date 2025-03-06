@@ -674,7 +674,7 @@ static int32_t GetSaltMsg(Uint8Buff *saltMsg)
     Uint8Buff random = { randomVal, DEV_SESSION_SALT_LEN };
     int32_t res = GetLoaderInstance()->generateRandom(&random);
     if (res != HC_SUCCESS) {
-        LOGE("generate random failed, res: %d", res);
+        LOGE("generate random failed, res: %" LOG_PUB "d", res);
         return res;
     }
     clock_t times = 0;

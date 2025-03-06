@@ -118,7 +118,7 @@ static bool IsPeerErrMessage(const CJson *in)
     if (GetIntFromJson(in, FIELD_ERROR_CODE, &res) != CLIB_SUCCESS) {
         LOGE("Get peer error code failed.");
     }
-    LOGE("Receive error message from peer, errCode: %x.", res);
+    LOGE("Receive error message from peer, errCode: %" LOG_PUB "x.", res);
     return true;
 }
 
@@ -138,7 +138,7 @@ static int32_t ProcessTaskT(AccountTask *task, const CJson *in, CJson *out, int3
     }
     int32_t res = task->subTask->process(task->subTask, in, out, status);
     if (res != HC_SUCCESS) {
-        LOGE("Process subTask failed, res: %x.", res);
+        LOGE("Process subTask failed, res: %" LOG_PUB "x.", res);
         int32_t operationCode = MapSubTaskTypeToOpCode(task->subTask->getTaskType());
         AccountSendErrMsgToOut(out, operationCode, res);
     }
@@ -204,13 +204,13 @@ AccountTask *CreateAccountTaskT(int32_t *taskId, const CJson *in, CJson *out)
     Uint8Buff taskIdBuf = { (uint8_t *)taskId, sizeof(int32_t) };
     res = GetLoaderInstance()->generateRandom(&taskIdBuf);
     if (res != HC_SUCCESS) {
-        LOGE("Generate taskId failed, res: %d.", res);
+        LOGE("Generate taskId failed, res: %" LOG_PUB "d.", res);
         goto ERR;
     }
     task->taskId = *taskId;
     res = NegotiateAndCreateSubTask(task, in, out);
     if (res != HC_SUCCESS) {
-        LOGE("NegotiateAndCreateSubTask failed, res: %d.", res);
+        LOGE("NegotiateAndCreateSubTask failed, res: %" LOG_PUB "d.", res);
         goto ERR;
     }
     return task;

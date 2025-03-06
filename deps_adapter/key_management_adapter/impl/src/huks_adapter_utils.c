@@ -84,7 +84,7 @@ int32_t BigNumExpMod(const Uint8Buff *base, const Uint8Buff *exp, const char *bi
     CHECK_PTR_RETURN_HAL_ERROR_CODE(bigNumHex, "bigNumHex");
     uint32_t primeLen = HcStrlen(bigNumHex) / BYTE_TO_HEX_OPER_LENGTH;
     if ((primeLen != BIG_PRIME_LEN_384) && (primeLen != BIG_PRIME_LEN_256)) {
-        LOGE("Not support big number len %d", outNum->length);
+        LOGE("Not support big number len %" LOG_PUB "d", outNum->length);
         return HAL_FAILED;
     }
     CHECK_LEN_EQUAL_RETURN(outNum->length, primeLen, "outNum->length");
@@ -108,7 +108,7 @@ int32_t BigNumExpMod(const Uint8Buff *base, const Uint8Buff *exp, const char *bi
 
     res = HksBnExpMod(&outNumBlob, &baseBlob, &expBlob, &bigNumBlob);
     if (res != HKS_SUCCESS) {
-        LOGE("Huks calculate big number exp mod failed, res = %d", res);
+        LOGE("Huks calculate big number exp mod failed, res = %" LOG_PUB "d", res);
         HcFree(bigNumBlob.data);
         return HAL_FAILED;
     }
@@ -131,20 +131,20 @@ int32_t ConstructParamSet(struct HksParamSet **out, const struct HksParam *inPar
     struct HksParamSet *paramSet = NULL;
     int32_t res = HksInitParamSet(&paramSet);
     if (res != HKS_SUCCESS) {
-        LOGE("init param set failed, res = %d", res);
+        LOGE("init param set failed, res = %" LOG_PUB "d", res);
         return HAL_ERR_INIT_PARAM_SET_FAILED;
     }
 
     res = HksAddParams(paramSet, inParam, inParamNum);
     if (res != HKS_SUCCESS) {
-        LOGE("add param failed, res = %d", res);
+        LOGE("add param failed, res = %" LOG_PUB "d", res);
         FreeParamSet(paramSet);
         return HAL_ERR_ADD_PARAM_FAILED;
     }
 
     res = HksBuildParamSet(&paramSet);
     if (res != HKS_SUCCESS) {
-        LOGE("build param set failed, res = %d", res);
+        LOGE("build param set failed, res = %" LOG_PUB "d", res);
         FreeParamSet(paramSet);
         return HAL_ERR_BUILD_PARAM_SET_FAILED;
     }
@@ -198,7 +198,7 @@ static int32_t ConstructDeParamSet(struct HksParamSet **paramSet)
 
     int32_t res = ConstructParamSet(paramSet, keyParam, CAL_ARRAY_SIZE(keyParam));
     if (res != HAL_SUCCESS) {
-        LOGE("Construct de param set failed, res = %d", res);
+        LOGE("Construct de param set failed, res = %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -217,7 +217,7 @@ static int32_t ConstructCeParamSet(int32_t osAccountId, struct HksParamSet **par
 
     int32_t res = ConstructParamSet(paramSet, keyParam, CAL_ARRAY_SIZE(keyParam));
     if (res != HAL_SUCCESS) {
-        LOGE("Construct ce param set failed, res = %d", res);
+        LOGE("Construct ce param set failed, res = %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -270,7 +270,7 @@ int32_t ConstructCheckParamSet(bool isDeStorage, int32_t osAccountId, struct Hks
     int32_t res = ConstructParamSet(paramSet, checkParams, idx);
     HcFree(checkParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Failed to construct check param set, res: %d", res);
+        LOGE("Failed to construct check param set, res: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -291,7 +291,7 @@ int32_t ConstructDeleteParamSet(bool isDeStorage, int32_t osAccountId, struct Hk
     int32_t res = ConstructParamSet(paramSet, deleteParams, idx);
     HcFree(deleteParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Failed to construct delete param set, res: %d", res);
+        LOGE("Failed to construct delete param set, res: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -316,7 +316,7 @@ int32_t ConstructHmacParamSet(bool isDeStorage, int32_t osAccountId, bool isAlia
     int32_t res = ConstructParamSet(hmacParamSet, hmacParams, idx);
     HcFree(hmacParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct hmac param set failed, res = %d", res);
+        LOGE("Construct hmac param set failed, res = %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -362,7 +362,7 @@ int32_t ConstructDeriveParamSet(const KeyParams *keyParams, const Uint8Buff *mes
     int32_t res = ConstructParamSet(deriveParamSet, hmacDeriveParams, idx);
     HcFree(hmacDeriveParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct derive param set failed, res = %d", res);
+        LOGE("Construct derive param set failed, res = %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -386,7 +386,7 @@ int32_t ConstructFinishParamSet(const KeyParams *keyParams, struct HksParamSet *
     int32_t res = ConstructParamSet(finishParamSet, hmacFinishParams, idx);
     HcFree(hmacFinishParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct finish param set failed, res = %d", res);
+        LOGE("Construct finish param set failed, res = %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -440,7 +440,7 @@ int32_t ConstructHkdfParamSet(bool isDeStorage, const KeyParams *keyParams, cons
     int32_t res = ConstructParamSet(paramSet, hkdfParams, idx);
     HcFree(hkdfParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Failed to construct hkdf param set, res: %d", res);
+        LOGE("Failed to construct hkdf param set, res: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -551,7 +551,7 @@ int32_t ConstructGetKeyExtInfoParamSet(const KeyParams *keyParams, struct HksPar
     int32_t res = ConstructParamSet(paramSet, getParams, idx);
     HcFree(getParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Failed to construct get param set, res: %d", res);
+        LOGE("Failed to construct get param set, res: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -610,7 +610,7 @@ int32_t ConstructAesGcmEncryptParamSet(const GcmParam *encryptInfo, const KeyPar
     int32_t res = ConstructParamSet(paramSet, encryptParams, idx);
     HcFree(encryptParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Failed to construct encrypt param set, res: %d", res);
+        LOGE("Failed to construct encrypt param set, res: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -669,7 +669,7 @@ int32_t ConstructAesGcmDecryptParamSet(const GcmParam *decryptInfo, const KeyPar
     int32_t res = ConstructParamSet(paramSet, decryptParams, idx);
     HcFree(decryptParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Failed to construct decrypt param set, res: %d", res);
+        LOGE("Failed to construct decrypt param set, res: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -693,7 +693,7 @@ int32_t ConstructInitParamsP256(struct HksParamSet **initParamSet, const KeyPara
     int32_t res = ConstructParamSet(initParamSet, initParams, idx);
     HcFree(initParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct init param set failed, res = %d", res);
+        LOGE("Construct init param set failed, res = %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -726,7 +726,7 @@ int32_t ConstructFinishParamsP256(struct HksParamSet **finishParamSet, const Key
     int32_t res = ConstructParamSet(finishParamSet, finishParams, idx);
     HcFree(finishParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct finish param set failed, res = %d", res);
+        LOGE("Construct finish param set failed, res = %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -765,7 +765,7 @@ int32_t ConstructAgreeWithStorageParams(struct HksParamSet **paramSet, uint32_t 
     int32_t res = ConstructParamSet(paramSet, agreeParams, idx);
     HcFree(agreeParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct agree param set failed, res = %d", res);
+        LOGE("Construct agree param set failed, res = %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -831,7 +831,7 @@ int32_t ConstructAgreeParamSet(const KeyParams *keyParams, Algorithm algo, const
     int32_t res = ConstructParamSet(paramSet, agreeParams, idx);
     HcFree(agreeParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct agree param set failed, res = %d", res);
+        LOGE("Construct agree param set failed, res = %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -863,7 +863,7 @@ int32_t ConstructGenerateKeyPairWithStorageParams(struct HksParamSet **paramSet,
     int32_t res = ConstructParamSet(paramSet, generateParams, idx);
     HcFree(generateParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct generate key pair param set failed, res = %d", res);
+        LOGE("Construct generate key pair param set failed, res = %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -901,7 +901,7 @@ int32_t ConstructGenerateKeyPairParams(struct HksParamSet **paramSet, Algorithm 
 
     int32_t res = ConstructParamSet(paramSet, keyParam, CAL_ARRAY_SIZE(keyParam));
     if (res != HAL_SUCCESS) {
-        LOGE("Construct param set failed, res = %d", res);
+        LOGE("Construct param set failed, res = %" LOG_PUB "d", res);
         return res;
     }
     return res;
@@ -923,7 +923,7 @@ int32_t ConstructExportParams(bool isDeStorage, int32_t osAccountId, struct HksP
     int32_t res = ConstructParamSet(paramSet, exportParams, idx);
     HcFree(exportParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Failed to construct export param set, res: %d", res);
+        LOGE("Failed to construct export param set, res: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -960,7 +960,7 @@ int32_t ConstructSignParams(bool isDeStorage, int32_t osAccountId, struct HksPar
     int32_t res = ConstructParamSet(paramSet, signParams, idx);
     HcFree(signParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct sign param set failed, res = %d", res);
+        LOGE("Construct sign param set failed, res = %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -998,7 +998,7 @@ int32_t ConstructVerifyParams(struct HksParamSet **paramSet, const KeyParams *ke
     int32_t res = ConstructParamSet(paramSet, verifyParams, idx);
     HcFree(verifyParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct verify param set failed, res = %d", res);
+        LOGE("Construct verify param set failed, res = %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -1049,7 +1049,7 @@ int32_t ConstructImportPublicKeyParams(struct HksParamSet **paramSet, Algorithm 
     int32_t res = ConstructParamSet(paramSet, importParams, idx);
     HcFree(importParams);
     if (res != HAL_SUCCESS) {
-        LOGE("Construct import param set failed, res = %d", res);
+        LOGE("Construct import param set failed, res = %" LOG_PUB "d", res);
     }
     return res;
 }

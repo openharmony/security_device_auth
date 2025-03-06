@@ -34,7 +34,7 @@ static int ExchangeRequest(AsyBaseCurTask *task, PakeParams *params, const CJson
 {
     int res;
     if (task->taskStatus != TASK_STATUS_CLIENT_BIND_EXCHANGE_BEGIN) {
-        LOGI("The message is repeated, ignore it, status: %d", task->taskStatus);
+        LOGI("The message is repeated, ignore it, status: %" LOG_PUB "d", task->taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
@@ -79,11 +79,11 @@ ERR:
 static int ExchangeConfirm(AsyBaseCurTask *task, PakeParams *params, const CJson *in, int *status)
 {
     if (task->taskStatus < TASK_STATUS_CLIENT_BIND_EXCHANGE_REQUEST) {
-        LOGE("Invalid taskStatus: %d", task->taskStatus);
+        LOGE("Invalid taskStatus: %" LOG_PUB "d", task->taskStatus);
         return HC_ERR_BAD_MESSAGE;
     }
     if (task->taskStatus > TASK_STATUS_CLIENT_BIND_EXCHANGE_REQUEST) {
-        LOGI("The message is repeated, ignore it, status: %d", task->taskStatus);
+        LOGI("The message is repeated, ignore it, status: %" LOG_PUB "d", task->taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }

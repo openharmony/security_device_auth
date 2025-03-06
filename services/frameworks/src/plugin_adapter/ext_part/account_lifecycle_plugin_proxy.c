@@ -89,14 +89,14 @@ static int32_t ExecuteWorkerTask(struct ExtWorkerTask *extTask)
     Uint8Buff taskIdBuff = { (uint8_t *)(&baseTask->taskId), sizeof(int32_t) };
     int32_t res = GetLoaderInstance()->generateRandom(&taskIdBuff);
     if (res != HC_SUCCESS) {
-        LOGE("Generate taskId failed, res: %d.", res);
+        LOGE("Generate taskId failed, res: %" LOG_PUB "d.", res);
         DestroyExtWorkerTask(extTask);
         HcFree(baseTask);
         return res;
     }
     res = LoadAccountAndAddTaskRecord(baseTask->taskId);
     if (res != HC_SUCCESS) {
-        LOGE("Add account task record failed, res: %d.", res);
+        LOGE("Add account task record failed, res: %" LOG_PUB "d.", res);
         DestroyExtWorkerTask(extTask);
         HcFree(baseTask);
         return res;

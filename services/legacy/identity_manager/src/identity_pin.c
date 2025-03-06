@@ -263,7 +263,7 @@ static int32_t AuthGeneratePskUsePin(const CJson *in, const Uint8Buff *seed, con
     Uint8Buff hashBuf = { hash, sizeof(hash) };
     int ret = GetLoaderInstance()->sha256(&messageBuf, &hashBuf);
     if (ret != HC_SUCCESS) {
-        LOGE("sha256 failed, ret:%d", ret);
+        LOGE("sha256 failed, ret:%" LOG_PUB "d", ret);
         return ret;
     }
     KeyParams keyParams = { { hashBuf.val, hashBuf.length, false }, false, osAccountId };
@@ -365,10 +365,10 @@ static int32_t GetSharedSecretByUrl(
     int32_t ret;
     if (protocolType == ALG_ISO) {
         ret = GetSharedSecretForPinInIso(in, sharedSecret);
-        LOGI("get shared secret for pin in iso result: %d", ret);
+        LOGI("get shared secret for pin in iso result: %" LOG_PUB "d", ret);
     } else {
         ret = GetSharedSecretForPinInPake(in, sharedSecret);
-        LOGI("get shared secret for pin in pake result: %d", ret);
+        LOGI("get shared secret for pin in pake result: %" LOG_PUB "d", ret);
     }
 
     return ret;

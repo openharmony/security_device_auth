@@ -83,7 +83,7 @@ static int32_t IsDeviceIdHashMatch(const char *udid, const char *subUdidHash)
     Uint8Buff udidHashBuf = { udidHashByte, sizeof(udidHashByte) };
     int32_t ret = GetLoaderInstance()->sha256(&udidBuf, &udidHashBuf);
     if (ret != HC_SUCCESS) {
-        LOGE("sha256 failed, ret:%d", ret);
+        LOGE("sha256 failed, ret:%" LOG_PUB "d", ret);
         return ret;
     }
     uint32_t udidHashLen = SHA256_LEN * BYTE_TO_HEX_OPER_LENGTH + 1;
@@ -94,7 +94,7 @@ static int32_t IsDeviceIdHashMatch(const char *udid, const char *subUdidHash)
     }
     ret = ByteToHexString(udidHashByte, SHA256_LEN, udidHash, udidHashLen);
     if (ret != HC_SUCCESS) {
-        LOGE("Byte to hexString failed, ret:%d", ret);
+        LOGE("Byte to hexString failed, ret:%" LOG_PUB "d", ret);
         HcFree(udidHash);
         return ret;
     }
@@ -279,7 +279,7 @@ static void DoStartSession(HcTaskBase *task)
     SET_TRACE_ID(realTask->sessionId);
     int32_t res = StartDevSession(realTask->sessionId);
     if (res != HC_SUCCESS) {
-        LOGE("start session fail.[Res]: %d", res);
+        LOGE("start session fail.[Res]: %" LOG_PUB "d", res);
         CloseDevSession(realTask->sessionId);
     }
 }
@@ -297,11 +297,11 @@ static void DoProcSession(HcTaskBase *task)
     bool isFinish = false;
     int32_t res = ProcessDevSession(realTask->sessionId, realTask->receivedMsg, &isFinish);
     if (res != HC_SUCCESS) {
-        LOGE("ProcessDevSession fail. [Res]: %d", res);
+        LOGE("ProcessDevSession fail. [Res]: %" LOG_PUB "d", res);
         CloseDevSession(realTask->sessionId);
         return;
     }
-    LOGI("ProcessDevSession success. [State]: %s", isFinish ? "FINISH" : "CONTINUE");
+    LOGI("ProcessDevSession success. [State]: %" LOG_PUB "s", isFinish ? "FINISH" : "CONTINUE");
     if (isFinish) {
         CloseDevSession(realTask->sessionId);
     }
@@ -455,7 +455,7 @@ static int32_t StartClientBindSession(int32_t osAccountId, int64_t requestId, co
     res = OpenDevSession(requestId, appId, &params);
     FreeJson(context);
     if (res != HC_SUCCESS) {
-        LOGE("OpenDevSession fail. [Res]: %d", res);
+        LOGE("OpenDevSession fail. [Res]: %" LOG_PUB "d", res);
         return res;
     }
     if (channelType == SERVICE_CHANNEL) {
@@ -510,11 +510,11 @@ static int32_t AddMemberToGroupInner(int32_t osAccountId, int64_t requestId, con
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    LOGI("Start to add member to group. [ReqId]: %" PRId64 ", [OsAccountId]: %d, [AppId]: %s",
-        requestId, osAccountId, appId);
+    LOGI("Start to add member to group. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %" LOG_PUB "d, [AppId]: %"
+        LOG_PUB "s", requestId, osAccountId, appId);
     const DeviceAuthCallback *callback = GetGMCallbackByAppId(appId);
     if (callback == NULL) {
-        LOGE("Failed to find callback by appId! [AppId]: %s", appId);
+        LOGE("Failed to find callback by appId! [AppId]: %" LOG_PUB "s", appId);
         return HC_ERR_CALLBACK_NOT_FOUND;
     }
     return StartClientBindSession(osAccountId, requestId, appId, addParams, callback);
@@ -690,7 +690,7 @@ static int32_t AddOsAccountIdToContextIfValid(CJson *context)
     int32_t osAccountId = ANY_OS_ACCOUNT;
     (void)GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId);
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    LOGI("[OsAccountId]: %d", osAccountId);
+    LOGI("[OsAccountId]: %" LOG_PUB "d", osAccountId);
     if (osAccountId == INVALID_OS_ACCOUNT) {
         return HC_ERR_INVALID_PARAMS;
     }
@@ -770,7 +770,7 @@ static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg
     const char *appId = GetAppIdFromReceivedMsg(receivedMsg);
     const DeviceAuthCallback *callback = GetGMCallbackByAppId(appId);
     if (callback == NULL) {
-        LOGE("Failed to find callback by appId! [AppId]: %s", appId);
+        LOGE("Failed to find callback by appId! [AppId]: %" LOG_PUB "s", appId);
         return HC_ERR_CALLBACK_NOT_FOUND;
     }
     int32_t opCode;
@@ -829,7 +829,7 @@ static int32_t ProcessBindDataInner(int64_t requestId, const uint8_t *data, uint
         LOGE("The input data is invalid!");
         return HC_ERR_INVALID_PARAMS;
     }
-    LOGI("[Start]: RequestProcessBindData! [ReqId]: %" PRId64, requestId);
+    LOGI("[Start]: RequestProcessBindData! [ReqId]: %" LOG_PUB PRId64, requestId);
     CJson *receivedMsg = CreateJsonFromString((const char *)data);
     if (receivedMsg == NULL) {
         LOGE("Failed to create json from string!");
@@ -948,7 +948,7 @@ static int32_t AuthDeviceInner(int32_t osAccountId, int64_t authReqId, const cha
     SET_TRACE_ID(authReqId);
     ADD_PERFORM_DATA(authReqId, false, true, HcGetCurTimeInMillis());
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    LOGI("Begin AuthDevice. [ReqId]: %" PRId64 ", [OsAccountId]: %d", authReqId, osAccountId);
+    LOGI("Begin AuthDevice. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %" LOG_PUB "d", authReqId, osAccountId);
     if ((authParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT) || (gaCallback == NULL)) {
         LOGE("The input auth params is invalid!");
         return HC_ERR_INVALID_PARAMS;
@@ -982,7 +982,7 @@ static int32_t AuthDeviceInner(int32_t osAccountId, int64_t authReqId, const cha
     res = OpenDevSession(authReqId, appId, &params);
     FreeJson(context);
     if (res != HC_SUCCESS) {
-        LOGE("OpenDevSession fail. [Res]: %d", res);
+        LOGE("OpenDevSession fail. [Res]: %" LOG_PUB "d", res);
         return res;
     }
     return PushStartSessionTask(authReqId);
@@ -1214,7 +1214,7 @@ static int32_t ProcessDataInner(int64_t authReqId, const uint8_t *data, uint32_t
     } else {
         UPDATE_PERFORM_DATA_BY_SELF_INDEX(authReqId, HcGetCurTimeInMillis());
     }
-    LOGI("[GA] Begin ProcessData. [DataLen]: %u, [ReqId]: %" PRId64, dataLen, authReqId);
+    LOGI("[GA] Begin ProcessData. [DataLen]: %" LOG_PUB "u, [ReqId]: %" LOG_PUB PRId64, dataLen, authReqId);
     if ((data == NULL) || (dataLen > MAX_DATA_BUFFER_SIZE)) {
         LOGE("Invalid input for ProcessData!");
         return HC_ERR_INVALID_PARAMS;
@@ -1309,7 +1309,7 @@ static int32_t AuthCredentialInner(int32_t osAccountId, int64_t authReqId, const
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(authReqId);
     ADD_PERFORM_DATA(authReqId, false, true, HcGetCurTimeInMillis());
-    LOGI("Begin AuthCredential. [ReqId]: %" PRId64 ", [OsAccountId]: %d", authReqId, osAccountId);
+    LOGI("Begin AuthCredential. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %" LOG_PUB "d", authReqId, osAccountId);
     if (authParams == NULL || osAccountId == INVALID_OS_ACCOUNT || caCallback == NULL ||
         returnPeerUdid == NULL) {
         LOGE("The input auth cred params is invalid!");
@@ -1338,7 +1338,7 @@ static int32_t AuthCredentialInner(int32_t osAccountId, int64_t authReqId, const
     res = OpenDevSession(authReqId, appId, &params);
     FreeJson(context);
     if (res != HC_SUCCESS) {
-        LOGE("OpenDevSession fail. [Res]: %d", res);
+        LOGE("OpenDevSession fail. [Res]: %" LOG_PUB "d", res);
         return res;
     }
     return PushStartSessionTask(authReqId);
@@ -1365,7 +1365,7 @@ static int32_t ProcessCredDataInner(int64_t authReqId, const uint8_t *data, uint
     } else {
         UPDATE_PERFORM_DATA_BY_SELF_INDEX(authReqId, HcGetCurTimeInMillis());
     }
-    LOGI("[GA] Begin ProcessCredData. [DataLen]: %u, [ReqId]: %" PRId64, dataLen, authReqId);
+    LOGI("[GA] Begin ProcessCredData. [DataLen]: %" LOG_PUB "u, [ReqId]: %" LOG_PUB PRId64, dataLen, authReqId);
     if ((data == NULL) || (dataLen > MAX_DATA_BUFFER_SIZE)) {
         LOGE("Invalid input for ProcessCredData!");
         return HC_ERR_INVALID_PARAMS;
@@ -1418,7 +1418,7 @@ static void CancelRequest(int64_t requestId, const char *appId)
         LOGE("Invalid app id!");
         return;
     }
-    LOGI("cancel request. [AppId]: %s, [ReqId]: %" PRId64, appId, requestId);
+    LOGI("cancel request. [AppId]: %" LOG_PUB "s, [ReqId]: %" LOG_PUB PRId64, appId, requestId);
     CancelDevSession(requestId, appId);
 }
 
@@ -1478,7 +1478,7 @@ DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const ch
             res = credOperator->deleteCredential(reqJsonStr, returnData);
             break;
         default:
-            LOGE("invalid opCode: %d", operationCode);
+            LOGE("invalid opCode: %" LOG_PUB "d", operationCode);
             break;
     }
 
@@ -1490,7 +1490,7 @@ DEVICE_AUTH_API_PUBLIC int32_t ProcessAuthDevice(
 {
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(authReqId);
-    LOGI("[DA] Begin ProcessAuthDevice [ReqId]: %" PRId64, authReqId);
+    LOGI("[DA] Begin ProcessAuthDevice [ReqId]: %" LOG_PUB PRId64, authReqId);
     if (authParams == NULL || HcStrlen(authParams) > MAX_DATA_BUFFER_SIZE) {
         LOGE("Invalid input for ProcessData!");
         return HC_ERR_INVALID_PARAMS;
@@ -1533,7 +1533,7 @@ DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
 {
     SET_LOG_MODE(TRACE_MODE);
     SET_TRACE_ID(authReqId);
-    LOGI("StartAuthDevice. [ReqId]:%" PRId64, authReqId);
+    LOGI("StartAuthDevice. [ReqId]:%" LOG_PUB PRId64, authReqId);
 
     if ((authParams == NULL) || (callback == NULL) || HcStrlen(authParams) > MAX_DATA_BUFFER_SIZE) {
         LOGE("The input auth params is invalid!");
@@ -1573,7 +1573,7 @@ DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
     res = OpenDevSession(authReqId, DEFAULT_PACKAGE_NAME, &params);
     FreeJson(context);
     if (res != HC_SUCCESS) {
-        LOGE("OpenDevSession fail. [Res]: %d", res);
+        LOGE("OpenDevSession fail. [Res]: %" LOG_PUB "d", res);
         return res;
     }
     return PushStartSessionTask(authReqId);
@@ -1587,7 +1587,7 @@ DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *
         LOGE("Invalid authParams!");
         return HC_ERR_INVALID_PARAMS;
     }
-    LOGI("cancel request. [ReqId]: %" PRId64, requestId);
+    LOGI("cancel request. [ReqId]: %" LOG_PUB PRId64, requestId);
     CancelDevSession(requestId, DEFAULT_PACKAGE_NAME);
     return HC_SUCCESS;
 }
@@ -1760,7 +1760,7 @@ static void DoOnChannelOpened(HcTaskBase *baseTask)
     LOGI("[Start]: DoOnChannelOpened!");
     int32_t res = StartDevSession(task->requestId);
     if (res != HC_SUCCESS) {
-        LOGE("start session fail.[Res]: %d", res);
+        LOGE("start session fail.[Res]: %" LOG_PUB "d", res);
         CloseDevSession(task->requestId);
     }
 }
@@ -1775,11 +1775,11 @@ static void InitSoftBusTask(SoftBusTask *task, int64_t requestId)
 static int OnChannelOpenedCb(int64_t requestId, int result)
 {
     if (result != HC_SUCCESS) {
-        LOGE("[SoftBus][Out]: Failed to open channel! res: %d", result);
+        LOGE("[SoftBus][Out]: Failed to open channel! res: %" LOG_PUB "d", result);
         CloseDevSession(requestId);
         return HC_ERR_SOFT_BUS;
     }
-    LOGI("[Start]: OnChannelOpened! [ReqId]: %" PRId64, requestId);
+    LOGI("[Start]: OnChannelOpened! [ReqId]: %" LOG_PUB PRId64, requestId);
     SoftBusTask *task = (SoftBusTask *)HcMalloc(sizeof(SoftBusTask), 0);
     if (task == NULL) {
         LOGE("Failed to allocate task memory!");

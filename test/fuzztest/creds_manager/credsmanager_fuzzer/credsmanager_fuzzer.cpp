@@ -477,7 +477,7 @@ static int32_t GenerateSeed(Uint8Buff *seed)
     Uint8Buff randomBuf = { random, SEED_LEN };
     int ret = GetLoaderInstance()->generateRandom(&randomBuf);
     if (ret != 0) {
-        LOGE("generate random failed, ret:%d", ret);
+        LOGE("generate random failed, ret:%" LOG_PUB "d", ret);
         HcFree(random);
         return ret;
     }

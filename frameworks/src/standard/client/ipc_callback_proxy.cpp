@@ -48,7 +48,7 @@ void ProxyDevAuthCb::DoCallBack(int32_t callbackId, uintptr_t cbHook,
     ret = remote->SendRequest(static_cast<uint32_t>(DevAuthCbInterfaceCode::DEV_AUTH_CALLBACK_REQUEST),
         data, reply, option);
     if (ret != NO_ERROR) {
-        LOGE("SendRequest is failed, error code: %d", ret);
+        LOGE("SendRequest is failed, error code: %" LOG_PUB "d", ret);
     }
     return;
 }

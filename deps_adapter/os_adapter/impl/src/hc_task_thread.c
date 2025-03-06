@@ -86,7 +86,7 @@ static int32_t StartTaskThread(struct HcTaskThreadT* thread)
     thread->quit = HC_FALSE;
     int32_t res = thread->thread.start(&thread->thread);
     if (res != HAL_SUCCESS) {
-        LOGE("Start thread failed, res:%d", res);
+        LOGE("Start thread failed, res:%" LOG_PUB "d", res);
     }
     return res;
 }

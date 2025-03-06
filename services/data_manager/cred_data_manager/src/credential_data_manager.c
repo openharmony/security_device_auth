@@ -439,7 +439,7 @@ static void LoadOsAccountCredDb(int32_t osAccountId)
         ClearCredentialVec(&info.credentials);
         return;
     }
-    LOGI("[CRED#DB]: Load os account cred db successfully! [Id]: %d", osAccountId);
+    LOGI("[CRED#DB]: Load os account cred db successfully! [Id]: %" LOG_PUB "d", osAccountId);
 }
 
 static void RemoveOsAccountCredInfo(int32_t osAccountId)
@@ -466,7 +466,7 @@ static void OnOsAccountUnlocked(int32_t osAccountId)
 
 static void OnOsAccountRemoved(int32_t osAccountId)
 {
-    LOGI("[CRED#DB]: os account is removed, osAccountId: %d", osAccountId);
+    LOGI("[CRED#DB]: os account is removed, osAccountId: %" LOG_PUB "d", osAccountId);
     (void)LockHcMutex(g_credMutex);
     RemoveOsAccountCredInfo(osAccountId);
     UnlockHcMutex(g_credMutex);
@@ -489,7 +489,7 @@ static void LoadDataIfNotLoaded(int32_t osAccountId)
     if (IsOsAccountDataLoaded(osAccountId)) {
         return;
     }
-    LOGI("[CRED#DB]: data has not been loaded, load it, osAccountId: %d", osAccountId);
+    LOGI("[CRED#DB]: data has not been loaded, load it, osAccountId: %" LOG_PUB "d", osAccountId);
     LoadOsAccountCredDb(osAccountId);
 }
 
@@ -505,7 +505,7 @@ static OsAccountCredInfo *GetCredInfoByOsAccountId(int32_t osAccountId)
             return info;
         }
     }
-    LOGI("[CRED#DB]: Create a new os account database cache! [Id]: %d", osAccountId);
+    LOGI("[CRED#DB]: Create a new os account database cache! [Id]: %" LOG_PUB "d", osAccountId);
     OsAccountCredInfo newInfo;
     newInfo.osAccountId = osAccountId;
     newInfo.credentials = CreateCredentialVec();
@@ -1020,7 +1020,7 @@ static void PostCredDeleteMsg(const Credential *entry)
 
 int32_t AddCredToDb(int32_t osAccountId, const Credential *entry)
 {
-    LOGI("[CRED#DB]: Start to add a cred to database! [OsAccountId]: %d", osAccountId);
+    LOGI("[CRED#DB]: Start to add a cred to database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
     if (entry == NULL) {
         LOGE("[CRED#DB]: The input entry is NULL!");
         return IS_ERR_NULL_PTR;
@@ -1044,7 +1044,7 @@ int32_t AddCredToDb(int32_t osAccountId, const Credential *entry)
         *oldEntryPtr = newEntry;
         PostCredUpdateMsg(newEntry);
         UnlockHcMutex(g_credMutex);
-        LOGI("[CRED#DB]: Update an old credential successfully! [credType]: %u", entry->credType);
+        LOGI("[CRED#DB]: Update an old credential successfully! [credType]: %" LOG_PUB "u", entry->credType);
         return IS_SUCCESS;
     }
     if (info->credentials.pushBackT(&info->credentials, newEntry) == NULL) {
@@ -1055,13 +1055,13 @@ int32_t AddCredToDb(int32_t osAccountId, const Credential *entry)
     }
     PostCredAddMsg(newEntry);
     UnlockHcMutex(g_credMutex);
-    LOGI("[CRED#DB]: Add a credential to database successfully! [credType]: %u", entry->credType);
+    LOGI("[CRED#DB]: Add a credential to database successfully! [credType]: %" LOG_PUB "u", entry->credType);
     return IS_SUCCESS;
 }
 
 int32_t DelCredential(int32_t osAccountId, const QueryCredentialParams *params)
 {
-    LOGI("[CRED#DB]: Start to delete credential from database! [OsAccountId]: %d", osAccountId);
+    LOGI("[CRED#DB]: Start to delete credential from database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
     if (params == NULL) {
         LOGE("[CRED#DB]: The input params is NULL!");
         return IS_ERR_NULL_PTR;
@@ -1084,12 +1084,13 @@ int32_t DelCredential(int32_t osAccountId, const QueryCredentialParams *params)
         Credential *popEntry;
         HC_VECTOR_POPELEMENT(&info->credentials, &popEntry, index);
         PostCredDeleteMsg(popEntry);
-        LOGI("[CRED#DB]: Delete a credential from database successfully! [credType]: %u", popEntry->credType);
+        LOGI("[CRED#DB]: Delete a credential from database successfully! [credType]: %" LOG_PUB "u",
+            popEntry->credType);
         DestroyCredential(popEntry);
         count++;
     }
     UnlockHcMutex(g_credMutex);
-    LOGI("[CRED#DB]: Number of credentials deleted: %d", count);
+    LOGI("[CRED#DB]: Number of credentials deleted: %" LOG_PUB "d", count);
     return IS_SUCCESS;
 }
 
@@ -1151,7 +1152,7 @@ int32_t SaveOsAccountCredDb(int32_t osAccountId)
     }
     DeleteParcel(&parcel);
     UnlockHcMutex(g_credMutex);
-    LOGI("[CRED#DB]: Save an os account cred database successfully! [Id]: %d", osAccountId);
+    LOGI("[CRED#DB]: Save an os account cred database successfully! [Id]: %" LOG_PUB "d", osAccountId);
     return IS_SUCCESS;
 }
 
@@ -1206,7 +1207,7 @@ static void LoadAllAccountsData(void)
     uint32_t size = 0;
     int32_t ret = GetAllOsAccountIds(&accountIds, &size);
     if (ret != IS_SUCCESS) {
-        LOGE("[CRED#DB]: Failed to get all os account ids, [res]: %d", ret);
+        LOGE("[CRED#DB]: Failed to get all os account ids, [res]: %" LOG_PUB "d", ret);
         return;
     }
     for (uint32_t index = 0; index < size; index++) {

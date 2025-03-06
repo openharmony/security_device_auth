@@ -30,7 +30,7 @@ int64_t HcGetCurTime(void)
     struct timespec start;
     int res = clock_gettime(CLOCK_MONOTONIC, &start);
     if (res != 0) {
-        LOGE("[TIMER]: clock_gettime fail. [Res] :%d", res);
+        LOGE("[TIMER]: clock_gettime fail. [Res] :%" LOG_PUB "d", res);
         return -1;
     }
     return start.tv_sec;
@@ -41,7 +41,7 @@ int64_t HcGetCurTimeInMillis(void)
     struct timespec start;
     int res = clock_gettime(CLOCK_MONOTONIC, &start);
     if (res != 0) {
-        LOGE("[TIMER]: clock_gettime fail. [Res] :%d", res);
+        LOGE("[TIMER]: clock_gettime fail. [Res] :%" LOG_PUB "d", res);
         return -1;
     }
     return start.tv_sec * SECOND_TO_MILLISECOND + start.tv_nsec / MILLISECOND_TO_NANOSECOND;
@@ -56,7 +56,7 @@ int64_t HcGetIntervalTime(int64_t startTime)
     struct timespec end;
     int res = clock_gettime(CLOCK_MONOTONIC, &end);
     if (res != 0) {
-        LOGE("[TIMER]: clock_gettime fail. [Res] :%d", res);
+        LOGE("[TIMER]: clock_gettime fail. [Res] :%" LOG_PUB "d", res);
         return -1;
     }
     if (end.tv_sec < startTime) {

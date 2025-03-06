@@ -88,7 +88,7 @@ int32_t main(int32_t argc, char const *argv[])
     LOGI("device authentication service starting ...");
     ret = InitDeviceAuthService();
     if (ret != HC_SUCCESS) {
-        LOGE("device auth service main, InitDeviceAuthService failed, ret %d", ret);
+        LOGE("device auth service main, InitDeviceAuthService failed, ret %" LOG_PUB "d", ret);
         return 1;
     }
 
@@ -113,7 +113,7 @@ int32_t main(int32_t argc, char const *argv[])
         DestroyServiceInstance(serviceInstance);
         DeMainRescInit();
         DestroyDeviceAuthService();
-        LOGE("device auth service main, AddDevAuthServiceToManager failed, ret %d", ret);
+        LOGE("device auth service main, AddDevAuthServiceToManager failed, ret %" LOG_PUB "d", ret);
         return 1;
     }
     LOGI("device authentication service register to IPC manager done, service running...");

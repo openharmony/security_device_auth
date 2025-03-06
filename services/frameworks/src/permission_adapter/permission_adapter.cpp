@@ -77,7 +77,7 @@ static bool IsProcessInWhitelist(const string& processName, int32_t methodId)
     bool ret = find(g_apiAccessWhitelist[methodId].begin(), g_apiAccessWhitelist[methodId].end(), processName) !=
                   g_apiAccessWhitelist[methodId].end();
     if (!ret) {
-        LOGE("Access Denied: Process(%s) not in access whitlist", processName.c_str());
+        LOGE("Access Denied: Process(%" LOG_PUB "s) not in access whitlist", processName.c_str());
     }
     return ret;
 }
@@ -87,7 +87,7 @@ int32_t CheckPermission(int32_t methodId)
     AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
     ATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
     if (tokenType != TOKEN_NATIVE) {
-        LOGE("[AccessTokenKit][GetTokenTypeFlag]: Invalid token type: %d", tokenType);
+        LOGE("[AccessTokenKit][GetTokenTypeFlag]: Invalid token type: %" LOG_PUB "d", tokenType);
         return HC_ERROR;
     }
     NativeTokenInfo findInfo;
@@ -96,7 +96,7 @@ int32_t CheckPermission(int32_t methodId)
         return HC_ERROR;
     }
     if ((findInfo.apl != APL_SYSTEM_CORE) && (findInfo.apl != APL_SYSTEM_BASIC)) {
-        LOGE("Check permission(APL3=SYSTEM_CORE or APL2=SYSTEM_BASIC) failed! APL: %d", findInfo.apl);
+        LOGE("Check permission(APL3=SYSTEM_CORE or APL2=SYSTEM_BASIC) failed! APL: %" LOG_PUB "d", findInfo.apl);
         return HC_ERROR;
     }
 

@@ -149,9 +149,9 @@ static void UpdateDataByInputIndex(PerformData *performData, PerformTimeIndex ti
         performData->status = PERFORM_DATA_STATUS_FINISH;
         int64_t totalTime = performData->onFinishTime - performData->firstStartTime;
         if (performData->isBind) {
-            LOGI("Bind consume time: %lld, requestId: %lld", totalTime, performData->reqId);
+            LOGI("Bind consume time: %" LOG_PUB PRId64 ", requestId: %" LOG_PUB PRId64, totalTime, performData->reqId);
         } else {
-            LOGI("Auth consume time: %lld, requestId: %lld", totalTime, performData->reqId);
+            LOGI("Auth consume time: %" LOG_PUB PRId64 ", requestId: %" LOG_PUB PRId64, totalTime, performData->reqId);
         }
     } else {
         LOGE("Invalid timeIndex!");
@@ -213,27 +213,27 @@ static void DumpPerformData(int fd, PerformData *performData)
     int64_t firstConsume = 0;
     if (performData->firstStartTime != 0) {
         firstConsume = GetConsumeTimeByIndex(performData, FIRST_START_TIME);
-        LOGI("firstConsume time:  %" PRId64 " milliseconds", firstConsume);
+        LOGI("firstConsume time:  %" LOG_PUB PRId64 " milliseconds", firstConsume);
     }
     int64_t secondConsume = 0;
     if (performData->secondStartTime != 0) {
         secondConsume = GetConsumeTimeByIndex(performData, SECOND_START_TIME);
-        LOGI("secondConsume time:  %" PRId64 " milliseconds", secondConsume);
+        LOGI("secondConsume time:  %" LOG_PUB PRId64 " milliseconds", secondConsume);
     }
     int64_t thirdConsume = 0;
     if (performData->thirdStartTime != 0) {
         thirdConsume = GetConsumeTimeByIndex(performData, THIRD_START_TIME);
-        LOGI("thirdConsume time:  %" PRId64 " milliseconds", thirdConsume);
+        LOGI("thirdConsume time:  %" LOG_PUB PRId64 " milliseconds", thirdConsume);
     }
     int64_t fourthConsume = 0;
     if (performData->fourthStartTime != 0) {
         fourthConsume = GetConsumeTimeByIndex(performData, FOURTH_START_TIME);
-        LOGI("fourthConsume time:  %" PRId64 " milliseconds", fourthConsume);
+        LOGI("fourthConsume time:  %" LOG_PUB PRId64 " milliseconds", fourthConsume);
     }
     int64_t innerConsume = firstConsume + secondConsume + thirdConsume + fourthConsume;
-    LOGI("innerConsume time:  %" PRId64 " milliseconds", innerConsume);
+    LOGI("innerConsume time:  %" LOG_PUB PRId64 " milliseconds", innerConsume);
     int64_t totalTime = performData->onFinishTime - performData->firstStartTime;
-    LOGI("totalTime time:  %" PRId64 " milliseconds", totalTime);
+    LOGI("totalTime time:  %" LOG_PUB PRId64 " milliseconds", totalTime);
     char reqIdStr[MAX_REQUEST_ID_LEN] = { 0 };
     if (sprintf_s(reqIdStr, MAX_REQUEST_ID_LEN, "%lld", performData->reqId) <= 0) {
         LOGE("Failed to get requestId string!");
@@ -420,7 +420,7 @@ void AddPerformData(int64_t reqId, bool isBind, bool isClient, int64_t startTime
     }
     RemovePerformDataIfExist(reqId);
     if (IsSessionNumExceeded(isBind, isClient)) {
-        LOGE("session number exceeded, requestId: %lld", reqId);
+        LOGE("session number exceeded, requestId: %" LOG_PUB PRId64, reqId);
         UnlockHcMutex(g_performDataMutex);
         return;
     }

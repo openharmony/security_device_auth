@@ -26,14 +26,14 @@ int32_t InitHks(void)
 {
     LOGI("[HUKS]: HksInitialize enter.");
     int32_t res = HksInitialize();
-    LOGI("[HUKS]: HksInitialize quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksInitialize quit. [Res]: %" LOG_PUB "d", res);
     if (res == HKS_SUCCESS) {
         return HAL_SUCCESS;
     }
 
     if ((res != HKS_ERROR_INVALID_KEY_FILE) && (res != HKS_ERROR_CRYPTO_ENGINE_ERROR) &&
         (res != HKS_ERROR_UPDATE_ROOT_KEY_MATERIAL_FAIL)) {
-        LOGE("[HUKS]: HksInitialize fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksInitialize fail. [Res]: %" LOG_PUB "d", res);
         return HAL_ERR_INIT_FAILED;
     }
 
@@ -42,16 +42,16 @@ int32_t InitHks(void)
     LOGI("Delete local database file successfully!");
     LOGI("[HUKS]: HksRefreshKeyInfo enter.");
     res = HksRefreshKeyInfo();
-    LOGI("[HUKS]: HksRefreshKeyInfo quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksRefreshKeyInfo quit. [Res]: %" LOG_PUB "d", res);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksRefreshKeyInfo failed, res: %d", res);
+        LOGE("[HUKS]: HksRefreshKeyInfo failed, res: %" LOG_PUB "d", res);
         return HAL_ERR_INIT_FAILED;
     }
     LOGI("[HUKS]: HksInitialize enter.");
     res = HksInitialize();
-    LOGI("[HUKS]: HksInitialize quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksInitialize quit. [Res]: %" LOG_PUB "d", res);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksInitialize fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksInitialize fail. [Res]: %" LOG_PUB "d", res);
         return HAL_ERR_INIT_FAILED;
     }
 
@@ -62,7 +62,7 @@ int32_t HashToPointX25519(const Uint8Buff *hash, Uint8Buff *outEcPoint)
 {
     int32_t res = MbedtlsHashToPoint25519(hash, outEcPoint);
     if (res != 0) {
-        LOGE("hashToPoint for x25519 failed, res: %d", res);
+        LOGE("hashToPoint for x25519 failed, res: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
 

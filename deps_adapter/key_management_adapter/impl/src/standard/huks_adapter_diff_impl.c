@@ -24,9 +24,9 @@ int32_t InitHks(void)
 {
     LOGI("[HUKS]: HksInitialize enter.");
     int32_t res = HksInitialize();
-    LOGI("[HUKS]: HksInitialize quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksInitialize quit. [Res]: %" LOG_PUB "d", res);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksInitialize fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksInitialize fail. [Res]: %" LOG_PUB "d", res);
     }
     return res;
 }
@@ -38,7 +38,7 @@ int32_t HashToPointX25519(const Uint8Buff *hash, Uint8Buff *outEcPoint)
 
     int32_t res = OpensslHashToPoint(&hashBlob, &pointBlob);
     if (res != HAL_SUCCESS || pointBlob.size != SHA256_LEN) {
-        LOGE("HashToPoint for x25519 failed, res: %d", res);
+        LOGE("HashToPoint for x25519 failed, res: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
 

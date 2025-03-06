@@ -304,7 +304,8 @@ static void RemoveUnsupportedProtocols(IdentityInfo *cred)
             index++;
             continue;
         }
-        LOGI("remove unsupported protocol from credential information. [ProtocolType]: %d", entity->protocolType);
+        LOGI("remove unsupported protocol from credential information. [ProtocolType]: %" LOG_PUB "d",
+            entity->protocolType);
         ProtocolEntity *popEntity = NULL;
         HC_VECTOR_POPELEMENT(&cred->protocolVec, &popEntity, index);
         HcFree(popEntity);
@@ -333,7 +334,7 @@ static int32_t GetAllCredsWithPeer(SessionImpl *impl)
 {
     int32_t res = GetCredInfosByPeerIdentity(impl->context, &impl->credList);
     if (res != HC_SUCCESS) {
-        LOGE("failed to get creds with peer. [Res]: %d", res);
+        LOGE("failed to get creds with peer. [Res]: %" LOG_PUB "d", res);
         return res;
     }
     CheckAllCredsValidity(impl);
@@ -344,7 +345,7 @@ static int32_t GetAllCredsWithPeer(SessionImpl *impl)
     }
     impl->credCurIndex = 0;
     impl->credTotalNum = credNum;
-    LOGI("Get creds with peer success. [CredNum]: %u", credNum);
+    LOGI("Get creds with peer success. [CredNum]: %" LOG_PUB "u", credNum);
     return HC_SUCCESS;
 }
 
@@ -377,7 +378,7 @@ static bool IsCmdIntercepted(SessionImpl *impl, CmdProcessor processor)
 {
     for (uint32_t i = 0; i < sizeof(CMDS_INTERCEPTOR_LIB) / sizeof(CMDS_INTERCEPTOR_LIB[0]); i++) {
         if (CMDS_INTERCEPTOR_LIB[i](impl, processor)) {
-            LOGI("Command intercepted. [Interceptor]: %u", i);
+            LOGI("Command intercepted. [Interceptor]: %" LOG_PUB "u", i);
             return true;
         }
     }
@@ -728,7 +729,8 @@ static int32_t SetAuthProtectedMsg(SessionImpl *impl, const CJson *msgJson, bool
 
 static int32_t AddStartHandshakeMsg(SessionImpl *impl, IdentityInfo *cred, CJson *sessionMsg)
 {
-    LOGI("Start handshake with peer. [CredIndex]: %u, [CredTotalNum]: %u", impl->credCurIndex, impl->credTotalNum);
+    LOGI("Start handshake with peer. [CredIndex]: %" LOG_PUB "u, [CredTotalNum]: %" LOG_PUB "u", impl->credCurIndex,
+        impl->credTotalNum);
     CJson *eventData = CreateJson();
     if (eventData == NULL) {
         LOGE("allocate eventData memory fail.");
@@ -776,7 +778,7 @@ static int32_t AddAuthFirstMsg(AuthSubSession *authSubSession, CJson *sessionMsg
     CJson *authData = NULL;
     int32_t res = authSubSession->start(authSubSession, &authData);
     if (res != HC_SUCCESS) {
-        LOGE("process auth sub session fail. [Res]: %d", res);
+        LOGE("process auth sub session fail. [Res]: %" LOG_PUB "d", res);
         return res;
     }
     if (shouldReplace) {
@@ -826,7 +828,7 @@ static int32_t CreateIsoSubSession(SessionImpl *impl, const IdentityInfo *cred, 
     AuthSubSession *authSubSession;
     int32_t res = CreateAuthSubSession(PROTOCOL_TYPE_ISO, &params, impl->isClient, &authSubSession);
     if (res != HC_SUCCESS) {
-        LOGE("create iso auth sub session fail. [Res]: %d", res);
+        LOGE("create iso auth sub session fail. [Res]: %" LOG_PUB "d", res);
         return res;
     }
     *returnSubSession = authSubSession;
@@ -877,7 +879,7 @@ static int32_t CreateDlSpekeSubSession(SessionImpl *impl, const IdentityInfo *cr
     AuthSubSession *authSubSession;
     int32_t res = CreateAuthSubSession(PROTOCOL_TYPE_DL_SPEKE, &params, impl->isClient, &authSubSession);
     if (res != HC_SUCCESS) {
-        LOGE("create dl speke auth sub session fail. [Res]: %d", res);
+        LOGE("create dl speke auth sub session fail. [Res]: %" LOG_PUB "d", res);
         return res;
     }
     *returnSubSession = authSubSession;
@@ -903,7 +905,7 @@ static int32_t CreateEcSpekeSubSession(SessionImpl *impl, const IdentityInfo *cr
     AuthSubSession *authSubSession;
     int32_t res = CreateAuthSubSession(PROTOCOL_TYPE_EC_SPEKE, &params, impl->isClient, &authSubSession);
     if (res != HC_SUCCESS) {
-        LOGE("create ecspeke auth sub session fail. [Res]: %d", res);
+        LOGE("create ecspeke auth sub session fail. [Res]: %" LOG_PUB "d", res);
         return res;
     }
     *returnSubSession = authSubSession;
@@ -1438,12 +1440,13 @@ static int32_t SelfCmdsNegotiate(SessionImpl *impl, const CJson *supportCmds, co
             continue;
         }
         if (CMDS_LIB[i].strategy == ABORT_IF_ERROR) {
-            LOGW("The peer device does not support this cmd and it is not optional. [Cmd]: %u", CMDS_LIB[i].id);
+            LOGW("The peer device does not support this cmd and it is not optional. [Cmd]: %" LOG_PUB "u",
+                CMDS_LIB[i].id);
             return HC_ERR_NOT_SUPPORT;
         }
     }
     impl->protocolEntity.expandProcessCmds |= selfCmds;
-    LOGI("self todo cmds: %u", selfCmds);
+    LOGI("self todo cmds: %" LOG_PUB "u", selfCmds);
     return HC_SUCCESS;
 }
 
@@ -1477,12 +1480,12 @@ static int32_t PeerCmdsNegotiate(SessionImpl *impl, const CJson *credAbility)
             return HC_ERR_JSON_GET;
         }
         if (strategy == ABORT_IF_ERROR) {
-            LOGW("The local device does not support this cmd and it is not optional. [Cmd]: %d", id);
+            LOGW("The local device does not support this cmd and it is not optional. [Cmd]: %" LOG_PUB "d", id);
             return HC_ERR_NOT_SUPPORT;
         }
     }
     impl->protocolEntity.expandProcessCmds |= peerCmds;
-    LOGI("peer todo cmds: %u", peerCmds);
+    LOGI("peer todo cmds: %" LOG_PUB "u", peerCmds);
     return HC_SUCCESS;
 }
 
@@ -1513,7 +1516,7 @@ static int32_t ProtocolEntityNegotiate(SessionImpl *impl, const CJson *abilityAr
             return res;
         }
         impl->protocolEntity.protocolType = protocol;
-        LOGI("negotiate result: protocol: %d, cmds: %u", impl->protocolEntity.protocolType,
+        LOGI("negotiate result: protocol: %" LOG_PUB "d, cmds: %" LOG_PUB "u", impl->protocolEntity.protocolType,
             impl->protocolEntity.expandProcessCmds);
         return HC_SUCCESS;
     }
@@ -1550,7 +1553,7 @@ static int32_t SetAuthPsk(SessionImpl *impl, const CJson *inputData, IdentityInf
     Uint8Buff psk;
     int32_t res = GetSharedSecret(impl, inputData, cred, &psk);
     if (res != HC_SUCCESS) {
-        LOGE("get psk fail. [Res]: %d", res);
+        LOGE("get psk fail. [Res]: %" LOG_PUB "d", res);
         return res;
     }
     res = curAuthSubSession->setPsk(curAuthSubSession, &psk);
@@ -1584,7 +1587,8 @@ static int32_t ProcHandshakeReqEventInner(SessionImpl *impl, SessionEvent *input
     if (res != HC_SUCCESS) {
         return res;
     }
-    LOGI("Recevice handshake with peer. [CredIndex]: %u, [CredTotalNum]: %u", impl->credCurIndex, impl->credTotalNum);
+    LOGI("Recevice handshake with peer. [CredIndex]: %" LOG_PUB "u, [CredTotalNum]: %" LOG_PUB "u", impl->credCurIndex,
+        impl->credTotalNum);
     res = GetSessionSaltFromInput(impl, inputEvent->data);
     if (res != HC_SUCCESS) {
         return res;
@@ -1645,7 +1649,7 @@ static int32_t RemoveInvalidAuthSubSession(SessionImpl *impl)
             index++;
             continue;
         }
-        LOGI("remove invalid authSubSession. [ProtocolType]: %d", curProtocolType);
+        LOGI("remove invalid authSubSession. [ProtocolType]: %" LOG_PUB "d", curProtocolType);
         AuthSubSession *popAuthSubSession;
         HC_VECTOR_POPELEMENT(&impl->authSubSessionList, &popAuthSubSession, index);
         popAuthSubSession->destroy(popAuthSubSession);
@@ -1687,10 +1691,10 @@ static int32_t AddAllCmds(SessionImpl *impl)
         if ((CMDS_LIB[i].id & cmds) != 0) {
             int32_t res = CMDS_LIB[i].cmdGenerator(impl);
             if (res != HC_SUCCESS) {
-                LOGE("add cmd fail. [CmdId]: %u", CMDS_LIB[i].id);
+                LOGE("add cmd fail. [CmdId]: %" LOG_PUB "u", CMDS_LIB[i].id);
                 return res;
             }
-            LOGI("add cmd success. [CmdId]: %u", CMDS_LIB[i].id);
+            LOGI("add cmd success. [CmdId]: %" LOG_PUB "u", CMDS_LIB[i].id);
         }
     }
     return HC_SUCCESS;
@@ -1725,7 +1729,7 @@ static int32_t ProcAuthSubSessionMsg(AuthSubSession *authSubSession, const CJson
     CJson *authData = NULL;
     int32_t res = authSubSession->process(authSubSession, receviedMsg, &authData);
     if (res != HC_SUCCESS) {
-        LOGE("process auth sub session fail. [Res]: %d", res);
+        LOGE("process auth sub session fail. [Res]: %" LOG_PUB "d", res);
         if (authData != NULL) {
             (void)AddAuthMsgToSessionMsg(authSubSession, authData, sessionMsg);
             FreeJson(authData);
@@ -1785,7 +1789,7 @@ static int32_t ProcAuthEventInner(SessionImpl *impl, SessionEvent *inputEvent, C
     }
     AuthSubSession *curAuthSubSession = impl->authSubSessionList.get(&impl->authSubSessionList, 0);
     if (protocolType != curAuthSubSession->protocolType) {
-        LOGI("Protocol type mismatch. Ignore it. [ProtocolType]: %d", protocolType);
+        LOGI("Protocol type mismatch. Ignore it. [ProtocolType]: %" LOG_PUB "d", protocolType);
         return HC_SUCCESS;
     }
     IdentityInfo *selfCred = HC_VECTOR_GET(&impl->credList, 0);
@@ -1818,7 +1822,7 @@ static int32_t ProcExpandEventInner(SessionImpl *impl, SessionEvent *inputEvent,
     CJson *expandData = NULL;
     int32_t res = impl->expandSubSession->process(impl->expandSubSession, inputEvent->data, &expandData);
     if (res != HC_SUCCESS) {
-        LOGE("process expand sub session fail. [Res]: %d", res);
+        LOGE("process expand sub session fail. [Res]: %" LOG_PUB "d", res);
         if (expandData != NULL) {
             (void)AddMsgToSessionMsg(EXPAND_EVENT, expandData, sessionMsg);
             FreeJson(expandData);
@@ -1841,7 +1845,7 @@ static int32_t ProcFailEvent(SessionImpl *impl, SessionEvent *inputEvent, CJson 
     (void)sessionMsg;
     int32_t peerErrorCode = HC_ERR_PEER_ERROR;
     (void)GetIntFromJson(inputEvent->data, FIELD_ERROR_CODE, &peerErrorCode);
-    LOGE("An exception occurred in the peer session. [Code]: %d", peerErrorCode);
+    LOGE("An exception occurred in the peer session. [Code]: %" LOG_PUB "d", peerErrorCode);
     return RestartSession(impl, policy) == HC_SUCCESS ? HC_SUCCESS : peerErrorCode;
 }
 
@@ -1950,7 +1954,7 @@ int32_t SessionSwitchState(SessionImpl *impl, SessionEvent *event, CJson *sessio
             int32_t preState = impl->curState;
             int32_t res = STATE_MACHINE[i].processFunc(impl, event, sessionMsg, &policy);
             if (res != HC_SUCCESS) {
-                LOGE("An error occurred. [Res]: %d", res);
+                LOGE("An error occurred. [Res]: %" LOG_PUB "d", res);
                 impl->curState = SESSION_FAIL_STATE;
                 return res;
             }
@@ -1961,11 +1965,13 @@ int32_t SessionSwitchState(SessionImpl *impl, SessionEvent *event, CJson *sessio
             } else if (policy == JUMP_TO_FINISH_STATE) {
                 impl->curState = SESSION_FINISH_STATE;
             }
-            LOGI("[Event]: %d, [CurState]: %d, [nextState]: %d", event->type, preState, impl->curState);
+            LOGI("[Event]: %" LOG_PUB "d, [CurState]: %" LOG_PUB "d, [nextState]: %" LOG_PUB "d", event->type, preState,
+                impl->curState);
             return HC_SUCCESS;
         }
     }
-    LOGI("Unsupported event type. Ignore process. [Event]: %d, [CurState]: %d", event->type, impl->curState);
+    LOGI("Unsupported event type. Ignore process. [Event]: %" LOG_PUB "d, [CurState]: %" LOG_PUB "d", event->type,
+        impl->curState);
     return HC_SUCCESS;
 }
 

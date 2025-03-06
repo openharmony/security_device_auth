@@ -131,7 +131,7 @@ int ClientProtocolMessageOut(CJson *out, int opCode, uint32_t step)
             res = AddIntToJson(sendToPeer, FIELD_MESSAGE, step);
             break;
         default:
-            LOGE("Unsupported opCode: %d.", opCode);
+            LOGE("Unsupported opCode: %" LOG_PUB "d.", opCode);
             return HC_ERR_NOT_SUPPORT;
     }
     return (res == 0) ? HC_SUCCESS : HC_ERR_JSON_ADD;
@@ -158,7 +158,7 @@ int ServerProtocolMessageOut(CJson *out, int opCode, uint32_t step)
             res = AddIntToJson(sendToPeer, FIELD_MESSAGE, step);
             break;
         default:
-            LOGE("Unsupported opCode: %d.", opCode);
+            LOGE("Unsupported opCode: %" LOG_PUB "d.", opCode);
             return HC_ERR_NOT_SUPPORT;
     }
     return (res == 0) ? HC_SUCCESS : HC_ERR_JSON_ADD;
@@ -375,7 +375,7 @@ int32_t GenerateKeyAlias(const Uint8Buff *pkgName, const Uint8Buff *serviceType,
     }
     res = CombineServiceId(pkgName, serviceType, &serviceId);
     if (res != HC_SUCCESS) {
-        LOGE("CombineServiceId failed, res: %x.", res);
+        LOGE("CombineServiceId failed, res: %" LOG_PUB "x.", res);
         goto ERR;
     }
     Uint8Buff keyTypeBuff = { GetKeyTypePair(keyType), KEY_TYPE_PAIR_LEN };
@@ -385,7 +385,7 @@ int32_t GenerateKeyAlias(const Uint8Buff *pkgName, const Uint8Buff *serviceType,
         res = CombineKeyAliasForPake(&serviceId, &keyTypeBuff, authId, outKeyAlias);
     }
     if (res != HC_SUCCESS) {
-        LOGE("CombineKeyAlias failed, keyType: %d, res: %d", keyType, res);
+        LOGE("CombineKeyAlias failed, keyType: %" LOG_PUB "d, res: %" LOG_PUB "d", keyType, res);
     }
 ERR:
     HcFree(serviceId.val);
@@ -469,12 +469,12 @@ int32_t GetIdPeer(const CJson *in, const char *peerIdKey, const Uint8Buff *authI
     }
     uint32_t authIdLen = HcStrlen(authIdStr) / BYTE_TO_HEX_OPER_LENGTH;
     if (authIdLen == 0 || authIdLen > MAX_AUTH_ID_LEN) {
-        LOGE("Invalid authIdPeerLen: %u.", authIdLen);
+        LOGE("Invalid authIdPeerLen: %" LOG_PUB "u.", authIdLen);
         return HC_ERR_INVALID_LEN;
     }
     int32_t res = InitSingleParam(authIdPeer, authIdLen);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for peer authId failed, res: %d.", res);
+        LOGE("InitSingleParam for peer authId failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     if (HexStringToByte(authIdStr, authIdPeer->val, authIdPeer->length) != HC_SUCCESS) {
@@ -540,7 +540,7 @@ int32_t GetAuthIdPeerFromPayload(const CJson *in, const Uint8Buff *authIdSelf, U
     }
     int res = GetIdPeer(payload, FIELD_PEER_AUTH_ID, authIdSelf, authIdPeer);
     if (res != HC_SUCCESS) {
-        LOGE("GetIdPeer failed, res: %d.", res);
+        LOGE("GetIdPeer failed, res: %" LOG_PUB "d.", res);
     }
     return res;
 }

@@ -178,7 +178,7 @@ static int32_t GenerateKeyAlias(const CmdParams *params, Uint8Buff *keyAlias)
     Uint8Buff serviceId = { serviceIdVal, SHA256_LEN };
     int32_t res = CalServiceId(params->appId, params->groupId, &serviceId);
     if (res != HC_SUCCESS) {
-        LOGE("CombineServiceId failed, res: %x.", res);
+        LOGE("CombineServiceId failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     Uint8Buff keyTypeBuff = { GetKeyTypePair(KEY_ALIAS_AUTH_TOKEN), KEY_TYPE_PAIR_LEN };
@@ -222,7 +222,7 @@ static int32_t GetAuthIdPeerFromInput(const CJson *inputEvent, CmdParams *params
     }
     uint32_t authIdPeerStrLen = HcStrlen(authIdPeerStr) / BYTE_TO_HEX_OPER_LENGTH;
     if (authIdPeerStrLen == 0) {
-        LOGE("Invalid authIdPeerStrLen: %u.", authIdPeerStrLen);
+        LOGE("Invalid authIdPeerStrLen: %" LOG_PUB "u.", authIdPeerStrLen);
         return HC_ERR_CONVERT_FAILED;
     }
     if (InitUint8Buff(&params->authIdPeer, authIdPeerStrLen) != HC_SUCCESS) {
@@ -257,7 +257,7 @@ static int32_t ServerGenAuthCodeProcEvent(CmdParams *params)
     Uint8Buff authCode = { authCodeVal, AUTH_CODE_LEN };
     int32_t res = GetLoaderInstance()->generateRandom(&authCode);
     if (res != HC_SUCCESS) {
-        LOGE("generate auth code failed, res:%d", res);
+        LOGE("generate auth code failed, res:%" LOG_PUB "d", res);
         return res;
     }
     if (DeepCopyUint8Buff(&authCode, &params->authCode) != HC_SUCCESS) {
@@ -268,10 +268,11 @@ static int32_t ServerGenAuthCodeProcEvent(CmdParams *params)
     Uint8Buff keyAlias = { keyAliasVal, KEY_ALIAS_LEN };
     res = GenerateKeyAlias(params, &keyAlias);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateKeyAliasInIso failed, res:%d", res);
+        LOGE("GenerateKeyAliasInIso failed, res:%" LOG_PUB "d", res);
         return res;
     }
-    LOGI("AuthCode alias(HEX): %x %x %x %x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
+    LOGI("AuthCode alias(HEX): %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x****.",
+        keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
         keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
     ExtraInfo exInfo = { params->authIdPeer, params->userTypePeer, PAIR_TYPE_BIND };
     KeyParams keyParams = { { keyAlias.val, keyAlias.length, true }, false, params->osAccountId };
@@ -347,11 +348,12 @@ static int32_t ClientImportAuthCodeProcEvent(const CmdParams *params)
     Uint8Buff keyAlias = { keyAliasVal, KEY_ALIAS_LEN };
     int32_t res = GenerateKeyAlias(params, &keyAlias);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateKeyAliasInIso failed, res:%d", res);
+        LOGE("GenerateKeyAliasInIso failed, res:%" LOG_PUB "d", res);
         return res;
     }
 
-    LOGI("AuthCode alias(HEX): %x %x %x %x****.", keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
+    LOGI("AuthCode alias(HEX): %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x****.",
+        keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
         keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
     ExtraInfo exInfo = { params->authIdPeer, params->userTypePeer, PAIR_TYPE_BIND };
     KeyParams keyParams = { { keyAlias.val, keyAlias.length, true }, false, params->osAccountId };
@@ -397,7 +399,7 @@ static int32_t ThrowException(BaseCmd *self, const CJson *baseEvent, CJson **out
     (void)outputEvent;
     int32_t peerErrorCode = HC_ERR_PEER_ERROR;
     (void)GetIntFromJson(baseEvent, FIELD_ERR_CODE, &peerErrorCode);
-    LOGE("An exception occurred in the peer cmd. [Code]: %d", peerErrorCode);
+    LOGE("An exception occurred in the peer cmd. [Code]: %" LOG_PUB "d", peerErrorCode);
     return peerErrorCode;
 }
 
@@ -469,13 +471,15 @@ static int32_t SwitchState(BaseCmd *self, const CJson *receviedMsg, CJson **retu
                 self->curState = self->failState;
                 return res;
             }
-            LOGI("event: %d, curState: %d, nextState: %d", eventType, self->curState, STATE_MACHINE[i].nextState);
+            LOGI("event: %" LOG_PUB "d, curState: %" LOG_PUB "d, nextState: %" LOG_PUB "d", eventType, self->curState,
+                STATE_MACHINE[i].nextState);
             self->curState = STATE_MACHINE[i].nextState;
             *returnState = (self->curState == self->finishState) ? CMD_STATE_FINISH : CMD_STATE_CONTINUE;
             return HC_SUCCESS;
         }
     }
-    LOGI("Unsupported event type. Ignore process. [Event]: %d, [CurState]: %d", eventType, self->curState);
+    LOGI("Unsupported event type. Ignore process. [Event]: %" LOG_PUB "d, [CurState]: %" LOG_PUB "d",
+        eventType, self->curState);
     return HC_SUCCESS;
 }
 

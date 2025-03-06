@@ -36,10 +36,10 @@ void *StaticThreadFunc(void *args)
 #if defined(SET_THREAD_NAME)
     int res = pthread_setname_np(pthread_self(), StringGet(&thread->name));
     if (res != 0) {
-        LOGW("[OS]: pthread_setname_np fail. [Res]: %d", res);
+        LOGW("[OS]: pthread_setname_np fail. [Res]: %" LOG_PUB "d", res);
     } else {
-        LOGI("[OS]: pthread_setname_np success. [StackSize]: %zu, [Name]: %s",
-            thread->stackSize, StringGet(&thread->name));
+        LOGI("[OS]: pthread_setname_np success. [StackSize]: %" LOG_PUB "zu, [Name]: %" LOG_PUB "s", thread->stackSize,
+            StringGet(&thread->name));
     }
 #endif
 
@@ -75,10 +75,10 @@ int Start(struct HcThreadT *thread)
 
     LOGI("[OS]: pthread_create enter.");
     int res = pthread_create(&thread->thread, &attr, StaticThreadFunc, thread);
-    LOGI("[OS]: pthread_create quit. [Res]: %d", res);
+    LOGI("[OS]: pthread_create quit. [Res]: %" LOG_PUB "d", res);
     pthread_attr_destroy(&attr);
     if (res != 0) {
-        LOGE("[OS]: pthread_create fail. [Res]: %d", res);
+        LOGE("[OS]: pthread_create fail. [Res]: %" LOG_PUB "d", res);
         thread->running = HC_FALSE;
     }
     UnlockHcMutex(&thread->threadLock);

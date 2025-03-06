@@ -183,12 +183,12 @@ int32_t GetCurrentActiveOsAccountId(void)
     std::vector<int> activatedOsAccountIds;
     OHOS::ErrCode res = OHOS::AccountSA::OsAccountManager::QueryActiveOsAccountIds(activatedOsAccountIds);
     if ((res != OHOS::ERR_OK) || (activatedOsAccountIds.size() <= 0)) {
-        LOGE("[OsAccountNativeFwk][QueryActiveOsAccountIds]: fail. [Res]: %d", res);
+        LOGE("[OsAccountNativeFwk][QueryActiveOsAccountIds]: fail. [Res]: %" LOG_PUB "d", res);
         return INVALID_OS_ACCOUNT;
     }
     int osAccountId = activatedOsAccountIds[0];
     if (osAccountId != SYSTEM_DEFAULT_USER) {
-        LOGI("[OsAccountNativeFwk][QueryActiveOsAccountIds]: Current active os accountId: %d", osAccountId);
+        LOGI("[OsAccountNativeFwk][QueryActiveOsAccountIds]: Current active os accountId: %" LOG_PUB "d", osAccountId);
     }
     return osAccountId;
 }
@@ -225,8 +225,8 @@ bool IsOsAccountUnlocked(int32_t osAccountId)
     bool isUnlocked = false;
     OHOS::ErrCode res = OHOS::AccountSA::OsAccountManager::IsOsAccountVerified(osAccountId, isUnlocked);
     if (res != OHOS::ERR_OK) {
-        LOGE("[OsAccountNativeFwk][IsOsAccountVerified]: Check account verify status failed, res: %d, accountId: %d",
-            res, osAccountId);
+        LOGE("[OsAccountNativeFwk][IsOsAccountVerified]: Check account verify status failed, res: %" LOG_PUB
+            "d, accountId: %" LOG_PUB "d", res, osAccountId);
         return false;
     }
     return isUnlocked;
@@ -242,7 +242,7 @@ int32_t GetAllOsAccountIds(int32_t **osAccountIds, uint32_t *size)
     OHOS::ErrCode res = OHOS::AccountSA::OsAccountManager::QueryAllCreatedOsAccounts(osAccountInfos);
     uint32_t accountSize = osAccountInfos.size();
     if ((res != OHOS::ERR_OK) || (accountSize <= 0)) {
-        LOGE("[OsAccountNativeFwk][QueryAllCreatedOsAccounts]: failed. [Res]: %d", res);
+        LOGE("[OsAccountNativeFwk][QueryAllCreatedOsAccounts]: failed. [Res]: %" LOG_PUB "d", res);
         return HC_ERROR;
     }
     *osAccountIds = (int32_t *)HcMalloc(accountSize * sizeof(int32_t), 0);
@@ -263,11 +263,11 @@ int32_t DevAuthGetRealOsAccountLocalId(int32_t inputId)
         return GetCurrentActiveOsAccountId();
     } else if (inputId >= SYSTEM_DEFAULT_USER) {
         if (inputId != SYSTEM_DEFAULT_USER) {
-            LOGI("[OsAccountAdapter]: Use input os account! [Id]: %d", inputId);
+            LOGI("[OsAccountAdapter]: Use input os account! [Id]: %" LOG_PUB "d", inputId);
         }
         return inputId;
     } else {
-        LOGE("[OsAccountAdapter]: The input os account is invalid! [Id]: %d", inputId);
+        LOGE("[OsAccountAdapter]: The input os account is invalid! [Id]: %" LOG_PUB "d", inputId);
         return INVALID_OS_ACCOUNT;
     }
 }

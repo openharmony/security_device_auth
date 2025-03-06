@@ -41,7 +41,7 @@ static int32_t ParsePlugins(const ExtPartProxy *pluginProxy)
                 SetAccountAuthPlugin(NULL, (AccountAuthExtPlug *)(current->plugin));
                 break;
             default:
-                LOGW("Invalid plugin type %d", current->plugin->pluginType);
+                LOGW("Invalid plugin type %" LOG_PUB "d", current->plugin->pluginType);
                 break;
         }
         current = current->next;

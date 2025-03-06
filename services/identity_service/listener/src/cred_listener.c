@@ -46,7 +46,7 @@ void OnCredAdd(const char *credId, const char *credInfo)
     (void)LockHcMutex(g_credListenerMutex);
     FOR_EACH_HC_VECTOR(g_credListenerVec, index, entry) {
         if (entry != NULL && entry->listener != NULL && entry->listener->onCredAdd != NULL) {
-            LOGI("[CredListener]: OnCredAdd! [AppId]: %s", entry->appId);
+            LOGI("[CredListener]: OnCredAdd! [AppId]: %" LOG_PUB "s", entry->appId);
             entry->listener->onCredAdd(credId, credInfo);
         }
     }
@@ -67,7 +67,7 @@ void OnCredDelete(const char *credId, const char *credInfo)
     (void)LockHcMutex(g_credListenerMutex);
     FOR_EACH_HC_VECTOR(g_credListenerVec, index, entry) {
         if (entry != NULL && entry->listener != NULL && entry->listener->onCredDelete != NULL) {
-            LOGI("[CredListener]: OnCredDelete! [AppId]: %s", entry->appId);
+            LOGI("[CredListener]: OnCredDelete! [AppId]: %" LOG_PUB "s", entry->appId);
             entry->listener->onCredDelete(credId, credInfo);
         }
     }
@@ -88,7 +88,7 @@ void OnCredUpdate(const char *credId, const char *credInfo)
     (void)LockHcMutex(g_credListenerMutex);
     FOR_EACH_HC_VECTOR(g_credListenerVec, index, entry) {
         if (entry != NULL && entry->listener != NULL && entry->listener->onCredUpdate != NULL) {
-            LOGI("[CredListener]: OnCredUpdate! [AppId]: %s", entry->appId);
+            LOGI("[CredListener]: OnCredUpdate! [AppId]: %" LOG_PUB "s", entry->appId);
             entry->listener->onCredUpdate(credId, credInfo);
         }
     }
@@ -108,7 +108,7 @@ static int32_t UpdateListenerIfExist(const char *appId, const CredChangeListener
                 return IS_ERR_MEMORY_COPY;
             }
             UnlockHcMutex(g_credListenerMutex);
-            LOGI("[CredListener]: Successfully updated a listener. [AppId]: %s", appId);
+            LOGI("[CredListener]: Successfully updated a listener. [AppId]: %" LOG_PUB "s", appId);
             return IS_SUCCESS;
         }
     }
@@ -153,7 +153,7 @@ static int32_t AddListenerIfNotExist(const char *appId, const CredChangeListener
         return IS_ERR_MEMORY_COPY;
     }
     UnlockHcMutex(g_credListenerMutex);
-    LOGI("[CredListener]: Successfully added a listener. [AppId]: %s", appId);
+    LOGI("[CredListener]: Successfully added a listener. [AppId]: %" LOG_PUB "s", appId);
     return IS_SUCCESS;
 }
 
@@ -227,10 +227,10 @@ int32_t RemoveCredListener(const char *appId)
             HcFree(entry->listener);
             CredListenerEntry tempEntry;
             HC_VECTOR_POPELEMENT(&g_credListenerVec, &tempEntry, index);
-            LOGI("[CredListener]: Successfully removed a cred listener. [AppId]: %s", appId);
+            LOGI("[CredListener]: Successfully removed a cred listener. [AppId]: %" LOG_PUB "s", appId);
             return IS_SUCCESS;
         }
     }
-    LOGI("[CredListener]: The cred listener does not exist! [AppId]: %s", appId);
+    LOGI("[CredListener]: The cred listener does not exist! [AppId]: %" LOG_PUB "s", appId);
     return IS_SUCCESS;
 }

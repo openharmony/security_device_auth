@@ -50,7 +50,7 @@ static int32_t CreateDirectory(const char *filePath)
         if (access(dirCache, F_OK) != 0) {
             res = mkdir(dirCache, S_IRWXU);
             if (res != 0) {
-                LOGE("[OS]: mkdir fail. [Res]: %d, [errno]: %d", res, errno);
+                LOGE("[OS]: mkdir fail. [Res]: %" LOG_PUB "d, [errno]: %" LOG_PUB "d", res, errno);
                 return -1;
             }
         }
@@ -74,12 +74,12 @@ static FILE *HcFileOpenWrite(const char *path)
     }
     FILE *fp = fopen(path, "wb+");
     if (fp == NULL) {
-        LOGE("[OS]: fopen fail. [errno]: %d", errno);
+        LOGE("[OS]: fopen fail. [errno]: %" LOG_PUB "d", errno);
         return NULL;
     }
     int res = fchmod(fileno(fp), S_IRUSR | S_IWUSR | S_IRGRP);
     if (res != 0) {
-        LOGW("[OS]: fchmod fail. [Res]: %d, [errno]: %d", res, errno);
+        LOGW("[OS]: fchmod fail. [Res]: %" LOG_PUB "d, [errno]: %" LOG_PUB "d", res, errno);
     }
     return fp;
 }
@@ -126,7 +126,7 @@ int HcFileRead(FileHandle file, void *dst, int dstSize)
 
     char *dstBuffer = (char *)dst;
     int total = 0;
-    LOGI("[OS]: file read enter. [OriSize]: %d", dstSize);
+    LOGI("[OS]: file read enter. [OriSize]: %" LOG_PUB "d", dstSize);
     while (total < dstSize) {
         int readCount = (int)fread(dstBuffer + total, 1, dstSize - total, fp);
         if (ferror(fp) != 0) {
@@ -137,7 +137,7 @@ int HcFileRead(FileHandle file, void *dst, int dstSize)
         }
         total += readCount;
     }
-    LOGI("[OS]: file read quit. [ReadSize]: %d", total);
+    LOGI("[OS]: file read quit. [ReadSize]: %" LOG_PUB "d", total);
     return total;
 }
 
@@ -154,7 +154,7 @@ int HcFileWrite(FileHandle file, const void *src, int srcSize)
     }
     const char *srcBuffer = (const char *)src;
     int total = 0;
-    LOGI("[OS]: file write enter. [OriSize]: %d", srcSize);
+    LOGI("[OS]: file write enter. [OriSize]: %" LOG_PUB "d", srcSize);
     while (total < srcSize) {
         int writeCount = (int)fwrite(srcBuffer + total, 1, srcSize - total, fp);
         if (ferror(fp) != 0) {
@@ -162,12 +162,12 @@ int HcFileWrite(FileHandle file, const void *src, int srcSize)
         }
         total += writeCount;
     }
-    LOGI("[OS]: file write quit. [WriteSize]: %d", total);
+    LOGI("[OS]: file write quit. [WriteSize]: %" LOG_PUB "d", total);
     if (fflush(fp) != 0) {
-        LOGE("[OS]: fflush fail. [errno]: %d", errno);
+        LOGE("[OS]: fflush fail. [errno]: %" LOG_PUB "d", errno);
     }
     if (fsync(fileno(fp)) != 0) {
-        LOGE("[OS]: fsync fail. [errno]: %d", errno);
+        LOGE("[OS]: fsync fail. [errno]: %" LOG_PUB "d", errno);
     }
     return total;
 }

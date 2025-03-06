@@ -506,7 +506,7 @@ int32_t MbedtlsHashToPoint(const Uint8Buff *hash, Uint8Buff *outEcPoint)
 
     int32_t ret = EcHashToPoint(&hashBlob, &pointBlob);
     if (ret != 0 || pointBlob.dataSize != EC_LEN) {
-        LOGE("HashToPoint with mbedtls for P256 failed, ret: %d", ret);
+        LOGE("HashToPoint with mbedtls for P256 failed, ret: %" LOG_PUB "d", ret);
         return HAL_FAILED;
     }
 
@@ -529,7 +529,7 @@ int32_t MbedtlsHashToPoint25519(const Uint8Buff *hash, Uint8Buff *outEcPoint)
     SwapEndian(hashTmp, BYTE_LENGTH_CURVE_25519);
     int status = Elligator(outEcPoint->val, BYTE_LENGTH_CURVE_25519, hashTmp, BYTE_LENGTH_CURVE_25519);
     if (status != 0) {
-        LOGE("Elligator failed, status:%d", status);
+        LOGE("Elligator failed, status:%" LOG_PUB "d", status);
     }
     return status;
 }
@@ -561,7 +561,7 @@ int32_t MbedtlsAgreeSharedSecret(const KeyBuff *priKey, const KeyBuff *pubKey, U
     };
     int32_t ret = EcKeyAgreement(&priKeyBlob, &pubKeyBlob, &sharedKeyBlob);
     if (ret != 0) {
-        LOGE("Agree key failed, ret = %d", ret);
+        LOGE("Agree key failed, ret = %" LOG_PUB "d", ret);
         return HAL_FAILED;
     }
     return HAL_SUCCESS;
@@ -578,14 +578,14 @@ int32_t MbedtlsBase64Encode(const uint8_t *byte, uint32_t byteLen, char *base64S
     size_t needBuffLen = 0;
     (void)mbedtls_base64_encode(NULL, 0, &needBuffLen, byte, byteLen);
     if (needBuffLen > strLen) {
-        LOGE("The content to be written is larger than the input buffer size. Need: %zd, Buffer: %u",
-            needBuffLen, strLen);
+        LOGE("The content to be written is larger than the input buffer size. Need: %" LOG_PUB "zd, Buffer: %"
+            LOG_PUB "u", needBuffLen, strLen);
         return HAL_ERR_SHORT_BUFFER;
     }
 
     int res = mbedtls_base64_encode((unsigned char *)base64Str, strLen, &needBuffLen, byte, byteLen);
     if (res != 0) {
-        LOGE("call mbedtls's mbedtls_base64_encode fail. res: %d", res);
+        LOGE("call mbedtls's mbedtls_base64_encode fail. res: %" LOG_PUB "d", res);
         return HAL_ERR_MBEDTLS;
     }
 
@@ -609,14 +609,14 @@ int32_t MbedtlsBase64Decode(const char *base64Str, uint32_t strLen, uint8_t *byt
     }
 
     if (needBuffLen > byteLen) {
-        LOGE("The content to be written is larger than the input buffer size. Need: %zd, Buffer: %u",
-            needBuffLen, byteLen);
+        LOGE("The content to be written is larger than the input buffer size. Need: %" LOG_PUB "zd, Buffer: %"
+            LOG_PUB "u", needBuffLen, byteLen);
         return HAL_ERR_SHORT_BUFFER;
     }
 
     res = mbedtls_base64_decode(byte, byteLen, &needBuffLen, (const unsigned char *)base64Str, strLen);
     if (res != 0) {
-        LOGE("call mbedtls's mbedtls_base64_decode fail. res: %d", res);
+        LOGE("call mbedtls's mbedtls_base64_decode fail. res: %" LOG_PUB "d", res);
         return HAL_ERR_MBEDTLS;
     }
 

@@ -140,7 +140,7 @@ static int32_t ClientSendTrustedInfoProcEvent(CmdParams *params)
     char udid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return res;
     }
     if (DeepCopyString(udid, &params->udidSelf) != HC_SUCCESS) {
@@ -471,7 +471,7 @@ static int32_t ServerSendTrustedInfoProcEvent(CmdParams *params)
     char udid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return res;
     }
     if (DeepCopyString(udid, &params->udidSelf) != HC_SUCCESS) {
@@ -662,7 +662,7 @@ static int32_t ThrowException(BaseCmd *self, const CJson *baseEvent, CJson **out
     (void)outputEvent;
     int32_t peerErrorCode = HC_ERR_PEER_ERROR;
     (void)GetIntFromJson(baseEvent, FIELD_ERR_CODE, &peerErrorCode);
-    LOGE("An exception occurred in the peer cmd. [Code]: %d", peerErrorCode);
+    LOGE("An exception occurred in the peer cmd. [Code]: %" LOG_PUB "d", peerErrorCode);
     return peerErrorCode;
 }
 
@@ -738,13 +738,15 @@ static int32_t SwitchState(BaseCmd *self, const CJson *receviedMsg, CJson **retu
                 self->curState = self->failState;
                 return res;
             }
-            LOGI("event: %d, curState: %d, nextState: %d", eventType, self->curState, STATE_MACHINE[i].nextState);
+            LOGI("event: %" LOG_PUB "d, curState: %" LOG_PUB "d, nextState: %" LOG_PUB "d", eventType, self->curState,
+                STATE_MACHINE[i].nextState);
             self->curState = STATE_MACHINE[i].nextState;
             *returnState = (self->curState == self->finishState) ? CMD_STATE_FINISH : CMD_STATE_CONTINUE;
             return HC_SUCCESS;
         }
     }
-    LOGI("Unsupported event type. Ignore process. [Event]: %d, [CurState]: %d", eventType, self->curState);
+    LOGI("Unsupported event type. Ignore process. [Event]: %" LOG_PUB "d, [CurState]: %" LOG_PUB "d",
+        eventType, self->curState);
     return HC_SUCCESS;
 }
 

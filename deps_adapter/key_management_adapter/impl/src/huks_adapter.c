@@ -51,13 +51,13 @@ static int32_t Sha256(const Uint8Buff *message, Uint8Buff *hash)
     };
     int32_t res = ConstructParamSet(&paramSet, digestParam, CAL_ARRAY_SIZE(digestParam));
     if (res != HAL_SUCCESS) {
-        LOGE("construct param set failed, res = %d", res);
+        LOGE("construct param set failed, res = %" LOG_PUB "d", res);
         return res;
     }
 
     res = HksHash(paramSet, &srcBlob, &hashBlob);
     if (res != HKS_SUCCESS || hashBlob.size != SHA256_LEN) {
-        LOGE("[HUKS]: HksHash fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksHash fail. [Res]: %" LOG_PUB "d", res);
         FreeParamSet(paramSet);
         return HAL_ERR_HUKS;
     }
@@ -75,7 +75,7 @@ static int32_t GenerateRandom(Uint8Buff *rand)
     struct HksBlob randBlob = { rand->length, rand->val };
     int32_t res = HksGenerateRandom(NULL, &randBlob);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksGenerateRandom fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksGenerateRandom fail. [Res]: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
 
@@ -117,11 +117,11 @@ static int32_t CheckKeyExist(const Uint8Buff *keyAlias, bool isDeStorage, int32_
     FreeParamSet(ceParamSet);
 
     if (res == HKS_ERROR_NOT_EXIST) {
-        LOGE("[HUKS]: Key not exist. [Res]: %d", res);
+        LOGE("[HUKS]: Key not exist. [Res]: %" LOG_PUB "d", res);
         return HAL_ERR_KEY_NOT_EXIST;
     }
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksKeyExist fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksKeyExist fail. [Res]: %" LOG_PUB "d", res);
         return HAL_ERR_HUKS;
     }
 
@@ -159,7 +159,7 @@ static int32_t DeleteKey(const Uint8Buff *keyAlias, bool isDeStorage, int32_t os
             res = HksDeleteKey(&keyAliasBlob, deParamSet);
         }
     }
-    LOGI("[HUKS]: HksDeleteKey quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksDeleteKey quit. [Res]: %" LOG_PUB "d", res);
 
     FreeParamSet(deParamSet);
     FreeParamSet(ceParamSet);
@@ -168,7 +168,7 @@ static int32_t DeleteKey(const Uint8Buff *keyAlias, bool isDeStorage, int32_t os
         return HAL_SUCCESS;
     }
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksDeleteKey fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksDeleteKey fail. [Res]: %" LOG_PUB "d", res);
         return HAL_ERR_HUKS;
     }
     return HAL_SUCCESS;
@@ -205,11 +205,11 @@ static int32_t ComputeHmac(const KeyParams *keyParams, const Uint8Buff *message,
             res = HksMac(&keyBlob, deParamSet, &srcBlob, &hmacBlob);
         }
     }
-    LOGI("[HUKS]: HksMac quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksMac quit. [Res]: %" LOG_PUB "d", res);
     FreeParamSet(deParamSet);
     FreeParamSet(ceParamSet);
     if (res != HKS_SUCCESS  || hmacBlob.size != HMAC_LEN) {
-        LOGE("[HUKS]: HksMac fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksMac fail. [Res]: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
     return HAL_SUCCESS;
@@ -219,7 +219,7 @@ static void DoAbortHks(struct HksBlob *handleDerive, struct HksParamSet *deriveP
 {
     int32_t res = HksAbort(handleDerive, deriveParamSet);
     if (res != HKS_SUCCESS) {
-        LOGE("Failed to abort huks, res:%d", res);
+        LOGE("Failed to abort huks, res:%" LOG_PUB "d", res);
     }
 }
 
@@ -259,7 +259,8 @@ static int32_t ComputeHmacWithThreeStageInner(const KeyParams *keyParams, const 
         }
         res = HksFinish(&handleDerive, finishParamSet, &inData, &hmacBlob);
         if (res != HKS_SUCCESS || hmacBlob.size != HMAC_LEN) {
-            LOGE("Compute hmac with three stage failed! [Res]: %d, [size]: %d", res, hmacBlob.size);
+            LOGE("Compute hmac with three stage failed! [Res]: %" LOG_PUB "d, [size]: %" LOG_PUB "d",
+                res, hmacBlob.size);
             DoAbortHks(&handleDerive, finishParamSet);
             res = HAL_FAILED;
             break;
@@ -332,11 +333,11 @@ static int32_t ComputeHkdf(const KeyParams *keyParams, const Uint8Buff *salt, co
             res = HksDeriveKey(deParamSet, &srcKeyBlob, &derivedKeyBlob);
         }
     }
-    LOGI("[HUKS]: HksDeriveKey quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksDeriveKey quit. [Res]: %" LOG_PUB "d", res);
     FreeParamSet(deParamSet);
     FreeParamSet(ceParamSet);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksDeriveKey fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksDeriveKey fail. [Res]: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
     return HAL_SUCCESS;
@@ -362,9 +363,9 @@ static int32_t ComputePseudonymPskInner(const KeyParams *keyParams, const Uint8B
     LOGI("[HUKS]: HksDeriveKey enter.");
     res = HksDeriveKey(paramSet, &srcKeyBlob, &derivedKeyBlob);
     FreeParamSet(paramSet);
-    LOGI("[HUKS]: HksDeriveKey quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksDeriveKey quit. [Res]: %" LOG_PUB "d", res);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksDeriveKey fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksDeriveKey fail. [Res]: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
     return HAL_SUCCESS;
@@ -401,7 +402,7 @@ static int32_t ConstructOutParamSet(struct HksParamSet **outParamSet)
 {
     int32_t res = HksInitParamSet(outParamSet);
     if (res != HKS_SUCCESS) {
-        LOGE("init out param set failed, res = %d", res);
+        LOGE("init out param set failed, res = %" LOG_PUB "d", res);
         return HAL_ERR_INIT_PARAM_SET_FAILED;
     }
 
@@ -428,7 +429,7 @@ static int32_t ConstructOutParamSet(struct HksParamSet **outParamSet)
     res = HksBuildParamSet(outParamSet);
     HcFree(blobVal);
     if (res != HKS_SUCCESS) {
-        LOGE("build param set failed, res = %d", res);
+        LOGE("build param set failed, res = %" LOG_PUB "d", res);
         HksFreeParamSet(outParamSet);
         return HAL_ERR_BUILD_PARAM_SET_FAILED;
     }
@@ -511,9 +512,9 @@ static int32_t AesGcmEncrypt(const KeyParams *keyParams, const Uint8Buff *plain,
     LOGI("[HUKS]: HksEncrypt enter.");
     res = HksEncrypt(&keyBlob, paramSet, &plainBlob, &cipherBlob);
     FreeParamSet(paramSet);
-    LOGI("[HUKS]: HksEncrypt quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksEncrypt quit. [Res]: %" LOG_PUB "d", res);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksEncrypt fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksEncrypt fail. [Res]: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
     return HAL_SUCCESS;
@@ -540,9 +541,9 @@ static int32_t AesGcmDecrypt(const KeyParams *keyParams, const Uint8Buff *cipher
     LOGI("[HUKS]: HksDecrypt enter.");
     res = HksDecrypt(&keyBlob, paramSet, &cipherBlob, &plainBlob);
     FreeParamSet(paramSet);
-    LOGI("[HUKS]: HksDecrypt quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksDecrypt quit. [Res]: %" LOG_PUB "d", res);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksDecrypt fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksDecrypt fail. [Res]: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
     return HAL_SUCCESS;
@@ -557,7 +558,7 @@ static int32_t HashToPoint(const Uint8Buff *hash, Algorithm algo, Uint8Buff *out
     CHECK_PTR_RETURN_HAL_ERROR_CODE(outEcPoint->val, "outEcPoint->val");
 
     if (algo != X25519 && algo != P256) {
-        LOGE("Compute algo: %d.", algo);
+        LOGE("Compute algo: %" LOG_PUB "d.", algo);
         return HAL_ERR_INVALID_PARAM;
     }
     if (algo == P256) {
@@ -594,22 +595,22 @@ static int32_t AgreeSharedSecretWithStorageP256(const KeyParams *priKeyParams, c
     do {
         res = HksInit(&priKeyAliasBlob, initParamSet, &handleBlob, NULL);
         if (res != HKS_SUCCESS) {
-            LOGE("Huks agree P256 key: HksInit failed, res = %d", res);
+            LOGE("Huks agree P256 key: HksInit failed, res = %" LOG_PUB "d", res);
             res = HAL_ERR_HUKS;
             break;
         }
         res = HksUpdate(&handleBlob, initParamSet, &pubKeyBlob, &outDataUpdateBlob);
         if (res != HKS_SUCCESS) {
-            LOGE("Huks agree P256 key: HksUpdate failed, res = %d", res);
+            LOGE("Huks agree P256 key: HksUpdate failed, res = %" LOG_PUB "d", res);
             DoAbortHks(&handleBlob, initParamSet);
             res = HAL_ERR_HUKS;
             break;
         }
         LOGI("[HUKS]: HksFinish enter.");
         res = HksFinish(&handleBlob, finishParamSet, &pubKeyBlob, &outDataFinishBlob);
-        LOGI("[HUKS]: HksFinish quit. [Res]: %d", res);
+        LOGI("[HUKS]: HksFinish quit. [Res]: %" LOG_PUB "d", res);
         if (res != HKS_SUCCESS) {
-            LOGE("[HUKS]: HksFinish fail. [Res]: %d", res);
+            LOGE("[HUKS]: HksFinish fail. [Res]: %" LOG_PUB "d", res);
             DoAbortHks(&handleBlob, finishParamSet);
             res = HAL_ERR_HUKS;
             break;
@@ -665,11 +666,11 @@ static int32_t AgreeSharedSecretWithStorage(const KeyParams *priKeyParams, const
             res = HksGenerateKey(&sharedKeyAliasBlob, deParamSet, NULL);
         }
     }
-    LOGI("[HUKS]: HksGenerateKey quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksGenerateKey quit. [Res]: %" LOG_PUB "d", res);
     FreeParamSet(deParamSet);
     FreeParamSet(ceParamSet);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksGenerateKey fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksGenerateKey fail. [Res]: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
     return HAL_SUCCESS;
@@ -702,9 +703,9 @@ static int32_t AgreeSharedSecret(const KeyParams *priKeyParams, const KeyBuff *p
     LOGI("[HUKS]: HksAgreeKey enter.");
     res = HksAgreeKey(paramSet, &priKeyBlob, &pubKeyBlob, &sharedKeyBlob);
     FreeParamSet(paramSet);
-    LOGI("[HUKS]: HksAgreeKey quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksAgreeKey quit. [Res]: %" LOG_PUB "d", res);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksAgreeKey fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksAgreeKey fail. [Res]: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
     return HAL_SUCCESS;
@@ -733,9 +734,9 @@ static int32_t GenerateKeyPairWithStorage(const KeyParams *keyParams, uint32_t k
     LOGI("[HUKS]: HksGenerateKey enter.");
     res = HksGenerateKey(&keyAliasBlob, paramSet, NULL);
     FreeParamSet(paramSet);
-    LOGI("[HUKS]: HksGenerateKey quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksGenerateKey quit. [Res]: %" LOG_PUB "d", res);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksGenerateKey fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksGenerateKey fail. [Res]: %" LOG_PUB "d", res);
         return HAL_ERR_HUKS;
     }
     return HAL_SUCCESS;
@@ -745,21 +746,21 @@ static int32_t GetKeyPair(struct HksParamSet *outParamSet, Uint8Buff *outPriKey,
 {
     int32_t res = HksFreshParamSet(outParamSet, false); /* false means fresh by local, not through IPC */
     if (res != HKS_SUCCESS) {
-        LOGE("fresh param set failed, res:%d", res);
+        LOGE("fresh param set failed, res:%" LOG_PUB "d", res);
         return HAL_ERR_FRESH_PARAM_SET_FAILED;
     }
 
     struct HksParam *pubKeyParam = NULL;
     res = HksGetParam(outParamSet, HKS_TAG_ASYMMETRIC_PUBLIC_KEY_DATA, &pubKeyParam);
     if (res != HKS_SUCCESS) {
-        LOGE("get pub key from param set failed, res:%d", res);
+        LOGE("get pub key from param set failed, res:%" LOG_PUB "d", res);
         return HAL_ERR_GET_PARAM_FAILED;
     }
 
     struct HksParam *priKeyParam = NULL;
     res = HksGetParam(outParamSet, HKS_TAG_ASYMMETRIC_PRIVATE_KEY_DATA, &priKeyParam);
     if (res != HKS_SUCCESS) {
-        LOGE("get priv key from param set failed, res:%d", res);
+        LOGE("get priv key from param set failed, res:%" LOG_PUB "d", res);
         return HAL_ERR_GET_PARAM_FAILED;
     }
 
@@ -813,16 +814,16 @@ static int32_t GenerateKeyPair(Algorithm algo, Uint8Buff *outPriKey, Uint8Buff *
 
     LOGI("[HUKS]: HksGenerateKey enter.");
     res = HksGenerateKey(NULL, paramSet, outParamSet);
-    LOGI("[HUKS]: HksGenerateKey quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksGenerateKey quit. [Res]: %" LOG_PUB "d", res);
     if (res != HKS_SUCCESS) {
-        LOGI("[HUKS]: HksGenerateKey quit. [Res]: %d", res);
+        LOGI("[HUKS]: HksGenerateKey quit. [Res]: %" LOG_PUB "d", res);
         res = HAL_FAILED;
         goto ERR;
     }
 
     res = GetKeyPair(outParamSet, outPriKey, outPubKey);
     if (res != HAL_SUCCESS) {
-        LOGE("parse x25519 output param set failed, res:%d", res);
+        LOGE("parse x25519 output param set failed, res:%" LOG_PUB "d", res);
         goto ERR;
     }
 ERR:
@@ -866,11 +867,11 @@ static int32_t ExportPublicKey(const KeyParams *keyParams, Uint8Buff *outPubKey)
             res = HksExportPublicKey(&keyAliasBlob, deParamSet, &keyBlob);
         }
     }
-    LOGI("[HUKS]: HksExportPublicKey quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksExportPublicKey quit. [Res]: %" LOG_PUB "d", res);
     FreeParamSet(deParamSet);
     FreeParamSet(ceParamSet);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksExportPublicKey failed. [Res]: %d", res);
+        LOGE("[HUKS]: HksExportPublicKey failed. [Res]: %" LOG_PUB "d", res);
         return HAL_ERR_HUKS;
     }
     outPubKey->length = keyBlob.size;
@@ -921,11 +922,11 @@ static int32_t Sign(const KeyParams *keyParams, const Uint8Buff *message, Algori
             res = HksSign(&keyAliasBlob, deParamSet, &messageBlob, &signatureBlob);
         }
     }
-    LOGI("[HUKS]: HksSign quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksSign quit. [Res]: %" LOG_PUB "d", res);
     FreeParamSet(deParamSet);
     FreeParamSet(ceParamSet);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksSign fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksSign fail. [Res]: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
     outSignature->length = signatureBlob.size;
@@ -960,9 +961,9 @@ static int32_t Verify(const KeyParams *keyParams, const Uint8Buff *message, Algo
     LOGI("[HUKS]: HksVerify enter.");
     res = HksVerify(&keyAliasBlob, paramSet, &messageBlob, &signatureBlob);
     FreeParamSet(paramSet);
-    LOGI("[HUKS]: HksVerify quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksVerify quit. [Res]: %" LOG_PUB "d", res);
     if ((res != HKS_SUCCESS)) {
-        LOGE("[HUKS]: HksVerify fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksVerify fail. [Res]: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
     return HAL_SUCCESS;
@@ -998,9 +999,9 @@ static int32_t ImportPublicKey(const KeyParams *keyParams, const Uint8Buff *pubK
     LOGI("[HUKS]: HksImportKey enter.");
     res = HksImportKey(&keyAliasBlob, paramSet, &pubKeyBlob);
     FreeParamSet(paramSet);
-    LOGI("[HUKS]: HksImportKey quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksImportKey quit. [Res]: %" LOG_PUB "d", res);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksImportKey fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksImportKey fail. [Res]: %" LOG_PUB "d", res);
         return HAL_ERR_HUKS;
     }
     return HAL_SUCCESS;
@@ -1117,7 +1118,7 @@ static int32_t ImportSymmetricKey(const KeyParams *keyParams, const Uint8Buff *a
     struct HksParamSet *paramSet = NULL;
     res = ConstructImportSymmetricKeyParam(&paramSet, keyParams, authToken->length, purpose, exInfo);
     if (res != HAL_SUCCESS) {
-        LOGE("construct param set failed, res = %d", res);
+        LOGE("construct param set failed, res = %" LOG_PUB "d", res);
         return res;
     }
     struct HksBlob keyAliasBlob = { keyParams->keyBuff.keyLen, keyParams->keyBuff.key };
@@ -1126,9 +1127,9 @@ static int32_t ImportSymmetricKey(const KeyParams *keyParams, const Uint8Buff *a
     LOGI("[HUKS]: HksImportKey enter.");
     res = HksImportKey(&keyAliasBlob, paramSet, &symKeyBlob);
     FreeParamSet(paramSet);
-    LOGI("[HUKS]: HksImportKey quit. [Res]: %d", res);
+    LOGI("[HUKS]: HksImportKey quit. [Res]: %" LOG_PUB "d", res);
     if (res != HKS_SUCCESS) {
-        LOGE("[HUKS]: HksImportKey fail. [Res]: %d", res);
+        LOGE("[HUKS]: HksImportKey fail. [Res]: %" LOG_PUB "d", res);
         return HAL_FAILED;
     }
     return HAL_SUCCESS;
