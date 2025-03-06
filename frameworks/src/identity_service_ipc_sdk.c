@@ -847,6 +847,29 @@ static int32_t IpcCmBatchUpdateCredentials(int32_t osAccountId, const char *requ
     return ret;
 }
 
+static bool IsJsonString(const char *str)
+{
+    CJson *json = CreateJsonFromString(str);
+    if (json == NULL) {
+        return false;
+    }
+    FreeJson(json);
+    return true;
+}
+
+static void IpcCmDestroyInfo(char **returnData)
+{
+    if (returnData == NULL || *returnData == NULL) {
+        return;
+    }
+    if (IsJsonString(*returnData)) {
+        FreeJsonString(*returnData);
+    } else {
+        HcFree(*returnData);
+    }
+    *returnData = NULL;
+}
+
 static void InitIpcCmMethods(CredManager *cmMethodObj)
 {
     cmMethodObj->addCredential = IpcCmAddCredential;
@@ -860,6 +883,7 @@ static void InitIpcCmMethods(CredManager *cmMethodObj)
     cmMethodObj->agreeCredential = IpcCmAgreeCredential;
     cmMethodObj->deleteCredByParams = IpcCmDelCredByParams;
     cmMethodObj->batchUpdateCredentials = IpcCmBatchUpdateCredentials;
+    cmMethodObj->destroyInfo = IpcCmDestroyInfo;
     return;
 }
 
