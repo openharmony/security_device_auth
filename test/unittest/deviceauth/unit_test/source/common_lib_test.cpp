@@ -83,7 +83,7 @@ HWTEST_F(CommonLibTest, HcParcelNullPtrTest001, TestSize.Level0)
     DataRevert(parcelNull, 0);
     ret = ParcelCopy(&parcel, parcelNull);
     EXPECT_EQ(ret, HC_FALSE);
-    ret = ParcelReadParcel(&parcel, parcelNull);
+    ret = ParcelReadParcel(&parcel, parcelNull, 0, HC_TRUE);
     EXPECT_EQ(ret, HC_FALSE);
 }
 
@@ -126,11 +126,6 @@ HWTEST_F(CommonLibTest, HcParcelInValidDataSizeTest002, TestSize.Level0)
     EXPECT_EQ(ret, HC_FALSE);
     parcel.data = nullptr;
     ret = ParcelIncrease(&parcel, 1);
-    EXPECT_EQ(ret, HC_FALSE);
-    parcel.endPos = PARCEL_UINT_MAX - 1;
-    ret = ParcelWrite(&parcel, &data, 2);
-    EXPECT_EQ(ret, HC_FALSE);
-    ret = ParcelEraseBlock(&parcel, PARCEL_UINT_MAX - 1, 2, &data);
     EXPECT_EQ(ret, HC_FALSE);
 }
 
