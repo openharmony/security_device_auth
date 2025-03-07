@@ -20,7 +20,7 @@
 #include <cstring>
 #include <cstddef>
 #include "securec.h"
-#include "..\..\..\..\..\common_lib\impl\src\hc_parcel.c"
+#include "../../../../common_lib/impl/src/hc_parcel.c"
 
 using namespace std;
 using namespace testing::ext;
@@ -80,6 +80,11 @@ HWTEST_F(CommonLibTest, HcParcelNullPtrTest001, TestSize.Level0)
     EXPECT_EQ(ret, HC_FALSE);
     ret = ParcelPopFront(&parcel, 0);
     EXPECT_EQ(ret, HC_FALSE);
+    DataRevert(parcelNull, 0);
+    ret = ParcelCopy(&parcel, parcelNull);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelReadParcel(&parcel, parcelNull);
+    EXPECT_EQ(ret, HC_FALSE);
 }
 
 HWTEST_F(CommonLibTest, HcParcelNullPtrTest002, TestSize.Level0)
@@ -111,7 +116,6 @@ HWTEST_F(CommonLibTest, HcParcelInValidDataSizeTest001, TestSize.Level0)
 HWTEST_F(CommonLibTest, HcParcelInValidDataSizeTest002, TestSize.Level0)
 {
     HcParcel parcel;
-    uint32_t zeroDataSize = 0;
     uint32_t data = 1;
     HcBool ret = ParcelEraseBlock(&parcel, 1, 0, &data);
     EXPECT_EQ(ret, HC_FALSE);
@@ -123,9 +127,14 @@ HWTEST_F(CommonLibTest, HcParcelInValidDataSizeTest002, TestSize.Level0)
     parcel.data = nullptr;
     ret = ParcelIncrease(&parcel, 1);
     EXPECT_EQ(ret, HC_FALSE);
+    parcel.endPos = PARCEL_UINT_MAX - 1;
+    ret = ParcelWrite(&parcel, &data, 2);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelEraseBlock(&parcel, PARCEL_UINT_MAX - 1, 2, &data);
+    EXPECT_EQ(ret, HC_FALSE);
 }
 
-HWTEST_F(CommonLibTest, HcParcelHcParcelReadRevertTest001, TestSize.Level0)
+HWTEST_F(CommonLibTest, HcParcelReadRevertTest001, TestSize.Level0)
 {
     HcParcel parcel = CreateParcel(TEST_BUFFER_SIZE, TEST_BUFFER_SIZE);
     HcParcel *parcelNull = nullptr;
