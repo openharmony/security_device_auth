@@ -22,7 +22,6 @@ extern "C"
 #endif
 
 #include "clib_error.h"
-#include "hc_parcel.h"
 #include "hc_string.h"
 #include "json_utils.h"
 #include "string_util.h"
