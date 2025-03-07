@@ -556,6 +556,7 @@ ohos_unittest("deviceauth_unit_test") {
   ]
 
   sources = hal_common_files
+  sources -= [ "${common_lib_path}/impl/src/hc_parcel.c" ]
   sources += [
     "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/huks_adapter.c",
