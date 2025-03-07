@@ -20,6 +20,7 @@
 #include <cstring>
 #include <cstddef>
 #include "securec.h"
+#include "../../../../common_lib/impl/src/hc_parcel.c"
 
 using namespace std;
 using namespace testing::ext;
@@ -32,6 +33,8 @@ static const uint32_t TEST_LENGTH_ZERO = 0;
 static const uint32_t TEST_SRC_DATA = 4;
 static const uint32_t TEST_UINT32_SIZE = 4;
 static const uint32_t MAX_TLV_LENGTH = 32768;
+static const uint32_t PARCEL_POS_0 = 0;
+static const uint32_t PARCEL_POS_1 = 1;
 const uint32_t PARCEL_UINT_MAX = 0xffffffffU;
 static const char *TEST_JSON_STR = "{\"name\":\"test_name\", \"age\":18}";
 static const char *TEST_JSON_STR_ARR = "[{\"name\":\"Tom1\",\"age\":18},{\"name\":\"Tom2\",\"age\":19}]";
@@ -50,6 +53,114 @@ void CommonLibTest::SetUpTestCase() {}
 void CommonLibTest::TearDownTestCase() {}
 void CommonLibTest::SetUp() {}
 void CommonLibTest::TearDown() {}
+
+HWTEST_F(CommonLibTest, HcParcelNullPtrTest001, TestSize.Level0)
+{
+    HcParcel *parcelNull = nullptr;
+    ClearParcel(parcelNull);
+    EXPECT_EQ(nullptr, parcelNull);
+    ResetParcel(parcelNull, 1, 1);
+    HcParcel parcel;
+    void *dstNull = nullptr;
+    HcBool ret = ParcelEraseBlock(&parcel, 1, 1, dstNull);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelIncrease(parcelNull, 1);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelIncrease(&parcel, 0);
+    EXPECT_EQ(ret, HC_FALSE);
+    ParcelRecycle(parcelNull);
+    const void *srcNull = nullptr;
+    ret = ParcelWrite(&parcel, srcNull, 1);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelPopBack(parcelNull, 1);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelPopBack(&parcel, 0);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelPopFront(parcelNull, 1);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelPopFront(&parcel, 0);
+    EXPECT_EQ(ret, HC_FALSE);
+    DataRevert(parcelNull, 0);
+    ret = ParcelCopy(&parcel, parcelNull);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelReadParcel(&parcel, parcelNull, 0, HC_TRUE);
+    EXPECT_EQ(ret, HC_FALSE);
+}
+
+HWTEST_F(CommonLibTest, HcParcelNullPtrTest002, TestSize.Level0)
+{
+    HcParcel *parcelNull = nullptr;
+    HcParcel parcel;
+    uint32_t ret = GetParcelIncreaseSize(parcelNull, 1);
+    EXPECT_EQ(ret, 0);
+    parcel.allocUnit = 0;
+    ret = GetParcelIncreaseSize(&parcel, 1);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(CommonLibTest, HcParcelInValidDataSizeTest001, TestSize.Level0)
+{
+    HcParcel parcel;
+    parcel.beginPos = PARCEL_POS_1;
+    parcel.endPos = PARCEL_POS_0;
+    int32_t ret = GetParcelDataSize(&parcel);
+    EXPECT_EQ(ret, 0);
+    const char *retStr = GetParcelLastChar(&parcel);
+    EXPECT_EQ(retStr, nullptr);
+    parcel.beginPos = PARCEL_POS_0;
+    parcel.endPos = PARCEL_POS_1;
+    parcel.allocUnit = 0;
+    ParcelRecycle(&parcel);
+}
+
+HWTEST_F(CommonLibTest, HcParcelInValidDataSizeTest002, TestSize.Level0)
+{
+    HcParcel parcel;
+    uint32_t data = 1;
+    HcBool ret = ParcelEraseBlock(&parcel, 1, 0, &data);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelWriteRevert(&parcel, &data, 0);
+    EXPECT_EQ(ret, HC_FALSE);
+    parcel.length = 1;
+    ret = ParcelRealloc(&parcel, 0);
+    EXPECT_EQ(ret, HC_FALSE);
+    parcel.data = nullptr;
+    ret = ParcelIncrease(&parcel, 1);
+    EXPECT_EQ(ret, HC_FALSE);
+}
+
+HWTEST_F(CommonLibTest, HcParcelReadRevertTest001, TestSize.Level0)
+{
+    HcParcel parcel = CreateParcel(TEST_BUFFER_SIZE, TEST_BUFFER_SIZE);
+    HcParcel *parcelNull = nullptr;
+    int32_t int32Dst = 0;
+    uint32_t uint32Dst = 0;
+    int16_t int16Dst = 0;
+    uint16_t uint16Dst = 0;
+    uint16_t *uint16DstNull = nullptr;
+    int64_t int64Dst = 0;
+    uint64_t uint64Dst = 0;
+
+    HcBool ret = ParcelReadInt32Revert(&parcel, &int32Dst);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelReadUint32Revert(&parcel, &uint32Dst);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelReadInt16Revert(&parcel, &int16Dst);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelReadUint16Revert(&parcel, &uint16Dst);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelReadUint16Revert(&parcel, uint16DstNull);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelReadUint16Revert(parcelNull, &uint16Dst);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelReadUint16Revert(&parcel, &uint16Dst);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelReadInt64Revert(&parcel, &int64Dst);
+    EXPECT_EQ(ret, HC_FALSE);
+    ret = ParcelReadUint64Revert(&parcel, &uint64Dst);
+    EXPECT_EQ(ret, HC_FALSE);
+    DeleteParcel(&parcel);
+}
 
 HWTEST_F(CommonLibTest, HcParcelCreateTest001, TestSize.Level0)
 {
