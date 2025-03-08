@@ -67,6 +67,7 @@ group("deviceauth_test_build") {
       "unittest/deviceauth:device_auth_ipc_test",
       "unittest/deviceauth:deviceauth_llt",
       "unittest/deviceauth:deviceauth_unit_test",
+      "unittest/deviceauth:identity_service_ipc_test",
       "unittest/tdd_framework/unit_test/services/creds_manager:creds_manager_test",
       "unittest/tdd_framework/unit_test/services/frameworks/hiview_adapter:perform_dumper_test",
       "unittest/tdd_framework/unit_test/services/frameworks/os_account_adapter:os_account_adapter_test_group",

@@ -958,7 +958,6 @@ public:
     void TearDown();
 };
 
-
 void CredMgrAgreeCredentialTest::SetUpTestCase() {}
 void CredMgrAgreeCredentialTest::TearDownTestCase() {}
 
@@ -1013,7 +1012,6 @@ HWTEST_F(CredMgrAgreeCredentialTest, CredMgrAgreeCredentialTest004, TestSize.Lev
     int32_t ret = cm->agreeCredential(DEFAULT_OS_ACCOUNT, TEST_CRED_ID, AGREE_PARAMS, nullptr);
     EXPECT_EQ(ret, IS_ERR_INVALID_PARAMS);
 }
-
 
 class CredMgrBatchUpdateCredsTest : public testing::Test {
 public:
