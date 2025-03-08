@@ -173,7 +173,7 @@ group_auth_account_related_mock_files = [ "${group_auth_path}/src/group_auth_man
 
 account_related_cred_plugin_mock_files = [ "${ext_plugin_manager_path}/src/account_related_mock/account_related_cred_plugin_mock.c" ]
 
-account_auth_plugin_files = [ "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin_proxy.c" ]
+account_auth_plugin_files = [ "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin/account_auth_plugin_proxy.c" ]
 account_auth_plugin_mock_files = [ "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c" ]
 
 account_task_manager_files =

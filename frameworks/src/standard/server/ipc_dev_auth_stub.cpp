@@ -410,10 +410,4 @@ DevAuthDeathRecipient::DevAuthDeathRecipient(int32_t cbIdx)
 {
     callbackIdx = cbIdx;
 }
-
-void DevAuthDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remoteObject)
-{
-    LOGI("remote is not actively, to reset local resource");
-    ResetIpcCallBackNodeByNodeId(callbackIdx);
-}
 }
