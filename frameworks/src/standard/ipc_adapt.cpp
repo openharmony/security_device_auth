@@ -1698,6 +1698,12 @@ static bool IsTypeForCpyData(int32_t type)
     return false;
 }
 
+void DevAuthDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remoteObject)
+{
+    LOGI("remote is not actively, to reset local resource");
+    ResetIpcCallBackNodeByNodeId(callbackIdx);
+}
+
 int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
     int32_t type, uint8_t *paramCache, int32_t *cacheLen)
 {

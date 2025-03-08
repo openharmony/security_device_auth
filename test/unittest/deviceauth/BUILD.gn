@@ -482,7 +482,7 @@ ohos_unittest("device_auth_interface_test") {
 
   sources += [
     "${dev_frameworks_path}/src/account_task_manager/account_task_manager.c",
-    "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin_proxy.c",
+    "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin/account_auth_plugin_proxy.c",
     "source/device_auth_ext_mock.c",
     "source/os_account_adapter_mock.c",
   ]

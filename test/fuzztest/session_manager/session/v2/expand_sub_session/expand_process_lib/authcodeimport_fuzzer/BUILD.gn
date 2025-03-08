@@ -81,7 +81,7 @@ ohos_fuzztest("AuthCodeImportFuzzTest") {
     "${deps_adapter_path}/os_adapter/impl/src/linux/hc_types.c",
     "${dev_frameworks_path}/src/account_task_manager/account_task_manager.c",
     "${dev_frameworks_path}/src/os_account_adapter_mock/os_account_adapter_mock.cpp",
-    "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin_proxy.c",
+    "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin/account_auth_plugin_proxy.c",
     "${dev_frameworks_path}/src/security_label_adapter_mock/security_label_adapter_mock.c",
     "${deviceauth_account_group_auth_path}/src/group_auth_manager/account_related_group_auth/account_related_group_auth.c",
     "${group_auth_path}/src/group_auth_manager/group_auth_common/group_auth_data_operation.c",
