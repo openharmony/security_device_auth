@@ -140,6 +140,7 @@ static int32_t InitAccountLifecyclePluginCtx(void)
     g_accountPluginCtx->updateCredInfo = cmInstace->updateCredInfo;
     g_accountPluginCtx->queryCredInfoByCredId = cmInstace->queryCredInfoByCredId;
     g_accountPluginCtx->queryCredentialByParams = cmInstace->queryCredentialByParams;
+    g_accountPluginCtx->destroyInfo = cmInstace->destroyInfo;
 #endif
     g_accountPluginCtx->createGroup = gmInstace->createGroup;
     g_accountPluginCtx->deleteGroup = gmInstace->deleteGroup;

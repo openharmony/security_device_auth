@@ -144,6 +144,8 @@ typedef struct {
     int32_t (*queryCredInfoByCredId)(int32_t osAccountId, const char *credId, char **returnData);
     /** This interface is used to query credential data by cred param. */
     int32_t (*queryCredentialByParams)(int32_t osAccountId, const char *requestParams, char **returnData);
+    /** This interface is used to destroy the information returned by the internal allocated memory. */
+    void (*destroyInfo)(char **returnInfo);
 } AccountLifecyleExtPlugCtx;
 
 #ifdef __cplusplus
