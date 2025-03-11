@@ -1283,7 +1283,7 @@ static int32_t GetSharedSecret(SessionImpl *impl, const CJson *inputData, Identi
         return GetSharedSecretByUrl(impl->context, &selfCred->proof.preSharedUrl,
             impl->protocolEntity.protocolType, psk);
     }
-    int32_t res = SetPeerInfoToContext(impl->context, inputData);
+    int32_t res = SetPeerInfoToContext(impl->context, impl->isCredAuth, inputData);
     if (res != HC_SUCCESS) {
         return res;
     }

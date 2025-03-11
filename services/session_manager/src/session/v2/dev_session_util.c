@@ -48,21 +48,21 @@ static TrustedDeviceEntry *GetPeerDeviceEntryByContext(int32_t osAccountId, cons
     return GetDeviceEntryById(osAccountId, peerDeviceId, isUdid, groupId);
 }
 
-static int32_t GetUserIdByGroup(const CJson *context, int32_t osAccountId, char **returnUserId)
+static int32_t GetPdidIndexByGroup(const CJson *context, int32_t osAccountId, char **returnPdidIndex)
 {
     TrustedDeviceEntry *deviceEntry = GetPeerDeviceEntryByContext(osAccountId, context);
     if (deviceEntry == NULL) {
         LOGE("Failed to get device entry!");
         return HC_ERR_DEVICE_NOT_EXIST;
     }
-    const char *userId = StringGet(&deviceEntry->userId);
-    if (userId == NULL) {
-        LOGE("userId is null!");
+    const char *pdidIndex = StringGet(&deviceEntry->userId);
+    if (pdidIndex == NULL) {
+        LOGE("pdidIndex is null!");
         DestroyDeviceEntry(deviceEntry);
         return HC_ERR_NULL_PTR;
     }
-    if (DeepCopyString(userId, returnUserId) != HC_SUCCESS) {
-        LOGE("Failed to copy userId!");
+    if (DeepCopyString(pdidIndex, returnPdidIndex) != HC_SUCCESS) {
+        LOGE("Failed to copy pdidIndex!");
         DestroyDeviceEntry(deviceEntry);
         return HC_ERR_ALLOC_MEMORY;
     }
@@ -70,15 +70,15 @@ static int32_t GetUserIdByGroup(const CJson *context, int32_t osAccountId, char 
     return HC_SUCCESS;
 }
 
-static int32_t GetUserIdByISInfo(const CJson *context, char **returnUserId)
+static int32_t GetPdidIndexByISInfo(const CJson *context, char **returnPdidIndex)
 {
-    const char *userId = GetStringFromJson(context, FIELD_USER_ID);
-    if (userId == NULL) {
-        LOGE("Failed to get user ID!");
+    const char *pdidIndex = GetStringFromJson(context, FIELD_CRED_ID);
+    if (pdidIndex == NULL) {
+        LOGE("Failed to get cred ID!");
         return HC_ERR_JSON_GET;
     }
-    if (DeepCopyString(userId, returnUserId) != HC_SUCCESS) {
-        LOGE("Failed to copy userId!");
+    if (DeepCopyString(pdidIndex, returnPdidIndex) != HC_SUCCESS) {
+        LOGE("Failed to copy pdidIndex!");
         return HC_ERR_ALLOC_MEMORY;
     }
     return HC_SUCCESS;
@@ -91,22 +91,22 @@ static int32_t GetPdidByContext(const CJson *context, bool isCredAuth, char **re
         LOGE("Failed to get osAccountId!");
         return HC_ERR_JSON_GET;
     }
-    char *userId = NULL;
-    int32_t res = isCredAuth? GetUserIdByISInfo(context, &userId)
-        : GetUserIdByGroup(context, osAccountId, &userId);
+    char *pdidIndex = NULL;
+    int32_t res = isCredAuth? GetPdidIndexByISInfo(context, &pdidIndex)
+        : GetPdidIndexByGroup(context, osAccountId, &pdidIndex);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get userId!");
+        LOGE("Failed to get pdidIndex!");
         return res;
     }
     PseudonymManager *manager = GetPseudonymInstance();
     if (manager == NULL) {
         LOGE("Pseudonym manager is null!");
-        HcFree(userId);
+        HcFree(pdidIndex);
         return HC_ERR_NULL_PTR;
     }
     char *pdid = NULL;
-    res = manager->getPseudonymId(osAccountId, userId, &pdid);
-    HcFree(userId);
+    res = manager->getPseudonymId(osAccountId, pdidIndex, &pdid);
+    HcFree(pdidIndex);
     if (res != HC_SUCCESS) {
         LOGE("Failed to get pdid!");
         return res;
@@ -377,7 +377,7 @@ int32_t SetPeerAuthIdToContextIfNeeded(CJson *context, bool isCredAuth, const Id
     return res;
 }
 
-int32_t SetPeerInfoToContext(CJson *context, const CJson *inputData)
+int32_t SetPeerInfoToContext(CJson *context, bool isCredAuth, const CJson *inputData)
 {
     if (IsPeerPseudonym(inputData)) {
         LOGI("Peer is pseudonym, no need to set peerInfo!");
@@ -393,13 +393,14 @@ int32_t SetPeerInfoToContext(CJson *context, const CJson *inputData)
         LOGE("Failed to create pkInfo json!");
         return HC_ERR_JSON_CREATE;
     }
-    const char *userId = GetStringFromJson(pkInfoJson, FIELD_USER_ID);
-    if (userId == NULL) {
-        LOGE("Failed to get userId!");
+    const char *pdidIndex = isCredAuth ? GetStringFromJson(context, FIELD_CRED_ID)
+        : GetStringFromJson(pkInfoJson, FIELD_USER_ID);
+    if (pdidIndex == NULL) {
+        LOGE("Failed to get pdidIndex!");
         FreeJson(pkInfoJson);
         return HC_ERR_JSON_GET;
     }
-    if (AddStringToJson(context, FIELD_INDEX_KEY, userId) != HC_SUCCESS) {
+    if (AddStringToJson(context, FIELD_INDEX_KEY, pdidIndex) != HC_SUCCESS) {
         LOGE("Failed to add pdidIndex!");
         FreeJson(pkInfoJson);
         return HC_ERR_JSON_ADD;

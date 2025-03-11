@@ -1611,10 +1611,10 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0288, TestSize.Level0)
 {
     // dev_session_util.c static interface test
     CJson *in = CreateJson();
-    int32_t res = GetUserIdByISInfo(in, nullptr);
+    int32_t res = GetPdidIndexByISInfo(in, nullptr);
     EXPECT_NE(res, HC_SUCCESS);
     (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID);
-    res = GetUserIdByISInfo(in, nullptr);
+    res = GetPdidIndexByISInfo(in, nullptr);
     EXPECT_NE(res, HC_SUCCESS);
     FreeJson(in);
 }
@@ -1748,18 +1748,18 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest032, TestSize.Level0)
     ASSERT_EQ(res, HC_SUCCESS);
     FreeJson(context);
     FreeJson(inputDataJson);
-    res = SetPeerInfoToContext(nullptr, nullptr);
+    res = SetPeerInfoToContext(nullptr, false, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
     inputDataJson = CreateJson();
     (void)AddStringToJson(inputDataJson, FIELD_PK_INFO, "TestPkInfo");
-    res = SetPeerInfoToContext(nullptr, inputDataJson);
+    res = SetPeerInfoToContext(nullptr, false, inputDataJson);
     ASSERT_NE(res, HC_SUCCESS);
     pkInfoJson = CreateJson();
     pkInfoStr = PackJsonToString(pkInfoJson);
     FreeJson(pkInfoJson);
     (void)AddStringToJson(inputDataJson, FIELD_PK_INFO, pkInfoStr);
     FreeJsonString(pkInfoStr);
-    res = SetPeerInfoToContext(nullptr, inputDataJson);
+    res = SetPeerInfoToContext(nullptr, false, inputDataJson);
     ASSERT_NE(res, HC_SUCCESS);
     FreeJson(inputDataJson);
 }

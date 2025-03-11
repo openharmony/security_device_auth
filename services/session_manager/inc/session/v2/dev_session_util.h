@@ -27,7 +27,7 @@ extern "C" {
 int32_t FillPeerAuthIdIfNeeded(bool isClient, const CJson *context, CJson *inputData);
 int32_t SetPeerAuthIdToContextIfNeeded(CJson *context, bool isCredAuth, const IdentityInfo *info);
 bool IsP2pAuth(const IdentityInfo *info);
-int32_t SetPeerInfoToContext(CJson *context, const CJson *inputData);
+int32_t SetPeerInfoToContext(CJson *context, bool isCredAuth, const CJson *inputData);
 int32_t ReplaceAuthIdWithRandom(CJson *authData);
 int32_t CheckPeerPkInfoForPdid(const CJson *context, const CJson *inputData);
 int32_t GetRealPkInfoStr(int32_t osAccountId, const CJson *credInfo, char **returnPkInfoStr, bool *isPseudonym);

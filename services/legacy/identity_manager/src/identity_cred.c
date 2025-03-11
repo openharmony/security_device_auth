@@ -162,13 +162,13 @@ static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *context,
         return res;
     }
     info->proof.certInfo.isPseudonym = isPseudonym;
-    bool isNeedRefreshPseudonymId = GetPseudonymInstance()->isNeedRefreshPseudonymId(osAccountId, userId);
-    res = ISSetEcSpekeEntity(info, isNeedRefreshPseudonymId);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to set protocol entity!");
-        return res;
+    const char *pdidIndex = GetStringFromJson(context, FIELD_CRED_ID);
+    if (pdidIndex == NULL) {
+        LOGE("Failed to get cred ID!");
+        return HC_ERR_JSON_GET;
     }
-    return HC_SUCCESS;
+    bool isNeedRefreshPseudonymId = GetPseudonymInstance()->isNeedRefreshPseudonymId(osAccountId, pdidIndex);
+    return ISSetEcSpekeEntity(info, isNeedRefreshPseudonymId);
 }
 
 static int32_t ISSetPreShareUrlAndEntity(const CJson *credAuthInfo, IdentityInfo *info)
