@@ -21,6 +21,7 @@
     GetGmInstance;
     GetCredMgrInstance;
     GetCredAuthInstance;
+    GetAccountVerifierInstance;
     ProcessCredential;
     StartAuthDevice;
     ProcessAuthDevice;

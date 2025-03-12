@@ -32,6 +32,7 @@ namespace {
 #define PROC_NAME_DEVICE_MANAGER "device_manager"
 #define TEST_REQ_ID 123
 #define TEST_OS_ACCOUNT_ID 100
+#define TEST_RANDOM_LEN 16
 #define TEST_APP_ID "TestAppId"
 #define TEST_APP_ID2 "TestAppId2"
 #define TEST_UDID "TestUdid"
@@ -43,6 +44,10 @@ static const char* AUTH_WITH_PIN_PARAMS = "{\"osAccountId\":100,\"acquireType\":
 static const char* AUTH_DIRECT_PARAMS =
     "{\"osAccountId\":100,\"acquireType\":0,\"serviceType\":\"service.type.import\",\"peerConnDeviceId\":"
     "\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C\"}";
+static const char *TEST_CLIENT_PK = "3059301306072A8648CE3D020106082A8648CE3D030107034200042CFE425AB037B9E6F"
+    "837AED32F0CD4460D509E8C6AEC3A5D49DB25F2DDC133A87434BFDD34";
+static const char *TEST_SERVER_PK = "020106082A8648CE3D030107034200042CFE425AB037B9E6F837AED32F0CD4460D509E8"
+    "C6AEC3A5D49DB25F2DDC133A87434BFDD34563C2226F838D3951C0F3D";
 #define FIELD_PUBLIC_KEY "publicKey"
 #define FIELD_PIN_CODE "pinCode"
 #define SERVICE_TYPE_IMPORT "service.type.import"
@@ -530,4 +535,64 @@ HWTEST_F(ApiAccessPassTest, ApiAccessPassTest001, TestSize.Level0)
     ASSERT_NE(res, HC_SUCCESS);
 }
 
+class AccountVerifyTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+void AccountVerifyTest::SetUpTestCase() {}
+
+void AccountVerifyTest::TearDownTestCase() {}
+
+void AccountVerifyTest::SetUp()
+{
+    NativeTokenSet(PROC_NAME_DEVICE_MANAGER);
+    int32_t ret = InitDeviceAuthService();
+    ASSERT_EQ(ret, HC_SUCCESS);
+}
+
+void AccountVerifyTest::TearDown()
+{
+    DestroyDeviceAuthService();
+}
+
+HWTEST_F(AccountVerifyTest, AccountVerifyTest001, TestSize.Level0)
+{
+    const AccountVerifier *verifier = GetAccountVerifierInstance();
+    ASSERT_NE(verifier, nullptr);
+    DataBuff sharedKeyBuff = { nullptr, 0 };
+    DataBuff randomBuff = { nullptr, 0 };
+    int32_t res = verifier->getClientSharedKey(nullptr, nullptr, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getClientSharedKey(TEST_SERVER_PK, nullptr, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getClientSharedKey(TEST_SERVER_PK, TEST_APP_ID, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getClientSharedKey(TEST_SERVER_PK, TEST_APP_ID, &sharedKeyBuff, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getClientSharedKey(TEST_SERVER_PK, TEST_APP_ID, &sharedKeyBuff, &randomBuff);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getServerSharedKey(nullptr, nullptr, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getServerSharedKey(TEST_CLIENT_PK, nullptr, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getServerSharedKey(TEST_CLIENT_PK, TEST_APP_ID, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getServerSharedKey(TEST_CLIENT_PK, TEST_APP_ID, &randomBuff, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    uint8_t randomVal[TEST_RANDOM_LEN] = { 0 };
+    randomBuff.data = randomVal;
+    res = verifier->getServerSharedKey(TEST_CLIENT_PK, TEST_APP_ID, &randomBuff, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getServerSharedKey(TEST_CLIENT_PK, TEST_APP_ID, &randomBuff, &sharedKeyBuff);
+    ASSERT_NE(res, HC_SUCCESS);
+    randomBuff.length = TEST_RANDOM_LEN;
+    res = verifier->getServerSharedKey(TEST_CLIENT_PK, TEST_APP_ID, &randomBuff, &sharedKeyBuff);
+    ASSERT_NE(res, HC_SUCCESS);
+    verifier->destroyDataBuff(nullptr);
+    verifier->destroyDataBuff(&sharedKeyBuff);
+}
 }

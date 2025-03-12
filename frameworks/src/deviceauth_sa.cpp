@@ -88,6 +88,8 @@ static IpcCallMap g_ipcCallMaps[] = {
     {IpcServiceCmBatchUpdateCredentials, IPC_CALL_ID_CM_BATCH_UPDATE_CREDENTIALS},
     {IpcServiceCaAuthDevice, IPC_CALL_ID_CA_AUTH_DEVICE},
     {IpcServiceCaProcessCredData, IPC_CALL_ID_CA_PROCESS_CRED_DATA},
+    {IpcServiceAvGetClientSharedKey, IPC_CALL_ID_AV_GET_CLIENT_SHARED_KEY},
+    {IpcServiceAvGetServerSharedKey, IPC_CALL_ID_AV_GET_SERVER_SHARED_KEY},
 };
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DeviceAuthAbility, SA_ID_DEVAUTH_SERVICE, true);

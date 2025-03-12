@@ -49,6 +49,7 @@
 
 static GroupAuthManager *g_groupAuthManager =  NULL;
 static DeviceGroupManager *g_groupManagerInstance = NULL;
+static AccountVerifier *g_accountVerifierInstance = NULL;
 
 static CredManager *g_credManager = NULL;
 static CredAuthManager *g_credAuthManager = NULL;
@@ -1610,6 +1611,17 @@ static int32_t AllocGmAndGa(void)
             return HC_ERR_ALLOC_MEMORY;
         }
     }
+    if (g_accountVerifierInstance == NULL) {
+        g_accountVerifierInstance = (AccountVerifier *)HcMalloc(sizeof(AccountVerifier), 0);
+        if (g_accountVerifierInstance == NULL) {
+            LOGE("Failed to allocate accountVerifier Instance memory!");
+            HcFree(g_groupManagerInstance);
+            g_groupManagerInstance = NULL;
+            HcFree(g_groupAuthManager);
+            g_groupAuthManager = NULL;
+            return HC_ERR_ALLOC_MEMORY;
+        }
+    }
     return HC_SUCCESS;
 }
 
@@ -1622,6 +1634,10 @@ static void DestroyGmAndGa(void)
     if (g_groupManagerInstance != NULL) {
         HcFree(g_groupManagerInstance);
         g_groupManagerInstance = NULL;
+    }
+    if (g_accountVerifierInstance != NULL) {
+        HcFree(g_accountVerifierInstance);
+        g_accountVerifierInstance = NULL;
     }
 }
 
@@ -1940,6 +1956,191 @@ DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
     g_groupAuthManager->getRealInfo = GetRealInfo;
     g_groupAuthManager->getPseudonymId = GetPseudonymId;
     return g_groupAuthManager;
+}
+
+static int32_t GetSharedKeyFromOutJson(const CJson *out, DataBuff *returnSharedKey)
+{
+    int sharedKeyLen = 0;
+    if (GetIntFromJson(out, FIELD_ACCOUNT_SHARED_KEY_LEN, &sharedKeyLen) != HC_SUCCESS) {
+        LOGE("Failed to get shared key len!");
+        return HC_ERR_JSON_GET;
+    }
+    uint8_t *sharedKeyVal = (uint8_t *)HcMalloc(sharedKeyLen, 0);
+    if (sharedKeyVal == NULL) {
+        LOGE("Failed to alloc shared key!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (GetByteFromJson(out, FIELD_ACCOUNT_SHARED_KEY_VAL, sharedKeyVal, sharedKeyLen) != HC_SUCCESS) {
+        LOGE("Failed to get shared key val!");
+        HcFree(sharedKeyVal);
+        return HC_ERR_JSON_GET;
+    }
+    returnSharedKey->data = sharedKeyVal;
+    returnSharedKey->length = sharedKeyLen;
+    return HC_SUCCESS;
+}
+
+static int32_t GetRandomFromOutJson(const CJson *out, DataBuff *returnRandom)
+{
+    int randomLen = 0;
+    if (GetIntFromJson(out, FIELD_ACCOUNT_RANDOM_LEN, &randomLen) != HC_SUCCESS) {
+        LOGE("Failed to get random len!");
+        return HC_ERR_JSON_GET;
+    }
+    uint8_t *randomVal = (uint8_t *)HcMalloc(randomLen, 0);
+    if (randomVal == NULL) {
+        LOGE("Failed to alloc random!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (GetByteFromJson(out, FIELD_ACCOUNT_RANDOM_VAL, randomVal, randomLen) != HC_SUCCESS) {
+        LOGE("Failed to get random val!");
+        HcFree(randomVal);
+        return HC_ERR_JSON_GET;
+    }
+    returnRandom->data = randomVal;
+    returnRandom->length = randomLen;
+    return HC_SUCCESS;
+}
+
+static void DestroyDataBuff(DataBuff *data)
+{
+    if (data == NULL || data->data == NULL) {
+        return;
+    }
+    HcFree(data->data);
+    data->data = NULL;
+    data->length = 0;
+}
+
+static int32_t ConstructClientInJson(CJson *in, const char *peerPk, const char *serviceId)
+{
+    if (AddStringToJson(in, FIELD_ACCOUNT_PEER_PK, peerPk) != HC_SUCCESS) {
+        LOGE("Failed to add peer pk to json!");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(in, FIELD_ACCOUNT_SERVICE_ID, serviceId) != HC_SUCCESS) {
+        LOGE("Failed to add serviceId to json!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t GetClientSharedKey(const char *peerPk, const char *serviceId, DataBuff *returnSharedKey,
+    DataBuff *returnRandom)
+{
+    if (peerPk == NULL || serviceId == NULL || returnSharedKey == NULL || returnRandom == NULL) {
+        LOGE("Invalid params!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    CJson *in = CreateJson();
+    if (in == NULL) {
+        LOGE("Failed to create in json!");
+        return HC_ERR_JSON_CREATE;
+    }
+    int32_t res = ConstructClientInJson(in, peerPk, serviceId);
+    if (res != HC_SUCCESS) {
+        FreeJson(in);
+        return res;
+    }
+    CJson *out = CreateJson();
+    if (out == NULL) {
+        LOGE("Failed to create out json!");
+        FreeJson(in);
+        return HC_ERR_JSON_CREATE;
+    }
+    res = ExecuteAccountAuthCmd(DEFAULT_OS_ACCOUNT, ACCOUNT_GET_CLIENT_SHARED_KEY, in, out);
+    FreeJson(in);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get client shared key!");
+        FreeJson(out);
+        return res;
+    }
+    res = GetSharedKeyFromOutJson(out, returnSharedKey);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get shared key from out json!");
+        FreeJson(out);
+        return res;
+    }
+
+    res = GetRandomFromOutJson(out, returnRandom);
+    FreeJson(out);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get random from out json!");
+        DestroyDataBuff(returnSharedKey);
+    }
+    return res;
+}
+
+static int32_t ConstructServerInJson(CJson *in, const char *peerPk, const char *serviceId, const DataBuff *random)
+{
+    if (AddStringToJson(in, FIELD_ACCOUNT_PEER_PK, peerPk) != HC_SUCCESS) {
+        LOGE("Failed to add peer pk to json!");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(in, FIELD_ACCOUNT_SERVICE_ID, serviceId) != HC_SUCCESS) {
+        LOGE("Failed to add serviceId to json!");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddByteToJson(in, FIELD_ACCOUNT_RANDOM_VAL, random->data, random->length) != HC_SUCCESS) {
+        LOGE("Failed to add random val to json!");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(in, FIELD_ACCOUNT_RANDOM_LEN, random->length) != HC_SUCCESS) {
+        LOGE("Failed to add random len to json!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t GetServerSharedKey(const char *peerPk, const char *serviceId, const DataBuff *random,
+    DataBuff *returnSharedKey)
+{
+    if (peerPk == NULL || serviceId == NULL || random == NULL || random->data == NULL || returnSharedKey == NULL) {
+        LOGE("Invalid params!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    CJson *in = CreateJson();
+    if (in == NULL) {
+        LOGE("Failed to create in json!");
+        return HC_ERR_JSON_CREATE;
+    }
+    int32_t res = ConstructServerInJson(in, peerPk, serviceId, random);
+    if (res != HC_SUCCESS) {
+        FreeJson(in);
+        return res;
+    }
+    CJson *out = CreateJson();
+    if (out == NULL) {
+        LOGE("Failed to create out json!");
+        FreeJson(in);
+        return HC_ERR_JSON_CREATE;
+    }
+    res = ExecuteAccountAuthCmd(DEFAULT_OS_ACCOUNT, ACCOUNT_GET_SERVER_SHARED_KEY, in, out);
+    FreeJson(in);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get server shared key!");
+        FreeJson(out);
+        return res;
+    }
+
+    res = GetSharedKeyFromOutJson(out, returnSharedKey);
+    FreeJson(out);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get shared key from out json!");
+    }
+    return res;
+}
+
+DEVICE_AUTH_API_PUBLIC const AccountVerifier *GetAccountVerifierInstance(void)
+{
+    if (g_accountVerifierInstance == NULL) {
+        LOGE("Account verifier instance not init!");
+        return NULL;
+    }
+    g_accountVerifierInstance->getClientSharedKey = GetClientSharedKey;
+    g_accountVerifierInstance->getServerSharedKey = GetServerSharedKey;
+    g_accountVerifierInstance->destroyDataBuff = DestroyDataBuff;
+    return g_accountVerifierInstance;
 }
 
 DEVICE_AUTH_API_PUBLIC const CredManager *GetCredMgrInstance(void)

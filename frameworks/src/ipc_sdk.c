@@ -22,6 +22,7 @@
 #include "device_auth.h"
 #include "hc_log.h"
 #include "hc_mutex.h"
+#include "hc_types.h"
 
 #include "ipc_adapt.h"
 #include "securec.h"
@@ -33,6 +34,7 @@ extern "C" {
 #define IPC_DATA_CACHES_1 1
 #define IPC_DATA_CACHES_3 3
 #define IPC_DATA_CACHES_4 4
+#define IPC_DATA_CACHES_6 6
 #define REPLAY_CACHE_NUM(caches) (sizeof(caches) / sizeof(IpcDataInfo))
 #define IPC_APPID_LEN 128
 
@@ -40,6 +42,7 @@ extern "C" {
 
 static const int32_t IPC_RESULT_NUM_1 = 1;
 static const int32_t IPC_RESULT_NUM_2 = 2;
+static const int32_t IPC_RESULT_NUM_4 = 4;
 
 typedef struct {
     uintptr_t inst;
@@ -104,12 +107,16 @@ static void GetIpcReplyByType(const IpcDataInfo *ipcData,
             case PARAM_TYPE_CRED_INFO_LIST:
             case PARAM_TYPE_CRED_VAL:
             case PARAM_TYPE_RETURN_DATA:
+            case PARAM_TYPE_SHARED_KEY_VAL:
+            case PARAM_TYPE_RANDOM_VAL:
                 *(uint8_t **)outCache = ipcData[i].val;
                 break;
             case PARAM_TYPE_IPC_RESULT:
             case PARAM_TYPE_IPC_RESULT_NUM:
             case PARAM_TYPE_COMM_DATA:
             case PARAM_TYPE_DATA_NUM:
+            case PARAM_TYPE_SHARED_KEY_LEN:
+            case PARAM_TYPE_RANDOM_LEN:
                 eno = memcpy_s(outCache, *cacheLen, ipcData[i].val, ipcData[i].valSz);
                 if (eno != EOK) {
                     break;
@@ -1714,6 +1721,219 @@ static void InitIpcGaMethods(GroupAuthManager *gaMethodObj)
     return;
 }
 
+static int32_t SetReturnSharedKey(const uint8_t *sharedKeyVal, uint32_t sharedKeyLen, DataBuff *returnSharedKey)
+{
+    uint8_t *tmpSharedKeyVal = (uint8_t *)HcMalloc(sharedKeyLen, 0);
+    if (tmpSharedKeyVal == NULL) {
+        LOGE("malloc temp shared key failed.");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (memcpy_s(tmpSharedKeyVal, sharedKeyLen, sharedKeyVal, sharedKeyLen) != EOK) {
+        LOGE("memcpy_s temp shared key failed.");
+        HcFree(tmpSharedKeyVal);
+        return HC_ERR_MEMORY_COPY;
+    }
+    returnSharedKey->data = tmpSharedKeyVal;
+    returnSharedKey->length = sharedKeyLen;
+    return HC_SUCCESS;
+}
+
+static int32_t SetReturnRandom(const uint8_t *randomVal, uint32_t randomLen, DataBuff *returnRandom)
+{
+    uint8_t *tmpRandomVal = (uint8_t *)HcMalloc(randomLen, 0);
+    if (tmpRandomVal == NULL) {
+        LOGE("malloc temp random failed.");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (memcpy_s(tmpRandomVal, randomLen, randomVal, randomLen) != EOK) {
+        LOGE("memcpy_s temp random failed.");
+        HcFree(tmpRandomVal);
+        return HC_ERR_MEMORY_COPY;
+    }
+    returnRandom->data = tmpRandomVal;
+    returnRandom->length = randomLen;
+    return HC_SUCCESS;
+}
+
+static void IpcAvDestroyDataBuff(DataBuff *dataBuff)
+{
+    if (dataBuff == NULL || dataBuff->data == NULL) {
+        return;
+    }
+    HcFree(dataBuff->data);
+    dataBuff->data = NULL;
+    dataBuff->length = 0;
+}
+
+static int32_t GetSharedKeyAndRandom(const IpcDataInfo *replies, int32_t cacheNum, DataBuff *returnSharedKey,
+    DataBuff *returnRandom)
+{
+    int32_t resultNum;
+    int32_t inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_IPC_RESULT_NUM, (uint8_t *)&resultNum, &inOutLen);
+    if ((resultNum < IPC_RESULT_NUM_4) || (inOutLen != sizeof(int32_t))) {
+        return HC_ERR_IPC_OUT_DATA_NUM;
+    }
+
+    uint8_t *sharedKeyVal = NULL;
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_SHARED_KEY_VAL, (uint8_t *)&sharedKeyVal, NULL);
+    if (sharedKeyVal == NULL) {
+        return HC_ERR_IPC_OUT_DATA;
+    }
+    inOutLen = sizeof(int32_t);
+    uint32_t sharedKeyLen = 0;
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_SHARED_KEY_LEN, (uint8_t *)&sharedKeyLen, &inOutLen);
+    if (sharedKeyLen == 0) {
+        return HC_ERR_IPC_OUT_DATA;
+    }
+
+    uint8_t *randomVal = NULL;
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_RANDOM_VAL, (uint8_t *)&randomVal, NULL);
+    if (randomVal == NULL) {
+        return HC_ERR_IPC_OUT_DATA;
+    }
+    inOutLen = sizeof(int32_t);
+    uint32_t randomLen = 0;
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_RANDOM_LEN, (uint8_t *)&randomLen, &inOutLen);
+    if (randomLen == 0) {
+        return HC_ERR_IPC_OUT_DATA;
+    }
+    int32_t ret = SetReturnSharedKey(sharedKeyVal, sharedKeyLen, returnSharedKey);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    ret = SetReturnRandom(randomVal, randomLen, returnRandom);
+    if (ret != HC_SUCCESS) {
+        IpcAvDestroyDataBuff(returnSharedKey);
+    }
+    return ret;
+}
+
+static int32_t IpcAvGetClientSharedKey(const char *peerPk, const char *serviceId, DataBuff *returnSharedKey,
+    DataBuff *returnRandom)
+{
+    if ((peerPk == NULL) || (serviceId == NULL) || (returnSharedKey == NULL) || (returnRandom == NULL)) {
+        LOGE("Invalid params.");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    uintptr_t callCtx = 0x0;
+    int32_t ret = CreateCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
+        return HC_ERR_IPC_INIT;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_PUB_KEY, (const uint8_t *)peerPk, HcStrlen(peerPk) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_PUB_KEY);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_SERVICE_ID, (const uint8_t *)serviceId, HcStrlen(serviceId) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_SERVICE_ID);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = DoBinderCall(callCtx, IPC_CALL_ID_AV_GET_CLIENT_SHARED_KEY, true);
+    if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_PROC_FAILED;
+    }
+    IpcDataInfo replyCache[IPC_DATA_CACHES_6] = { { 0 } };
+    DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
+    ret = HC_ERR_IPC_UNKNOW_REPLY;
+    int32_t inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        DestroyCallCtx(&callCtx, NULL);
+        return ret;
+    }
+    ret = GetSharedKeyAndRandom(replyCache, REPLAY_CACHE_NUM(replyCache), returnSharedKey, returnRandom);
+    DestroyCallCtx(&callCtx, NULL);
+    return ret;
+}
+
+static int32_t GetSharedKey(const IpcDataInfo *replies, int32_t cacheNum, DataBuff *returnSharedKey)
+{
+    int32_t resultNum;
+    int32_t inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_IPC_RESULT_NUM, (uint8_t *)&resultNum, &inOutLen);
+    if ((resultNum < IPC_RESULT_NUM_2) || (inOutLen != sizeof(int32_t))) {
+        return HC_ERR_IPC_OUT_DATA_NUM;
+    }
+
+    uint8_t *sharedKeyVal = NULL;
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_SHARED_KEY_VAL, (uint8_t *)&sharedKeyVal, NULL);
+    if (sharedKeyVal == NULL) {
+        return HC_ERR_IPC_OUT_DATA;
+    }
+    inOutLen = sizeof(int32_t);
+    uint32_t sharedKeyLen = 0;
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_SHARED_KEY_LEN, (uint8_t *)&sharedKeyLen, &inOutLen);
+    if (sharedKeyLen == 0) {
+        return HC_ERR_IPC_OUT_DATA;
+    }
+    return SetReturnSharedKey(sharedKeyVal, sharedKeyLen, returnSharedKey);
+}
+
+static int32_t IpcAvGetServerSharedKey(const char *peerPk, const char *serviceId, const DataBuff *random,
+    DataBuff *returnSharedKey)
+{
+    if ((peerPk == NULL) || (serviceId == NULL) || (random == NULL) || (random->data == NULL) ||
+        (returnSharedKey == NULL)) {
+        LOGE("Invalid params.");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    uintptr_t callCtx = 0x0;
+    int32_t ret = CreateCallCtx(&callCtx, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
+        return HC_ERR_IPC_INIT;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_PUB_KEY, (const uint8_t *)peerPk, HcStrlen(peerPk) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_PUB_KEY);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_SERVICE_ID, (const uint8_t *)serviceId, HcStrlen(serviceId) + 1);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_SERVICE_ID);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_RANDOM, (const uint8_t *)random->data, random->length);
+    if (ret != HC_SUCCESS) {
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_RANDOM);
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_BUILD_PARAM;
+    }
+    ret = DoBinderCall(callCtx, IPC_CALL_ID_AV_GET_SERVER_SHARED_KEY, true);
+    if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
+        DestroyCallCtx(&callCtx, NULL);
+        return HC_ERR_IPC_PROC_FAILED;
+    }
+    IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
+    DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
+    ret = HC_ERR_IPC_UNKNOW_REPLY;
+    int32_t inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
+    if (ret != HC_SUCCESS) {
+        DestroyCallCtx(&callCtx, NULL);
+        return ret;
+    }
+    ret = GetSharedKey(replyCache, REPLAY_CACHE_NUM(replyCache), returnSharedKey);
+    DestroyCallCtx(&callCtx, NULL);
+    return ret;
+}
+
+static void InitIpcAccountVerifierMethods(AccountVerifier *accountVerifier)
+{
+    accountVerifier->getClientSharedKey = IpcAvGetClientSharedKey;
+    accountVerifier->getServerSharedKey = IpcAvGetServerSharedKey;
+    accountVerifier->destroyDataBuff = IpcAvDestroyDataBuff;
+}
+
 DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const char *reqJsonStr, char **returnData)
 {
     uintptr_t callCtx = IPC_CALL_CONTEXT_INIT;
@@ -1953,6 +2173,15 @@ DEVICE_AUTH_API_PUBLIC const DeviceGroupManager *GetGmInstance(void)
         gmInstPtr = &gmInstCtx;
     }
     return (const DeviceGroupManager *)(gmInstPtr);
+}
+
+DEVICE_AUTH_API_PUBLIC const AccountVerifier *GetAccountVerifierInstance(void)
+{
+    static AccountVerifier avInstCtx;
+    static AccountVerifier *avInstPtr = NULL;
+    InitIpcAccountVerifierMethods(&avInstCtx);
+    avInstPtr = &avInstCtx;
+    return (const AccountVerifier *)(avInstPtr);
 }
 
 #ifdef __cplusplus

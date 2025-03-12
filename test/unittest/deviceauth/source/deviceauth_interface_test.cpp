@@ -36,6 +36,7 @@
 #include "account_version_util.h"
 #include "account_module.h"
 #include "account_multi_task_manager.h"
+#include "account_task_manager.h"
 #include "identical_account_group.h"
 #include "broadcast_manager.h"
 #include "iso_protocol_common.h"
@@ -78,6 +79,7 @@ namespace {
 #define TEST_OS_ACCOUNT_ID 0
 #define TEST_DEVICE_PK "testDevicePk"
 #define TEST_VERSION 0
+#define TEST_RANDOM_LEN 16
 static const char *EXT_INFO =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
@@ -88,6 +90,11 @@ static const char *CRED_DATA =
     "{\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
+static const char *TEST_CLIENT_PK = "3059301306072A8648CE3D020106082A8648CE3D030107034200042CFE425AB037B9E6F"
+    "837AED32F0CD4460D509E8C6AEC3A5D49DB25F2DDC133A87434BFDD34";
+static const char *TEST_SERVER_PK = "020106082A8648CE3D030107034200042CFE425AB037B9E6F837AED32F0CD4460D509E8"
+    "C6AEC3A5D49DB25F2DDC133A87434BFDD34563C2226F838D3951C0F3D";
+
 class DeviceAuthInterfaceTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -1809,5 +1816,106 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest033, TestSize.Level0)
     ASSERT_NE(res, HC_SUCCESS);
     res = loader->computeHmacWithThreeStage(nullptr, nullptr, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest034, TestSize.Level0)
+{
+    // account_task_manager.c interface test
+    DestroyAccountTaskManager();
+    bool hasAccountPlugin = HasAccountPlugin();
+    ASSERT_EQ(hasAccountPlugin, false);
+    int32_t res = ExecuteAccountAuthCmd(DEFAULT_OS_ACCOUNT, IMPORT_SELF_CREDENTIAL, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    int32_t sessionId = 0;
+    res = CreateAccountAuthSession(&sessionId, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = ProcessAccountAuthSession(&sessionId, nullptr, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = DestroyAccountAuthSession(sessionId);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = LoadAccountAndAddTaskRecord(0);
+    ASSERT_NE(res, HC_SUCCESS);
+    RemoveAccountTaskRecordAndUnload(0);
+    NotifyAsyncTaskStart();
+    NotifyAsyncTaskStop();
+    res = InitAccountTaskManager();
+    ASSERT_EQ(res, HC_SUCCESS);
+    res = InitAccountTaskManager();
+    ASSERT_EQ(res, HC_SUCCESS);
+    res = ExecuteAccountAuthCmd(DEFAULT_OS_ACCOUNT, IMPORT_SELF_CREDENTIAL, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = CreateAccountAuthSession(&sessionId, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = ProcessAccountAuthSession(&sessionId, nullptr, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = DestroyAccountAuthSession(sessionId);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = LoadAccountAndAddTaskRecord(0);
+    ASSERT_EQ(res, HC_SUCCESS);
+    RemoveAccountTaskRecordAndUnload(0);
+    NotifyAsyncTaskStart();
+    NotifyAsyncTaskStart();
+    NotifyAsyncTaskStop();
+    NotifyAsyncTaskStop();
+    DestroyAccountTaskManager();
+}
+
+class AvInterfaceTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+void AvInterfaceTest::SetUpTestCase() {}
+void AvInterfaceTest::TearDownTestCase() {}
+
+void AvInterfaceTest::SetUp()
+{
+    int ret = InitDeviceAuthService();
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+void AvInterfaceTest::TearDown()
+{
+    DestroyDeviceAuthService();
+}
+
+HWTEST_F(AvInterfaceTest, AvInterfaceTest001, TestSize.Level0)
+{
+    const AccountVerifier *verifier = GetAccountVerifierInstance();
+    ASSERT_NE(verifier, nullptr);
+    int32_t res = verifier->getClientSharedKey(nullptr, nullptr, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getClientSharedKey(TEST_SERVER_PK, nullptr, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getClientSharedKey(TEST_SERVER_PK, TEST_APP_ID, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    DataBuff sharedKeyBuff = { nullptr, 0 };
+    res = verifier->getClientSharedKey(TEST_SERVER_PK, TEST_APP_ID, &sharedKeyBuff, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    DataBuff randomBuff = { nullptr, 0 };
+    res = verifier->getClientSharedKey(TEST_SERVER_PK, TEST_APP_ID, &sharedKeyBuff, &randomBuff);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getServerSharedKey(nullptr, nullptr, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getServerSharedKey(TEST_CLIENT_PK, nullptr, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getServerSharedKey(TEST_CLIENT_PK, TEST_APP_ID, nullptr, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getServerSharedKey(TEST_CLIENT_PK, TEST_APP_ID, &randomBuff, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    uint8_t randomVal[TEST_RANDOM_LEN] = { 0 };
+    randomBuff.data = randomVal;
+    res = verifier->getServerSharedKey(TEST_CLIENT_PK, TEST_APP_ID, &randomBuff, nullptr);
+    ASSERT_NE(res, HC_SUCCESS);
+    res = verifier->getServerSharedKey(TEST_CLIENT_PK, TEST_APP_ID, &randomBuff, &sharedKeyBuff);
+    ASSERT_NE(res, HC_SUCCESS);
+    randomBuff.length = TEST_RANDOM_LEN;
+    res = verifier->getServerSharedKey(TEST_CLIENT_PK, TEST_APP_ID, &randomBuff, &sharedKeyBuff);
+    ASSERT_NE(res, HC_SUCCESS);
+    verifier->destroyDataBuff(nullptr);
+    verifier->destroyDataBuff(&sharedKeyBuff);
 }
 } // namespace

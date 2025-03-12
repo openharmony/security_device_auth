@@ -520,6 +520,21 @@ DEVICE_AUTH_API_PUBLIC const CredManager *GetCredMgrInstance(void);
  */
 DEVICE_AUTH_API_PUBLIC const CredAuthManager *GetCredAuthInstance(void);
 
+typedef struct {
+    uint8_t *data;
+    uint32_t length;
+} DataBuff;
+
+typedef struct {
+    int32_t (*getClientSharedKey)(const char *peerPk, const char *serviceId, DataBuff *returnSharedKey,
+        DataBuff *returnRandom);
+    int32_t (*getServerSharedKey)(const char *peerPk, const char *serviceId, const DataBuff *random,
+        DataBuff *returnSharedKey);
+    void (*destroyDataBuff)(DataBuff *dataBuff);
+} AccountVerifier;
+
+DEVICE_AUTH_API_PUBLIC const AccountVerifier *GetAccountVerifierInstance(void);
+
 #ifdef __cplusplus
 }
 #endif
