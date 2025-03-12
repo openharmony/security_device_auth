@@ -28,9 +28,11 @@ extern "C" {
 
 static const int32_t IPC_RESULT_NUM_1 = 1;
 static const int32_t IPC_RESULT_NUM_2 = 2;
+static const int32_t IPC_RESULT_NUM_4 = 4;
 static const char *SERVICE_APP_ID = "deviceauth_service";
 static DeviceGroupManager g_devGroupMgrMethod = {NULL};
 static GroupAuthManager g_groupAuthMgrMethod = {NULL};
+static AccountVerifier g_accountVerifierMethod = {NULL};
 static DeviceAuthCallback g_bindCbAdt = {NULL};
 static DeviceAuthCallback g_authCbAdt = {NULL};
 static DataChangeListener g_listenCbAdt = {NULL};
@@ -846,6 +848,92 @@ int32_t IpcServiceGmGetTrustedDevices(const IpcDataInfo *ipcParams, int32_t para
     }
     ret += IpcEncodeCallReply(outCache, PARAM_TYPE_DATA_NUM, (const uint8_t *)&outDevNum, sizeof(int32_t));
     g_devGroupMgrMethod.destroyInfo(&outDevInfo);
+    return (ret == HC_SUCCESS) ? ret : HC_ERROR;
+}
+
+int32_t IpcServiceAvGetClientSharedKey(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    const char *peerPk = NULL;
+    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_PUB_KEY, (uint8_t *)&peerPk, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_PUB_KEY);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+
+    const char *serviceId = NULL;
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_SERVICE_ID, (uint8_t *)&serviceId, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_SERVICE_ID);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    DataBuff returnSharedKey = { NULL, 0 };
+    DataBuff returnRandom = { NULL, 0 };
+    int32_t callRet = g_accountVerifierMethod.getClientSharedKey(peerPk, serviceId, &returnSharedKey, &returnRandom);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_4,
+        sizeof(int32_t));
+    if (returnSharedKey.data != NULL) {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_SHARED_KEY_VAL, (const uint8_t *)returnSharedKey.data,
+            returnSharedKey.length);
+        uint32_t len = returnSharedKey.length;
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_SHARED_KEY_LEN, (const uint8_t *)&len, sizeof(uint32_t));
+        g_accountVerifierMethod.destroyDataBuff(&returnSharedKey);
+    } else {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_SHARED_KEY_VAL, NULL, 0);
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_SHARED_KEY_LEN, NULL, 0);
+    }
+    if (returnRandom.data != NULL) {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_RANDOM_VAL, (const uint8_t *)returnRandom.data,
+            returnRandom.length);
+        uint32_t len = returnRandom.length;
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_RANDOM_LEN, (const uint8_t *)&len, sizeof(uint32_t));
+        g_accountVerifierMethod.destroyDataBuff(&returnRandom);
+    } else {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_RANDOM_VAL, NULL, 0);
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_RANDOM_LEN, NULL, 0);
+    }
+    return (ret == HC_SUCCESS) ? ret : HC_ERROR;
+}
+
+int32_t IpcServiceAvGetServerSharedKey(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+{
+    const char *peerPk = NULL;
+    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_PUB_KEY, (uint8_t *)&peerPk, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_PUB_KEY);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+
+    const char *serviceId = NULL;
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_SERVICE_ID, (uint8_t *)&serviceId, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_SERVICE_ID);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+
+    int32_t randomLen = 0;
+    const uint8_t *randomVal = NULL;
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_RANDOM, (uint8_t *)&randomVal, &randomLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_RANDOM);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    DataBuff randomBuff = { (uint8_t *)randomVal, (uint32_t)randomLen };
+    DataBuff returnSharedKey = { NULL, 0 };
+    int32_t callRet = g_accountVerifierMethod.getServerSharedKey(peerPk, serviceId, &randomBuff, &returnSharedKey);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_2,
+        sizeof(int32_t));
+    if (returnSharedKey.data != NULL) {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_SHARED_KEY_VAL, (const uint8_t *)returnSharedKey.data,
+            returnSharedKey.length);
+        uint32_t len = returnSharedKey.length;
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_SHARED_KEY_LEN, (const uint8_t *)&len, sizeof(uint32_t));
+        g_accountVerifierMethod.destroyDataBuff(&returnSharedKey);
+    } else {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_SHARED_KEY_VAL, NULL, 0);
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_SHARED_KEY_LEN, NULL, 0);
+    }
     return (ret == HC_SUCCESS) ? ret : HC_ERROR;
 }
 
@@ -1753,19 +1841,22 @@ int32_t MainRescInit(void)
     LOGI("starting ...");
     const DeviceGroupManager *gmInst = NULL;
     const GroupAuthManager *gaInst = NULL;
+    const AccountVerifier *avInst = NULL;
     ret = InitIpcCallBackList();
     if (ret != HC_SUCCESS) {
         return ret;
     }
     gmInst = GetGmInstance();
     gaInst = GetGaInstance();
-    if ((gmInst == NULL) || (gaInst == NULL)) {
+    avInst = GetAccountVerifierInstance();
+    if ((gmInst == NULL) || (gaInst == NULL) || (avInst == NULL)) {
         DeInitIpcCallBackList();
         LOGE("MainInit, GetGmInstance failed");
         return HC_ERROR;
     }
     g_devGroupMgrMethod = (DeviceGroupManager)(*gmInst);
     g_groupAuthMgrMethod = (GroupAuthManager)(*gaInst);
+    g_accountVerifierMethod = (AccountVerifier)(*avInst);
     InitDevAuthListenerCbCtx(&g_listenCbAdt);
     ret = gmInst->regDataChangeListener(SERVICE_APP_ID, &g_listenCbAdt);
     if (ret != HC_SUCCESS) {

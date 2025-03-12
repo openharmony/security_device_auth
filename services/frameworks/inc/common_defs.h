@@ -134,6 +134,12 @@
 #define FIELD_COMMON_EVENT_NAME "commonEventName"
 #define FIELD_COMMON_EVENT_CODE "commonEventCode"
 #define FIELD_IS_SINGLE_CRED "isSingleCred"
+#define FIELD_ACCOUNT_PEER_PK "peerPk"
+#define FIELD_ACCOUNT_SERVICE_ID "serviceId"
+#define FIELD_ACCOUNT_SHARED_KEY_LEN "sharedKeyLen"
+#define FIELD_ACCOUNT_SHARED_KEY_VAL "sharedKeyVal"
+#define FIELD_ACCOUNT_RANDOM_LEN "randomLen"
+#define FIELD_ACCOUNT_RANDOM_VAL "randomVal"
 
 #define INVALID_MODULE_TYPE (-1)
 #define GROUP_ERR_MSG 0x8080
@@ -282,6 +288,8 @@ typedef enum {
     CHECK_UPGRADE_DATA = 12,
     HANDLE_COMMON_EVENT = 13,
     RELOAD_CRED_MGR = 14,
+    ACCOUNT_GET_CLIENT_SHARED_KEY = 15,
+    ACCOUNT_GET_SERVER_SHARED_KEY = 16,
 } CredentialCode;
 
 #endif
