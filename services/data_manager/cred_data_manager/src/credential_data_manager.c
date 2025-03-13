@@ -899,7 +899,7 @@ static int32_t AddPeerUserSpaceIdToReturn(const Credential *credInfo, CJson *jso
 static int32_t AddAuthorizedAppListToReturn(const Credential *credInfo, CJson *json)
 {
     CJson *arr = CreateJsonArray();
-    if (json == NULL) {
+    if (arr == NULL) {
         LOGE("Failed to allocate json memory!");
         return IS_ERR_JSON_CREATE;
     }
