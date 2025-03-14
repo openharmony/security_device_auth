@@ -46,7 +46,10 @@ namespace OHOS {
             TestLogd,
         };
         registe_log(&logFunc);
-        DBG_OUT("data: %s size: %d", data, size);
+        char tmpLog[MAX_LOG_BUFF_LENGTH];
+        if (memcpy_s(tmpLog, sizeof(tmpLog), data, size) != EOK) {
+            return false;
+        }
         return true;
     }
 }
