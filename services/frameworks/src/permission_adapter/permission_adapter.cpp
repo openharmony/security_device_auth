@@ -34,6 +34,7 @@ using namespace OHOS::Security::AccessToken;
 #define PROC_NAME_SOFT_BUS "softbus_server"
 #define PROC_NAME_DEVICE_SECURITY_LEVEL "dslm_service"
 #define PROC_NAME_ISHARE "CollaborationFwk"
+#define PROC_NAME_REMOTE_COMM "remote_communication"
 
 static unordered_map<int32_t, vector<string>> g_apiAccessWhitelist = {
     { IPC_CALL_ID_PROCESS_CREDENTIAL, { PROC_NAME_DEVICE_MANAGER } },
@@ -58,6 +59,8 @@ static unordered_map<int32_t, vector<string>> g_apiAccessConfig = {
     { IPC_CALL_ID_GA_PROC_DATA, { PROC_NAME_SOFT_BUS, PROC_NAME_DEVICE_MANAGER, PROC_NAME_ISHARE } },
     { IPC_CALL_GA_CANCEL_REQUEST, { PROC_NAME_SOFT_BUS, PROC_NAME_DEVICE_MANAGER, PROC_NAME_ISHARE } },
     { IPC_CALL_ID_GET_PK_INFO_LIST, { PROC_NAME_DEVICE_SECURITY_LEVEL } },
+    { IPC_CALL_ID_AV_GET_CLIENT_SHARED_KEY, { PROC_NAME_REMOTE_COMM } },
+    { IPC_CALL_ID_AV_GET_SERVER_SHARED_KEY, { PROC_NAME_REMOTE_COMM } },
 };
 
 static bool IsProcessAllowAccess(const string &processName, int32_t methodId)
