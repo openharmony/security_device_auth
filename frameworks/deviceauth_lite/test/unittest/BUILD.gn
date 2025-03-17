@@ -23,7 +23,7 @@ if (!defined(global_parts_info) ||
   has_os_account_part = false
 }
 
-module_output_path = "device_auth/deviceauth_test"
+module_output_path = "security/device_auth"
 
 hichain_sources = [
   "../../source/auth_info/auth_info.c",

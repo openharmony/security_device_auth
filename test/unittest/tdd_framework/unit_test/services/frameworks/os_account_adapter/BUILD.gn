@@ -14,7 +14,7 @@
 import("../../../../tdd_framework.gni")
 
 if (support_os_account) {
-  module_output_path = "device_auth/deviceauth_test"
+  module_output_path = "security/device_auth"
 
   ohos_unittest("os_account_adapter_test") {
     module_out_path = module_output_path

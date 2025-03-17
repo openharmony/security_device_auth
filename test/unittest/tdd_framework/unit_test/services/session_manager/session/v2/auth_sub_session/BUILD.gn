@@ -13,7 +13,7 @@
 
 import("../../../../../../tdd_framework.gni")
 
-module_output_path = "device_auth/deviceauth_test"
+module_output_path = "security/device_auth"
 
 ohos_unittest("auth_sub_session_test") {
   module_out_path = module_output_path
