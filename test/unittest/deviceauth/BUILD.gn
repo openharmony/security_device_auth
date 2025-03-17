@@ -16,7 +16,7 @@ import("//base/security/device_auth/services/deviceauth.gni")
 import("//base/security/device_auth/services/key_agree_sdk/key_agree_sdk.gni")
 import("//build/test.gni")
 
-module_output_path = "device_auth/deviceauth_test"
+module_output_path = "security/device_auth"
 
 ohos_unittest("deviceauth_llt") {
   module_out_path = module_output_path
