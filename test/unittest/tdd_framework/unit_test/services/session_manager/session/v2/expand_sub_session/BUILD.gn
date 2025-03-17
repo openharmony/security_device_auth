@@ -47,6 +47,7 @@ ohos_unittest("expand_sub_session_test") {
   sources = [ "${session_manager_path}/src/session/v2/expand_sub_session/expand_sub_session.c" ]
   sources += auth_code_import_files
   sources += pub_key_exchange_files
+  sources += identity_service_files
   sources += [ "expand_sub_session_test.cpp" ]
   sources += [
     "${authenticators_path}/src/account_related/creds_manager/asy_token_manager.c",
