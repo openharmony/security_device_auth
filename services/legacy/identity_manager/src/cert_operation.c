@@ -662,8 +662,8 @@ int32_t GetAccountRelatedCredInfo(
     }
 }
 
-static int32_t GetSharedSecretByPeerCertFromPlugin(
-    int32_t osAccountId, const char *credId, const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
+static int32_t GetSharedSecretByPeerCertFromPlugin(int32_t osAccountId, const char *id, const char *idField,
+    const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
 {
     CJson *input = CreateJson();
     if (input == NULL) {
@@ -677,7 +677,7 @@ static int32_t GetSharedSecretByPeerCertFromPlugin(
         return HC_ERR_JSON_CREATE;
     }
     int32_t res = HC_ERR_JSON_ADD;
-    if ((credId != NULL) && (AddStringToJson(input, FIELD_ACROSS_ACCOUNT_CRED_ID, credId) != HC_SUCCESS)) {
+    if ((id != NULL) && (idField != NULL) && (AddStringToJson(input, idField, id) != HC_SUCCESS)) {
         LOGE("across account cred eixsts, but add cred id to json failed!");
         goto ERR;
     }
@@ -707,15 +707,15 @@ ERR:
     return res;
 }
 
-int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *credId, const CertInfo *peerCertInfo,
-    Uint8Buff *sharedSecret)
+int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *id, const char *idField,
+    const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
 {
-    if (peerCertInfo == NULL || sharedSecret == NULL) {
+    if ((peerCertInfo == NULL) || (sharedSecret == NULL)) {
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
     if (HasAccountPlugin()) {
-        return GetSharedSecretByPeerCertFromPlugin(osAccountId, credId, peerCertInfo, sharedSecret);
+        return GetSharedSecretByPeerCertFromPlugin(osAccountId, id, idField, peerCertInfo, sharedSecret);
     }
     TrustedDeviceEntry *deviceEntry = CreateDeviceEntry();
     if (deviceEntry == NULL) {

@@ -25,8 +25,8 @@ extern "C" {
 int32_t AddCertInfoToJson(const CertInfo *certInfo, CJson *out);
 int32_t GetAccountRelatedCredInfo(
     int32_t osAccountId, const char *groupId, const char *deviceId, bool isUdid, IdentityInfo *info);
-int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *credId, const CertInfo *peerCertInfo,
-    Uint8Buff *sharedSecret);
+int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *id, const char *idField,
+    const CertInfo *peerCertInfo, Uint8Buff *sharedSecret);
 int32_t GetAccountSymSharedSecret(const CJson *in, const CJson *urlJson, Uint8Buff *sharedSecret);
 int32_t GetAccountAsymCredInfo(int32_t osAccountId, const CertInfo *certInfo, IdentityInfo **returnInfo);
 int32_t GetAccountSymCredInfoByPeerUrl(const CJson *in, const CJson *urlJson, IdentityInfo *info);
