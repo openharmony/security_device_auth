@@ -127,10 +127,10 @@ HWTEST_F(IdentityManagerTest, IdentityManagerTest003, TestSize.Level0)
     EXPECT_NE(ret, HC_SUCCESS);
     ret = GetAccountRelatedCredInfo(TEST_OS_ACCOUNT_ID, TEST_GROUP_ID, TEST_DEVICE_ID, true, nullptr);
     EXPECT_NE(ret, HC_SUCCESS);
-    ret = GetAccountAsymSharedSecret(TEST_OS_ACCOUNT_ID, nullptr, nullptr, nullptr);
+    ret = GetAccountAsymSharedSecret(TEST_OS_ACCOUNT_ID, nullptr, FIELD_PEER_USER_ID, nullptr, nullptr);
     EXPECT_NE(ret, HC_SUCCESS);
     CertInfo peerCertInfo = { { nullptr, 0 }, { nullptr, 0 }, P256 };
-    ret = GetAccountAsymSharedSecret(TEST_OS_ACCOUNT_ID, nullptr, &peerCertInfo, nullptr);
+    ret = GetAccountAsymSharedSecret(TEST_OS_ACCOUNT_ID, nullptr, FIELD_PEER_USER_ID, &peerCertInfo, nullptr);
     EXPECT_NE(ret, HC_SUCCESS);
     ret = GetAccountSymSharedSecret(nullptr, nullptr, nullptr);
     EXPECT_NE(ret, HC_SUCCESS);

@@ -941,7 +941,7 @@ static int32_t GetSharedSecretByPeerCert(
     if (peerUserId != NULL) {
         LOGE("peerUserId exists.");
     }
-    return GetAccountAsymSharedSecret(osAccountId, peerUserId, peerCertInfo, sharedSecret);
+    return GetAccountAsymSharedSecret(osAccountId, peerUserId, FIELD_PEER_USER_ID, peerCertInfo, sharedSecret);
 }
 
 static const AuthIdentity g_authIdentity = {

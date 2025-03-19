@@ -724,7 +724,7 @@ static int32_t GetSharedSecretByPeerCert(
     if (credId != NULL) {
         LOGI("across account credential Id exists.");
     }
-    return GetAccountAsymSharedSecret(osAccountId, credId, peerCertInfo, sharedSecret);
+    return GetAccountAsymSharedSecret(osAccountId, credId, FIELD_ACROSS_ACCOUNT_CRED_ID, peerCertInfo, sharedSecret);
 }
 
 static const AuthIdentity g_authIdentity = {
