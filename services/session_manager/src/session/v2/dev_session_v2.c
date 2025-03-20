@@ -261,6 +261,7 @@ static void ResetSessionState(SessionImpl *impl)
 
 static int32_t RestartSession(SessionImpl *impl, JumpPolicy *policy)
 {
+    impl->eventList.clear(&impl->eventList);
     bool isSingleCred = false;
     (void)GetBoolFromJson(impl->context, FIELD_IS_SINGLE_CRED, &isSingleCred);
     if (!HasNextCredInfo(impl) || isSingleCred) {

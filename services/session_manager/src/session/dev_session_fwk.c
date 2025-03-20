@@ -167,14 +167,19 @@ static int32_t ProcEventList(SessionImpl *impl)
         LOGE("allocate sessionMsg memory fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t res = HC_ERR_CASE;
-    while (HC_VECTOR_SIZE(&impl->eventList) > 0) {
+    int32_t res = HC_SUCCESS;
+    uint32_t index;
+    SessionEvent *eventPtr = NULL;
+    FOR_EACH_HC_VECTOR(impl->eventList, index, eventPtr) {
+        if ((eventPtr != NULL) && (SESSION_FAIL_EVENT == eventPtr->type)) {
+            res = SessionSwitchState(impl, eventPtr, sessionMsg);
+            break;
+        }
+    }
+    while ((HC_SUCCESS == res) && (HC_VECTOR_SIZE(&impl->eventList) > 0)) {
         SessionEvent event;
         HC_VECTOR_POPELEMENT(&impl->eventList, &event, 0);
         res = SessionSwitchState(impl, &event, sessionMsg);
-        if (res != HC_SUCCESS) {
-            break;
-        }
     }
     if (res != HC_SUCCESS) {
         (void)SendSessionMsg(impl, sessionMsg);
