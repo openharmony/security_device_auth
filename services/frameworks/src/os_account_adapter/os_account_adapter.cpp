@@ -39,11 +39,13 @@ DECLARE_HC_VECTOR(EventCallbackVec, OsAccountEventCallback)
 IMPLEMENT_HC_VECTOR(EventCallbackVec, OsAccountEventCallback, 1)
 
 static std::shared_ptr<OHOS::DevAuth::AccountSubscriber> g_accountSubscriber = nullptr;
-static OHOS::sptr<OHOS::DevAuth::SaSubscriber> g_saSubscriber = nullptr;
+static OHOS::sptr<OHOS::DevAuth::SaSubscriber> g_eventSaSubscriber = nullptr;
+static OHOS::sptr<OHOS::DevAuth::SaSubscriber> g_netSaSubscriber = nullptr;
 static EventCallbackVec g_callbackVec;
 static bool g_isInitialized = false;
 static bool g_isCommonEventSubscribed = false;
-static bool g_isSaSubscribed = false;
+static bool g_isEventSaSubscribed = false;
+static bool g_isNetSaSubscribed = false;
 static const int32_t SYSTEM_DEFAULT_USER = 100;
 static OHOS::DevAuth::OsAccountEventNotifier g_accountEventNotifier;
 static OHOS::DevAuth::SaEventNotifier g_saEventNotifier;
@@ -113,21 +115,44 @@ static void UnSubscribeCommonEvent(void)
 
 static void UnSubscribeSystemAbility(void)
 {
-    if (!g_isSaSubscribed) {
-        return;
-    }
     OHOS::sptr<OHOS::ISystemAbilityManager> sysMgr =
         OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sysMgr == nullptr) {
         LOGE("[OsAccountAdapter]: system ability manager is null!");
         return;
     }
-    if (sysMgr->UnSubscribeSystemAbility(OHOS::COMMON_EVENT_SERVICE_ID, g_saSubscriber) == OHOS::ERR_OK) {
-        LOGI("[OsAccountAdapter]: unsubscribe common event sa succeed!");
-        g_isSaSubscribed = false;
-    } else {
-        LOGE("[OsAccountAdapter]: unsubscribe common event sa failed!");
+    if (g_isEventSaSubscribed) {
+        if (sysMgr->UnSubscribeSystemAbility(OHOS::COMMON_EVENT_SERVICE_ID, g_eventSaSubscriber) == OHOS::ERR_OK) {
+            LOGI("[OsAccountAdapter]: unsubscribe common event sa succeed!");
+            g_isEventSaSubscribed = false;
+        } else {
+            LOGE("[OsAccountAdapter]: unsubscribe common event sa failed!");
+        }
     }
+    if (g_isNetSaSubscribed) {
+        if (sysMgr->UnSubscribeSystemAbility(OHOS::COMM_NET_CONN_MANAGER_SYS_ABILITY_ID, g_netSaSubscriber) ==
+            OHOS::ERR_OK) {
+            LOGI("[OsAccountAdapter]: unsubscribe net connection manager sa succeed!");
+            g_isNetSaSubscribed = false;
+        } else {
+            LOGE("[OsAccountAdapter]: unsubscribe net connection manager sa failed!");
+        }
+    }
+}
+
+static void StartNetObserver(void)
+{
+    g_observer = new NetObserver();
+    g_observer->StartObserver();
+}
+
+static void StopNetObserver(void)
+{
+    if (g_observer == nullptr) {
+        return;
+    }
+    g_observer->StopObserver();
+    g_observer = nullptr;
 }
 
 static void NotifySystemAbilityAdded(int32_t systemAbilityId)
@@ -135,9 +160,9 @@ static void NotifySystemAbilityAdded(int32_t systemAbilityId)
     if (systemAbilityId == OHOS::COMMON_EVENT_SERVICE_ID) {
         LOGI("[OsAccountAdapter]: common event sa added, try to subscribe common event.");
         SubscribeCommonEvent();
-        if (g_isCommonEventSubscribed) {
-            UnSubscribeSystemAbility();
-        }
+    } else if (systemAbilityId == OHOS::COMM_NET_CONN_MANAGER_SYS_ABILITY_ID) {
+        LOGI("[OsAccountAdapter]: net connection manager sa added, try to subscribe net observer.");
+        StartNetObserver();
     } else {
         LOGE("[OsAccountAdapter]: invalid system ability!");
     }
@@ -145,24 +170,35 @@ static void NotifySystemAbilityAdded(int32_t systemAbilityId)
 
 static void SubscribeSystemAbility(void)
 {
-    if (g_isSaSubscribed) {
-        return;
-    }
     OHOS::sptr<OHOS::ISystemAbilityManager> sysMgr =
         OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sysMgr == nullptr) {
         LOGE("[OsAccountAdapter]: system ability manager is null!");
         return;
     }
-    if (g_saSubscriber == nullptr) {
-        g_saEventNotifier.notifySystemAbilityAdded = NotifySystemAbilityAdded;
-        g_saSubscriber = new OHOS::DevAuth::SaSubscriber(g_saEventNotifier);
+    g_saEventNotifier.notifySystemAbilityAdded = NotifySystemAbilityAdded;
+    if (!g_isEventSaSubscribed) {
+        if (g_eventSaSubscriber == nullptr) {
+            g_eventSaSubscriber = new OHOS::DevAuth::SaSubscriber(g_saEventNotifier);
+        }
+        if (sysMgr->SubscribeSystemAbility(OHOS::COMMON_EVENT_SERVICE_ID, g_eventSaSubscriber) == OHOS::ERR_OK) {
+            LOGI("[OsAccountAdapter]: subscribe common event sa succeed!");
+            g_isEventSaSubscribed = true;
+        } else {
+            LOGE("[OsAccountAdapter]: subscribe common event sa failed!");
+        }
     }
-    if (sysMgr->SubscribeSystemAbility(OHOS::COMMON_EVENT_SERVICE_ID, g_saSubscriber) == OHOS::ERR_OK) {
-        LOGI("[OsAccountAdapter]: subscribe common event sa succeed!");
-        g_isSaSubscribed = true;
-    } else {
-        LOGE("[OsAccountAdapter]: subscribe common event sa failed!");
+    if (!g_isNetSaSubscribed) {
+        if (g_netSaSubscriber == nullptr) {
+            g_netSaSubscriber = new OHOS::DevAuth::SaSubscriber(g_saEventNotifier);
+        }
+        if (sysMgr->SubscribeSystemAbility(OHOS::COMM_NET_CONN_MANAGER_SYS_ABILITY_ID, g_netSaSubscriber) ==
+            OHOS::ERR_OK) {
+            LOGI("[OsAccountAdapter]: subscribe net connection manager sa succeed!");
+            g_isNetSaSubscribed = true;
+        } else {
+            LOGE("[OsAccountAdapter]: subscribe net connection manager sa failed!");
+        }
     }
 }
 
@@ -200,8 +236,6 @@ void InitOsAccountAdapter(void)
     }
     g_callbackVec = CREATE_HC_VECTOR(EventCallbackVec);
     SubscribeSystemAbility();
-    g_observer = new NetObserver();
-    g_observer->StartObserver();
     g_isInitialized = true;
 }
 
@@ -211,12 +245,9 @@ void DestroyOsAccountAdapter(void)
         return;
     }
     g_isInitialized = false;
-    if (g_observer != nullptr) {
-        g_observer->StopObserver();
-        g_observer = nullptr;
-    }
     UnSubscribeSystemAbility();
     UnSubscribeCommonEvent();
+    StopNetObserver();
     DESTROY_HC_VECTOR(EventCallbackVec, &g_callbackVec);
 }
 
