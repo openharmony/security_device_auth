@@ -170,14 +170,15 @@ static int32_t ProcEventList(SessionImpl *impl)
     int32_t res = HC_SUCCESS;
     uint32_t index;
     SessionEvent *eventPtr = NULL;
+    SessionEvent event;
     FOR_EACH_HC_VECTOR(impl->eventList, index, eventPtr) {
         if ((eventPtr != NULL) && (SESSION_FAIL_EVENT == eventPtr->type)) {
             res = SessionSwitchState(impl, eventPtr, sessionMsg);
+            HC_VECTOR_POPELEMENT(&impl->eventList, &event, index);
             break;
         }
     }
     while ((HC_SUCCESS == res) && (HC_VECTOR_SIZE(&impl->eventList) > 0)) {
-        SessionEvent event;
         HC_VECTOR_POPELEMENT(&impl->eventList, &event, 0);
         res = SessionSwitchState(impl, &event, sessionMsg);
     }
