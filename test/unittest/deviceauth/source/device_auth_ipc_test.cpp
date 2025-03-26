@@ -95,8 +95,8 @@ static const char *PROCESS_DATA2 =
 static const char *AUTH_PARAMS = "{\"peerConnDeviceId\":\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C"
     "749558BD2E6492C\",\"servicePkgName\":\"TestAppId\",\"isClient\":true}";
 static const char *GET_REG_INFO_PARAMS =
-    "{\"version\":\"1.0.0\",\"deviceId\":\"TestAuthId\",\"userId\":"
-    "\"GGGG\"}";
+    "version\":\"1.0.0\",\"deviceId\":\"TestAuthId\",\"userId\":"
+    "\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\"}";
 
 enum AsyncStatus {
     ASYNC_STATUS_WAITING = 0,
