@@ -94,9 +94,7 @@ static const char *PROCESS_DATA2 =
     "{\"groupId\":\"E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21\",\"appId\":\"TestAppId\"}";
 static const char *AUTH_PARAMS = "{\"peerConnDeviceId\":\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C"
     "749558BD2E6492C\",\"servicePkgName\":\"TestAppId\",\"isClient\":true}";
-static const char *GET_REG_INFO_PARAMS =
-    "version\":\"1.0.0\",\"deviceId\":\"TestAuthId\",\"userId\":"
-    "\"4269DC28B639681698809A67EDAD08E39F207900038F91FEF95DD042FE2874E4\"}";
+static const char *GET_REG_INFO_PARAMS = "TEST_GET_REG_FAIL";
 
 enum AsyncStatus {
     ASYNC_STATUS_WAITING = 0,
