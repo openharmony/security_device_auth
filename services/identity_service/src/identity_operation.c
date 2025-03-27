@@ -62,7 +62,7 @@ int32_t GetCredentialById(int32_t osAccountId, const char *credId, Credential **
     return IS_ERR_LOCAL_CRED_NOT_EXIST;
 }
 
-static int32_t int64ToString(int64_t num, char **result)
+static int32_t Int64ToString(int64_t num, char **result)
 {
     const int bufferSize = MAX_INT64_SIZE + 1;
     char *tempStr = (char *)HcMalloc(bufferSize, 0);
@@ -86,7 +86,7 @@ static int32_t CombineBaseCredId(const char *credentialOwner, const char *device
         return IS_ERR_INVALID_PARAMS;
     }
     char *timeStr = NULL;
-    int32_t ret = int64ToString(HcGetCurTimeInMillis(), &timeStr);
+    int32_t ret = Int64ToString(HcGetCurTimeInMillis(), &timeStr);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to convert time to string!");
         return ret;
@@ -190,7 +190,7 @@ static int32_t GenerateCredIdInner(const char *credentialOwner, const char *devi
     return ret;
 }
 
-static bool isCredIdExist(int32_t osAccountId, const char *credIdStr)
+static bool IsCredIdExist(int32_t osAccountId, const char *credIdStr)
 {
     Credential *existedCredential = NULL;
     int32_t ret = GetCredentialById(osAccountId, credIdStr, &existedCredential);
@@ -201,7 +201,7 @@ static bool isCredIdExist(int32_t osAccountId, const char *credIdStr)
 
 static int32_t UseImportedCredId(int32_t osAccountId, Credential *credential, Uint8Buff *credIdByte)
 {
-    if (isCredIdExist(osAccountId, StringGet(&credential->credId))) {
+    if (IsCredIdExist(osAccountId, StringGet(&credential->credId))) {
         LOGE("Imported credId existed");
         return IS_ERR_IMPORTED_CRED_ID_EXISTED;
     }
@@ -235,7 +235,7 @@ static int32_t GenerateUniqueCredId(int32_t osAccountId,
     if (ret != IS_SUCCESS) {
         return ret;
     }
-    if (isCredIdExist(osAccountId, returnCredId)) {
+    if (IsCredIdExist(osAccountId, returnCredId)) {
         LOGW("CredId already exists, regenerate credId");
         HcFree(returnCredId);
         returnCredId = NULL;

@@ -634,7 +634,7 @@ static bool SaveCredInfoToParcel(const OsAccountCredInfo *info, HcParcel *parcel
     return ret;
 }
 
-static bool CompareQueryCredentialParams(const QueryCredentialParams *params, const Credential *entry)
+static bool CompareStringParams(const QueryCredentialParams *params, const Credential *entry)
 {
     if ((params->deviceId != NULL) && (strcmp(params->deviceId, StringGet(&entry->deviceId)) != 0)) {
         return false;
@@ -648,6 +648,15 @@ static bool CompareQueryCredentialParams(const QueryCredentialParams *params, co
     if ((params->credId != NULL) && (strcmp(params->credId, StringGet(&entry->credId)) != 0)) {
         return false;
     }
+    if ((params->peerUserSpaceId != NULL) &&
+        (strcmp(params->peerUserSpaceId, StringGet(&entry->peerUserSpaceId)) != 0)) {
+        return false;
+    }
+    return true;
+}
+
+static bool CompareIntParams(const QueryCredentialParams *params, const Credential *entry)
+{
     if ((params->credType != DEFAULT_CRED_PARAM_VAL) && (params->credType != entry->credType)) {
         return false;
     }
@@ -660,7 +669,24 @@ static bool CompareQueryCredentialParams(const QueryCredentialParams *params, co
     if ((params->ownerUid != DEFAULT_CRED_PARAM_VAL) && (params->ownerUid != entry->ownerUid)) {
         return false;
     }
+    if ((params->authorizedScope != DEFAULT_CRED_PARAM_VAL) && (params->authorizedScope != entry->authorizedScope)) {
+        return false;
+    }
+    if ((params->keyFormat != DEFAULT_CRED_PARAM_VAL) && (params->keyFormat != entry->keyFormat)) {
+        return false;
+    }
+    if ((params->algorithmType != DEFAULT_CRED_PARAM_VAL) && (params->algorithmType != entry->algorithmType)) {
+        return false;
+    }
+    if ((params->proofType != DEFAULT_CRED_PARAM_VAL) && (params->proofType != entry->proofType)) {
+        return false;
+    }
     return true;
+}
+
+static bool CompareQueryCredentialParams(const QueryCredentialParams *params, const Credential *entry)
+{
+    return CompareStringParams(params, entry) && CompareIntParams(params, entry);
 }
 
 static Credential **QueryCredentialPtrIfMatch(const CredentialVec *vec, const QueryCredentialParams *params)
