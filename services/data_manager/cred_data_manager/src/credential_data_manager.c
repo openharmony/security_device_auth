@@ -29,6 +29,7 @@
 #include "account_task_manager.h"
 #include "cred_listener.h"
 #include "cred_tlv_parser.h"
+#include "identity_service_defines.h"
 
 typedef struct {
     DECLARE_CRED_TLV_STRUCT(17)
@@ -856,6 +857,16 @@ static int32_t AddProofTypeToReturn(const Credential *credInfo, CJson *json)
     return IS_SUCCESS;
 }
 
+static int32_t AddAuthorizedScopeToReturn(const Credential *credInfo, CJson *json)
+{
+    uint8_t authorizedScope = credInfo->authorizedScope;
+    if (AddIntToJson(json, FIELD_AUTHORIZED_SCOPE, authorizedScope) != IS_SUCCESS) {
+        LOGE("[CRED#DB]: Failed to add authorizedScope to json!");
+        return IS_ERR_JSON_ADD;
+    }
+    return IS_SUCCESS;
+}
+
 static int32_t AddAlgorithmTypeToReturn(const Credential *credInfo, CJson *json)
 {
     uint8_t algorithmType = credInfo->algorithmType;
@@ -965,6 +976,7 @@ int32_t GenerateReturnCredInfo(const Credential *credential, CJson *returnJson)
         ((result = AddProofTypeToReturn(credential, returnJson)) != IS_SUCCESS) ||
         ((result = AddCredOwnerToReturn(credential, returnJson)) != IS_SUCCESS) ||
         ((result = AddAuthorizedAppListToReturn(credential, returnJson)) != IS_SUCCESS) ||
+        ((result = AddAuthorizedScopeToReturn(credential, returnJson)) != IS_SUCCESS) ||
         ((result = AddExtendInfoToReturn(credential, returnJson)) != IS_SUCCESS)) {
         return result;
     }
