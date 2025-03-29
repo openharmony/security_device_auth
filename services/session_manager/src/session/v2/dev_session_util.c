@@ -284,7 +284,7 @@ static int32_t SetPeerAuthIdByCredAuthInfo(CJson *context)
         LOGE("Get self credAuthInfo fail.");
         return HC_ERR_JSON_GET;
     }
-    const char *peerAuthId = GetStringFromJson(context, FIELD_DEVICE_ID);
+    const char *peerAuthId = GetStringFromJson(credAuthInfo, FIELD_DEVICE_ID);
     if (peerAuthId == NULL) {
         LOGE("Get peer authId fail.");
         return HC_ERR_JSON_GET;
