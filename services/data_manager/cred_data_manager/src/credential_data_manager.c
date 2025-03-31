@@ -1147,7 +1147,7 @@ int32_t QueryCredentials(int32_t osAccountId, const QueryCredentialParams *param
     uint32_t index;
     Credential **entry;
     FOR_EACH_HC_VECTOR(info->credentials, index, entry) {
-        if (entry != NULL && *entry != NULL && !CompareQueryCredentialParams(params, *entry)) {
+        if (entry == NULL || *entry == NULL || !CompareQueryCredentialParams(params, *entry)) {
             continue;
         }
         Credential *newEntry = DeepCopyCredential(*entry);
