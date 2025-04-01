@@ -138,10 +138,12 @@ static int32_t AddUserIdHashHexStringToContext(CJson *context, CJson *credAuthIn
     if (res != HC_SUCCESS) {
         LOGE("Byte to hexString failed, res:%" LOG_PUB "d", res);
         HcFree(userIdHash);
+        return res;
     }
     //replace userId plain to hash hex string
     if (AddStringToJson(context, FIELD_USER_ID, userIdHash) != HC_SUCCESS) {
         LOGE("Failed to add userIdHash");
+        HcFree(userIdHash);
         return HC_ERR_JSON_ADD;
     }
     HcFree(userIdHash);

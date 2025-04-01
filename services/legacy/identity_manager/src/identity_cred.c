@@ -137,6 +137,7 @@ static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *context,
     const char *userId = GetStringFromJson(context, FIELD_USER_ID);
     if (userId == NULL) {
         LOGE("Failed to get user ID!");
+        DestroyAccountToken(token);
         return HC_ERR_JSON_GET;
     }
     int32_t res = GetAccountAuthTokenManager()->getToken(osAccountId, token, userId, authId);
