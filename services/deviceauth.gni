@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -29,6 +29,8 @@ creds_manager_path = "${services_path}/legacy/creds_manager"
 mk_agree_path = "${services_path}/mk_agree"
 identity_manager_path = "${services_path}/legacy/identity_manager"
 identity_service_path = "${services_path}/identity_service"
+device_auth_common = "${services_path}/common"
+
 enable_broadcast = true
 deviceauth_defines = []
 
@@ -57,6 +59,7 @@ identity_service_mock_files = [
 
 inc_path = [
   "${inner_api_path}",
+  "${device_auth_common}/inc",
   "${frameworks_path}/inc",
   "${ext_plugin_manager_path}/inc",
   "${ext_plugin_manager_path}/inc/account_related",
@@ -115,6 +118,8 @@ inc_path += identity_service_inc
 
 deviceauth_common_files = [
   "${services_path}/device_auth.c",
+  "${device_auth_common}/src/hisysevent_common.c",
+  "${device_auth_common}/src/device_auth_common.c",
   "${group_manager_path}/src/group_manager.c",
   "${group_manager_path}/src/channel_manager/channel_manager.c",
   "${group_manager_path}/src/callback_manager/callback_manager.c",

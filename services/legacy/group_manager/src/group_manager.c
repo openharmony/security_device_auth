@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,6 +37,22 @@ int32_t DeleteGroupImpl(int32_t osAccountId, int64_t requestId, const char *appI
                             : HC_ERR_NOT_SUPPORT;
 }
 
+int32_t AddMemberToGroupImpl(int32_t osAccountId, int64_t requestId, const char *appId, const char *addParams)
+{
+    SET_LOG_MODE(NORMAL_MODE);
+    SET_TRACE_ID(requestId);
+    return IsGroupSupport() ? GetGroupImplInstance()->addMemberToGroup(osAccountId, requestId, appId, addParams)
+                            : HC_ERR_NOT_SUPPORT;
+}
+
+int32_t ProcessBindDataImpl(int64_t requestId, const uint8_t *data, uint32_t dataLen)
+{
+    SET_LOG_MODE(NORMAL_MODE);
+    SET_TRACE_ID(requestId);
+    return IsGroupSupport() ? GetGroupImplInstance()->processBindData(requestId, data, dataLen)
+                            : HC_ERR_NOT_SUPPORT;
+}
+
 int32_t DeleteMemberFromGroupImpl(int32_t osAccountId, int64_t requestId, const char *appId, const char *deleteParams)
 {
     SET_LOG_MODE(TRACE_MODE);
@@ -57,6 +73,18 @@ int32_t DelMultiMembersFromGroupImpl(int32_t osAccountId, const char *appId, con
     SET_LOG_MODE(NORMAL_MODE);
     return IsGroupSupport() ? GetGroupImplInstance()->delMultiMembers(osAccountId, appId, deleteParams)
                             : HC_ERR_NOT_SUPPORT;
+}
+
+int32_t RegCallbackImpl(const char *appId, const DeviceAuthCallback *callback)
+{
+    SET_LOG_MODE(NORMAL_MODE);
+    return IsGroupSupport() ? GetGroupImplInstance()->regCallback(appId, callback) : HC_ERR_NOT_SUPPORT;
+}
+
+int32_t UnRegCallbackImpl(const char *appId)
+{
+    SET_LOG_MODE(NORMAL_MODE);
+    return IsGroupSupport() ? GetGroupImplInstance()->unRegCallback(appId) : HC_ERR_NOT_SUPPORT;
 }
 
 int32_t RegListenerImpl(const char *appId, const DataChangeListener *listener)

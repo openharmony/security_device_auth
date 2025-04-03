@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,7 +32,7 @@
 #include "hc_time.h"
 #include "hc_types.h"
 #include "performance_dumper.h"
-#include "hisysevent_adapter.h"
+#include "hisysevent_common.h"
 
 static int32_t StartV1Session(SessionImpl *impl, CJson **sendMsg)
 {
@@ -227,25 +227,6 @@ static bool IsMetaNode(const CJson *context)
 {
     return GetStringFromJson(context, FIELD_META_NODE_TYPE) != NULL;
 }
-
-#ifdef DEV_AUTH_HIVIEW_ENABLE
-static DevAuthBizScene GetBizScene(bool isBind, bool isClient)
-{
-    if (isBind) {
-        if (isClient) {
-            return BIZ_SCENE_ADD_MEMBER_CLIENT;
-        } else {
-            return BIZ_SCENE_ADD_MEMBER_SERVER;
-        }
-    } else {
-        if (isClient) {
-            return BIZ_SCENE_AUTH_DEVICE_CLIENT;
-        } else {
-            return BIZ_SCENE_AUTH_DEVICE_SERVER;
-        }
-    }
-}
-#endif
 
 static void ReportBehaviorEvent(const SessionImpl *impl, bool isProcessEnd, bool isBehaviorEnd, int32_t res)
 {

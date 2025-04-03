@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1250,4 +1250,116 @@ int32_t AddDevInfoToContextByInput(CJson *context)
         return HC_ERR_JSON_FAIL;
     }
     return HC_SUCCESS;
+}
+
+static int32_t IsDeviceIdHashMatch(const char *udid, const char *subUdidHash)
+{
+    Uint8Buff udidBuf = { (uint8_t *)udid, (uint32_t)HcStrlen(udid) };
+    uint8_t udidHashByte[SHA256_LEN] = { 0 };
+    Uint8Buff udidHashBuf = { udidHashByte, sizeof(udidHashByte) };
+    int32_t ret = GetLoaderInstance()->sha256(&udidBuf, &udidHashBuf);
+    if (ret != HC_SUCCESS) {
+        LOGE("sha256 failed, ret:%" LOG_PUB "d", ret);
+        return ret;
+    }
+    uint32_t udidHashLen = SHA256_LEN * BYTE_TO_HEX_OPER_LENGTH + 1;
+    char *udidHash = (char *)HcMalloc(udidHashLen, 0);
+    if (udidHash == NULL) {
+        LOGE("malloc udidHash string failed");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    ret = ByteToHexString(udidHashByte, SHA256_LEN, udidHash, udidHashLen);
+    if (ret != HC_SUCCESS) {
+        LOGE("Byte to hexString failed, ret:%" LOG_PUB "d", ret);
+        HcFree(udidHash);
+        return ret;
+    }
+    char *subUdidHashUpper = NULL;
+    ret = ToUpperCase(subUdidHash, &subUdidHashUpper);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to convert the input sub udid hash to upper case!");
+        HcFree(udidHash);
+        return ret;
+    }
+    if (strstr((const char *)udidHash, subUdidHashUpper) != NULL) {
+        LOGI("udid hash is match!");
+        HcFree(udidHash);
+        HcFree(subUdidHashUpper);
+        return HC_SUCCESS;
+    }
+    HcFree(udidHash);
+    HcFree(subUdidHashUpper);
+    return HC_ERROR;
+}
+
+static const char *GetUdidByGroup(int32_t osAccountId, const char *groupId, const char *deviceIdHash)
+{
+    uint32_t index;
+    TrustedDeviceEntry **deviceEntry = NULL;
+    DeviceEntryVec deviceEntryVec = CREATE_HC_VECTOR(DeviceEntryVec);
+    QueryDeviceParams params = InitQueryDeviceParams();
+    params.groupId = groupId;
+    if (QueryDevices(osAccountId, &params, &deviceEntryVec) != HC_SUCCESS) {
+        LOGE("query trusted devices failed!");
+        ClearDeviceEntryVec(&deviceEntryVec);
+        return NULL;
+    }
+    FOR_EACH_HC_VECTOR(deviceEntryVec, index, deviceEntry) {
+        const char *udid = StringGet(&(*deviceEntry)->udid);
+        if (IsDeviceIdHashMatch(udid, deviceIdHash) == HC_SUCCESS) {
+            ClearDeviceEntryVec(&deviceEntryVec);
+            return udid;
+        }
+        continue;
+    }
+    ClearDeviceEntryVec(&deviceEntryVec);
+    return NULL;
+}
+
+static const char *GetDeviceIdByUdidHash(int32_t osAccountId, const char *deviceIdHash)
+{
+    if (deviceIdHash == NULL) {
+        LOGE("deviceIdHash is null");
+        return NULL;
+    }
+    QueryGroupParams queryParams = InitQueryGroupParams();
+    GroupEntryVec groupEntryVec = CreateGroupEntryVec();
+    int32_t ret = QueryGroups(osAccountId, &queryParams, &groupEntryVec);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to query groups!");
+        ClearGroupEntryVec(&groupEntryVec);
+        return NULL;
+    }
+    uint32_t index;
+    TrustedGroupEntry **ptr = NULL;
+    FOR_EACH_HC_VECTOR(groupEntryVec, index, ptr) {
+        const TrustedGroupEntry *groupEntry = (const TrustedGroupEntry *)(*ptr);
+        const char *groupId = StringGet(&(groupEntry->id));
+        if (groupId == NULL) {
+            continue;
+        }
+        const char *udid = GetUdidByGroup(osAccountId, groupId, deviceIdHash);
+        if (udid != NULL) {
+            ClearGroupEntryVec(&groupEntryVec);
+            return udid;
+        }
+    }
+    ClearGroupEntryVec(&groupEntryVec);
+    return NULL;
+}
+
+const char *GetPeerUdidFromJson(int32_t osAccountId, const CJson *in)
+{
+    const char *peerConnDeviceId = GetStringFromJson(in, FIELD_PEER_CONN_DEVICE_ID);
+    if (peerConnDeviceId == NULL) {
+        LOGI("get peerConnDeviceId from json fail.");
+        return NULL;
+    }
+    bool isUdidHash = false;
+    (void)GetBoolFromJson(in, FIELD_IS_UDID_HASH, &isUdidHash);
+    if (isUdidHash) {
+        const char *deviceId = GetDeviceIdByUdidHash(osAccountId, peerConnDeviceId);
+        return (deviceId == NULL ? peerConnDeviceId : deviceId);
+    }
+    return peerConnDeviceId;
 }

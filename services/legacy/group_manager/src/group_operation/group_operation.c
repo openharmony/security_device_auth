@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,13 +20,10 @@
 #include "callback_manager.h"
 #include "common_defs.h"
 #include "ext_plugin_manager.h"
-#include "group_data_manager.h"
 #include "dev_auth_module_manager.h"
-#include "device_auth_defines.h"
 #include "group_operation_common.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
-#include "hisysevent_adapter.h"
 #include "hitrace_adapter.h"
 #include "os_account_adapter.h"
 #include "task_manager.h"
@@ -36,8 +33,18 @@
 #include "peer_to_peer_group.h"
 #include "hc_time.h"
 #include "account_task_manager.h"
+#include "dev_session_mgr.h"
+#include "hisysevent_common.h"
+#include "device_auth_common.h"
+#include "performance_dumper.h"
+#include "channel_manager.h"
 
 #define EXT_PART_APP_ID "ext_part"
+
+typedef struct {
+    HcTaskBase base;
+    int64_t requestId;
+} SoftBusTask;
 
 static bool IsGroupTypeSupported(int groupType)
 {
@@ -640,6 +647,407 @@ static int32_t DeleteMemberFromGroupInner(int32_t osAccountId, int64_t requestId
     return HC_SUCCESS;
 }
 
+static int32_t GetOpCodeFromContext(const CJson *context)
+{
+    bool isAdmin = true;
+    (void)GetBoolFromJson(context, FIELD_IS_ADMIN, &isAdmin);
+    return isAdmin ? MEMBER_INVITE : MEMBER_JOIN;
+}
+
+static int32_t AddClientReqInfoToContext(int32_t osAccountId, int64_t requestId, const char *appId, CJson *context)
+{
+    const char *groupId = GetStringFromJson(context, FIELD_GROUP_ID);
+    if (groupId == NULL) {
+        LOGE("get groupId from json fail.");
+        return HC_ERR_JSON_GET;
+    }
+    if (AddBoolToJson(context, FIELD_IS_BIND, true) != HC_SUCCESS) {
+        LOGE("add isBind to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddBoolToJson(context, FIELD_IS_CLIENT, true) != HC_SUCCESS) {
+        LOGE("add isClient to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
+        LOGE("add osAccountId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
+        LOGE("add requestId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    int32_t opCode = GetOpCodeFromContext(context);
+    if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
+        LOGE("add operationCode to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (opCode == MEMBER_JOIN) {
+        return AddDevInfoToContextByInput(context);
+    }
+    int32_t res = AddDevInfoToContextByDb(groupId, context);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    return AddGroupInfoToContextByDb(groupId, context);
+}
+
+#ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+// If bind with iso short pin, groupVisibility must be private
+static int32_t CheckGroupVisibility(const CJson *context)
+{
+    int32_t osAccountId = INVALID_OS_ACCOUNT;
+    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
+    const char *groupId = GetStringFromJson(context, FIELD_GROUP_ID);
+    if (groupId == NULL) {
+        LOGE("Failed to get groupId!");
+        return HC_ERR_JSON_GET;
+    }
+    const char *appId = GetStringFromJson(context, FIELD_APP_ID);
+    if (appId == NULL) {
+        LOGE("Failed to get appId!");
+        return HC_ERR_JSON_GET;
+    }
+    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
+    if (entry == NULL) {
+        LOGE("Failed to get group entry!");
+        return HC_ERR_GROUP_NOT_EXIST;
+    }
+    int32_t res = CheckUpgradeIdentity(entry->upgradeFlag, appId, NULL);
+    if (res == HC_SUCCESS) {
+        LOGI("Group is from upgrade, no need to check visibility.");
+        DestroyGroupEntry(entry);
+        return HC_SUCCESS;
+    }
+    if (entry->visibility != GROUP_VISIBILITY_PRIVATE) {
+        LOGE("Group is not private, can not bind old version wearable device!");
+        DestroyGroupEntry(entry);
+        return HC_ERR_INVALID_PARAMS;
+    }
+    DestroyGroupEntry(entry);
+    return HC_SUCCESS;
+}
+#endif
+
+#ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+static int32_t CheckBindParams(const CJson *context, bool isClient)
+{
+    int32_t opCode;
+    if (GetIntFromJson(context, FIELD_OPERATION_CODE, &opCode) != HC_SUCCESS) {
+        LOGE("Failed to get operation code!");
+        return HC_ERR_JSON_GET;
+    }
+    if ((isClient && opCode == MEMBER_INVITE) || (!isClient && opCode == MEMBER_JOIN)) {
+        int32_t protocolExpandVal = INVALID_PROTOCOL_EXPAND_VALUE;
+        (void)GetIntFromJson(context, FIELD_PROTOCOL_EXPAND, &protocolExpandVal);
+        if (protocolExpandVal == LITE_PROTOCOL_COMPATIBILITY_MODE) {
+            return CheckGroupVisibility(context);
+        }
+    }
+    return HC_SUCCESS;
+}
+#endif
+
+static int32_t BuildClientBindContext(int32_t osAccountId, int64_t requestId, const char *appId,
+    const DeviceAuthCallback *callback, CJson *context)
+{
+    int32_t res = AddClientReqInfoToContext(osAccountId, requestId, appId, context);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    ChannelType channelType = GetChannelType(callback, context);
+    int64_t channelId;
+    res = OpenChannel(channelType, context, requestId, &channelId);
+    if (res != HC_SUCCESS) {
+        LOGE("open channel fail.");
+        return res;
+    }
+    return AddChannelInfoToContext(channelType, channelId, context);
+}
+
+static int32_t StartClientBindSession(int32_t osAccountId, int64_t requestId, const char *appId,
+    const char *contextParams, const DeviceAuthCallback *callback)
+{
+    CJson *context = CreateJsonFromString(contextParams);
+    if (context == NULL) {
+        LOGE("Failed to create json from string!");
+        return HC_ERR_JSON_FAIL;
+    }
+    int32_t res = BuildClientBindContext(osAccountId, requestId, appId, callback, context);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+#ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+    res = CheckBindParams(context, true);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+#endif
+    ChannelType channelType = GetChannelType(callback, context);
+    SessionInitParams params = { context, *callback };
+    res = OpenDevSession(requestId, appId, &params);
+    FreeJson(context);
+    if (res != HC_SUCCESS) {
+        LOGE("OpenDevSession fail. [Res]: %" LOG_PUB "d", res);
+        return res;
+    }
+    if (channelType == SERVICE_CHANNEL) {
+        res = PushStartSessionTask(requestId);
+        if (res != HC_SUCCESS) {
+            return res;
+        }
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t RequestAddMemberToGroupInner(int32_t osAccountId, int64_t requestId, const char *appId,
+    const char *addParams)
+{
+    ADD_PERFORM_DATA(requestId, true, true, HcGetCurTimeInMillis());
+    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
+    if ((appId == NULL) || (addParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
+        LOGE("Invalid input parameters!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    if (!CheckIsForegroundOsAccountId(osAccountId)) {
+        LOGE("This access is not from the foreground user, rejected it.");
+        return HC_ERR_CROSS_USER_ACCESS;
+    }
+    if (!IsOsAccountUnlocked(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
+    LOGI("Start to add member to group. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %" LOG_PUB "d, [AppId]: %"
+        LOG_PUB "s", requestId, osAccountId, appId);
+    const DeviceAuthCallback *callback = GetGMCallbackByAppId(appId);
+    if (callback == NULL) {
+        LOGE("Failed to find callback by appId! [AppId]: %" LOG_PUB "s", appId);
+        return HC_ERR_CALLBACK_NOT_FOUND;
+    }
+    return StartClientBindSession(osAccountId, requestId, appId, addParams, callback);
+}
+
+static int32_t RequestAddMemberToGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *addParams)
+{
+    ReportBehaviorBeginEvent(true, true, requestId);
+    int32_t res = RequestAddMemberToGroupInner(osAccountId, requestId, appId, addParams);
+    ReportBehaviorBeginResultEvent(true, true, requestId, NULL, res);
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    const char *callEventFuncName = GetAddMemberCallEventFuncName(addParams);
+    DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(osAccountId, addParams, appId, callEventFuncName);
+#endif
+    return res;
+}
+
+static int32_t CreateAppIdJsonString(const char *appId, char **reqParames)
+{
+    CJson *reqJson = CreateJson();
+    if ((reqJson == NULL) || (reqParames == NULL)) {
+        LOGE("Failed to create json!");
+        return HC_ERR_JSON_CREATE;
+    }
+    if (AddStringToJson(reqJson, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        LOGE("Failed to add appId!");
+        FreeJson(reqJson);
+        return HC_ERR_JSON_ADD;
+    }
+    *reqParames = PackJsonToString(reqJson);
+    FreeJson(reqJson);
+    if ((*reqParames) == NULL) {
+        LOGE("Failed to create reqParames string!");
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+    return HC_SUCCESS;
+}
+
+static const char *GetAppIdFromReceivedMsg(const CJson *receivedMsg)
+{
+    const char *appId = GetStringFromJson(receivedMsg, FIELD_APP_ID);
+    if (appId == NULL) {
+        LOGW("use default device manager appId.");
+        appId = DM_APP_ID;
+    }
+    return appId;
+}
+
+static int32_t AddServerReqInfoToContext(int64_t requestId, const char *appId, int32_t opCode,
+    const CJson *receivedMsg, CJson *context)
+{
+    const char *groupId = GetStringFromJson(receivedMsg, FIELD_GROUP_ID);
+    if (groupId == NULL) {
+        LOGE("get groupId from json fail.");
+        return HC_ERR_JSON_GET;
+    }
+    if (AddBoolToJson(context, FIELD_IS_SINGLE_CRED, true) != HC_SUCCESS) {
+        LOGE("add isSingleCred to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddBoolToJson(context, FIELD_IS_BIND, true) != HC_SUCCESS) {
+        LOGE("add isBind to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddBoolToJson(context, FIELD_IS_CLIENT, false) != HC_SUCCESS) {
+        LOGE("add isClient to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
+        LOGE("add requestId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
+        LOGE("add opCode to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    int32_t res;
+    if (opCode == MEMBER_INVITE) {
+        res = AddGroupInfoToContextByInput(receivedMsg, context);
+        if (res != HC_SUCCESS) {
+            return res;
+        }
+        return AddDevInfoToContextByInput(context);
+    }
+    res = AddGroupInfoToContextByDb(groupId, context);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    return AddDevInfoToContextByDb(groupId, context);
+}
+
+static int32_t BuildServerBindContext(int64_t requestId, const char *appId, int32_t opCode,
+    const CJson *receivedMsg, CJson *context)
+{
+    int32_t res = CheckConfirmationExist(context);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    res = AddOsAccountIdToContextIfValid(context);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    res = AddServerReqInfoToContext(requestId, appId, opCode, receivedMsg, context);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    int32_t channelType;
+    int64_t channelId = DEFAULT_CHANNEL_ID;
+    if (GetByteFromJson(receivedMsg, FIELD_CHANNEL_ID, (uint8_t *)&channelId, sizeof(int64_t)) == HC_SUCCESS) {
+        channelType = SOFT_BUS;
+    } else {
+        channelType = SERVICE_CHANNEL;
+    }
+    return AddChannelInfoToContext(channelType, channelId, context);
+}
+
+static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg)
+{
+    const char *appId = GetAppIdFromReceivedMsg(receivedMsg);
+    const DeviceAuthCallback *callback = GetGMCallbackByAppId(appId);
+    if (callback == NULL) {
+        LOGE("Failed to find callback by appId! [AppId]: %" LOG_PUB "s", appId);
+        return HC_ERR_CALLBACK_NOT_FOUND;
+    }
+    int32_t opCode;
+    if (GetIntFromJson(receivedMsg, FIELD_GROUP_OP, &opCode) != HC_SUCCESS) {
+        if (GetIntFromJson(receivedMsg, FIELD_OP_CODE, &opCode) != HC_SUCCESS) {
+            opCode = MEMBER_JOIN;
+            LOGW("use default opCode.");
+        }
+    }
+    char *reqParames = NULL;
+    int32_t res = CreateAppIdJsonString(appId, &reqParames);
+    if (res != HC_SUCCESS) {
+        LOGE("Create reqParames from appid failed!");
+        return res;
+    }
+    char *returnDataStr = ProcessRequestCallback(requestId, opCode, reqParames, callback);
+    FreeJsonString(reqParames);
+    if (returnDataStr == NULL) {
+        LOGE("The OnRequest callback is fail!");
+        return HC_ERR_REQ_REJECTED;
+    }
+    CJson *context = CreateJsonFromString(returnDataStr);
+    FreeJsonString(returnDataStr);
+    if (context == NULL) {
+        LOGE("Failed to create context from string!");
+        return HC_ERR_JSON_FAIL;
+    }
+    res = BuildServerBindContext(requestId, appId, opCode, receivedMsg, context);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+#ifdef ENABLE_P2P_BIND_LITE_PROTOCOL_CHECK
+    res = CheckBindParams(context, false);
+    if (res != HC_SUCCESS) {
+        FreeJson(context);
+        return res;
+    }
+#endif
+    SessionInitParams params = { context, *callback };
+    res = OpenDevSession(requestId, appId, &params);
+    FreeJson(context);
+    return res;
+}
+
+static int32_t RequestProcessBindDataInner(int64_t requestId, const uint8_t *data, uint32_t dataLen)
+{
+    if (!IsSessionExist(requestId)) {
+        ADD_PERFORM_DATA(requestId, true, false, HcGetCurTimeInMillis());
+    } else {
+        UPDATE_PERFORM_DATA_BY_SELF_INDEX(requestId, HcGetCurTimeInMillis());
+    }
+    if ((data == NULL) || (dataLen == 0) || (dataLen > MAX_DATA_BUFFER_SIZE)) {
+        LOGE("The input data is invalid!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    LOGI("[Start]: RequestProcessBindData! [ReqId]: %" LOG_PUB PRId64, requestId);
+    CJson *receivedMsg = CreateJsonFromString((const char *)data);
+    if (receivedMsg == NULL) {
+        LOGE("Failed to create json from string!");
+        return HC_ERR_JSON_FAIL;
+    }
+    int32_t res;
+    if (!IsSessionExist(requestId)) {
+        res = OpenServerBindSession(requestId, receivedMsg);
+        if (res != HC_SUCCESS) {
+            FreeJson(receivedMsg);
+            return res;
+        }
+    }
+    res = PushProcSessionTask(requestId, receivedMsg);
+    if (res != HC_SUCCESS) {
+        FreeJson(receivedMsg);
+        return res;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t RequestProcessBindData(int64_t requestId, const uint8_t *data, uint32_t dataLen)
+{
+    bool isSessionExist = IsSessionExist(requestId);
+    if (!isSessionExist) {
+        ReportBehaviorBeginEvent(true, false, requestId);
+    }
+    int32_t res = RequestProcessBindDataInner(requestId, data, dataLen);
+    if (!isSessionExist) {
+        ReportBehaviorBeginResultEvent(true, false, requestId, NULL, res);
+    }
+    return res;
+}
+
 static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t requestId, const char *appId,
     const char *deleteParams)
 {
@@ -798,6 +1206,96 @@ static int32_t RegListener(const char *appId, const DataChangeListener *listener
         return HC_ERR_NOT_SUPPORT;
     }
     return AddListener(appId, listener);
+}
+
+static void DoOnChannelOpened(HcTaskBase *baseTask)
+{
+    if (baseTask == NULL) {
+        LOGE("The input task is NULL!");
+        return;
+    }
+    SoftBusTask *task = (SoftBusTask *)baseTask;
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(task->requestId);
+    LOGI("[Start]: DoOnChannelOpened!");
+    int32_t res = StartDevSession(task->requestId);
+    if (res != HC_SUCCESS) {
+        LOGE("start session fail.[Res]: %" LOG_PUB "d", res);
+        CloseDevSession(task->requestId);
+    }
+}
+
+static void InitSoftBusTask(SoftBusTask *task, int64_t requestId)
+{
+    task->base.doAction = DoOnChannelOpened;
+    task->base.destroy = NULL;
+    task->requestId = requestId;
+}
+
+static int OnChannelOpenedCb(int64_t requestId, int result)
+{
+    if (result != HC_SUCCESS) {
+        LOGE("[SoftBus][Out]: Failed to open channel! res: %" LOG_PUB "d", result);
+        CloseDevSession(requestId);
+        return HC_ERR_SOFT_BUS;
+    }
+    LOGI("[Start]: OnChannelOpened! [ReqId]: %" LOG_PUB PRId64, requestId);
+    SoftBusTask *task = (SoftBusTask *)HcMalloc(sizeof(SoftBusTask), 0);
+    if (task == NULL) {
+        LOGE("Failed to allocate task memory!");
+        CloseDevSession(requestId);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    InitSoftBusTask(task, requestId);
+    if (PushTask((HcTaskBase *)task) != HC_SUCCESS) {
+        HcFree(task);
+        CloseDevSession(requestId);
+        return HC_ERR_INIT_TASK_FAIL;
+    }
+    LOGI("[End]: OnChannelOpened!");
+    return HC_SUCCESS;
+}
+
+static void OnChannelClosedCb(void)
+{
+    return;
+}
+
+static void OnBytesReceivedCb(int64_t requestId, uint8_t *data, uint32_t dataLen)
+{
+    if ((data == NULL) || (dataLen == 0) || (dataLen > MAX_DATA_BUFFER_SIZE)) {
+        LOGE("Invalid input params!");
+        return;
+    }
+    (void)RequestProcessBindData(requestId, data, dataLen);
+}
+
+static int32_t RegCallback(const char *appId, const DeviceAuthCallback *callback)
+{
+    if ((appId == NULL) || (callback == NULL)) {
+        LOGE("The input parameters contains NULL value!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    ChannelProxy proxy = {
+        .onChannelOpened = OnChannelOpenedCb,
+        .onChannelClosed = OnChannelClosedCb,
+        .onBytesReceived = OnBytesReceivedCb
+    };
+    int32_t res = InitChannelManager(&proxy);
+    if (res != HC_SUCCESS) {
+        LOGE("[End]: [Service]: Failed to init channel manage module!");
+        return res;
+    }
+    return RegGroupManagerCallback(appId, callback);
+}
+
+static int32_t UnRegCallback(const char *appId)
+{
+    if (appId == NULL) {
+        LOGE("The input parameters contains NULL value!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    return UnRegGroupManagerCallback(appId);
 }
 
 static int32_t UnRegListener(const char *appId)
@@ -1210,9 +1708,13 @@ static void DestroyInfo(char **returnInfo)
 static const GroupImpl GROUP_IMPL_INSTANCE = {
     .createGroup = RequestCreateGroup,
     .deleteGroup = RequestDeleteGroup,
+    .addMemberToGroup = RequestAddMemberToGroup,
+    .processBindData = RequestProcessBindData,
     .deleteMember = RequestDeleteMemberFromGroup,
     .addMultiMembers = RequestAddMultiMembersToGroup,
     .delMultiMembers = RequestDelMultiMembersFromGroup,
+    .regCallback = RegCallback,
+    .unRegCallback = UnRegCallback,
     .regListener = RegListener,
     .unRegListener = UnRegListener,
     .getRegisterInfo = GetRegisterInfo,

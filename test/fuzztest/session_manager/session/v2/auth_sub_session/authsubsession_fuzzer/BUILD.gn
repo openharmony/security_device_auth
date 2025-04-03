@@ -74,6 +74,7 @@ ohos_fuzztest("AuthSubSessionFuzzTest") {
     "${services_path}/ext_plugin_manager/inc/account_related",
     "${services_path}/ext_plugin_manager/inc",
     "${protocol_path}/inc",
+    "${device_auth_common}/inc",
     "${session_manager_path}/inc/session/v2/auth_sub_session/protocol_lib",
   ]
   sources += identity_manager_files
