@@ -18,6 +18,7 @@
 #include "alg_loader.h"
 #include "hc_log.h"
 #include "protocol_common.h"
+#include "hc_dev_info.h"
 
 #define MESSAGE_RETURN 0x8000
 #define MESSAGE_PREFIX 0x0010
@@ -198,47 +199,92 @@ ERR:
     return res;
 }
 
-static int32_t CombineKeyAlias(const Uint8Buff *serviceId, const Uint8Buff *keyType,
-    const Uint8Buff *authId, Uint8Buff *keyAliasHash)
+static bool IsPeerDevice(const Uint8Buff *authId)
 {
-    int32_t res = HC_SUCCESS;
+    char selfUdid[INPUT_UDID_LEN] = { 0 };
+    int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
+        return false;
+    }
+    char *authIdStr = (char *)HcMalloc(authId->length + 1, 0);
+    if (authIdStr == NULL) {
+        LOGE("Failed to alloc memory for authIdStr!");
+        return false;
+    }
+    if (memcpy_s(authIdStr, authId->length + 1, authId->val, authId->length) != EOK) {
+        LOGE("Failed to copy authId!");
+        HcFree(authIdStr);
+        return false;
+    }
+    bool isPeerDevice = strcmp(selfUdid, authIdStr) != 0;
+    HcFree(authIdStr);
+    return isPeerDevice;
+}
+
+static int32_t FillKeyAlias(const Uint8Buff *serviceId, const Uint8Buff *keyType,
+    const TokenManagerParams *params, Uint8Buff *keyAliasBuff)
+{
+    uint32_t totalLen = keyAliasBuff->length;
+    uint32_t usedLen = 0;
+    if (memcpy_s(keyAliasBuff->val, totalLen, serviceId->val, serviceId->length) != EOK) {
+        LOGE("Copy serviceId failed.");
+        return HC_ERR_MEMORY_COPY;
+    }
+    usedLen = usedLen + serviceId->length;
+
+    if (memcpy_s(keyAliasBuff->val + usedLen, totalLen - usedLen, keyType->val, keyType->length) != EOK) {
+        LOGE("Copy keyType failed.");
+        return HC_ERR_MEMORY_COPY;
+    }
+    usedLen = usedLen + keyType->length;
+
+    Uint8Buff authId = { params->authId.val, params->authId.length };
+    if (memcpy_s(keyAliasBuff->val + usedLen, totalLen - usedLen, authId.val, authId.length) != EOK) {
+        LOGE("Copy authId failed.");
+        return HC_ERR_MEMORY_COPY;
+    }
+
+    if (params->isDirectAuthToken && IsPeerDevice(&authId)) {
+        usedLen = usedLen + authId.length;
+        Uint8Buff peerOsAccIdBuff = { (uint8_t *)&params->peerOsAccountId, sizeof(params->peerOsAccountId) };
+        if (memcpy_s(keyAliasBuff->val + usedLen, totalLen - usedLen, peerOsAccIdBuff.val,
+            peerOsAccIdBuff.length) != EOK) {
+            LOGE("Copy peerOsAccountId failed.");
+            return HC_ERR_MEMORY_COPY;
+        }
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t CombineKeyAlias(const Uint8Buff *serviceId, const Uint8Buff *keyType,
+    const TokenManagerParams *params, Uint8Buff *keyAliasHash)
+{
     Uint8Buff keyAliasBuff = { NULL, 0 };
-    keyAliasBuff.length = serviceId->length + authId->length + keyType->length;
+    Uint8Buff authId = { params->authId.val, params->authId.length };
+    if (params->isDirectAuthToken && IsPeerDevice(&authId)) {
+        keyAliasBuff.length = serviceId->length + authId.length + keyType->length + sizeof(params->peerOsAccountId);
+    } else {
+        keyAliasBuff.length = serviceId->length + authId.length + keyType->length;
+    }
     keyAliasBuff.val = (uint8_t *)HcMalloc(keyAliasBuff.length, 0);
     if (keyAliasBuff.val == NULL) {
         LOGE("Malloc mem failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
 
-    uint32_t totalLen = keyAliasBuff.length;
-    uint32_t usedLen = 0;
-    if (memcpy_s(keyAliasBuff.val, totalLen, serviceId->val, serviceId->length) != EOK) {
-        LOGE("Copy serviceId failed.");
-        res = HC_ERR_MEMORY_COPY;
-        goto ERR;
-    }
-    usedLen = usedLen + serviceId->length;
-
-    if (memcpy_s(keyAliasBuff.val + usedLen, totalLen - usedLen, keyType->val, keyType->length) != EOK) {
-        LOGE("Copy keyType failed.");
-        res = HC_ERR_MEMORY_COPY;
-        goto ERR;
-    }
-    usedLen = usedLen + keyType->length;
-
-    if (memcpy_s(keyAliasBuff.val + usedLen, totalLen - usedLen, authId->val, authId->length) != EOK) {
-        LOGE("Copy authId failed.");
-        res = HC_ERR_MEMORY_COPY;
-        goto ERR;
+    int32_t res = FillKeyAlias(serviceId, keyType, params, &keyAliasBuff);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to fill key alias!");
+        HcFree(keyAliasBuff.val);
+        return res;
     }
 
     res = GetLoaderInstance()->sha256(&keyAliasBuff, keyAliasHash);
+    HcFree(keyAliasBuff.val);
     if (res != HC_SUCCESS) {
         LOGE("Sha256 failed.");
-        goto ERR;
     }
-ERR:
-    HcFree(keyAliasBuff.val);
     return res;
 }
 
@@ -287,12 +333,12 @@ static int32_t CombineKeyAliasForPseudonymPsk(const Uint8Buff *serviceType, cons
 }
 
 static int32_t CombineKeyAliasForIso(const Uint8Buff *serviceId, const Uint8Buff *keyType,
-    const Uint8Buff *authId, Uint8Buff *outKeyAlias)
+    const TokenManagerParams *params, Uint8Buff *outKeyAlias)
 {
     if (outKeyAlias->length != SHA256_LEN) {
         return HC_ERR_INVALID_LEN;
     }
-    int32_t res = CombineKeyAlias(serviceId, keyType, authId, outKeyAlias);
+    int32_t res = CombineKeyAlias(serviceId, keyType, params, outKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("CombineKeyAlias failed.");
         return res;
@@ -301,7 +347,7 @@ static int32_t CombineKeyAliasForIso(const Uint8Buff *serviceId, const Uint8Buff
 }
 
 static int32_t CombineKeyAliasForPake(const Uint8Buff *serviceId, const Uint8Buff *keyType,
-    const Uint8Buff *authId, Uint8Buff *outKeyAlias)
+    const TokenManagerParams *params, Uint8Buff *outKeyAlias)
 {
     int32_t res;
     Uint8Buff keyAliasHash = { NULL, SHA256_LEN };
@@ -316,7 +362,7 @@ static int32_t CombineKeyAliasForPake(const Uint8Buff *serviceId, const Uint8Buf
         res = HC_ERR_ALLOC_MEMORY;
         goto ERR;
     }
-    res = CombineKeyAlias(serviceId, keyType, authId, &keyAliasHash);
+    res = CombineKeyAlias(serviceId, keyType, params, &keyAliasHash);
     if (res != HC_SUCCESS) {
         LOGE("CombineKeyAlias failed.");
         goto ERR;
@@ -344,23 +390,23 @@ ERR:
     return res;
 }
 
-int32_t GenerateKeyAlias(const Uint8Buff *pkgName, const Uint8Buff *serviceType,
-    const KeyAliasType keyType, const Uint8Buff *authId, Uint8Buff *outKeyAlias)
+int32_t GenerateKeyAlias(const TokenManagerParams *params, Uint8Buff *outKeyAlias)
 {
-    CHECK_PTR_RETURN_ERROR_CODE(pkgName, "pkgName");
-    CHECK_PTR_RETURN_ERROR_CODE(pkgName->val, "pkgName->val");
-    CHECK_PTR_RETURN_ERROR_CODE(serviceType, "serviceType");
-    CHECK_PTR_RETURN_ERROR_CODE(serviceType->val, "serviceType->val");
-    CHECK_PTR_RETURN_ERROR_CODE(authId, "authId");
-    CHECK_PTR_RETURN_ERROR_CODE(authId->val, "authId->val");
+    CHECK_PTR_RETURN_ERROR_CODE(params, "params");
+    Uint8Buff pkgName = { params->pkgName.val, params->pkgName.length };
+    Uint8Buff serviceType = { params->serviceType.val, params->serviceType.length };
+    CHECK_PTR_RETURN_ERROR_CODE(pkgName.val, "pkgName.val");
+    CHECK_PTR_RETURN_ERROR_CODE(serviceType.val, "serviceType.val");
+    CHECK_PTR_RETURN_ERROR_CODE(params->authId.val, "params->authId.val");
     CHECK_PTR_RETURN_ERROR_CODE(outKeyAlias, "outKeyAlias");
     CHECK_PTR_RETURN_ERROR_CODE(outKeyAlias->val, "outKeyAlias->val");
-    if (pkgName->length == 0 || serviceType->length == 0 || authId->length == 0 || outKeyAlias->length == 0) {
+    if (pkgName.length == 0 || serviceType.length == 0 || params->authId.length == 0 || outKeyAlias->length == 0) {
         LOGE("Invalid zero length params exist.");
         return HC_ERR_INVALID_LEN;
     }
-    if (pkgName->length > PACKAGE_NAME_MAX_LEN || serviceType->length > SERVICE_TYPE_MAX_LEN ||
-        authId->length > AUTH_ID_MAX_LEN || keyType >= KEY_ALIAS_TYPE_END) {
+    KeyAliasType keyType = (KeyAliasType)params->userType;
+    if (pkgName.length > PACKAGE_NAME_MAX_LEN || serviceType.length > SERVICE_TYPE_MAX_LEN ||
+        params->authId.length > AUTH_ID_MAX_LEN || keyType >= KEY_ALIAS_TYPE_END) {
         LOGE("Out of length params exist.");
         return HC_ERR_INVALID_LEN;
     }
@@ -373,16 +419,16 @@ int32_t GenerateKeyAlias(const Uint8Buff *pkgName, const Uint8Buff *serviceType,
         res = HC_ERR_ALLOC_MEMORY;
         goto ERR;
     }
-    res = CombineServiceId(pkgName, serviceType, &serviceId);
+    res = CombineServiceId(&pkgName, &serviceType, &serviceId);
     if (res != HC_SUCCESS) {
         LOGE("CombineServiceId failed, res: %" LOG_PUB "x.", res);
         goto ERR;
     }
     Uint8Buff keyTypeBuff = { GetKeyTypePair(keyType), KEY_TYPE_PAIR_LEN };
     if (keyType == KEY_ALIAS_AUTH_TOKEN) {
-        res = CombineKeyAliasForIso(&serviceId, &keyTypeBuff, authId, outKeyAlias);
+        res = CombineKeyAliasForIso(&serviceId, &keyTypeBuff, params, outKeyAlias);
     } else {
-        res = CombineKeyAliasForPake(&serviceId, &keyTypeBuff, authId, outKeyAlias);
+        res = CombineKeyAliasForPake(&serviceId, &keyTypeBuff, params, outKeyAlias);
     }
     if (res != HC_SUCCESS) {
         LOGE("CombineKeyAlias failed, keyType: %" LOG_PUB "d, res: %" LOG_PUB "d", keyType, res);

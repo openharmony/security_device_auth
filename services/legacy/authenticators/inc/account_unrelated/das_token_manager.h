@@ -21,10 +21,12 @@
 
 typedef struct {
     int32_t osAccountId;
+    int32_t peerOsAccountId;
     Uint8Buff pkgName;
     Uint8Buff serviceType;
     Uint8Buff authId;
     int userType;
+    bool isDirectAuthToken;
 } TokenManagerParams;
 
 

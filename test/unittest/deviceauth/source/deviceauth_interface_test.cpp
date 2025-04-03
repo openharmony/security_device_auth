@@ -1092,10 +1092,12 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest017, TestSize.Level0)
     Uint8Buff authIdBuff = { (uint8_t *)TEST_AUTH_ID, strlen(TEST_AUTH_ID) };
     TokenManagerParams params = {
         .osAccountId = DEFAULT_OS_ACCOUNT,
+        .peerOsAccountId = DEFAULT_OS_ACCOUNT,
         .pkgName = { (uint8_t *)TEST_APP_ID, HcStrlen(TEST_APP_ID) },
         .serviceType = { (uint8_t *)TEST_GROUP_ID, HcStrlen(TEST_GROUP_ID) },
         .authId = authIdBuff,
-        .userType = 0
+        .userType = 0,
+        .isDirectAuthToken = false
     };
     int32_t res = liteManager->unregisterLocalIdentity(&params);
     ASSERT_EQ(res, HC_SUCCESS);
@@ -1329,31 +1331,6 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest024, TestSize.Level0)
     (void)GeneratePseudonymPskAlias(&serviceTypeBuff, &authIdBuff, &outKeyAliasBuff);
     authIdBuff.length = HcStrlen(TEST_AUTH_ID);
     (void)GeneratePseudonymPskAlias(&serviceTypeBuff, &authIdBuff, &outKeyAliasBuff);
-    Uint8Buff pkgNameBuff = { (uint8_t *)TEST_APP_ID, 0 };
-    (void)GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_ACCESSOR_PK, &authIdBuff, &outKeyAliasBuff);
-    pkgNameBuff.length = HcStrlen(TEST_APP_ID);
-    serviceTypeBuff.length = 0;
-    (void)GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_ACCESSOR_PK, &authIdBuff, &outKeyAliasBuff);
-    serviceTypeBuff.length = HcStrlen(TEST_GROUP_ID);
-    authIdBuff.length = 0;
-    (void)GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_ACCESSOR_PK, &authIdBuff, &outKeyAliasBuff);
-    authIdBuff.length = HcStrlen(TEST_AUTH_ID);
-    outKeyAliasBuff.length = 0;
-    (void)GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_ACCESSOR_PK, &authIdBuff, &outKeyAliasBuff);
-    outKeyAliasBuff.length = 256;
-    pkgNameBuff.length = PACKAGE_NAME_MAX_LEN + 1;
-    (void)GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_ACCESSOR_PK, &authIdBuff, &outKeyAliasBuff);
-    pkgNameBuff.length = HcStrlen(TEST_APP_ID);
-    serviceTypeBuff.length = SERVICE_TYPE_MAX_LEN + 1;
-    (void)GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_ACCESSOR_PK, &authIdBuff, &outKeyAliasBuff);
-    serviceTypeBuff.length = HcStrlen(TEST_GROUP_ID);
-    authIdBuff.length = AUTH_ID_MAX_LEN + 1;
-    (void)GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_ACCESSOR_PK, &authIdBuff, &outKeyAliasBuff);
-    authIdBuff.length = HcStrlen(TEST_AUTH_ID);
-    (void)GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_TYPE_END, &authIdBuff, &outKeyAliasBuff);
-    (void)GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_PSK, &authIdBuff, &outKeyAliasBuff);
-    res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_AUTH_TOKEN, &authIdBuff, &outKeyAliasBuff);
-    ASSERT_NE(res, HC_SUCCESS);
 }
 
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest025, TestSize.Level0)
@@ -1858,6 +1835,47 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest034, TestSize.Level0)
     NotifyAsyncTaskStop();
     NotifyAsyncTaskStop();
     DestroyAccountTaskManager();
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest035, TestSize.Level0)
+{
+    Uint8Buff pkgNameBuff = { (uint8_t *)TEST_APP_ID, 0 };
+    Uint8Buff serviceTypeBuff = { (uint8_t *)TEST_GROUP_ID, HcStrlen(TEST_GROUP_ID) };
+    Uint8Buff authIdBuff = { (uint8_t *)TEST_AUTH_ID, HcStrlen(TEST_AUTH_ID) };
+    uint8_t outKeyAliasVal[256] = { 0 };
+    Uint8Buff outKeyAliasBuff = { outKeyAliasVal, 256 };
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName = pkgNameBuff;
+    tokenParams.serviceType = serviceTypeBuff;
+    tokenParams.userType = KEY_ALIAS_ACCESSOR_PK;
+    tokenParams.authId = authIdBuff;
+    (void)GenerateKeyAlias(&tokenParams, &outKeyAliasBuff);
+    tokenParams.pkgName.length = HcStrlen(TEST_APP_ID);
+    tokenParams.serviceType.length = 0;
+    (void)GenerateKeyAlias(&tokenParams, &outKeyAliasBuff);
+    tokenParams.serviceType.length = HcStrlen(TEST_GROUP_ID);
+    tokenParams.authId.length = 0;
+    (void)GenerateKeyAlias(&tokenParams, &outKeyAliasBuff);
+    tokenParams.authId.length = HcStrlen(TEST_AUTH_ID);
+    outKeyAliasBuff.length = 0;
+    (void)GenerateKeyAlias(&tokenParams, &outKeyAliasBuff);
+    outKeyAliasBuff.length = 256;
+    tokenParams.pkgName.length = PACKAGE_NAME_MAX_LEN + 1;
+    (void)GenerateKeyAlias(&tokenParams, &outKeyAliasBuff);
+    tokenParams.pkgName.length = HcStrlen(TEST_APP_ID);
+    tokenParams.serviceType.length = SERVICE_TYPE_MAX_LEN + 1;
+    (void)GenerateKeyAlias(&tokenParams, &outKeyAliasBuff);
+    tokenParams.serviceType.length = HcStrlen(TEST_GROUP_ID);
+    tokenParams.authId.length = AUTH_ID_MAX_LEN + 1;
+    (void)GenerateKeyAlias(&tokenParams, &outKeyAliasBuff);
+    tokenParams.authId.length = HcStrlen(TEST_AUTH_ID);
+    tokenParams.userType = KEY_ALIAS_TYPE_END;
+    (void)GenerateKeyAlias(&tokenParams, &outKeyAliasBuff);
+    tokenParams.userType = KEY_ALIAS_PSK;
+    (void)GenerateKeyAlias(&tokenParams, &outKeyAliasBuff);
+    tokenParams.userType = KEY_ALIAS_AUTH_TOKEN;
+    int32_t res = GenerateKeyAlias(&tokenParams, &outKeyAliasBuff);
+    ASSERT_NE(res, HC_SUCCESS);
 }
 
 class AvInterfaceTest : public testing::Test {

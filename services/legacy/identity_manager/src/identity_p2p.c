@@ -57,6 +57,15 @@ static int32_t CombineQueryCredentialParams(const CJson *in, CJson *out)
         LOGE("acquireType invalid! only P2P_BIND is allowed now!");
         return HC_ERR_INVALID_PARAMS;
     }
+    int32_t peerOsAccountId = INVALID_OS_ACCOUNT;
+    if (GetIntFromJson(in, FIELD_PEER_OS_ACCOUNT_ID, &peerOsAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get peer osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
+    if (AddIntToJson(out, FIELD_PEER_OS_ACCOUNT_ID, peerOsAccountId) != HC_SUCCESS) {
+        LOGE("Failed to add peer osAccountId!");
+        return HC_ERR_JSON_ADD;
+    }
     if (AddIntToJson(out, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
         LOGE("add osAccountId to json error!");
         return HC_ERR_JSON_ADD;
@@ -205,6 +214,35 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
     return HC_SUCCESS;
 }
 
+static int32_t GenerateSelfKeyAlias(const char *selfAuthId, Uint8Buff *selfKeyAlias)
+{
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)DEFAULT_PACKAGE_NAME;
+    tokenParams.pkgName.length = HcStrlen(DEFAULT_PACKAGE_NAME);
+    tokenParams.serviceType.val = (uint8_t *)DEFAULT_SERVICE_TYPE;
+    tokenParams.serviceType.length = HcStrlen(DEFAULT_SERVICE_TYPE);
+    tokenParams.userType = KEY_ALIAS_P2P_AUTH;
+    tokenParams.authId.val = (uint8_t *)selfAuthId;
+    tokenParams.authId.length = HcStrlen(selfAuthId);
+    return GenerateKeyAlias(&tokenParams, selfKeyAlias);
+}
+
+static int32_t GeneratePeerKeyAlias(const char *peerServiceType, const char *peerAuthId, int32_t peerOsAccountId,
+    Uint8Buff *peerKeyAlias)
+{
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)DEFAULT_PACKAGE_NAME;
+    tokenParams.pkgName.length = HcStrlen(DEFAULT_PACKAGE_NAME);
+    tokenParams.serviceType.val = (uint8_t *)peerServiceType;
+    tokenParams.serviceType.length = HcStrlen(peerServiceType);
+    tokenParams.userType = KEY_ALIAS_P2P_AUTH;
+    tokenParams.authId.val = (uint8_t *)peerAuthId;
+    tokenParams.authId.length = HcStrlen(peerAuthId);
+    tokenParams.isDirectAuthToken = true;
+    tokenParams.peerOsAccountId = peerOsAccountId;
+    return GenerateKeyAlias(&tokenParams, peerKeyAlias);
+}
+
 /**
  * @brief compute shared key alias
  *
@@ -214,16 +252,16 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
  * @param sharedKeyAlias
  * @return int32_t
  */
-static int32_t ComputeAndSaveDirectAuthPsk(int32_t osAccountId, const char *selfAuthId, const char *peerAuthId,
+static int32_t ComputeAndSaveDirectAuthPsk(const CJson *in, const char *selfAuthId, const char *peerAuthId,
     const char *peerServiceType, const Uint8Buff *sharedKeyAlias)
 {
-    Uint8Buff selfAuthIdBuff = { (uint8_t *)selfAuthId, HcStrlen(selfAuthId) };
-    Uint8Buff pkgNameBuff = { (uint8_t *)DEFAULT_PACKAGE_NAME, HcStrlen(DEFAULT_PACKAGE_NAME) };
-    Uint8Buff serviceTypeBuff = { (uint8_t *)DEFAULT_SERVICE_TYPE, HcStrlen(DEFAULT_SERVICE_TYPE) };
-    KeyAliasType keyType = KEY_ALIAS_P2P_AUTH;
+    int32_t osAccountId = INVALID_OS_ACCOUNT;
+    (void)GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId);
+    int32_t peerOsAccountId = INVALID_OS_ACCOUNT;
+    (void)GetIntFromJson(in, FIELD_PEER_OS_ACCOUNT_ID, &peerOsAccountId);
     uint8_t selfKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff selfKeyAlias = { selfKeyAliasVal, PAKE_KEY_ALIAS_LEN };
-    int32_t ret = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, keyType, &selfAuthIdBuff, &selfKeyAlias);
+    int32_t ret = GenerateSelfKeyAlias(selfAuthId, &selfKeyAlias);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to generate self key alias!");
         return ret;
@@ -231,12 +269,9 @@ static int32_t ComputeAndSaveDirectAuthPsk(int32_t osAccountId, const char *self
     LOGI("selfKeyAlias: %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x****.", selfKeyAlias.val[DEV_AUTH_ZERO],
         selfKeyAlias.val[DEV_AUTH_ONE], selfKeyAlias.val[DEV_AUTH_TWO], selfKeyAlias.val[DEV_AUTH_THREE]);
 
-    Uint8Buff peerServiceTypeBuff = { (uint8_t *)peerServiceType, HcStrlen(peerServiceType) };
-    KeyAliasType keyTypePeer = KEY_ALIAS_P2P_AUTH;
-    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, HcStrlen(peerAuthId) };
     uint8_t peerKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff peerKeyAlias = { peerKeyAliasVal, PAKE_KEY_ALIAS_LEN };
-    ret = GenerateKeyAlias(&pkgNameBuff, &peerServiceTypeBuff, keyTypePeer, &peerAuthIdBuff, &peerKeyAlias);
+    ret = GeneratePeerKeyAlias(peerServiceType, peerAuthId, peerOsAccountId, &peerKeyAlias);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to generate peer key alias!");
         return ret;
@@ -261,11 +296,32 @@ static int32_t ComputeAndSaveDirectAuthPsk(int32_t osAccountId, const char *self
         &selfKeyParams, &peerKeyBuff, ED25519, PAKE_PSK_LEN, sharedKeyAlias);
 }
 
+static int32_t GetDirectAuthPskAliasInner(const char *peerServiceType, const char *peerAuthId, int32_t peerOsAccountId,
+    Uint8Buff *pskKeyAlias)
+{
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)DEFAULT_PACKAGE_NAME;
+    tokenParams.pkgName.length = HcStrlen(DEFAULT_PACKAGE_NAME);
+    tokenParams.serviceType.val = (uint8_t *)peerServiceType;
+    tokenParams.serviceType.length = HcStrlen(peerServiceType);
+    tokenParams.userType = KEY_ALIAS_PSK;
+    tokenParams.authId.val = (uint8_t *)peerAuthId;
+    tokenParams.authId.length = HcStrlen(peerAuthId);
+    tokenParams.isDirectAuthToken = true;
+    tokenParams.peerOsAccountId = peerOsAccountId;
+    return GenerateKeyAlias(&tokenParams, pskKeyAlias);
+}
+
 static int32_t GetDirectAuthPskAliasCreateIfNeeded(const CJson *in, Uint8Buff *pskKeyAlias)
 {
     int32_t osAccountId = INVALID_OS_ACCOUNT;
     if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
         LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
+    int32_t peerOsAccountId = INVALID_OS_ACCOUNT;
+    if (GetIntFromJson(in, FIELD_PEER_OS_ACCOUNT_ID, &peerOsAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get peer osAccountId!");
         return HC_ERR_JSON_GET;
     }
     const char *selfAuthId = GetStringFromJson(in, FIELD_AUTH_ID);
@@ -278,15 +334,12 @@ static int32_t GetDirectAuthPskAliasCreateIfNeeded(const CJson *in, Uint8Buff *p
         LOGE("get peerConnDeviceId from json fail.");
         return HC_ERR_JSON_GET;
     }
-    const char *peerServieType = GetStringFromJson(in, FIELD_SERVICE_TYPE);
-    if (peerServieType == NULL) {
+    const char *peerServiceType = GetStringFromJson(in, FIELD_SERVICE_TYPE);
+    if (peerServiceType == NULL) {
         LOGI("get serviceType from json fail, replace by default");
-        peerServieType = DEFAULT_SERVICE_TYPE;
+        peerServiceType = DEFAULT_SERVICE_TYPE;
     }
-    Uint8Buff pkgNameBuff = { (uint8_t *)DEFAULT_PACKAGE_NAME, HcStrlen(DEFAULT_PACKAGE_NAME) };
-    Uint8Buff serviceTypeBuff = { (uint8_t *)peerServieType, HcStrlen(peerServieType) };
-    Uint8Buff peerAuthIdBuff = { (uint8_t *)peerAuthId, HcStrlen(peerAuthId) };
-    int32_t ret = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_PSK, &peerAuthIdBuff, pskKeyAlias);
+    int32_t ret = GetDirectAuthPskAliasInner(peerServiceType, peerAuthId, peerOsAccountId, pskKeyAlias);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to generate psk key alias!");
         return ret;
@@ -295,7 +348,7 @@ static int32_t GetDirectAuthPskAliasCreateIfNeeded(const CJson *in, Uint8Buff *p
         pskKeyAlias->val[DEV_AUTH_ONE], pskKeyAlias->val[DEV_AUTH_TWO], pskKeyAlias->val[DEV_AUTH_THREE]);
     ret = GetLoaderInstance()->checkKeyExist(pskKeyAlias, false, osAccountId);
     if (ret != HC_SUCCESS) {
-        ret = ComputeAndSaveDirectAuthPsk(osAccountId, selfAuthId, peerAuthId, peerServieType, pskKeyAlias);
+        ret = ComputeAndSaveDirectAuthPsk(in, selfAuthId, peerAuthId, peerServiceType, pskKeyAlias);
     }
     return ret;
 }
