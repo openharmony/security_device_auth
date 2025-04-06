@@ -59,9 +59,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest001, TestSize.L
     AccountRelatedGroupAuth *groupAuth = (AccountRelatedGroupAuth *)GetAccountRelatedGroupAuth();
     ASSERT_NE(groupAuth, nullptr);
     CJson *param = CreateJson();
-    if (param == nullptr) {
-        return;
-    }
+    ASSERT_NE(param, nullptr);
     QueryGroupParams queryParams;
     GroupEntryVec vec = CreateGroupEntryVec();
     (void)groupAuth->getAccountCandidateGroup(0, param, &queryParams, &vec); // For unit test.
@@ -133,9 +131,7 @@ static DeviceAuthCallback g_deviceAuthCallBack = {
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest002, TestSize.Level0)
 {
     CJson *authParam = CreateJson();
-    if (authParam == nullptr) {
-        return;
-    }
+    ASSERT_NE(authParam, nullptr);
     CJson *out = CreateJson();
     if (out == nullptr) {
         FreeJson(authParam);
@@ -169,9 +165,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0021, TestSize.
 {
     int32_t ret = HC_ERROR;
     CJson *authParam = CreateJson();
-    if (authParam == nullptr) {
-        return;
-    }
+    ASSERT_NE(authParam, nullptr);
     CJson *out = CreateJson();
     if (out == nullptr) {
         FreeJson(authParam);
@@ -208,9 +202,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0022, TestSize.
 {
     int32_t ret = HC_ERROR;
     CJson *authParam = CreateJson();
-    if (authParam == nullptr) {
-        return;
-    }
+    ASSERT_NE(authParam, nullptr);
     CJson *out = CreateJson();
     if (out == nullptr) {
         FreeJson(authParam);
@@ -290,9 +282,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0023, TestSize.
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest004, TestSize.Level0)
 {
     TrustedGroupEntry *entry = CreateGroupEntry();
-    if (entry == nullptr) {
-        return;
-    }
+    ASSERT_NE(entry, nullptr);
     TrustedDeviceEntry *localAuthInfo = CreateDeviceEntry();
     if (localAuthInfo == nullptr) {
         DestroyGroupEntry(entry);
@@ -317,9 +307,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest004, TestSize.L
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0041, TestSize.Level0)
 {
     TrustedGroupEntry *entry = CreateGroupEntry();
-    if (entry == nullptr) {
-        return;
-    }
+    ASSERT_NE(entry, nullptr);
     TrustedDeviceEntry *localAuthInfo = CreateDeviceEntry();
     if (localAuthInfo == nullptr) {
         DestroyGroupEntry(entry);
@@ -346,9 +334,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0041, TestSize.
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0042, TestSize.Level0)
 {
     TrustedGroupEntry *entry = CreateGroupEntry();
-    if (entry == nullptr) {
-        return;
-    }
+    ASSERT_NE(entry, nullptr);
     TrustedDeviceEntry *localAuthInfo = CreateDeviceEntry();
     if (localAuthInfo == nullptr) {
         DestroyGroupEntry(entry);
@@ -376,9 +362,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0042, TestSize.
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0043, TestSize.Level0)
 {
     TrustedGroupEntry *entry = CreateGroupEntry();
-    if (entry == nullptr) {
-        return;
-    }
+    ASSERT_NE(entry, nullptr);
     TrustedDeviceEntry *localAuthInfo = CreateDeviceEntry();
     if (localAuthInfo == nullptr) {
         DestroyGroupEntry(entry);
@@ -408,9 +392,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0043, TestSize.
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest00431, TestSize.Level0)
 {
     TrustedGroupEntry *entry = CreateGroupEntry();
-    if (entry == nullptr) {
-        return;
-    }
+    ASSERT_NE(entry, nullptr);
     TrustedDeviceEntry *localAuthInfo = CreateDeviceEntry();
     if (localAuthInfo == nullptr) {
         DestroyGroupEntry(entry);
@@ -443,9 +425,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest00431, TestSize
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0044, TestSize.Level0)
 {
     TrustedGroupEntry *entry = CreateGroupEntry();
-    if (entry == nullptr) {
-        return;
-    }
+    ASSERT_NE(entry, nullptr);
     TrustedDeviceEntry *localAuthInfo = CreateDeviceEntry();
     if (localAuthInfo == nullptr) {
         DestroyGroupEntry(entry);
@@ -480,9 +460,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0044, TestSize.
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest007, TestSize.Level0)
 {
     CJson *confirmationJson = CreateJson();
-    if (confirmationJson == nullptr) {
-        return;
-    }
+    ASSERT_NE(confirmationJson, nullptr);
     CJson *dataFromClient = CreateJson();
     if (dataFromClient == nullptr) {
         FreeJson(confirmationJson);
@@ -497,9 +475,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest007, TestSize.L
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0071, TestSize.Level0)
 {
     CJson *confirmationJson = CreateJson();
-    if (confirmationJson == nullptr) {
-        return;
-    }
+    ASSERT_NE(confirmationJson, nullptr);
     CJson *dataFromClient = CreateJson();
     if (dataFromClient == nullptr) {
         FreeJson(confirmationJson);
