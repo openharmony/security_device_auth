@@ -1198,19 +1198,19 @@ int32_t IpcServiceDaProcessCredential(const IpcDataInfo *ipcParams, int32_t para
     if (ret != HC_SUCCESS) {
         return ret;
     }
-    ret = ProcessCredential(operationCode, reqJsonStr, &returnData);
-    if (ret != HC_SUCCESS) {
-        LOGI("call ProcessCredential failed %" LOG_PUB "d", ret);
-    }
+    int32_t callRet = ProcessCredential(operationCode, reqJsonStr, &returnData);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_1,
+        sizeof(int32_t));
     if (returnData != NULL) {
-        ret = IpcEncodeCallReply(
+        ret += IpcEncodeCallReply(
             outCache, PARAM_TYPE_RETURN_DATA, (const uint8_t *)returnData, HcStrlen(returnData) + 1);
         HcFree(returnData);
     } else {
-        ret = IpcEncodeCallReply(outCache, PARAM_TYPE_RETURN_DATA, NULL, 0);
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_RETURN_DATA, NULL, 0);
     }
-    LOGI("process done, ipc ret %" LOG_PUB "d", ret);
-    return ret;
+    LOGI("process done, call ret %" LOG_PUB "d, ipc ret %" LOG_PUB "d", callRet, ret);
+    return (ret == HC_SUCCESS) ? HC_SUCCESS : HC_ERROR;
 }
 
 int32_t IpcServiceDaProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)

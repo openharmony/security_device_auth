@@ -20,13 +20,9 @@
 
 static int32_t RegisterLocalIdentityStd(const TokenManagerParams *params)
 {
-    Uint8Buff pkgNameBuff = { params->pkgName.val, params->pkgName.length };
-    Uint8Buff serviceTypeBuff = { params->serviceType.val, params->serviceType.length };
-    KeyAliasType keyType = (KeyAliasType)params->userType;
     uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAliasBuff = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
-    Uint8Buff authIdBuff = { params->authId.val, params->authId.length };
-    int32_t res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, keyType, &authIdBuff, &keyAliasBuff);
+    int32_t res = GenerateKeyAlias(params, &keyAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate identity keyPair alias!");
         return res;
@@ -39,7 +35,8 @@ static int32_t RegisterLocalIdentityStd(const TokenManagerParams *params)
         return HC_SUCCESS;
     }
 
-    ExtraInfo exInfo = { authIdBuff, -1, -1 }; /* UserType and pairType are not required when generating key. */
+    /* UserType and pairType are not required when generating key. */
+    ExtraInfo exInfo = { { params->authId.val, params->authId.length }, -1, -1 };
     KeyParams keyParams = { { keyAliasBuff.val, keyAliasBuff.length, true }, false, params->osAccountId };
     res = loader->generateKeyPairWithStorage(&keyParams, PAKE_ED25519_KEY_PAIR_LEN, ED25519,
         KEY_PURPOSE_SIGN_VERIFY, &exInfo);
@@ -53,13 +50,9 @@ static int32_t RegisterLocalIdentityStd(const TokenManagerParams *params)
 
 static int32_t UnregisterLocalIdentityStd(const TokenManagerParams *params)
 {
-    Uint8Buff pkgNameBuff = { params->pkgName.val, params->pkgName.length };
-    Uint8Buff serviceTypeBuff = { params->serviceType.val, params->serviceType.length };
-    KeyAliasType keyType = (KeyAliasType)params->userType;
     uint8_t pakeKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff pakeKeyAliasBuff = { pakeKeyAliasVal, PAKE_KEY_ALIAS_LEN };
-    Uint8Buff authIdBuff = { params->authId.val, params->authId.length };
-    int32_t res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, keyType, &authIdBuff, &pakeKeyAliasBuff);
+    int32_t res = GenerateKeyAlias(params, &pakeKeyAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate identity keyPair alias!");
         return res;
@@ -79,7 +72,9 @@ static int32_t UnregisterLocalIdentityStd(const TokenManagerParams *params)
     // try to delete upgrade keypair if exist.
     if (memcmp(params->pkgName.val, GROUP_MANAGER_PACKAGE_NAME, HcStrlen(GROUP_MANAGER_PACKAGE_NAME)) == 0) {
         LOGI("Try to delete upgrade key pair.");
-        res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_LT_KEY_PAIR, &authIdBuff, &pakeKeyAliasBuff);
+        TokenManagerParams tokenParams = *params;
+        tokenParams.userType = KEY_ALIAS_LT_KEY_PAIR;
+        res = GenerateKeyAlias(&tokenParams, &pakeKeyAliasBuff);
         if (res != HC_SUCCESS) {
             LOGE("Failed to generate upgrade key pair alias!");
             return res;
@@ -103,12 +98,11 @@ static int32_t UnregisterLocalIdentityStd(const TokenManagerParams *params)
     return HC_SUCCESS;
 }
 
-static int32_t DeletePeerPubKey(int32_t osAccountId, const Uint8Buff *pkgNameBuff, const Uint8Buff *serviceTypeBuff,
-    KeyAliasType keyType, const Uint8Buff *authIdPeer)
+static int32_t DeletePeerPubKey(const TokenManagerParams *params)
 {
     uint8_t pakeKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff pakeKeyAliasBuff = { pakeKeyAliasVal, PAKE_KEY_ALIAS_LEN };
-    int32_t res = GenerateKeyAlias(pkgNameBuff, serviceTypeBuff, keyType, authIdPeer, &pakeKeyAliasBuff);
+    int32_t res = GenerateKeyAlias(params, &pakeKeyAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate peer pub key alias!");
         return res;
@@ -116,7 +110,7 @@ static int32_t DeletePeerPubKey(int32_t osAccountId, const Uint8Buff *pkgNameBuf
     LOGI("PubKey alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.", pakeKeyAliasVal[DEV_AUTH_ZERO],
         pakeKeyAliasVal[DEV_AUTH_ONE], pakeKeyAliasVal[DEV_AUTH_TWO], pakeKeyAliasVal[DEV_AUTH_THREE]);
     const AlgLoader *loader = GetLoaderInstance();
-    res = loader->deleteKey(&pakeKeyAliasBuff, false, osAccountId);
+    res = loader->deleteKey(&pakeKeyAliasBuff, false, params->osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete peer public key!");
         return res;
@@ -128,19 +122,18 @@ static int32_t DeletePeerPubKey(int32_t osAccountId, const Uint8Buff *pkgNameBuf
         LOGE("Failed to convert peer key alias to lower case!");
         return res;
     }
-    res = loader->deleteKey(&pakeKeyAliasBuff, true, osAccountId);
+    res = loader->deleteKey(&pakeKeyAliasBuff, true, params->osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete peer public key by lower case alias!");
     }
     return res;
 }
 
-static int32_t DeleteAuthPsk(int32_t osAccountId, const Uint8Buff *pkgNameBuff, const Uint8Buff *serviceTypeBuff,
-    const Uint8Buff *authIdPeer)
+static int32_t DeleteAuthPsk(const TokenManagerParams *params)
 {
     uint8_t pakeKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff pakeKeyAliasBuff = { pakeKeyAliasVal, PAKE_KEY_ALIAS_LEN };
-    int32_t res = GenerateKeyAlias(pkgNameBuff, serviceTypeBuff, KEY_ALIAS_PSK, authIdPeer, &pakeKeyAliasBuff);
+    int32_t res = GenerateKeyAlias(params, &pakeKeyAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate psk alias!");
         return res;
@@ -148,12 +141,12 @@ static int32_t DeleteAuthPsk(int32_t osAccountId, const Uint8Buff *pkgNameBuff, 
     LOGI("Psk alias(HEX): %" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x%" LOG_PUB "x****.", pakeKeyAliasVal[DEV_AUTH_ZERO],
         pakeKeyAliasVal[DEV_AUTH_ONE], pakeKeyAliasVal[DEV_AUTH_TWO], pakeKeyAliasVal[DEV_AUTH_THREE]);
     const AlgLoader *loader = GetLoaderInstance();
-    res = loader->deleteKey(&pakeKeyAliasBuff, false, osAccountId);
+    res = loader->deleteKey(&pakeKeyAliasBuff, false, params->osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete psk!");
         return res;
     }
-    res = loader->deleteKey(&pakeKeyAliasBuff, true, osAccountId);
+    res = loader->deleteKey(&pakeKeyAliasBuff, true, params->osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete psk!");
         return res;
@@ -165,7 +158,7 @@ static int32_t DeleteAuthPsk(int32_t osAccountId, const Uint8Buff *pkgNameBuff, 
         LOGE("Failed to convert psk alias to lower case!");
         return res;
     }
-    res = loader->deleteKey(&pakeKeyAliasBuff, true, osAccountId);
+    res = loader->deleteKey(&pakeKeyAliasBuff, true, params->osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to delete psk by lower case alias!");
     }
@@ -198,38 +191,41 @@ static int32_t DeletePseudonymPskStd(int32_t osAccountId, const Uint8Buff *servi
 
 static int32_t DeletePeerAuthInfoStd(const TokenManagerParams *params)
 {
-    Uint8Buff pkgNameBuff = { params->pkgName.val, params->pkgName.length };
-    Uint8Buff serviceTypeBuff = { params->serviceType.val, params->serviceType.length };
+    TokenManagerParams tokenParams = *params;
 #ifdef DEV_AUTH_FUNC_TEST
-    KeyAliasType keyType = KEY_ALIAS_LT_KEY_PAIR;
-#else
-    KeyAliasType keyType = (KeyAliasType)params->userType;
+    tokenParams.userType = KEY_ALIAS_LT_KEY_PAIR;
 #endif
-    Uint8Buff authIdBuff = { params->authId.val, params->authId.length };
-    int32_t res = DeletePeerPubKey(params->osAccountId, &pkgNameBuff, &serviceTypeBuff, keyType, &authIdBuff);
+    int32_t res = DeletePeerPubKey(&tokenParams);
     if (res != HC_SUCCESS) {
         return res;
     }
 
-    res = DeleteAuthPsk(params->osAccountId, &pkgNameBuff, &serviceTypeBuff, &authIdBuff);
+    tokenParams.userType = KEY_ALIAS_PSK;
+    res = DeleteAuthPsk(&tokenParams);
     if (res != HC_SUCCESS) {
         return res;
     }
 
     // try to delete pseudonym psk if exist.
+    Uint8Buff serviceTypeBuff = { params->serviceType.val, params->serviceType.length };
+    Uint8Buff authIdBuff = { params->authId.val, params->authId.length };
     return DeletePseudonymPskStd(params->osAccountId, &serviceTypeBuff, &authIdBuff);
 }
 
 static int32_t GenerateSelfKeyAlias(const PakeParams *params, Uint8Buff *selfKeyAlias)
 {
-    KeyAliasType keyType = (KeyAliasType)params->userType;
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)params->packageName;
+    tokenParams.pkgName.length = HcStrlen(params->packageName);
+    tokenParams.serviceType.val = (uint8_t *)params->serviceType;
+    tokenParams.serviceType.length = HcStrlen(params->serviceType);
+    tokenParams.userType = params->userType;
     // if self data is from upgrade, key type should be key-pair.
     if (params->isSelfFromUpgrade) {
-        keyType = KEY_ALIAS_LT_KEY_PAIR;
+        tokenParams.userType = KEY_ALIAS_LT_KEY_PAIR;
     }
-    Uint8Buff packageName = { (uint8_t *)params->packageName, HcStrlen(params->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
-    int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(params->baseParams.idSelf), selfKeyAlias);
+    tokenParams.authId = params->baseParams.idSelf;
+    int32_t res = GenerateKeyAlias(&tokenParams, selfKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generate self key alias failed");
         return res;
@@ -246,14 +242,18 @@ static int32_t GenerateSelfKeyAlias(const PakeParams *params, Uint8Buff *selfKey
 
 static int32_t GeneratePeerKeyAlias(const PakeParams *params, Uint8Buff *peerKeyAlias)
 {
-    Uint8Buff packageName = { (uint8_t *)params->packageName, HcStrlen(params->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)params->packageName;
+    tokenParams.pkgName.length = HcStrlen(params->packageName);
+    tokenParams.serviceType.val = (uint8_t *)params->serviceType;
+    tokenParams.serviceType.length = HcStrlen(params->serviceType);
 #ifdef DEV_AUTH_FUNC_TEST
-    KeyAliasType keyTypePeer = KEY_ALIAS_LT_KEY_PAIR;
+    tokenParams.userType = KEY_ALIAS_LT_KEY_PAIR;
 #else
-    KeyAliasType keyTypePeer = (KeyAliasType)params->userTypePeer;
+    tokenParams.userType = params->userTypePeer;
 #endif
-    int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyTypePeer, &(params->baseParams.idPeer), peerKeyAlias);
+    tokenParams.authId = params->baseParams.idPeer;
+    int32_t res = GenerateKeyAlias(&tokenParams, peerKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generate peer key alias failed");
         return res;
@@ -270,10 +270,14 @@ static int32_t GeneratePeerKeyAlias(const PakeParams *params, Uint8Buff *peerKey
 
 static int32_t GenerateSharedKeyAlias(const PakeParams *params, Uint8Buff *sharedKeyAlias)
 {
-    Uint8Buff packageName = { (uint8_t *)params->packageName, HcStrlen(params->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
-    int32_t res = GenerateKeyAlias(&packageName, &serviceType, KEY_ALIAS_PSK, &(params->baseParams.idPeer),
-        sharedKeyAlias);
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)params->packageName;
+    tokenParams.pkgName.length = HcStrlen(params->packageName);
+    tokenParams.serviceType.val = (uint8_t *)params->serviceType;
+    tokenParams.serviceType.length = HcStrlen(params->serviceType);
+    tokenParams.userType = KEY_ALIAS_PSK;
+    tokenParams.authId = params->baseParams.idPeer;
+    int32_t res = GenerateKeyAlias(&tokenParams, sharedKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generate psk alias failed");
         return res;
@@ -374,13 +378,9 @@ static int32_t ComputeAndSavePskStd(const PakeParams *params)
 
 static int32_t GetPublicKeyStd(const TokenManagerParams *params, Uint8Buff *returnPk)
 {
-    Uint8Buff pkgNameBuff = { params->pkgName.val, params->pkgName.length };
-    Uint8Buff serviceTypeBuff = { params->serviceType.val, params->serviceType.length };
-    KeyAliasType keyType = (KeyAliasType)params->userType;
     uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAliasBuff = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
-    Uint8Buff authIdBuff = { params->authId.val, params->authId.length };
-    int32_t res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, keyType, &authIdBuff, &keyAliasBuff);
+    int32_t res = GenerateKeyAlias(params, &keyAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate keyPair alias!");
         return res;

@@ -21,14 +21,11 @@
 
 static int32_t UnregisterLocalIdentityLite(const TokenManagerParams *params)
 {
-    Uint8Buff pkgNameBuff = { params->pkgName.val, params->pkgName.length };
-    Uint8Buff serviceTypeBuff = { params->serviceType.val, params->serviceType.length };
-
     uint8_t isoKeyAliasVal[ISO_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff isoKeyAliasBuff = { isoKeyAliasVal, ISO_KEY_ALIAS_LEN };
-    Uint8Buff authIdBuff = { params->authId.val, params->authId.length };
-    int32_t res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_AUTH_TOKEN, &authIdBuff,
-        &isoKeyAliasBuff);
+    TokenManagerParams tokenParams = *params;
+    tokenParams.userType = KEY_ALIAS_AUTH_TOKEN;
+    int32_t res = GenerateKeyAlias(&tokenParams, &isoKeyAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate authtoken alias!");
         return res;
@@ -50,14 +47,11 @@ static int32_t UnregisterLocalIdentityLite(const TokenManagerParams *params)
 
 static int32_t DeletePeerAuthInfoLite(const TokenManagerParams *params)
 {
-    Uint8Buff pkgNameBuff = { params->pkgName.val, params->pkgName.length };
-    Uint8Buff serviceTypeBuff = { params->serviceType.val, params->serviceType.length };
-
     uint8_t isoKeyAliasVal[ISO_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff isoKeyAliasBuff = { isoKeyAliasVal, ISO_KEY_ALIAS_LEN };
-    Uint8Buff authIdBuff = { params->authId.val, params->authId.length };
-    int32_t res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_AUTH_TOKEN, &authIdBuff,
-        &isoKeyAliasBuff);
+    TokenManagerParams tokenParams = *params;
+    tokenParams.userType = KEY_ALIAS_AUTH_TOKEN;
+    int32_t res = GenerateKeyAlias(&tokenParams, &isoKeyAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate authtoken alias!");
         return res;
@@ -77,7 +71,7 @@ static int32_t DeletePeerAuthInfoLite(const TokenManagerParams *params)
     // try to delete upgrade auth token if exist.
     uint8_t isoUpgradeKeyAliasVal[ISO_UPGRADE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff isoUpgradeKeyAliasBuff = { isoUpgradeKeyAliasVal, ISO_UPGRADE_KEY_ALIAS_LEN };
-    res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, params->userType, &authIdBuff, &isoUpgradeKeyAliasBuff);
+    res = GenerateKeyAlias(params, &isoUpgradeKeyAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate upgrade auth token alias!");
         return res;

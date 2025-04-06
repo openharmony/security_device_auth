@@ -20,13 +20,13 @@
 #include "identity_defines.h"
 #include "json_utils.h"
 #include "string_util.h"
+#include "das_token_manager.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t GenerateKeyAlias(const Uint8Buff *pkgName, const Uint8Buff *serviceType, const KeyAliasType keyType,
-    const Uint8Buff *authId, Uint8Buff *outKeyAlias);
+int32_t GenerateKeyAlias(const TokenManagerParams *params, Uint8Buff *outKeyAlias);
 int32_t GeneratePseudonymPskAlias(const Uint8Buff *serviceType, const Uint8Buff *peerAuthId, Uint8Buff *outKeyAlias);
 int32_t GetIdPeer(const CJson *in, const char *peerIdKey, const Uint8Buff *authIdSelf, Uint8Buff *authIdPeer);
 int32_t GetAndCheckAuthIdPeer(const CJson *in, const Uint8Buff *authIdSelf, const Uint8Buff *authIdPeer);

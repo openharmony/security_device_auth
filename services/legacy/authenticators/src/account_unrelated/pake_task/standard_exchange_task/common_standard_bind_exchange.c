@@ -399,15 +399,18 @@ static int32_t SaveAuthInfo(const PakeParams *pakeParams, const StandardBindExch
 {
     uint8_t keyAliasPeerVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAlias = { keyAliasPeerVal, PAKE_KEY_ALIAS_LEN };
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)pakeParams->packageName;
+    tokenParams.pkgName.length = HcStrlen(pakeParams->packageName);
+    tokenParams.serviceType.val = (uint8_t *)pakeParams->serviceType;
+    tokenParams.serviceType.length = HcStrlen(pakeParams->serviceType);
 #ifdef DEV_AUTH_FUNC_TEST
-    KeyAliasType keyType = KEY_ALIAS_LT_KEY_PAIR;
+    tokenParams.userType = KEY_ALIAS_LT_KEY_PAIR;
 #else
-    KeyAliasType keyType = (KeyAliasType)pakeParams->userTypePeer;
+    tokenParams.userType = pakeParams->userTypePeer;
 #endif
-    Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, HcStrlen(pakeParams->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, HcStrlen(pakeParams->serviceType) };
-    int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(pakeParams->baseParams.idPeer),
-        &keyAlias);
+    tokenParams.authId = pakeParams->baseParams.idPeer;
+    int32_t res = GenerateKeyAlias(&tokenParams, &keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generateKeyAlias failed");
         return res;
@@ -435,14 +438,17 @@ int32_t ClientRequestStandardBindExchange(const PakeParams *pakeParams, Standard
 {
     uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAlias = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
-    KeyAliasType keyType = (KeyAliasType)pakeParams->userType;
-    // if self data is from upgrade, key type should be key-pair.
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)pakeParams->packageName;
+    tokenParams.pkgName.length = HcStrlen(pakeParams->packageName);
+    tokenParams.serviceType.val = (uint8_t *)pakeParams->serviceType;
+    tokenParams.serviceType.length = HcStrlen(pakeParams->serviceType);
+    tokenParams.userType = pakeParams->userType;
     if (pakeParams->isSelfFromUpgrade) {
-        keyType = KEY_ALIAS_LT_KEY_PAIR;
+        tokenParams.userType = KEY_ALIAS_LT_KEY_PAIR;
     }
-    Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, HcStrlen(pakeParams->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, HcStrlen(pakeParams->serviceType) };
-    int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(pakeParams->baseParams.idSelf), &keyAlias);
+    tokenParams.authId = pakeParams->baseParams.idSelf;
+    int32_t res = GenerateKeyAlias(&tokenParams, &keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generateKeyAlias failed");
         return res;
@@ -480,14 +486,17 @@ int32_t ClientRequestStandardBindExchange(const PakeParams *pakeParams, Standard
 
 static int32_t GenerateSelfKeyAlias(const PakeParams *pakeParams, Uint8Buff *keyAlias)
 {
-    KeyAliasType keyType = (KeyAliasType)pakeParams->userType;
-    // if self data is from upgrade, key type should be key-pair.
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)pakeParams->packageName;
+    tokenParams.pkgName.length = HcStrlen(pakeParams->packageName);
+    tokenParams.serviceType.val = (uint8_t *)pakeParams->serviceType;
+    tokenParams.serviceType.length = HcStrlen(pakeParams->serviceType);
+    tokenParams.userType = pakeParams->userType;
     if (pakeParams->isSelfFromUpgrade) {
-        keyType = KEY_ALIAS_LT_KEY_PAIR;
+        tokenParams.userType = KEY_ALIAS_LT_KEY_PAIR;
     }
-    Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, HcStrlen(pakeParams->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, HcStrlen(pakeParams->serviceType) };
-    int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(pakeParams->baseParams.idSelf), keyAlias);
+    tokenParams.authId = pakeParams->baseParams.idSelf;
+    int32_t res = GenerateKeyAlias(&tokenParams, keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generateKeyAlias failed");
         return res;
@@ -562,10 +571,14 @@ int32_t ClientConfirmStandardBindExchange(PakeParams *pakeParams, StandardBindEx
 {
     uint8_t keyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff keyAlias = { keyAliasVal, PAKE_KEY_ALIAS_LEN };
-    KeyAliasType keyType = (KeyAliasType)pakeParams->userType;
-    Uint8Buff packageName = { (uint8_t *)pakeParams->packageName, HcStrlen(pakeParams->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)pakeParams->serviceType, HcStrlen(pakeParams->serviceType) };
-    int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyType, &(pakeParams->baseParams.idSelf), &keyAlias);
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)pakeParams->packageName;
+    tokenParams.pkgName.length = HcStrlen(pakeParams->packageName);
+    tokenParams.serviceType.val = (uint8_t *)pakeParams->serviceType;
+    tokenParams.serviceType.length = HcStrlen(pakeParams->serviceType);
+    tokenParams.userType = pakeParams->userType;
+    tokenParams.authId = pakeParams->baseParams.idSelf;
+    int32_t res = GenerateKeyAlias(&tokenParams, &keyAlias);
     if (res != HC_SUCCESS) {
         LOGE("generateKeyAlias failed");
         return res;

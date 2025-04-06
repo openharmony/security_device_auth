@@ -1934,11 +1934,31 @@ static void InitIpcAccountVerifierMethods(AccountVerifier *accountVerifier)
     accountVerifier->destroyDataBuff = IpcAvDestroyDataBuff;
 }
 
+static int32_t GetReturnData(const IpcDataInfo *replies, int32_t cacheNum, char **returnData)
+{
+    int32_t resultNum;
+    int32_t inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_IPC_RESULT_NUM, (uint8_t *)&resultNum, &inOutLen);
+    if ((resultNum < IPC_RESULT_NUM_1) || (inOutLen != sizeof(int32_t))) {
+        LOGE("Invalid result num!");
+        return HC_ERR_IPC_OUT_DATA_NUM;
+    }
+
+    GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_RETURN_DATA, (uint8_t *)returnData, NULL);
+    if (*returnData != NULL) {
+        *returnData = strdup(*returnData);
+        if (*returnData == NULL) {
+            LOGE("Failed to strdup return data!");
+            return HC_ERR_ALLOC_MEMORY;
+        }
+    }
+    return HC_SUCCESS;
+}
+
 DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const char *reqJsonStr, char **returnData)
 {
     uintptr_t callCtx = IPC_CALL_CONTEXT_INIT;
     int32_t ret;
-    IpcDataInfo replyCache = { 0 };
 
     LOGI("starting ...");
     if (IsStrInvalid(reqJsonStr) || (returnData == NULL)) {
@@ -1970,11 +1990,17 @@ DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const ch
         DestroyCallCtx(&callCtx, NULL);
         return HC_ERR_IPC_PROC_FAILED;
     }
-    DecodeCallReply(callCtx, &replyCache, REPLAY_CACHE_NUM(replyCache));
-    ret = GetIpcReplyByTypeInner(&replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
+    IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
+    DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
+    ret = HC_ERR_IPC_UNKNOW_REPLY;
+    int32_t inOutLen = sizeof(int32_t);
+    GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     if (ret != HC_SUCCESS) {
-        LOGE("GetIpcReplyByType failed, ret %" LOG_PUB "d", ret);
+        DestroyCallCtx(&callCtx, NULL);
+        return ret;
     }
+    ret = GetReturnData(replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
+    LOGI("process done, ret %" LOG_PUB "d", ret);
     DestroyCallCtx(&callCtx, NULL);
     return ret;
 }

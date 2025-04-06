@@ -261,17 +261,20 @@ ERR:
 
 static int32_t GenerateKeyAliasForIso(const IsoParams *params, Uint8Buff *keyAliasBuff)
 {
-    int32_t res;
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, (uint32_t)HcStrlen(params->serviceType) };
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.serviceType.val = (uint8_t *)params->serviceType;
+    tokenParams.serviceType.length = HcStrlen(params->serviceType);
+    tokenParams.authId = params->baseParams.authIdPeer;
     if (params->isPeerFromUpgrade) {
-        Uint8Buff pkgNameBuff = { (uint8_t *)GROUP_MANAGER_PACKAGE_NAME, HcStrlen(GROUP_MANAGER_PACKAGE_NAME) };
-        res = GenerateKeyAlias(&pkgNameBuff, &serviceType, params->peerUserType, &params->baseParams.authIdPeer,
-            keyAliasBuff);
+        tokenParams.pkgName.val = (uint8_t *)GROUP_MANAGER_PACKAGE_NAME;
+        tokenParams.pkgName.length = HcStrlen(GROUP_MANAGER_PACKAGE_NAME);
+        tokenParams.userType = params->peerUserType;
     } else {
-        Uint8Buff pkgNameBuff = { (uint8_t *)params->packageName, (uint32_t)HcStrlen(params->packageName) };
-        res = GenerateKeyAlias(&pkgNameBuff, &serviceType, KEY_ALIAS_AUTH_TOKEN, &params->baseParams.authIdPeer,
-            keyAliasBuff);
+        tokenParams.pkgName.val = (uint8_t *)params->packageName;
+        tokenParams.pkgName.length = HcStrlen(params->packageName);
+        tokenParams.userType = KEY_ALIAS_AUTH_TOKEN;
     }
+    int32_t res = GenerateKeyAlias(&tokenParams, keyAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate iso key alias!");
         return res;
@@ -616,19 +619,19 @@ int GenerateKeyAliasInIso(const IsoParams *params, uint8_t *keyAlias, uint32_t k
     if (params == NULL || keyAlias == NULL || keyAliasLen == 0) {
         return HC_ERR_INVALID_PARAMS;
     }
-    Uint8Buff pkgName = { (uint8_t *)params->packageName, (uint32_t)HcStrlen(params->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, (uint32_t)HcStrlen(params->serviceType) };
-    Uint8Buff authId = { NULL, 0 };
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)params->packageName;
+    tokenParams.pkgName.length = HcStrlen(params->packageName);
+    tokenParams.serviceType.val = (uint8_t *)params->serviceType;
+    tokenParams.serviceType.length = HcStrlen(params->serviceType);
+    tokenParams.userType = KEY_ALIAS_AUTH_TOKEN;
     if (useOpposite) {
-        authId.val = params->baseParams.authIdPeer.val;
-        authId.length = params->baseParams.authIdPeer.length;
+        tokenParams.authId = params->baseParams.authIdPeer;
     } else {
-        authId.val = params->baseParams.authIdSelf.val;
-        authId.length = params->baseParams.authIdSelf.length;
+        tokenParams.authId = params->baseParams.authIdSelf;
     }
     Uint8Buff outKeyAlias = { keyAlias, keyAliasLen };
-    return GenerateKeyAlias(&pkgName, &serviceType, KEY_ALIAS_AUTH_TOKEN, &authId,
-        &outKeyAlias);
+    return GenerateKeyAlias(&tokenParams, &outKeyAlias);
 }
 
 int GeneratePsk(const CJson *in, IsoParams *params)

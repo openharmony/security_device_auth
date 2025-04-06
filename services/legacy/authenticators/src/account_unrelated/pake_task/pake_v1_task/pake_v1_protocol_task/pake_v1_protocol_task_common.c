@@ -138,11 +138,14 @@ static int32_t LoadPseudonymFlagIfNeed(PakeParams *params)
 {
     uint8_t peerKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff peerKeyAlias = { peerKeyAliasVal, PAKE_KEY_ALIAS_LEN };
-    KeyAliasType keyTypePeer = (KeyAliasType)params->userTypePeer;
-    Uint8Buff packageName = { (uint8_t *)params->packageName, HcStrlen(params->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
-    int32_t res = GenerateKeyAlias(&packageName, &serviceType, keyTypePeer, &(params->baseParams.idPeer),
-        &peerKeyAlias);
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)params->packageName;
+    tokenParams.pkgName.length = HcStrlen(params->packageName);
+    tokenParams.serviceType.val = (uint8_t *)params->serviceType;
+    tokenParams.serviceType.length = HcStrlen(params->serviceType);
+    tokenParams.userType = params->userTypePeer;
+    tokenParams.authId = params->baseParams.idPeer;
+    int32_t res = GenerateKeyAlias(&tokenParams, &peerKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate peer key alias!");
         return res;
@@ -177,11 +180,7 @@ static int32_t LoadPseudonymFlagIfNeed(PakeParams *params)
         FreeJson(innerExtInfoJson);
         return HC_ERR_JSON_GET;
     }
-    if (params->isPseudonym) {
-        LOGI("peer support pseudonym!");
-    } else {
-        LOGI("peer not support pseudonym!");
-    }
+    LOGI("peer support pseudonym: %" LOG_PUB "s", params->isPseudonym ? "true" : "false");
     FreeJson(innerExtInfoJson);
     return HC_SUCCESS;
 }
@@ -263,10 +262,14 @@ static int32_t ConvertPakeV1Psk(const Uint8Buff *srcPsk, PakeParams *params)
 
 static int32_t GeneratePskAlias(const PakeParams *params, Uint8Buff *pskKeyAlias)
 {
-    Uint8Buff packageName = { (uint8_t *)params->packageName, HcStrlen(params->packageName) };
-    Uint8Buff serviceType = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
-    int32_t res = GenerateKeyAlias(&packageName, &serviceType, KEY_ALIAS_PSK, &(params->baseParams.idPeer),
-        pskKeyAlias);
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)params->packageName;
+    tokenParams.pkgName.length = HcStrlen(params->packageName);
+    tokenParams.serviceType.val = (uint8_t *)params->serviceType;
+    tokenParams.serviceType.length = HcStrlen(params->serviceType);
+    tokenParams.userType = KEY_ALIAS_PSK;
+    tokenParams.authId = params->baseParams.idPeer;
+    int32_t res = GenerateKeyAlias(&tokenParams, pskKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("GenerateKeyAlias for psk failed, res: %" LOG_PUB "d.", res);
         return res;
@@ -449,10 +452,14 @@ static int32_t GeneratePseudonymPskIfNotExist(const PakeParams *params)
 {
     uint8_t baseKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff baseKeyAlias = { baseKeyAliasVal, PAKE_KEY_ALIAS_LEN };
-    Uint8Buff pkgNameBuff = { (uint8_t *)params->packageName, HcStrlen(params->packageName)};
-    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
-    int32_t res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_PSK, &params->baseParams.idPeer,
-        &baseKeyAlias);
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)params->packageName;
+    tokenParams.pkgName.length = HcStrlen(params->packageName);
+    tokenParams.serviceType.val = (uint8_t *)params->serviceType;
+    tokenParams.serviceType.length = HcStrlen(params->serviceType);
+    tokenParams.userType = KEY_ALIAS_PSK;
+    tokenParams.authId = params->baseParams.idPeer;
+    int32_t res = GenerateKeyAlias(&tokenParams, &baseKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate base key alias!");
         return res;
@@ -464,6 +471,7 @@ static int32_t GeneratePseudonymPskIfNotExist(const PakeParams *params)
     }
     uint8_t pskAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff pskAliasBuff = { pskAliasVal, PAKE_KEY_ALIAS_LEN };
+    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
     res = GeneratePseudonymPskAlias(&serviceTypeBuff, &params->baseParams.idPeer, &pskAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate psk alias!");
@@ -790,10 +798,14 @@ static int32_t SaveExtInfoToPseudonymPsk(const PakeParams *params, const Uint8Bu
 {
     uint8_t baseKeyAliasVal[PAKE_KEY_ALIAS_LEN] = { 0 };
     Uint8Buff baseKeyAlias = { baseKeyAliasVal, PAKE_KEY_ALIAS_LEN };
-    Uint8Buff pkgNameBuff = { (uint8_t *)params->packageName, HcStrlen(params->packageName)};
-    Uint8Buff serviceTypeBuff = { (uint8_t *)params->serviceType, HcStrlen(params->serviceType) };
-    int32_t res = GenerateKeyAlias(&pkgNameBuff, &serviceTypeBuff, KEY_ALIAS_PSK, &params->baseParams.idPeer,
-        &baseKeyAlias);
+    TokenManagerParams tokenParams = { 0 };
+    tokenParams.pkgName.val = (uint8_t *)params->packageName;
+    tokenParams.pkgName.length = HcStrlen(params->packageName);
+    tokenParams.serviceType.val = (uint8_t *)params->serviceType;
+    tokenParams.serviceType.length = HcStrlen(params->serviceType);
+    tokenParams.userType = KEY_ALIAS_PSK;
+    tokenParams.authId = params->baseParams.idPeer;
+    int32_t res = GenerateKeyAlias(&tokenParams, &baseKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate psk alias!");
         return res;

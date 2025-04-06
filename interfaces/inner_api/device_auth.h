@@ -98,6 +98,7 @@
 #define FIELD_USER_ID_HASH "userIdHash"
 #define FIELD_BASE_INFO "baseInfo"
 #define FIELD_UPDATE_LISTS "updateLists"
+#define FIELD_PEER_OS_ACCOUNT_ID "peerOsAccountId"
 
 /**
  * @brief protocol expand value for bind
