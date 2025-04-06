@@ -18,6 +18,7 @@
 #include "hc_time.h"
 #include "hidump_adapter.h"
 #include "performance_dumper.h"
+#include "json_utils.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -183,11 +184,11 @@ HWTEST_F(PerformDumperTest, PerformDumperTest001, TestSize.Level0)
     DumpPerformData();
     RESET_PERFORM_DATA(TEST_REQ_ID);
     DisablePerformDumper();
-
+    CJson *in = CreateJson();
+    EXPECT_NE(in, nullptr);
     DESTROY_PERFORMANCE_DUMPER();
     DESTROY_PERFORMANCE_DUMPER(); // has been deinitialized
-    int32_t res = HC_SUCCESS;
-    ASSERT_EQ(res, HC_SUCCESS);
+    FreeJson(in);
 }
 
 HWTEST_F(PerformDumperTest, PerformDumperTest002, TestSize.Level0)
@@ -211,13 +212,13 @@ HWTEST_F(PerformDumperTest, PerformDumperTest002, TestSize.Level0)
     for (uint32_t i = MAX_SESSION_NUM * 3; i <= MAX_SESSION_NUM * 4; i++) {
         ADD_PERFORM_DATA(i, false, false, curTimeInMillis + i);
     }
-
+    CJson *in = CreateJson();
+    EXPECT_NE(in, nullptr);
     DumpPerformData();
 
     DisablePerformDumper();
     DESTROY_PERFORMANCE_DUMPER();
-    int32_t res = HC_SUCCESS;
-    ASSERT_EQ(res, HC_SUCCESS);
+    FreeJson(in);
 }
 
 HWTEST_F(PerformDumperTest, PerformDumperTest003, TestSize.Level0)
@@ -230,10 +231,11 @@ HWTEST_F(PerformDumperTest, PerformDumperTest003, TestSize.Level0)
     TestAddUpdatePerformData(TEST_REQ_ID2, false, false);
 
     DumpPerformData();
+    CJson *in = CreateJson();
+    EXPECT_NE(in, nullptr);
 
     DisablePerformDumper();
     DESTROY_PERFORMANCE_DUMPER();
-    int32_t res = HC_SUCCESS;
-    ASSERT_EQ(res, HC_SUCCESS);
+    FreeJson(in);
 }
 }
