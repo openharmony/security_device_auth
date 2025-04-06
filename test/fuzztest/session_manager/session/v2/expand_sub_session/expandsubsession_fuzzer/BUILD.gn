@@ -76,6 +76,7 @@ ohos_fuzztest("ExpandSubSessionFuzzTest") {
     "${mk_agree_path}/inc",
     "${services_path}/ext_plugin_manager/inc/account_related",
     "${services_path}/ext_plugin_manager/inc",
+    "${device_auth_common}/inc",
     "${protocol_path}/inc",
   ]
   sources += identity_manager_files

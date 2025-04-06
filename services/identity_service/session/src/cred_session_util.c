@@ -19,7 +19,7 @@
 #include "identity_service.h"
 #include "device_auth.h"
 #include "common_defs.h"
-#include "device_auth_defines.h"
+#include "device_auth_common.h"
 #include "hc_types.h"
 #include "hc_dev_info.h"
 #include "json_utils.h"
@@ -28,19 +28,6 @@
 #include "string_util.h"
 #include "os_account_adapter.h"
 #include "identity_service_defines.h"
-
-static int32_t AddChannelInfoToContext(int32_t channelType, int64_t channelId, CJson *context)
-{
-    if (AddIntToJson(context, FIELD_CHANNEL_TYPE, channelType) != HC_SUCCESS) {
-        LOGE("add channelType to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddByteToJson(context, FIELD_CHANNEL_ID, (uint8_t *)&channelId, sizeof(int64_t)) != HC_SUCCESS) {
-        LOGE("add channelId to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    return HC_SUCCESS;
-}
 
 static int32_t AddCredIdToContextIfNeeded(CJson *context)
 {
@@ -62,21 +49,6 @@ static int32_t AddCredIdToContextIfNeeded(CJson *context)
     if (AddStringToJson(context, FIELD_ACROSS_ACCOUNT_CRED_ID, credId) != HC_SUCCESS) {
         LOGE("add across account credential id to context fail.");
         return HC_ERR_JSON_ADD;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t CheckConfirmationExist(const CJson *context)
-{
-    uint32_t confirmation = REQUEST_REJECTED;
-    if (GetUnsignedIntFromJson(context, FIELD_CONFIRMATION, &confirmation) != HC_SUCCESS) {
-        LOGE("Failed to get confimation from json!");
-        return HC_ERR_JSON_GET;
-    }
-    if (confirmation == REQUEST_ACCEPTED) {
-        LOGI("The service accepts this request!");
-    } else {
-        LOGW("The service rejects this request!");
     }
     return HC_SUCCESS;
 }
@@ -138,12 +110,10 @@ static int32_t AddUserIdHashHexStringToContext(CJson *context, CJson *credAuthIn
     if (res != HC_SUCCESS) {
         LOGE("Byte to hexString failed, res:%" LOG_PUB "d", res);
         HcFree(userIdHash);
-        return res;
     }
     //replace userId plain to hash hex string
     if (AddStringToJson(context, FIELD_USER_ID, userIdHash) != HC_SUCCESS) {
         LOGE("Failed to add userIdHash");
-        HcFree(userIdHash);
         return HC_ERR_JSON_ADD;
     }
     HcFree(userIdHash);
@@ -347,30 +317,6 @@ int32_t BuildClientCredContext(int32_t osAccountId, int64_t requestId, CJson *co
         return BuildClientCredBindContext(osAccountId, requestId, context, returnAppId);
     }
     return BuildClientCredAuthContext(osAccountId, requestId, context, returnAppId);
-}
-
-static int32_t AddOsAccountIdToContextIfValid(CJson *context)
-{
-    int32_t osAccountId = ANY_OS_ACCOUNT;
-    (void)GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId);
-    osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
-    LOGI("[OsAccountId]: %" LOG_PUB "d", osAccountId);
-    if (osAccountId == INVALID_OS_ACCOUNT) {
-        return HC_ERR_INVALID_PARAMS;
-    }
-    if (!CheckIsForegroundOsAccountId(osAccountId)) {
-        LOGE("This access is not from the foreground user, rejected it.");
-        return HC_ERR_CROSS_USER_ACCESS;
-    }
-    if (!IsOsAccountUnlocked(osAccountId)) {
-        LOGE("Os account is not unlocked!");
-        return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
-    }
-    if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
-        LOGE("add operationCode to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    return HC_SUCCESS;
 }
 
 static int32_t BuildServerCredBindContext(int64_t requestId, CJson *context,

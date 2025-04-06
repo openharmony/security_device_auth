@@ -159,10 +159,10 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest002, TestSize.L
 
     (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack); // For unit test.
     ret = AddObjToJson(out, FIELD_SEND_TO_PEER, sendToPeer);
-    EXPECT_EQ(ret, HC_SUCCESS);
     FreeJson(sendToPeer);
     FreeJson(out);
     FreeJson(authParam);
+    EXPECT_EQ(ret, HC_SUCCESS);
 }
 
 HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0021, TestSize.Level0)
@@ -279,7 +279,7 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0023, TestSize.
     (void)AddStringToJson(sendToSelf, FIELD_USER_ID, "USER_ID"); // For unit test.
     (void)AddObjToJson(out, FIELD_SEND_TO_SELF, sendToSelf);
     (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack); // For unit test.
-    ret = AddObjToJson(out, FIELD_SEND_TO_PEER, sendToPeer);
+    ret = AddObjToJson(out, FIELD_SEND_TO_SELF, sendToSelf);
     EXPECT_EQ(ret, HC_SUCCESS);
     FreeJson(sendToSelf);
     FreeJson(out);

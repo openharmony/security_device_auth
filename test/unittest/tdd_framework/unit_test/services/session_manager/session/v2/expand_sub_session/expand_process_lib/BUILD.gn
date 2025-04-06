@@ -60,6 +60,7 @@ ohos_unittest("auth_code_import_test") {
     "${mk_agree_path}/inc",
     "${services_path}/ext_plugin_manager/inc/account_related",
     "${services_path}/ext_plugin_manager/inc",
+    "${device_auth_common}/inc",
     "${protocol_path}/inc",
   ]
   sources += identity_manager_files
@@ -123,6 +124,7 @@ ohos_unittest("pub_key_exchange_test") {
     "${mk_agree_path}/inc",
     "${services_path}/ext_plugin_manager/inc/account_related",
     "${services_path}/ext_plugin_manager/inc",
+    "${device_auth_common}/inc",
     "${protocol_path}/inc",
   ]
 

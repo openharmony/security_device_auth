@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,11 +23,23 @@
 #include "hc_mutex.h"
 #include "hc_time.h"
 #include "hc_vector.h"
+#include "task_manager.h"
 
 typedef struct {
     DevSession *session;
     int64_t createTime;
 } SessionInfo;
+
+typedef struct {
+    HcTaskBase base;
+    int64_t sessionId;
+} StartSessionTask;
+
+typedef struct {
+    HcTaskBase base;
+    int64_t sessionId;
+    CJson *receivedMsg;
+} ProcSessionTask;
 
 DECLARE_HC_VECTOR(SessionInfoList, SessionInfo)
 IMPLEMENT_HC_VECTOR(SessionInfoList, SessionInfo, 1)
@@ -245,4 +257,99 @@ void CancelDevSession(int64_t sessionId, const char *appId)
     }
     LOGI("session not exist. [Id]: %" LOG_PUB PRId64, sessionId);
     UnlockHcMutex(&g_sessionMutex);
+}
+
+static void DoStartSession(HcTaskBase *task)
+{
+    LOGI("start session task begin.");
+    if (task == NULL) {
+        LOGE("The input task is NULL, can't start session!");
+        return;
+    }
+    StartSessionTask *realTask = (StartSessionTask *)task;
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(realTask->sessionId);
+    int32_t res = StartDevSession(realTask->sessionId);
+    if (res != HC_SUCCESS) {
+        LOGE("start session fail.[Res]: %" LOG_PUB "d", res);
+        CloseDevSession(realTask->sessionId);
+    }
+}
+
+static void DoProcSession(HcTaskBase *task)
+{
+    LOGI("proc session task begin.");
+    if (task == NULL) {
+        LOGE("The input task is NULL, can't start session!");
+        return;
+    }
+    ProcSessionTask *realTask = (ProcSessionTask *)task;
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(realTask->sessionId);
+    bool isFinish = false;
+    int32_t res = ProcessDevSession(realTask->sessionId, realTask->receivedMsg, &isFinish);
+    if (res != HC_SUCCESS) {
+        LOGE("ProcessDevSession fail. [Res]: %" LOG_PUB "d", res);
+        CloseDevSession(realTask->sessionId);
+        return;
+    }
+    LOGI("ProcessDevSession success. [State]: %" LOG_PUB "s", isFinish ? "FINISH" : "CONTINUE");
+    if (isFinish) {
+        CloseDevSession(realTask->sessionId);
+    }
+}
+
+static void InitStartSessionTask(StartSessionTask *task, int64_t sessionId)
+{
+    task->base.doAction = DoStartSession;
+    task->base.destroy = NULL;
+    task->sessionId = sessionId;
+}
+
+static void DestroyProcSessionTask(HcTaskBase *task)
+{
+    ProcSessionTask *realTask = (ProcSessionTask *)task;
+    FreeJson(realTask->receivedMsg);
+}
+
+static void InitProcSessionTask(ProcSessionTask *task, int64_t sessionId, CJson *receivedMsg)
+{
+    task->base.doAction = DoProcSession;
+    task->base.destroy = DestroyProcSessionTask;
+    task->sessionId = sessionId;
+    task->receivedMsg = receivedMsg;
+}
+
+int32_t PushStartSessionTask(int64_t sessionId)
+{
+    StartSessionTask *task = (StartSessionTask *)HcMalloc(sizeof(StartSessionTask), 0);
+    if (task == NULL) {
+        LOGE("Failed to allocate memory for task!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    InitStartSessionTask(task, sessionId);
+    if (PushTask((HcTaskBase*)task) != HC_SUCCESS) {
+        LOGE("push start session task fail.");
+        HcFree(task);
+        return HC_ERR_INIT_TASK_FAIL;
+    }
+    LOGI("push start session task success.");
+    return HC_SUCCESS;
+}
+
+int32_t PushProcSessionTask(int64_t sessionId, CJson *receivedMsg)
+{
+    ProcSessionTask *task = (ProcSessionTask *)HcMalloc(sizeof(ProcSessionTask), 0);
+    if (task == NULL) {
+        LOGE("Failed to allocate memory for task!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    InitProcSessionTask(task, sessionId, receivedMsg);
+    if (PushTask((HcTaskBase*)task) != HC_SUCCESS) {
+        LOGE("push start session task fail.");
+        HcFree(task);
+        return HC_ERR_INIT_TASK_FAIL;
+    }
+    LOGI("push start session task success.");
+    return HC_SUCCESS;
 }

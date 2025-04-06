@@ -34,6 +34,9 @@ void CloseDevSession(int64_t sessionId);
 bool IsSessionExist(int64_t sessionId);
 void CancelDevSession(int64_t sessionId, const char *appId);
 
+int32_t PushStartSessionTask(int64_t sessionId);
+int32_t PushProcSessionTask(int64_t sessionId, CJson *receivedMsg);
+
 #ifdef __cplusplus
 }
 #endif

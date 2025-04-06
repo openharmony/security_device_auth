@@ -34,6 +34,7 @@ ohos_unittest("expand_sub_session_test") {
     "${mk_agree_path}/inc",
     "${services_path}/ext_plugin_manager/inc/account_related",
     "${services_path}/ext_plugin_manager/inc",
+    "${device_auth_common}/inc",
     "${protocol_path}/inc",
   ]
   include_dirs += identity_service_inc
