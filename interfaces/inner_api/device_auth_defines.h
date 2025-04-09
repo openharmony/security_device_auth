@@ -75,6 +75,7 @@ enum {
     HC_ERR_IPC_OUT_DATA = 0x00003010,                                     // 12304
     HC_ERR_IPC_BAD_PARAM = 0x00003011,                                    // 12305
     HC_ERR_IPC_SERVICE_DIED = 0x00003012,                                 // 12306
+    HC_ERR_IPC_PERMISSION_DENIED = 0x00003013,                            // 12307
 
     /* error code for module , 0x00004000 ~ 0x00004FFF */
     HC_ERR_MODULE_NOT_FOUNT = 0x00004001,                                 // 16385
@@ -170,13 +171,13 @@ enum {
     IS_AUTH_ERR_PROOF_NOT_MATCH = 0x00010010,                             // 65552
 
     /* IS AddCredential imported credId existed */
-    IS_ERR_IMPORTED_CRED_ID_EXISTED = 0x00010011,                             // 65553
+    IS_ERR_IMPORTED_CRED_ID_EXISTED = 0x00010011,                         // 65553
     /* IS invalid hex string*/
-    IS_ERR_INVALID_HEX_STRING = 0x00010012,                             // 65554
+    IS_ERR_INVALID_HEX_STRING = 0x00010012,                               // 65554
     /* IS keyValue is passed in when method is generate*/
-    IS_ERR_KEYVALUE_METHOD_CONFLICT = 0x00010013,                             // 65555
+    IS_ERR_KEYVALUE_METHOD_CONFLICT = 0x00010013,                         // 65555
     /* IS ownerUid error*/
-    IS_ERR_OWNER_UID = 0x00010014,                             // 65556
+    IS_ERR_OWNER_UID = 0x00010014,                                        // 65556
 
     // IS json error
     IS_ERR_JSON_FAILED = 0x00020001,                                      // 131073

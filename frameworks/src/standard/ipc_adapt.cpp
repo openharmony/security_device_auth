@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1749,7 +1749,7 @@ bool IsCallbackMethod(int32_t methodId)
     if ((methodId == IPC_CALL_ID_REG_CB) || (methodId == IPC_CALL_ID_REG_LISTENER) ||
         (methodId == IPC_CALL_ID_DA_AUTH_DEVICE) || (methodId == IPC_CALL_ID_DA_PROC_DATA) ||
         (methodId == IPC_CALL_ID_GA_PROC_DATA) || (methodId == IPC_CALL_ID_AUTH_DEVICE) ||
-        (methodId == IPC_CALL_ID_CM_REG_LISTENER) || (methodId == IPC_CALL_ID_CA_AUTH_DEVICE) ||
+        (methodId == IPC_CALL_ID_CM_REG_LISTENER) || (methodId == IPC_CALL_ID_CA_AUTH_CREDENTIAL) ||
         (methodId == IPC_CALL_ID_CA_PROCESS_CRED_DATA)) {
         return true;
     }

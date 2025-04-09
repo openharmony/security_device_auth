@@ -27,6 +27,7 @@
 
 #include "identity_operation.h"
 #include "identity_service_defines.h"
+#include "permission_adapter.h"
 
 static int32_t AddCredentialImplInner(int32_t osAccountId, CJson *reqJson, Credential *credential,
     char **returnData)
@@ -89,8 +90,11 @@ int32_t ExportCredentialImpl(int32_t osAccountId, const char *credId, char **ret
     if (ret != IS_SUCCESS) {
         return ret;
     }
+    ret = CheckOwnerUidPermission(credential);
     DestroyCredential(credential);
-
+    if (ret != IS_SUCCESS) {
+        return ret;
+    }
     Uint8Buff credIdByte = { NULL, 0 };
 
     ret = GetValidKeyAlias(osAccountId, credId, &credIdByte);
@@ -139,9 +143,12 @@ int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestPara
 
     QueryCredentialParams queryParams = InitQueryCredentialParams();
     SetQueryParamsFromJson(&queryParams, reqJson);
+    if (CheckInterfacePermission(CRED_PRIVILEGE_PERMISSION) != HC_SUCCESS) {
+        LOGI("no privilege permission, need to check ownerUid.");
+        queryParams.ownerUid = GetCallingUid();
+    }
 
     CredentialVec credentialVec = CreateCredentialVec();
-
     int32_t ret = QueryCredentials(osAccountId, &queryParams, &credentialVec);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to query credentials");
@@ -190,7 +197,14 @@ int32_t QueryCredInfoByCredIdImpl(int32_t osAccountId, const char *credId, char 
         LOGE("Failed to get credential by credId, ret = %" LOG_PUB "d", ret);
         return ret;
     }
-
+    if (CheckInterfacePermission(CRED_PRIVILEGE_PERMISSION) != IS_SUCCESS) {
+        ret = CheckOwnerUidPermission(credential);
+        if (ret != HC_SUCCESS) {
+            LOGE("don't have privilege or owner uid permission to query cred info");
+            DestroyCredential(credential);
+            return ret;
+        }
+    }
     CJson *credInfoJson = CreateJson();
     if (credInfoJson == NULL) {
         LOGE("Failed to create credInfoJson object");
@@ -299,8 +313,9 @@ int32_t DeleteCredByParamsImpl(int32_t osAccountId, const char *requestParams, c
     }
     QueryCredentialParams delParams = InitQueryCredentialParams();
     SetQueryParamsFromJson(&delParams, reqJson);
-    CredentialVec credentialVec = CreateCredentialVec();
+    delParams.ownerUid = GetCallingUid();
 
+    CredentialVec credentialVec = CreateCredentialVec();
     int32_t ret = QueryCredentials(osAccountId, &delParams, &credentialVec);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to query credentials");
@@ -488,6 +503,7 @@ static int32_t BatchUpdateCredsImplInner(int32_t osAccountId,
     if (ret != IS_SUCCESS) {
         return ret;
     }
+    queryParams.ownerUid = GetCallingUid();
 
     CredentialVec selfCredVec = CreateCredentialVec();
     ret = QueryCredentials(osAccountId, &queryParams, &selfCredVec);

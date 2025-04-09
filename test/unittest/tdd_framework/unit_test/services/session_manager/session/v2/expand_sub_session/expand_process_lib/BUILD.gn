@@ -64,7 +64,7 @@ ohos_unittest("auth_code_import_test") {
     "${protocol_path}/inc",
   ]
   sources += identity_manager_files
-  sources += identity_service_files
+  sources += identity_service_mock_files
   sources += [
     "${authenticators_path}/src/account_related/creds_manager/asy_token_manager.c",
     "${authenticators_path}/src/account_related/creds_manager/sym_token_manager.c",
@@ -166,7 +166,7 @@ ohos_unittest("pub_key_exchange_test") {
     "${authenticators_path}/inc/account_unrelated",
   ]
   sources += identity_manager_files
-  sources += identity_service_files
+  sources += identity_service_mock_files
 
   defines = [
     "DEV_AUTH_MEMORY_DEBUG",

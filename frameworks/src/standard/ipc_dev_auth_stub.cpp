@@ -244,8 +244,9 @@ int32_t ServiceDevAuth::HandleDeviceAuthCall(uint32_t code, MessageParcel &data,
             if (ret != HC_SUCCESS) {
                 break;
             }
-            if (CheckPermission(methodId) != HC_SUCCESS) {
-                return -1;
+            ret = CheckPermission(methodId);
+            if (ret != HC_SUCCESS) {
+                return ret;
             }
             serviceCall = GetCallMethodByMethodId(methodId);
             if (serviceCall == nullptr) {

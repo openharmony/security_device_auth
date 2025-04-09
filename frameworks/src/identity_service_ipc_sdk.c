@@ -940,7 +940,7 @@ static int32_t IpcCmAuthCredential(int32_t osAccountId, int64_t authReqId, const
         DestroyCallCtx(&callCtx, NULL);
         return ret;
     }
-    ret = DoBinderCall(callCtx, IPC_CALL_ID_CA_AUTH_DEVICE, true);
+    ret = DoBinderCall(callCtx, IPC_CALL_ID_CA_AUTH_CREDENTIAL, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
         LOGE("ipc call failed");
         DestroyCallCtx(&callCtx, NULL);

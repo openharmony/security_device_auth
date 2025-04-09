@@ -24,6 +24,7 @@
 #include "securec.h"
 #include "nativetoken_kit.h"
 #include "token_setproc.h"
+#include "accesstoken_kit.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -89,17 +90,18 @@ static const char *DEL_PARAMS = "{\"credOwner\":\"TestAppId\"}";
 static const char *DEL_PARAMS1 = "{\"credOwner\":\"TestAppId\",\"userIdHash\":\"12D2\",\"deviceIdHash\":\"12D2\"}";
 static void NativeTokenSet(const char *procName)
 {
-    const char *acls[] = {"ACCESS_IDS"};
+    const char *acls[] = {
+        "ohos.permission.ACCESS_DEVAUTH_CRED_PRIVILEGE",
+    };
     const char *perms[] = {
-        "ohos.permission.PLACE_CALL",
-        "ohos.permission.ACCESS_IDS"
+        "ohos.permission.ACCESS_DEVAUTH_CRED_PRIVILEGE",
     };
     uint64_t tokenId;
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
-        .permsNum = 2,
+        .permsNum = 1,
         .aclsNum = 1,
-        .dcaps = NULL,
+        .dcaps = nullptr,
         .perms = perms,
         .acls = acls,
         .processName = procName,
@@ -107,6 +109,7 @@ static void NativeTokenSet(const char *procName)
     };
     tokenId = GetAccessTokenId(&infoInstance);
     SetSelfTokenID(tokenId);
+    OHOS::Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
 }
 
 class GetCredMgrInstanceTest : public testing::Test {

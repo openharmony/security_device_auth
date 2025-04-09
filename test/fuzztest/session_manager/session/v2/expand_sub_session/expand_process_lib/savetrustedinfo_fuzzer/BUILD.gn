@@ -74,7 +74,7 @@ ohos_fuzztest("SaveTrustedInfoFuzzTest") {
     "${protocol_path}/inc",
   ]
   sources += identity_manager_files
-  sources += identity_service_files
+  sources += identity_service_mock_files
   sources += save_trusted_info_files
   sources += hiview_adapter_files
   sources += [

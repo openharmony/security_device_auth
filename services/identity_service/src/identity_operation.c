@@ -26,10 +26,7 @@
 #include "hc_log.h"
 #include "hc_time.h"
 #include "identity_service_defines.h"
-
-#ifdef DEV_AUTH_PERMISSION_ENABLE
 #include "permission_adapter.h"
-#endif
 
 int32_t GetCredentialById(int32_t osAccountId, const char *credId, Credential **returnEntry)
 {
@@ -781,10 +778,8 @@ static int32_t SetRequiredField(Credential *credential, CJson *json, uint8_t *me
     if (ret != IS_SUCCESS) {
         return ret;
     }
-#ifdef DEV_AUTH_PERMISSION_ENABLE
     credential->ownerUid = GetCallingUid();
     LOGI("UID: %" LOG_PUB "d", credential->ownerUid);
-#endif
     return IS_SUCCESS;
 }
 
@@ -1127,15 +1122,11 @@ int32_t GenerateReturnEmptyArrayStr(char **returnVec)
 
 int32_t CheckOwnerUidPermission(Credential *credential)
 {
-#ifdef DEV_AUTH_PERMISSION_ENABLE
     int32_t currentUid = GetCallingUid();
     if (currentUid != credential->ownerUid) {
         LOGE("currentUid is not the same as the ownerUid of the credential");
         return IS_ERR_OWNER_UID;
     }
-#else
-    (void)credential;
-#endif
     return IS_SUCCESS;
 }
 

@@ -80,7 +80,7 @@ ohos_fuzztest("ExpandSubSessionFuzzTest") {
     "${protocol_path}/inc",
   ]
   sources += identity_manager_files
-  sources += identity_service_files
+  sources += identity_service_mock_files
   sources += hiview_adapter_files
   sources += [
     "${authenticators_path}/src/account_related/creds_manager/asy_token_manager.c",
