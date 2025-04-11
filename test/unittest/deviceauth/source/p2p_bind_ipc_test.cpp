@@ -32,6 +32,7 @@ namespace {
 #define PROC_NAME_DEVICE_MANAGER "device_manager"
 #define TEST_REQ_ID 123
 #define TEST_OS_ACCOUNT_ID 100
+#define TEST_OS_ACCOUNT_ID_0 0
 #define TEST_RANDOM_LEN 16
 #define TEST_APP_ID "TestAppId"
 #define TEST_APP_ID2 "TestAppId2"
@@ -161,6 +162,7 @@ static void CreateCredentialParamsJson(
     AddStringToJson(out, FIELD_DEVICE_ID, deviceId);
     AddStringToJson(out, FIELD_SERVICE_TYPE, serviceType);
     AddIntToJson(out, FIELD_ACQURIED_TYPE, P2P_BIND);
+    AddIntToJson(out, FIELD_PEER_OS_ACCOUNT_ID, TEST_OS_ACCOUNT_ID_0);
 
     if (flag >= 0) {
         AddIntToJson(out, FIELD_CRED_OP_FLAG, flag);
@@ -210,23 +212,6 @@ static int32_t CreateServerKeyPair()
     printf("ProcessCredentialDemo: operationCode=%d\n", CRED_OP_CREATE);
     res = ProcessCredential(CRED_OP_CREATE, requestParams, &returnData);
     FreeJsonString(requestParams);
-    if (returnData) {
-        printf("returnData: %s\n", returnData);
-        CJson *in = CreateJsonFromString(returnData);
-        if (in == nullptr) {
-            printf("CreateJsonFromString returnData failed !\n");
-        } else {
-            if (GetIntFromJson(in, FIELD_CRED_OP_RESULT, &res) != HC_SUCCESS) {
-                printf("GetIntFromJson  result failed !\n");
-                FreeJson(in);
-                return HC_ERR_INVALID_PARAMS;
-            }
-            printf("get  result from returnData: %d\n", res);
-            return res;
-        }
-    }
-
-    printf("returnData is null !\n");
 
     return res;
 }
@@ -296,23 +281,6 @@ static int32_t ProcessCredentialDemo(int operationCode, const char *serviceType)
     printf("ProcessCredentialDemo: operationCode=%d\n", operationCode);
     int32_t res = ProcessCredential(operationCode, requestParams, &returnData);
     FreeJsonString(requestParams);
-    if (returnData) {
-        printf("returnData: %s\n", returnData);
-        CJson *in = CreateJsonFromString(returnData);
-        if (in == nullptr) {
-            printf("CreateJsonFromString returnData failed !\n");
-        } else {
-            if (GetIntFromJson(in, FIELD_CRED_OP_RESULT, &res) != HC_SUCCESS) {
-                printf("GetIntFromJson  result failed !\n");
-                FreeJson(in);
-                return HC_ERR_INVALID_PARAMS;
-            }
-            printf("get  result from returnData: %d\n", res);
-            return res;
-        }
-    }
-
-    printf("returnData is null !\n");
 
     return res;
 }
