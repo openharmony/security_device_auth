@@ -135,8 +135,8 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest002, TestSize.L
     CJson *out = CreateJson();
     if (out == nullptr) {
         FreeJson(authParam);
-        return;
     }
+    ASSERT_NE(out, nullptr);
     int32_t ret = HC_ERROR;
     (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, nullptr); // For unit test.
 
@@ -144,8 +144,8 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest002, TestSize.L
     if (out == nullptr) {
         FreeJson(authParam);
         FreeJson(out);
-        return;
     }
+    ASSERT_NE(out, nullptr);
     (void)AddObjToJson(out, FIELD_SEND_TO_PEER, sendToPeer);
     (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, nullptr); // For unit test.
 
@@ -169,14 +169,14 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0021, TestSize.
     CJson *out = CreateJson();
     if (out == nullptr) {
         FreeJson(authParam);
-        return;
     }
+    ASSERT_NE(out, nullptr);
     CJson *sendToPeer = CreateJson();
     if (sendToPeer == nullptr) {
         FreeJson(authParam);
         FreeJson(out);
-        return;
     }
+    ASSERT_NE(sendToPeer, nullptr);
     (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, nullptr); // For unit test.
 
     (void)AddObjToJson(out, FIELD_SEND_TO_PEER, sendToPeer);
@@ -206,14 +206,14 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0022, TestSize.
     CJson *out = CreateJson();
     if (out == nullptr) {
         FreeJson(authParam);
-        return;
     }
+    ASSERT_NE(out, nullptr);
     CJson *sendToPeer = CreateJson();
     if (sendToPeer == nullptr) {
         FreeJson(authParam);
         FreeJson(out);
-        return;
     }
+    ASSERT_NE(sendToPeer, nullptr);
 
     (void)AddObjToJson(out, FIELD_SEND_TO_PEER, sendToPeer);
     (void)AddStringToJson(sendToPeer, "test_key", "test_value"); // For unit test.
@@ -286,14 +286,14 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest004, TestSize.L
     TrustedDeviceEntry *localAuthInfo = CreateDeviceEntry();
     if (localAuthInfo == nullptr) {
         DestroyGroupEntry(entry);
-        return;
     }
+    ASSERT_NE(localAuthInfo, nullptr);
     CJson *paramsData = CreateJson();
     if (paramsData == nullptr) {
         DestroyGroupEntry(entry);
         DestroyDeviceEntry(localAuthInfo);
-        return;
     }
+    ASSERT_NE(paramsData, nullptr);
 
     int32_t res = GetAccountRelatedGroupAuth()->fillDeviceAuthInfo(0, entry,
         localAuthInfo, paramsData); // For unit test.
@@ -311,14 +311,14 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0041, TestSize.
     TrustedDeviceEntry *localAuthInfo = CreateDeviceEntry();
     if (localAuthInfo == nullptr) {
         DestroyGroupEntry(entry);
-        return;
     }
+    ASSERT_NE(localAuthInfo, nullptr);
     CJson *paramsData = CreateJson();
     if (paramsData == nullptr) {
         DestroyGroupEntry(entry);
         DestroyDeviceEntry(localAuthInfo);
-        return;
     }
+    ASSERT_NE(paramsData, nullptr);
 
     int32_t res = AddStringToJson(paramsData, FIELD_PEER_CONN_DEVICE_ID, "CONN_DEVICE_ID"); // For unit test.
     EXPECT_EQ(res, HC_SUCCESS);
@@ -338,14 +338,15 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0042, TestSize.
     TrustedDeviceEntry *localAuthInfo = CreateDeviceEntry();
     if (localAuthInfo == nullptr) {
         DestroyGroupEntry(entry);
-        return;
     }
+    ASSERT_NE(localAuthInfo, nullptr);
+
     CJson *paramsData = CreateJson();
     if (paramsData == nullptr) {
         DestroyGroupEntry(entry);
         DestroyDeviceEntry(localAuthInfo);
-        return;
     }
+    ASSERT_NE(paramsData, nullptr);
     (void)AddStringToJson(paramsData, FIELD_PEER_CONN_DEVICE_ID, "CONN_DEVICE_ID"); // For unit test.
 
     entry->userId = CreateString();
@@ -366,14 +367,14 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0043, TestSize.
     TrustedDeviceEntry *localAuthInfo = CreateDeviceEntry();
     if (localAuthInfo == nullptr) {
         DestroyGroupEntry(entry);
-        return;
     }
+    ASSERT_NE(localAuthInfo, nullptr);
     CJson *paramsData = CreateJson();
     if (paramsData == nullptr) {
         DestroyGroupEntry(entry);
         DestroyDeviceEntry(localAuthInfo);
-        return;
     }
+    ASSERT_NE(paramsData, nullptr);
     (void)AddStringToJson(paramsData, FIELD_PEER_CONN_DEVICE_ID, "CONN_DEVICE_ID"); // For unit test.
     entry->userId = CreateString();
     (void)StringSetPointer(&entry->userId, "selfUserId"); // For unit test.
@@ -396,14 +397,16 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest00431, TestSize
     TrustedDeviceEntry *localAuthInfo = CreateDeviceEntry();
     if (localAuthInfo == nullptr) {
         DestroyGroupEntry(entry);
-        return;
     }
+    ASSERT_NE(localAuthInfo, nullptr);
+
     CJson *paramsData = CreateJson();
     if (paramsData == nullptr) {
         DestroyGroupEntry(entry);
         DestroyDeviceEntry(localAuthInfo);
-        return;
     }
+    ASSERT_NE(paramsData, nullptr);
+
     (void)AddStringToJson(paramsData, FIELD_PEER_CONN_DEVICE_ID, "CONN_DEVICE_ID"); // For unit test.
     entry->userId = CreateString();
     (void)StringSetPointer(&entry->userId, "selfUserId"); // For unit test.
@@ -429,14 +432,14 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0044, TestSize.
     TrustedDeviceEntry *localAuthInfo = CreateDeviceEntry();
     if (localAuthInfo == nullptr) {
         DestroyGroupEntry(entry);
-        return;
     }
+    ASSERT_NE(localAuthInfo, nullptr);
     CJson *paramsData = CreateJson();
     if (paramsData == nullptr) {
         DestroyGroupEntry(entry);
         DestroyDeviceEntry(localAuthInfo);
-        return;
     }
+    ASSERT_NE(paramsData, nullptr);
     entry->userId = CreateString();
     (void)StringSetPointer(&entry->userId, "selfUserId");
     entry->id = CreateString();
@@ -464,8 +467,8 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest007, TestSize.L
     CJson *dataFromClient = CreateJson();
     if (dataFromClient == nullptr) {
         FreeJson(confirmationJson);
-        return;
     }
+    ASSERT_NE(dataFromClient, nullptr);
     int32_t ret = GetAccountRelatedGroupAuth()->combineServerConfirmParams(confirmationJson, dataFromClient);
     EXPECT_NE(ret, HC_SUCCESS);
     FreeJson(confirmationJson);
@@ -479,8 +482,8 @@ HWTEST_F(AccountRelatedGroupAuthTest, AccountRelatedGroupAuthTest0071, TestSize.
     CJson *dataFromClient = CreateJson();
     if (dataFromClient == nullptr) {
         FreeJson(confirmationJson);
-        return;
     }
+    ASSERT_NE(dataFromClient, nullptr);
 
     (void)AddStringToJson(confirmationJson, FIELD_PEER_CONN_DEVICE_ID, "CONN_DEVICE_ID"); // For unit test.
     int32_t ret = GetAccountRelatedGroupAuth()->combineServerConfirmParams(confirmationJson, dataFromClient);
