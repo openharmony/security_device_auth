@@ -51,6 +51,7 @@ typedef struct {
 static IpcProxyCbInfo g_ipcProxyCbList = { 0 };
 static IpcProxyCbInfo g_ipcListenerCbList = { 0 };
 static HcMutex g_ipcMutex;
+static bool g_devAuthServiceStatus = false;
 
 static bool IsStrInvalid(const char *str)
 {
@@ -2161,11 +2162,24 @@ DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *
 
 DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 {
-    InitHcMutex(&g_ipcMutex, false);
+    if (g_devAuthServiceStatus == true) {
+        LOGI("device auth service already init");
+        return HC_SUCCESS;
+    }
+    int32_t ret = InitHcMutex(&g_ipcMutex, false);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    ret = InitProxyAdapt();
+    if (ret != HC_SUCCESS) {
+        DestroyHcMutex(&g_ipcMutex);
+        return ret;
+    }
 #ifdef DEV_AUTH_IS_ENABLE
     InitISIpc();
 #endif
-    return InitProxyAdapt();
+    g_devAuthServiceStatus = true;
+    return HC_SUCCESS;
 }
 
 DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
@@ -2175,6 +2189,7 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
 #ifdef DEV_AUTH_IS_ENABLE
     DeInitISIpc();
 #endif
+    g_devAuthServiceStatus = false;
 }
 
 DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)

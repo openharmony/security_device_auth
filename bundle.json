@@ -60,6 +60,7 @@
           "init",
           "json",
           "mbedtls",
+          "napi",
           "openssl",
           "os_account",
           "samgr",
@@ -74,6 +75,7 @@
       },
       "build": {
         "sub_component": [
+          "//base/security/device_auth:deviceauth_napi_build",
           "//base/security/device_auth:deviceauth_sdk_build",
           "//base/security/device_auth:deviceauth_service_build",
           "//base/security/device_auth:deviceauth_build",
