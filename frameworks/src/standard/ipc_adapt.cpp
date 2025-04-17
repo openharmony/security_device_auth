@@ -1725,7 +1725,7 @@ int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
             break;
         }
         if (IsTypeForCpyData(type)) {
-            if ((ipcParams[i].val == nullptr) || (ipcParams[i].valSz <= 0)) {
+            if ((ipcParams[i].val == nullptr) || (ipcParams[i].valSz <= 0) || (cacheLen == nullptr)) {
                 ret = HC_ERR_INVALID_PARAMS;
                 break;
             }
@@ -1736,7 +1736,8 @@ int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
             *cacheLen = ipcParams[i].valSz;
             break;
         }
-        if ((type == PARAM_TYPE_CB_OBJECT) && (static_cast<uint32_t>(*cacheLen) >= sizeof(ipcParams[i].idx))) {
+        if ((type == PARAM_TYPE_CB_OBJECT) && (cacheLen != nullptr) &&
+            (static_cast<uint32_t>(*cacheLen) >= sizeof(ipcParams[i].idx))) {
             *(reinterpret_cast<int32_t *>(paramCache)) = ipcParams[i].idx;
         }
         break;
