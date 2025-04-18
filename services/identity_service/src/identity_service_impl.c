@@ -245,7 +245,9 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
         return IS_ERR_INVALID_HEX_STRING;
     }
 
-    ret = GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId);
+    if (credential->ownerUid != DEV_AUTH_UID) {
+        ret = GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId);
+    }
     HcFree(credIdByte.val);
     if (ret == HAL_ERR_HUKS) {
         LOGW("Huks delete key failed, error: %" LOG_PUB "d, continue to delete local cred", IS_ERR_HUKS_DELETE_FAILED);

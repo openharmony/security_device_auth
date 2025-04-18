@@ -357,6 +357,9 @@ int32_t AddKeyValueToHuks(int32_t osAccountId, Uint8Buff *credIdByte, Credential
     if (credential->credType == ACCOUNT_SHARED && keyValue->val == NULL) {
         return IS_SUCCESS;
     }
+    if (credential->ownerUid == DEV_AUTH_UID) {
+        return IS_SUCCESS;
+    }
     KeyParams keyParams = { { credIdByte->val, credIdByte->length, true }, false, osAccountId };
     int32_t authId = 0;
     Uint8Buff authIdBuff = { (uint8_t *)&authId, sizeof(int32_t) };
@@ -958,7 +961,7 @@ bool IsCredHashMatch(Credential *credential, CJson *reqJson)
 static int32_t CheckCredKeyExist(int32_t osAccountId, const Credential *credential, const char *credId)
 {
     // ACCOUNT_SHARED type dose not need check key
-    if (credential->credType == ACCOUNT_SHARED) {
+    if (credential->credType == ACCOUNT_SHARED || credential->ownerUid == DEV_AUTH_UID) {
         return HC_SUCCESS;
     }
     uint32_t credIdByteLen = HcStrlen(credId) / BYTE_TO_HEX_OPER_LENGTH;

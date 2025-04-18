@@ -53,6 +53,7 @@
 #define DEFAULT_EX_INFO_VAL (-1)
 #define UPDATE_MATCHED_NUM_ZERO 0
 #define UPDATE_MATCHED_NUM_ONE 1
+#define DEV_AUTH_UID 3333
 
 #ifdef __cplusplus
 extern "C" {
