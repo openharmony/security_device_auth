@@ -142,6 +142,9 @@ static void UnSubscribeSystemAbility(void)
 
 static void StartNetObserver(void)
 {
+    if (g_observer != nullptr) {
+        return;
+    }
     g_observer = new NetObserver();
     g_observer->StartObserver();
 }
