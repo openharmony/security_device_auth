@@ -122,7 +122,6 @@
 #define FIELD_PEER_ID_FROM_REQUEST "peerIdFromRequest"
 #define FIELD_STEP "step"
 #define FIELD_DATA "data"
-#define FIELD_EPK "epk"
 #define FIELD_AUTH_KEY_ALG_ENCODE "authKeyAlgEncode"
 #define FIELD_AUTH_PK_INFO "authPkInfo"
 #define FIELD_AUTH_PK_INFO_SIGN "authPkInfoSign"

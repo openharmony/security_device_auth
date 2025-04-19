@@ -1342,16 +1342,13 @@ void InitDevAuthListenerCbCtx(DataChangeListener *ctx)
 }
 
 /* ipc client process adapter */
-int32_t CreateCallCtx(uintptr_t *callCtx, uintptr_t *cbCtx)
+int32_t CreateCallCtx(uintptr_t *callCtx)
 {
-    ProxyDevAuthData *dataCache = NULL;
-
-    (void)cbCtx;
     if (callCtx == NULL) {
         return HC_ERR_INVALID_PARAMS;
     }
 
-    dataCache = (ProxyDevAuthData *)HcMalloc(sizeof(ProxyDevAuthData), 0);
+    ProxyDevAuthData *dataCache = (ProxyDevAuthData *)HcMalloc(sizeof(ProxyDevAuthData), 0);
     if (dataCache == NULL) {
         LOGE("call context alloc failed");
         return HC_ERR_ALLOC_MEMORY;
@@ -1360,7 +1357,7 @@ int32_t CreateCallCtx(uintptr_t *callCtx, uintptr_t *cbCtx)
     dataCache->tmpData = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
     dataCache->reply = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
     if ((dataCache->data == NULL) || (dataCache->tmpData == NULL) || (dataCache->reply == NULL)) {
-        DestroyCallCtx((uintptr_t *)(dataCache), NULL);
+        DestroyCallCtx((uintptr_t *)(dataCache));
         return HC_ERROR;
     }
     /* linux lite, ipc io init with : token + SvcIdentity */
@@ -1369,11 +1366,9 @@ int32_t CreateCallCtx(uintptr_t *callCtx, uintptr_t *cbCtx)
     return HC_SUCCESS;
 }
 
-void DestroyCallCtx(uintptr_t *callCtx, uintptr_t *cbCtx)
+void DestroyCallCtx(uintptr_t *callCtx)
 {
     ProxyDevAuthData *dataCache = NULL;
-
-    (void)cbCtx;
     if ((callCtx != NULL) && (*callCtx != 0)) {
         dataCache = (ProxyDevAuthData *)(*callCtx);
         if (dataCache->data != NULL) {

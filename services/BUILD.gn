@@ -146,6 +146,8 @@ if (os_level == "mini" || os_level == "small") {
 
       sources = deviceauth_ipc_files
       sources += [ "${frameworks_path}/src/ipc_sdk.c" ]
+      sources +=
+          [ "${frameworks_path}/src/mock/identity_service_ipc_sdk_mock.c" ]
 
       defines = [ "HILOG_ENABLE" ]
       if (ohos_kernel_type == "linux") {

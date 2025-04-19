@@ -61,8 +61,8 @@ int32_t IpcEncodeCallReply(uintptr_t replayCache, int32_t type, const uint8_t *r
 uint32_t SetIpcCallMap(uintptr_t ipcInstance, IpcServiceCall method, int32_t methodId);
 
 void SetCbCtxToDataCtx(uintptr_t callCtx, int32_t cbIdx);
-int32_t CreateCallCtx(uintptr_t *callCtx, uintptr_t *cbCtx);
-void DestroyCallCtx(uintptr_t *callCtx, uintptr_t *cbCtx);
+int32_t CreateCallCtx(uintptr_t *callCtx);
+void DestroyCallCtx(uintptr_t *callCtx);
 int32_t DoBinderCall(uintptr_t callCtx, int32_t methodId, bool withSync);
 int32_t SetCallRequestParamInfo(uintptr_t callCtx, int32_t type, const uint8_t *param, int32_t paramSz);
 

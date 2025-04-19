@@ -192,20 +192,20 @@ static int32_t IpcCmAddCredential(int32_t osAccountId, const char *requestParams
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    ret = CreateCallCtx(&callCtx, NULL);
+    ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeAddCredentialParams(callCtx, osAccountId, requestParams);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_CM_ADD_CREDENTIAL, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
         LOGE("ipc call failed");
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_PROC_FAILED;
     }
     DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
@@ -213,12 +213,12 @@ static int32_t IpcCmAddCredential(int32_t osAccountId, const char *requestParams
     int32_t inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = AddCredentialIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
-    DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %" LOG_PUB "d", ret);
+    DestroyCallCtx(&callCtx);
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -232,7 +232,7 @@ static int32_t IpcCmRegChangeListener(const char *appId, CredChangeListener *lis
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    ret = CreateCallCtx(&callCtx, NULL);
+    ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
@@ -241,14 +241,14 @@ static int32_t IpcCmRegChangeListener(const char *appId, CredChangeListener *lis
         HcStrlen(appId) + 1);
     if (ret != HC_SUCCESS) {
         LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_APPID);
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_LISTERNER, (const uint8_t *)listener,
         sizeof(*listener));
     if (ret != HC_SUCCESS) {
         LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_LISTERNER);
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     // why do this ?
@@ -257,8 +257,8 @@ static int32_t IpcCmRegChangeListener(const char *appId, CredChangeListener *lis
     if (ret == HC_SUCCESS) {
         AddIpcCliCallbackCtx(appId, 0, &g_ipcCredListenerCbList);
     }
-    DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %" LOG_PUB "d", ret);
+    DestroyCallCtx(&callCtx);
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
     return (ret == HC_SUCCESS) ? HC_SUCCESS : HC_ERR_IPC_PROC_FAILED;
 }
 
@@ -272,7 +272,7 @@ static int32_t IpcCmUnRegChangeListener(const char *appId)
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    ret = CreateCallCtx(&callCtx, NULL);
+    ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
@@ -281,15 +281,15 @@ static int32_t IpcCmUnRegChangeListener(const char *appId)
         HcStrlen(appId) + 1);
     if (ret != HC_SUCCESS) {
         LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_APPID);
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_CM_UNREG_LISTENER, true);
     if (ret == HC_SUCCESS) {
         DelIpcCliCallbackCtx(appId, &g_ipcCredListenerCbList);
     }
-    DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %" LOG_PUB "d", ret);
+    DestroyCallCtx(&callCtx);
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
     return HC_SUCCESS;
 }
 
@@ -342,20 +342,20 @@ static int32_t IpcCmExportCredential(int32_t osAccountId, const char *credId, ch
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    ret = CreateCallCtx(&callCtx, NULL);
+    ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeExportCredentialParams(callCtx, osAccountId, credId);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_CM_EXPORT_CREDENTIAL, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
         LOGE("ipc call failed");
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_PROC_FAILED;
     }
     DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
@@ -363,12 +363,12 @@ static int32_t IpcCmExportCredential(int32_t osAccountId, const char *credId, ch
     int32_t inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = ExportCredentialIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
-    DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %" LOG_PUB "d", ret);
+    DestroyCallCtx(&callCtx);
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -403,7 +403,7 @@ static int32_t IpcCmQueryCredByParams(int32_t osAccountId, const char *requestPa
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    int32_t ret = CreateCallCtx(&callCtx, NULL);
+    int32_t ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
@@ -412,21 +412,21 @@ static int32_t IpcCmQueryCredByParams(int32_t osAccountId, const char *requestPa
         sizeof(osAccountId));
     if (ret != HC_SUCCESS) {
         LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_QUERY_PARAMS, (const uint8_t *)requestParams,
         HcStrlen(requestParams) + 1);
     if (ret != HC_SUCCESS) {
         LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_QUERY_PARAMS);
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_BUILD_PARAM;
     }
 
     ret = DoBinderCall(callCtx, IPC_CALL_ID_CM_QUERY_CREDENTIAL_BY_PARAMS, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
         LOGE("ipc call failed");
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_PROC_FAILED;
     }
     DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
@@ -434,12 +434,12 @@ static int32_t IpcCmQueryCredByParams(int32_t osAccountId, const char *requestPa
     int32_t inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = SearchCredsIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnCredList);
-    DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %" LOG_PUB "d", ret);
+    DestroyCallCtx(&callCtx);
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -474,7 +474,7 @@ static int32_t IpcCmQueryCredInfoByCredId(int32_t osAccountId, const char *credI
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    int32_t ret = CreateCallCtx(&callCtx, NULL);
+    int32_t ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
@@ -483,21 +483,21 @@ static int32_t IpcCmQueryCredInfoByCredId(int32_t osAccountId, const char *credI
         sizeof(osAccountId));
     if (ret != HC_SUCCESS) {
         LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_OS_ACCOUNT_ID);
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_BUILD_PARAM;
     }
     ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_CRED_ID, (const uint8_t *)credId,
         HcStrlen(credId) + 1);
     if (ret != HC_SUCCESS) {
         LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_QUERY_PARAMS);
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_BUILD_PARAM;
     }
 
     ret = DoBinderCall(callCtx, IPC_CALL_ID_CM_QUERY_CREDENTIAL_BY_CRED_ID, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
         LOGE("ipc call failed");
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_PROC_FAILED;
     }
     DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
@@ -505,12 +505,12 @@ static int32_t IpcCmQueryCredInfoByCredId(int32_t osAccountId, const char *credI
     int32_t inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = SearchCredInfoIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnCredInfo);
-    LOGI("process done, ret %" LOG_PUB "d", ret);
-    DestroyCallCtx(&callCtx, NULL);
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
+    DestroyCallCtx(&callCtx);
     return ret;
 }
 
@@ -541,28 +541,28 @@ static int32_t IpcCmDeleteCredential(int32_t osAccountId, const char *credId)
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    ret = CreateCallCtx(&callCtx, NULL);
+    ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeDeleteCredentialParams(callCtx, osAccountId, credId);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_CM_DEL_CREDENTIAL, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
         LOGE("ipc call failed");
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_PROC_FAILED;
     }
     DecodeCallReply(callCtx, &replyCache, REPLAY_CACHE_NUM(replyCache));
     ret = HC_ERR_IPC_UNKNOW_REPLY;
     int32_t inOutLen = sizeof(int32_t);
     GetIpcReplyByType(&replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
-    DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %" LOG_PUB "d", ret);
+    DestroyCallCtx(&callCtx);
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -599,28 +599,28 @@ static int32_t IpcCmUpdateCredInfo(int32_t osAccountId, const char *credId, cons
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    ret = CreateCallCtx(&callCtx, NULL);
+    ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeUpdateParams(callCtx, osAccountId, credId, requestParams);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_CM_UPDATE_CRED_INFO, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
         LOGE("ipc call failed");
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_PROC_FAILED;
     }
     DecodeCallReply(callCtx, &replyCache, REPLAY_CACHE_NUM(replyCache));
     ret = HC_ERR_IPC_UNKNOW_REPLY;
     int32_t inOutLen = sizeof(int32_t);
     GetIpcReplyByType(&replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
-    DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %" LOG_PUB "d", ret);
+    DestroyCallCtx(&callCtx);
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -659,20 +659,20 @@ static int32_t IpcCmAgreeCredential(int32_t osAccountId, const char *selfCredId,
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    ret = CreateCallCtx(&callCtx, NULL);
+    ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeAgreeCredentialParams(callCtx, osAccountId, selfCredId, requestParams);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_CM_AGREE_CREDENTIAL, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
         LOGE("ipc call failed");
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_PROC_FAILED;
     }
     DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
@@ -680,12 +680,12 @@ static int32_t IpcCmAgreeCredential(int32_t osAccountId, const char *selfCredId,
     int32_t inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = AgreeCredentialIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
-    DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %" LOG_PUB "d", ret);
+    DestroyCallCtx(&callCtx);
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -738,20 +738,20 @@ static int32_t IpcCmDelCredByParams(int32_t osAccountId, const char *requestPara
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    ret = CreateCallCtx(&callCtx, NULL);
+    ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeDelCredByParams(callCtx, osAccountId, requestParams);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_CM_DEL_CRED_BY_PARAMS, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
         LOGE("ipc call failed");
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_PROC_FAILED;
     }
     DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
@@ -759,12 +759,12 @@ static int32_t IpcCmDelCredByParams(int32_t osAccountId, const char *requestPara
     int32_t inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = DelCredByParamsIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
-    DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %" LOG_PUB "d", ret);
+    DestroyCallCtx(&callCtx);
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -817,20 +817,20 @@ static int32_t IpcCmBatchUpdateCredentials(int32_t osAccountId, const char *requ
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    ret = CreateCallCtx(&callCtx, NULL);
+    ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeBatchUpdateParam(callCtx, osAccountId, requestParams);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_CM_BATCH_UPDATE_CREDENTIALS, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
         LOGE("ipc call failed");
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_PROC_FAILED;
     }
     DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
@@ -838,12 +838,12 @@ static int32_t IpcCmBatchUpdateCredentials(int32_t osAccountId, const char *requ
     int32_t inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = BatchUpdateCredIpcResult(replyCache, REPLAY_CACHE_NUM(replyCache), returnData);
-    DestroyCallCtx(&callCtx, NULL);
-    LOGI("process done, ret %" LOG_PUB "d", ret);
+    DestroyCallCtx(&callCtx);
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
 
@@ -930,28 +930,28 @@ static int32_t IpcCmAuthCredential(int32_t osAccountId, int64_t authReqId, const
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    ret = CreateCallCtx(&callCtx, NULL);
+    ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeAuthDeviceParams(callCtx, osAccountId, authReqId, authParams, caCallback);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_CA_AUTH_DEVICE, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
         LOGE("ipc call failed");
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_PROC_FAILED;
     }
     DecodeCallReply(callCtx, &replyCache, REPLAY_CACHE_NUM(replyCache));
     ret = HC_ERR_IPC_UNKNOW_REPLY;
     inOutLen = sizeof(int32_t);
     GetIpcReplyByType(&replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
-    LOGI("process done, ret %" LOG_PUB "d", ret);
-    DestroyCallCtx(&callCtx, NULL);
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
+    DestroyCallCtx(&callCtx);
     return ret;
 }
 
@@ -990,28 +990,28 @@ static int32_t IpcCmProcessCredData(int64_t authReqId, const uint8_t *data, uint
         LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    ret = CreateCallCtx(&callCtx, NULL);
+    ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
     ret = EncodeProcessDataParams(callCtx, authReqId, data, dataLen, callback);
     if (ret != HC_SUCCESS) {
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return ret;
     }
     ret = DoBinderCall(callCtx, IPC_CALL_ID_CA_PROCESS_CRED_DATA, true);
     if (ret == HC_ERR_IPC_INTERNAL_FAILED) {
         LOGE("ipc call failed");
-        DestroyCallCtx(&callCtx, NULL);
+        DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_PROC_FAILED;
     }
     DecodeCallReply(callCtx, &replyCache, REPLAY_CACHE_NUM(replyCache));
     ret = HC_ERR_IPC_UNKNOW_REPLY;
     inOutLen = sizeof(int32_t);
     GetIpcReplyByType(&replyCache, REPLAY_CACHE_NUM(replyCache), PARAM_TYPE_IPC_RESULT, (uint8_t *)&ret, &inOutLen);
-    LOGI("process done, ret %" LOG_PUB "d", ret);
-    DestroyCallCtx(&callCtx, NULL);
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
+    DestroyCallCtx(&callCtx);
     return ret;
 }
 
