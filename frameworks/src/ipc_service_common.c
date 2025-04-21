@@ -1123,6 +1123,7 @@ int32_t IpcServiceGaCancelRequest(const IpcDataInfo *ipcParams, int32_t paramNum
 
 int32_t IpcServiceGaGetRealInfo(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
 {
+    int32_t callRet;
     int32_t ret;
     int32_t osAccountId;
     const char *pseudonymId = NULL;
@@ -1139,13 +1140,14 @@ int32_t IpcServiceGaGetRealInfo(const IpcDataInfo *ipcParams, int32_t paramNum, 
     }
 
     char *realInfo = NULL;
-    ret = g_groupAuthMgrMethod.getRealInfo(osAccountId, pseudonymId, &realInfo);
-    if ((realInfo != NULL) && (ret == HC_SUCCESS)) {
-        ret = IpcEncodeCallReply(outCache, PARAM_TYPE_RETURN_DATA, (const uint8_t *)realInfo,
+    callRet = g_groupAuthMgrMethod.getRealInfo(osAccountId, pseudonymId, &realInfo);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    if ((realInfo != NULL) && (callRet == HC_SUCCESS)) {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_RETURN_DATA, (const uint8_t *)realInfo,
             HcStrlen(realInfo) + 1);
         HcFree(realInfo);
     } else {
-        ret = IpcEncodeCallReply(outCache, PARAM_TYPE_RETURN_DATA, NULL, 0);
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_RETURN_DATA, NULL, 0);
     }
     LOGI("process done, ipc ret %" LOG_PUB "d", ret);
     return ret;
@@ -1153,6 +1155,7 @@ int32_t IpcServiceGaGetRealInfo(const IpcDataInfo *ipcParams, int32_t paramNum, 
 
 int32_t IpcServiceGaGetPseudonymId(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
 {
+    int32_t callRet;
     int32_t ret;
     int32_t osAccountId;
     const char *indexKey = NULL;
@@ -1169,13 +1172,14 @@ int32_t IpcServiceGaGetPseudonymId(const IpcDataInfo *ipcParams, int32_t paramNu
     }
 
     char *pseudonymId = NULL;
-    ret = g_groupAuthMgrMethod.getPseudonymId(osAccountId, indexKey, &pseudonymId);
-    if ((pseudonymId != NULL) && (ret == HC_SUCCESS)) {
-        ret = IpcEncodeCallReply(outCache, PARAM_TYPE_RETURN_DATA, (const uint8_t *)pseudonymId,
+    callRet = g_groupAuthMgrMethod.getPseudonymId(osAccountId, indexKey, &pseudonymId);
+    ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
+    if ((pseudonymId != NULL) && (callRet == HC_SUCCESS)) {
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_RETURN_DATA, (const uint8_t *)pseudonymId,
             HcStrlen(pseudonymId) + 1);
         HcFree(pseudonymId);
     } else {
-        ret = IpcEncodeCallReply(outCache, PARAM_TYPE_RETURN_DATA, NULL, 0);
+        ret += IpcEncodeCallReply(outCache, PARAM_TYPE_RETURN_DATA, NULL, 0);
     }
     LOGI("process done, ipc ret %" LOG_PUB "d", ret);
     return ret;
@@ -1183,6 +1187,7 @@ int32_t IpcServiceGaGetPseudonymId(const IpcDataInfo *ipcParams, int32_t paramNu
 
 int32_t IpcServiceDaProcessCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
 {
+    int32_t callRet;
     int32_t ret;
     int32_t operationCode = 0;
     const char *reqJsonStr = NULL;
@@ -1198,19 +1203,17 @@ int32_t IpcServiceDaProcessCredential(const IpcDataInfo *ipcParams, int32_t para
     if (ret != HC_SUCCESS) {
         return ret;
     }
-    int32_t callRet = ProcessCredential(operationCode, reqJsonStr, &returnData);
+    callRet = ProcessCredential(operationCode, reqJsonStr, &returnData);
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
-    ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_1,
-        sizeof(int32_t));
-    if (returnData != NULL) {
+    if (returnData != NULL && callRet == HC_SUCCESS) {
         ret += IpcEncodeCallReply(
             outCache, PARAM_TYPE_RETURN_DATA, (const uint8_t *)returnData, HcStrlen(returnData) + 1);
         HcFree(returnData);
     } else {
         ret += IpcEncodeCallReply(outCache, PARAM_TYPE_RETURN_DATA, NULL, 0);
     }
-    LOGI("process done, call ret %" LOG_PUB "d, ipc ret %" LOG_PUB "d", callRet, ret);
-    return (ret == HC_SUCCESS) ? HC_SUCCESS : HC_ERROR;
+    LOGI("process done, ipc ret %" LOG_PUB "d", ret);
+    return ret;
 }
 
 int32_t IpcServiceDaProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)

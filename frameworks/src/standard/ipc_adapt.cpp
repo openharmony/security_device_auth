@@ -1474,16 +1474,13 @@ void InitDevAuthCredListenerCbCtx(CredChangeListener *ctx)
 }
 
 /* ipc client process adapter */
-int32_t CreateCallCtx(uintptr_t *callCtx, uintptr_t *cbCtx)
+int32_t CreateCallCtx(uintptr_t *callCtx)
 {
-    ProxyDevAuthData *dataCache = nullptr;
-
-    (void)cbCtx;
     if (callCtx == nullptr) {
         return HC_ERR_INVALID_PARAMS;
     }
 
-    dataCache = new(std::nothrow) ProxyDevAuthData();
+    ProxyDevAuthData *dataCache = new(std::nothrow) ProxyDevAuthData();
     if (dataCache == nullptr) {
         LOGE("call context alloc failed");
         return HC_ERR_ALLOC_MEMORY;
@@ -1492,11 +1489,9 @@ int32_t CreateCallCtx(uintptr_t *callCtx, uintptr_t *cbCtx)
     return HC_SUCCESS;
 }
 
-void DestroyCallCtx(uintptr_t *callCtx, uintptr_t *cbCtx)
+void DestroyCallCtx(uintptr_t *callCtx)
 {
     ProxyDevAuthData *dataCache = nullptr;
-
-    (void)cbCtx;
     if ((callCtx != nullptr) && (*callCtx != 0)) {
         dataCache = reinterpret_cast<ProxyDevAuthData *>(*callCtx);
         delete dataCache;

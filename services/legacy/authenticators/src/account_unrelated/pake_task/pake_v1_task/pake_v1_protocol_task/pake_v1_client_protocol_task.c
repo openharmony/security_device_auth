@@ -225,7 +225,7 @@ static int Process(struct AsyBaseCurTaskT *task, PakeParams *params, const CJson
     uint32_t step = ProtocolMessageIn(in);
     if (step == INVALID_MESSAGE) {
         res = PakeRequest(task, params, out, status);
-        step = 1;
+        step = STEP_ONE;
         goto OUT;
     }
 
