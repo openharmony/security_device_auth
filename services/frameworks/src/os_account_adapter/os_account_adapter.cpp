@@ -89,6 +89,7 @@ static void SubscribeCommonEvent(void)
         matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGIN);
         matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGOUT);
         matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_BLUETOOTH_HOST_STATE_UPDATE);
+        matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
         OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
         g_accountSubscriber = std::make_shared<OHOS::DevAuth::AccountSubscriber>(subscribeInfo, g_accountEventNotifier);
     }
