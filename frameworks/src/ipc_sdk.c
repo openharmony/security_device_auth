@@ -52,6 +52,7 @@ typedef struct {
 static IpcProxyCbInfo g_ipcProxyCbList = { 0 };
 static IpcProxyCbInfo g_ipcListenerCbList = { 0 };
 static HcMutex g_ipcMutex;
+static bool g_devAuthServiceStatus = false;
 
 #define CHECK_IPC_PARAMS(cond) do { \
     if ((cond)) { \
@@ -120,7 +121,7 @@ if ((outVar) == NULL) { \
 
 #define GET_IPC_REPLY_INT(cache, paramType, outVar) \
 inOutLen = sizeof(int32_t); \
-GetIpcReplyByType((cache), REPLAY_CACHE_NUM(cache), (paramType), (uint8_t *)(outVar), &inOutLen); \
+GetIpcReplyByType((cache), REPLAY_CACHE_NUM(cache), (paramType), (uint8_t *)(outVar), &inOutLen) \
 
 #define GET_IPC_RESULT_NUM(cache, paramType, ipcResultNum) \
 inOutLen = sizeof(int32_t); \
@@ -1289,16 +1290,30 @@ DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *
 
 DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 {
-    InitHcMutex(&g_ipcMutex, false);
+    if (g_devAuthServiceStatus == true) {
+        LOGI("device auth service already init");
+        return HC_SUCCESS;
+    }
+    int32_t ret = InitHcMutex(&g_ipcMutex, false);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
     InitISIpc();
-    return InitProxyAdapt();
+    ret = InitProxyAdapt();
+    if (ret != HC_SUCCESS) {
+        DestroyHcMutex(&g_ipcMutex);
+        return ret;
+    }
+    g_devAuthServiceStatus = true;
+    return HC_SUCCESS;
 }
 
 DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
 {
     UnInitProxyAdapt();
-    DestroyHcMutex(&g_ipcMutex);
     DeInitISIpc();
+    DestroyHcMutex(&g_ipcMutex);
+    g_devAuthServiceStatus = false;
 }
 
 DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
