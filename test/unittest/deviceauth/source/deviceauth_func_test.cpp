@@ -67,11 +67,12 @@ static const char *AUTH_WITH_PIN_PARAMS = "{\"osAccountId\":100,\"acquireType\":
 static const char *AUTH_DIRECT_PARAMS =
     "{\"osAccountId\":100,\"acquireType\":0,\"serviceType\":\"service.type.import\",\"peerConnDeviceId\":"
     "\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C"
-    "749558BD2E6492C\"}";
+    "749558BD2E6492C\",\"peerOsAccountId\":100}";
 
 static const char *DEVICE_LEVEL_AUTH_PARAMS =
-    "{\"peerConnDeviceId\":\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C"
-    "749558BD2E6492C\",\"servicePkgName\":\"TestAppId\",\"isClient\":true, \"isDeviceLevel\":true}";
+    "{\"peerConnDeviceId\":\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C\","
+    "\"serviceType\":\"service.type.import\",\"servicePkgName\":\"TestAppId\",\"isClient\":true,"
+    "\"isDeviceLevel\":true,\"peerOsAccountId\":100}";
 
 static const char *GET_REGISTER_INFO_PARAMS =
     "{\"version\":\"1.0.0\",\"deviceId\":\"TestAuthIdClient\",\"userId\":\"4269DC28B639681698809A67EDAD08E39F20"
@@ -275,6 +276,21 @@ static char *OnAuthRequestDirect(int64_t requestId, int operationCode, const cha
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddStringToJson(json, FIELD_PEER_CONN_DEVICE_ID, TEST_UDID_CLIENT);
     AddStringToJson(json, FIELD_SERVICE_TYPE, SERVICE_TYPE_IMPORT);
+    AddIntToJson(json, FIELD_PEER_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
+static char *OnDaAuthRequest(int64_t requestId, int operationCode, const char *reqParam)
+{
+    CJson *json = CreateJson();
+    AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
+    AddIntToJson(json, FIELD_PEER_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
+    AddStringToJson(json, FIELD_PEER_CONN_DEVICE_ID, TEST_UDID_CLIENT);
+    AddStringToJson(json, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
+    AddStringToJson(json, FIELD_SERVICE_TYPE, SERVICE_TYPE_IMPORT);
     char *returnDataStr = PackJsonToString(json);
     FreeJson(json);
     return returnDataStr;
@@ -382,6 +398,14 @@ static DeviceAuthCallback g_daLTCallback = { .onTransmit = OnTransmit,
     .onRequest = OnAuthRequestDirect
 };
 
+static DeviceAuthCallback g_daCallback = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnDaAuthRequest
+};
+
 static void AuthDeviceDirectWithPinDemo(const char *startAuthParams, const DeviceAuthCallback *callback)
 {
     g_asyncStatus = ASYNC_STATUS_WAITING;
@@ -485,7 +509,7 @@ static void DeviceLevelAuthDemo(void)
     SetDeviceStatus(isClient);
     const GroupAuthManager *ga = GetGaInstance();
     ASSERT_NE(ga, nullptr);
-    int32_t ret = ga->authDevice(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, DEVICE_LEVEL_AUTH_PARAMS, &g_gaCallback);
+    int32_t ret = ga->authDevice(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, DEVICE_LEVEL_AUTH_PARAMS, &g_daCallback);
     if (ret != HC_SUCCESS) {
         g_asyncStatus = ASYNC_STATUS_ERROR;
         return;
@@ -498,9 +522,9 @@ static void DeviceLevelAuthDemo(void)
         SetDeviceStatus(isClient);
         g_asyncStatus = ASYNC_STATUS_WAITING;
         if (isClient) {
-            ret = ga->processData(TEST_REQ_ID, g_transmitData, g_transmitDataLen, &g_gaCallback);
+            ret = ga->processData(TEST_REQ_ID, g_transmitData, g_transmitDataLen, &g_daCallback);
         } else {
-            ret = ga->processData(TEST_REQ_ID2, g_transmitData, g_transmitDataLen, &g_gaCallback);
+            ret = ga->processData(TEST_REQ_ID2, g_transmitData, g_transmitDataLen, &g_daCallback);
         }
         (void)memset_s(g_transmitData, TRANSMIT_DATA_MAX_LEN, 0, TRANSMIT_DATA_MAX_LEN);
         g_transmitDataLen = 0;
@@ -528,6 +552,7 @@ static void CreateCredentialParamsJson(int32_t osAccountId, const char *deviceId
     AddStringToJson(out, FIELD_DEVICE_ID, deviceId);
     AddStringToJson(out, FIELD_SERVICE_TYPE, serviceType);
     AddIntToJson(out, FIELD_ACQURIED_TYPE, P2P_BIND);
+    (void)AddIntToJson(out, FIELD_PEER_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
 
     if (flag >= 0) {
         AddIntToJson(out, FIELD_CRED_OP_FLAG, flag);
@@ -552,23 +577,8 @@ static int32_t ProcessCredentiaCreateDemo(const int32_t osAccountId, const bool 
     FreeJsonString(requestParams);
     if (returnData) {
         printf("returnData: %s\n", returnData);
-        CJson *in = CreateJsonFromString(returnData);
-        if (in == nullptr) {
-            printf("CreateJsonFromString returnData failed !\n");
-        } else {
-            if (GetIntFromJson(in, FIELD_CRED_OP_RESULT, &res) != HC_SUCCESS) {
-                printf("GetIntFromJson  result failed !\n");
-                FreeJson(in);
-                return HC_ERR_INVALID_PARAMS;
-            }
-            printf("get  result from returnData: %d\n", res);
-            SetDeviceStatus(true);
-            return res;
-        }
+        FreeJsonString(returnData);
     }
-
-    printf("returnData is null !\n");
-
     SetDeviceStatus(true);
     return res;
 }
@@ -596,20 +606,12 @@ static int32_t ProcessCredentialQueryDemo(
         if (in == nullptr) {
             printf("CreateJsonFromString returnData failed !\n");
         } else {
-            if (GetIntFromJson(in, FIELD_CRED_OP_RESULT, &res) != HC_SUCCESS) {
-                printf("GetIntFromJson  result failed !\n");
-                FreeJson(in);
-                return HC_ERR_INVALID_PARAMS;
-            }
-            printf("get  result from returnData: %d\n", res);
-            *publicKey = (char *)GetStringFromJson(in, FIELD_PUBLIC_KEY);
-            SetDeviceStatus(true);
-            return res;
+            const char *returnPk = GetStringFromJson(in, FIELD_PUBLIC_KEY);
+            (void)DeepCopyString(returnPk, publicKey);
+            FreeJson(in);
         }
+        FreeJsonString(returnData);
     }
-
-    printf("returnData is null !\n");
-
     SetDeviceStatus(true);
     return res;
 }
@@ -630,24 +632,9 @@ static int32_t ProcessCredentialDemoImpPubKey(
 
     int32_t res = ProcessCredential(CRED_OP_IMPORT, requestParams, &returnData);
     FreeJsonString(requestParams);
-    if (returnData) {
-        CJson *in = CreateJsonFromString(returnData);
-        if (in == nullptr) {
-            printf("CreateJsonFromString returnData failed !\n");
-        } else {
-            if (GetIntFromJson(in, FIELD_CRED_OP_RESULT, &res) != HC_SUCCESS) {
-                printf("GetIntFromJson  result failed !\n");
-                FreeJson(in);
-                return HC_ERR_INVALID_PARAMS;
-            }
-            printf("get  result from returnData: %d\n", res);
-            SetDeviceStatus(true);
-            return res;
-        }
+    if (returnData != nullptr) {
+        FreeJsonString(returnData);
     }
-
-    printf("returnData is null !\n");
-
     SetDeviceStatus(true);
     return res;
 }
@@ -670,22 +657,8 @@ static int32_t CreateServerKeyPair()
     FreeJsonString(requestParams);
     if (returnData) {
         printf("returnData: %s\n", returnData);
-        CJson *in = CreateJsonFromString(returnData);
-        if (in == nullptr) {
-            printf("CreateJsonFromString returnData failed !\n");
-        } else {
-            if (GetIntFromJson(in, FIELD_CRED_OP_RESULT, &res) != HC_SUCCESS) {
-                printf("GetIntFromJson  result failed !\n");
-                FreeJson(in);
-                return HC_ERR_INVALID_PARAMS;
-            }
-            printf("get  result from returnData: %d\n", res);
-            return res;
-        }
+        FreeJsonString(returnData);
     }
-
-    printf("returnData is null !\n");
-
     SetDeviceStatus(true);
     return res;
 }
@@ -708,22 +681,8 @@ static int32_t DeleteServerKeyPair()
     FreeJsonString(requestParams);
     if (returnData) {
         printf("returnData: %s\n", returnData);
-        CJson *in = CreateJsonFromString(returnData);
-        if (in == nullptr) {
-            printf("CreateJsonFromString returnData failed !\n");
-        } else {
-            if (GetIntFromJson(in, FIELD_CRED_OP_RESULT, &res) != HC_SUCCESS) {
-                printf("GetIntFromJson  result failed !\n");
-                FreeJson(in);
-                return HC_ERR_INVALID_PARAMS;
-            }
-            printf("get  result from returnData: %d\n", res);
-            return res;
-        }
+        FreeJsonString(returnData);
     }
-
-    printf("returnData is null !\n");
-
     SetDeviceStatus(true);
     return res;
 }
@@ -743,6 +702,17 @@ static int32_t DeleteAllCredentails()
     ProcessCredential(CRED_OP_DELETE, requestParams, &returnData);
     FreeJsonString(requestParams);
 
+    json = CreateJson();
+    if (json == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    CreateCredentialParamsJson(TEST_AUTH_OS_ACCOUNT_ID, TEST_UDID_CLIENT,
+        RETURN_FLAG_DEFAULT, SERVICE_TYPE_IMPORT, json);
+    requestParams = PackJsonToString(json);
+    FreeJson(json);
+    ProcessCredential(CRED_OP_DELETE, requestParams, &returnData);
+    FreeJsonString(requestParams);
+
     SetDeviceStatus(true);
     json = CreateJson();
     if (json == NULL) {
@@ -752,7 +722,17 @@ static int32_t DeleteAllCredentails()
         RETURN_FLAG_DEFAULT, DEFAULT_SERVICE_TYPE, json);
     requestParams = PackJsonToString(json);
     FreeJson(json);
-    returnData = nullptr;
+    ProcessCredential(CRED_OP_DELETE, requestParams, &returnData);
+    FreeJsonString(requestParams);
+
+    json = CreateJson();
+    if (json == NULL) {
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    CreateCredentialParamsJson(TEST_AUTH_OS_ACCOUNT_ID, TEST_UDID_SERVER,
+        RETURN_FLAG_DEFAULT, SERVICE_TYPE_IMPORT, json);
+    requestParams = PackJsonToString(json);
+    FreeJson(json);
     ProcessCredential(CRED_OP_DELETE, requestParams, &returnData);
     FreeJsonString(requestParams);
 
@@ -773,31 +753,15 @@ static int32_t ProcessCredentialDemo(int operationCode, const char *serviceType)
     char *requestParams = PackJsonToString(json);
     FreeJson(json);
     char *returnData = nullptr;
-    bool isClient = true;
-    SetDeviceStatus(isClient);
+    SetDeviceStatus(true);
 
     printf("ProcessCredentialDemo: operationCode=%d\n", operationCode);
     int32_t res = ProcessCredential(operationCode, requestParams, &returnData);
     FreeJsonString(requestParams);
     if (returnData) {
         printf("returnData: %s\n", returnData);
-        CJson *in = CreateJsonFromString(returnData);
-        if (in == nullptr) {
-            printf("CreateJsonFromString returnData failed !\n");
-        } else {
-            if (GetIntFromJson(in, FIELD_CRED_OP_RESULT, &res) != HC_SUCCESS) {
-                printf("GetIntFromJson  result failed !\n");
-                FreeJson(in);
-                return HC_ERR_INVALID_PARAMS;
-            }
-            printf("get  result from returnData: %d\n", res);
-            SetDeviceStatus(true);
-            return res;
-        }
+        FreeJsonString(returnData);
     }
-
-    printf("returnData is null !\n");
-
     SetDeviceStatus(true);
     return res;
 }
@@ -814,30 +778,14 @@ static int32_t ProcessCredentialDemoImport(const char *importServiceType)
     char *requestParams = PackJsonToString(json);
     FreeJson(json);
     char *returnData = nullptr;
-    bool isClient = false;
-    SetDeviceStatus(isClient);
+    SetDeviceStatus(false);
 
     printf("ProcessCredentialDemoImport\n");
     int32_t res = ProcessCredential(CRED_OP_IMPORT, requestParams, &returnData);
     FreeJsonString(requestParams);
     if (returnData) {
-        CJson *in = CreateJsonFromString(returnData);
-        if (in == nullptr) {
-            printf("CreateJsonFromString returnData failed !\n");
-        } else {
-            if (GetIntFromJson(in, FIELD_CRED_OP_RESULT, &res) != HC_SUCCESS) {
-                printf("GetIntFromJson  result failed !\n");
-                FreeJson(in);
-                return HC_ERR_INVALID_PARAMS;
-            }
-            printf("get  result from returnData: %d\n", res);
-            SetDeviceStatus(true);
-            return res;
-        }
+        FreeJsonString(returnData);
     }
-
-    printf("returnData is null !\n");
-
     SetDeviceStatus(true);
     return res;
 }
@@ -1230,8 +1178,11 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest006, TestSize.Level0)
     char *publicKey = nullptr;
     ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER, &publicKey);
     ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_SERVER, publicKey);
+    HcFree(publicKey);
+    publicKey = nullptr;
     ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT, &publicKey);
     ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_CLIENT, publicKey);
+    HcFree(publicKey);
     DeviceLevelAuthDemo();
     ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
 }
@@ -1381,7 +1332,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest015, TestSize.Level0)
 
     const CredentialOperator *credentialOperator = GetCredentialOperator();
 
-    const char *reqJsonStr = "{\"deviceId\":\"123456\",\"osAccountId\":0,\"acquireType\":0}";
+    const char *reqJsonStr = "{\"deviceId\":\"123456\",\"osAccountId\":0,\"peerOsAccountId\":0,\"acquireType\":0}";
     char *returnData = nullptr;
     int32_t res = credentialOperator->queryCredential(reqJsonStr, &returnData);
     ASSERT_NE(res, HC_SUCCESS);
@@ -1577,8 +1528,11 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest029, TestSize.Level0)
     char *publicKey = nullptr;
     ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER, &publicKey);
     ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_SERVER, publicKey);
+    HcFree(publicKey);
+    publicKey = nullptr;
     ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT, &publicKey);
     ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_CLIENT, publicKey);
+    HcFree(publicKey);
     AuthDeviceDirectDemo(AUTH_DIRECT_PARAMS, &g_daLTCallback);
     ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
 }
@@ -1594,8 +1548,11 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest030, TestSize.Level0)
     char *publicKey = nullptr;
     ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER, &publicKey);
     ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_SERVER, publicKey);
+    HcFree(publicKey);
+    publicKey = nullptr;
     ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT, &publicKey);
     ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_CLIENT, publicKey);
+    HcFree(publicKey);
     const char *statAuthParams =
     "{\"osAccountId\":100,\"acquireType\":0,\"serviceType\":\"service.type.import\"}";
     AuthDeviceDirectDemo(statAuthParams, &g_daLTCallback);
@@ -1613,8 +1570,11 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest031, TestSize.Level0)
     char *publicKey = nullptr;
     ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER, &publicKey);
     ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_SERVER, publicKey);
+    HcFree(publicKey);
+    publicKey = nullptr;
     ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT, &publicKey);
     ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_CLIENT, publicKey);
+    HcFree(publicKey);
     const char *statAuthParams =
     "{\"osAccountId\":100,\"acquireType\":0,\"serviceType\":\"service.type.import\",\"peerConnDeviceId\":"
     "\"52E2706717D5C39D736E134CC1\"}";
@@ -1633,8 +1593,11 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest032, TestSize.Level0)
     char *publicKey = nullptr;
     ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_SERVER, &publicKey);
     ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_SERVER, publicKey);
+    HcFree(publicKey);
+    publicKey = nullptr;
     ProcessCredentialQueryDemo(TEST_AUTH_OS_ACCOUNT_ID, true, TEST_UDID_CLIENT, &publicKey);
     ProcessCredentialDemoImpPubKey(TEST_AUTH_OS_ACCOUNT_ID, false, TEST_UDID_CLIENT, publicKey);
+    HcFree(publicKey);
     const char *statAuthParams =
     "{\"osAccountId\":100,\"acquireType\":8,\"serviceType\":\"service.type.import\",\"peerConnDeviceId\":"
     "\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C"

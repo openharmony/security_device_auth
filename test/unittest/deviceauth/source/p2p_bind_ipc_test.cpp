@@ -212,6 +212,9 @@ static int32_t CreateServerKeyPair()
     printf("ProcessCredentialDemo: operationCode=%d\n", CRED_OP_CREATE);
     res = ProcessCredential(CRED_OP_CREATE, requestParams, &returnData);
     FreeJsonString(requestParams);
+    if (returnData != nullptr) {
+        FreeJsonString(returnData);
+    }
 
     return res;
 }
@@ -244,22 +247,8 @@ static int32_t DeleteServerKeyPair()
     FreeJsonString(requestParams);
     if (returnData) {
         printf("returnData: %s\n", returnData);
-        CJson *in = CreateJsonFromString(returnData);
-        if (in == nullptr) {
-            printf("CreateJsonFromString returnData failed !\n");
-        } else {
-            if (GetIntFromJson(in, FIELD_CRED_OP_RESULT, &res) != HC_SUCCESS) {
-                printf("GetIntFromJson  result failed !\n");
-                FreeJson(in);
-                return HC_ERR_INVALID_PARAMS;
-            }
-            printf("get  result from returnData: %d\n", res);
-            return res;
-        }
+        FreeJsonString(returnData);
     }
-
-    printf("returnData is null !\n");
-
     return res;
 }
 
@@ -281,6 +270,9 @@ static int32_t ProcessCredentialDemo(int operationCode, const char *serviceType)
     printf("ProcessCredentialDemo: operationCode=%d\n", operationCode);
     int32_t res = ProcessCredential(operationCode, requestParams, &returnData);
     FreeJsonString(requestParams);
+    if (returnData != nullptr) {
+        FreeJsonString(returnData);
+    }
 
     return res;
 }
@@ -302,22 +294,8 @@ static int32_t ProcessCredentialDemoImport(const char *importServiceType)
     int32_t res = ProcessCredential(CRED_OP_IMPORT, requestParams, &returnData);
     FreeJsonString(requestParams);
     if (returnData) {
-        CJson *in = CreateJsonFromString(returnData);
-        if (in == nullptr) {
-            printf("CreateJsonFromString returnData failed !\n");
-        } else {
-            if (GetIntFromJson(in, FIELD_CRED_OP_RESULT, &res) != HC_SUCCESS) {
-                printf("GetIntFromJson  result failed !\n");
-                FreeJson(in);
-                return HC_ERR_INVALID_PARAMS;
-            }
-            printf("get  result from returnData: %d\n", res);
-            return res;
-        }
+        FreeJsonString(returnData);
     }
-
-    printf("returnData is null !\n");
-
     return res;
 }
 

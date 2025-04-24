@@ -36,6 +36,20 @@ static int32_t SetProtocolsToIdentityInfo(IdentityInfo *info)
     return HC_SUCCESS;
 }
 
+static int32_t AddServiceTypeToQueryParams(const CJson *in, CJson *out)
+{
+    const char *serviceType = GetStringFromJson(in, FIELD_SERVICE_TYPE);
+    if (serviceType == NULL) {
+        LOGI("get serviceType from json failed, replace by default.");
+        serviceType = DEFAULT_SERVICE_TYPE;
+    }
+    if (AddStringToJson(out, FIELD_SERVICE_TYPE, serviceType) != HC_SUCCESS) {
+        LOGE("Failed to add serviceType!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t CombineQueryCredentialParams(const CJson *in, CJson *out)
 {
     int32_t osAccountId = INVALID_OS_ACCOUNT;
@@ -82,7 +96,7 @@ static int32_t CombineQueryCredentialParams(const CJson *in, CJson *out)
         LOGE("add device id to json error!");
         return HC_ERR_JSON_ADD;
     }
-    return HC_SUCCESS;
+    return AddServiceTypeToQueryParams(in, out);
 }
 
 static int32_t IsPeerDevicePublicKeyExist(const CJson *in)
