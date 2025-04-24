@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-void InitISIpc(void);
+int32_t InitISIpc(void);
 void DeInitISIpc(void);
 
 #ifdef __cplusplus

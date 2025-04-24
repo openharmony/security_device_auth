@@ -1022,9 +1022,9 @@ static void InitIpcCaMethods(CredAuthManager *caMethodObj)
     return;
 }
 
-void InitISIpc(void)
+int32_t InitISIpc(void)
 {
-    InitHcMutex(&g_ipcMutex, false);
+    return InitHcMutex(&g_ipcMutex, false);
 }
 
 void DeInitISIpc(void)
