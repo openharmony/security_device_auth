@@ -1298,9 +1298,14 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     if (ret != HC_SUCCESS) {
         return ret;
     }
-    InitISIpc();
+    ret = InitISIpc();
+    if (ret != HC_SUCCESS) {
+        DestroyHcMutex(&g_ipcMutex);
+        return ret;
+    }
     ret = InitProxyAdapt();
     if (ret != HC_SUCCESS) {
+        DeInitISIpc();
         DestroyHcMutex(&g_ipcMutex);
         return ret;
     }

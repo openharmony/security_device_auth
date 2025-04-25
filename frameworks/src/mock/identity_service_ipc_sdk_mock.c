@@ -14,14 +14,14 @@
  */
 
 #include "identity_service_ipc_sdk.h"
-
+#include "device_auth_defines.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void InitISIpc(void)
+int32_t InitISIpc(void)
 {
-    return;
+    return HC_SUCCESS;
 }
 
 void DeInitISIpc(void)
