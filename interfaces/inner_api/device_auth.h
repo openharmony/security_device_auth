@@ -172,6 +172,8 @@ typedef enum {
     AUTH_FORM_IDENTICAL_ACCOUNT = 1,
     /** group authentication type shared to other cloud accounts */
     AUTH_FORM_ACROSS_ACCOUNT = 2,
+    /** app level authentication type */
+    AUTH_FORM_DIRECT_AUTH = 3,
 } GroupAuthForm;
 
 /**
