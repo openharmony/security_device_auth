@@ -1044,12 +1044,12 @@ static int32_t AddAcrossAccountAuthInfoToContext(SessionImpl *impl, int32_t osAc
             return HC_ERR_JSON_ADD;
         }
     }
-    if (AddIntToJson(impl->context, FIELD_OPERATION_CODE, AUTH_FORM_IDENTICAL_ACCOUNT) != HC_SUCCESS) {
+    if (AddIntToJson(impl->context, FIELD_OPERATION_CODE, AUTH_FORM_ACROSS_ACCOUNT) != HC_SUCCESS) {
         LOGE("add operationCode to context fail.");
         ClearGroupEntryVec(&groupVec);
         return HC_ERR_JSON_ADD;
     }
-    impl->base.opCode = AUTH_FORM_IDENTICAL_ACCOUNT;
+    impl->base.opCode = AUTH_FORM_ACROSS_ACCOUNT;
     ClearGroupEntryVec(&groupVec);
     return HC_SUCCESS;
 }
@@ -1071,12 +1071,12 @@ static int32_t AddIdenticalAccountAuthInfoToContext(SessionImpl *impl, int32_t o
         ClearGroupEntryVec(&groupVec);
         return HC_ERR_JSON_ADD;
     }
-    if (AddIntToJson(impl->context, FIELD_OPERATION_CODE, AUTH_FORM_ACROSS_ACCOUNT) != HC_SUCCESS) {
+    if (AddIntToJson(impl->context, FIELD_OPERATION_CODE, AUTH_FORM_IDENTICAL_ACCOUNT) != HC_SUCCESS) {
         LOGE("add operationCode to context fail.");
         ClearGroupEntryVec(&groupVec);
         return HC_ERR_JSON_ADD;
     }
-    impl->base.opCode = AUTH_FORM_ACROSS_ACCOUNT;
+    impl->base.opCode = AUTH_FORM_IDENTICAL_ACCOUNT;
     ClearGroupEntryVec(&groupVec);
     return HC_SUCCESS;
 }
@@ -1156,6 +1156,8 @@ static int32_t AddAuthInfoToContextByCred(SessionImpl *impl, IdentityInfo *cred)
             LOGE("add selfAuthId to json fail.");
             return HC_ERR_ALLOC_MEMORY;
         }
+        impl->base.opCode = AUTH_FORM_DIRECT_AUTH;
+        DeleteItemFromJson(impl->context, FIELD_GROUP_ID);
         return HC_SUCCESS;
     }
     CJson *urlJson = CreateJsonFromString((const char *)cred->proof.preSharedUrl.val);
