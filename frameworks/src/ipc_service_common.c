@@ -1713,7 +1713,7 @@ int32_t IpcServiceCmBatchUpdateCredentials(const IpcDataInfo *ipcParams, int32_t
     return ret;
 }
 
-int32_t IpcServiceCaAuthDevice(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
+int32_t IpcServiceCaAuthCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
 {
     int32_t ret;
     DeviceAuthCallback *caCallback = NULL;

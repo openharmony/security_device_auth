@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -72,7 +72,7 @@ int32_t IpcServiceCmUpdateCredInfo(const IpcDataInfo *ipcParams, int32_t paramNu
 int32_t IpcServiceCmAgreeCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
 int32_t IpcServiceCmDelCredByParams(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
 int32_t IpcServiceCmBatchUpdateCredentials(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
-int32_t IpcServiceCaAuthDevice(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+int32_t IpcServiceCaAuthCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
 int32_t IpcServiceCaProcessCredData(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
 
 // Account Verifier Interfaces

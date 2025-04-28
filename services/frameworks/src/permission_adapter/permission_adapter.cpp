@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,6 +63,25 @@ static unordered_map<int32_t, vector<string>> g_apiAccessConfig = {
     { IPC_CALL_ID_AV_GET_SERVER_SHARED_KEY, { PROC_NAME_REMOTE_COMM } },
 };
 
+static unordered_set<int32_t> g_credMgrApi = {
+    IPC_CALL_ID_CM_ADD_CREDENTIAL,
+    IPC_CALL_ID_CM_AGREE_CREDENTIAL,
+    IPC_CALL_ID_CM_DEL_CRED_BY_PARAMS,
+    IPC_CALL_ID_CM_BATCH_UPDATE_CREDENTIALS,
+    IPC_CALL_ID_CM_REG_LISTENER,
+    IPC_CALL_ID_CM_UNREG_LISTENER,
+    IPC_CALL_ID_CM_EXPORT_CREDENTIAL,
+    IPC_CALL_ID_CM_QUERY_CREDENTIAL_BY_PARAMS,
+    IPC_CALL_ID_CM_QUERY_CREDENTIAL_BY_CRED_ID,
+    IPC_CALL_ID_CM_DEL_CREDENTIAL,
+    IPC_CALL_ID_CM_UPDATE_CRED_INFO,
+};
+
+static unordered_set<int32_t> g_credAuthApi = {
+    IPC_CALL_ID_CA_AUTH_CREDENTIAL,
+    IPC_CALL_ID_CA_PROCESS_CRED_DATA,
+};
+
 static bool IsProcessAllowAccess(const string &processName, int32_t methodId)
 {
     if (g_apiAccessConfig.find(methodId) == g_apiAccessConfig.end()) {
@@ -85,32 +104,102 @@ static bool IsProcessInWhitelist(const string& processName, int32_t methodId)
     return ret;
 }
 
+int32_t CheckInterfacePermission(const char *permission)
+{
+    AccessTokenID accessTokenId = IPCSkeleton::GetCallingTokenID();
+    int result = AccessTokenKit::VerifyAccessToken(accessTokenId, permission);
+    if (result != PERMISSION_GRANTED) {
+        LOGE("The permission %" LOG_PUB "s is not granted!, res: %" LOG_PUB "d", permission, result);
+        return HC_ERR_IPC_PERMISSION_DENIED;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t CheckCredMgrPermission(int32_t methodId)
+{
+    if (g_credMgrApi.count(methodId) == 0) {
+        return HC_SUCCESS;
+    }
+    if (CheckInterfacePermission(CRED_PRIVILEGE_PERMISSION) == HC_SUCCESS ||
+        CheckInterfacePermission(CRED_MGR_PERMISSION) == HC_SUCCESS) {
+        return HC_SUCCESS;
+    }
+    LOGE("Do not have CRED MGR or CRED PRIVILEGE permission!");
+    return HC_ERR_IPC_PERMISSION_DENIED;
+}
+
+static int32_t CheckCredAuthPermission(int32_t methodId)
+{
+    if (g_credAuthApi.count(methodId) == 0) {
+        return HC_SUCCESS;
+    }
+    if (CheckInterfacePermission(CRED_PRIVILEGE_PERMISSION) == HC_SUCCESS ||
+        CheckInterfacePermission(CRED_AUTH_PERMISSION) == HC_SUCCESS) {
+        return HC_SUCCESS;
+    }
+    LOGE("Do not have CRED AUTH or CRED PRIVILEGE permission!");
+    return HC_ERR_IPC_PERMISSION_DENIED;
+}
+
+static int32_t CheckACLPermission(int32_t methodId)
+{
+    if (CheckCredAuthPermission(methodId) != HC_SUCCESS) {
+        return HC_ERR_IPC_PERMISSION_DENIED;
+    }
+    if (CheckCredMgrPermission(methodId) != HC_SUCCESS) {
+        return HC_ERR_IPC_PERMISSION_DENIED;
+    }
+    return HC_SUCCESS;
+}
+
+static bool CheckTokenType(ATokenTypeEnum tokenType, int32_t methodId)
+{
+    if (tokenType == TOKEN_HAP && (g_credAuthApi.count(methodId) != 0 || g_credMgrApi.count(methodId) != 0)) {
+        LOGI("IS interface not need check token type");
+        return true;
+    }
+    if (tokenType == TOKEN_NATIVE) {
+        return true;
+    }
+    LOGE("[AccessTokenKit][GetTokenTypeFlag]: Invalid token type: %" LOG_PUB "d", tokenType);
+    return false;
+}
+
+static int32_t CheckNativeTokenInfo(AccessTokenID tokenId, int32_t methodId)
+{
+    NativeTokenInfo findInfo;
+    if (AccessTokenKit::GetNativeTokenInfo(tokenId, findInfo) != 0) {
+        LOGE("[AccessTokenKit][GetNativeTokenInfo]: failed!");
+        return HC_ERR_IPC_PERMISSION_DENIED;
+    }
+    if ((findInfo.apl != APL_SYSTEM_CORE) && (findInfo.apl != APL_SYSTEM_BASIC)) {
+        LOGE("Check permission(APL3=SYSTEM_CORE or APL2=SYSTEM_BASIC) failed! APL: %" LOG_PUB "d", findInfo.apl);
+        return HC_ERR_IPC_PERMISSION_DENIED;
+    }
+    if (!IsProcessInWhitelist(findInfo.processName, methodId)) {
+        LOGE("Check permission(Access Whitelist) failed!");
+        return HC_ERR_IPC_PERMISSION_DENIED;
+    }
+    if (!IsProcessAllowAccess(findInfo.processName, methodId)) {
+        LOGE("Check permission(Interface Access List) failed!");
+        return HC_ERR_IPC_PERMISSION_DENIED;
+    }
+    return HC_SUCCESS;
+}
+
 int32_t CheckPermission(int32_t methodId)
 {
     AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
     ATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
-    if (tokenType != TOKEN_NATIVE) {
-        LOGE("[AccessTokenKit][GetTokenTypeFlag]: Invalid token type: %" LOG_PUB "d", tokenType);
-        return HC_ERROR;
+    if (!CheckTokenType(tokenType, methodId)) {
+        return HC_ERR_IPC_PERMISSION_DENIED;
     }
-    NativeTokenInfo findInfo;
-    if (AccessTokenKit::GetNativeTokenInfo(tokenId, findInfo) != 0) {
-        LOGE("[AccessTokenKit][GetNativeTokenInfo]: failed!");
-        return HC_ERROR;
+    if (tokenType == TOKEN_NATIVE && CheckNativeTokenInfo(tokenId, methodId) != HC_SUCCESS) {
+        return HC_ERR_IPC_PERMISSION_DENIED;
     }
-    if ((findInfo.apl != APL_SYSTEM_CORE) && (findInfo.apl != APL_SYSTEM_BASIC)) {
-        LOGE("Check permission(APL3=SYSTEM_CORE or APL2=SYSTEM_BASIC) failed! APL: %" LOG_PUB "d", findInfo.apl);
-        return HC_ERROR;
-    }
-
-    if (!IsProcessInWhitelist(findInfo.processName, methodId)) {
-        LOGE("Check permission(Access Whitelist) failed!");
-        return HC_ERROR;
-    }
-
-    if (!IsProcessAllowAccess(findInfo.processName, methodId)) {
-        LOGE("Check permission(Interface Access List) failed!");
-        return HC_ERROR;
+    if (CheckACLPermission(methodId) != HC_SUCCESS) {
+        LOGE("Check ACL permission failed!");
+        return HC_ERR_IPC_PERMISSION_DENIED;
     }
     return HC_SUCCESS;
 }
