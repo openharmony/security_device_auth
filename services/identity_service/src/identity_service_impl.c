@@ -225,6 +225,7 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
         return ret;
     }
     ret = CheckOwnerUidPermission(credential);
+    int32_t credentialUid = credential->ownerUid;
     DestroyCredential(credential);
     if (ret != IS_SUCCESS) {
         return ret;
@@ -245,7 +246,7 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
         return IS_ERR_INVALID_HEX_STRING;
     }
 
-    if (credential->ownerUid != DEV_AUTH_UID) {
+    if (credentialUid != DEV_AUTH_UID) {
         ret = GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId);
     }
     HcFree(credIdByte.val);
