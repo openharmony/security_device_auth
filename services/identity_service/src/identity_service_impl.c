@@ -197,7 +197,8 @@ int32_t QueryCredInfoByCredIdImpl(int32_t osAccountId, const char *credId, char 
         LOGE("Failed to get credential by credId, ret = %" LOG_PUB "d", ret);
         return ret;
     }
-    if (CheckInterfacePermission(CRED_PRIVILEGE_PERMISSION) != IS_SUCCESS) {
+    int32_t currentUid = GetCallingUid();
+    if (currentUid == DEV_AUTH_UID || CheckInterfacePermission(CRED_PRIVILEGE_PERMISSION) != IS_SUCCESS) {
         ret = CheckOwnerUidPermission(credential);
         if (ret != HC_SUCCESS) {
             LOGE("don't have privilege or owner uid permission to query cred info");
