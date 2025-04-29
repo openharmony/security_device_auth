@@ -189,6 +189,23 @@ int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestPara
     return IS_SUCCESS;
 }
 
+static int32_t CheckQueryPermission(Credential *credential)
+{
+    int32_t currentUid = GetCallingUid();
+    if (currentUid == DEV_AUTH_UID) {
+        return IS_SUCCESS;
+    }
+    if (CheckInterfacePermission(CRED_PRIVILEGE_PERMISSION) == IS_SUCCESS) {
+        return IS_SUCCESS;
+    }
+    int32_t ret = CheckOwnerUidPermission(credential);
+    if (ret != IS_SUCCESS) {
+        LOGE("don't have privilege or owner uid permission to query cred info");
+        return ret;
+    }
+    return IS_SUCCESS;
+}
+
 int32_t QueryCredInfoByCredIdImpl(int32_t osAccountId, const char *credId, char **returnData)
 {
     Credential *credential = NULL;
@@ -197,14 +214,10 @@ int32_t QueryCredInfoByCredIdImpl(int32_t osAccountId, const char *credId, char 
         LOGE("Failed to get credential by credId, ret = %" LOG_PUB "d", ret);
         return ret;
     }
-    int32_t currentUid = GetCallingUid();
-    if (currentUid == DEV_AUTH_UID || CheckInterfacePermission(CRED_PRIVILEGE_PERMISSION) != IS_SUCCESS) {
-        ret = CheckOwnerUidPermission(credential);
-        if (ret != HC_SUCCESS) {
-            LOGE("don't have privilege or owner uid permission to query cred info");
-            DestroyCredential(credential);
-            return ret;
-        }
+    ret = CheckQueryPermission(credential);
+    if (ret != IS_SUCCESS) {
+        DestroyCredential(credential);
+        return ret;
     }
     CJson *credInfoJson = CreateJson();
     if (credInfoJson == NULL) {
