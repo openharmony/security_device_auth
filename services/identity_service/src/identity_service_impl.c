@@ -195,6 +195,9 @@ static int32_t CheckQueryPermission(Credential *credential)
     if (currentUid == DEV_AUTH_UID) {
         return IS_SUCCESS;
     }
+    if ((currentUid == DEV_CAST_UID) && (credential->credType == ACCOUNT_RELATED)) {
+        return IS_SUCCESS;
+    }
     if (CheckInterfacePermission(CRED_PRIVILEGE_PERMISSION) == IS_SUCCESS) {
         return IS_SUCCESS;
     }
