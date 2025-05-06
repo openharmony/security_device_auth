@@ -983,26 +983,35 @@ int32_t GenerateReturnCredInfo(const Credential *credential, CJson *returnJson)
     return IS_SUCCESS;
 }
 
-static int32_t GenerateCredChangedInfo(const Credential *entry, char **returnCredInfo)
+static int32_t GenerateCredInfoFromCredential(const Credential *entry, CJson *credInfo)
 {
-    CJson *credInfo = CreateJson();
     if (AddCredTypeToReturn(entry, credInfo) != IS_SUCCESS) {
         LOGE("add cretype to json failed.");
-        FreeJson(credInfo);
         return IS_ERR_JSON_ADD;
     }
     if (AddDeviceIdToReturn(entry, credInfo) != IS_SUCCESS) {
         LOGE("add deviceId to json failed.");
-        FreeJson(credInfo);
         return IS_ERR_JSON_ADD;
     }
     if (AddUserIdToReturn(entry, credInfo) != IS_SUCCESS) {
         LOGE("add userId to json failed.");
-        FreeJson(credInfo);
         return IS_ERR_JSON_ADD;
     }
     if (AddSubjectToReturn(entry, credInfo) != IS_SUCCESS) {
         LOGE("add userId to json failed.");
+        return IS_ERR_JSON_ADD;
+    }
+    return IS_SUCCESS;
+}
+
+static int32_t GenerateCredChangedInfo(const Credential *entry, char **returnCredInfo)
+{
+    CJson *credInfo = CreateJson();
+    if (credInfo == NULL) {
+        LOGE("create json failed.");
+        return IS_ERR_ALLOC_MEMORY;
+    }
+    if (GenerateCredInfoFromCredential(entry, credInfo) != IS_SUCCESS) {
         FreeJson(credInfo);
         return IS_ERR_JSON_ADD;
     }
@@ -1016,6 +1025,31 @@ static int32_t GenerateCredChangedInfo(const Credential *entry, char **returnCre
     return IS_SUCCESS;
 }
 
+static int32_t GenerateDeleteCredInfo(const Credential *entry, int32_t osAccountId, char **returnCredInfo)
+{
+    CJson *credInfo = CreateJson();
+    if (credInfo == NULL) {
+        LOGE("create json failed.");
+        return IS_ERR_ALLOC_MEMORY;
+    }
+    int32_t ret = GenerateCredInfoFromCredential(entry, credInfo);
+    if (ret != IS_SUCCESS) {
+        FreeJson(credInfo);
+        return ret;
+    }
+    if (AddIntToJson(credInfo, FIELD_OS_ACCOUNT_ID, osAccountId) != IS_SUCCESS) {
+        FreeJson(credInfo);
+        return IS_ERR_JSON_ADD;
+    }
+    char *credInfoJsonStr = PackJsonToString(credInfo);
+    FreeJson(credInfo);
+    if (credInfoJsonStr == NULL) {
+        LOGE("pack json to string failed.");
+        return IS_ERR_ALLOC_MEMORY;
+    }
+    *returnCredInfo = credInfoJsonStr;
+    return IS_SUCCESS;
+}
 
 static void PostCredAddMsg(const Credential *entry)
 {
@@ -1043,13 +1077,13 @@ static void PostCredUpdateMsg(const Credential *entry)
     FreeJsonString(returnCredInfo);
 }
 
-static void PostCredDeleteMsg(const Credential *entry)
+static void PostCredDeleteMsg(const Credential *entry, int32_t osAccountId)
 {
     if (!IsCredListenerSupported()) {
         return;
     }
     char *returnCredInfo = NULL;
-    if (GenerateCredChangedInfo(entry, &returnCredInfo) != IS_SUCCESS) {
+    if (GenerateDeleteCredInfo(entry, osAccountId, &returnCredInfo) != IS_SUCCESS) {
         return;
     }
     OnCredDelete(StringGet(&entry->credId), returnCredInfo);
@@ -1121,7 +1155,7 @@ int32_t DelCredential(int32_t osAccountId, const QueryCredentialParams *params)
         }
         Credential *popEntry;
         HC_VECTOR_POPELEMENT(&info->credentials, &popEntry, index);
-        PostCredDeleteMsg(popEntry);
+        PostCredDeleteMsg(popEntry, osAccountId);
         LOGI("[CRED#DB]: Delete a credential from database successfully! [credType]: %" LOG_PUB "u",
             popEntry->credType);
         DestroyCredential(popEntry);
