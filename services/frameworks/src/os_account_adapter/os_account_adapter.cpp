@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,6 +44,7 @@ static OHOS::sptr<OHOS::DevAuth::SaSubscriber> g_netSaSubscriber = nullptr;
 static EventCallbackVec g_callbackVec;
 static bool g_isInitialized = false;
 static bool g_isCommonEventSubscribed = false;
+static bool g_isNetObserverSubscribed = false;
 static bool g_isEventSaSubscribed = false;
 static bool g_isNetSaSubscribed = false;
 static const int32_t SYSTEM_DEFAULT_USER = 100;
@@ -143,20 +144,26 @@ static void UnSubscribeSystemAbility(void)
 
 static void StartNetObserver(void)
 {
-    if (g_observer != nullptr) {
+    if (g_isNetObserverSubscribed) {
         return;
     }
-    g_observer = new NetObserver();
+    g_observer = new(std::nothrow) NetObserver();
+    if (g_observer == nullptr) {
+        LOGE("[OsAccountAdapter]: failed to create net observer!");
+        return;
+    }
     g_observer->StartObserver();
+    g_isNetObserverSubscribed = true;
 }
 
 static void StopNetObserver(void)
 {
-    if (g_observer == nullptr) {
+    if (!g_isNetObserverSubscribed) {
         return;
     }
     g_observer->StopObserver();
     g_observer = nullptr;
+    g_isNetObserverSubscribed = false;
 }
 
 static void NotifySystemAbilityAdded(int32_t systemAbilityId)
