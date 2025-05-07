@@ -1136,9 +1136,9 @@ static void DestroyDataBuff(DataBuff *data)
     data->length = 0;
 }
 
-static int32_t ConstructClientInJson(CJson *in, const char *peerPk, const char *serviceId)
+static int32_t ConstructClientInJson(CJson *in, const char *peerPkWithSig, const char *serviceId)
 {
-    if (AddStringToJson(in, FIELD_ACCOUNT_PEER_PK, peerPk) != HC_SUCCESS) {
+    if (AddStringToJson(in, FIELD_ACCOUNT_PEER_PK_WITH_SIG, peerPkWithSig) != HC_SUCCESS) {
         LOGE("Failed to add peer pk to json!");
         return HC_ERR_JSON_ADD;
     }
@@ -1149,10 +1149,10 @@ static int32_t ConstructClientInJson(CJson *in, const char *peerPk, const char *
     return HC_SUCCESS;
 }
 
-static int32_t GetClientSharedKey(const char *peerPk, const char *serviceId, DataBuff *returnSharedKey,
+static int32_t GetClientSharedKey(const char *peerPkWithSig, const char *serviceId, DataBuff *returnSharedKey,
     DataBuff *returnRandom)
 {
-    if (peerPk == NULL || serviceId == NULL || returnSharedKey == NULL || returnRandom == NULL) {
+    if (peerPkWithSig == NULL || serviceId == NULL || returnSharedKey == NULL || returnRandom == NULL) {
         LOGE("Invalid params!");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -1161,7 +1161,7 @@ static int32_t GetClientSharedKey(const char *peerPk, const char *serviceId, Dat
         LOGE("Failed to create in json!");
         return HC_ERR_JSON_CREATE;
     }
-    int32_t res = ConstructClientInJson(in, peerPk, serviceId);
+    int32_t res = ConstructClientInJson(in, peerPkWithSig, serviceId);
     if (res != HC_SUCCESS) {
         FreeJson(in);
         return res;
@@ -1195,9 +1195,10 @@ static int32_t GetClientSharedKey(const char *peerPk, const char *serviceId, Dat
     return res;
 }
 
-static int32_t ConstructServerInJson(CJson *in, const char *peerPk, const char *serviceId, const DataBuff *random)
+static int32_t ConstructServerInJson(CJson *in, const char *peerPkWithSig, const char *serviceId,
+    const DataBuff *random)
 {
-    if (AddStringToJson(in, FIELD_ACCOUNT_PEER_PK, peerPk) != HC_SUCCESS) {
+    if (AddStringToJson(in, FIELD_ACCOUNT_PEER_PK_WITH_SIG, peerPkWithSig) != HC_SUCCESS) {
         LOGE("Failed to add peer pk to json!");
         return HC_ERR_JSON_ADD;
     }
@@ -1216,10 +1217,11 @@ static int32_t ConstructServerInJson(CJson *in, const char *peerPk, const char *
     return HC_SUCCESS;
 }
 
-static int32_t GetServerSharedKey(const char *peerPk, const char *serviceId, const DataBuff *random,
+static int32_t GetServerSharedKey(const char *peerPkWithSig, const char *serviceId, const DataBuff *random,
     DataBuff *returnSharedKey)
 {
-    if (peerPk == NULL || serviceId == NULL || random == NULL || random->data == NULL || returnSharedKey == NULL) {
+    if (peerPkWithSig == NULL || serviceId == NULL || random == NULL || random->data == NULL ||
+        returnSharedKey == NULL) {
         LOGE("Invalid params!");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -1228,7 +1230,7 @@ static int32_t GetServerSharedKey(const char *peerPk, const char *serviceId, con
         LOGE("Failed to create in json!");
         return HC_ERR_JSON_CREATE;
     }
-    int32_t res = ConstructServerInJson(in, peerPk, serviceId, random);
+    int32_t res = ConstructServerInJson(in, peerPkWithSig, serviceId, random);
     if (res != HC_SUCCESS) {
         FreeJson(in);
         return res;

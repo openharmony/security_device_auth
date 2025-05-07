@@ -133,7 +133,7 @@
 #define FIELD_COMMON_EVENT_NAME "commonEventName"
 #define FIELD_COMMON_EVENT_CODE "commonEventCode"
 #define FIELD_IS_SINGLE_CRED "isSingleCred"
-#define FIELD_ACCOUNT_PEER_PK "peerPk"
+#define FIELD_ACCOUNT_PEER_PK_WITH_SIG "peerPkWithSig"
 #define FIELD_ACCOUNT_SERVICE_ID "serviceId"
 #define FIELD_ACCOUNT_SHARED_KEY_LEN "sharedKeyLen"
 #define FIELD_ACCOUNT_SHARED_KEY_VAL "sharedKeyVal"
