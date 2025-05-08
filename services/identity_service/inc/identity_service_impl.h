@@ -24,7 +24,7 @@ int32_t ExportCredentialImpl(int32_t osAccountId, const char *credId, char **ret
 
 int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestParams, char **returnData);
 
-int32_t QueryCredInfoByCredIdImpl(int32_t osAccountId, const char *credId, char **returnData);
+int32_t QueryCredInfoByCredIdImpl(int32_t osAccountId, int32_t uid, const char *credId, char **returnData);
 
 int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId);
 

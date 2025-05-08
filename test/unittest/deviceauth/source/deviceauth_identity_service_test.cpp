@@ -1344,7 +1344,7 @@ HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest003, TestSize.Level0)
 
 HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest004, TestSize.Level0)
 {
-    int32_t ret = QueryCredInfoByCredIdImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+    int32_t ret = QueryCredInfoByCredIdImpl(DEFAULT_OS_ACCOUNT_ID, DEFAULT_VAL, nullptr, nullptr);
     EXPECT_NE(ret, IS_SUCCESS);
 }
 

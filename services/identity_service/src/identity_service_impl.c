@@ -189,13 +189,9 @@ int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestPara
     return IS_SUCCESS;
 }
 
-static int32_t CheckQueryPermission(Credential *credential)
+static int32_t CheckQueryPermission(Credential *credential, int32_t uid)
 {
-    int32_t currentUid = GetCallingUid();
-    if (currentUid == DEV_AUTH_UID) {
-        return IS_SUCCESS;
-    }
-    if ((currentUid == DEV_CAST_UID) && (credential->credType == ACCOUNT_RELATED)) {
+    if (uid == DEV_AUTH_UID) {
         return IS_SUCCESS;
     }
     if (CheckInterfacePermission(CRED_PRIVILEGE_PERMISSION) == IS_SUCCESS) {
@@ -209,7 +205,7 @@ static int32_t CheckQueryPermission(Credential *credential)
     return IS_SUCCESS;
 }
 
-int32_t QueryCredInfoByCredIdImpl(int32_t osAccountId, const char *credId, char **returnData)
+int32_t QueryCredInfoByCredIdImpl(int32_t osAccountId, int32_t uid, const char *credId, char **returnData)
 {
     Credential *credential = NULL;
     int32_t ret = GetCredentialById(osAccountId, credId, &credential);
@@ -217,7 +213,7 @@ int32_t QueryCredInfoByCredIdImpl(int32_t osAccountId, const char *credId, char 
         LOGE("Failed to get credential by credId, ret = %" LOG_PUB "d", ret);
         return ret;
     }
-    ret = CheckQueryPermission(credential);
+    ret = CheckQueryPermission(credential, uid);
     if (ret != IS_SUCCESS) {
         DestroyCredential(credential);
         return ret;

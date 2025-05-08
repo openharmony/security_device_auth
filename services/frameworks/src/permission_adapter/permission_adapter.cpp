@@ -109,7 +109,7 @@ int32_t CheckInterfacePermission(const char *permission)
     AccessTokenID accessTokenId = IPCSkeleton::GetCallingTokenID();
     int result = AccessTokenKit::VerifyAccessToken(accessTokenId, permission);
     if (result != PERMISSION_GRANTED) {
-        LOGE("The permission %" LOG_PUB "s is not granted!, res: %" LOG_PUB "d", permission, result);
+        LOGW("The permission %" LOG_PUB "s is not granted!, res: %" LOG_PUB "d", permission, result);
         return HC_ERR_IPC_PERMISSION_DENIED;
     }
     return HC_SUCCESS;

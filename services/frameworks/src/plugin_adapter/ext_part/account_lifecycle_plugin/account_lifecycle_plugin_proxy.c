@@ -20,6 +20,7 @@
 #include "task_manager.h"
 #include "account_task_manager.h"
 #include "alg_loader.h"
+#include "identity_service.h"
 
 static AccountLifecyleExtPlug *g_accountLifeCyclePlugin = NULL;
 static AccountLifecyleExtPlugCtx *g_accountPluginCtx = NULL;
@@ -138,7 +139,7 @@ static int32_t InitAccountLifecyclePluginCtx(void)
     g_accountPluginCtx->exportCredential = cmInstace->exportCredential;
     g_accountPluginCtx->deleteCredential = cmInstace->deleteCredential;
     g_accountPluginCtx->updateCredInfo = cmInstace->updateCredInfo;
-    g_accountPluginCtx->queryCredInfoByCredId = cmInstace->queryCredInfoByCredId;
+    g_accountPluginCtx->queryCredInfoByCredId = QueryCredInfoByCredIdAndUid;
     g_accountPluginCtx->queryCredentialByParams = cmInstace->queryCredentialByParams;
     g_accountPluginCtx->destroyInfo = cmInstace->destroyInfo;
 #endif
