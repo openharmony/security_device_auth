@@ -20,6 +20,7 @@
 #include "hc_log.h"
 #include "identity_service_impl.h"
 #include "os_account_adapter.h"
+#include "permission_adapter.h"
 
 int32_t AddCredential(int32_t osAccountId, const char *requestParams, char **returnData)
 {
@@ -72,6 +73,12 @@ int32_t QueryCredentialByParams(int32_t osAccountId, const char *requestParams, 
     return QueryCredentialByParamsImpl(osAccountId, requestParams, returnData);
 }
 
+int32_t QueryCredInfoByCredIdAndUid(int32_t osAccountId, int32_t uid, const char *credId,
+    char **returnData)
+{
+    return QueryCredInfoByCredIdImpl(osAccountId, uid, credId, returnData);
+}
+
 int32_t QueryCredInfoByCredId(int32_t osAccountId, const char *credId, char **returnData)
 {
     SET_LOG_MODE(TRACE_MODE);
@@ -86,7 +93,7 @@ int32_t QueryCredInfoByCredId(int32_t osAccountId, const char *credId, char **re
         return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
 
-    return QueryCredInfoByCredIdImpl(osAccountId, credId, returnData);
+    return QueryCredInfoByCredIdAndUid(osAccountId, GetCallingUid(), credId, returnData);
 }
 
 int32_t DeleteCredential(int32_t osAccountId, const char *credId)

@@ -141,7 +141,7 @@ typedef struct {
     /** This interface is used to update cred info. */
     int32_t (*updateCredInfo)(int32_t osAccountId, const char *credId, const char *requestParams);
     /** This interface is used to query credential data by cred id. */
-    int32_t (*queryCredInfoByCredId)(int32_t osAccountId, const char *credId, char **returnData);
+    int32_t (*queryCredInfoByCredId)(int32_t osAccountId, int32_t uid, const char *credId, char **returnData);
     /** This interface is used to query credential data by cred param. */
     int32_t (*queryCredentialByParams)(int32_t osAccountId, const char *requestParams, char **returnData);
     /** This interface is used to destroy the information returned by the internal allocated memory. */

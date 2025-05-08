@@ -41,6 +41,16 @@ int32_t QueryCredentialByParams(int32_t osAccountId, const char *requestParams, 
     return IS_ERR_NOT_SUPPORT;
 }
 
+int32_t QueryCredInfoByCredIdAndUid(int32_t osAccountId, int32_t uid, const char *credId,
+    char **returnData)
+{
+    (void)osAccountId;
+    (void)uid;
+    (void)credId;
+    (void)returnData;
+    return IS_ERR_NOT_SUPPORT;    
+}
+
 int32_t QueryCredInfoByCredId(int32_t osAccountId, const char *credId, char **returnData)
 {
     (void)osAccountId;
