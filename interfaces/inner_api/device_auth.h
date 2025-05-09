@@ -529,9 +529,9 @@ typedef struct {
 } DataBuff;
 
 typedef struct {
-    int32_t (*getClientSharedKey)(const char *peerPk, const char *serviceId, DataBuff *returnSharedKey,
+    int32_t (*getClientSharedKey)(const char *peerPkWithSig, const char *serviceId, DataBuff *returnSharedKey,
         DataBuff *returnRandom);
-    int32_t (*getServerSharedKey)(const char *peerPk, const char *serviceId, const DataBuff *random,
+    int32_t (*getServerSharedKey)(const char *peerPkWithSig, const char *serviceId, const DataBuff *random,
         DataBuff *returnSharedKey);
     void (*destroyDataBuff)(DataBuff *dataBuff);
 } AccountVerifier;

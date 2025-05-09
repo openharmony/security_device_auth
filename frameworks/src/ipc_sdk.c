@@ -1053,25 +1053,23 @@ static int32_t GetSharedKeyAndRandom(const IpcDataInfo *replies, int32_t cacheNu
     return ret;
 }
 
-static int32_t IpcAvGetClientSharedKey(const char *peerPk, const char *serviceId, DataBuff *returnSharedKey,
+static int32_t IpcAvGetClientSharedKey(const char *peerPkWithSig, const char *serviceId, DataBuff *returnSharedKey,
     DataBuff *returnRandom)
 {
-    LOGI("starting ...");
-    int32_t ret;
-    uintptr_t callCtx = 0x0;
-
-    if ((peerPk == NULL) || (serviceId == NULL) || (returnSharedKey == NULL) || (returnRandom == NULL)) {
+    if ((peerPkWithSig == NULL) || (serviceId == NULL) || (returnSharedKey == NULL) || (returnRandom == NULL)) {
         LOGE("Invalid params.");
         return HC_ERR_INVALID_PARAMS;
     }
-    ret = CreateCallCtx(&callCtx);
+    uintptr_t callCtx = 0x0;
+    int32_t ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_PUB_KEY, (const uint8_t *)peerPk, HcStrlen(peerPk) + 1);
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_PK_WITH_SIG, (const uint8_t *)peerPkWithSig,
+        HcStrlen(peerPkWithSig) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_PUB_KEY);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_PK_WITH_SIG);
         DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_BUILD_PARAM;
     }
@@ -1123,26 +1121,24 @@ static int32_t GetSharedKey(const IpcDataInfo *replies, int32_t cacheNum, DataBu
     return SetReturnSharedKey(sharedKeyVal, sharedKeyLen, returnSharedKey);
 }
 
-static int32_t IpcAvGetServerSharedKey(const char *peerPk, const char *serviceId, const DataBuff *random,
+static int32_t IpcAvGetServerSharedKey(const char *peerPkWithSig, const char *serviceId, const DataBuff *random,
     DataBuff *returnSharedKey)
 {
-    LOGI("starting ...");
-    int32_t ret;
-    uintptr_t callCtx = 0x0;
-
-    if ((peerPk == NULL) || (serviceId == NULL) || (random == NULL) || (random->data == NULL) ||
+    if ((peerPkWithSig == NULL) || (serviceId == NULL) || (random == NULL) || (random->data == NULL) ||
         (returnSharedKey == NULL)) {
         LOGE("Invalid params.");
         return HC_ERR_INVALID_PARAMS;
     }
-    ret = CreateCallCtx(&callCtx);
+    uintptr_t callCtx = 0x0;
+    int32_t ret = CreateCallCtx(&callCtx);
     if (ret != HC_SUCCESS) {
         LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret);
         return HC_ERR_IPC_INIT;
     }
-    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_PUB_KEY, (const uint8_t *)peerPk, HcStrlen(peerPk) + 1);
+    ret = SetCallRequestParamInfo(callCtx, PARAM_TYPE_PK_WITH_SIG, (const uint8_t *)peerPkWithSig,
+        HcStrlen(peerPkWithSig) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_PUB_KEY);
+        LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, PARAM_TYPE_PK_WITH_SIG);
         DestroyCallCtx(&callCtx);
         return HC_ERR_IPC_BUILD_PARAM;
     }

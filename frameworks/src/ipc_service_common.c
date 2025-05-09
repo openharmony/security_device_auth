@@ -853,10 +853,11 @@ int32_t IpcServiceGmGetTrustedDevices(const IpcDataInfo *ipcParams, int32_t para
 
 int32_t IpcServiceAvGetClientSharedKey(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
 {
-    const char *peerPk = NULL;
-    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_PUB_KEY, (uint8_t *)&peerPk, NULL);
+    const char *peerPkWithSig = NULL;
+    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_PK_WITH_SIG, (uint8_t *)&peerPkWithSig,
+        NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_PUB_KEY);
+        LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_PK_WITH_SIG);
         return HC_ERR_IPC_BAD_PARAM;
     }
 
@@ -868,7 +869,8 @@ int32_t IpcServiceAvGetClientSharedKey(const IpcDataInfo *ipcParams, int32_t par
     }
     DataBuff returnSharedKey = { NULL, 0 };
     DataBuff returnRandom = { NULL, 0 };
-    int32_t callRet = g_accountVerifierMethod.getClientSharedKey(peerPk, serviceId, &returnSharedKey, &returnRandom);
+    int32_t callRet = g_accountVerifierMethod.getClientSharedKey(peerPkWithSig, serviceId, &returnSharedKey,
+        &returnRandom);
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_4,
         sizeof(int32_t));
@@ -897,10 +899,11 @@ int32_t IpcServiceAvGetClientSharedKey(const IpcDataInfo *ipcParams, int32_t par
 
 int32_t IpcServiceAvGetServerSharedKey(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
 {
-    const char *peerPk = NULL;
-    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_PUB_KEY, (uint8_t *)&peerPk, NULL);
+    const char *peerPkWithSig = NULL;
+    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_PK_WITH_SIG, (uint8_t *)&peerPkWithSig,
+        NULL);
     if (ret != HC_SUCCESS) {
-        LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_PUB_KEY);
+        LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_PK_WITH_SIG);
         return HC_ERR_IPC_BAD_PARAM;
     }
 
@@ -920,7 +923,8 @@ int32_t IpcServiceAvGetServerSharedKey(const IpcDataInfo *ipcParams, int32_t par
     }
     DataBuff randomBuff = { (uint8_t *)randomVal, (uint32_t)randomLen };
     DataBuff returnSharedKey = { NULL, 0 };
-    int32_t callRet = g_accountVerifierMethod.getServerSharedKey(peerPk, serviceId, &randomBuff, &returnSharedKey);
+    int32_t callRet = g_accountVerifierMethod.getServerSharedKey(peerPkWithSig, serviceId, &randomBuff,
+        &returnSharedKey);
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_2,
         sizeof(int32_t));
