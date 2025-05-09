@@ -221,31 +221,31 @@ static int32_t ServerSendTrustedInfoParseEvent(const CJson *inputEvent, CmdParam
 {
     const char *authId = GetStringFromJson(inputEvent, FIELD_AUTH_ID_CLIENT);
     if (authId == NULL) {
-        LOGE("get authIdC from json fail.");
+        LOGE("Get authIdC from json failed.");
         return HC_ERR_JSON_GET;
     }
     const char *udid = GetStringFromJson(inputEvent, FIELD_UDID_CLIENT);
     if (udid == NULL) {
-        LOGE("get udidC from json fail.");
+        LOGE("Get udidC from json failed.");
         return HC_ERR_JSON_GET;
     }
     int32_t userTypeC;
     if (GetIntFromJson(inputEvent, FIELD_USER_TYPE_CLIENT, &userTypeC) != HC_SUCCESS) {
-        LOGE("get userTypeC from json fail.");
+        LOGE("Get userTypeC from json failed.");
         return HC_ERR_JSON_GET;
     }
     if (DeepCopyString(authId, &(params->authIdPeer)) != HC_SUCCESS) {
-        LOGE("copy groupId fail.");
+        LOGE("Copy groupId failed.");
         return HC_ERR_MEMORY_COPY;
     }
     if (DeepCopyString(udid, &(params->udidPeer)) != HC_SUCCESS) {
-        LOGE("copy groupId fail.");
+        LOGE("Copy groupId failed.");
         return HC_ERR_MEMORY_COPY;
     }
     const char *groupName = GetStringFromJson(inputEvent, FIELD_GROUP_NAME);
     if (groupName != NULL) {
         if (DeepCopyString(groupName, &(params->groupName)) != HC_SUCCESS) {
-            LOGE("copy groupName fail.");
+            LOGE("Copy groupName failed.");
             return HC_ERR_MEMORY_COPY;
         }
         params->isGroupExistPeer = true;
@@ -255,7 +255,7 @@ static int32_t ServerSendTrustedInfoParseEvent(const CJson *inputEvent, CmdParam
     const char *userId = GetStringFromJson(inputEvent, FIELD_USER_ID_CLIENT);
     if (userId != NULL) {
         if (DeepCopyString(userId, &(params->userIdPeer)) != HC_SUCCESS) {
-            LOGE("copy userId fail.");
+            LOGE("Copy userId failed.");
             return HC_ERR_MEMORY_COPY;
         }
     }

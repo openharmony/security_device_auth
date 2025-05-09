@@ -115,7 +115,7 @@ static int32_t CheckCreateParams(int32_t osAccountId, const CJson *jsonParams)
 {
     const char *appId = GetStringFromJson(jsonParams, FIELD_APP_ID);
     if (appId == NULL) {
-        LOGE("Failed to get appId from jsonParams!");
+        LOGE("Failed to get appId by GetStringFromJson!");
         return HC_ERR_JSON_GET;
     }
     int32_t result;
@@ -389,17 +389,17 @@ static int32_t CheckDeletePeerStatus(const CJson *jsonParams)
 {
     const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
     if (groupId == NULL) {
-        LOGE("Failed to get groupId from jsonParams!");
+        LOGE("Failed to get group id from json params!");
         return HC_ERR_JSON_GET;
     }
     const char *appId = GetStringFromJson(jsonParams, FIELD_APP_ID);
     if (appId == NULL) {
-        LOGE("Failed to get appId from jsonParams!");
+        LOGE("Failed to get app id from json params!");
         return HC_ERR_JSON_GET;
     }
     int32_t osAccountId;
     if (GetIntFromJson(jsonParams, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId from jsonParams!");
+        LOGE("Failed to get osAccountId from json params!");
         return HC_ERR_JSON_GET;
     }
 

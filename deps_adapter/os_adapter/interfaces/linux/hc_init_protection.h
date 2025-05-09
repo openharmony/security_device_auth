@@ -29,6 +29,7 @@ typedef enum InitStatusEnum {
 
 int CheckInit(void);
 int CheckDestroy(void);
+
 void SetInitStatus(void);
 void SetDeInitStatus(void);
 

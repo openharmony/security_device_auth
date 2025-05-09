@@ -31,8 +31,8 @@
 #define FIELD_AUTH_PK_SERVER "authPkS"
 
 #define FIELD_EVENT "event"
-#define FIELD_ERR_CODE "errCode"
 #define FIELD_ERR_MSG "errMsg"
+#define FIELD_ERR_CODE "errCode"
 
 typedef struct {
     int32_t userTypeSelf;
@@ -272,23 +272,23 @@ static int32_t ClientSendPkInfoBuildEvent(const CmdParams *params, CJson **outpu
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, CLIENT_SEND_PK_INFO_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
+        LOGE("add eventName to json failed.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_AUTH_ID_CLIENT, params->authIdSelf.val,
         params->authIdSelf.length) != HC_SUCCESS) {
-        LOGE("add authIdC to json fail.");
+        LOGE("add authIdC to json failed.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddIntToJson(json, FIELD_USER_TYPE_CLIENT, params->userTypeSelf) != HC_SUCCESS) {
-        LOGE("add userTypeC to json fail.");
+        LOGE("add userTypeC to json failed.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_AUTH_PK_CLIENT, params->pkSelf.val, params->pkSelf.length) != HC_SUCCESS) {
-        LOGE("add authPkC to json fail.");
+        LOGE("add authPkC to json failed.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -328,16 +328,16 @@ static int32_t ServerSendPkInfoParseEvent(const CJson *inputEvent, CmdParams *pa
     }
     int32_t userTypeC;
     if (GetIntFromJson(inputEvent, FIELD_USER_TYPE_CLIENT, &userTypeC) != HC_SUCCESS) {
-        LOGE("get userTypeC from json fail.");
+        LOGE("Get userTypeC from json failed.");
         return HC_ERR_JSON_GET;
     }
     if (InitUint8Buff(&params->pkPeer, PAKE_ED25519_KEY_PAIR_LEN) != HC_SUCCESS) {
-        LOGE("allocate pkPeer memory fail.");
+        LOGE("Allocate pkPeer memory failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (GetByteFromJson(inputEvent, FIELD_AUTH_PK_CLIENT, params->pkPeer.val,
         params->pkPeer.length) != HC_SUCCESS) {
-        LOGE("get authPkC from json fail.");
+        LOGE("Get authPkC from json failed.");
         return HC_ERR_JSON_GET;
     }
     params->userTypePeer = userTypeC;
@@ -354,7 +354,7 @@ static int32_t GenerateSelfKeyAlias(const CmdParams *params, Uint8Buff *selfKeyA
     if (params->isSelfFromUpgrade) {
         res = ToLowerCase(selfKeyAlias);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to convert self key alias to lower case!");
+            LOGE("Convert self key alias to lower case failed!");
             return res;
         }
     }

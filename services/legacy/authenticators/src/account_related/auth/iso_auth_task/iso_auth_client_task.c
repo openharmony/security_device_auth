@@ -110,7 +110,7 @@ static int32_t PackIsoAuthClientBeginMsg(const IsoAuthParams *params, CJson *out
     }
 
     if (AddObjToJson(out, FIELD_SEND_TO_PEER, sendToPeer) != CLIB_SUCCESS) {
-        LOGE("Add sendToPeer to json failed.");
+        LOGE("Failed to add sendToPeer to json!");
         goto CLEAN_UP;
     }
     FreeJson(sendToPeer);

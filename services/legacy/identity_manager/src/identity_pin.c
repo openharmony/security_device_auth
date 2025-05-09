@@ -155,7 +155,7 @@ static int32_t CreateUrlStr(const CJson *in, char **urlStr)
     char *str = PackJsonToString(urlJson);
     FreeJson(urlJson);
     if (str == NULL) {
-        LOGE("Failed to pack url json to string!");
+        LOGE("Failed to pack json to str!");
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     *urlStr = str;

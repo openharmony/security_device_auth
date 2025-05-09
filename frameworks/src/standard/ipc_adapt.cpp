@@ -232,14 +232,14 @@ int32_t AddIpcCallBackByAppId(const char *appId, const uint8_t *cbPtr, int32_t c
     if (node != nullptr) {
         eno = memcpy_s(&(node->cbCtx), sizeof(node->cbCtx), cbPtr, cbSz);
         if (eno != EOK) {
-            LOGE("callback context memory copy failed");
+            LOGE("Callback context memory copy failed");
             return HC_ERROR;
         }
         if (node->proxyId >= 0) {
             ServiceDevAuth::ResetRemoteObject(node->proxyId);
             node->proxyId = -1;
         }
-        LOGI("callback add success, appid: %" LOG_PUB "s", appId);
+        LOGI("Callback add success, appid: %" LOG_PUB "s", appId);
         return HC_SUCCESS;
     }
 
@@ -1025,13 +1025,13 @@ void IpcOnGroupCreated(const char *groupInfo)
 {
     int32_t i;
     uint32_t ret;
-    MessageParcel dataParcel;
     MessageParcel reply;
+    MessageParcel dataParcel;
     DataChangeListener *listener = nullptr;
 
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     if (g_ipcCallBackList.ctx == nullptr) {
-        LOGE("IpcCallBackList un-initialized");
+        LOGE("IpcCallBackList is not initialized");
         return;
     }
 

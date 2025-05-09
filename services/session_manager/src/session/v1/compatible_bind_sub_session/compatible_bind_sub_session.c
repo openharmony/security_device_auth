@@ -34,17 +34,17 @@ static int32_t CheckInvitePeer(const CJson *jsonParams)
 {
     const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
     if (groupId == NULL) {
-        LOGE("Failed to get groupId from jsonParams!");
+        LOGE("Get group id from jsonParams failed!");
         return HC_ERR_JSON_GET;
     }
     const char *appId = GetStringFromJson(jsonParams, FIELD_APP_ID);
     if (appId == NULL) {
-        LOGE("Failed to get appId from jsonParams!");
+        LOGE("Get app id from jsonParams failed!");
         return HC_ERR_JSON_GET;
     }
     int32_t osAccountId;
     if (GetIntFromJson(jsonParams, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId from jsonParams!");
+        LOGE("Get osAccountId from jsonParams failed!");
         return HC_ERR_JSON_GET;
     }
 
@@ -697,7 +697,7 @@ static int32_t CreateAndProcessClientBindTask(CompatibleBindSubSession *session,
     *sendData = DetachItemFromJson(out, FIELD_SEND_TO_PEER);
     FreeJson(out);
     if (*sendData == NULL) {
-        LOGE("Failed to get sendToPeer from out!");
+        LOGE("Get sendToPeer from out failed!");
         return HC_ERR_JSON_GET;
     }
 

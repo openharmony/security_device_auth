@@ -505,7 +505,7 @@ static int32_t GenerateProof(PakeBaseParams *params)
         params->sharedSecret.length + params->innerKeyLen + params->extraData.length;
     proofMsg.val = (uint8_t *)HcMalloc(proofMsg.length, 0);
     if (proofMsg.val == NULL) {
-        LOGE("Malloc for proofMsg failed.");
+        LOGE("Failed to malloc for proofMsg!");
         res = HC_ERR_ALLOC_MEMORY;
         goto CLEAN_UP;
     }

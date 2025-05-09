@@ -758,12 +758,13 @@ static void LoadDeviceAuthDb(void)
     (void)LockHcMutex(g_databaseMutex);
     StringVector osAccountDbNameVec = CreateStrVector();
     HcFileGetSubFileName(GetStorageDirPath(), &osAccountDbNameVec);
-    uint32_t index;
     HcString *dbName;
+    uint32_t index;
     FOR_EACH_HC_VECTOR(osAccountDbNameVec, index, dbName) {
         int32_t osAccountId;
         const char *osAccountIdStr = StringGet(dbName);
         if (osAccountIdStr == NULL) {
+            LOGW("[DB]: Invalid osAccountIdStr!");
             continue;
         }
         if (strcmp(osAccountIdStr, "hcgroup.dat") == 0) {

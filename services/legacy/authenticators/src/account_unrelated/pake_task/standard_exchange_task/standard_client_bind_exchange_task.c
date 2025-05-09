@@ -117,6 +117,7 @@ static int Process(struct AsyBaseCurTaskT *task, PakeParams *params, const CJson
     if (task->taskStatus == TASK_STATUS_CLIENT_BIND_EXCHANGE_BEGIN) {
         res = ExchangeRequest(task, params, in, out, status);
         if (res != HC_SUCCESS) {
+            LOGE("ExchangeRequest failed!");
             goto ERR;
         }
         return res;
@@ -125,6 +126,7 @@ static int Process(struct AsyBaseCurTaskT *task, PakeParams *params, const CJson
     int message = 0;
     res = GetIntFromJson(in, "message", &message);
     if (res != HC_SUCCESS) {
+        LOGE("GetIntFromJson failed!");
         goto ERR;
     }
 

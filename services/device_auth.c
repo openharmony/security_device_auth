@@ -108,15 +108,15 @@ static int32_t BuildClientAuthContext(int32_t osAccountId, int64_t requestId, co
         return HC_ERR_JSON_ADD;
     }
     if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
-        LOGE("add requestId to context fail.");
+        LOGE("add request id to context fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
-        LOGE("add appId to context fail.");
+        LOGE("add app id to context fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddIntToJson(context, FIELD_OPERATION_CODE, AUTH_FORM_ACCOUNT_UNRELATED) != HC_SUCCESS) {
-        LOGE("add opCode to context fail.");
+        LOGE("add operation code to context fail.");
         return HC_ERR_JSON_ADD;
     }
     return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
@@ -249,27 +249,27 @@ static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const c
     (void)DeepCopyString(peerUdid, returnPeerUdid);
     PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
     if (AddDeviceIdToJson(context, peerUdid) != HC_SUCCESS) {
-        LOGE("add deviceId to context fail.");
+        LOGE("add deviceId to context failed.");
         return HC_ERR_JSON_ADD;
     }
     if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
-        LOGE("add isBind to context fail.");
+        LOGE("add isBind to context failed.");
         return HC_ERR_JSON_ADD;
     }
     if (AddBoolToJson(context, FIELD_IS_CLIENT, false) != HC_SUCCESS) {
-        LOGE("add isClient to context fail.");
+        LOGE("add isClient to context failed.");
         return HC_ERR_JSON_ADD;
     }
     if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
-        LOGE("add requestId to context fail.");
+        LOGE("add requestId to context failed.");
         return HC_ERR_JSON_ADD;
     }
     if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
-        LOGE("add appId to context fail.");
+        LOGE("add appId to context failed.");
         return HC_ERR_JSON_ADD;
     }
     if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
-        LOGE("add opCode to context fail.");
+        LOGE("add opCode to context failed.");
         return HC_ERR_JSON_ADD;
     }
     return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
@@ -337,13 +337,13 @@ static int32_t OpenServerAuthSession(int64_t requestId, const CJson *receivedMsg
     }
     char *returnDataStr = ProcessRequestCallback(requestId, opCode, NULL, callback);
     if (returnDataStr == NULL) {
-        LOGE("The OnRequest callback is fail!");
+        LOGE("The OnRequest callback failed!");
         return HC_ERR_REQ_REJECTED;
     }
     CJson *context = CreateJsonFromString(returnDataStr);
     FreeJsonString(returnDataStr);
     if (context == NULL) {
-        LOGE("Failed to create context from string!");
+        LOGE("Failed to create context json from returnDataStr!");
         return HC_ERR_JSON_FAIL;
     }
     const char *appId = GetStringFromJson(context, FIELD_SERVICE_PKG_NAME);
@@ -527,7 +527,7 @@ static int32_t AuthCredentialInner(int32_t osAccountId, int64_t authReqId, const
         return HC_ERR_CROSS_USER_ACCESS;
     }
     if (!IsOsAccountUnlocked(osAccountId)) {
-        LOGE("Os account is not unlocked!");
+        LOGE("Os account is not unlocked! Please unlock it first.");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
     CJson *context = CreateJsonFromString(authParams);

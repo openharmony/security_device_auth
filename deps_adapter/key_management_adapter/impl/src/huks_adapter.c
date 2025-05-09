@@ -890,7 +890,7 @@ static int32_t Sign(const KeyParams *keyParams, const Uint8Buff *message, Algori
     Uint8Buff messageHash = { messageHashVal, SHA256_LEN };
     res = Sha256(message, &messageHash);
     if (res != HAL_SUCCESS) {
-        LOGE("Sha256 failed.");
+        LOGE("The operation of Sha256 failed.");
         return res;
     }
     struct HksParamSet *deParamSet = NULL;

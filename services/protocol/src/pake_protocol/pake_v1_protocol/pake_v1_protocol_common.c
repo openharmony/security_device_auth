@@ -376,24 +376,24 @@ CLEAN_UP:
 int32_t ClientConfirmPakeV1Protocol(PakeBaseParams *params)
 {
     if (params == NULL) {
-        LOGE("Params is null.");
+        LOGE("Invalid params.");
         return HC_ERR_NULL_PTR;
     }
     int32_t res = GeneratePakeParams(params);
     if (res != HC_SUCCESS) {
-        LOGE("GeneratePakeParams failed, res: %" LOG_PUB "x.", res);
+        LOGE("The operation of GeneratePakeParams failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
     res = GenerateSessionKey(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateSessionKey failed, res: %" LOG_PUB "x.", res);
+        LOGE("The operation of GenerateSessionKey failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
     res = GenerateProof(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateProof failed, res: %" LOG_PUB "x.", res);
+        LOGE("The operation of GenerateProof failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     return res;

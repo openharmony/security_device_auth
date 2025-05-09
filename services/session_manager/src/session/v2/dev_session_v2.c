@@ -100,12 +100,12 @@ static int32_t CmdExchangePkGenerator(SessionImpl *impl)
     }
     const char *groupId = GetStringFromJson(impl->context, FIELD_GROUP_ID);
     if (groupId == NULL) {
-        LOGE("get groupId from context fail.");
+        LOGE("Get groupId from context failed.");
         return HC_ERR_JSON_GET;
     }
     const char *authId = GetStringFromJson(impl->context, FIELD_AUTH_ID);
     if (authId == NULL) {
-        LOGE("get authId from context fail.");
+        LOGE("Get authId from context failed.");
         return HC_ERR_JSON_GET;
     }
     Uint8Buff authIdBuf = { (uint8_t *)authId, HcStrlen(authId) };
@@ -140,12 +140,12 @@ static int32_t CmdImportAuthCodeGenerator(SessionImpl *impl)
     }
     const char *groupId = GetStringFromJson(impl->context, FIELD_GROUP_ID);
     if (groupId == NULL) {
-        LOGE("get groupId from context fail.");
+        LOGE("Get groupId from context fail.");
         return HC_ERR_JSON_GET;
     }
     const char *authId = GetStringFromJson(impl->context, FIELD_AUTH_ID);
     if (authId == NULL) {
-        LOGE("get authId from context fail.");
+        LOGE("Get authId from context fail.");
         return HC_ERR_JSON_GET;
     }
     Uint8Buff authIdBuf = { (uint8_t *)authId, HcStrlen(authId) };
@@ -600,11 +600,11 @@ static int32_t GenerateDevSessionSalt(SessionImpl *impl)
         return res;
     }
     if (AddByteToJson(impl->context, FIELD_NONCE, impl->salt.val, impl->salt.length) != HC_SUCCESS) {
-        LOGE("add nonce to context fail.");
+        LOGE("Failed to add nonce to context!");
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(impl->context, FIELD_SEED, impl->salt.val, impl->salt.length) != HC_SUCCESS) {
-        LOGE("add seed to context fail.");
+        LOGE("Failed to add seed to context!");
         return HC_ERR_JSON_ADD;
     }
     return HC_SUCCESS;
@@ -689,6 +689,7 @@ static int32_t GenerateHandshakeEventData(SessionImpl *impl, IdentityInfo *cred,
     }
     res = AddCredInfoToEventData(impl, cred, eventData);
     if (res != HC_SUCCESS) {
+        LOGE("Failed to AddCredInfoToEventData.");
         return res;
     }
     bool isDirectAuth = false;

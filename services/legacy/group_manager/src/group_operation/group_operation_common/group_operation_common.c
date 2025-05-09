@@ -241,12 +241,12 @@ bool IsGroupExistByGroupId(int32_t osAccountId, const char *groupId)
 int32_t CheckGroupAccessible(int32_t osAccountId, const char *groupId, const char *appId)
 {
     if ((groupId == NULL) || (appId == NULL)) {
-        LOGE("The input groupId or appId is NULL!");
+        LOGE("The group id or app id is NULL!");
         return HC_ERR_NULL_PTR;
     }
     TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
     if (entry == NULL) {
-        LOGE("The group cannot be found!");
+        LOGE("Group not exist!");
         return HC_ERR_GROUP_NOT_EXIST;
     }
     if ((entry->visibility != GROUP_VISIBILITY_PUBLIC) &&
@@ -626,7 +626,7 @@ int32_t AddAuthIdToParamsOrDefault(const CJson *jsonParams, TrustedDeviceEntry *
         LOGD("No authId is found. The default value is udid!");
         int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
+            LOGE("Failed to get local Udid! res: %" LOG_PUB "d", res);
             return HC_ERR_DB;
         }
         authId = udid;
@@ -898,16 +898,16 @@ int32_t GenerateBindSuccessData(const char *peerAuthId, const char *peerUdid,
     PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
     CJson *jsonData = CreateJson();
     if (jsonData == NULL) {
-        LOGE("Failed to allocate jsonData memory!");
+        LOGE("Allocate jsonData memory failed!");
         return HC_ERR_JSON_FAIL;
     }
     if (AddStringToJson(jsonData, FIELD_GROUP_ID, groupId) != HC_SUCCESS) {
-        LOGE("Failed to add groupId to jsonData!");
+        LOGE("Add groupId to jsonData failed!");
         FreeJson(jsonData);
         return HC_ERR_JSON_FAIL;
     }
     if (AddStringToJson(jsonData, FIELD_ADD_ID, peerAuthId) != HC_SUCCESS) {
-        LOGE("Failed to add addId to jsonData!");
+        LOGE("Add addId to jsonData failed!");
         FreeJson(jsonData);
         return HC_ERR_JSON_FAIL;
     }
@@ -968,7 +968,7 @@ int32_t ProcessKeyPair(int32_t osAccountId, int action, const CJson *jsonParams,
         LOGD("No authId is found. The default value is udid!");
         int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
+            LOGE("Failed to get local udid! res: %" LOG_PUB "d!", res);
             return HC_ERR_DB;
         }
         authId = udid;
@@ -983,11 +983,11 @@ int32_t ProcessKeyPair(int32_t osAccountId, int action, const CJson *jsonParams,
     }
     authIdBuff.val = (uint8_t *)HcMalloc(authIdBuff.length, 0);
     if (authIdBuff.val == NULL) {
-        LOGE("Failed to allocate authIdBuff memory!");
+        LOGE("Allocate authIdBuff memory failed!");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (memcpy_s(authIdBuff.val, authIdBuff.length, authId, authIdBuff.length) != EOK) {
-        LOGE("Failed to copy authId!");
+        LOGE("Copy authId failed!");
         HcFree(authIdBuff.val);
         return HC_ERR_MEMORY_COPY;
     }
@@ -1233,7 +1233,7 @@ int32_t AddDevInfoToContextByInput(CJson *context)
     const char *authId = GetStringFromJson(context, FIELD_DEVICE_ID);
     char udid[INPUT_UDID_LEN] = { 0 };
     if (authId == NULL) {
-        LOGD("No authId is found. The default value is udid!");
+        LOGD("The authId is not found. The default value is udid!");
         int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
         if (res != HC_SUCCESS) {
             LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);

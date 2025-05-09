@@ -39,7 +39,7 @@ static int32_t CreateUrlStr(uint8_t credType, int32_t keyType, char **urlStr)
     char *str = PackJsonToString(urlJson);
     FreeJson(urlJson);
     if (str == NULL) {
-        LOGE("Failed to pack url json to string!");
+        LOGE("Failed to PackJsonToString!");
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     *urlStr = str;
@@ -402,6 +402,25 @@ static int32_t ComputeAuthToken(int32_t osAccountId, const char *userId, const U
     return ret;
 }
 
+static int32_t CheckKeyAliasIsValid(int32_t osAccountId, const char *credId, Uint8Buff *keyAlias)
+{
+    int32_t ret = GetValidKeyAlias(osAccountId, credId, keyAlias);
+    if (ret == HAL_ERR_KEY_NOT_EXIST) {
+        LOGE("Huks key not exist!");
+        DelCredById(osAccountId, credId);
+        return IS_ERR_HUKS_KEY_NOT_EXIST;
+    }
+    if (ret == HAL_ERR_HUKS) {
+        LOGE("HUKS occured error, when check key exist.");
+        return IS_ERR_HUKS_CHECK_KEY_EXIST_FAILED;
+    }
+    if (ret != IS_SUCCESS) {
+        LOGE("Failed to check key exist in HUKS.");
+        return ret;
+    }
+    return IS_SUCCESS;
+}
+
 static int32_t GenerateAuthTokenForAccessory(int32_t osAccountId, const char *credId, const CJson *in,
     Uint8Buff *authToken)
 {
@@ -411,18 +430,8 @@ static int32_t GenerateAuthTokenForAccessory(int32_t osAccountId, const char *cr
         return HC_ERR_JSON_GET;
     }
     Uint8Buff credIdByte = { NULL, 0 };
-    int32_t ret = GetValidKeyAlias(osAccountId, credId, &credIdByte);
-    if (ret == HAL_ERR_KEY_NOT_EXIST) {
-        LOGE("Huks key not exist!");
-        DelCredById(osAccountId, credId);
-        return IS_ERR_HUKS_KEY_NOT_EXIST;
-    }
-    if (ret == HAL_ERR_HUKS) {
-        LOGE("Huks check key exist failed");
-        return IS_ERR_HUKS_CHECK_KEY_EXIST_FAILED;
-    }
+    int32_t ret = CheckKeyAliasIsValid(osAccountId, credId, &credIdByte);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to check key exist in HUKS");
         return ret;
     }
     ret = ComputeAuthToken(osAccountId, userIdSelf, credIdByte, authToken);
@@ -432,21 +441,7 @@ static int32_t GenerateAuthTokenForAccessory(int32_t osAccountId, const char *cr
 
 static int32_t GenerateTokenAliasForController(int32_t osAccountId, const char *credId, Uint8Buff *authToken)
 {
-    int32_t ret = GetValidKeyAlias(osAccountId, credId, authToken);
-    if (ret == HAL_ERR_KEY_NOT_EXIST) {
-        LOGE("Huks key not exist!");
-        DelCredById(osAccountId, credId);
-        return IS_ERR_HUKS_KEY_NOT_EXIST;
-    }
-    if (ret == HAL_ERR_HUKS) {
-        LOGE("Huks check key exist failed");
-        return IS_ERR_HUKS_CHECK_KEY_EXIST_FAILED;
-    }
-    if (ret != IS_SUCCESS) {
-        LOGE("Failed to check key exist in HUKS");
-        return ret;
-    }
-    return HC_SUCCESS;
+    return CheckKeyAliasIsValid(osAccountId, credId, authToken);
 }
 
 static int32_t GenerateAuthTokenByDevType(int32_t osAccountId, const CJson *in, Uint8Buff *authToken,
@@ -480,12 +475,12 @@ static int32_t GenerateAuthTokenByDevType(int32_t osAccountId, const CJson *in, 
 static int32_t ISGetAccountSymSharedSecret(const CJson *in, Uint8Buff *sharedSecret)
 {
     if (in == NULL || sharedSecret == NULL) {
-        LOGE("Invalid input params!");
+        LOGE("Incorrect input params!");
         return HC_ERR_INVALID_PARAMS;
     }
     int32_t osAccountId;
     if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId!");
+        LOGE("Failed to get osAccountId from Json!");
         return HC_ERR_JSON_GET;
     }
     bool isTokenStored = true;
@@ -533,18 +528,8 @@ static int32_t AuthGeneratePsk(const CJson *in, const Uint8Buff *seed, Uint8Buff
         return HC_ERR_JSON_GET;
     }
     Uint8Buff credIdByte = { NULL, 0 };
-    int32_t ret = GetValidKeyAlias(osAccountId, credId, &credIdByte);
-    if (ret == HAL_ERR_KEY_NOT_EXIST) {
-        LOGE("Huks key not exist!");
-        DelCredById(osAccountId, credId);
-        return IS_ERR_HUKS_KEY_NOT_EXIST;
-    }
-    if (ret == HAL_ERR_HUKS) {
-        LOGE("Huks check key exist failed");
-        return IS_ERR_HUKS_CHECK_KEY_EXIST_FAILED;
-    }
+    int32_t ret = CheckKeyAliasIsValid(osAccountId, credId, &credIdByte);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to check key exist in HUKS");
         return ret;
     }
     KeyParams keyAliasParams = { { credIdByte.val, credIdByte.length, true }, false, osAccountId };
