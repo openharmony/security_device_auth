@@ -22,8 +22,8 @@
 #include "common_defs.h"
 #include "hc_dev_info.h"
 #include "hal_error.h"
-#include "hc_file.h"
 #include "hc_log.h"
+#include "hc_file.h"
 #include "hc_mutex.h"
 #include "hc_types.h"
 #include "os_account_adapter.h"
@@ -394,12 +394,12 @@ static int32_t GenerateServerPkAlias(CJson *pkInfoJson, Uint8Buff *alias)
 {
     const char *userId = GetStringFromJson(pkInfoJson, FIELD_USER_ID);
     if (userId == NULL) {
-        LOGE("Failed to get userId");
+        LOGE("Failed to get userId from Json");
         return HC_ERR_JSON_GET;
     }
     const char *deviceId = GetStringFromJson(pkInfoJson, FIELD_DEVICE_ID);
     if (deviceId == NULL) {
-        LOGE("Failed to get deviceId");
+        LOGE("Failed to get deviceId from Json");
         return HC_ERR_JSON_GET;
     }
     return GenerateKeyAlias(userId, deviceId, alias, true);
@@ -1020,7 +1020,7 @@ static void LoadDataIfNotLoaded(int32_t osAccountId)
     if (IsOsAccountDataLoaded(osAccountId)) {
         return;
     }
-    LOGI("Data has not been loaded, load it, osAccountId: %" LOG_PUB "d", osAccountId);
+    LOGI("Data is not loaded, now load it, osAccountId: %" LOG_PUB "d", osAccountId);
     LoadOsAccountTokenDbCe(osAccountId);
 }
 

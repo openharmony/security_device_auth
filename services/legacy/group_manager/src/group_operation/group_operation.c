@@ -621,7 +621,7 @@ static int32_t DeleteMemberFromGroupInner(int32_t osAccountId, int64_t requestId
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((appId == NULL) || (deleteParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
-        LOGE("Invalid input parameters!");
+        LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
     if (!IsOsAccountUnlocked(osAccountId)) {
@@ -658,32 +658,32 @@ static int32_t AddClientReqInfoToContext(int32_t osAccountId, int64_t requestId,
 {
     const char *groupId = GetStringFromJson(context, FIELD_GROUP_ID);
     if (groupId == NULL) {
-        LOGE("get groupId from json fail.");
+        LOGE("Failed to get groupId from json.");
         return HC_ERR_JSON_GET;
     }
     if (AddBoolToJson(context, FIELD_IS_BIND, true) != HC_SUCCESS) {
-        LOGE("add isBind to context fail.");
+        LOGE("Failed to add isBind to context.");
         return HC_ERR_JSON_ADD;
     }
     if (AddBoolToJson(context, FIELD_IS_CLIENT, true) != HC_SUCCESS) {
-        LOGE("add isClient to context fail.");
+        LOGE("Failed to add isClient to context.");
         return HC_ERR_JSON_ADD;
     }
     if (AddIntToJson(context, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
-        LOGE("add osAccountId to context fail.");
+        LOGE("Failed to add osAccountId to context.");
         return HC_ERR_JSON_ADD;
     }
     if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
-        LOGE("add requestId to context fail.");
+        LOGE("Failed to add requestId to context.");
         return HC_ERR_JSON_ADD;
     }
     if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
-        LOGE("add appId to context fail.");
+        LOGE("Failed to add appId to context.");
         return HC_ERR_JSON_ADD;
     }
     int32_t opCode = GetOpCodeFromContext(context);
     if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
-        LOGE("add operationCode to context fail.");
+        LOGE("Failed to add operationCode to context.");
         return HC_ERR_JSON_ADD;
     }
     if (opCode == MEMBER_JOIN) {
@@ -823,7 +823,7 @@ static int32_t RequestAddMemberToGroupInner(int32_t osAccountId, int64_t request
         return HC_ERR_CROSS_USER_ACCESS;
     }
     if (!IsOsAccountUnlocked(osAccountId)) {
-        LOGE("Os account is not unlocked!");
+        LOGE("Os account is not unlocked! Please unlock it firstly!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
     LOGI("Start to add member to group. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %" LOG_PUB "d, [AppId]: %"
@@ -975,13 +975,13 @@ static int32_t OpenServerBindSession(int64_t requestId, const CJson *receivedMsg
     char *returnDataStr = ProcessRequestCallback(requestId, opCode, reqParames, callback);
     FreeJsonString(reqParames);
     if (returnDataStr == NULL) {
-        LOGE("The OnRequest callback is fail!");
+        LOGE("The OnRequest callback failed!");
         return HC_ERR_REQ_REJECTED;
     }
     CJson *context = CreateJsonFromString(returnDataStr);
     FreeJsonString(returnDataStr);
     if (context == NULL) {
-        LOGE("Failed to create context from string!");
+        LOGE("Failed to create context json from string!");
         return HC_ERR_JSON_FAIL;
     }
     res = BuildServerBindContext(requestId, appId, opCode, receivedMsg, context);
@@ -1378,15 +1378,15 @@ static int32_t GetAccessibleGroupInfoById(int32_t osAccountId, const char *appId
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((appId == NULL) || (groupId == NULL) || (returnGroupInfo == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
-        LOGE("Invalid input parameters!");
+        LOGE("Invalid parameters!");
         return HC_ERR_INVALID_PARAMS;
     }
     if (!IsOsAccountUnlocked(osAccountId)) {
-        LOGE("Os account is not unlocked!");
+        LOGE("Os account is not unlocked! Please unlock it firstly!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
     if (!IsGroupExistByGroupId(osAccountId, groupId)) {
-        LOGE("No group is found based on the query parameters!");
+        LOGE("No group found based on the query parameters!");
         return HC_ERR_GROUP_NOT_EXIST;
     }
     if (CheckGroupAccessible(osAccountId, groupId, appId) != HC_SUCCESS) {

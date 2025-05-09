@@ -136,12 +136,12 @@ static int Process(struct SymBaseCurTaskT *task, IsoParams *params, const CJson 
     }
 
     if (realTask->taskBase.taskStatus > TASK_TYPE_BEGIN) {
-        LOGI("The message is repeated, ignore it, status: %" LOG_PUB "d", realTask->taskBase.taskStatus);
+        LOGI("Message is repeated, ignore it, status: %" LOG_PUB "d", realTask->taskBase.taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
-    int res;
     int32_t message = 0;
+    int res;
     res = GetIntFromJson(in, FIELD_MESSAGE, &message);
     if (res != 0 || message != ISO_SERVER_BIND_EXCHANGE_RET) {
         return HC_ERR_BAD_MESSAGE;

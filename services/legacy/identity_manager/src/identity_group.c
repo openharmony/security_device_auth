@@ -193,7 +193,7 @@ static int32_t GetAccountUnrelatedIdentityInfo(
         return HC_ERR_ALLOC_MEMORY;
     }
     if (AddStringToJson(urlJson, FIELD_GROUP_ID, groupId) != HC_SUCCESS) {
-        LOGE("Failed to add group id!");
+        LOGE("Failed to add group id to url json!");
         FreeJson(urlJson);
         return HC_ERR_JSON_ADD;
     }
@@ -365,19 +365,19 @@ static int32_t SetIdentityInfoByUrl(const CJson *urlJson, IdentityInfo *info)
 
     char *urlStr = PackJsonToString(urlJson);
     if (urlStr == NULL) {
-        LOGE("Failed to pack url json to string!");
+        LOGE("Failed to pack json to str!");
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     int32_t ret = SetPreSharedUrlForProof(urlStr, &info->proof.preSharedUrl);
     FreeJsonString(urlStr);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to set preSharedUrl of proof!");
+        LOGE("Failed to set preSharedUrl for proof!");
         return ret;
     }
 
     ret = SetProtocolsToIdentityInfo(keyType, info);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to set protocols!");
+        LOGE("Failed to set protocols to identity info!");
         return ret;
     }
 

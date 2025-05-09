@@ -77,10 +77,10 @@ static int32_t CheckAcceptRequest(const CJson *context)
     uint32_t confirmation = REQUEST_REJECTED;
     (void)GetUnsignedIntFromJson(context, FIELD_CONFIRMATION, &confirmation);
     if (confirmation != REQUEST_ACCEPTED) {
-        LOGE("The service rejects this request!");
+        LOGE("The service rejected this request!");
         return HC_ERR_REQ_REJECTED;
     }
-    LOGI("The service accepts this request!");
+    LOGI("The service accepted this request!");
     return HC_SUCCESS;
 }
 

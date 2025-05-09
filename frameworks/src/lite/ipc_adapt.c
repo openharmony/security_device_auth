@@ -991,12 +991,13 @@ void IpcOnGroupCreated(const char *groupInfo)
     LockCallbackList();
     if (g_ipcCallBackList.ctx == NULL) {
         UnLockCallbackList();
-        LOGE("IpcCallBackList un-initialized");
+        LOGE("IpcCallBackList not initialized.");
         return;
     }
     dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
     if (dataParcel == NULL) {
         UnLockCallbackList();
+        LOGE("Failed to InitIpcDataCache.");
         return;
     }
 
@@ -1044,6 +1045,7 @@ void IpcOnGroupDeleted(const char *groupInfo)
     dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
     if (dataParcel == NULL) {
         UnLockCallbackList();
+        LOGE("Failed to init IpcDataCache.");
         return;
     }
 
@@ -1078,7 +1080,7 @@ void IpcOnDeviceBound(const char *peerUdid, const char *groupInfo)
     DataChangeListener *listener = NULL;
 
     if ((peerUdid == NULL) || (groupInfo == NULL)) {
-        LOGE("params error");
+        LOGE("Params Error");
         return;
     }
 
@@ -1126,14 +1128,14 @@ void IpcOnDeviceUnBound(const char *peerUdid, const char *groupInfo)
     DataChangeListener *listener = NULL;
 
     if ((peerUdid == NULL) || (groupInfo == NULL)) {
-        LOGE("params error");
+        LOGE("Argument Error");
         return;
     }
 
     LockCallbackList();
     if (g_ipcCallBackList.ctx == NULL) {
         UnLockCallbackList();
-        LOGE("IpcCallBackList un-initialized");
+        LOGE("IpcCallBackList not initialized!");
         return;
     }
     dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
@@ -1174,14 +1176,14 @@ void IpcOnDeviceNotTrusted(const char *peerUdid)
     DataChangeListener *listener = NULL;
 
     if (peerUdid == NULL) {
-        LOGE("params error");
+        LOGE("Invalid Params!");
         return;
     }
 
     LockCallbackList();
     if (g_ipcCallBackList.ctx == NULL) {
         UnLockCallbackList();
-        LOGE("IpcCallBackList un-initialized");
+        LOGE("IpcCallBackList uninitialized!");
         return;
     }
     dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);

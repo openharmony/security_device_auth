@@ -460,6 +460,7 @@ int32_t AddStringToJson(CJson *jsonObj, const char *key, const char *value)
     } else {
         cJSON *tmp = cJSON_CreateString(value);
         if (tmp == NULL) {
+            LOGE("The operation of cJSON_CreateString failed.");
             return CLIB_ERR_BAD_ALLOC;
         }
         if (cJSON_ReplaceItemInObjectCaseSensitive(jsonObj, key, tmp) == false) {
@@ -512,6 +513,7 @@ int32_t AddBoolToJson(CJson *jsonObj, const char *key, bool value)
     } else {
         cJSON *tmp = cJSON_CreateBool(value);
         if (tmp == NULL) {
+            LOGE("cJSON_CreateString failed.");
             return CLIB_ERR_BAD_ALLOC;
         }
         if (cJSON_ReplaceItemInObjectCaseSensitive(jsonObj, key, tmp) == false) {

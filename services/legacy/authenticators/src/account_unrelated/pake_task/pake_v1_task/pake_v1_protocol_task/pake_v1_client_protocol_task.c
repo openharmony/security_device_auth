@@ -49,7 +49,7 @@ static int PakeRequest(AsyBaseCurTask *task, PakeParams *params, CJson *out, int
 
     int res = ConstructOutJson(params, out);
     if (res != HC_SUCCESS) {
-        LOGE("ConstructOutJson failed, res: %" LOG_PUB "d.", res);
+        LOGE("Construct out json failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     CJson *payload = GetObjFromJson(out, FIELD_PAYLOAD);

@@ -810,8 +810,8 @@ static void ReportV1RelatedAuthCallEvent(int64_t requestId, const CJson *authPar
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData;
     eventData.appId = SOFTBUS_APP_ID;
-    eventData.funcName = AUTH_DEV_EVENT;
     eventData.osAccountId = DEFAULT_OS_ACCOUNT;
+    eventData.funcName = AUTH_DEV_EVENT;
     (void)GetIntFromJson(authParam, FIELD_OS_ACCOUNT_ID, &eventData.osAccountId);
     eventData.callResult = DEFAULT_CALL_RESULT;
     eventData.processCode = PROCESS_AUTH_V1;

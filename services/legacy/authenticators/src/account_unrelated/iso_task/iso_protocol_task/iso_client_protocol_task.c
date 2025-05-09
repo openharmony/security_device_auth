@@ -262,7 +262,7 @@ static int Process(struct SymBaseCurTaskT *task, IsoParams *params, const CJson 
     }
 OUT_FUNC:
     if (res != HC_SUCCESS) {
-        LOGE("Process step:%" LOG_PUB "d failed, res: %" LOG_PUB "x.", step, res);
+        LOGE("Process Step: %" LOG_PUB "d failed, res: %" LOG_PUB "x.", step, res);
         return res;
     }
     if (step != STEP_THREE) {

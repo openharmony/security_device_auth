@@ -42,7 +42,7 @@ static int PackageMsgForResponse(PakeParams *params, CJson *out)
 {
     int res = ConstructOutJson(params, out);
     if (res != HC_SUCCESS) {
-        LOGE("ConstructOutJson failed, res: %" LOG_PUB "d.", res);
+        LOGE("The operation of ConstructOutJson failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     CJson *payload = GetObjFromJson(out, FIELD_PAYLOAD);
@@ -99,7 +99,7 @@ static int PakeResponse(AsyBaseCurTask *task, PakeParams *params, const CJson *i
             res = GetAndCheckAuthIdPeer(in, &(params->baseParams.idSelf), &(params->baseParams.idPeer));
         }
         if (res != HC_SUCCESS) {
-            LOGE("GetAndCheckAuthIdPeer failed, res: %" LOG_PUB "d.", res);
+            LOGE("The oparetion of GetAndCheckAuthIdPeer failed, res: %" LOG_PUB "d.", res);
             return res;
         }
     }
@@ -209,7 +209,7 @@ static int Process(struct AsyBaseCurTaskT *task, PakeParams *params, const CJson
     }
 OUT:
     if (res != HC_SUCCESS) {
-        LOGE("Process step:%" LOG_PUB "d failed, res: %" LOG_PUB "x.", step, res);
+        LOGE("Process Step: %" LOG_PUB "d failed, res: %" LOG_PUB "x.", step, res);
         return res;
     }
     res = ServerProtocolMessageOut(out, params->opCode, step);

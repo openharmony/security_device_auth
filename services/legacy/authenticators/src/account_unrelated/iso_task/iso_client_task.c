@@ -70,7 +70,7 @@ static int CreateNextTask(IsoClientTask *realTask, const CJson *in, CJson *out, 
             *status = FINISH;
             break;
         default:
-            LOGE("Unsupported opCode: %" LOG_PUB "d.", realTask->params.opCode);
+            LOGE("Unsupported OpCode: %" LOG_PUB "d.", realTask->params.opCode);
             res = HC_ERR_NOT_SUPPORT;
     }
     return res;

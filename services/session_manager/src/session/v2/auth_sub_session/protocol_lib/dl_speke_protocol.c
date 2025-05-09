@@ -107,17 +107,17 @@ static int32_t DlSpekeClientStartReqBuildEvent(const DlSpekeParams *params, CJso
 {
     CJson *json = CreateJson();
     if (json == NULL) {
-        LOGE("create json failed.");
+        LOGE("Create json failed.");
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, CLEINT_START_REQ_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
+        LOGE("Failed to add eventName to json.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_AUTH_ID_CLIENT, params->authIdSelf.val,
         params->authIdSelf.length) != HC_SUCCESS) {
-        LOGE("add authIdC to json fail.");
+        LOGE("Failed to add authIdC to json.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -173,11 +173,11 @@ static int32_t GetEpkPeerFromInput(const CJson *inputData, DlSpekeParams *params
     const char *epkPeerStr = isClient ? GetStringFromJson(inputData, FIELD_EPK_SERVER) :
         GetStringFromJson(inputData, FIELD_EPK_CLIENT);
     if (epkPeerStr == NULL) {
-        LOGE("get epkPeerStr from inputData fail.");
+        LOGE("get epkPeerStr from inputData failed.");
         return HC_ERR_JSON_GET;
     }
     if (InitUint8Buff(&params->epkPeer, HcStrlen(epkPeerStr) / BYTE_TO_HEX_OPER_LENGTH) != HC_SUCCESS) {
-        LOGE("allocate epkPeerStr memory fail.");
+        LOGE("allocate epkPeerStr memory failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (HexStringToByte(epkPeerStr, params->epkPeer.val, params->epkPeer.length) != HC_SUCCESS) {
@@ -370,17 +370,17 @@ static int32_t CalSidSelf(DlSpekeParams *params, Uint8Buff *sidSelf)
     uint32_t sidSelfMsgLen = params->authIdSelf.length + params->innerKeyLen;
     Uint8Buff sidSelfMsg = { NULL, 0 };
     if (InitUint8Buff(&sidSelfMsg, sidSelfMsgLen) != HC_SUCCESS) {
-        LOGE("allocate sidSelfMsg memory fail.");
+        LOGE("Allocate sidSelfMsg memory fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (memcpy_s(sidSelfMsg.val, sidSelfMsg.length, params->authIdSelf.val, params->authIdSelf.length) != EOK) {
-        LOGE("Memcpy for authIdSelf failed.");
+        LOGE("Memory copy for authIdSelf failed.");
         ClearFreeUint8Buff(&sidSelfMsg);
         return HC_ERR_MEMORY_COPY;
     }
     if (memcpy_s(sidSelfMsg.val + params->authIdSelf.length, sidSelfMsg.length - params->authIdSelf.length,
         params->epkSelf.val, params->innerKeyLen) != EOK) { // only need x-coordinate
-        LOGE("Memcpy for epkSelf_X failed.");
+        LOGE("Memory copy for epkSelf_X failed.");
         ClearFreeUint8Buff(&sidSelfMsg);
         return HC_ERR_MEMORY_COPY;
     }
@@ -398,17 +398,17 @@ static int32_t CalSidPeer(DlSpekeParams *params, Uint8Buff *sidPeer)
     uint32_t sidPeerMsgLen = params->authIdPeer.length + params->innerKeyLen;
     Uint8Buff sidPeerMsg = { NULL, 0 };
     if (InitUint8Buff(&sidPeerMsg, sidPeerMsgLen) != HC_SUCCESS) {
-        LOGE("allocate sidPeerMsg memory fail.");
+        LOGE("Allocate sidPeerMsg memory failed!");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (memcpy_s(sidPeerMsg.val, sidPeerMsg.length, params->authIdPeer.val, params->authIdPeer.length) != EOK) {
-        LOGE("Memcpy for authIdPeer failed.");
+        LOGE("Memcpy for authIdPeer failed!");
         ClearFreeUint8Buff(&sidPeerMsg);
         return HC_ERR_MEMORY_COPY;
     }
     if (memcpy_s(sidPeerMsg.val + params->authIdPeer.length, sidPeerMsg.length - params->authIdPeer.length,
         params->epkPeer.val, params->innerKeyLen) != EOK) { // only need x-coordinate
-        LOGE("Memcpy for epkPeer_X failed.");
+        LOGE("Memcpy for epkPeer_X failed!");
         ClearFreeUint8Buff(&sidPeerMsg);
         return HC_ERR_MEMORY_COPY;
     }
@@ -700,23 +700,23 @@ static int32_t DlSpekeServerStartRspBuildEvent(const DlSpekeParams *params, CJso
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, SERVER_START_RSP_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
+        LOGE("add eventName to json failed!");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_SALT, params->salt.val, params->salt.length) != HC_SUCCESS) {
-        LOGE("add salt to json fail.");
+        LOGE("add salt to json failed!");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_EPK_SERVER, params->epkSelf.val, params->epkSelf.length) != HC_SUCCESS) {
-        LOGE("add epkS to json fail.");
+        LOGE("add epkS to json failed!");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_AUTH_ID_SERVER, params->authIdSelf.val,
         params->authIdSelf.length) != HC_SUCCESS) {
-        LOGE("add authIdS to json fail.");
+        LOGE("add authIdS to json failed!");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -786,22 +786,22 @@ static int32_t DlSpekeClientFinishReqBuildEvent(DlSpekeParams *params, CJson **o
 {
     CJson *json = CreateJson();
     if (json == NULL) {
-        LOGE("create json failed.");
+        LOGE("Creating json failed!");
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, CLEINT_FINISH_REQ_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
+        LOGE("Add eventName to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_EPK_CLIENT, params->epkSelf.val, params->epkSelf.length) != HC_SUCCESS) {
-        LOGE("add epkC to json fail.");
+        LOGE("Add epkC to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_KCF_DATA_CLIENT, params->kcfDataSelf.val,
         params->kcfDataSelf.length) != HC_SUCCESS) {
-        LOGE("add kcfDataC to json fail.");
+        LOGE("Add kcfDataC to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -860,17 +860,17 @@ static int32_t DlSpekeServerFinishRspBuildEvent(DlSpekeParams *params, CJson **o
 {
     CJson *json = CreateJson();
     if (json == NULL) {
-        LOGE("create json failed.");
+        LOGE("Create json failed.");
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, SERVER_FINISH_RSP_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
+        LOGE("Add event to out json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_KCF_DATA_SERVER, params->kcfDataSelf.val,
         params->kcfDataSelf.length) != HC_SUCCESS) {
-        LOGE("add kcfDataS to json fail.");
+        LOGE("Add kcfDataS to out json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -1073,7 +1073,7 @@ static int32_t SetDlSpekePeerProtectedMsg(BaseProtocol *self, const Uint8Buff *p
 static int32_t GetDlSpekeSessionKey(BaseProtocol *self, Uint8Buff *returnSessionKey)
 {
     if ((self == NULL) || (returnSessionKey == NULL)) {
-        LOGE("invalid params.");
+        LOGE("Incorrect params.");
         return HC_ERR_INVALID_PARAMS;
     }
     if (self->curState != self->finishState) {

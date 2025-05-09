@@ -21,8 +21,8 @@
 #include "group_data_manager.h"
 #include "device_auth_defines.h"
 #include "group_operation_common.h"
-#include "hc_dev_info.h"
 #include "hc_log.h"
+#include "hc_dev_info.h"
 #include "string_util.h"
 #include "dev_auth_module_manager.h"
 #include "account_module.h"
@@ -115,7 +115,7 @@ static int32_t CheckCreateParams(int32_t osAccountId, const CJson *jsonParams)
 {
     const char *appId = GetStringFromJson(jsonParams, FIELD_APP_ID);
     if (appId == NULL) {
-        LOGE("Failed to get appId from jsonParams!");
+        LOGE("Failed to get appId from json.");
         return HC_ERR_JSON_GET;
     }
     int32_t result;
@@ -230,7 +230,7 @@ static int32_t DelDeviceToken(int32_t osAccountId, const TrustedDeviceEntry *ent
 {
     CJson *delParams = CreateJson();
     if (delParams == NULL) {
-        LOGE("Failed to allocate delParams memory!");
+        LOGE("Failed to allocate del params memory.");
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t res = GenerateDelTokenParams(entry, delParams);
@@ -263,8 +263,8 @@ static void DelAllTokens(int32_t osAccountId, const DeviceEntryVec *vec)
 
 static void DelAllPeerTokens(int32_t osAccountId, const DeviceEntryVec *vec)
 {
-    int32_t res;
     uint32_t index;
+    int32_t res;
     TrustedDeviceEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(*vec, index, entry) {
         if (IsLocalDevice(StringGet(&(*entry)->udid))) {

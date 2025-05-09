@@ -516,7 +516,7 @@ static int32_t GenarateCredential(const char *reqJsonStr, char **returnData)
     CredentialRequestParam param = { 0 };
     int32_t res = GenerateRequestParamFromJson(reqJsonStr, false, &param);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to generate request param!");
+        LOGE("Generate request param from Json occurred error!");
         return res;
     }
     if (CheckKeyExistByParam(&param) == HC_SUCCESS) {

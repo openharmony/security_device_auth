@@ -85,17 +85,17 @@ static int32_t EcSpekeClientStartReqBuildEvent(const EcSpekeParams *params, CJso
 {
     CJson *json = CreateJson();
     if (json == NULL) {
-        LOGE("create json failed.");
+        LOGE("Create json failed.");
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, CLEINT_START_REQ_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
+        LOGE("Add eventName to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_AUTH_ID_CLIENT, params->authIdSelf.val,
         params->authIdSelf.length) != HC_SUCCESS) {
-        LOGE("add authIdC to json fail.");
+        LOGE("Add authIdC to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -368,17 +368,17 @@ static int32_t CalSidPeer(EcSpekeParams *params, Uint8Buff *sidPeer)
     uint32_t sidPeerMsgLen = params->authIdPeer.length + EC_SPEKE_EC_KEY_LEN;
     Uint8Buff sidPeerMsg = { NULL, 0 };
     if (InitUint8Buff(&sidPeerMsg, sidPeerMsgLen) != HC_SUCCESS) {
-        LOGE("allocate sidPeerMsg memory fail.");
+        LOGE("Failed to allocate sidPeerMsg memory!");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (memcpy_s(sidPeerMsg.val, sidPeerMsg.length, params->authIdPeer.val, params->authIdPeer.length) != EOK) {
-        LOGE("Memcpy for authIdPeer failed.");
+        LOGE("Failed to memcpy for authIdPeer!");
         ClearFreeUint8Buff(&sidPeerMsg);
         return HC_ERR_MEMORY_COPY;
     }
     if (memcpy_s(sidPeerMsg.val + params->authIdPeer.length, sidPeerMsg.length - params->authIdPeer.length,
         params->epkPeer.val, EC_SPEKE_EC_KEY_LEN) != EOK) { // only need x-coordinate
-        LOGE("Memcpy for epkPeer_X failed.");
+        LOGE("Failed to memcpy for epkPeer_X!");
         ClearFreeUint8Buff(&sidPeerMsg);
         return HC_ERR_MEMORY_COPY;
     }
