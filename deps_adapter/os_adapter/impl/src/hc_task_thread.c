@@ -93,13 +93,16 @@ static int32_t StartTaskThread(struct HcTaskThreadT* thread)
 
 static int TaskThreadLoop(void* args)
 {
+    LOGI("start task loop.");
     HcTaskThread* thread = (HcTaskThread*)args;
     if (thread == NULL) {
+        LOGE("thread is null!");
         return -1;
     }
 
     while (1) {
         if (thread->quit) {
+            LOGW("thread quit!");
             break;
         }
         HcTaskBase* task = PopTask(thread);
