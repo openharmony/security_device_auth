@@ -55,9 +55,9 @@
 #include "dev_session_util.h"
 #include "pake_v2_protocol_common.h"
 #include "iso_task_common.h"
-#include "../../../../services/legacy/authenticators/src/account_unrelated/pake_task/pake_v1_task/pake_v1_protocol_task/pake_v1_protocol_task_common.c"
-#include "../../../../services/session_manager/src/session/v2/dev_session_util.c"
-#include "../../../../services/legacy/group_manager/src/group_operation/identical_account_group/identical_account_group.c"
+#include "base/security/device_auth/services/legacy/authenticators/src/account_unrelated/pake_task/pake_v1_task/pake_v1_protocol_task/pake_v1_protocol_task_common.c"
+#include "base/security/device_auth/services/session_manager/src/session/v2/dev_session_util.c"
+#include "base/security/device_auth/services/legacy/group_manager/src/group_operation/identical_account_group/identical_account_group.c"
 
 using namespace std;
 using namespace testing::ext;

@@ -35,9 +35,9 @@
 #include <sys/stat.h>
 #include "hc_log.h"
 #include "hc_types.h"
-#include "../../../../services/identity_service/src/identity_operation.c"
-#include "../../../../services/identity_service/src/identity_service_impl.c"
-#include "../../../../services/identity_service/session/src/cred_session_util.c"
+#include "base/security/device_auth/services/identity_service/src/identity_operation.c"
+#include "base/security/device_auth/services/identity_service/src/identity_service_impl.c"
+#include "base/security/device_auth/services/identity_service/session/src/cred_session_util.c"
 #include "cred_listener.h"
 
 using namespace std;

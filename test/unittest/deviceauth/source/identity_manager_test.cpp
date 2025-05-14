@@ -22,7 +22,7 @@
 #include "cert_operation.h"
 #include "identity_manager.h"
 #include "identity_common.h"
-#include "../../../../services/legacy/identity_manager/src/identity_cred.c"
+#include "base/security/device_auth/services/legacy/identity_manager/src/identity_cred.c"
 
 using namespace std;
 using namespace testing::ext;
