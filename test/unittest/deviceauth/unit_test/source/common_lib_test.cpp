@@ -20,7 +20,7 @@
 #include <cstring>
 #include <cstddef>
 #include "securec.h"
-#include "../../../../common_lib/impl/src/hc_parcel.c"
+#include "base/security/device_auth/common_lib/impl/src/hc_parcel.c"
 
 using namespace std;
 using namespace testing::ext;

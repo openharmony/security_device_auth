@@ -17,7 +17,7 @@
 #include <cinttypes>
 #include <unistd.h>
 #include <gtest/gtest.h>
-#include "../../../../../services/legacy/group_auth/src/group_auth_manager/account_related_group_auth/account_related_group_auth.c"
+#include "base/security/device_auth/services/legacy/group_auth/src/group_auth_manager/account_related_group_auth/account_related_group_auth.c"
 using namespace std;
 using namespace testing::ext;
 
