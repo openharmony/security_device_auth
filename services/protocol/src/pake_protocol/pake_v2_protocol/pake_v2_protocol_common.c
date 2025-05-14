@@ -505,13 +505,13 @@ static int32_t GenerateProof(PakeBaseParams *params)
         params->sharedSecret.length + params->innerKeyLen + params->extraData.length;
     proofMsg.val = (uint8_t *)HcMalloc(proofMsg.length, 0);
     if (proofMsg.val == NULL) {
-        LOGE("Failed to malloc for proofMsg!");
+        LOGE("Failed to malloc memory for proofMsg!");
         res = HC_ERR_ALLOC_MEMORY;
         goto CLEAN_UP;
     }
     res = CombineProofMsg(params, &proofMsg, false);
     if (res != HC_SUCCESS) {
-        LOGE("CombineProofMsg failed, res: %" LOG_PUB "x.", res);
+        LOGE("Combine proof msg failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     res = params->loader->sha256(&proofMsg, &params->kcfData);
@@ -624,7 +624,7 @@ int32_t ClientVerifyConfirmPakeV2Protocol(PakeBaseParams *params)
 
     res = GenerateSessionKey(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateSessionKey failed, res: %" LOG_PUB "x.", res);
+        LOGE("Generate session key failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     return res;
@@ -636,12 +636,12 @@ CLEAN_UP:
 int32_t ServerResponsePakeV2Protocol(PakeBaseParams *params)
 {
     if (params == NULL) {
-        LOGE("Params is null.");
+        LOGE("Params is NULL.");
         return HC_ERR_NULL_PTR;
     }
     int32_t res = GeneratePakeParams(params);
     if (res != HC_SUCCESS) {
-        LOGE("GeneratePakeParams failed, res: %" LOG_PUB "x.", res);
+        LOGE("Generate pake params failed, res: %" LOG_PUB "x.", res);
         CleanPakeSensitiveKeys(params);
     }
     return res;
@@ -660,17 +660,17 @@ int32_t ServerConfirmPakeV2Protocol(PakeBaseParams *params)
     }
     res = VerifyProof(params);
     if (res != HC_SUCCESS) {
-        LOGE("VerifyProof failed, res: %" LOG_PUB "x.", res);
+        LOGE("Veriry proof failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     res = GenerateProof(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateProof failed, res: %" LOG_PUB "x.", res);
+        LOGE("Generate proof failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     res = GenerateSessionKey(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateSessionKey failed, res: %" LOG_PUB "x.", res);
+        LOGE("Generate session key failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     return res;

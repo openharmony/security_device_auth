@@ -617,7 +617,7 @@ static int32_t GetRealInfo(int32_t osAccountId, const char *pseudonymId, char **
         if ((pseudonymInfoEntry != NULL) && (*pseudonymInfoEntry != NULL) &&
             (strcmp((*pseudonymInfoEntry)->pseudonymId, pseudonymId) == 0)) {
             if (DeepCopyString((*pseudonymInfoEntry)->realInfo, realInfo) != HC_SUCCESS) {
-                LOGE("Failed to deep copy pseudonyminfoentry realInfo!");
+                LOGE("Failed to deep copy pseudonymInfoentry realInfo!");
                 UnlockHcMutex(g_mutex);
                 return HC_ERR_MEMORY_COPY;
             }

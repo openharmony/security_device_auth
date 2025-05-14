@@ -19,11 +19,11 @@
 #include "common_defs.h"
 #include "device_auth.h"
 #include "device_auth_defines.h"
-#include "hc_log.h"
 #include "hc_types.h"
 #include "iso_auth_task_common.h"
 #include "iso_protocol_common.h"
 #include "protocol_common.h"
+#include "hc_log.h"
 
 enum {
     TASK_STATUS_ISO_MAIN_BEGIN = 0,
@@ -205,23 +205,23 @@ static int32_t PackIsoAuthClientGetTokenMsg(const IsoAuthParams *params, CJson *
     }
 
     if (AddIntToJson(sendToPeer, FIELD_AUTH_FORM, params->authForm) != CLIB_SUCCESS) {
-        LOGE("Add authForm to json failed.");
+        LOGE("Add authForm to sendToPeer json failed.");
         goto CLEAN_UP;
     }
     if (AddIntToJson(sendToPeer, FIELD_STEP, CMD_ISO_AUTH_MAIN_TWO) != CLIB_SUCCESS) {
-        LOGE("Add step code to json failed.");
+        LOGE("Add step code to sendToPeer json failed.");
         goto CLEAN_UP;
     }
     if (AddByteToJson(data, FIELD_TOKEN, params->hmacToken, sizeof(params->hmacToken)) != CLIB_SUCCESS) {
-        LOGE("Add hmacToken to json failed.");
+        LOGE("Add hmacToken to data failed.");
         goto CLEAN_UP;
     }
     if (AddObjToJson(sendToPeer, FIELD_DATA, data) != CLIB_SUCCESS) {
-        LOGE("Add data json obj to json failed.");
+        LOGE("Add data json obj to sendToPeer json failed.");
         goto CLEAN_UP;
     }
     if (AddObjToJson(out, FIELD_SEND_TO_PEER, sendToPeer) != CLIB_SUCCESS) {
-        LOGE("Add sendToPeer to json failed.");
+        LOGE("Add sendToPeer to out json failed.");
         goto CLEAN_UP;
     }
     FreeJson(sendToPeer);

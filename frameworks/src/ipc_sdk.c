@@ -206,7 +206,7 @@ static void GetIpcReplyByType(const IpcDataInfo *ipcData,
                 *cacheLen = ipcData[i].valSz;
                 break;
             default:
-                LOGE("un-expectation type case");
+                LOGE("un-expectation type case.");
                 break;
         }
     }

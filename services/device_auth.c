@@ -83,12 +83,12 @@ static int32_t BuildClientAuthContext(int32_t osAccountId, int64_t requestId, co
             return HC_ERR_ALLOC_MEMORY;
         }
         if (AddStringToJson(context, FIELD_PEER_UDID, deviceId) != HC_SUCCESS) {
-            LOGE("add peerUdid to context fail.");
+            LOGE("add peerUdid to client auth context fail.");
             HcFree(deviceId);
             return HC_ERR_JSON_ADD;
         }
         if (AddStringToJson(context, FIELD_PEER_CONN_DEVICE_ID, deviceId) != HC_SUCCESS) {
-            LOGE("add peerConnDeviceId to context fail.");
+            LOGE("add peerConnDeviceId to client auth context fail.");
             HcFree(deviceId);
             return HC_ERR_JSON_ADD;
         }
@@ -108,15 +108,15 @@ static int32_t BuildClientAuthContext(int32_t osAccountId, int64_t requestId, co
         return HC_ERR_JSON_ADD;
     }
     if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
-        LOGE("add request id to context fail.");
+        LOGE("add request id to client auth context fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
-        LOGE("add app id to context fail.");
+        LOGE("add app id to client auth context fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddIntToJson(context, FIELD_OPERATION_CODE, AUTH_FORM_ACCOUNT_UNRELATED) != HC_SUCCESS) {
-        LOGE("add operation code to context fail.");
+        LOGE("add operation code to client auth context fail.");
         return HC_ERR_JSON_ADD;
     }
     return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
@@ -170,12 +170,12 @@ static int32_t AuthDeviceInner(int32_t osAccountId, int64_t authReqId, const cha
     }
     CJson *context = CreateJsonFromString(authParams);
     if (context == NULL) {
-        LOGE("Failed to create json from string!");
+        LOGE("Failed to create json from auth params!");
         return HC_ERR_JSON_FAIL;
     }
     const char *appId = GetStringFromJson(context, FIELD_SERVICE_PKG_NAME);
     if (appId == NULL) {
-        LOGE("get servicePkgName from json fail.");
+        LOGE("get servicePkgName from context fail.");
         FreeJson(context);
         return HC_ERR_JSON_GET;
     }
@@ -249,27 +249,27 @@ static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const c
     (void)DeepCopyString(peerUdid, returnPeerUdid);
     PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
     if (AddDeviceIdToJson(context, peerUdid) != HC_SUCCESS) {
-        LOGE("add deviceId to context failed.");
+        LOGE("add deviceId to server auth context failed.");
         return HC_ERR_JSON_ADD;
     }
     if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
-        LOGE("add isBind to context failed.");
+        LOGE("add isBind to server auth context failed.");
         return HC_ERR_JSON_ADD;
     }
     if (AddBoolToJson(context, FIELD_IS_CLIENT, false) != HC_SUCCESS) {
-        LOGE("add isClient to context failed.");
+        LOGE("add isClient to server auth context failed.");
         return HC_ERR_JSON_ADD;
     }
     if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
-        LOGE("add requestId to context failed.");
+        LOGE("add requestId to server auth context failed.");
         return HC_ERR_JSON_ADD;
     }
     if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
-        LOGE("add appId to context failed.");
+        LOGE("add appId to server auth context failed.");
         return HC_ERR_JSON_ADD;
     }
     if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
-        LOGE("add opCode to context failed.");
+        LOGE("add opCode to server auth context failed.");
         return HC_ERR_JSON_ADD;
     }
     return AddChannelInfoToContext(SERVICE_CHANNEL, DEFAULT_CHANNEL_ID, context);
@@ -343,12 +343,12 @@ static int32_t OpenServerAuthSession(int64_t requestId, const CJson *receivedMsg
     CJson *context = CreateJsonFromString(returnDataStr);
     FreeJsonString(returnDataStr);
     if (context == NULL) {
-        LOGE("Failed to create context json from returnDataStr!");
+        LOGE("Failed to create server auth context json from returnDataStr!");
         return HC_ERR_JSON_FAIL;
     }
     const char *appId = GetStringFromJson(context, FIELD_SERVICE_PKG_NAME);
     if (appId == NULL) {
-        LOGE("get appId from json fail.");
+        LOGE("get appId from context fail.");
         FreeJson(context);
         return HC_ERR_JSON_GET;
     }
@@ -379,7 +379,7 @@ static int32_t OpenServerAuthSessionForP2P(
     CJson *context = CreateJsonFromString(returnDataStr);
     FreeJsonString(returnDataStr);
     if (context == NULL) {
-        LOGE("Failed to create context from string!");
+        LOGE("Failed to create server auth context from string!");
         return HC_ERR_JSON_FAIL;
     }
     if (AddBoolToJson(context, FIELD_IS_DIRECT_AUTH, true) != HC_SUCCESS) {
@@ -389,13 +389,13 @@ static int32_t OpenServerAuthSessionForP2P(
     }
     const char *pkgName = GetStringFromJson(context, FIELD_SERVICE_PKG_NAME);
     if (pkgName == NULL && AddStringToJson(context, FIELD_SERVICE_PKG_NAME, DEFAULT_PACKAGE_NAME) != HC_SUCCESS) {
-        LOGE("Failed to add default package name to context!");
+        LOGE("Failed to add default package name to server auth context!");
         FreeJson(context);
         return HC_ERR_JSON_ADD;
     }
     const char *serviceType = GetStringFromJson(context, FIELD_SERVICE_TYPE);
     if (serviceType == NULL && AddStringToJson(context, FIELD_SERVICE_TYPE, DEFAULT_SERVICE_TYPE) != HC_SUCCESS) {
-        LOGE("Failed to add default package name to context!");
+        LOGE("Failed to add default package name to server auth context!");
         FreeJson(context);
         return HC_ERR_JSON_ADD;
     }
@@ -594,6 +594,7 @@ static int32_t ProcessCredDataInner(int64_t authReqId, const uint8_t *data, uint
         res = AddOriginDataForPlugin(receivedMsg, data);
         if (res != HC_SUCCESS) {
             FreeJson(receivedMsg);
+            LOGE("AddOriginDataForPlugin occurred error!");
             return res;
         }
     }

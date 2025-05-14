@@ -133,7 +133,7 @@ static int32_t PackIsoAuthServerGetTokenMsg(const IsoAuthParams *params, CJson *
     }
 
     if (AddObjToJson(out, FIELD_SEND_TO_PEER, sendToPeer) != CLIB_SUCCESS) {
-        LOGE("Add sendToPeer to json failed.");
+        LOGE("Add sendToPeer to out json failed.");
         goto CLEAN_UP;
     }
 

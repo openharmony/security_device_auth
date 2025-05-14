@@ -158,13 +158,13 @@ static int32_t ClientSendTrustedInfoProcEvent(CmdParams *params)
     }
     params->isGroupExistSelf = true;
     if (DeepCopyString(StringGet(&entry->name), &params->groupName) != HC_SUCCESS) {
-        LOGE("copy groupName fail.");
+        LOGE("Copy groupName failed!");
         DestroyGroupEntry(entry);
         return HC_ERR_ALLOC_MEMORY;
     }
     if ((entry->type != PEER_TO_PEER_GROUP) &&
         (DeepCopyString(StringGet(&entry->userId), &params->userIdSelf) != HC_SUCCESS)) {
-        LOGE("copy userIdSelf fail.");
+        LOGE("Copy userIdSelf failed!");
         DestroyGroupEntry(entry);
         return HC_ERR_ALLOC_MEMORY;
     }
@@ -221,25 +221,25 @@ static int32_t ServerSendTrustedInfoParseEvent(const CJson *inputEvent, CmdParam
 {
     const char *authId = GetStringFromJson(inputEvent, FIELD_AUTH_ID_CLIENT);
     if (authId == NULL) {
-        LOGE("Get authIdC from json failed.");
+        LOGE("Get authIdC from inputEvent failed.");
         return HC_ERR_JSON_GET;
     }
     const char *udid = GetStringFromJson(inputEvent, FIELD_UDID_CLIENT);
     if (udid == NULL) {
-        LOGE("Get udidC from json failed.");
+        LOGE("Get udidC from inputEvent failed.");
         return HC_ERR_JSON_GET;
     }
     int32_t userTypeC;
     if (GetIntFromJson(inputEvent, FIELD_USER_TYPE_CLIENT, &userTypeC) != HC_SUCCESS) {
-        LOGE("Get userTypeC from json failed.");
+        LOGE("Get userTypeC from inputEvent failed.");
         return HC_ERR_JSON_GET;
     }
     if (DeepCopyString(authId, &(params->authIdPeer)) != HC_SUCCESS) {
-        LOGE("Copy groupId failed.");
+        LOGE("Deep copy groupId failed.");
         return HC_ERR_MEMORY_COPY;
     }
     if (DeepCopyString(udid, &(params->udidPeer)) != HC_SUCCESS) {
-        LOGE("Copy groupId failed.");
+        LOGE("Deep copy groupId failed.");
         return HC_ERR_MEMORY_COPY;
     }
     const char *groupName = GetStringFromJson(inputEvent, FIELD_GROUP_NAME);
@@ -255,7 +255,7 @@ static int32_t ServerSendTrustedInfoParseEvent(const CJson *inputEvent, CmdParam
     const char *userId = GetStringFromJson(inputEvent, FIELD_USER_ID_CLIENT);
     if (userId != NULL) {
         if (DeepCopyString(userId, &(params->userIdPeer)) != HC_SUCCESS) {
-            LOGE("Copy userId failed.");
+            LOGE("Deep copy userId failed.");
             return HC_ERR_MEMORY_COPY;
         }
     }
@@ -643,12 +643,12 @@ static void NotifyPeerError(int32_t errorCode, CJson **outputEvent)
         return;
     }
     if (AddIntToJson(json, FIELD_EVENT, FAIL_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
+        LOGE("Add eventName to event json failed.");
         FreeJson(json);
         return;
     }
     if (AddIntToJson(json, FIELD_ERR_CODE, errorCode) != HC_SUCCESS) {
-        LOGE("add errorCode to json fail.");
+        LOGE("add errorCode to event json  failed.");
         FreeJson(json);
         return;
     }
@@ -753,7 +753,7 @@ static int32_t SwitchState(BaseCmd *self, const CJson *receviedMsg, CJson **retu
 static int32_t StartSaveTrustedInfoCmd(BaseCmd *self, CJson **returnSendMsg)
 {
     if ((self == NULL) || (returnSendMsg == NULL)) {
-        LOGE("invalid params.");
+        LOGE("Incorrect params!");
         return HC_ERR_INVALID_PARAMS;
     }
     if (self->curState != self->beginState) {
@@ -768,7 +768,7 @@ static int32_t ProcessSaveTrustedInfoCmd(BaseCmd *self, const CJson *receviedMsg
     CJson **returnSendMsg, CmdState *returnState)
 {
     if ((self == NULL) || (receviedMsg == NULL) || (returnSendMsg == NULL) || (returnState == NULL)) {
-        LOGE("invalid params.");
+        LOGE("Incorrect params!");
         return HC_ERR_INVALID_PARAMS;
     }
     if ((self->curState == self->finishState) || (self->curState == self->failState)) {

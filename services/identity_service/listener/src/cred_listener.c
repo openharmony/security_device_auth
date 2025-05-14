@@ -35,7 +35,7 @@ static HcMutex *g_credListenerMutex = NULL;
 void OnCredAdd(const char *credId, const char *credInfo)
 {
     if (credId == NULL) {
-        LOGE("[CredListener]: The credId is NULL!");
+        LOGE("[CredListener-CredAdd]: The credId is NULL!");
         return;
     }
     if (credInfo == NULL) {
@@ -56,7 +56,7 @@ void OnCredAdd(const char *credId, const char *credInfo)
 void OnCredDelete(const char *credId, const char *credInfo)
 {
     if (credId == NULL) {
-        LOGE("[CredListener]: The credId is NULL!");
+        LOGE("[CredListener-CredDelete]: The credId is NULL!");
         return;
     }
     if (credInfo == NULL) {
@@ -77,7 +77,7 @@ void OnCredDelete(const char *credId, const char *credInfo)
 void OnCredUpdate(const char *credId, const char *credInfo)
 {
     if (credId == NULL) {
-        LOGE("[CredListener]: The credId is NULL!");
+        LOGE("[CredListener-CredUpdate]: The credId is NULL!");
         return;
     }
     if (credInfo == NULL) {

@@ -100,7 +100,7 @@ static int Process(struct SubTaskBaseT *task, const CJson *in, CJson *out, int *
 {
     PakeV1ClientTask *realTask = (PakeV1ClientTask *)task;
     if (realTask->curTask == NULL) {
-        LOGE("CurTask is null.");
+        LOGE("CurTask is NULL.");
         return HC_ERR_NULL_PTR;
     }
 

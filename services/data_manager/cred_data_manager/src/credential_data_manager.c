@@ -1018,7 +1018,7 @@ static int32_t GenerateCredChangedInfo(const Credential *entry, char **returnCre
     char *credInfoJsonStr = PackJsonToString(credInfo);
     FreeJson(credInfo);
     if (credInfoJsonStr == NULL) {
-        LOGE("pack json to string failed.");
+        LOGE("pack  credInfo json to string failed.");
         return IS_ERR_ALLOC_MEMORY;
     }
     *returnCredInfo = credInfoJsonStr;

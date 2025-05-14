@@ -48,6 +48,7 @@ void HcFree(void* addr)
 uint32_t HcStrlen(const char *str)
 {
     if (str == NULL) {
+        LOGE("Invalid param!");
         return 0;
     }
     const char *p = str;

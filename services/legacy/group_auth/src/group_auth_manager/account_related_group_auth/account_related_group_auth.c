@@ -189,7 +189,7 @@ static bool IsPeerInIdenticalGroup(int32_t osAccountId, const char *peerUserId)
     queryParams.groupType = IDENTICAL_ACCOUNT_GROUP;
     do {
         if (QueryGroups(osAccountId, &queryParams, &accountVec) != HC_SUCCESS) {
-            LOGD("No identical-account group in db, no identical-account auth!");
+            LOGD("No identical-account group in dataBase, no identical-account auth!");
             break;
         }
         uint32_t index = 0;
@@ -810,11 +810,11 @@ static void ReportV1RelatedAuthCallEvent(int64_t requestId, const CJson *authPar
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthCallEvent eventData;
     eventData.appId = SOFTBUS_APP_ID;
+    eventData.callResult = DEFAULT_CALL_RESULT;
+    eventData.processCode = PROCESS_AUTH_V1;
     eventData.osAccountId = DEFAULT_OS_ACCOUNT;
     eventData.funcName = AUTH_DEV_EVENT;
     (void)GetIntFromJson(authParam, FIELD_OS_ACCOUNT_ID, &eventData.osAccountId);
-    eventData.callResult = DEFAULT_CALL_RESULT;
-    eventData.processCode = PROCESS_AUTH_V1;
     eventData.credType = DEFAULT_CRED_TYPE;
     eventData.groupType = IDENTICAL_ACCOUNT_GROUP;
     eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQ_ID(requestId);

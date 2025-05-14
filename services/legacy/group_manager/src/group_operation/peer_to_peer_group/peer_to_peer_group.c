@@ -95,17 +95,17 @@ static int32_t GeneratePeerToPeerGroupId(const CJson *jsonParams, char **returnG
 {
     const char *groupName = GetStringFromJson(jsonParams, FIELD_GROUP_NAME);
     if (groupName == NULL) {
-        LOGE("Failed to get groupName from jsonParams!");
+        LOGE("Failed to get groupName from jsonParams.");
         return HC_ERR_JSON_GET;
     }
     const char *appId = GetStringFromJson(jsonParams, FIELD_APP_ID);
     if (appId == NULL) {
-        LOGE("Failed to get appId from jsonParams!");
+        LOGE("Failed to get appId from jsonParams.");
         return HC_ERR_JSON_GET;
     }
     int32_t result = GenerateGroupId(groupName, appId, returnGroupId);
     if (result != HC_SUCCESS) {
-        LOGE("Failed to generate groupId! [GroupName]: %" LOG_PUB "s, [AppId]: %" LOG_PUB "s", groupName, appId);
+        LOGE("Failed to generate groupId! [GroupName]: %" LOG_PUB "s, [AppId]: %" LOG_PUB "s.", groupName, appId);
         return result;
     }
     return HC_SUCCESS;
@@ -115,7 +115,7 @@ static int32_t CheckCreateParams(int32_t osAccountId, const CJson *jsonParams)
 {
     const char *appId = GetStringFromJson(jsonParams, FIELD_APP_ID);
     if (appId == NULL) {
-        LOGE("Failed to get appId by GetStringFromJson!");
+        LOGE("Failed to get app id from jsonParams!");
         return HC_ERR_JSON_GET;
     }
     int32_t result;
@@ -399,7 +399,7 @@ static int32_t CheckDeletePeerStatus(const CJson *jsonParams)
     }
     int32_t osAccountId;
     if (GetIntFromJson(jsonParams, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId from json params!");
+        LOGE("Failed to get os account id from json params!");
         return HC_ERR_JSON_GET;
     }
 

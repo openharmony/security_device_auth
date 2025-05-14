@@ -137,7 +137,7 @@ static int32_t CreateUrlStr(int32_t keyType, char **urlStr)
         return HC_ERR_ALLOC_MEMORY;
     }
     if (AddBoolToJson(urlJson, FIELD_IS_DIRECT_AUTH, true) != HC_SUCCESS) {
-        LOGE("Failed to add isDirectAuth to preshared url!");
+        LOGE("Failed to add isDirectAuth to preshared url json!");
         FreeJson(urlJson);
         return HC_ERR_JSON_ADD;
     } else {
@@ -167,7 +167,7 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
     char *urlStr = NULL;
     ret = CreateUrlStr(keyType, &urlStr);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to create url string!");
+        LOGE("Failed to create url string with keyType!");
         return ret;
     }
     IdentityInfo *info = CreateIdentityInfo();

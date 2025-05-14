@@ -206,6 +206,7 @@ static bool IsJsonString(const char *str)
 void DestroyInfo(char **returnData)
 {
     if (returnData == NULL || *returnData == NULL) {
+        LOGE("Invalid params!");
         return;
     }
     if (IsJsonString(*returnData)) {

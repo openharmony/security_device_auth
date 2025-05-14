@@ -46,7 +46,7 @@ static int Process(struct SymBaseCurTaskT *task, IsoParams *params, const CJson 
     }
 
     if (realTask->taskBase.taskStatus > TASK_TYPE_BEGIN) {
-        LOGI("Message is repeated, ignore it, status: %" LOG_PUB "d", realTask->taskBase.taskStatus);
+        LOGI("Message is repeated, ignore it, status: %" LOG_PUB "d.", realTask->taskBase.taskStatus);
         *status = IGNORE_MSG;
         return HC_SUCCESS;
     }
