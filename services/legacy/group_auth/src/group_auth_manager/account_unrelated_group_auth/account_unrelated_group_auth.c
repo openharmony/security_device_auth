@@ -243,10 +243,10 @@ static void ReportV1UnrelatedAuthCallEvent(int64_t requestId, const CJson *authP
     DevAuthCallEvent eventData;
     eventData.appId = SOFTBUS_APP_ID;
     eventData.funcName = AUTH_DEV_EVENT;
-    eventData.osAccountId = DEFAULT_OS_ACCOUNT;
-    (void)GetIntFromJson(authParam, FIELD_OS_ACCOUNT_ID, &eventData.osAccountId);
     eventData.processCode = PROCESS_AUTH_V1;
     eventData.callResult = DEFAULT_CALL_RESULT;
+    eventData.osAccountId = DEFAULT_OS_ACCOUNT;
+    (void)GetIntFromJson(authParam, FIELD_OS_ACCOUNT_ID, &eventData.osAccountId);
     eventData.credType = DEFAULT_CRED_TYPE;
     eventData.groupType = PEER_TO_PEER_GROUP;
     eventData.executionTime = GET_TOTAL_CONSUME_TIME_BY_REQ_ID(requestId);

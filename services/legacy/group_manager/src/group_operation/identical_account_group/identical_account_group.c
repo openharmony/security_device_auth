@@ -23,9 +23,9 @@
 #include "group_operation_common.h"
 #include "hc_log.h"
 #include "hc_dev_info.h"
-#include "string_util.h"
 #include "dev_auth_module_manager.h"
 #include "account_module.h"
+#include "string_util.h"
 
 static int32_t GenerateDevParams(const CJson *jsonParams, const char *groupId, TrustedDeviceEntry *devParams)
 {
@@ -115,7 +115,7 @@ static int32_t CheckCreateParams(int32_t osAccountId, const CJson *jsonParams)
 {
     const char *appId = GetStringFromJson(jsonParams, FIELD_APP_ID);
     if (appId == NULL) {
-        LOGE("Failed to get appId from json.");
+        LOGE("Failed to get appId from json in identity account group.");
         return HC_ERR_JSON_GET;
     }
     int32_t result;
@@ -272,7 +272,7 @@ static void DelAllPeerTokens(int32_t osAccountId, const DeviceEntryVec *vec)
         }
         res = DelDeviceToken(osAccountId, *entry, false);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to delete peer device token! res: %" LOG_PUB "d", res);
+            LOGE("Failed to del peer device token! res: %" LOG_PUB "d", res);
         }
     }
 }
@@ -435,7 +435,7 @@ static int32_t CheckChangeParams(int32_t osAccountId, const char *appId, CJson *
 {
     const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
     if (groupId == NULL) {
-        LOGE("Failed to get groupId from json!");
+        LOGE("Failed to get groupId from json in identical account group!");
         return HC_ERR_JSON_GET;
     }
     uint32_t groupType;
@@ -549,7 +549,7 @@ static int32_t DeleteGroup(int32_t osAccountId, CJson *jsonParams, char **return
 {
     LOGI("[Start]: Start to delete a identical account group!");
     if ((jsonParams == NULL) || (returnJsonStr == NULL)) {
-        LOGE("The input parameters contains NULL value!");
+        LOGE("JsonParams or returnJson str is NULL!");
         return HC_ERR_INVALID_PARAMS;
     }
     int32_t result;

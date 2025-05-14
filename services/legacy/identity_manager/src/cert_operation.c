@@ -480,7 +480,7 @@ static int32_t GenerateAuthTokenForAccessory(int32_t osAccountId, const char *gr
     }
     int32_t ret = GetSelfDeviceEntry(osAccountId, groupId, deviceEntry);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to get self device entry!");
+        LOGE("Failed to get self device entry with osAcccountId and groupId!");
         DestroyDeviceEntry(deviceEntry);
         return ret;
     }
@@ -678,7 +678,7 @@ static int32_t GetSharedSecretByPeerCertFromPlugin(int32_t osAccountId, const ch
     }
     int32_t res = HC_ERR_JSON_ADD;
     if ((id != NULL) && (idField != NULL) && (AddStringToJson(input, idField, id) != HC_SUCCESS)) {
-        LOGE("across account cred eixsts, but add cred id to json failed!");
+        LOGE("Across-account cred eixsts, but add cred id to json failed!");
         goto ERR;
     }
     GOTO_ERR_AND_SET_RET(AddCertInfoToJson(peerCertInfo, input), res);

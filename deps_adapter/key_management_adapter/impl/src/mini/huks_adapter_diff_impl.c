@@ -26,7 +26,7 @@ int32_t InitHks(void)
 {
     LOGI("[HUKS]: HksInitialize enter.");
     int32_t res = HksInitialize();
-    LOGI("[HUKS]: HksInitialize quit. [Res]: %" LOG_PUB "d", res);
+    LOGI("[HUKS]: HksInitialize quit. [Res]: %" LOG_PUB "d.", res);
     if (res == HKS_SUCCESS) {
         return HAL_SUCCESS;
     }

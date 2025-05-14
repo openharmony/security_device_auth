@@ -22,9 +22,9 @@
 #include "ext_plugin_manager.h"
 #include "group_data_manager.h"
 #include "device_auth_defines.h"
+#include "hc_log.h"
 #include "group_operation_common.h"
 #include "hc_dev_info.h"
-#include "hc_log.h"
 #include "string_util.h"
 
 /* 1: s1 > s2, -1: s1 <= s2 */
@@ -67,7 +67,7 @@ static int32_t GenerateGroupId(const char *userId, const char *sharedUserId, cha
     int hashStrLen = SHA256_LEN * BYTE_TO_HEX_OPER_LENGTH + 1;
     *returnGroupId = (char *)HcMalloc(hashStrLen, 0);
     if (*returnGroupId == NULL) {
-        LOGE("Failed to allocate returnGroupId memory!");
+        LOGE("Failed to allocate return groupId memory!");
         HcFree(hashMessage);
         return HC_ERR_ALLOC_MEMORY;
     }

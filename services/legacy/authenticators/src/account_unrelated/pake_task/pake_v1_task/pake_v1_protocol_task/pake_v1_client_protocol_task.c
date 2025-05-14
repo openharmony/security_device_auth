@@ -249,7 +249,7 @@ OUT:
     if (step != STEP_THREE) {
         res = ClientProtocolMessageOut(out, params->opCode, step);
         if (res != HC_SUCCESS) {
-            LOGE("ClientProtocolMessageOut failed, res: %" LOG_PUB "x.", res);
+            LOGE("Client protocol message out failed, res: %" LOG_PUB "x.", res);
         }
     }
     return res;

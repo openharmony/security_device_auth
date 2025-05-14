@@ -85,7 +85,7 @@ static int32_t EcSpekeClientStartReqBuildEvent(const EcSpekeParams *params, CJso
 {
     CJson *json = CreateJson();
     if (json == NULL) {
-        LOGE("Create json failed.");
+        LOGE("Json create failed.");
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, CLEINT_START_REQ_EVENT) != HC_SUCCESS) {
@@ -95,7 +95,7 @@ static int32_t EcSpekeClientStartReqBuildEvent(const EcSpekeParams *params, CJso
     }
     if (AddByteToJson(json, FIELD_AUTH_ID_CLIENT, params->authIdSelf.val,
         params->authIdSelf.length) != HC_SUCCESS) {
-        LOGE("Add authIdC to json fail.");
+        LOGE("Add client auth id to json failed!");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -368,17 +368,17 @@ static int32_t CalSidPeer(EcSpekeParams *params, Uint8Buff *sidPeer)
     uint32_t sidPeerMsgLen = params->authIdPeer.length + EC_SPEKE_EC_KEY_LEN;
     Uint8Buff sidPeerMsg = { NULL, 0 };
     if (InitUint8Buff(&sidPeerMsg, sidPeerMsgLen) != HC_SUCCESS) {
-        LOGE("Failed to allocate sidPeerMsg memory!");
+        LOGE("Failed to init sidPeerMsg memory!");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (memcpy_s(sidPeerMsg.val, sidPeerMsg.length, params->authIdPeer.val, params->authIdPeer.length) != EOK) {
-        LOGE("Failed to memcpy for authIdPeer!");
+        LOGE("Failed to memcpy for authIdPeer to sidPeerMsg!");
         ClearFreeUint8Buff(&sidPeerMsg);
         return HC_ERR_MEMORY_COPY;
     }
     if (memcpy_s(sidPeerMsg.val + params->authIdPeer.length, sidPeerMsg.length - params->authIdPeer.length,
         params->epkPeer.val, EC_SPEKE_EC_KEY_LEN) != EOK) { // only need x-coordinate
-        LOGE("Failed to memcpy for epkPeer_X!");
+        LOGE("Failed to memcpy for epkPeer_X to sidPeerMsg!");
         ClearFreeUint8Buff(&sidPeerMsg);
         return HC_ERR_MEMORY_COPY;
     }
@@ -923,12 +923,12 @@ static void NotifyPeerError(int32_t errorCode, CJson **outputEvent)
         return;
     }
     if (AddIntToJson(json, FIELD_EVENT, FAIL_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
+        LOGE("add fail event to eventJson fail.");
         FreeJson(json);
         return;
     }
     if (AddIntToJson(json, FIELD_ERR_CODE, errorCode) != HC_SUCCESS) {
-        LOGE("add errorCode to json fail.");
+        LOGE("add errorCode to eventJson fail.");
         FreeJson(json);
         return;
     }
@@ -985,13 +985,13 @@ static int32_t EcSpekeProtocolSwitchState(BaseProtocol *self, const CJson *recev
                 self->curState = self->failState;
                 return res;
             }
-            LOGI("event: %" LOG_PUB "d, curState: %" LOG_PUB "d, nextState: %" LOG_PUB "d", eventType, self->curState,
+            LOGI("Event: %" LOG_PUB "d, CurState: %" LOG_PUB "d, NextState: %" LOG_PUB "d", eventType, self->curState,
                 STATE_MACHINE[i].nextState);
             self->curState = STATE_MACHINE[i].nextState;
             return HC_SUCCESS;
         }
     }
-    LOGI("Unsupported event type. Ignore process. [Event]: %" LOG_PUB "d, [CurState]: %" LOG_PUB "d",
+    LOGI("Unsupported eventType, Ignore process. [Event]: %" LOG_PUB "d, [CurState]: %" LOG_PUB "d. ",
         eventType, self->curState);
     return HC_SUCCESS;
 }

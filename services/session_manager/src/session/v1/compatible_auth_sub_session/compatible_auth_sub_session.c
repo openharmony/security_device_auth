@@ -92,13 +92,13 @@ static int32_t GetAuthInfoForServer(CJson *dataFromClient, ParamsVecForAuth *aut
     }
     int32_t authForm = AUTH_FORM_INVALID_TYPE;
     if (GetIntFromJson(dataFromClient, FIELD_AUTH_FORM, &authForm) != HC_SUCCESS) {
-        LOGE("Failed to get auth form!");
+        LOGE("Failed to get auth form from clientData!");
         return HC_ERR_JSON_GET;
     }
     int32_t groupAuthType = GetAuthType(authForm);
     BaseGroupAuth *groupAuthHandle = GetGroupAuth(groupAuthType);
     if (groupAuthHandle == NULL) {
-        LOGE("Failed to get group auth handle!");
+        LOGE("Failed to get group auth handle with groupAuthType!");
         return HC_ERR_NOT_SUPPORT;
     }
     return groupAuthHandle->getAuthParamsVecForServer(dataFromClient, authParamsVec);

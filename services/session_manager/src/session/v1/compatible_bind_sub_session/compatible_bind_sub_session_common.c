@@ -355,12 +355,12 @@ static int32_t AddSelfUpgradeFlag(CJson *params, bool isClient, int32_t osAccoun
     }
     TrustedDeviceEntry *selfDeviceEntry = CreateDeviceEntry();
     if (selfDeviceEntry == NULL) {
-        LOGE("Failed to create self device entry!");
+        LOGE("Failed to create selfDeviceEntry!");
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t res = GaGetLocalDeviceInfo(osAccountId, groupId, selfDeviceEntry);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get self device entry!");
+        LOGE("Failed to get selfDeviceInfo!");
         DestroyDeviceEntry(selfDeviceEntry);
         return res;
     }

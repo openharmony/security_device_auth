@@ -241,7 +241,7 @@ bool IsGroupExistByGroupId(int32_t osAccountId, const char *groupId)
 int32_t CheckGroupAccessible(int32_t osAccountId, const char *groupId, const char *appId)
 {
     if ((groupId == NULL) || (appId == NULL)) {
-        LOGE("The group id or app id is NULL!");
+        LOGE("GroupId or appId is NULL!");
         return HC_ERR_NULL_PTR;
     }
     TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
@@ -522,12 +522,12 @@ int32_t AddGroupOwnerToParams(const char *owner, TrustedGroupEntry *groupParams)
 {
     HcString ownerName = CreateString();
     if (!StringSetPointer(&ownerName, owner)) {
-        LOGE("Failed to copy groupOwner!");
+        LOGE("Failed to copy groupOwner to ownerName!");
         DeleteString(&ownerName);
         return HC_ERR_MEMORY_COPY;
     }
     if (groupParams->managers.pushBackT(&groupParams->managers, ownerName) == NULL) {
-        LOGE("Failed to push owner to vec!");
+        LOGE("Failed to push ownerName to managers vec!");
         DeleteString(&ownerName);
         return HC_ERR_MEMORY_COPY;
     }
@@ -898,16 +898,16 @@ int32_t GenerateBindSuccessData(const char *peerAuthId, const char *peerUdid,
     PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
     CJson *jsonData = CreateJson();
     if (jsonData == NULL) {
-        LOGE("Allocate jsonData memory failed!");
+        LOGE("Allocate json data memory failed!");
         return HC_ERR_JSON_FAIL;
     }
     if (AddStringToJson(jsonData, FIELD_GROUP_ID, groupId) != HC_SUCCESS) {
-        LOGE("Add groupId to jsonData failed!");
+        LOGE("Add groupId to json data failed!");
         FreeJson(jsonData);
         return HC_ERR_JSON_FAIL;
     }
     if (AddStringToJson(jsonData, FIELD_ADD_ID, peerAuthId) != HC_SUCCESS) {
-        LOGE("Add addId to jsonData failed!");
+        LOGE("Add addId to json data failed!");
         FreeJson(jsonData);
         return HC_ERR_JSON_FAIL;
     }
@@ -987,7 +987,7 @@ int32_t ProcessKeyPair(int32_t osAccountId, int action, const CJson *jsonParams,
         return HC_ERR_ALLOC_MEMORY;
     }
     if (memcpy_s(authIdBuff.val, authIdBuff.length, authId, authIdBuff.length) != EOK) {
-        LOGE("Copy authId failed!");
+        LOGE("Copy authId to buff failed!");
         HcFree(authIdBuff.val);
         return HC_ERR_MEMORY_COPY;
     }

@@ -214,7 +214,7 @@ static int32_t GetAccountUnrelatedIdentityInfo(
 
     ret = SetProtocolsToIdentityInfo(keyType, info);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to set protocols!");
+        LOGE("Failed to set protocols with keyType!");
         return ret;
     }
 
@@ -377,7 +377,7 @@ static int32_t SetIdentityInfoByUrl(const CJson *urlJson, IdentityInfo *info)
 
     ret = SetProtocolsToIdentityInfo(keyType, info);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to set protocols to identity info!");
+        LOGE("Failed to set protocols to identity info with keyType!");
         return ret;
     }
 
@@ -389,18 +389,18 @@ static int32_t CheckAndGetP2pCredInfo(const CJson *in, const CJson *urlJson, Ide
 {
     int32_t osAccountId = INVALID_OS_ACCOUNT;
     if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId!");
+        LOGE("Failed to get osAccountId from json!");
         return HC_ERR_JSON_GET;
     }
 
     const char *groupId = GetStringFromJson(urlJson, FIELD_GROUP_ID);
     if (groupId == NULL) {
-        LOGE("Failed to get groupId!");
+        LOGE("Failed to get groupId from url json!");
         return HC_ERR_JSON_GET;
     }
     int32_t ret = CheckGroupExist(osAccountId, groupId);
     if (ret != HC_SUCCESS) {
-        LOGE("group not exist!");
+        LOGE("Group not exist!");
         return ret;
     }
     TrustedDeviceEntry *deviceEntry = CreateDeviceEntry();
@@ -501,7 +501,7 @@ static int32_t AuthGeneratePsk(const CJson *in, const char *groupId, const Uint8
 {
     int32_t osAccountId = INVALID_OS_ACCOUNT;
     if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId!");
+        LOGE("Failed to get osAccountId from inJson!");
         return HC_ERR_JSON_GET;
     }
     TrustedDeviceEntry *deviceEntry = CreateDeviceEntry();
@@ -549,7 +549,7 @@ static int32_t GetSharedSecretForP2pInIso(const CJson *in, const char *groupId, 
     Uint8Buff seedBuff = { seedVal, SEED_LEN };
     int32_t ret = GetByteFromJson(in, FIELD_SEED, seedBuff.val, seedBuff.length);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to get seed!");
+        LOGE("Failed to get seed from json!");
         HcFree(seedVal);
         return HC_ERR_JSON_GET;
     }
@@ -580,7 +580,7 @@ static int32_t GetSelfAuthIdAndUserType(
     }
     int32_t ret = GetSelfDeviceEntry(osAccountId, groupId, deviceEntry);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to get self device entry!");
+        LOGE("Failed to get self device entry with groupId!");
         DestroyDeviceEntry(deviceEntry);
         return ret;
     }
@@ -821,13 +821,13 @@ static int32_t GetSharedSecretForP2pInPake(const CJson *in, const char *groupId,
     }
     uint8_t *pskVal = (uint8_t *)HcMalloc(PAKE_PSK_LEN, 0);
     if (pskVal == NULL) {
-        LOGE("Failed to alloc memory for psk!");
+        LOGE("Failed to allocate memory for psk!");
         return HC_ERR_ALLOC_MEMORY;
     }
     Uint8Buff pskBuff = { pskVal, PAKE_PSK_LEN };
     uint8_t *nonceVal = (uint8_t *)HcMalloc(PAKE_NONCE_LEN, 0);
     if (nonceVal == NULL) {
-        LOGE("Failed to alloc memory for nonce!");
+        LOGE("Failed to allocate memory for nonce!");
         HcFree(pskVal);
         return HC_ERR_ALLOC_MEMORY;
     }
@@ -844,7 +844,7 @@ static int32_t GetSharedSecretForP2pInPake(const CJson *in, const char *groupId,
     ret = GetLoaderInstance()->computeHkdf(&keyAliasParams, &nonceBuff, &keyInfo, &pskBuff);
     HcFree(nonceVal);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to compute hkdf for psk!");
+        LOGE("Failed to computeHkdf for psk!");
         HcFree(pskVal);
         return ret;
     }

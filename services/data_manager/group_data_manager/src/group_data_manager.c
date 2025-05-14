@@ -1109,7 +1109,7 @@ static int32_t AddUserTypeToReturn(const TrustedDeviceEntry *deviceInfo, CJson *
 static int32_t GenerateMessage(const TrustedGroupEntry *groupEntry, char **returnGroupInfo)
 {
     if (groupEntry == NULL) {
-        LOGE("groupEntry is null!");
+        LOGE("Invalid param, groupEntry is null!");
         return HC_ERR_NULL_PTR;
     }
     CJson *message = CreateJson();
@@ -1532,6 +1532,7 @@ int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params)
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         UnlockHcMutex(g_databaseMutex);
+        LOGE("[DB]: GetTrustedInfoByOsAccountId occurred error!");
         return HC_ERR_INVALID_PARAMS;
     }
     int32_t count = 0;

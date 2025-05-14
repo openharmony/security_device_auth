@@ -182,7 +182,7 @@ int32_t StartDevSession(int64_t sessionId)
     SessionInfo *sessionInfo;
     int32_t res = GetSessionInfo(sessionId, &sessionInfo);
     if (res != HC_SUCCESS) {
-        LOGE("Session not found. [Id]: %" LOG_PUB PRId64, sessionId);
+        LOGE("session not found. [Id]: %" LOG_PUB PRId64, sessionId);
         UnlockHcMutex(&g_sessionMutex);
         return res;
     }

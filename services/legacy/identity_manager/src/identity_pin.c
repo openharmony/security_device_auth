@@ -144,7 +144,7 @@ static int32_t CreateUrlStr(const CJson *in, char **urlStr)
 {
     CJson *urlJson = CreateCredUrlJson(PRE_SHARED, KEY_TYPE_SYM, TRUST_TYPE_PIN);
     if (!urlJson) {
-        LOGE("Failed to create CredUrlJson info!");
+        LOGE("Failed to create cred url json info!");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (IsDirectAuth(in) && AddBoolToJson(urlJson, FIELD_IS_DIRECT_AUTH, true) != HC_SUCCESS) {
@@ -276,7 +276,7 @@ static bool CheckPinLenForStandardIso(const CJson *in, const char *pinCode)
     int32_t protocolExpandVal = INVALID_PROTOCOL_EXPAND_VALUE;
     (void)GetIntFromJson(in, FIELD_PROTOCOL_EXPAND, &protocolExpandVal);
     if (protocolExpandVal != LITE_PROTOCOL_STANDARD_MODE) {
-        LOGI("not standard iso, no need to check.");
+        LOGI("not standard iso, not need to check.");
         return true;
     }
     return HcStrlen(pinCode) >= PIN_CODE_LEN_LONG;
@@ -308,7 +308,7 @@ static int32_t GetSharedSecretForPinInIso(const CJson *in, Uint8Buff *sharedSecr
     Uint8Buff seedBuff = { seedVal, SEED_LEN };
     int32_t ret = GetByteFromJson(in, FIELD_SEED, seedBuff.val, seedBuff.length);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to get seed!");
+        LOGE("Failed to get seed from json!");
         HcFree(seedVal);
         return HC_ERR_JSON_GET;
     }

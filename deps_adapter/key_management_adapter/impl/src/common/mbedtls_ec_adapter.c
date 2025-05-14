@@ -632,7 +632,7 @@ bool MbedtlsIsP256PublicKeyValid(const Uint8Buff *pubKey)
     }
     mbedtls_ctr_drbg_context *ctrDrbg = HcMalloc(sizeof(mbedtls_ctr_drbg_context), 0);
     if (ctrDrbg == NULL) {
-        LOGE("Malloc for ctrDrbg failed.");
+        LOGE("Malloc for mbedtls_ctr_drbg_context failed.");
         return false;
     }
     mbedtls_ecp_group grp;

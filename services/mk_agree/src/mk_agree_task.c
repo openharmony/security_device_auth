@@ -263,7 +263,7 @@ static int32_t GeneratePakeRequestData(PakeMkAgreeTask *pakeTask, CJson *out)
         return HC_ERR_JSON_ADD;
     }
     if (AddObjToJson(out, FIELD_SEND_TO_PEER, sendData) != HC_SUCCESS) {
-        LOGE("Failed to add send data!");
+        LOGE("Failed to add send data to out json!");
         FreeJson(sendData);
         return HC_ERR_JSON_ADD;
     }

@@ -31,8 +31,8 @@
 #define FIELD_AUTH_PK_SERVER "authPkS"
 
 #define FIELD_EVENT "event"
-#define FIELD_ERR_MSG "errMsg"
 #define FIELD_ERR_CODE "errCode"
+#define FIELD_ERR_MSG "errMsg"
 
 typedef struct {
     int32_t userTypeSelf;
@@ -272,23 +272,23 @@ static int32_t ClientSendPkInfoBuildEvent(const CmdParams *params, CJson **outpu
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, CLIENT_SEND_PK_INFO_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json failed.");
+        LOGE("Add eventName to evnet json failed.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_AUTH_ID_CLIENT, params->authIdSelf.val,
         params->authIdSelf.length) != HC_SUCCESS) {
-        LOGE("add authIdC to json failed.");
         FreeJson(json);
+        LOGE("Add authIdC to json failed.");
         return HC_ERR_JSON_ADD;
     }
     if (AddIntToJson(json, FIELD_USER_TYPE_CLIENT, params->userTypeSelf) != HC_SUCCESS) {
-        LOGE("add userTypeC to json failed.");
         FreeJson(json);
+        LOGE("Add userTypeC to json failed.");
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_AUTH_PK_CLIENT, params->pkSelf.val, params->pkSelf.length) != HC_SUCCESS) {
-        LOGE("add authPkC to json failed.");
+        LOGE("Add authPkC to json failed.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -328,16 +328,16 @@ static int32_t ServerSendPkInfoParseEvent(const CJson *inputEvent, CmdParams *pa
     }
     int32_t userTypeC;
     if (GetIntFromJson(inputEvent, FIELD_USER_TYPE_CLIENT, &userTypeC) != HC_SUCCESS) {
-        LOGE("Get userTypeC from json failed.");
+        LOGE("Get userTypeC from inputEvent failed.");
         return HC_ERR_JSON_GET;
     }
     if (InitUint8Buff(&params->pkPeer, PAKE_ED25519_KEY_PAIR_LEN) != HC_SUCCESS) {
-        LOGE("Allocate pkPeer memory failed.");
+        LOGE("Allocate pkPeer memory buff failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (GetByteFromJson(inputEvent, FIELD_AUTH_PK_CLIENT, params->pkPeer.val,
         params->pkPeer.length) != HC_SUCCESS) {
-        LOGE("Get authPkC from json failed.");
+        LOGE("Get authPkC from inputEvent failed.");
         return HC_ERR_JSON_GET;
     }
     params->userTypePeer = userTypeC;
@@ -354,7 +354,7 @@ static int32_t GenerateSelfKeyAlias(const CmdParams *params, Uint8Buff *selfKeyA
     if (params->isSelfFromUpgrade) {
         res = ToLowerCase(selfKeyAlias);
         if (res != HC_SUCCESS) {
-            LOGE("Convert self key alias to lower case failed!");
+            LOGE("Failed to convert self key alias to lower case!");
             return res;
         }
     }
@@ -466,28 +466,28 @@ static int32_t ServerSendAuthCodeBuildEvent(const CmdParams *params, CJson **out
 {
     CJson *json = CreateJson();
     if (json == NULL) {
-        LOGE("create json failed.");
+        LOGE("Create json failed!");
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, SERVER_SEND_PK_INFO_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
+        LOGE("Add eventName to eventJson failed!");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_AUTH_ID_SERVER, params->authIdSelf.val,
         params->authIdSelf.length) != HC_SUCCESS) {
-        LOGE("add authIdS to json fail.");
         FreeJson(json);
+        LOGE("Add authIdS to eventJson fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddIntToJson(json, FIELD_USER_TYPE_SERVER, params->userTypeSelf) != HC_SUCCESS) {
-        LOGE("add userTypeC to json fail.");
         FreeJson(json);
+        LOGE("Add userTypeC to eventJson fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_AUTH_PK_SERVER, params->pkSelf.val, params->pkSelf.length) != HC_SUCCESS) {
-        LOGE("add authPkS to json fail.");
         FreeJson(json);
+        LOGE("Add authPkS to json fail.");
         return HC_ERR_JSON_ADD;
     }
     *outputEvent = json;
@@ -538,16 +538,16 @@ static void NotifyPeerError(int32_t errorCode, CJson **outputEvent)
 {
     CJson *json = CreateJson();
     if (json == NULL) {
-        LOGE("create json failed.");
+        LOGE("Failed to create json.");
         return;
     }
     if (AddIntToJson(json, FIELD_EVENT, FAIL_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
+        LOGE("Add eventName to json failed.");
         FreeJson(json);
         return;
     }
     if (AddIntToJson(json, FIELD_ERR_CODE, errorCode) != HC_SUCCESS) {
-        LOGE("add errorCode to json fail.");
+        LOGE("Add errorCode to json failed.");
         FreeJson(json);
         return;
     }
@@ -652,11 +652,11 @@ static int32_t SwitchState(BaseCmd *self, const CJson *receviedMsg, CJson **retu
 static int32_t StartPubKeyExchangeCmd(BaseCmd *self, CJson **returnSendMsg)
 {
     if ((self == NULL) || (returnSendMsg == NULL)) {
-        LOGE("invalid params.");
+        LOGE("Invalid params!");
         return HC_ERR_INVALID_PARAMS;
     }
     if (self->curState != self->beginState) {
-        LOGE("The protocol has ended, and the state switch cannot continue!");
+        LOGE("The protocol has ended, and cannot continue to switch state!");
         return HC_ERR_UNSUPPORTED_OPCODE;
     }
     CmdState state;
@@ -667,7 +667,7 @@ static int32_t ProcessPubKeyExchangeCmd(BaseCmd *self, const CJson *receviedMsg,
     CJson **returnSendMsg, CmdState *returnState)
 {
     if ((self == NULL) || (receviedMsg == NULL) || (returnSendMsg == NULL) || (returnState == NULL)) {
-        LOGE("invalid params.");
+        LOGE("Invalid params !");
         return HC_ERR_INVALID_PARAMS;
     }
     if ((self->curState == self->finishState) || (self->curState == self->failState)) {
@@ -706,15 +706,15 @@ static int32_t InitPubkeyExchangeCmd(PubKeyExchangeCmd *instance, const PubKeyEx
     bool isCaller, int32_t strategy)
 {
     if (DeepCopyUint8Buff(&params->authId, &(instance->params.authIdSelf)) != HC_SUCCESS) {
-        LOGE("copy authIdSelf fail.");
+        LOGE("Failed to deep copy authIdSelf.");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (DeepCopyString(params->appId, &(instance->params.appId)) != HC_SUCCESS) {
-        LOGE("copy appId fail.");
+        LOGE("Failed to deep copy appId.");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (DeepCopyString(params->groupId, &(instance->params.groupId)) != HC_SUCCESS) {
-        LOGE("copy groupId fail.");
+        LOGE("Failed to deep copy groupId");
         return HC_ERR_ALLOC_MEMORY;
     }
     instance->params.osAccountId = params->osAccountId;

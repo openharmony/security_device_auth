@@ -75,7 +75,7 @@ int32_t RegisterLocalIdentity(const AuthModuleParams *moduleParams, int moduleTy
     }
     AuthModuleBase *module = GetModule(moduleType);
     if (module == NULL) {
-        LOGE("Failed to get module for das.");
+        LOGE("Failed to get module for das with moduleType.");
         return HC_ERR_MODULE_NOT_FOUNT;
     }
     DasAuthModule *dasModule = (DasAuthModule *)module;

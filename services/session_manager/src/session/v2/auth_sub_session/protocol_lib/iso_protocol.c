@@ -281,18 +281,18 @@ static int32_t ClientGenRandomBuildEvent(const IsoParams *params, CJson **output
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, CLEINT_START_REQ_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
+        LOGE("Failed to add eventName to json!");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_RAND_CLIENT, params->randSelf.val, params->randSelf.length) != HC_SUCCESS) {
-        LOGE("add randC to json fail.");
+        LOGE("Failed to add randC to json!");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_AUTH_ID_CLIENT, params->authIdSelf.val,
         params->authIdSelf.length) != HC_SUCCESS) {
-        LOGE("add authIdC to json fail.");
+        LOGE("Failed to add authIdC to json!");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -376,7 +376,7 @@ static int32_t ServerGenTokenBuildEvent(const IsoParams *params, CJson **outputE
 {
     CJson *json = CreateJson();
     if (json == NULL) {
-        LOGE("CreateJson failed.");
+        LOGE("create json failed.");
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, SERVER_START_RSP_EVENT) != HC_SUCCESS) {
@@ -385,18 +385,18 @@ static int32_t ServerGenTokenBuildEvent(const IsoParams *params, CJson **outputE
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_RAND_SERVER, params->randSelf.val, params->randSelf.length) != HC_SUCCESS) {
-        LOGE("add randS to json failed.");
+        LOGE("add randS byte to json failed.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_AUTH_ID_SERVER, params->authIdSelf.val,
         params->authIdSelf.length) != HC_SUCCESS) {
-        LOGE("add authIdS to json failed.");
+        LOGE("add authIdS byte to json failed.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_TOKEN_SERVER, params->tokenSelf.val, params->tokenSelf.length) != HC_SUCCESS) {
-        LOGE("add tokenS to json failed.");
+        LOGE("add tokenS byte to json failed.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -494,16 +494,16 @@ static int32_t ClientGenTokenBuildEvent(const IsoParams *params, CJson **outputE
 {
     CJson *json = CreateJson();
     if (json == NULL) {
-        LOGE("Failed to create json!.");
+        LOGE("create json failed!");
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, CLEINT_FINISH_REQ_EVENT) != HC_SUCCESS) {
-        LOGE("Failed to add eventName to json!");
+        LOGE("add event name to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_TOKEN_CLIENT, params->tokenSelf.val, params->tokenSelf.length) != HC_SUCCESS) {
-        LOGE("Failed to add tokenC to json!");
+        LOGE("add tokenC byte to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -575,17 +575,17 @@ static int32_t ServerGenSessKeyBuildEvent(const IsoParams *params, CJson **outpu
 {
     CJson *json = CreateJson();
     if (json == NULL) {
-        LOGE("Failed to create json!");
+        LOGE("create json failed.");
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, SERVER_FINISH_RSP_EVENT) != HC_SUCCESS) {
-        LOGE("Failed to add eventName to json!");
+        LOGE("add eventName to event json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_AUTH_RESULT_MAC, params->authResultMac.val,
         params->authResultMac.length) != HC_SUCCESS) {
-        LOGE("Failed to add authResultMac to json!");
+        LOGE("add authResultMac byte to event json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -784,11 +784,11 @@ static int32_t SetIsoPsk(BaseProtocol *self, const Uint8Buff *psk)
 static int32_t SetIsoSelfProtectedMsg(BaseProtocol *self, const Uint8Buff *selfMsg)
 {
     if ((self == NULL) || !IsUint8BuffValid(selfMsg, PROTECTED_MSG_MAX_LEN)) {
-        LOGE("Invalid params.");
+        LOGE("invalid params or null pointer.");
         return HC_ERR_INVALID_PARAMS;
     }
     if (DeepCopyUint8Buff(selfMsg, &self->protectedMsg.selfMsg) != HC_SUCCESS) {
-        LOGE("Failed to deepCopy protected selfMsg.");
+        LOGE("Failed to deep copy protected selfMsg.");
         return HC_ERR_ALLOC_MEMORY;
     }
     return HC_SUCCESS;
@@ -810,7 +810,7 @@ static int32_t SetIsoPeerProtectedMsg(BaseProtocol *self, const Uint8Buff *peerM
 static int32_t GetIsoSessionKey(BaseProtocol *self, Uint8Buff *returnSessionKey)
 {
     if ((self == NULL) || (returnSessionKey == NULL)) {
-        LOGE("Invalid params.");
+        LOGE("Exist null pointer.");
         return HC_ERR_INVALID_PARAMS;
     }
     if (self->curState != self->finishState) {

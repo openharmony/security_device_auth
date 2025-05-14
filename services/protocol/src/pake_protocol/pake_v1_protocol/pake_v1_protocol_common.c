@@ -29,6 +29,7 @@
 void DestroyPakeV1BaseParams(PakeBaseParams *params)
 {
     if (params == NULL) {
+        LOGE("param is NULL!");
         return;
     }
 
@@ -70,7 +71,7 @@ static int32_t AllocDefaultParams(PakeBaseParams *params)
     params->salt.length = PAKE_SALT_LEN;
     params->salt.val = (uint8_t *)HcMalloc(params->salt.length, 0);
     if (params->salt.val == NULL) {
-        LOGE("Malloc for salt failed.");
+        LOGE("Failed to malloc for salt!");
         return HC_ERR_ALLOC_MEMORY;
     }
 
@@ -376,18 +377,18 @@ CLEAN_UP:
 int32_t ClientConfirmPakeV1Protocol(PakeBaseParams *params)
 {
     if (params == NULL) {
-        LOGE("Invalid params.");
+        LOGE("Params is NULL.");
         return HC_ERR_NULL_PTR;
     }
     int32_t res = GeneratePakeParams(params);
     if (res != HC_SUCCESS) {
-        LOGE("The operation of GeneratePakeParams failed, res: %" LOG_PUB "x.", res);
+        LOGE("Generate v1 pake params failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
     res = GenerateSessionKey(params);
     if (res != HC_SUCCESS) {
-        LOGE("The operation of GenerateSessionKey failed, res: %" LOG_PUB "x.", res);
+        LOGE("Generate v1 session key failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
@@ -419,12 +420,12 @@ int32_t ClientVerifyConfirmPakeV1Protocol(PakeBaseParams *params)
 int32_t ServerResponsePakeV1Protocol(PakeBaseParams *params)
 {
     if (params == NULL) {
-        LOGE("Params is null.");
+        LOGE("Invalid params, params is null!");
         return HC_ERR_NULL_PTR;
     }
     int32_t res = GeneratePakeParams(params);
     if (res != HC_SUCCESS) {
-        LOGE("GeneratePakeParams failed, res: %" LOG_PUB "x.", res);
+        LOGE("Generate v1 pake params failed, res: %" LOG_PUB "x.", res);
         CleanPakeSensitiveKeys(params);
     }
     return res;
@@ -444,13 +445,13 @@ int32_t ServerConfirmPakeV1Protocol(PakeBaseParams *params)
 
     res = VerifyProof(params);
     if (res != HC_SUCCESS) {
-        LOGE("VerifyProof failed, res: %" LOG_PUB "x.", res);
+        LOGE("Verify proof failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
     res = GenerateProof(params);
     if (res != HC_SUCCESS) {
-        LOGE("GenerateProof failed, res: %" LOG_PUB "x.", res);
+        LOGE("Generate proof failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 

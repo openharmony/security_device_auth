@@ -131,7 +131,7 @@ static int32_t StringToVersion(const char* verStr, VersionStruct* version)
         return HC_ERR_ALLOC_MEMORY;
     }
     if (memcpy_s(verStrTmp, len + 1, verStr, len) != EOK) {
-        LOGE("Memcpy for verStrTmp failed.");
+        LOGE("Memcpy verStr to verStrTmp failed.");
         HcFree(verStrTmp);
         return HC_ERR_MEMORY_COPY;
     }

@@ -258,7 +258,7 @@ int IsoClientCheckAndGenToken(IsoBaseParams *params, const Uint8Buff *peerToken,
         return HC_ERR_NULL_PTR;
     }
     if (peerToken == NULL || selfToken == NULL) {
-        LOGE("Params is null.");
+        LOGE("peerToken or selfToken is null.");
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
         return HC_ERR_NULL_PTR;
     }
