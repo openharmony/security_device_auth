@@ -38,7 +38,7 @@ build_flags = [
   "-fstack-protector-all",
   "-FPIC",
   "-FS",
-  "-D_FORTITY_SOURCE=2",
+  "-D_FORTIFY_SOURCE=2",
   "-Wformat=2",
   "-Wfloat-equal",
   "-Wdate-time",
