@@ -141,15 +141,15 @@ static int32_t IpcGmRegCallback(const char *appId, const DeviceAuthCallback *cal
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
     int32_t inOutLen;
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || callback == NULL));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || callback == NULL));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_BIND_ID);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_REG_CB, true);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_REG_CB, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
         AddIpcCliCallbackCtx(appId, 0, &g_ipcProxyCbList);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
@@ -166,13 +166,13 @@ static int32_t IpcGmUnRegCallback(const char *appId)
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
     int32_t inOutLen;
 
-    CHECK_IPC_PARAMS(IsStrInvalid(appId));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED(IsStrInvalid(appId));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_UNREG_CB, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_UNREG_CB, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
         DelIpcCliCallbackCtx(appId, &g_ipcProxyCbList);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
@@ -189,15 +189,15 @@ static int32_t IpcGmRegDataChangeListener(const char *appId, const DataChangeLis
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
     int32_t inOutLen;
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || (listener == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || (listener == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_LISTENER, listener, sizeof(*listener));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_LISTENER, listener, sizeof(*listener));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_BIND_ID);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_REG_LISTENER, true);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_REG_LISTENER, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
         AddIpcCliCallbackCtx(appId, 0, &g_ipcListenerCbList);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
@@ -214,13 +214,13 @@ static int32_t IpcGmUnRegDataChangeListener(const char *appId)
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
     int32_t inOutLen;
 
-    CHECK_IPC_PARAMS(IsStrInvalid(appId));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED(IsStrInvalid(appId));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_UNREG_LISTENER, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_UNREG_LISTENER, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
         DelIpcCliCallbackCtx(appId, &g_ipcListenerCbList);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
@@ -237,16 +237,16 @@ static int32_t IpcGmCreateGroup(int32_t osAccountId, int64_t requestId, const ch
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || IsStrInvalid(createParams)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(createParams)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_CREATE_PARAMS, createParams, HcStrlen(createParams) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_CREATE_GROUP, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_CREATE_PARAMS, createParams, HcStrlen(createParams) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_CREATE_GROUP, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -262,16 +262,16 @@ static int32_t IpcGmDeleteGroup(int32_t osAccountId, int64_t requestId, const ch
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || IsStrInvalid(delParams)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(delParams)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_DEL_PARAMS, delParams, HcStrlen(delParams) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_DEL_GROUP, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEL_PARAMS, delParams, HcStrlen(delParams) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_DEL_GROUP, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -287,16 +287,16 @@ static int32_t IpcGmAddMemberToGroup(int32_t osAccountId, int64_t requestId, con
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || IsStrInvalid(addParams)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(addParams)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_ADD_PARAMS, addParams, HcStrlen(addParams) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_ADD_GROUP_MEMBER, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_ADD_PARAMS, addParams, HcStrlen(addParams) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_ADD_GROUP_MEMBER, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -312,16 +312,16 @@ static int32_t IpcGmDelMemberFromGroup(int32_t osAccountId, int64_t requestId, c
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || IsStrInvalid(delParams)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(delParams)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_DEL_PARAMS, delParams, HcStrlen(delParams) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_DEL_GROUP_MEMBER, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEL_PARAMS, delParams, HcStrlen(delParams) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_DEL_GROUP_MEMBER, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -337,15 +337,15 @@ static int32_t IpcGmAddMultiMembersToGroup(int32_t osAccountId, const char *appI
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || IsStrInvalid(addParams)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(addParams)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_ADD_PARAMS, addParams, HcStrlen(addParams) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_ADD_MULTI_GROUP_MEMBERS, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_ADD_PARAMS, addParams, HcStrlen(addParams) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_ADD_MULTI_GROUP_MEMBERS, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -361,15 +361,15 @@ static int32_t IpcGmDelMultiMembersFromGroup(int32_t osAccountId, const char *ap
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || IsStrInvalid(delParams)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(delParams)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_DEL_PARAMS, delParams, HcStrlen(delParams) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_DEL_MULTI_GROUP_MEMBERS, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEL_PARAMS, delParams, HcStrlen(delParams) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_DEL_MULTI_GROUP_MEMBERS, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -385,14 +385,14 @@ static int32_t IpcGmProcessData(int64_t requestId, const uint8_t *data, uint32_t
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
 
-    CHECK_IPC_PARAMS((!IS_COMM_DATA_VALID(data, dataLen)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((!IS_COMM_DATA_VALID(data, dataLen)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_COMM_DATA, data, dataLen);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_GM_PROC_DATA, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_COMM_DATA, data, dataLen);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_GM_PROC_DATA, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -409,15 +409,15 @@ static int32_t IpcGmGetRegisterInfo(const char *reqJsonStr, char **registerInfo)
     IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
     char *outInfo = NULL;
 
-    CHECK_IPC_PARAMS((IsStrInvalid(reqJsonStr) || (registerInfo == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(reqJsonStr) || (registerInfo == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_REQ_JSON, reqJsonStr, HcStrlen(reqJsonStr) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_APPLY_REG_INFO, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQ_JSON, reqJsonStr, HcStrlen(reqJsonStr) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_APPLY_REG_INFO, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
-        GET_IPC_RESULT_NUM(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_1);
-        GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_REG_INFO, outInfo);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
+        BREAK_IF_GET_IPC_RESULT_NUM_FAILED(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_1);
+        BREAK_IF_GET_IPC_REPLY_STR_FAILED(replyCache, PARAM_TYPE_REG_INFO, outInfo);
         *registerInfo = strdup(outInfo);
         if (registerInfo == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
@@ -436,15 +436,15 @@ static int32_t IpcGmCheckAccessToGroup(int32_t osAccountId, const char *appId, c
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || IsStrInvalid(groupId)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(groupId)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_GROUPID, groupId, HcStrlen(groupId) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_CHECK_ACCESS_TO_GROUP, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_GROUPID, groupId, HcStrlen(groupId) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_CHECK_ACCESS_TO_GROUP, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -460,18 +460,18 @@ static int32_t IpcGmGetPkInfoList(int32_t osAccountId, const char *appId, const 
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
     char *outInfo = NULL;
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || IsStrInvalid(queryParams) || (returnInfoList == NULL)
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(queryParams) || (returnInfoList == NULL)
         || (returnInfoNum == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_QUERY_PARAMS, queryParams, HcStrlen(queryParams) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_GET_PK_INFO_LIST, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_QUERY_PARAMS, queryParams, HcStrlen(queryParams) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_GET_PK_INFO_LIST, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
-        GET_IPC_RESULT_NUM(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_2);
-        GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_RETURN_DATA, outInfo);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
+        BREAK_IF_GET_IPC_RESULT_NUM_FAILED(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_2);
+        BREAK_IF_GET_IPC_REPLY_STR_FAILED(replyCache, PARAM_TYPE_RETURN_DATA, outInfo);
         *returnInfoList = strdup(outInfo);
         if (returnInfoList == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
@@ -492,17 +492,17 @@ static int32_t IpcGmGetGroupInfoById(int32_t osAccountId, const char *appId, con
     IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
     char *outInfo = NULL;
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || IsStrInvalid(groupId) || (outGroupInfo == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(groupId) || (outGroupInfo == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_GROUPID, groupId, HcStrlen(groupId) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_GET_GROUP_INFO, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_GROUPID, groupId, HcStrlen(groupId) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_GET_GROUP_INFO, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
-        GET_IPC_RESULT_NUM(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_1);
-        GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_GROUP_INFO, outInfo);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
+        BREAK_IF_GET_IPC_RESULT_NUM_FAILED(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_1);
+        BREAK_IF_GET_IPC_REPLY_STR_FAILED(replyCache, PARAM_TYPE_GROUP_INFO, outInfo);
         *outGroupInfo = strdup(outInfo);
         if (outGroupInfo == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
@@ -522,17 +522,18 @@ static int32_t IpcGmGetGroupInfo(int32_t osAccountId, const char *appId, const c
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
     char *outInfo = NULL;
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || IsStrInvalid(queryParams) || (outGroupVec == NULL) || (groupNum == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(queryParams)
+        || (outGroupVec == NULL) || (groupNum == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_QUERY_PARAMS, queryParams, HcStrlen(queryParams) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_SEARCH_GROUPS, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_QUERY_PARAMS, queryParams, HcStrlen(queryParams) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_SEARCH_GROUPS, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
-        GET_IPC_RESULT_NUM(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_2);
-        GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_GROUP_INFO, outInfo);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
+        BREAK_IF_GET_IPC_RESULT_NUM_FAILED(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_2);
+        BREAK_IF_GET_IPC_REPLY_STR_FAILED(replyCache, PARAM_TYPE_GROUP_INFO, outInfo);
         *outGroupVec = strdup(outInfo);
         if (outGroupVec == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
@@ -554,17 +555,17 @@ static int32_t IpcGmGetJoinedGroups(int32_t osAccountId, const char *appId, int3
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
     char *outInfo = NULL;
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || (outGroupVec == NULL) || (groupNum == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || (outGroupVec == NULL) || (groupNum == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_GROUP_TYPE, &groupType, sizeof(groupType));
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_GET_JOINED_GROUPS, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_GROUP_TYPE, &groupType, sizeof(groupType));
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_GET_JOINED_GROUPS, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
-        GET_IPC_RESULT_NUM(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_2);
-        GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_GROUP_INFO, outInfo);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
+        BREAK_IF_GET_IPC_RESULT_NUM_FAILED(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_2);
+        BREAK_IF_GET_IPC_REPLY_STR_FAILED(replyCache, PARAM_TYPE_GROUP_INFO, outInfo);
         *outGroupVec = strdup(outInfo);
         if (outGroupVec == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
@@ -586,17 +587,18 @@ static int32_t IpcGmGetRelatedGroups(int32_t osAccountId, const char *appId, con
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
     char *outInfo = NULL;
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || IsStrInvalid(peerUdid) || (outGroupVec == NULL) || (groupNum == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(peerUdid) ||
+        (outGroupVec == NULL) || (groupNum == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_UDID, peerUdid, HcStrlen(peerUdid) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_GET_RELATED_GROUPS, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_UDID, peerUdid, HcStrlen(peerUdid) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_GET_RELATED_GROUPS, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
-        GET_IPC_RESULT_NUM(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_2);
-        GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_GROUP_INFO, outInfo);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
+        BREAK_IF_GET_IPC_RESULT_NUM_FAILED(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_2);
+        BREAK_IF_GET_IPC_REPLY_STR_FAILED(replyCache, PARAM_TYPE_GROUP_INFO, outInfo);
         *outGroupVec = strdup(outInfo);
         if (outGroupVec == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
@@ -618,18 +620,19 @@ static int32_t IpcGmGetDeviceInfoById(int32_t osAccountId, const char *appId, co
     IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
     char *outInfo = NULL;
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || IsStrInvalid(peerUdid) || IsStrInvalid(groupId) || (outDevInfo == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(peerUdid) ||
+        IsStrInvalid(groupId) || (outDevInfo == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_UDID, peerUdid, HcStrlen(peerUdid) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_GROUPID, groupId, HcStrlen(groupId) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_GET_DEV_INFO_BY_ID, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_UDID, peerUdid, HcStrlen(peerUdid) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_GROUPID, groupId, HcStrlen(groupId) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_GET_DEV_INFO_BY_ID, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
-        GET_IPC_RESULT_NUM(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_1);
-        GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_DEVICE_INFO, outInfo);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
+        BREAK_IF_GET_IPC_RESULT_NUM_FAILED(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_1);
+        BREAK_IF_GET_IPC_REPLY_STR_FAILED(replyCache, PARAM_TYPE_DEVICE_INFO, outInfo);
         *outDevInfo = strdup(outInfo);
         if (outDevInfo == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
@@ -649,17 +652,18 @@ static int32_t IpcGmGetTrustedDevices(int32_t osAccountId, const char *appId,
     IpcDataInfo replyCache[IPC_DATA_CACHES_4] = { { 0 } };
     char *outInfo = NULL;
 
-    CHECK_IPC_PARAMS((IsStrInvalid(appId) || IsStrInvalid(groupId) || (outDevInfoVec == NULL) || (deviceNum == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(groupId) ||
+        (outDevInfoVec == NULL) || (deviceNum == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_GROUPID, groupId, HcStrlen(groupId) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_GET_TRUST_DEVICES, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_GROUPID, groupId, HcStrlen(groupId) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_GET_TRUST_DEVICES, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
-        GET_IPC_RESULT_NUM(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_2);
-        GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_DEVICE_INFO, outInfo);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
+        BREAK_IF_GET_IPC_RESULT_NUM_FAILED(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_2);
+        BREAK_IF_GET_IPC_REPLY_STR_FAILED(replyCache, PARAM_TYPE_DEVICE_INFO, outInfo);
         *outDevInfoVec = strdup(outInfo);
         if (outDevInfoVec == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
@@ -679,16 +683,16 @@ static bool IpcGmIsDeviceInGroup(int32_t osAccountId, const char *appId, const c
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
 
-    CHECK_IPC_PARAMS_BOOL((IsStrInvalid(appId) || IsStrInvalid(groupId) || IsStrInvalid(udid)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_BOOL_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(groupId) || IsStrInvalid(udid)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_GROUPID, groupId, HcStrlen(groupId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_UDID, udid, HcStrlen(udid) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_IS_DEV_IN_GROUP, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_GROUPID, groupId, HcStrlen(groupId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_UDID, udid, HcStrlen(udid) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_IS_DEV_IN_GROUP, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -710,12 +714,12 @@ static void IpcGmCancelRequest(int64_t requestId, const char *appId)
     uintptr_t callCtx = 0x0;
     int32_t ret;
 
-    CHECK_IPC_PARAMS_VOID((IsStrInvalid(appId)));
-    CREATE_IPC_CTX_VOID(callCtx);
+    RETURN_VOID_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId)));
+    RETURN_VOID_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_GM_CANCEL_REQUEST, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_GM_CANCEL_REQUEST, true);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -759,16 +763,16 @@ static int32_t IpcGaProcessData(int64_t authReqId,
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
 
-    CHECK_IPC_PARAMS((!IS_COMM_DATA_VALID(data, dataLen) || (callback == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((!IS_COMM_DATA_VALID(data, dataLen) || (callback == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_REQID, &authReqId, sizeof(authReqId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_COMM_DATA, data, dataLen);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &authReqId, sizeof(authReqId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_COMM_DATA, data, dataLen);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
         SetCbCtxToDataCtx(callCtx, 0x0);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_GA_PROC_DATA, true);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_GA_PROC_DATA, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -785,17 +789,17 @@ static int32_t IpcGaAuthDevice(int32_t osAccountId, int64_t authReqId, const cha
     uintptr_t callCtx = 0x0;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
 
-    CHECK_IPC_PARAMS((IsStrInvalid(authParams) || (callback == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(authParams) || (callback == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_REQID, &authReqId, sizeof(authReqId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_AUTH_PARAMS, authParams, HcStrlen(authParams) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &authReqId, sizeof(authReqId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_AUTH_PARAMS, authParams, HcStrlen(authParams) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_AUTH_ID);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_AUTH_DEVICE, true);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_AUTH_DEVICE, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -809,12 +813,12 @@ static void IpcGaCancelRequest(int64_t requestId, const char *appId)
     uintptr_t callCtx = 0x0;
     int32_t ret;
 
-    CHECK_IPC_PARAMS_VOID((IsStrInvalid(appId)));
-    CREATE_IPC_CTX_VOID(callCtx);
+    RETURN_VOID_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId)));
+    RETURN_VOID_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_GA_CANCEL_REQUEST, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_GA_CANCEL_REQUEST, true);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -829,15 +833,15 @@ static int32_t IpcGaGetRealInfo(int32_t osAccountId, const char *pseudonymId, ch
     IpcDataInfo replyCache[IPC_DATA_CACHES_2] = { { 0 } };
     char *outInfo = NULL;
 
-    CHECK_IPC_PARAMS((IsStrInvalid(pseudonymId) || (realInfo == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(pseudonymId) || (realInfo == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_PSEUDONYM_ID, pseudonymId, HcStrlen(pseudonymId) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_GET_REAL_INFO, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_PSEUDONYM_ID, pseudonymId, HcStrlen(pseudonymId) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_GET_REAL_INFO, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
-        GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_RETURN_DATA, outInfo);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
+        BREAK_IF_GET_IPC_REPLY_STR_FAILED(replyCache, PARAM_TYPE_RETURN_DATA, outInfo);
         *realInfo = strdup(outInfo);
         if (realInfo == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
@@ -856,15 +860,15 @@ static int32_t IpcGaGetPseudonymId(int32_t osAccountId, const char *indexKey, ch
     IpcDataInfo replyCache[IPC_DATA_CACHES_2] = { { 0 } };
     char *outInfo = NULL;
 
-    CHECK_IPC_PARAMS((IsStrInvalid(indexKey) || (pseudonymId == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(indexKey) || (pseudonymId == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_INDEX_KEY, indexKey, HcStrlen(indexKey) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_GET_PSEUDONYM_ID, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_INDEX_KEY, indexKey, HcStrlen(indexKey) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_GET_PSEUDONYM_ID, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
-        GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_RETURN_DATA, outInfo);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
+        BREAK_IF_GET_IPC_REPLY_STR_FAILED(replyCache, PARAM_TYPE_RETURN_DATA, outInfo);
         *pseudonymId = strdup(outInfo);
         if (pseudonymId == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
@@ -1109,15 +1113,15 @@ DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const ch
     IpcDataInfo replyCache[IPC_DATA_CACHES_2] = { { 0 } };
     char *outInfo = NULL;
 
-    CHECK_IPC_PARAMS((IsStrInvalid(reqJsonStr) || (returnData == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(reqJsonStr) || (returnData == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_OPCODE, &operationCode, sizeof(operationCode));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_REQ_JSON, reqJsonStr, HcStrlen(reqJsonStr) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_PROCESS_CREDENTIAL, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OPCODE, &operationCode, sizeof(operationCode));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQ_JSON, reqJsonStr, HcStrlen(reqJsonStr) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_PROCESS_CREDENTIAL, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
-        GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_RETURN_DATA, outInfo);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
+        BREAK_IF_GET_IPC_REPLY_STR_FAILED(replyCache, PARAM_TYPE_RETURN_DATA, outInfo);
         *returnData = strdup(outInfo);
         if (returnData == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
@@ -1138,16 +1142,16 @@ DEVICE_AUTH_API_PUBLIC int32_t ProcessAuthDevice(
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
 
-    CHECK_IPC_PARAMS((IsStrInvalid(authParams) || (callback == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(authParams) || (callback == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_AUTH_PARAMS, authParams, HcStrlen(authParams) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_AUTH_PARAMS, authParams, HcStrlen(authParams) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_DIRECT_AUTH_ID);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_DA_PROC_DATA, true);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_DA_PROC_DATA, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -1164,16 +1168,16 @@ DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
 
-    CHECK_IPC_PARAMS((IsStrInvalid(authParams) || (callback == NULL)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(authParams) || (callback == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_REQID, &authReqId, sizeof(authReqId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_AUTH_PARAMS, authParams, HcStrlen(authParams) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &authReqId, sizeof(authReqId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_AUTH_PARAMS, authParams, HcStrlen(authParams) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_DIRECT_AUTH_ID);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_DA_AUTH_DEVICE, true);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_DA_AUTH_DEVICE, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -1189,14 +1193,14 @@ DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
 
-    CHECK_IPC_PARAMS((IsStrInvalid(authParams)));
-    CREATE_IPC_CTX(callCtx);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(authParams)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_AUTH_PARAMS, authParams, HcStrlen(authParams) + 1);
-        DO_IPC_CALL(callCtx, IPC_CALL_ID_DA_CANCEL_REQUEST, true);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_AUTH_PARAMS, authParams, HcStrlen(authParams) + 1);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_DA_CANCEL_REQUEST, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
-        CHECK_IPC_RESULT(replyCache, ret);
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 

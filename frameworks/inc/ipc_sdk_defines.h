@@ -122,42 +122,42 @@ enum {
     IPC_CALL_ID_AV_GET_SERVER_SHARED_KEY,
 };
 
-#define CHECK_IPC_PARAMS(cond) do { \
+#define RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED(cond) do { \
     if ((cond)) { \
         LOGE("Invalid params"); \
         return HC_ERR_INVALID_PARAMS; \
     } \
 } while (0)
 
-#define CHECK_IPC_PARAMS_VOID(cond) do { \
+#define RETURN_VOID_IF_CHECK_IPC_PARAMS_FAILED(cond) do { \
     if ((cond)) { \
         LOGE("Invalid params"); \
         return; \
     } \
 } while (0)
 
-#define CHECK_IPC_PARAMS_BOOL(cond) do { \
+#define RETURN_BOOL_IF_CHECK_IPC_PARAMS_FAILED(cond) do { \
     if ((cond)) { \
         LOGE("Invalid params"); \
         return false; \
     } \
 } while (0)
 
-#define CREATE_IPC_CTX(callCtx) \
+#define RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx) \
 ret = CreateCallCtx(&(callCtx)); \
 if (ret != HC_SUCCESS) { \
     LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret); \
     return HC_ERR_IPC_INIT; \
 }
 
-#define CREATE_IPC_CTX_VOID(callCtx) \
+#define RETURN_VOID_IF_CREATE_IPC_CTX_FAILED(callCtx) \
 ret = CreateCallCtx(&(callCtx)); \
 if (ret != HC_SUCCESS) { \
     LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret); \
     return; \
 }
 
-#define SET_IPC_PARAM(callCtx, paramType, paramValue, valueSize) \
+#define BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, paramType, paramValue, valueSize) \
 ret = SetCallRequestParamInfo((callCtx), (paramType), (const uint8_t *)(paramValue), (valueSize)); \
 if (ret != HC_SUCCESS) { \
     LOGE("set request param failed, ret %" LOG_PUB "d, param id %" LOG_PUB "d", ret, paramType); \
@@ -165,14 +165,14 @@ if (ret != HC_SUCCESS) { \
     break; \
 }
 
-#define DO_IPC_CALL(callCtx, callFunc, isSync) \
+#define BREAK_IF_DO_IPC_CALL_FAILED(callCtx, callFunc, isSync) \
 ret = DoBinderCall((callCtx), (callFunc), (isSync)); \
 if (ret != HC_SUCCESS) { \
     LOGE("ipc call failed."); \
     break; \
 }
 
-#define CHECK_IPC_RESULT(cache, ret) \
+#define BREAK_IF_CHECK_IPC_RESULT_FAILED(cache, ret) \
 (ret) = HC_ERR_IPC_UNKNOW_REPLY; \
 inOutLen = sizeof(int32_t); \
 GetIpcReplyByType((cache), REPLAY_CACHE_NUM((cache)), PARAM_TYPE_IPC_RESULT, (uint8_t *)&(ret), &inOutLen); \
@@ -180,7 +180,7 @@ if ((inOutLen != sizeof(int32_t)) || (ret) != HC_SUCCESS) { \
     break; \
 }
 
-#define GET_IPC_REPLY_STR(cache, paramType, outVar) \
+#define BREAK_IF_GET_IPC_REPLY_STR_FAILED(cache, paramType, outVar) \
 GetIpcReplyByType((cache), REPLAY_CACHE_NUM(cache), (paramType), (uint8_t *)&(outVar), NULL); \
 if ((outVar) == NULL) { \
     ret = HC_ERR_IPC_OUT_DATA; \
@@ -191,7 +191,7 @@ if ((outVar) == NULL) { \
 inOutLen = sizeof(int32_t); \
 GetIpcReplyByType((cache), REPLAY_CACHE_NUM(cache), (paramType), (uint8_t *)(outVar), &inOutLen) \
 
-#define GET_IPC_RESULT_NUM(cache, paramType, ipcResultNum) \
+#define BREAK_IF_GET_IPC_RESULT_NUM_FAILED(cache, paramType, ipcResultNum) \
 inOutLen = sizeof(int32_t); \
 int32_t resultNum; \
 GetIpcReplyByType((cache), REPLAY_CACHE_NUM(cache), (paramType), (uint8_t *)(&resultNum), &inOutLen); \
