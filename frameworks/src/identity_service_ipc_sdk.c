@@ -142,7 +142,7 @@ static int32_t IpcCmAddCredential(int32_t osAccountId, const char *requestParams
         GET_IPC_RESULT_NUM(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_1);
         GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_CRED_ID, outInfo);
         *returnData = strdup(outInfo);
-        if (returnData == NULL) {
+        if (*returnData == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
         }
     } while (0);
@@ -163,7 +163,7 @@ static int32_t IpcCmRegChangeListener(const char *appId, CredChangeListener *lis
     CREATE_IPC_CTX(callCtx);
     do {
         SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_LISTERNER, listener, sizeof(*listener));
+        SET_IPC_PARAM(callCtx, PARAM_TYPE_LISTENER, listener, sizeof(*listener));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_BIND_ID);
         DO_IPC_CALL(callCtx, IPC_CALL_ID_CM_REG_LISTENER, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
@@ -218,7 +218,7 @@ static int32_t IpcCmExportCredential(int32_t osAccountId, const char *credId, ch
         GET_IPC_RESULT_NUM(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_1);
         GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_CRED_VAL, outInfo);
         *returnData = strdup(outInfo);
-        if (returnData == NULL) {
+        if (*returnData == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
             break;
         }
@@ -358,7 +358,7 @@ static int32_t IpcCmAgreeCredential(int32_t osAccountId, const char *selfCredId,
         GET_IPC_RESULT_NUM(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_1);
         GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_CRED_ID, outInfo);
         *returnData = strdup(outInfo);
-        if (returnData == NULL) {
+        if (*returnData == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
             break;
         }
@@ -389,7 +389,7 @@ static int32_t IpcCmDelCredByParams(int32_t osAccountId, const char *requestPara
         GET_IPC_RESULT_NUM(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_1);
         GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_CRED_INFO_LIST, outInfo);
         *returnData = strdup(outInfo);
-        if (returnData == NULL) {
+        if (*returnData == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
             break;
         }
@@ -409,7 +409,7 @@ static int32_t IpcCmBatchUpdateCredentials(int32_t osAccountId, const char *requ
     char *outInfo = NULL;
     int32_t inOutLen;
 
-    CHECK_IPC_PARAMS(IsStrInvalid(requestParams) || returnData == NULL); 
+    CHECK_IPC_PARAMS(IsStrInvalid(requestParams) || returnData == NULL);
     CREATE_IPC_CTX(callCtx);
     do {
         SET_IPC_PARAM(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
@@ -420,7 +420,7 @@ static int32_t IpcCmBatchUpdateCredentials(int32_t osAccountId, const char *requ
         GET_IPC_RESULT_NUM(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_1);
         GET_IPC_REPLY_STR(replyCache, PARAM_TYPE_CRED_INFO_LIST, outInfo);
         *returnData = strdup(outInfo);
-        if (returnData == NULL) {
+        if (*returnData == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
             break;
         }

@@ -31,7 +31,7 @@ extern "C" {
 /* params type for ipc call */
 #define PARAM_TYPE_APPID 1
 #define PARAM_TYPE_DEV_AUTH_CB 2
-#define PARAM_TYPE_LISTERNER 3
+#define PARAM_TYPE_LISTENER 3
 #define PARAM_TYPE_REQID 4
 #define PARAM_TYPE_CREATE_PARAMS 5
 #define PARAM_TYPE_GROUPID 6

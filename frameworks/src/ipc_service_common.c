@@ -191,9 +191,9 @@ int32_t IpcServiceGmRegDataChangeListener(const IpcDataInfo *ipcParams, int32_t 
     }
 
     inOutLen = sizeof(DataChangeListener);
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_LISTERNER, (uint8_t *)&callback, &inOutLen);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_LISTENER, (uint8_t *)&callback, &inOutLen);
     if ((ret != HC_SUCCESS) || (inOutLen != sizeof(DataChangeListener))) {
-        LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_LISTERNER);
+        LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_LISTENER);
         return HC_ERR_IPC_BAD_PARAM;
     }
 
@@ -1396,9 +1396,9 @@ int32_t IpcServiceCmRegCredChangeListener(const IpcDataInfo *ipcParams, int32_t 
     }
 
     inOutLen = sizeof(CredChangeListener);
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_LISTERNER, (uint8_t *)&listener, &inOutLen);
+    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_LISTENER, (uint8_t *)&listener, &inOutLen);
     if ((ret != HC_SUCCESS) || (inOutLen != sizeof(CredChangeListener))) {
-        LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_LISTERNER);
+        LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_LISTENER);
         return HC_ERR_IPC_BAD_PARAM;
     }
 
