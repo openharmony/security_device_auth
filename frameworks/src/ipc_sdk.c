@@ -193,7 +193,7 @@ static int32_t IpcGmRegDataChangeListener(const char *appId, const DataChangeLis
     CREATE_IPC_CTX(callCtx);
     do {
         SET_IPC_PARAM(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        SET_IPC_PARAM(callCtx, PARAM_TYPE_LISTERNER, listener, sizeof(*listener));
+        SET_IPC_PARAM(callCtx, PARAM_TYPE_LISTENER, listener, sizeof(*listener));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_BIND_ID);
         DO_IPC_CALL(callCtx, IPC_CALL_ID_REG_LISTENER, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
