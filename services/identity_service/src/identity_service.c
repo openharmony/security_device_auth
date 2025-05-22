@@ -21,6 +21,7 @@
 #include "identity_service_impl.h"
 #include "os_account_adapter.h"
 #include "permission_adapter.h"
+#include "hisysevent_adapter.h"
 
 int32_t AddCredential(int32_t osAccountId, const char *requestParams, char **returnData)
 {
@@ -36,7 +37,12 @@ int32_t AddCredential(int32_t osAccountId, const char *requestParams, char **ret
         return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
 
-    return AddCredentialImpl(osAccountId, requestParams, returnData);
+    int32_t ret = AddCredentialImpl(osAccountId, requestParams, returnData);
+    if (ret != IS_SUCCESS) {
+        LOGE("Add credential failed, ret: %" LOG_PUB "d.", ret);
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(ADD_CREDENTIAL_EVENT, PROCESS_ADD_CREDENTIAL, ret);
+    }
+    return ret;
 }
 
 int32_t ExportCredential(int32_t osAccountId, const char *credId, char **returnData)
@@ -53,7 +59,12 @@ int32_t ExportCredential(int32_t osAccountId, const char *credId, char **returnD
         return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
 
-    return ExportCredentialImpl(osAccountId, credId, returnData);
+    int32_t ret = ExportCredentialImpl(osAccountId, credId, returnData);
+    if (ret != IS_SUCCESS) {
+        LOGE("Export credential failed, ret: %" LOG_PUB "d.", ret);
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(EXPORT_CREDENTIAL_EVENT, PROCESS_EXPORT_CREDENTIAL, ret);
+    }
+    return ret;
 }
 
 int32_t QueryCredentialByParams(int32_t osAccountId, const char *requestParams, char **returnData)
@@ -70,7 +81,13 @@ int32_t QueryCredentialByParams(int32_t osAccountId, const char *requestParams, 
         return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
 
-    return QueryCredentialByParamsImpl(osAccountId, requestParams, returnData);
+    int32_t ret = QueryCredentialByParamsImpl(osAccountId, requestParams, returnData);
+    if (ret != IS_SUCCESS) {
+        LOGE("Query credential by params failed, ret: %" LOG_PUB "d.", ret);
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(QUERY_CREDENTIAL_BY_PARAMS_EVENT,
+            PROCESS_QUERY_CREDENTIAL_BY_PARAMS, ret);
+    }
+    return ret;
 }
 
 int32_t QueryCredInfoByCredIdAndUid(int32_t osAccountId, int32_t uid, const char *credId,
@@ -93,7 +110,13 @@ int32_t QueryCredInfoByCredId(int32_t osAccountId, const char *credId, char **re
         return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
 
-    return QueryCredInfoByCredIdAndUid(osAccountId, GetCallingUid(), credId, returnData);
+    int32_t ret = QueryCredInfoByCredIdAndUid(osAccountId, GetCallingUid(), credId, returnData);
+    if (ret != IS_SUCCESS) {
+        LOGE("Query credential by credId failed, ret: %" LOG_PUB "d.", ret);
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(QUERY_CRED_INFO_BY_CRED_ID_EVENT,
+            PROCESS_QUERY_CRED_INFO_BY_CRED_ID, ret);
+    }
+    return ret;
 }
 
 int32_t DeleteCredential(int32_t osAccountId, const char *credId)
@@ -110,7 +133,13 @@ int32_t DeleteCredential(int32_t osAccountId, const char *credId)
         return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
 
-    return DeleteCredentialImpl(osAccountId, credId);
+    int32_t ret = DeleteCredentialImpl(osAccountId, credId);
+    if (ret != IS_SUCCESS) {
+        LOGE("Delete credential failed, ret: %" LOG_PUB "d.", ret);
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(DELETE_CREDENTIAL_EVENT,
+            PROCESS_DELETE_CREDENTIAL, ret);
+    }
+    return ret;
 }
 
 int32_t DeleteCredByParams(int32_t osAccountId, const char *requestParams, char **returnData)
@@ -126,7 +155,13 @@ int32_t DeleteCredByParams(int32_t osAccountId, const char *requestParams, char 
         LOGE("Os account is not unlocked!");
         return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    return DeleteCredByParamsImpl(osAccountId, requestParams, returnData);
+    int32_t ret = DeleteCredByParamsImpl(osAccountId, requestParams, returnData);
+    if (ret != IS_SUCCESS) {
+        LOGE("Delete cred by params failed, ret: %" LOG_PUB "d.", ret);
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(DELETE_CREDENTIAL_BY_PARAMS_EVENT,
+            PROCESS_DELETE_CREDENTIAL_BY_PARAMS, ret);
+    }
+    return ret;
 }
 
 int32_t UpdateCredInfo(int32_t osAccountId, const char *credId, const char *requestParams)
@@ -143,7 +178,13 @@ int32_t UpdateCredInfo(int32_t osAccountId, const char *credId, const char *requ
         return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
 
-    return UpdateCredInfoImpl(osAccountId, credId, requestParams);
+    int32_t ret = UpdateCredInfoImpl(osAccountId, credId, requestParams);
+    if (ret != IS_SUCCESS) {
+        LOGE("Update credInfo failed, ret: %" LOG_PUB "d.", ret);
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(UPDATE_CREDENTIAL_INFO_EVENT,
+            PROCESS_UPDATE_CREDENTIAL_INFO, ret);
+    }
+    return ret;
 }
 
 int32_t BatchUpdateCredentials(int32_t osAccountId, const char *requestParams, char **returnData)
@@ -159,7 +200,13 @@ int32_t BatchUpdateCredentials(int32_t osAccountId, const char *requestParams, c
         LOGE("Os account is not unlocked!");
         return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    return BatchUpdateCredsImpl(osAccountId, requestParams, returnData);
+    int32_t ret = BatchUpdateCredsImpl(osAccountId, requestParams, returnData);
+    if (ret != IS_SUCCESS) {
+        LOGE("Batch update creds failed, ret: %" LOG_PUB "d.", ret);
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(BATCH_UPDATE_CREDENTIALS_EVENT,
+            PROCESS_BATCH_UPDATE_CREDENTIALS, ret);
+    }
+    return ret;
 }
 
 int32_t AgreeCredential(int32_t osAccountId, const char *selfCredId, const char *requestParams, char **returnData)
@@ -176,7 +223,13 @@ int32_t AgreeCredential(int32_t osAccountId, const char *selfCredId, const char 
         return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
 
-    return AgreeCredentialImpl(osAccountId, selfCredId, requestParams, returnData);
+    int32_t ret = AgreeCredentialImpl(osAccountId, selfCredId, requestParams, returnData);
+    if (ret != IS_SUCCESS) {
+        LOGE("Agree credential failed, ret: %" LOG_PUB "d.", ret);
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(AGREE_CREDENTIAL_EVENT,
+            PROCESS_AGREE_CREDENTIAL, ret);
+    }
+    return ret;
 }
 
 int32_t RegisterChangeListener(const char *appId, CredChangeListener *listener)

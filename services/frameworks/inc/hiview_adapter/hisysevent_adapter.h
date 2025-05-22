@@ -30,6 +30,16 @@
 #define GET_REGISTER_INFO_EVENT "GetRegisterInfo"
 #define GET_PK_INFO_LIST_EVENT "GetPkInfoList"
 
+#define ADD_CREDENTIAL_EVENT "AddCredential"
+#define EXPORT_CREDENTIAL_EVENT "ExportCredential"
+#define QUERY_CREDENTIAL_BY_PARAMS_EVENT "QueryCredentialByParams"
+#define QUERY_CRED_INFO_BY_CRED_ID_EVENT "QueryCredInfoByCredId"
+#define DELETE_CREDENTIAL_EVENT "DeleteCredential"
+#define DELETE_CREDENTIAL_BY_PARAMS_EVENT "DeleteCredByParams"
+#define UPDATE_CREDENTIAL_INFO_EVENT "UpdateCredInfo"
+#define BATCH_UPDATE_CREDENTIALS_EVENT "BatchUpdateCredentials"
+#define AGREE_CREDENTIAL_EVENT "AgreeCredential"
+
 #define ADD_MEMBER_WITH_LITE_COMPATIBILITY "AddMemberWithLiteCompatibility"
 #define ADD_MEMBER_WITH_LITE_STANDARD "AddMemberWithLiteStandard"
 #define UPGRADE_DATA_EVENT "UpgradeData"
@@ -55,16 +65,25 @@
 #include <stdint.h>
 
 enum DevAuthReportProcessCode {
-    PROCESS_BIND_V1 = 0x001000,
-    PROCESS_AUTH_V1,
-    PROCESS_BIND_V2,
-    PROCESS_AUTH_V2,
-    PROCESS_CREATE_GROUP,
-    PROCESS_DELETE_GROUP,
-    PROCESS_DELETE_MEMBER_FROM_GROUP,
-    PROCESS_ADD_MULTI_MEMBERS_TO_GROUP,
-    PROCESS_DEL_MULTI_MEMBERS_FROM_GROUP,
-    PROCESS_UPDATE
+    PROCESS_BIND_V1 = 0x001000,                 //4096
+    PROCESS_AUTH_V1,                            //4097
+    PROCESS_BIND_V2,                            //4098
+    PROCESS_AUTH_V2,                            //4099
+    PROCESS_CREATE_GROUP,                       //4100
+    PROCESS_DELETE_GROUP,                       //4101
+    PROCESS_DELETE_MEMBER_FROM_GROUP,           //4102
+    PROCESS_ADD_MULTI_MEMBERS_TO_GROUP,         //4103
+    PROCESS_DEL_MULTI_MEMBERS_FROM_GROUP,       //4104
+    PROCESS_UPDATE,                             //4105
+    PROCESS_ADD_CREDENTIAL,                     //4106
+    PROCESS_EXPORT_CREDENTIAL,                  //4107
+    PROCESS_QUERY_CREDENTIAL_BY_PARAMS,         //4108
+    PROCESS_QUERY_CRED_INFO_BY_CRED_ID,         //4109
+    PROCESS_DELETE_CREDENTIAL,                  //4110
+    PROCESS_DELETE_CREDENTIAL_BY_PARAMS,        //4111
+    PROCESS_UPDATE_CREDENTIAL_INFO,             //4112
+    PROCESS_BATCH_UPDATE_CREDENTIALS,           //4113
+    PROCESS_AGREE_CREDENTIAL                    //4114
 };
 
 #define DEFAULT_PNAMEID "device_auth"
