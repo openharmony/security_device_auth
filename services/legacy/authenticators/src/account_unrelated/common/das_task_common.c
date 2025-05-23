@@ -537,6 +537,10 @@ int32_t GetIdPeer(const CJson *in, const char *peerIdKey, const Uint8Buff *authI
 
 int32_t GetAndCheckAuthIdPeer(const CJson *in, const Uint8Buff *authIdSelf, const Uint8Buff *authIdPeer)
 {
+    if (in == NULL || authIdSelf == NULL || authIdPeer == NULL) {
+        LOGE("Params exist NULL.");
+        return HC_ERR_NULL_PTR;
+    }
     const CJson *payload = GetObjFromJson(in, FIELD_PAYLOAD);
     if (payload == NULL) {
         LOGE("Get payload failed.");
