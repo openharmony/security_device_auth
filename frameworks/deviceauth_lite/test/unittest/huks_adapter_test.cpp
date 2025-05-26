@@ -98,17 +98,6 @@ void InitHcAuthId()
     return ;
 }
 
-static struct hc_auth_id g_test_client_auth_id_001 = {strlen("authClient1"), "authClient1"};
-static struct hc_auth_id g_test_client_auth_id_002 = {strlen("authClient2"), "authClient2"};
-
-struct hc_auth_id *g_authIdClientList[3] = {
-    &g_test_client_auth_id,
-    &g_test_client_auth_id_001,
-    &g_test_client_auth_id_002
-};
-
-struct hc_auth_id **g_authIdList = g_authIdClientList;
-
 static void Transmit(const struct session_identity *identity, const void *data, uint32_t length)
 {
     LOG("--------Transmit--------");
