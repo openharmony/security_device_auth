@@ -91,6 +91,7 @@ if (support_os_account) {
       "ability_base:want",
       "access_token:libnativetoken",
       "access_token:libtoken_setproc",
+      "selinux_adapter:librestorecon",
       "cJSON:cjson",
       "c_utils:utils",
       "common_event_service:cesfwk_innerkits",
