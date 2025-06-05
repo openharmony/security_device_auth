@@ -18,6 +18,7 @@
 #include "compatible_auth_sub_session_common.h"
 #include "compatible_auth_sub_session_util.h"
 #include "dev_auth_module_manager.h"
+#include "ext_plugin_manager.h"
 #include "hc_log.h"
 #include "hc_types.h"
 #include "hitrace_adapter.h"
@@ -122,6 +123,33 @@ static int32_t HandlePeerAuthError(CompatibleAuthSubSession *session)
     return HC_SUCCESS;
 }
 
+static void DeleteDeviceToken(int32_t osAccountId, const TrustedDeviceEntry *entry)
+{
+    CJson *deleteParams = CreateJson();
+    if (deleteParams == NULL) {
+        LOGE("Failed to create delete params!");
+        return;
+    }
+    if (AddIntToJson(deleteParams, FIELD_CREDENTIAL_TYPE, (int32_t)entry->credential) != HC_SUCCESS) {
+        LOGE("Failed to add credentialType!");
+        FreeJson(deleteParams);
+        return;
+    }
+    if (AddStringToJson(deleteParams, FIELD_USER_ID, StringGet(&entry->userId)) != HC_SUCCESS) {
+        LOGE("Failed to add userId!");
+        FreeJson(deleteParams);
+        return;
+    }
+    if (AddStringToJson(deleteParams, FIELD_DEVICE_ID, StringGet(&entry->authId)) != HC_SUCCESS) {
+        LOGE("Failed to add deviceId!");
+        FreeJson(deleteParams);
+        return;
+    }
+    int32_t res = ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId, DELETE_TRUSTED_CREDENTIALS, deleteParams, NULL);
+    LOGI("Delete token result is: %" LOG_PUB "d", res);
+    FreeJson(deleteParams);
+}
+
 static void DelTrustDeviceOnAuthErrorV1(const CJson *paramInSession, int32_t peerResultCode)
 {
     int32_t authForm = 0;
@@ -129,8 +157,8 @@ static void DelTrustDeviceOnAuthErrorV1(const CJson *paramInSession, int32_t pee
         LOGE("Get FIELD_AUTH_FORM from session failed!");
         return;
     }
-    if ((authForm != AUTH_FORM_IDENTICAL_ACCOUNT) ||
-        ((peerResultCode != PEER_ACCOUNT_NOT_MATCH) && (peerResultCode != PEER_ACCOUNT_NOT_LOGIN))) {
+    if ((authForm != AUTH_FORM_IDENTICAL_ACCOUNT) || ((peerResultCode != PEER_ACCOUNT_NOT_MATCH) &&
+        (peerResultCode != PEER_ACCOUNT_NOT_LOGIN) && (peerResultCode != PEER_ACCOUNT_NOT_REG))) {
         return;
     }
     int32_t osAccountId;
@@ -158,15 +186,14 @@ static void DelTrustDeviceOnAuthErrorV1(const CJson *paramInSession, int32_t pee
         DestroyDeviceEntry(peerDevInfo);
         return;
     }
-    if (peerDevInfo->source == IMPORTED_FROM_CLOUD) {
-        LOGW("peer device is imported, do not delete!");
-        DestroyDeviceEntry(peerDevInfo);
-        return;
-    }
     if (DelDeviceFromDb(osAccountId, groupId, peerDevInfo) != HC_SUCCESS) {
         LOGE("Failed to delete not trusted account related device!");
         DestroyDeviceEntry(peerDevInfo);
         return;
+    }
+    if (peerDevInfo->source == IMPORTED_FROM_CLOUD) {
+        LOGI("peer device is imported, delete token.");
+        DeleteDeviceToken(osAccountId, peerDevInfo);
     }
     DestroyDeviceEntry(peerDevInfo);
     LOGI("Success delete not trusted account related device!");
