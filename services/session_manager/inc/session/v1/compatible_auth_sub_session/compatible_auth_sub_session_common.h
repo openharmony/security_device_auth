@@ -25,6 +25,7 @@
 
 #define PEER_ACCOUNT_NOT_MATCH 0x7A00000F                 //2046820367
 #define PEER_ACCOUNT_NOT_LOGIN 0x7A000023                 //2046820387
+#define PEER_ACCOUNT_NOT_REG 0x7A000022                   //2046820386
 
 #ifdef __cplusplus
 extern "C" {
