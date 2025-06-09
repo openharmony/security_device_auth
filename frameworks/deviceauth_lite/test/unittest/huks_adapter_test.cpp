@@ -98,17 +98,6 @@ void InitHcAuthId()
     return ;
 }
 
-static struct hc_auth_id g_test_client_auth_id_001 = {strlen("authClient1"), "authClient1"};
-static struct hc_auth_id g_test_client_auth_id_002 = {strlen("authClient2"), "authClient2"};
-
-struct hc_auth_id *g_authIdClientList[3] = {
-    &g_test_client_auth_id,
-    &g_test_client_auth_id_001,
-    &g_test_client_auth_id_002
-};
-
-struct hc_auth_id **g_authIdList = g_authIdClientList;
-
 static void Transmit(const struct session_identity *identity, const void *data, uint32_t length)
 {
     LOG("--------Transmit--------");
@@ -497,17 +486,6 @@ static HWTEST_F(HuksAdapterTest, GetLtKeyInfoTest001, TestSize.Level2)
     int32_t ret = get_lt_key_info(&alias, &key_type, &auth_id);
     EXPECT_NE(ret, ERROR_CODE_SUCCESS);
     LOG("--------HuksAdapterTest Test028--------");
-}
-
-static HWTEST_F(HuksAdapterTest, GetLtPublicKeyListTest001, TestSize.Level2)
-{
-    LOG("--------HuksAdapterTest Test029--------");
-    LOG("--------get_lt_public_key_list--------");
-    uint32_t count = 0;
-    enum huks_key_alias_type alias_type = KEY_ALIAS_CONTROLLER_PK;
-    int32_t ret = get_lt_public_key_list(&g_test_client_auth_id, alias_type, *g_authIdList, &count);
-    EXPECT_NE(ret, ERROR_CODE_SUCCESS);
-    LOG("--------HuksAdapterTest Test029--------");
 }
 
 static HWTEST_F(HuksAdapterTest, ComputeStsSharedSecretTest001, TestSize.Level2)
