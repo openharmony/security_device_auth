@@ -167,12 +167,12 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
     char *urlStr = NULL;
     ret = CreateUrlStr(keyType, &urlStr);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to create url string with keyType!");
+        LOGE("Create url string with keyType failed!");
         return ret;
     }
     IdentityInfo *info = CreateIdentityInfo();
     if (info == NULL) {
-        LOGE("Failed to create identity info!");
+        LOGE("Create identityInfo failed!");
         FreeJsonString(urlStr);
         return HC_ERR_ALLOC_MEMORY;
     }
@@ -185,7 +185,7 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
     }
     ret = SetProtocolsToIdentityInfo(info);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to set protocols!");
+        LOGE("Error occurs, Failed to set protocols!");
         DestroyIdentityInfo(info);
         return ret;
     }
@@ -404,7 +404,7 @@ static int32_t GetSharedSecretByUrl(
     }
     ret = ConvertPsk(&pskBuff, sharedSecret);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to convert psk!");
+        LOGE("Failed to convert sharedSecret to psk!");
     }
     return ret;
 }
@@ -412,9 +412,9 @@ static int32_t GetSharedSecretByUrl(
 static int32_t GetCredInfoByPeerCert(const CJson *in, const CertInfo *certInfo, IdentityInfo **returnInfo)
 {
     // NOT SUPPORT FOR P2P AUTH
-    (void)in;
     (void)certInfo;
     (void)returnInfo;
+    (void)in;
     return HC_ERR_ALG_FAIL;
 }
 

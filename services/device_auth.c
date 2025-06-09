@@ -310,12 +310,12 @@ static int32_t BuildServerP2PAuthContext(int64_t requestId, int32_t opCode, cons
         LOGE("add isClient to context fail.");
         return HC_ERR_JSON_ADD;
     }
-    if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
-        LOGE("add requestId to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
     if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
         LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
+        LOGE("add requestId to context fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
@@ -331,8 +331,8 @@ static int32_t OpenServerAuthSession(int64_t requestId, const CJson *receivedMsg
     int32_t opCode = AUTH_FORM_ACCOUNT_UNRELATED;
     if (GetIntFromJson(receivedMsg, FIELD_AUTH_FORM, &opCode) != HC_SUCCESS) {
         if (GetIntFromJson(receivedMsg, FIELD_OP_CODE, &opCode) != HC_SUCCESS) {
+            LOGW("Use default opCode.");
             opCode = AUTH_FORM_INVALID_TYPE;
-            LOGW("use default opCode.");
         }
     }
     char *returnDataStr = ProcessRequestCallback(requestId, opCode, NULL, callback);

@@ -145,11 +145,11 @@ static int32_t GetAuthIdPeerFromInput(const CJson *inputData, DlSpekeParams *par
         return HC_ERR_CONVERT_FAILED;
     }
     if (InitUint8Buff(&params->authIdPeer, authIdPeerStrLen) != HC_SUCCESS) {
-        LOGE("allocate authIdPeer memory fail.");
+        LOGE("allocate authIdPeer memory failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (HexStringToByte(authIdPeerStr, params->authIdPeer.val, params->authIdPeer.length) != HC_SUCCESS) {
-        LOGE("HexStringToByte for authIdPeerStr failed.");
+        LOGE("HexStringToByte for peerAuthIdStr failed.");
         return HC_ERR_CONVERT_FAILED;
     }
     return HC_SUCCESS;
@@ -595,7 +595,7 @@ static int32_t CalKcfDataSelf(DlSpekeProtocol *impl, bool isClient)
         impl->base.protectedMsg.peerMsg.length;
     Uint8Buff kcfDataMsg = { NULL, 0 };
     if (InitUint8Buff(&kcfDataMsg, kcfDataMsgLen) != HC_SUCCESS) {
-        LOGE("allocate kcfDataMsg memory fail.");
+        LOGE("Init kcfDataMsg failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t res = GenerateKcfDataMsg(impl, isClient, false, &kcfDataMsg);
@@ -604,14 +604,14 @@ static int32_t CalKcfDataSelf(DlSpekeProtocol *impl, bool isClient)
         return res;
     }
     if (InitUint8Buff(&impl->params.kcfDataSelf, SHA256_LEN) != HC_SUCCESS) {
-        LOGE("allocate kcfDataSelf memory fail.");
+        LOGE("Init kcfDataSelf memory failed.");
         ClearFreeUint8Buff(&kcfDataMsg);
         return HC_ERR_ALLOC_MEMORY;
     }
     res = GetLoaderInstance()->sha256(&kcfDataMsg, &impl->params.kcfDataSelf);
     ClearFreeUint8Buff(&kcfDataMsg);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for kcfDataSelf failed, res: %" LOG_PUB "x", res);
+        LOGE("Error occurs, sha256 for kcfDataSelf failed, res: %" LOG_PUB "x", res);
     }
     return res;
 }
@@ -623,7 +623,7 @@ static int32_t VerifyKcfDataPeer(DlSpekeProtocol *impl, bool isClient)
         impl->base.protectedMsg.peerMsg.length;
     Uint8Buff kcfDataMsg = { NULL, 0 };
     if (InitUint8Buff(&kcfDataMsg, kcfDataMsgLen) != HC_SUCCESS) {
-        LOGE("allocate kcfDataMsg memory fail.");
+        LOGE("Error occurs, init kcfDataMsg failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t res = GenerateKcfDataMsg(impl, isClient, true, &kcfDataMsg);
@@ -653,12 +653,12 @@ static int32_t CalSessionKey(DlSpekeProtocol *impl)
         LOGE("Allocating sessionKey memory failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
-    Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_SESSIONKEY_INFO, HcStrlen(HICHAIN_SPEKE_SESSIONKEY_INFO) };
     KeyParams keyParams = {
         { impl->params.sharedSecret.val, impl->params.sharedSecret.length, false },
         false,
         impl->params.osAccountId
     };
+    Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_SESSIONKEY_INFO, HcStrlen(HICHAIN_SPEKE_SESSIONKEY_INFO) };
     int32_t res = GetLoaderInstance()->computeHkdf(&keyParams, &impl->params.salt, &keyInfo,
         &impl->base.sessionKey);
     ClearFreeUint8Buff(&impl->params.salt);
@@ -696,27 +696,27 @@ static int32_t DlSpekeServerStartRspBuildEvent(const DlSpekeParams *params, CJso
 {
     CJson *json = CreateJson();
     if (json == NULL) {
-        LOGE("create json failed.");
+        LOGE("Create json failed.");
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, SERVER_START_RSP_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
-        FreeJson(json);
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddByteToJson(json, FIELD_SALT, params->salt.val, params->salt.length) != HC_SUCCESS) {
-        LOGE("add salt to json fail.");
+        LOGE("Add eventName to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_EPK_SERVER, params->epkSelf.val, params->epkSelf.length) != HC_SUCCESS) {
-        LOGE("add server epk to json fail.");
+        LOGE("Add server epk to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_AUTH_ID_SERVER, params->authIdSelf.val,
         params->authIdSelf.length) != HC_SUCCESS) {
-        LOGE("add server auth id to json fail.");
+        LOGE("Add server auth id to json fail.");
+        FreeJson(json);
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddByteToJson(json, FIELD_SALT, params->salt.val, params->salt.length) != HC_SUCCESS) {
+        LOGE("Add salt to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -786,22 +786,22 @@ static int32_t DlSpekeClientFinishReqBuildEvent(DlSpekeParams *params, CJson **o
 {
     CJson *json = CreateJson();
     if (json == NULL) {
-        LOGE("create json failed.");
+        LOGE("Create json failed.");
         return HC_ERR_JSON_CREATE;
     }
     if (AddIntToJson(json, FIELD_EVENT, CLEINT_FINISH_REQ_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
+        LOGE("Add eventName to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_EPK_CLIENT, params->epkSelf.val, params->epkSelf.length) != HC_SUCCESS) {
-        LOGE("add client epk to json fail.");
+        LOGE("Add client epk to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(json, FIELD_KCF_DATA_CLIENT, params->kcfDataSelf.val,
         params->kcfDataSelf.length) != HC_SUCCESS) {
-        LOGE("add kcfDataC to json fail.");
+        LOGE("Add kcfDataC to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -926,16 +926,16 @@ static void NotifyPeerError(int32_t errorCode, CJson **outputData)
 {
     CJson *json = CreateJson();
     if (json == NULL) {
-        LOGE("create json failed.");
-        return;
-    }
-    if (AddIntToJson(json, FIELD_EVENT, FAIL_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
-        FreeJson(json);
+        LOGE("Create json failed.");
         return;
     }
     if (AddIntToJson(json, FIELD_ERR_CODE, errorCode) != HC_SUCCESS) {
-        LOGE("add errorCode to json fail.");
+        LOGE("Add error code to json failed.");
+        FreeJson(json);
+        return;
+    }
+    if (AddIntToJson(json, FIELD_EVENT, FAIL_EVENT) != HC_SUCCESS) {
+        LOGE("Add fail event to json failed.");
         FreeJson(json);
         return;
     }
@@ -971,13 +971,13 @@ static int32_t DecodeEvent(const CJson *receviedMsg)
     }
     int32_t event;
     if (GetIntFromJson(receviedMsg, FIELD_EVENT, &event) != HC_SUCCESS) {
-        LOGE("get event from receviedMsg fail.");
+        LOGE("Get event from receviedMsg fail.");
         return UNKNOWN_EVENT;
     }
     if (START_AUTH_EVENT <= event && event <= UNKNOWN_EVENT) {
         return event;
     }
-    LOGE("unknown event.");
+    LOGE("Unknown event.");
     return UNKNOWN_EVENT;
 }
 
@@ -1060,11 +1060,11 @@ static int32_t SetDlSpekeSelfProtectedMsg(BaseProtocol *self, const Uint8Buff *s
 static int32_t SetDlSpekePeerProtectedMsg(BaseProtocol *self, const Uint8Buff *peerMsg)
 {
     if ((self == NULL) || !IsUint8BuffValid(peerMsg, PROTECTED_MSG_MAX_LEN)) {
-        LOGE("invalid params.");
+        LOGE("Error occurs, params invalid.");
         return HC_ERR_INVALID_PARAMS;
     }
     if (DeepCopyUint8Buff(peerMsg, &self->protectedMsg.peerMsg) != HC_SUCCESS) {
-        LOGE("copy protected peer msg fail.");
+        LOGE("Copy protected peer msg fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
     return HC_SUCCESS;
@@ -1089,22 +1089,22 @@ static void DestroyDlSpekeProtocol(BaseProtocol *self)
         LOGD("self is null.");
         return;
     }
-    DlSpekeProtocol *impl = (DlSpekeProtocol *)self;
-    ClearFreeUint8Buff(&impl->base.protectedMsg.selfMsg);
-    ClearFreeUint8Buff(&impl->base.protectedMsg.peerMsg);
-    ClearFreeUint8Buff(&impl->base.sessionKey);
-    ClearFreeUint8Buff(&impl->params.psk);
-    ClearFreeUint8Buff(&impl->params.salt);
-    ClearFreeUint8Buff(&impl->params.base);
-    ClearFreeUint8Buff(&impl->params.eskSelf);
-    ClearFreeUint8Buff(&impl->params.epkSelf);
-    ClearFreeUint8Buff(&impl->params.epkPeer);
-    ClearFreeUint8Buff(&impl->params.authIdSelf);
-    ClearFreeUint8Buff(&impl->params.authIdPeer);
-    ClearFreeUint8Buff(&impl->params.kcfDataSelf);
-    ClearFreeUint8Buff(&impl->params.kcfDataPeer);
-    ClearFreeUint8Buff(&impl->params.sharedSecret);
-    HcFree(impl);
+    DlSpekeProtocol *dlSpekeProtocol = (DlSpekeProtocol *)self;
+    ClearFreeUint8Buff(&dlSpekeProtocol->base.protectedMsg.selfMsg);
+    ClearFreeUint8Buff(&dlSpekeProtocol->base.protectedMsg.peerMsg);
+    ClearFreeUint8Buff(&dlSpekeProtocol->base.sessionKey);
+    ClearFreeUint8Buff(&dlSpekeProtocol->params.psk);
+    ClearFreeUint8Buff(&dlSpekeProtocol->params.salt);
+    ClearFreeUint8Buff(&dlSpekeProtocol->params.base);
+    ClearFreeUint8Buff(&dlSpekeProtocol->params.eskSelf);
+    ClearFreeUint8Buff(&dlSpekeProtocol->params.epkSelf);
+    ClearFreeUint8Buff(&dlSpekeProtocol->params.epkPeer);
+    ClearFreeUint8Buff(&dlSpekeProtocol->params.authIdSelf);
+    ClearFreeUint8Buff(&dlSpekeProtocol->params.authIdPeer);
+    ClearFreeUint8Buff(&dlSpekeProtocol->params.kcfDataSelf);
+    ClearFreeUint8Buff(&dlSpekeProtocol->params.kcfDataPeer);
+    ClearFreeUint8Buff(&dlSpekeProtocol->params.sharedSecret);
+    HcFree(dlSpekeProtocol);
 }
 
 static int32_t BuildDlSpekeProtocolObj(const DlSpekeInitParams *params, bool isClient, DlSpekeProtocol *instance)

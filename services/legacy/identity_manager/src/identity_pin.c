@@ -230,7 +230,7 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
     FreeJson(urlJson);
     int32_t ret = SetPreSharedUrlForProof((const char *)presharedUrl->val, &info->proof.preSharedUrl);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to set preSharedUrl of proof!");
+        LOGE("Set preSharedUrl of proof failed!");
         DestroyIdentityInfo(info);
         return ret;
     }
@@ -241,7 +241,7 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
         ret = SetProtocolsForPinType(in, info);
     }
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to set protocols!");
+        LOGE("Error occurs, Failed to set protocols!");
         DestroyIdentityInfo(info);
         return ret;
     }
@@ -370,16 +370,15 @@ static int32_t GetSharedSecretByUrl(
         ret = GetSharedSecretForPinInPake(in, sharedSecret);
         LOGI("get shared secret for pin in pake result: %" LOG_PUB "d", ret);
     }
-
     return ret;
 }
 
 static int32_t GetCredInfoByPeerCert(const CJson *in, const CertInfo *certInfo, IdentityInfo **returnInfo)
 {
     // NOT SUPPORT FOR PIN
-    (void)in;
-    (void)certInfo;
     (void)returnInfo;
+    (void)certInfo;
+    (void)in;
     return HC_ERR_ALG_FAIL;
 }
 
@@ -387,10 +386,10 @@ static int32_t GetSharedSecretByPeerCert(
     const CJson *in, const CertInfo *peerCertInfo, ProtocolAlgType protocolType, Uint8Buff *sharedSecret)
 {
     // NOT SUPPORT FOR PIN
-    (void)in;
-    (void)peerCertInfo;
-    (void)protocolType;
     (void)sharedSecret;
+    (void)protocolType;
+    (void)peerCertInfo;
+    (void)in;
     return HC_ERR_ALG_FAIL;
 }
 

@@ -193,6 +193,10 @@ static int32_t BuildClientCredBindContext(int32_t osAccountId, int64_t requestId
         LOGE("get appId fail.");
         return HC_ERR_JSON_GET;
     }
+    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
     if (AddBoolToJson(context, FIELD_IS_BIND, true) != HC_SUCCESS) {
         LOGE("add isBind to context fail.");
         return HC_ERR_JSON_ADD;
@@ -211,10 +215,6 @@ static int32_t BuildClientCredBindContext(int32_t osAccountId, int64_t requestId
     }
     if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
         LOGE("add requestId to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
-        LOGE("add appId to context fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddIntToJson(context, FIELD_OPERATION_CODE, AUTH_FORM_ACCOUNT_UNRELATED) != HC_SUCCESS) {
@@ -273,6 +273,10 @@ static int32_t BuildClientCredAuthContext(int32_t osAccountId, int64_t requestId
         LOGE("get appId fail.");
         return HC_ERR_JSON_GET;
     }
+    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
     if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
         LOGE("add isBind to context fail.");
         return HC_ERR_JSON_ADD;
@@ -291,10 +295,6 @@ static int32_t BuildClientCredAuthContext(int32_t osAccountId, int64_t requestId
     }
     if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
         LOGE("add requestId to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
-        LOGE("add appId to context fail.");
         return HC_ERR_JSON_ADD;
     }
     if (SetContextOpCode(context) != HC_SUCCESS) {
@@ -345,16 +345,16 @@ static int32_t BuildServerCredBindContext(int64_t requestId, CJson *context,
         LOGE("get appId Fail.");
         return HC_ERR_JSON_GET;
     }
+    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
+        LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
     if (AddBoolToJson(context, FIELD_IS_CRED_AUTH, true) != HC_SUCCESS) {
         LOGE("add isCredAuth to context fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
         LOGE("add requestId to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
-        LOGE("add appId to context fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddAuthIdToCredContext(context)) {
@@ -398,12 +398,12 @@ static int32_t BuildServerCredAuthContext(int64_t requestId, CJson *context,
         LOGE("add isCredAuth to context fail.");
         return HC_ERR_JSON_ADD;
     }
-    if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
-        LOGE("add requestId to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
     if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
         LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
+        LOGE("add requestId to context fail.");
         return HC_ERR_JSON_ADD;
     }
     *returnAppId = appId;

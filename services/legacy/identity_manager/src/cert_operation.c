@@ -145,7 +145,7 @@ static int32_t GetSelfUserId(int32_t osAccountId, char *userId, uint32_t userIdL
                 continue;
             }
             if (memcpy_s(userId, userIdLen, StringGet(&(*ptr)->userId), StringLength(&(*ptr)->userId)) != EOK) {
-                LOGE("copy fail");
+                LOGE("Error occurs, copy userId failed.");
                 ClearGroupEntryVec(&accountVec);
                 return HC_ERROR;
             }
@@ -524,7 +524,7 @@ static int32_t GenerateTokenAliasForController(
     }
     int32_t ret = GetPeerDeviceEntry(osAccountId, in, groupId, deviceEntry);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to get peer device entry!");
+        LOGE("Error occurs, failed to get peer device entry!");
         DestroyDeviceEntry(deviceEntry);
         return ret;
     }
@@ -756,20 +756,20 @@ int32_t GetAccountSymSharedSecret(const CJson *in, const CJson *urlJson, Uint8Bu
     Uint8Buff authToken = { NULL, 0 };
     int32_t ret = GenerateAuthTokenByDevType(in, urlJson, &authToken, &isTokenStored);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to generate auth token!");
+        LOGE("Failed to generate auth token by devType!");
         return ret;
     }
     uint8_t seed[SEED_SIZE] = { 0 };
     Uint8Buff seedBuff = { seed, SEED_SIZE };
     ret = GetByteFromJson(in, FIELD_SEED, seed, SEED_SIZE);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to get seed!");
+        LOGE("Failed to get seed form json!");
         FreeBuffData(&authToken);
         return HC_ERR_JSON_GET;
     }
     sharedSecret->val = (uint8_t *)HcMalloc(ISO_PSK_LEN, 0);
     if (sharedSecret->val == NULL) {
-        LOGE("Failed to alloc sharedSecret memory!");
+        LOGE("Failed to alloc shared secret memory!");
         FreeBuffData(&authToken);
         return HC_ERR_ALLOC_MEMORY;
     }

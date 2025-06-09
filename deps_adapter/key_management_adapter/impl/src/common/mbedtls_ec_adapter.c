@@ -638,11 +638,11 @@ bool MbedtlsIsP256PublicKeyValid(const Uint8Buff *pubKey)
     mbedtls_ecp_group grp;
     mbedtls_ecp_point publicKeyPoint;
     mbedtls_ecp_point returnPoint;
-    mbedtls_mpi scalar;
     mbedtls_ecp_group_init(&grp);
     mbedtls_ctr_drbg_init(ctrDrbg);
     mbedtls_ecp_point_init(&publicKeyPoint);
     mbedtls_ecp_point_init(&returnPoint);
+    mbedtls_mpi scalar;
     mbedtls_mpi_init(&scalar);
     const int32_t P256_CHECK_SCALAR_VALUE = 8;
     Blob publicKey = {

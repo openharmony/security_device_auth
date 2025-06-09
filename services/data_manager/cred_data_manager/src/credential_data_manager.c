@@ -473,7 +473,7 @@ static void OnOsAccountRemoved(int32_t osAccountId)
     UnlockHcMutex(g_credMutex);
 }
 
-static bool IsOsAccountDataLoaded(int32_t osAccountId)
+static bool IsOsAccountCredDataLoaded(int32_t osAccountId)
 {
     uint32_t index = 0;
     OsAccountCredInfo *info = NULL;
@@ -487,7 +487,7 @@ static bool IsOsAccountDataLoaded(int32_t osAccountId)
 
 static void LoadDataIfNotLoaded(int32_t osAccountId)
 {
-    if (IsOsAccountDataLoaded(osAccountId)) {
+    if (IsOsAccountCredDataLoaded(osAccountId)) {
         return;
     }
     LOGI("[CRED#DB]: data has not been loaded, load it, osAccountId: %" LOG_PUB "d", osAccountId);

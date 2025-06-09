@@ -194,12 +194,12 @@ void AddIpcCbObjByAppId(const char *appId, int32_t objIdx, int32_t type)
 
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     if (g_ipcCallBackList.ctx == nullptr) {
-        LOGE("list not inited");
+        LOGE("CallbackList is not init.");
         return;
     }
 
     if (g_ipcCallBackList.nodeCnt >= IPC_CALL_BACK_MAX_NODES) {
-        LOGE("list is full");
+        LOGE("CallbackList is full.");
         return;
     }
 
@@ -325,7 +325,7 @@ void AddIpcCbObjByReqId(int64_t reqId, int32_t objIdx, int32_t type)
 
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     if (g_ipcCallBackList.ctx == nullptr) {
-        LOGE("list not inited");
+        LOGE("CallbackList not inited");
         return;
     }
 
@@ -974,7 +974,7 @@ static char *IpcGaCbOnRequest(int64_t requestId, int32_t operationCode, const ch
     if (!CanFindCbByReqId(requestId, CB_TYPE_DEV_AUTH)) {
         CJson *reqParamsJson = CreateJsonFromString(reqParams);
         if (reqParamsJson == nullptr) {
-            LOGE("failed to create json from string!");
+            LOGE("Create json from string occur error!");
             return nullptr;
         }
         const char *callerAppId = GetStringFromJson(reqParamsJson, FIELD_APP_ID);
@@ -1002,12 +1002,12 @@ static char *IpcCaCbOnRequest(int64_t requestId, int32_t operationCode, const ch
     if (!CanFindCbByReqId(requestId, CB_TYPE_CRED_DEV_AUTH)) {
         CJson *reqParamsJson = CreateJsonFromString(reqParams);
         if (reqParamsJson == nullptr) {
-            LOGE("failed to create json from string!");
+            LOGE("Failed to create json from string!");
             return nullptr;
         }
         const char *callerAppId = GetStringFromJson(reqParamsJson, FIELD_APP_ID);
         if (callerAppId == nullptr) {
-            LOGE("failed to get appId from json object!");
+            LOGE("Failed to get appId from reqParams json!");
             FreeJson(reqParamsJson);
             return nullptr;
         }
@@ -1043,7 +1043,7 @@ void IpcOnGroupCreated(const char *groupInfo)
     ret = EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO,
         reinterpret_cast<const uint8_t *>(groupInfo), HcStrlen(groupInfo) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("IpcGaCbOnRequest, build trans data failed");
+        LOGE("Error occurs, IpcOnGroupCreated build trans data failed");
         return;
     }
 
@@ -1082,7 +1082,7 @@ void IpcOnGroupDeleted(const char *groupInfo)
     ret = EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO,
         reinterpret_cast<const uint8_t *>(groupInfo), HcStrlen(groupInfo) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("IpcGaCbOnRequest, build trans data failed");
+        LOGE("IpcOnGroupDeleted, build trans data failed");
         return;
     }
 
@@ -1101,32 +1101,29 @@ void IpcOnGroupDeleted(const char *groupInfo)
 
 void IpcOnDeviceBound(const char *peerUdid, const char *groupInfo)
 {
-    int32_t i;
-    uint32_t ret;
-    MessageParcel dataParcel;
-    MessageParcel reply;
-    DataChangeListener *listener = nullptr;
-
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     if (g_ipcCallBackList.ctx == nullptr) {
-        LOGE("IpcCallBackList un-initialized");
+        LOGE("CallBackList un-initialized.");
         return;
     }
-
     if ((peerUdid == nullptr) || (groupInfo == nullptr)) {
-        LOGE("params error");
+        LOGE("Error occurs, param is nullptr.");
         return;
     }
 
-    ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID,
+    MessageParcel dataParcel;
+    uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID,
         reinterpret_cast<const uint8_t *>(peerUdid), HcStrlen(peerUdid) + 1);
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO,
         reinterpret_cast<const uint8_t *>(groupInfo), HcStrlen(groupInfo) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("build trans data failed");
+        LOGE("build transmit data failed.");
         return;
     }
 
+    MessageParcel reply;
+    DataChangeListener *listener = nullptr;
+    int32_t i;
     for (i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
         if (g_ipcCallBackList.ctx[i].cbType == CB_TYPE_LISTENER) {
             listener = &(g_ipcCallBackList.ctx[i].cbCtx.listener);
@@ -1142,32 +1139,30 @@ void IpcOnDeviceBound(const char *peerUdid, const char *groupInfo)
 
 void IpcOnDeviceUnBound(const char *peerUdid, const char *groupInfo)
 {
-    int32_t i;
-    uint32_t ret;
-    MessageParcel dataParcel;
-    MessageParcel reply;
-    DataChangeListener *listener = nullptr;
-
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     if (g_ipcCallBackList.ctx == nullptr) {
-        LOGE("IpcCallBackList un-initialized");
+        LOGE("CallBackList ctx is nullptr.");
         return;
     }
-
     if ((peerUdid == nullptr) || (groupInfo == nullptr)) {
-        LOGE("params error");
+        LOGE("peerUdid is nullptr or groupInfo is nullptr.");
         return;
     }
 
+    uint32_t ret;
+    MessageParcel dataParcel;
     ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID,
         reinterpret_cast<const uint8_t *>(peerUdid), HcStrlen(peerUdid) + 1);
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO,
         reinterpret_cast<const uint8_t *>(groupInfo), HcStrlen(groupInfo) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("build trans data failed");
+        LOGE("build trans data failed.");
         return;
     }
 
+    int32_t i;
+    MessageParcel reply;
+    DataChangeListener *listener = nullptr;
     for (i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
         if (g_ipcCallBackList.ctx[i].cbType == CB_TYPE_LISTENER) {
             listener = &(g_ipcCallBackList.ctx[i].cbCtx.listener);
@@ -1191,19 +1186,19 @@ void IpcOnDeviceNotTrusted(const char *peerUdid)
 
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     if (g_ipcCallBackList.ctx == nullptr) {
-        LOGE("IpcCallBackList un-initialized");
+        LOGE("Error occurs, callBackList ctx is nullptr.");
         return;
     }
 
     if (peerUdid == nullptr) {
-        LOGE("params error");
+        LOGE("Error occurs, peerUdid is nullptr.");
         return;
     }
 
     ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID,
         reinterpret_cast<const uint8_t *>(peerUdid), HcStrlen(peerUdid) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("build trans data failed");
+        LOGE("Error occurs, encode trans data failed.");
         return;
     }
 
@@ -1230,12 +1225,12 @@ void IpcOnLastGroupDeleted(const char *peerUdid, int32_t groupType)
 
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     if (g_ipcCallBackList.ctx == nullptr) {
-        LOGE("IpcCallBackList un-initialized");
+        LOGE("Error occurs, callBackList ctx is uninitialized.");
         return;
     }
 
     if (peerUdid == nullptr) {
-        LOGE("params error");
+        LOGE("Error occurs, param is nullptr.");
         return;
     }
 
@@ -1244,7 +1239,7 @@ void IpcOnLastGroupDeleted(const char *peerUdid, int32_t groupType)
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_GROUP_TYPE,
         reinterpret_cast<const uint8_t *>(&groupType), sizeof(groupType));
     if (ret != HC_SUCCESS) {
-        LOGE("build trans data failed");
+        LOGE("Encode call data failed.");
         return;
     }
 
@@ -1265,9 +1260,7 @@ void IpcOnTrustedDeviceNumChanged(int32_t curTrustedDeviceNum)
 {
     int32_t i;
     uint32_t ret;
-    MessageParcel dataParcel;
     MessageParcel reply;
-    DataChangeListener *listener = nullptr;
 
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     if (g_ipcCallBackList.ctx == nullptr) {
@@ -1275,6 +1268,7 @@ void IpcOnTrustedDeviceNumChanged(int32_t curTrustedDeviceNum)
         return;
     }
 
+    MessageParcel dataParcel;
     ret = EncodeCallData(dataParcel, PARAM_TYPE_DATA_NUM,
         reinterpret_cast<const uint8_t *>(&curTrustedDeviceNum), sizeof(curTrustedDeviceNum));
     if (ret != HC_SUCCESS) {
@@ -1282,6 +1276,7 @@ void IpcOnTrustedDeviceNumChanged(int32_t curTrustedDeviceNum)
         return;
     }
 
+    DataChangeListener *listener = nullptr;
     for (i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
         if (g_ipcCallBackList.ctx[i].cbType == CB_TYPE_LISTENER) {
             listener = &(g_ipcCallBackList.ctx[i].cbCtx.listener);
@@ -1299,26 +1294,26 @@ void IpcOnCredAdd(const char *credId, const char *credInfo)
 {
     int32_t i;
     uint32_t ret;
-    MessageParcel dataParcel;
     MessageParcel reply;
     CredChangeListener *listener = nullptr;
 
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     if (g_ipcCallBackList.ctx == nullptr) {
-        LOGE("IpcCallBackList un-initialized");
+        LOGE("IpcOnCredAdd failed, callBackList is un-initialized.");
         return;
     }
 
     if (credId == nullptr) {
-        LOGE("IpcOnCredAdd failed, params error");
+        LOGE("IpcOnCredAdd failed, params error.");
         return;
     }
+    MessageParcel dataParcel;
     ret = EncodeCallData(dataParcel, PARAM_TYPE_CRED_ID,
         reinterpret_cast<const uint8_t *>(credId), HcStrlen(credId) + 1);
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_CRED_INFO,
         reinterpret_cast<const uint8_t *>(credInfo), HcStrlen(credInfo) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("IpcGaCbOnRequest, build trans data failed");
+        LOGE("IpcOnCredAdd, build trans data failed");
         return;
     }
 
@@ -1345,12 +1340,12 @@ void IpcOnCredDelete(const char *credId, const char *credInfo)
 
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     if (g_ipcCallBackList.ctx == nullptr) {
-        LOGE("IpcCallBackList un-initialized");
+        LOGE("IpcOnCredDelete failed, CallBackList un-initialized");
         return;
     }
 
     if (credId == nullptr) {
-        LOGE("IpcOnCredDelete failed, params error");
+        LOGE("IpcOnCredDelete failed, credId is nullptr.");
         return;
     }
 
@@ -1359,7 +1354,7 @@ void IpcOnCredDelete(const char *credId, const char *credInfo)
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_CRED_INFO,
         reinterpret_cast<const uint8_t *>(credInfo), HcStrlen(credInfo) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("IpcGaCbOnRequest, build trans data failed");
+        LOGE("IpcOnCredDelete build trans data failed");
         return;
     }
 
@@ -1386,7 +1381,7 @@ void IpcOnCredUpdate(const char *credId, const char *credInfo)
 
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     if (g_ipcCallBackList.ctx == nullptr) {
-        LOGE("IpcCallBackList un-initialized");
+        LOGE("IpcOnCredUpdate failed, IpcCallBackList un-initialized");
         return;
     }
 
@@ -1400,7 +1395,7 @@ void IpcOnCredUpdate(const char *credId, const char *credInfo)
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_CRED_INFO,
         reinterpret_cast<const uint8_t *>(credInfo), HcStrlen(credInfo) + 1);
     if (ret != HC_SUCCESS) {
-        LOGE("IpcGaCbOnRequest, build trans data failed");
+        LOGE("IpcOnCredUpdate build trans data failed");
         return;
     }
 
@@ -1675,6 +1670,7 @@ static bool IsTypeForSettingPtr(int32_t type)
             return true;
         }
     }
+    LOGE("Input type is not match.");
     return false;
 }
 
@@ -1690,6 +1686,7 @@ static bool IsTypeForCpyData(int32_t type)
             return true;
         }
     }
+    LOGE("Input type is not match.");
     return false;
 }
 

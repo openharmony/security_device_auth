@@ -600,11 +600,11 @@ static int32_t GenerateDevSessionSalt(SessionImpl *impl)
         return res;
     }
     if (AddByteToJson(impl->context, FIELD_NONCE, impl->salt.val, impl->salt.length) != HC_SUCCESS) {
-        LOGE("add nonce to context fail.");
+        LOGE("Error occurs, add nonce byte to context fail!");
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(impl->context, FIELD_SEED, impl->salt.val, impl->salt.length) != HC_SUCCESS) {
-        LOGE("add seed to context fail.");
+        LOGE("Error occurs, add seed byte to context fail!");
         return HC_ERR_JSON_ADD;
     }
     return HC_SUCCESS;
@@ -785,6 +785,7 @@ static int32_t AddAuthFirstMsg(AuthSubSession *authSubSession, CJson *sessionMsg
     if (shouldReplace) {
         res = ReplaceAuthIdWithRandom(authData);
         if (res != HC_SUCCESS) {
+            LOGE("Replace auth id with random failed. [Res]: %" LOG_PUB "d", res);
             FreeJson(authData);
             return res;
         }
@@ -816,12 +817,12 @@ static int32_t CreateIsoSubSession(SessionImpl *impl, const IdentityInfo *cred, 
     }
     const char *authId = GetStringFromJson(impl->context, FIELD_AUTH_ID);
     if (authId == NULL) {
-        LOGE("get self authId fail.");
+        LOGE("Get auth id from context fail.");
         return HC_ERR_JSON_GET;
     }
     int32_t osAccountId;
     if (GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId!");
+        LOGE("Error occurs, failed to get osAccountId from context!");
         return HC_ERR_JSON_GET;
     }
     Uint8Buff authIdBuff = { (uint8_t *)authId, HcStrlen(authId) + 1 };
@@ -893,12 +894,12 @@ static int32_t CreateEcSpekeSubSession(SessionImpl *impl, const IdentityInfo *cr
     EcSpekeCurveType curveType = (cred->proofType == CERTIFICATED) ? CURVE_TYPE_256 : CURVE_TYPE_25519;
     const char *authId = GetStringFromJson(impl->context, FIELD_AUTH_ID);
     if (authId == NULL) {
-        LOGE("get self authId fail.");
+        LOGE("Error occurs, authId is NULL.");
         return HC_ERR_JSON_GET;
     }
     int32_t osAccountId;
     if (GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId!");
+        LOGE("Failed to get osAccountId from context!");
         return HC_ERR_JSON_GET;
     }
     Uint8Buff authIdBuff = { (uint8_t *)authId, HcStrlen(authId) + 1 };
@@ -1108,19 +1109,19 @@ static int32_t ISAddAuthInfoToContext(SessionImpl *impl, IdentityInfo *cred)
     PRINT_SENSITIVE_DATA("SelfUdid", selfUdid);
     if (cred->proofType == CERTIFICATED) {
         if (AddStringToJson(impl->context, FIELD_AUTH_ID, selfUdid) != HC_SUCCESS) {
-            LOGE("add selfAuthId to json fail.");
+            LOGE("Error occurs, add selfAuthId to json fail.");
             return HC_ERR_JSON_ADD;
         }
         return HC_SUCCESS;
     }
     CJson *urlJson = CreateJsonFromString((const char *)cred->proof.preSharedUrl.val);
     if (urlJson == NULL) {
-        LOGE("create urlJson from string fail.");
+        LOGE("Create urlJson from cred pre shared url fail.");
         return HC_ERR_JSON_CREATE;
     }
     int32_t trustType;
     if (GetIntFromJson(urlJson, PRESHARED_URL_TRUST_TYPE, &trustType) != HC_SUCCESS) {
-        LOGE("Failed to get trust type!");
+        LOGE("Failed to get trust type from json!");
         FreeJson(urlJson);
         return HC_ERR_JSON_GET;
     }
@@ -1163,12 +1164,12 @@ static int32_t AddAuthInfoToContextByCred(SessionImpl *impl, IdentityInfo *cred)
     }
     CJson *urlJson = CreateJsonFromString((const char *)cred->proof.preSharedUrl.val);
     if (urlJson == NULL) {
-        LOGE("create urlJson from string fail.");
+        LOGE("create urlJson from cred proof preSharedUrl fail.");
         return HC_ERR_JSON_CREATE;
     }
     int32_t trustType;
     if (GetIntFromJson(urlJson, PRESHARED_URL_TRUST_TYPE, &trustType) != HC_SUCCESS) {
-        LOGE("Failed to get trust type!");
+        LOGE("Failed to get trust type from url json!");
         FreeJson(urlJson);
         return HC_ERR_JSON_GET;
     }
@@ -1262,15 +1263,15 @@ static int32_t ProcStartEventInner(SessionImpl *impl, CJson *sessionMsg)
 static int32_t GetSessionSaltFromInput(SessionImpl *impl, const CJson *inputData)
 {
     if (InitUint8Buff(&impl->salt, DEV_SESSION_SALT_LEN) != HC_SUCCESS) {
-        LOGE("allocate salt memory fail.");
+        LOGE("Allocate salt memory fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (GetByteFromJson(inputData, FIELD_SALT, impl->salt.val, impl->salt.length) != HC_SUCCESS) {
-        LOGE("get session salt from json fail.");
+        LOGE("Get session salt data from input data fail.");
         return HC_ERR_JSON_GET;
     }
     if (AddByteToJson(impl->context, FIELD_NONCE, impl->salt.val, impl->salt.length) != HC_SUCCESS) {
-        LOGE("add nonce to context fail.");
+        LOGE("Add salt data to context fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddByteToJson(impl->context, FIELD_SEED, impl->salt.val, impl->salt.length) != HC_SUCCESS) {

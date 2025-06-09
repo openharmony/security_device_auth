@@ -250,6 +250,7 @@ static bool IsJsonString(const char *str)
 {
     CJson *json = CreateJsonFromString(str);
     if (json == NULL) {
+        LOGE("Create json from string error.");
         return false;
     }
     FreeJson(json);

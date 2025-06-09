@@ -621,7 +621,7 @@ static int32_t DeleteMemberFromGroupInner(int32_t osAccountId, int64_t requestId
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((appId == NULL) || (deleteParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
-        LOGE("Invalid input parameters!");
+        LOGE("Input parameters appId, deleteParams or osAccountId invliad!");
         return HC_ERR_INVALID_PARAMS;
     }
     if (!IsOsAccountUnlocked(osAccountId)) {
@@ -895,16 +895,16 @@ static int32_t AddServerReqInfoToContext(int64_t requestId, const char *appId, i
         LOGE("add isBind to context fail.");
         return HC_ERR_JSON_ADD;
     }
-    if (AddBoolToJson(context, FIELD_IS_CLIENT, false) != HC_SUCCESS) {
-        LOGE("add isClient to context fail.");
-        return HC_ERR_JSON_ADD;
-    }
     if (AddInt64StringToJson(context, FIELD_REQUEST_ID, requestId) != HC_SUCCESS) {
         LOGE("add requestId to context fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddStringToJson(context, FIELD_APP_ID, appId) != HC_SUCCESS) {
         LOGE("add appId to context fail.");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddBoolToJson(context, FIELD_IS_CLIENT, false) != HC_SUCCESS) {
+        LOGE("add isClient to context fail.");
         return HC_ERR_JSON_ADD;
     }
     if (AddIntToJson(context, FIELD_OPERATION_CODE, opCode) != HC_SUCCESS) {
@@ -1080,12 +1080,12 @@ static int32_t AddMultiMembersToGroupInner(int32_t osAccountId, const char *appI
     LOGI("[Start]: [AppId]: %" LOG_PUB "s", appId);
     CJson *params = CreateJsonFromString(addParams);
     if (params == NULL) {
-        LOGE("Failed to create json from string!");
+        LOGE("Failed to create json from add params str!");
         return HC_ERR_JSON_CREATE;
     }
     int32_t groupType = GROUP_TYPE_INVALID;
     if (GetIntFromJson(params, FIELD_GROUP_TYPE, &groupType) != HC_SUCCESS) {
-        LOGE("Failed to get groupType from json!");
+        LOGE("Failed to get groupType from params!");
         FreeJson(params);
         return HC_ERR_JSON_GET;
     }
@@ -1147,7 +1147,7 @@ static int32_t DelMultiMembersFromGroupInner(int32_t osAccountId, const char *ap
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
     if ((appId == NULL) || (deleteParams == NULL) || (osAccountId == INVALID_OS_ACCOUNT)) {
-        LOGE("Invalid input parameters!");
+        LOGE("Invalid input!");
         return HC_ERR_INVALID_PARAMS;
     }
     if (!IsOsAccountUnlocked(osAccountId)) {

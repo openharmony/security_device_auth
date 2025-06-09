@@ -55,7 +55,7 @@ static int32_t CombineServiceId(const Uint8Buff *pkgName, const Uint8Buff *servi
     }
     res = GetLoaderInstance()->sha256(&serviceIdPlain, serviceId);
     if (res != HC_SUCCESS) {
-        LOGE("Service id Sha256 failed.");
+        LOGE("Sha256 serviceId  failed.");
         goto ERR;
     }
 ERR:
@@ -68,7 +68,7 @@ static bool IsPeerDevice(const Uint8Buff *authId)
     char selfUdid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d.", res);
         return false;
     }
     char *authIdStr = (char *)HcMalloc(authId->length + 1, 0);
@@ -92,17 +92,17 @@ static int32_t FillKeyAlias(const Uint8Buff *serviceId, const Uint8Buff *keyType
     uint32_t totalLen = keyAliasBuff->length;
     uint32_t usedLen = 0;
     if (memcpy_s(keyAliasBuff->val, totalLen, serviceId->val, serviceId->length) != EOK) {
-        LOGE("Copy serviceId failed.");
+        LOGE("Error occurs, Copy serviceId failed.");
         return HC_ERR_MEMORY_COPY;
     }
     usedLen = usedLen + serviceId->length;
     if (memcpy_s(keyAliasBuff->val + usedLen, totalLen - usedLen, keyType->val, keyType->length) != EOK) {
-        LOGE("Copy keyType failed.");
+        LOGE("Error occurs, Copy keyType failed.");
         return HC_ERR_MEMORY_COPY;
     }
     usedLen = usedLen + keyType->length;
     if (memcpy_s(keyAliasBuff->val + usedLen, totalLen - usedLen, authId->val, authId->length) != EOK) {
-        LOGE("Copy authId failed.");
+        LOGE("Error occurs, Copy authId failed.");
         return HC_ERR_MEMORY_COPY;
     }
     return HC_SUCCESS;
@@ -500,8 +500,8 @@ static int32_t QueryCredential(const char *reqJsonStr, char **returnData)
 static int32_t RegisterIdentity(const CredentialRequestParam *param, int32_t keyType)
 {
     TokenManagerParams params = {
-        .osAccountId = param->osAccountId,
         .peerOsAccountId = param->peerOsAccountId,
+        .osAccountId = param->osAccountId,
         .pkgName = { (uint8_t *)DEFAULT_PACKAGE_NAME, HcStrlen(DEFAULT_PACKAGE_NAME) },
         .serviceType = { (uint8_t *)param->serviceType, HcStrlen(param->serviceType) },
         .authId = { (uint8_t *)param->deviceId, HcStrlen(param->deviceId) },

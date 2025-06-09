@@ -506,12 +506,12 @@ static int32_t AuthGeneratePsk(const CJson *in, const char *groupId, const Uint8
     }
     TrustedDeviceEntry *deviceEntry = CreateDeviceEntry();
     if (deviceEntry == NULL) {
-        LOGE("Failed to create device entry!");
+        LOGE("Create deviceEntry failed!");
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t ret = GetPeerDeviceEntry(osAccountId, in, groupId, deviceEntry);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to get peer device entry!");
+        LOGE("Error occurs, failed to get peerDeviceEntry!");
         DestroyDeviceEntry(deviceEntry);
         return ret;
     }
@@ -549,8 +549,8 @@ static int32_t GetSharedSecretForP2pInIso(const CJson *in, const char *groupId, 
     Uint8Buff seedBuff = { seedVal, SEED_LEN };
     int32_t ret = GetByteFromJson(in, FIELD_SEED, seedBuff.val, seedBuff.length);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to get seed from json!");
         HcFree(seedVal);
+        LOGE("Get seed from json failed!");
         return HC_ERR_JSON_GET;
     }
     uint8_t *pskVal = (uint8_t *)HcMalloc(ISO_PSK_LEN, 0);
@@ -770,12 +770,12 @@ static int32_t GeneratePskAliasAndCheckExist(const CJson *in, const char *groupI
     }
     TrustedDeviceEntry *deviceEntry = CreateDeviceEntry();
     if (deviceEntry == NULL) {
-        LOGE("Failed to create device entry!");
+        LOGE("Create device entry failed!");
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t ret = GetPeerDeviceEntry(osAccountId, in, groupId, deviceEntry);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to get peer device entry!");
+        LOGE("Error occurs, Failed to get peer device entry!");
         DestroyDeviceEntry(deviceEntry);
         return ret;
     }
@@ -886,7 +886,7 @@ static int32_t GetSharedSecretByUrl(
 
     CJson *urlJson = CreateJsonFromString((const char *)presharedUrl->val);
     if (urlJson == NULL) {
-        LOGE("Failed to create url json!");
+        LOGE("Create url json from url failed!");
         return HC_ERR_JSON_CREATE;
     }
 

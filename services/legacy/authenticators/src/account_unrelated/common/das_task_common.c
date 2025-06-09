@@ -50,7 +50,7 @@ void DasSendErrorToOut(CJson *out, int errCode)
     }
     CJson *sendToPeer = CreateJson();
     if (sendToPeer == NULL) {
-        LOGE("Create sendToPeer json failed.");
+        LOGE("Create json failed.");
         FreeJson(sendToSelf);
         return;
     }
@@ -167,12 +167,12 @@ int ServerProtocolMessageOut(CJson *out, int opCode, uint32_t step)
 
 static int32_t CombineServiceId(const Uint8Buff *pkgName, const Uint8Buff *serviceType, Uint8Buff *serviceId)
 {
-    int32_t res = HC_SUCCESS;
     Uint8Buff serviceIdPlain = { NULL, 0 };
     serviceIdPlain.length = pkgName->length + serviceType->length;
     serviceIdPlain.val = (uint8_t *)HcMalloc(serviceIdPlain.length, 0);
+    int32_t res = HC_SUCCESS;
     if (serviceIdPlain.val == NULL) {
-        LOGE("malloc serviceIdPlain.val failed.");
+        LOGE("Hcmalloc val memory failed.");
         res = HC_ERR_ALLOC_MEMORY;
         goto ERR;
     }
@@ -184,14 +184,14 @@ static int32_t CombineServiceId(const Uint8Buff *pkgName, const Uint8Buff *servi
     }
     if (memcpy_s(serviceIdPlain.val + pkgName->length,  serviceIdPlain.length - pkgName->length,
         serviceType->val, serviceType->length) != EOK) {
-        LOGE("Copy service id: serviceType failed.");
+        LOGE("Copy serviceType to service id plain failed.");
         res = HC_ERR_MEMORY_COPY;
         goto ERR;
     }
 
     res = GetLoaderInstance()->sha256(&serviceIdPlain, serviceId);
     if (res != HC_SUCCESS) {
-        LOGE("Service id Sha256 failed.");
+        LOGE("Sha256 service id to service id plain failed.");
         goto ERR;
     }
 ERR:
@@ -204,16 +204,16 @@ static bool IsPeerDevice(const Uint8Buff *authId)
     char selfUdid[INPUT_UDID_LEN] = { 0 };
     int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d.", res);
         return false;
     }
     char *authIdStr = (char *)HcMalloc(authId->length + 1, 0);
     if (authIdStr == NULL) {
-        LOGE("Failed to alloc memory for authIdStr!");
+        LOGE("Failed to malloc memory for authIdStr!");
         return false;
     }
     if (memcpy_s(authIdStr, authId->length + 1, authId->val, authId->length) != EOK) {
-        LOGE("Failed to copy authId!");
+        LOGE("Failed to copy authId to authIdStr!");
         HcFree(authIdStr);
         return false;
     }
@@ -225,16 +225,15 @@ static bool IsPeerDevice(const Uint8Buff *authId)
 static int32_t FillKeyAlias(const Uint8Buff *serviceId, const Uint8Buff *keyType,
     const TokenManagerParams *params, Uint8Buff *keyAliasBuff)
 {
-    uint32_t totalLen = keyAliasBuff->length;
     uint32_t usedLen = 0;
+    uint32_t totalLen = keyAliasBuff->length;
     if (memcpy_s(keyAliasBuff->val, totalLen, serviceId->val, serviceId->length) != EOK) {
-        LOGE("Copy serviceId failed.");
+        LOGE("Copy serviceId to key alias failed.");
         return HC_ERR_MEMORY_COPY;
     }
     usedLen = usedLen + serviceId->length;
-
     if (memcpy_s(keyAliasBuff->val + usedLen, totalLen - usedLen, keyType->val, keyType->length) != EOK) {
-        LOGE("Copy keyType failed.");
+        LOGE("Copy keyType to key alias failed.");
         return HC_ERR_MEMORY_COPY;
     }
     usedLen = usedLen + keyType->length;
@@ -510,21 +509,21 @@ int32_t GetIdPeer(const CJson *in, const char *peerIdKey, const Uint8Buff *authI
 {
     const char *authIdStr = GetStringFromJson(in, peerIdKey);
     if (authIdStr == NULL) {
-        LOGE("Get peer id from json failed.");
+        LOGE("Get peer id key from input json failed.");
         return HC_ERR_JSON_GET;
     }
     uint32_t authIdLen = HcStrlen(authIdStr) / BYTE_TO_HEX_OPER_LENGTH;
     if (authIdLen == 0 || authIdLen > MAX_AUTH_ID_LEN) {
-        LOGE("Invalid authIdPeerLen: %" LOG_PUB "u.", authIdLen);
+        LOGE("AuthIdPeerLen is invalid, len: %" LOG_PUB "u.", authIdLen);
         return HC_ERR_INVALID_LEN;
     }
     int32_t res = InitSingleParam(authIdPeer, authIdLen);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for peer authId failed, res: %" LOG_PUB "d.", res);
+        LOGE("Init single param for peer authId failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     if (HexStringToByte(authIdStr, authIdPeer->val, authIdPeer->length) != HC_SUCCESS) {
-        LOGE("HexStringToByte for authIdPeer failed.");
+        LOGE("Hex str to byte for authIdPeer failed.");
         return HC_ERR_CONVERT_FAILED;
     }
     if ((authIdSelf->length == authIdPeer->length) &&

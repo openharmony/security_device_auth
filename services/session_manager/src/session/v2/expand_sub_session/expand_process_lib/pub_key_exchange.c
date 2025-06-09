@@ -102,17 +102,17 @@ static int32_t BuildKeyAliasMsg(const Uint8Buff *serviceId, const Uint8Buff *key
 {
     uint32_t usedLen = 0;
     if (memcpy_s(keyAliasMsg->val, keyAliasMsg->length, serviceId->val, serviceId->length) != EOK) {
-        LOGE("Copy serviceId failed.");
+        LOGE("Error occurs, copy serviceId failed.");
         return HC_ERR_MEMORY_COPY;
     }
     usedLen = usedLen + serviceId->length;
     if (memcpy_s(keyAliasMsg->val + usedLen, keyAliasMsg->length - usedLen, keyType->val, keyType->length) != EOK) {
-        LOGE("Copy keyType failed.");
+        LOGE("Error occurs, copy keyType failed.");
         return HC_ERR_MEMORY_COPY;
     }
     usedLen = usedLen + keyType->length;
     if (memcpy_s(keyAliasMsg->val + usedLen, keyAliasMsg->length - usedLen, authId->val, authId->length) != EOK) {
-        LOGE("Copy authId failed.");
+        LOGE("Error occurs, copy authId failed.");
         return HC_ERR_MEMORY_COPY;
     }
     return HC_SUCCESS;
@@ -125,7 +125,7 @@ static int32_t CalKeyAlias(const Uint8Buff *serviceId, const Uint8Buff *keyType,
     keyAliasMsg.length = serviceId->length + authId->length + keyType->length;
     keyAliasMsg.val = (uint8_t *)HcMalloc(keyAliasMsg.length, 0);
     if (keyAliasMsg.val == NULL) {
-        LOGE("Malloc mem failed.");
+        LOGE("Error occurs, hcmalloc mem failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t res = BuildKeyAliasMsg(serviceId, keyType, authId, &keyAliasMsg);
@@ -136,7 +136,7 @@ static int32_t CalKeyAlias(const Uint8Buff *serviceId, const Uint8Buff *keyType,
     res = GetLoaderInstance()->sha256(&keyAliasMsg, keyAlias);
     HcFree(keyAliasMsg.val);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 failed.");
+        LOGE("Error occurs, sha256 failed.");
         return res;
     }
     return HC_SUCCESS;
@@ -150,23 +150,23 @@ static int32_t CalServiceId(const char *appId, const char *groupId, Uint8Buff *s
     serviceIdPlain.length = appIdLen + groupIdLen;
     serviceIdPlain.val = (uint8_t *)HcMalloc(serviceIdPlain.length, 0);
     if (serviceIdPlain.val == NULL) {
-        LOGE("malloc serviceIdPlain.val failed.");
+        LOGE("Error occurs, malloc serviceIdPlain.val failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (memcpy_s(serviceIdPlain.val, serviceIdPlain.length, appId, appIdLen) != EOK) {
-        LOGE("Copy service id: pkgName failed.");
+        LOGE("Error occurs, copy service id: pkgName failed.");
         HcFree(serviceIdPlain.val);
         return HC_ERR_MEMORY_COPY;
     }
     if (memcpy_s(serviceIdPlain.val + appIdLen,  serviceIdPlain.length - appIdLen, groupId, groupIdLen) != EOK) {
-        LOGE("Copy service id: groupId failed.");
+        LOGE("Error occurs, copy service id: groupId failed.");
         HcFree(serviceIdPlain.val);
         return HC_ERR_MEMORY_COPY;
     }
     int32_t res = GetLoaderInstance()->sha256(&serviceIdPlain, serviceId);
     HcFree(serviceIdPlain.val);
     if (res != HC_SUCCESS) {
-        LOGE("Service id Sha256 failed.");
+        LOGE("Error occurs, sha256 failed.");
         return res;
     }
     return HC_SUCCESS;
@@ -301,12 +301,12 @@ static int32_t GetAuthIdPeerFromInput(const CJson *inputEvent, CmdParams *params
     const char *authIdPeerStr = isClient ? GetStringFromJson(inputEvent, FIELD_AUTH_ID_SERVER) :
         GetStringFromJson(inputEvent, FIELD_AUTH_ID_CLIENT);
     if (authIdPeerStr == NULL) {
-        LOGE("get authIdPeerStr from inputEvent fail.");
+        LOGE("get authIdPeerStr from inputEvent failed.");
         return HC_ERR_JSON_GET;
     }
     uint32_t authIdPeerStrLen = HcStrlen(authIdPeerStr) / BYTE_TO_HEX_OPER_LENGTH;
     if (authIdPeerStrLen == 0) {
-        LOGE("Invalid authIdPeerStrLen: %" LOG_PUB "u.", authIdPeerStrLen);
+        LOGE("Invalid peerAuthIdStrLen: %" LOG_PUB "u.", authIdPeerStrLen);
         return HC_ERR_CONVERT_FAILED;
     }
     if (InitUint8Buff(&params->authIdPeer, authIdPeerStrLen) != HC_SUCCESS) {
@@ -616,13 +616,13 @@ static int32_t DecodeEvent(const CJson *receviedMsg)
     }
     int32_t event;
     if (GetIntFromJson(receviedMsg, FIELD_EVENT, &event) != HC_SUCCESS) {
-        LOGE("get event from receviedMsg fail.");
+        LOGE("Get event from receviedMsg fail.");
         return UNKNOWN_EVENT;
     }
     if (START_EVENT <= event && event <= UNKNOWN_EVENT) {
         return event;
     }
-    LOGE("unknown event.");
+    LOGE("Unknown event.");
     return UNKNOWN_EVENT;
 }
 
@@ -637,14 +637,14 @@ static int32_t SwitchState(BaseCmd *self, const CJson *receviedMsg, CJson **retu
                 self->curState = self->failState;
                 return res;
             }
-            LOGI("event: %" LOG_PUB "d, curState: %" LOG_PUB "d, nextState: %" LOG_PUB "d", eventType, self->curState,
+            LOGI("Event: %" LOG_PUB "d, curState: %" LOG_PUB "d, nextState: %" LOG_PUB "d", eventType, self->curState,
                 STATE_MACHINE[i].nextState);
             self->curState = STATE_MACHINE[i].nextState;
             *returnState = (self->curState == self->finishState) ? CMD_STATE_FINISH : CMD_STATE_CONTINUE;
             return HC_SUCCESS;
         }
     }
-    LOGI("Unsupported event type. Ignore process. [Event]: %" LOG_PUB "d, [CurState]: %" LOG_PUB "d",
+    LOGI("Unsupported event type. Ignore process. [Event]: %" LOG_PUB "d, [CurState]: %" LOG_PUB "d.",
         eventType, self->curState);
     return HC_SUCCESS;
 }

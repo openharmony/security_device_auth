@@ -47,20 +47,13 @@ typedef struct {
 static IpcProxyCbInfo g_ipcCredListenerCbList = { 0 };
 static HcMutex g_ipcMutex;
 
-static bool IsStrInvalid(const char *str)
-{
-    return (str == NULL || str[0] == 0);
-}
-
 static void DelIpcCliCallbackCtx(const char *appId, IpcProxyCbInfo *cbCache)
 {
-    int32_t ret;
-
     if (cbCache->appId[0] == 0) {
         return;
     }
     (void)LockHcMutex(&g_ipcMutex);
-    ret = memcmp(appId, cbCache->appId, HcStrlen(cbCache->appId) + 1);
+    int32_t ret = memcmp(appId, cbCache->appId, HcStrlen(cbCache->appId) + 1);
     if (ret == 0) {
         cbCache->appId[0] = 0;
     }
@@ -68,15 +61,19 @@ static void DelIpcCliCallbackCtx(const char *appId, IpcProxyCbInfo *cbCache)
     return;
 }
 
+static bool IsStrInvalid(const char *str)
+{
+    return (str == NULL || str[0] == 0);
+}
+
 static void AddIpcCliCallbackCtx(const char *appId, uintptr_t cbInst, IpcProxyCbInfo *cbCache)
 {
     errno_t eno;
-
     (void)LockHcMutex(&g_ipcMutex);
     eno = memcpy_s(cbCache->appId, IPC_APPID_LEN, appId, HcStrlen(appId) + 1);
     if (eno != EOK) {
         UnlockHcMutex(&g_ipcMutex);
-        LOGE("memory copy failed");
+        LOGE("memory copy appId to cbcache failed.");
         return;
     }
     cbCache->inst = cbInst;
@@ -248,7 +245,7 @@ static int32_t IpcCmQueryCredByParams(int32_t osAccountId, const char *requestPa
         BREAK_IF_GET_IPC_RESULT_NUM_FAILED(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_1);
         BREAK_IF_GET_IPC_REPLY_STR_FAILED(replyCache, PARAM_TYPE_CRED_INFO_LIST, outInfo);
         *returnCredList = strdup(outInfo);
-        if (returnCredList == NULL) {
+        if (*returnCredList == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
             break;
         }
@@ -278,7 +275,7 @@ static int32_t IpcCmQueryCredInfoByCredId(int32_t osAccountId, const char *credI
         BREAK_IF_GET_IPC_RESULT_NUM_FAILED(replyCache, PARAM_TYPE_IPC_RESULT_NUM, IPC_RESULT_NUM_1);
         BREAK_IF_GET_IPC_REPLY_STR_FAILED(replyCache, PARAM_TYPE_CRED_INFO, outInfo);
         *returnCredInfo = strdup(outInfo);
-        if (returnCredInfo == NULL) {
+        if (*returnCredInfo == NULL) {
             ret = HC_ERR_ALLOC_MEMORY;
             break;
         }
@@ -346,7 +343,8 @@ static int32_t IpcCmAgreeCredential(int32_t osAccountId, const char *selfCredId,
     IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
     int32_t inOutLen;
 
-    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED(IsStrInvalid(selfCredId) || IsStrInvalid(requestParams) || returnData == NULL);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED(IsStrInvalid(selfCredId) ||
+        IsStrInvalid(requestParams) || returnData == NULL);
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
@@ -435,6 +433,7 @@ static bool IsJsonString(const char *str)
 {
     CJson *json = CreateJsonFromString(str);
     if (json == NULL) {
+        LOGE("Input str is not json str.");
         return false;
     }
     FreeJson(json);

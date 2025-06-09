@@ -215,24 +215,24 @@ static int32_t ReadTokensFromFile(AccountTokenVec *vec, const char *tokenPath)
     FileHandle file = { 0 };
     int32_t ret = HcFileOpen(tokenPath, MODE_FILE_READ, &file);
     if (ret != HC_SUCCESS) {
-        LOGE("Open token file failed");
+        LOGE("Open token file failed.");
         return ret;
     }
     SetSecurityLabel(tokenPath, SECURITY_LABEL_S2);
     int32_t fileSize = HcFileSize(file);
     if (fileSize <= 0) {
-        LOGE("file size stat failed");
+        LOGE("file size is invalid.");
         HcFileClose(file);
         return HC_ERROR;
     }
     char *fileData = (char *)HcMalloc(fileSize, 0);
     if (fileData == NULL) {
-        LOGE("Malloc file data failed");
+        LOGE("Malloc file memory failed.");
         HcFileClose(file);
         return HC_ERR_ALLOC_MEMORY;
     }
     if (HcFileRead(file, fileData, fileSize) != fileSize) {
-        LOGE("fileData read failed");
+        LOGE("fileData read failed.");
         HcFileClose(file);
         HcFree(fileData);
         return HC_ERROR;
@@ -241,13 +241,13 @@ static int32_t ReadTokensFromFile(AccountTokenVec *vec, const char *tokenPath)
     CJson *readJsonFile = CreateJsonFromString(fileData);
     HcFree(fileData);
     if (readJsonFile == NULL) {
-        LOGE("fileData parse failed");
+        LOGE("Create json from fileData failed.");
         return HC_ERR_JSON_CREATE;
     }
     ret = CreateTokensFromJson(readJsonFile, vec);
     FreeJson(readJsonFile);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to create tokens from json");
+        LOGE("Create tokens from readJsonFile.");
     }
     return ret;
 }
@@ -256,20 +256,20 @@ static int32_t WriteTokensJsonToFile(CJson *tokensJson, const char *tokenPath)
 {
     char *storeJsonString = PackJsonToString(tokensJson);
     if (storeJsonString == NULL) {
-        LOGE("Pack stored json to string failed.");
+        LOGE("Pack tokensJson json to string failed.");
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     FileHandle file = { 0 };
     int32_t ret = HcFileOpen(tokenPath, MODE_FILE_WRITE, &file);
     if (ret != HC_SUCCESS) {
-        LOGE("Open token file failed.");
         FreeJsonString(storeJsonString);
+        LOGE("Open token file failed.");
         return ret;
     }
     SetSecurityLabel(tokenPath, SECURITY_LABEL_S2);
     int32_t fileSize = (int32_t)(HcStrlen(storeJsonString) + 1);
     if (HcFileWrite(file, storeJsonString, fileSize) != fileSize) {
-        LOGE("Failed to write token array to file.");
+        LOGE("Write storeStr to file failed.");
         ret = HC_ERR_FILE;
     }
     FreeJsonString(storeJsonString);
@@ -1003,7 +1003,7 @@ static void OnOsAccountRemoved(int32_t osAccountId)
     UnlockHcMutex(g_accountDbMutex);
 }
 
-static bool IsOsAccountDataLoaded(int32_t osAccountId)
+static bool IsOsAccountAsyTokenDataLoaded(int32_t osAccountId)
 {
     uint32_t index = 0;
     OsAccountTokenInfo *info = NULL;
@@ -1017,7 +1017,7 @@ static bool IsOsAccountDataLoaded(int32_t osAccountId)
 
 static void LoadDataIfNotLoaded(int32_t osAccountId)
 {
-    if (IsOsAccountDataLoaded(osAccountId)) {
+    if (IsOsAccountAsyTokenDataLoaded(osAccountId)) {
         return;
     }
     LOGI("Data is not loaded, now load it, osAccountId: %" LOG_PUB "d.", osAccountId);

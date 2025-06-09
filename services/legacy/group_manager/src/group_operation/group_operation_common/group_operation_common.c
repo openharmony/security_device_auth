@@ -108,8 +108,8 @@ static uint32_t GetGroupNumByOwner(int32_t osAccountId, const char *ownerName)
 TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *deviceId, bool isUdid,
     const char *groupId)
 {
-    DeviceEntryVec deviceEntryVec = CreateDeviceEntryVec();
     QueryDeviceParams params = InitQueryDeviceParams();
+    DeviceEntryVec deviceEntryVec = CreateDeviceEntryVec();
     params.groupId = groupId;
     if (isUdid) {
         params.udid = deviceId;
@@ -117,8 +117,8 @@ TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *d
         params.authId = deviceId;
     }
     if (QueryDevices(osAccountId, &params, &deviceEntryVec) != HC_SUCCESS) {
-        LOGE("Failed to query trusted devices!");
         ClearDeviceEntryVec(&deviceEntryVec);
+        LOGE("Query trusted devices failed!");
         return NULL;
     }
     uint32_t index;
@@ -914,7 +914,7 @@ int32_t GenerateBindSuccessData(const char *peerAuthId, const char *peerUdid,
     char *jsonDataStr = PackJsonToString(jsonData);
     FreeJson(jsonData);
     if (jsonDataStr == NULL) {
-        LOGE("An error occurred when converting JSON data to String data!");
+        LOGE("Error occurred when converting JSON data to String data!");
         return HC_ERR_JSON_FAIL;
     }
     *returnDataStr = jsonDataStr;
@@ -947,7 +947,7 @@ int32_t GenerateUnbindSuccessData(const char *peerAuthId, const char *groupId, c
     char *jsonDataStr = PackJsonToString(jsonData);
     FreeJson(jsonData);
     if (jsonDataStr == NULL) {
-        LOGE("An error occurred when converting JSON data to String data!");
+        LOGE("Error occurred, convert JSON data to String data failed!");
         return HC_ERR_JSON_FAIL;
     }
     *returnDataStr = jsonDataStr;
@@ -1236,7 +1236,7 @@ int32_t AddDevInfoToContextByInput(CJson *context)
         LOGD("The authId is not found. The default value is udid!");
         int32_t res = HcGetUdid((uint8_t *)udid, INPUT_UDID_LEN);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
+            LOGE("Error occurs, failed to get local udid! res: %" LOG_PUB "d", res);
             return HC_ERR_DB;
         }
         authId = udid;
