@@ -439,7 +439,7 @@ static TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const 
     params.groupId = groupId;
     params.udid = udid;
     if (QueryDevices(osAccountId, &params, &deviceEntryVec) != HC_SUCCESS) {
-        LOGE("Failed to query trusted devices!");
+        LOGE("Error occurs, query trusted devices failed!");
         ClearDeviceEntryVec(&deviceEntryVec);
         return NULL;
     }
@@ -628,13 +628,6 @@ static int32_t ClientFinishProcProcEvent(const CmdParams *params)
     return SaveOsAccountDb(params->osAccountId);
 }
 
-static void ReturnError(int32_t errorCode, CJson **outputEvent)
-{
-    (void)errorCode;
-    (void)outputEvent;
-    return;
-}
-
 static void NotifyPeerError(int32_t errorCode, CJson **outputEvent)
 {
     CJson *json = CreateJson();
@@ -653,6 +646,13 @@ static void NotifyPeerError(int32_t errorCode, CJson **outputEvent)
         return;
     }
     *outputEvent = json;
+    return;
+}
+
+static void ReturnError(int32_t errorCode, CJson **outputEvent)
+{
+    (void)errorCode;
+    (void)outputEvent;
     return;
 }
 
@@ -717,13 +717,13 @@ static int32_t DecodeEvent(const CJson *receviedMsg)
     }
     int32_t event;
     if (GetIntFromJson(receviedMsg, FIELD_EVENT, &event) != HC_SUCCESS) {
-        LOGE("get event from receviedMsg fail.");
+        LOGE("Error occurs, get event from receviedMsg failed.");
         return UNKNOWN_EVENT;
     }
     if (START_EVENT <= event && event <= UNKNOWN_EVENT) {
         return event;
     }
-    LOGE("unknown event.");
+    LOGE("Invalid event type.");
     return UNKNOWN_EVENT;
 }
 
@@ -738,14 +738,14 @@ static int32_t SwitchState(BaseCmd *self, const CJson *receviedMsg, CJson **retu
                 self->curState = self->failState;
                 return res;
             }
-            LOGI("event: %" LOG_PUB "d, curState: %" LOG_PUB "d, nextState: %" LOG_PUB "d", eventType, self->curState,
+            LOGI("Event: %" LOG_PUB "d, CurState: %" LOG_PUB "d, NextState: %" LOG_PUB "d.", eventType, self->curState,
                 STATE_MACHINE[i].nextState);
             self->curState = STATE_MACHINE[i].nextState;
             *returnState = (self->curState == self->finishState) ? CMD_STATE_FINISH : CMD_STATE_CONTINUE;
             return HC_SUCCESS;
         }
     }
-    LOGI("Unsupported event type. Ignore process. [Event]: %" LOG_PUB "d, [CurState]: %" LOG_PUB "d",
+    LOGI("Invalid event type. Ignore process. [Event]: %" LOG_PUB "d, [CurState]: %" LOG_PUB "d.",
         eventType, self->curState);
     return HC_SUCCESS;
 }

@@ -188,22 +188,22 @@ static int IsoCombineHkdfSalt(IsoBaseParams *params, Uint8Buff *hkdfSaltBuf, boo
 {
     if (isClient) {
         if (memcpy_s(hkdfSaltBuf->val, hkdfSaltBuf->length, params->randSelf.val, params->randSelf.length) != EOK) {
-            LOGE("Memcpy randSelf failed.");
+            LOGE("Error occurs, Memcpy randSelf failed.");
             return HC_ERR_MEMORY_COPY;
         }
         if (memcpy_s(hkdfSaltBuf->val + params->randSelf.length, hkdfSaltBuf->length - params->randSelf.length,
             params->randPeer.val, params->randPeer.length) != EOK) {
-            LOGE("Memcpy randPeer failed.");
+            LOGE("Error occurs, Memcpy randPeer failed.");
             return HC_ERR_MEMORY_COPY;
         }
     } else {
         if (memcpy_s(hkdfSaltBuf->val, hkdfSaltBuf->length, params->randPeer.val, params->randPeer.length) != EOK) {
-            LOGE("Memcpy randPeer failed.");
+            LOGE("Error occurs, Memcpy randPeer failed.");
             return HC_ERR_MEMORY_COPY;
         }
         if (memcpy_s(hkdfSaltBuf->val + params->randPeer.length, hkdfSaltBuf->length - params->randPeer.length,
             params->randSelf.val, params->randSelf.length) != EOK) {
-            LOGE("Memcpy randSelf failed.");
+            LOGE("Error occurs, Memcpy randSelf failed.");
             return HC_ERR_MEMORY_COPY;
         }
     }
@@ -267,7 +267,7 @@ int IsoClientCheckAndGenToken(IsoBaseParams *params, const Uint8Buff *peerToken,
     Uint8Buff outHmac = { hmacPeer, sizeof(hmacPeer) };
     int res = IsoCalSelfToken(params, &outHmac);
     if (res != HC_SUCCESS) {
-        LOGE("IsoCalSelfToken failed, res: %" LOG_PUB "x.", res);
+        LOGE("Error occurs, IsoCalSelfToken failed, res: %" LOG_PUB "x.", res);
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
         return res;
     }
@@ -363,13 +363,13 @@ int IsoServerGenSessionKeyAndCalToken(IsoBaseParams *params, const Uint8Buff *to
     Uint8Buff outHmac = { hmacPeer, sizeof(hmacPeer) };
     int res = IsoCalSelfToken(params, &outHmac);
     if (res != HC_SUCCESS) {
-        LOGE("IsoCalSelfToken failed, res: %" LOG_PUB "x.", res);
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
+        LOGE("IsoCalSelfToken failed, res: %" LOG_PUB "x.", res);
         return res;
     }
     if (memcmp(tokenFromPeer->val, outHmac.val, outHmac.length) != 0) {
-        LOGE("Compare hmac token failed.");
         (void)memset_s(params->psk, sizeof(params->psk), 0, PSK_LEN);
+        LOGE("Compare hmac token failed.");
         return PROOF_MISMATCH;
     }
 

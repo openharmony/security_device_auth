@@ -663,16 +663,16 @@ static void NotifyPeerError(int32_t errorCode, CJson **outputEvent)
 {
     CJson *json = CreateJson();
     if (json == NULL) {
-        LOGE("create json failed.");
-        return;
-    }
-    if (AddIntToJson(json, FIELD_EVENT, FAIL_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
-        FreeJson(json);
+        LOGE("Create json failed.");
         return;
     }
     if (AddIntToJson(json, FIELD_ERR_CODE, errorCode) != HC_SUCCESS) {
-        LOGE("add errorCode to json fail.");
+        LOGE("Add errorCode to json fail.");
+        FreeJson(json);
+        return;
+    }
+    if (AddIntToJson(json, FIELD_EVENT, FAIL_EVENT) != HC_SUCCESS) {
+        LOGE("Add eventName to json fail.");
         FreeJson(json);
         return;
     }
@@ -704,6 +704,7 @@ static const ProtocolStateNode STATE_MACHINE[] = {
 static int32_t DecodeEvent(const CJson *receviedMsg)
 {
     if (receviedMsg == NULL) {
+        LOGE("iso receviedMsg is NULL.");
         return START_AUTH_EVENT;
     }
     int32_t event;
@@ -797,11 +798,11 @@ static int32_t SetIsoSelfProtectedMsg(BaseProtocol *self, const Uint8Buff *selfM
 static int32_t SetIsoPeerProtectedMsg(BaseProtocol *self, const Uint8Buff *peerMsg)
 {
     if ((self == NULL) || !IsUint8BuffValid(peerMsg, PROTECTED_MSG_MAX_LEN)) {
-        LOGE("invalid params.");
+        LOGE("Invalid params.");
         return HC_ERR_INVALID_PARAMS;
     }
     if (DeepCopyUint8Buff(peerMsg, &self->protectedMsg.peerMsg) != HC_SUCCESS) {
-        LOGE("copy protected peer msg fail.");
+        LOGE("Copy protected peer msg to peerMsg fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
     return HC_SUCCESS;

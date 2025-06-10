@@ -49,17 +49,17 @@ static int32_t GetIdPeer(const CJson *in, const char *peerIdKey, const Uint8Buff
 {
     const char *authIdStr = GetStringFromJson(in, peerIdKey);
     if (authIdStr == NULL) {
-        LOGE("Get peer id from json failed.");
+        LOGE("Error occurs, get peer id from json failed.");
         return HC_ERR_JSON_GET;
     }
     uint32_t authIdLen = HcStrlen(authIdStr) / BYTE_TO_HEX_OPER_LENGTH;
     if (authIdLen == 0 || authIdLen > MAX_AUTH_ID_LEN) {
-        LOGE("Invalid authIdPeerLen: %" LOG_PUB "u.", authIdLen);
+        LOGE("Occuer error, invalid peer authIdLen: %" LOG_PUB "u.", authIdLen);
         return HC_ERR_INVALID_LEN;
     }
     int32_t res = InitSingleParam(authIdPeer, authIdLen);
     if (res != HC_SUCCESS) {
-        LOGE("InitSingleParam for peer authId failed, res: %" LOG_PUB "d.", res);
+        LOGE("Init Single Param for peer authId failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     if (HexStringToByte(authIdStr, authIdPeer->val, authIdPeer->length) != HC_SUCCESS) {
@@ -166,16 +166,16 @@ static int32_t VersionToString(const VersionStruct *version, char *verStr, uint3
     char tmpStr[TMP_VERSION_STR_LEN] = { 0 };
     if (sprintf_s(tmpStr, TMP_VERSION_STR_LEN, "%lld.%lld.%lld",
         version->first, version->second, version->third) <= 0) {
-        LOGE("Convert version struct to string failed.");
+        LOGE("Error occurs, convert version struct to string failed.");
         return HC_ERR_CONVERT_FAILED;
     }
     uint32_t tmpStrLen = HcStrlen(tmpStr);
     if (len < tmpStrLen + 1) {
-        LOGE("The length of verStr is too short, len: %" LOG_PUB "u.", len);
+        LOGE("Too short len, len: %" LOG_PUB "u.", len);
         return HC_ERR_INVALID_LEN;
     }
     if (memcpy_s(verStr, len, tmpStr, tmpStrLen + 1) != 0) {
-        LOGE("Memcpy for verStr failed.");
+        LOGE("Error occurs, memcpy for verStr failed.");
         return HC_ERR_MEMORY_COPY;
     }
     return HC_SUCCESS;
@@ -807,12 +807,12 @@ static int32_t ProcessProtocolInitial(SpekeSession *spekeSession, KeyAgreeBlob *
     char *returnStr = PackJsonToString(outJsonMessage);
     FreeJson(outJsonMessage);
     if (returnStr == NULL) {
-        LOGE("Pack json to string failed.");
+        LOGE("Error occurs, pack json to string failed.");
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     uint32_t returnStrLen = HcStrlen(returnStr);
     if (memcpy_s(out->data, out->length, returnStr, returnStrLen + 1) != EOK) {
-        LOGE("Memcpy for out blob failed.");
+        LOGE("Memcpy str to out blob failed.");
         FreeJsonString(returnStr);
         return HC_ERR_MEMORY_COPY;
     }

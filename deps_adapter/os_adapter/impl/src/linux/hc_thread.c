@@ -97,20 +97,20 @@ void Join(struct HcThreadT *thread)
     UnlockHcMutex(&thread->threadLock);
 }
 
-void BizWait(struct HcThreadT *thread)
-{
-    if (thread == NULL) {
-        return;
-    }
-    thread->bizWaitObj.wait(&thread->bizWaitObj);
-}
-
 void BizNotify(struct HcThreadT *thread)
 {
     if (thread == NULL) {
         return;
     }
     thread->bizWaitObj.notify(&thread->bizWaitObj);
+}
+
+void BizWait(struct HcThreadT *thread)
+{
+    if (thread == NULL) {
+        return;
+    }
+    thread->bizWaitObj.wait(&thread->bizWaitObj);
 }
 
 int32_t InitThread(HcThread *thread, ThreadFunc func, size_t stackSize, const char *threadName)

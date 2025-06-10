@@ -75,17 +75,17 @@ static int32_t GeneratePakeRequestPayloadData(PakeMkAgreeTask *pakeTask, Uint8Bu
     char *payloadStr = PackJsonToString(payload);
     FreeJson(payload);
     if (payloadStr == NULL) {
-        LOGE("Failed to pack payload json to string!");
+        LOGE("Pack payload json to string failed!");
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     uint32_t payloadLen = HcStrlen(payloadStr);
     if (InitUint8Buff(payloadData, payloadLen + 1) != HC_SUCCESS) {
-        LOGE("Failed to init payload data!");
+        LOGE("Init payload data failed!");
         FreeJsonString(payloadStr);
         return HC_ERR_ALLOC_MEMORY;
     }
     if (memcpy_s(payloadData->val, payloadData->length, payloadStr, payloadLen) != EOK) {
-        LOGE("Failed to copy payload!");
+        LOGE("Copy payload failed!");
         FreeJsonString(payloadStr);
         FreeUint8Buff(payloadData);
         return HC_ERR_MEMORY_COPY;
@@ -240,12 +240,12 @@ static int32_t GeneratePakeRequestData(PakeMkAgreeTask *pakeTask, CJson *out)
     }
     CJson *sendData = CreateJson();
     if (sendData == NULL) {
-        LOGE("Failed to create send data json!");
+        LOGE("Create send data json failed!");
         ClearFreeUint8Buff(&payloadData);
         return HC_ERR_JSON_CREATE;
     }
     if (AddByteToJson(sendData, FIELD_PAYLOAD, payloadData.val, payloadData.length) != HC_SUCCESS) {
-        LOGE("Failed to add payload data to json!");
+        LOGE("Add payload data to json failed!");
         ClearFreeUint8Buff(&payloadData);
         FreeJson(sendData);
         return HC_ERR_JSON_ADD;
@@ -253,7 +253,7 @@ static int32_t GeneratePakeRequestData(PakeMkAgreeTask *pakeTask, CJson *out)
     ClearFreeUint8Buff(&payloadData);
     res = AddSelfUdidToSendData(sendData);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to add self udid to json!");
+        LOGE("Error occurs, Failed to add self udid to json!");
         FreeJson(sendData);
         return res;
     }

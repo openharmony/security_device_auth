@@ -252,12 +252,12 @@ static int32_t LoadPseudonymDataFromFile(int32_t osAccountId, PseudonymInfoVec *
     FileHandle file = { 0 };
     int32_t ret = OpenPseudonymFile(osAccountId, &file, MODE_FILE_READ);
     if (ret != HC_SUCCESS) {
-        LOGE("Open pseudonym data file failed, ret:%" LOG_PUB "d", ret);
+        LOGE("Open pseudonym data file failed, ret:%" LOG_PUB "d.", ret);
         return ret;
     }
     int32_t fileSize = HcFileSize(file);
     if (fileSize <= 0) {
-        LOGE("file size stat failed");
+        LOGE("file size stat failed.");
         HcFileClose(file);
         return HC_ERROR;
     }
@@ -442,7 +442,7 @@ static void OnOsAccountRemoved(int32_t osAccountId)
     UnlockHcMutex(g_mutex);
 }
 
-static bool IsOsAccountDataLoaded(int32_t osAccountId)
+static bool IsOsAccountPseudonymDataLoaded(int32_t osAccountId)
 {
     uint32_t index = 0;
     OsAccountPseudonymInfo *info = NULL;
@@ -456,7 +456,7 @@ static bool IsOsAccountDataLoaded(int32_t osAccountId)
 
 static void LoadDataIfNotLoaded(int32_t osAccountId)
 {
-    if (IsOsAccountDataLoaded(osAccountId)) {
+    if (IsOsAccountPseudonymDataLoaded(osAccountId)) {
         return;
     }
     LOGI("Data has not been loaded, load it, osAccountId: %" LOG_PUB "d", osAccountId);
@@ -607,7 +607,7 @@ static int32_t GetRealInfo(int32_t osAccountId, const char *pseudonymId, char **
     (void)LockHcMutex(g_mutex);
     OsAccountPseudonymInfo *info = GetPseudonymInfoByOsAccountId(osAccountId);
     if (info == NULL) {
-        LOGE("Failed to get Pseudonym by os account id");
+        LOGE("Failed to get Pseudonym by os account id.");
         UnlockHcMutex(g_mutex);
         return HC_ERROR;
     }
@@ -639,7 +639,7 @@ static int32_t GetPseudonymId(int32_t osAccountId, const char *indexKey, char **
     (void)LockHcMutex(g_mutex);
     OsAccountPseudonymInfo *info = GetPseudonymInfoByOsAccountId(osAccountId);
     if (info == NULL) {
-        LOGE("Failed to get Pseudonym by os account id");
+        LOGE("Get Pseudonym by os account id failed.");
         UnlockHcMutex(g_mutex);
         return HC_ERROR;
     }
@@ -746,13 +746,13 @@ static int32_t DeleteAllPseudonymId(int32_t osAccountId, const char *deviceId)
     PseudonymInfoVec deletePseudonymIdVec = CreatePseudonymInfoVec();
     int32_t ret = DeletePseudonymInner(osAccountId, deviceId, &deletePseudonymIdVec, FIELD_DEVICE_ID);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to delete pseudonym inner, account id is: %" LOG_PUB "d", osAccountId);
+        LOGE("Error occurs, delete pseudonym failed, account id is: %" LOG_PUB "d", osAccountId);
         DestroyPseudonymInfoVec(&deletePseudonymIdVec);
         return ret;
     }
     ret = SaveOsAccountPseudonymDb(osAccountId);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to save pseudonym data to db, account id is: %" LOG_PUB "d", osAccountId);
+        LOGE("Error occurs, save pseudonym data to db failed, account id is: %" LOG_PUB "d", osAccountId);
         ClearPseudonymInfoVec(&deletePseudonymIdVec);
         return ret;
     }

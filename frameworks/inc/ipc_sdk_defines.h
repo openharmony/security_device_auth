@@ -157,6 +157,13 @@ if (ret != HC_SUCCESS) { \
     return; \
 }
 
+#define RETURN_BOOL_IF_CREATE_IPC_CTX_FAILED(callCtx) \
+ret = CreateCallCtx(&(callCtx)); \
+if (ret != HC_SUCCESS) { \
+    LOGE("CreateCallCtx failed, ret %" LOG_PUB "d", ret); \
+    return false; \
+}
+
 #define BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, paramType, paramValue, valueSize) \
 ret = SetCallRequestParamInfo((callCtx), (paramType), (const uint8_t *)(paramValue), (valueSize)); \
 if (ret != HC_SUCCESS) { \

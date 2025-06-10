@@ -80,8 +80,8 @@ static int CreateNextTask(PakeV1ServerTask *realTask, const CJson *in, CJson *ou
             res = HC_ERR_NOT_SUPPORT;
     }
     if (res != HC_SUCCESS) {
-        LOGE("Create and process next task failed, opcode: %" LOG_PUB "d, res: %" LOG_PUB "d.",
-            realTask->params.opCode, res);
+        LOGE("Create and process next task failed, res: %" LOG_PUB "d, opcode: %" LOG_PUB "d.",
+            res, realTask->params.opCode);
         return res;
     }
     if (*status != FINISH) {
@@ -89,7 +89,7 @@ static int CreateNextTask(PakeV1ServerTask *realTask, const CJson *in, CJson *ou
     }
     res = SendResultToSelf(&realTask->params, out);
     if (res != HC_SUCCESS) {
-        LOGE("SendResultToSelf failed, res: %" LOG_PUB "d", res);
+        LOGE("send result to out failed, res: %" LOG_PUB "d.", res);
         return res;
     }
     LOGI("End server task successfully, opcode: %" LOG_PUB "d.", realTask->params.opCode);

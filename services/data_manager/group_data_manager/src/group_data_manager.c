@@ -150,6 +150,7 @@ static bool LoadStringVectorFromParcel(StringVector *vec, HcParcel *parcel)
             return true;
         }
         if ((strLen == 0) || (strLen > MAX_STRING_LEN)) {
+            LOGE("strlen invalid.");
             return false;
         }
         HcString str = CreateString();
@@ -161,6 +162,7 @@ static bool LoadStringVectorFromParcel(StringVector *vec, HcParcel *parcel)
         } else {
             if (vec->pushBack(vec, &str) == NULL) {
                 DeleteString(&str);
+                LOGE("vec pushBack failed.");
                 return false;
             }
         }
@@ -174,9 +176,11 @@ static bool SaveStringVectorToParcel(const StringVector *vec, HcParcel *parcel)
     FOR_EACH_HC_VECTOR(*vec, index, str) {
         uint32_t len = StringLength(str) + sizeof(char);
         if (!ParcelWriteUint32(parcel, len)) {
+            LOGE("Parcel write failed.");
             return false;
         }
         if (!ParcelWrite(parcel, GetParcelData(&str->parcel), GetParcelDataSize(&str->parcel))) {
+            LOGE("Parcel write failed.");
             return false;
         }
     }
@@ -476,8 +480,8 @@ static bool ReadParcelFromFile(const char *filePath, HcParcel *parcel)
     }
     HcFileClose(file);
     if (!ParcelWrite(parcel, fileData, fileSize)) {
-        LOGE("[DB]: parcel write error!");
         HcFree(fileData);
+        LOGE("[DB]: parcel write error!");
         return false;
     }
     HcFree(fileData);
@@ -608,8 +612,8 @@ static int32_t DelGroupFromDbInner(int32_t osAccountId, const char *groupId)
         return HC_ERR_NULL_PTR;
     }
     QueryGroupParams queryGroupParams = InitQueryGroupParams();
-    queryGroupParams.groupId = groupId;
     QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
+    queryGroupParams.groupId = groupId;
     queryDeviceParams.groupId = groupId;
     int32_t result = HC_SUCCESS;
     if (DelTrustedDevice(osAccountId, &queryDeviceParams) != HC_SUCCESS) {
@@ -703,7 +707,7 @@ static void OnOsAccountRemoved(int32_t osAccountId)
     UnlockHcMutex(g_databaseMutex);
 }
 
-static bool IsOsAccountDataLoaded(int32_t osAccountId)
+static bool IsOsAccountGroupDataLoaded(int32_t osAccountId)
 {
     uint32_t index = 0;
     OsAccountTrustedInfo *info = NULL;
@@ -717,7 +721,7 @@ static bool IsOsAccountDataLoaded(int32_t osAccountId)
 
 static void LoadDataIfNotLoaded(int32_t osAccountId)
 {
-    if (IsOsAccountDataLoaded(osAccountId)) {
+    if (IsOsAccountGroupDataLoaded(osAccountId)) {
         return;
     }
     LOGI("[DB]: data has not been loaded, load it, osAccountId: %" LOG_PUB "d", osAccountId);
@@ -1109,7 +1113,7 @@ static int32_t AddUserTypeToReturn(const TrustedDeviceEntry *deviceInfo, CJson *
 static int32_t GenerateMessage(const TrustedGroupEntry *groupEntry, char **returnGroupInfo)
 {
     if (groupEntry == NULL) {
-        LOGE("Invalid param, groupEntry is null!");
+        LOGE("Input param groupEntry is null!");
         return HC_ERR_NULL_PTR;
     }
     CJson *message = CreateJson();
@@ -1201,7 +1205,7 @@ static int32_t GenerateMessageWithOsAccount(const TrustedGroupEntry *groupEntry,
     }
     CJson *message = CreateJson();
     if (message == NULL) {
-        LOGE("Failed to allocate message memory!");
+        LOGE("Failed to create message json!");
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t result = GenerateReturnGroupInfo(groupEntry, message);
@@ -1594,7 +1598,7 @@ int32_t DelTrustedDevice(int32_t osAccountId, const QueryDeviceParams *params)
 int32_t QueryGroups(int32_t osAccountId, const QueryGroupParams *params, GroupEntryVec *vec)
 {
     if ((params == NULL) || (vec == NULL)) {
-        LOGE("[DB]: The input params or vec is NULL!");
+        LOGE("[DB]: Error occurs, the input params or vec is NULL!");
         return HC_ERR_NULL_PTR;
     }
     (void)LockHcMutex(g_databaseMutex);
@@ -1625,7 +1629,7 @@ int32_t QueryGroups(int32_t osAccountId, const QueryGroupParams *params, GroupEn
 int32_t QueryDevices(int32_t osAccountId, const QueryDeviceParams *params, DeviceEntryVec *vec)
 {
     if ((params == NULL) || (vec == NULL)) {
-        LOGE("[DB]: The input params or vec is NULL!");
+        LOGE("[DB]: The input query devices params or vec is NULL!");
         return HC_ERR_NULL_PTR;
     }
     (void)LockHcMutex(g_databaseMutex);

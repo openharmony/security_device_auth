@@ -21,19 +21,10 @@
 #include "hc_types.h"
 #include "securec.h"
 
-static const uint8_t DEFAULT_CRED_PARAM_VAL = 0;
-
 QueryCredentialParams InitQueryCredentialParams(void)
 {
     QueryCredentialParams params = {
-        .deviceId = NULL,
-        .credOwner = NULL,
         .credId = NULL,
-        .userId = NULL,
-        .credType = DEFAULT_CRED_PARAM_VAL,
-        .ownerUid = DEFAULT_CRED_PARAM_VAL,
-        .subject = DEFAULT_CRED_PARAM_VAL,
-        .issuer = DEFAULT_CRED_PARAM_VAL,
     };
     return params;
 }

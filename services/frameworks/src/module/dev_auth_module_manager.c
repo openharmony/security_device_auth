@@ -66,6 +66,18 @@ static bool IsParamsForDasTokenManagerValid(const char *pkgName, const char *ser
     return true;
 }
 
+static TokenManagerParams BuildTokenManagerParams(const AuthModuleParams *moduleParams)
+{
+    TokenManagerParams params = {
+        .osAccountId = moduleParams->osAccountId,
+        .pkgName = { (uint8_t *)moduleParams->pkgName, HcStrlen(moduleParams->pkgName) },
+        .serviceType = { (uint8_t *)moduleParams->serviceType, HcStrlen(moduleParams->serviceType) },
+        .authId = { moduleParams->authId->val, moduleParams->authId->length },
+        .userType = moduleParams->userType
+    };
+    return params;
+}
+
 int32_t RegisterLocalIdentity(const AuthModuleParams *moduleParams, int moduleType)
 {
     if (!IsParamsForDasTokenManagerValid(moduleParams->pkgName, moduleParams->serviceType, moduleParams->authId,
@@ -78,14 +90,8 @@ int32_t RegisterLocalIdentity(const AuthModuleParams *moduleParams, int moduleTy
         LOGE("Failed to get module for das with moduleType.");
         return HC_ERR_MODULE_NOT_FOUNT;
     }
+    TokenManagerParams params = BuildTokenManagerParams(moduleParams);
     DasAuthModule *dasModule = (DasAuthModule *)module;
-    TokenManagerParams params = {
-        .osAccountId = moduleParams->osAccountId,
-        .pkgName = { (uint8_t *)moduleParams->pkgName, HcStrlen(moduleParams->pkgName) },
-        .serviceType = { (uint8_t *)moduleParams->serviceType, HcStrlen(moduleParams->serviceType) },
-        .authId = { moduleParams->authId->val, moduleParams->authId->length },
-        .userType = moduleParams->userType
-    };
     int32_t res = dasModule->registerLocalIdentity(&params);
     if (res != HC_SUCCESS) {
         LOGE("Register local identity failed, res: %" LOG_PUB "x", res);
@@ -103,17 +109,11 @@ int32_t UnregisterLocalIdentity(const AuthModuleParams *moduleParams, int module
     }
     AuthModuleBase *module = GetModule(moduleType);
     if (module == NULL) {
-        LOGE("Failed to get module for das.");
+        LOGE("Failed to get module for das with moduleType.");
         return HC_ERR_MODULE_NOT_FOUNT;
     }
+    TokenManagerParams params = BuildTokenManagerParams(moduleParams);
     DasAuthModule *dasModule = (DasAuthModule *)module;
-    TokenManagerParams params = {
-        .osAccountId = moduleParams->osAccountId,
-        .pkgName = { (uint8_t *)moduleParams->pkgName, HcStrlen(moduleParams->pkgName) },
-        .serviceType = { (uint8_t *)moduleParams->serviceType, HcStrlen(moduleParams->serviceType) },
-        .authId = { moduleParams->authId->val, moduleParams->authId->length },
-        .userType = moduleParams->userType
-    };
     int32_t res = dasModule->unregisterLocalIdentity(&params);
     if (res != HC_SUCCESS) {
         LOGE("Unregister local identity failed, res: %" LOG_PUB "x", res);
@@ -134,14 +134,8 @@ int32_t DeletePeerAuthInfo(const AuthModuleParams *moduleParams, int moduleType)
         LOGE("Failed to get module for das.");
         return HC_ERR_MODULE_NOT_FOUNT;
     }
+    TokenManagerParams params = BuildTokenManagerParams(moduleParams);
     DasAuthModule *dasModule = (DasAuthModule *)module;
-    TokenManagerParams params = {
-        .osAccountId = moduleParams->osAccountId,
-        .pkgName = { (uint8_t *)moduleParams->pkgName, HcStrlen(moduleParams->pkgName) },
-        .serviceType = { (uint8_t *)moduleParams->serviceType, HcStrlen(moduleParams->serviceType) },
-        .authId = { moduleParams->authId->val, moduleParams->authId->length },
-        .userType = moduleParams->userType
-    };
     int32_t res = dasModule->deletePeerAuthInfo(&params);
     if (res != HC_SUCCESS) {
         LOGE("Delete peer authInfo failed, res: %" LOG_PUB "x", res);
@@ -163,14 +157,8 @@ int32_t GetPublicKey(int moduleType, AuthModuleParams *moduleParams, Uint8Buff *
         LOGE("Failed to get module for das.");
         return HC_ERR_MODULE_NOT_FOUNT;
     }
+    TokenManagerParams params = BuildTokenManagerParams(moduleParams);
     DasAuthModule *dasModule = (DasAuthModule *)module;
-    TokenManagerParams params = {
-        .osAccountId = moduleParams->osAccountId,
-        .pkgName = { (uint8_t *)moduleParams->pkgName, HcStrlen(moduleParams->pkgName) },
-        .serviceType = { (uint8_t *)moduleParams->serviceType, HcStrlen(moduleParams->serviceType) },
-        .authId = { moduleParams->authId->val, moduleParams->authId->length },
-        .userType = moduleParams->userType
-    };
     int32_t res = dasModule->getPublicKey(&params, returnPk);
     if (res != HC_SUCCESS) {
         LOGE("Get public key failed, res: %" LOG_PUB "d", res);

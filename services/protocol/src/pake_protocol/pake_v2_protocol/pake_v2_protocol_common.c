@@ -38,14 +38,14 @@ void DestroyPakeV2BaseParams(PakeBaseParams *params)
 
     CleanPakeSensitiveKeys(params);
 
-    HcFree(params->salt.val);
-    params->salt.val = NULL;
-
     HcFree(params->challengeSelf.val);
     params->challengeSelf.val = NULL;
 
     HcFree(params->challengePeer.val);
     params->challengePeer.val = NULL;
+
+    HcFree(params->salt.val);
+    params->salt.val = NULL;
 
     HcFree(params->epkSelf.val);
     params->epkSelf.val = NULL;
@@ -95,14 +95,14 @@ static int32_t AllocDefaultParams(PakeBaseParams *params)
     params->kcfData.length = HMAC_LEN;
     params->kcfData.val = (uint8_t *)HcMalloc(params->kcfData.length, 0);
     if (params->kcfData.val == NULL) {
-        LOGE("Malloc for kcfData failed.");
+        LOGE("Error occurs, Malloc for kcfData failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
 
     params->kcfDataPeer.length = HMAC_LEN;
     params->kcfDataPeer.val = (uint8_t *)HcMalloc(params->kcfDataPeer.length, 0);
     if (params->kcfDataPeer.val == NULL) {
-        LOGE("Malloc for kcfDataPeer failed.");
+        LOGE("Error occurs, Malloc for kcfDataPeer failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
     return HC_SUCCESS;
@@ -110,12 +110,12 @@ static int32_t AllocDefaultParams(PakeBaseParams *params)
 
 static void FillDefaultValue(PakeBaseParams *params)
 {
-    params->psk.val = NULL;
-    params->psk.length = 0;
     params->challengeSelf.val = NULL;
     params->challengeSelf.length = 0;
     params->challengePeer.val = NULL;
     params->challengePeer.length = 0;
+    params->psk.val = NULL;
+    params->psk.length = 0;
     params->eskSelf.val = NULL;
     params->eskSelf.length = 0;
     params->epkSelf.val = NULL;
@@ -143,7 +143,7 @@ static void FillDefaultValue(PakeBaseParams *params)
 int32_t InitPakeV2BaseParams(int32_t osAccountId, PakeBaseParams *params)
 {
     if (params == NULL) {
-        LOGE("Params is null.");
+        LOGE("Input params is null.");
         return HC_ERR_NULL_PTR;
     }
     params->osAccountId = osAccountId;
@@ -175,7 +175,7 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
     if (!params->isClient) {
         res = params->loader->generateRandom(&(params->salt));
         if (res != HC_SUCCESS) {
-            LOGE("Generate salt failed, res: %" LOG_PUB "x.", res);
+            LOGE("Error occurs, Generate salt failed, res: %" LOG_PUB "x.", res);
             goto CLEAN_UP;
         }
     }
@@ -184,7 +184,7 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
     KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false, params->osAccountId };
     res = params->loader->computeHkdf(&keyParams, &(params->salt), &keyInfo, &secret);
     if (res != HC_SUCCESS) {
-        LOGE("Derive secret from psk failed, res: %" LOG_PUB "x.", res);
+        LOGE("Error occurs, derive secret from psk failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     FreeAndCleanKey(&params->psk);
@@ -618,13 +618,13 @@ int32_t ClientVerifyConfirmPakeV2Protocol(PakeBaseParams *params)
     }
     int32_t res = VerifyProof(params);
     if (res != HC_SUCCESS) {
-        LOGE("VerifyProof failed, res: %" LOG_PUB "x.", res);
+        LOGE("Error occurs, verifyProof failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
 
     res = GenerateSessionKey(params);
     if (res != HC_SUCCESS) {
-        LOGE("Generate session key failed, res: %" LOG_PUB "x.", res);
+        LOGE("Error occurs, generate session key failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     return res;
@@ -670,7 +670,7 @@ int32_t ServerConfirmPakeV2Protocol(PakeBaseParams *params)
     }
     res = GenerateSessionKey(params);
     if (res != HC_SUCCESS) {
-        LOGE("Generate session key failed, res: %" LOG_PUB "x.", res);
+        LOGE("Error occurs, generate session key failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
     return res;

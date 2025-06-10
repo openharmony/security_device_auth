@@ -378,7 +378,7 @@ static int32_t ComputeHkdfKeyAlias(const CJson *in, int32_t osAccountId, Uint8Bu
     ret = ConvertPsk(&pskBuff, sharedSecret);
     HcFree(pskVal);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to convert psk!");
+        LOGE("Error occurs, Failed to convert psk!");
     }
     return ret;
 }
@@ -487,20 +487,20 @@ static int32_t ISGetAccountSymSharedSecret(const CJson *in, Uint8Buff *sharedSec
     Uint8Buff authToken = { NULL, 0 };
     int32_t ret = GenerateAuthTokenByDevType(osAccountId, in, &authToken, &isTokenStored);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to generate auth token!");
+        LOGE("Error occurs, Failed to generate auth token!");
         return ret;
     }
     uint8_t seed[SEED_SIZE] = { 0 };
     Uint8Buff seedBuff = { seed, SEED_SIZE };
     ret = GetByteFromJson(in, FIELD_SEED, seed, SEED_SIZE);
     if (ret != HC_SUCCESS) {
-        LOGE("Failed to get seed!");
+        LOGE("Get seed failed!");
         FreeBuffData(&authToken);
         return HC_ERR_JSON_GET;
     }
     sharedSecret->val = (uint8_t *)HcMalloc(ISO_PSK_LEN, 0);
     if (sharedSecret->val == NULL) {
-        LOGE("Failed to alloc sharedSecret memory!");
+        LOGE("HcMalloc sharedSecret memory failed!");
         FreeBuffData(&authToken);
         return HC_ERR_ALLOC_MEMORY;
     }
@@ -509,7 +509,7 @@ static int32_t ISGetAccountSymSharedSecret(const CJson *in, Uint8Buff *sharedSec
     ret = GetLoaderInstance()->computeHmac(&keyParams, &seedBuff, sharedSecret);
     FreeBuffData(&authToken);
     if (ret != HC_SUCCESS) {
-        LOGE("ComputeHmac for psk failed, ret: %" LOG_PUB "d.", ret);
+        LOGE("Error occurs, ComputeHmac for psk failed, ret: %" LOG_PUB "d.", ret);
         FreeBuffData(sharedSecret);
     }
     return ret;
@@ -554,7 +554,7 @@ static int32_t GetSharedSecretForP2pInIso(const CJson *in, Uint8Buff *sharedSecr
     }
     uint8_t *pskVal = (uint8_t *)HcMalloc(ISO_PSK_LEN, 0);
     if (pskVal == NULL) {
-        LOGE("Failed to alloc memory for psk!");
+        LOGE("HcMalloc memory for psk failed.!");
         HcFree(seedVal);
         return HC_ERR_ALLOC_MEMORY;
     }
@@ -585,12 +585,12 @@ static int32_t GetSharedSecretForP2pInPake(const CJson *in, Uint8Buff *sharedSec
     Uint8Buff credIdByte = { NULL, credIdByteLen };
     credIdByte.val = (uint8_t *)HcMalloc(credIdByteLen, 0);
     if (credIdByte.val == NULL) {
-        LOGE("Failed to malloc credIdByteLen");
+        LOGE("Failed to Hcmalloc credIdByteLen memory.");
         return IS_ERR_ALLOC_MEMORY;
     }
     int32_t ret = HexStringToByte(credId, credIdByte.val, credIdByte.length);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to convert credId to byte, invalid credId, ret = %" LOG_PUB "d", ret);
+        LOGE("Error occurs, invalid credId, ret = %" LOG_PUB "d", ret);
         HcFree(credIdByte.val);
         return IS_ERR_INVALID_HEX_STRING;
     }
@@ -640,19 +640,19 @@ static int32_t GetSharedSecretByUrl(
     const CJson *in, const Uint8Buff *presharedUrl, ProtocolAlgType protocolType, Uint8Buff *sharedSecret)
 {
     if (in == NULL || presharedUrl == NULL || sharedSecret == NULL) {
-        LOGE("Invalid input params!");
+        LOGE("Input params invalid!");
         return HC_ERR_INVALID_PARAMS;
     }
 
     CJson *urlJson = CreateJsonFromString((const char *)presharedUrl->val);
     if (urlJson == NULL) {
-        LOGE("Failed to create url json!");
+        LOGE("Failed to create url json from preshared url!");
         return HC_ERR_JSON_CREATE;
     }
 
     int32_t trustType = 0;
     if (GetIntFromJson(urlJson, PRESHARED_URL_TRUST_TYPE, &trustType) != HC_SUCCESS) {
-        LOGE("Failed to get trust type!");
+        LOGE("Get trust type from url json failed!");
         FreeJson(urlJson);
         return HC_ERR_JSON_GET;
     }
@@ -694,7 +694,7 @@ static int32_t GetSharedSecretByPeerCert(
     const CJson *in, const CertInfo *peerCertInfo, ProtocolAlgType protocolType, Uint8Buff *sharedSecret)
 {
     if (in == NULL || peerCertInfo == NULL || sharedSecret == NULL) {
-        LOGE("Invalid input params!");
+        LOGE("Input params invalid!");
         return HC_ERR_INVALID_PARAMS;
     }
     if (protocolType != ALG_EC_SPEKE) {
@@ -703,7 +703,7 @@ static int32_t GetSharedSecretByPeerCert(
     }
     int32_t osAccountId = INVALID_OS_ACCOUNT;
     if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId!");
+        LOGE("Get os account id failed!");
         return HC_ERR_JSON_GET;
     }
     const char *credId = GetStringFromJson(in, FIELD_ACROSS_ACCOUNT_CRED_ID);

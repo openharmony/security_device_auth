@@ -64,14 +64,14 @@ static int32_t ReturnSessionKey(int64_t requestId, const CJson *out, const Devic
             break;
         }
         if ((callback == NULL) || (callback->onSessionKeyReturned == NULL)) {
-            LOGE("The callback of onSessionKeyReturned is null!");
+            LOGE("The callback or callback onSessionKeyReturned is NULL!");
             res = HC_ERR_INVALID_PARAMS;
             break;
         }
-        LOGI("Begin invoke onSessionKeyReturned.");
+        LOGI("Begin execute onSessionKeyReturned!");
         UPDATE_PERFORM_DATA_BY_INPUT_INDEX(requestId, ON_SESSION_KEY_RETURN_TIME, HcGetCurTimeInMillis());
         callback->onSessionKeyReturned(requestId, sessionKey, keyLen);
-        LOGI("End invoke onSessionKeyReturned, res = %" LOG_PUB "d.", res);
+        LOGI("End execute onSessionKeyReturned, res = %" LOG_PUB "d!", res);
     } while (0);
     (void)memset_s(sessionKey, keyLen, 0, keyLen);
     HcFree(sessionKey);

@@ -113,11 +113,11 @@ static int32_t GetAuthIdPeerFromInput(const CJson *inputEvent, EcSpekeParams *pa
     }
     uint32_t authIdPeerStrLen = HcStrlen(authIdPeerStr) / BYTE_TO_HEX_OPER_LENGTH;
     if (authIdPeerStrLen == 0 || authIdPeerStrLen > EC_SPEKE_AUTH_ID_MAX_LEN) {
-        LOGE("Invalid authIdPeerStrLen: %" LOG_PUB "u.", authIdPeerStrLen);
+        LOGE("Error occurs, Invalid authIdPeerStrLen: %" LOG_PUB "u.", authIdPeerStrLen);
         return HC_ERR_CONVERT_FAILED;
     }
     if (InitUint8Buff(&params->authIdPeer, authIdPeerStrLen) != HC_SUCCESS) {
-        LOGE("allocate authIdPeer memory fail.");
+        LOGE("InitUint8Buff authIdPeer memory fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (HexStringToByte(authIdPeerStr, params->authIdPeer.val, params->authIdPeer.length) != HC_SUCCESS) {
@@ -412,11 +412,11 @@ static int32_t CalSid(EcSpekeParams *params, Uint8Buff *sid)
         minSid = &sidSelf;
     }
     if (memcpy_s(sid->val, sid->length, maxSid->val, maxSid->length) != EOK) {
-        LOGE("Memcpy for maxSid failed.");
+        LOGE("Memcpy maxSid to sid failed.");
         return HC_ERR_MEMORY_COPY;
     }
     if (memcpy_s(sid->val + maxSid->length, sid->length - maxSid->length, minSid->val, minSid->length) != EOK) {
-        LOGE("Memcpy for minSid failed.");
+        LOGE("Memcpy minSid to sid failed.");
         return HC_ERR_MEMORY_COPY;
     }
     return HC_SUCCESS;
@@ -489,7 +489,7 @@ static int32_t CalSharedSecret(EcSpekeParams *params)
     uint32_t sharedSecretMsgLen = SHA256_LEN * 2 + EC_SPEKE_EC_KEY_LEN + HcStrlen(SHARED_SECRET_DERIVED_FACTOR);
     Uint8Buff sharedSecretMsg = { NULL, 0 };
     if (InitUint8Buff(&sharedSecretMsg, sharedSecretMsgLen) != HC_SUCCESS) {
-        LOGE("allocate sharedSecretMsg memory fail.");
+        LOGE("allocate sharedSecretMsg memory failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t res = GenerateSharedSecretMsg(params, &sharedSecretMsg);
@@ -498,7 +498,7 @@ static int32_t CalSharedSecret(EcSpekeParams *params)
         return res;
     }
     if (InitUint8Buff(&params->sharedSecret, SHA256_LEN)) {
-        LOGE("allocate sharedSecret memory fail.");
+        LOGE("allocate sharedSecret memory failed.");
         ClearFreeUint8Buff(&sharedSecretMsg);
         return HC_ERR_ALLOC_MEMORY;
     }
@@ -519,7 +519,7 @@ static int32_t CombineProtectedMsg(EcSpekeProtocol *impl, bool isVerify, Uint8Bu
     if (IsUint8BuffValid(firstProtectedMsg, PROTECTED_MSG_MAX_LEN)) {
         if (memcpy_s(kcfDataMsg->val + usedLen, kcfDataMsg->length - usedLen,
             firstProtectedMsg->val, firstProtectedMsg->length) != EOK) {
-            LOGE("Memcpy firstProtectedMsg failed.");
+            LOGE("Error occurs, memcpy firstProtectedMsg failed.");
             return HC_ERR_MEMORY_COPY;
         }
         usedLen += firstProtectedMsg->length;
@@ -527,7 +527,7 @@ static int32_t CombineProtectedMsg(EcSpekeProtocol *impl, bool isVerify, Uint8Bu
     if (IsUint8BuffValid(secondProtectedMsg, PROTECTED_MSG_MAX_LEN)) {
         if (memcpy_s(kcfDataMsg->val + usedLen, kcfDataMsg->length - usedLen,
             secondProtectedMsg->val, secondProtectedMsg->length) != EOK) {
-            LOGE("Memcpy secondProtectedMsg failed.");
+            LOGE("Error occurs, memcpy secondProtectedMsg failed.");
             return HC_ERR_MEMORY_COPY;
         }
     }
@@ -583,7 +583,7 @@ static int32_t CalKcfDataSelf(EcSpekeProtocol *impl, bool isClient)
         impl->base.protectedMsg.peerMsg.length;
     Uint8Buff kcfDataMsg = { NULL, 0 };
     if (InitUint8Buff(&kcfDataMsg, kcfDataMsgLen) != HC_SUCCESS) {
-        LOGE("allocate kcfDataMsg memory fail.");
+        LOGE("Init kcfDataMsg memory failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t res = GenerateKcfDataMsg(impl, isClient, false, &kcfDataMsg);
@@ -592,14 +592,14 @@ static int32_t CalKcfDataSelf(EcSpekeProtocol *impl, bool isClient)
         return res;
     }
     if (InitUint8Buff(&impl->params.kcfDataSelf, SHA256_LEN) != HC_SUCCESS) {
-        LOGE("allocate kcfDataSelf memory fail.");
+        LOGE("Allocate kcfDataSelf memory failed.");
         ClearFreeUint8Buff(&kcfDataMsg);
         return HC_ERR_ALLOC_MEMORY;
     }
     res = GetLoaderInstance()->sha256(&kcfDataMsg, &impl->params.kcfDataSelf);
     ClearFreeUint8Buff(&kcfDataMsg);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for kcfDataSelf failed, res: %" LOG_PUB "x", res);
+        LOGE("Error occurs, sha256 failed, res: %" LOG_PUB "x", res);
         return res;
     }
     PRINT_DEBUG_MSG(impl->params.kcfDataSelf.val, impl->params.kcfDataSelf.length, "kcfDataSelf");
@@ -617,7 +617,7 @@ static int32_t VerifyKcfDataPeer(EcSpekeProtocol *impl, bool isClient)
         impl->base.protectedMsg.peerMsg.length;
     Uint8Buff kcfDataMsg = { NULL, 0 };
     if (InitUint8Buff(&kcfDataMsg, kcfDataMsgLen) != HC_SUCCESS) {
-        LOGE("allocate kcfDataMsg memory fail.");
+        LOGE("Allocate kcfDataMsg memory fail.");
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t res = GenerateKcfDataMsg(impl, isClient, true, &kcfDataMsg);
@@ -630,7 +630,7 @@ static int32_t VerifyKcfDataPeer(EcSpekeProtocol *impl, bool isClient)
     res = GetLoaderInstance()->sha256(&kcfDataMsg, &kcfDataPeer);
     ClearFreeUint8Buff(&kcfDataMsg);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 for kcfDataPeer failed, res: %" LOG_PUB "x", res);
+        LOGE("Error occurs, sha256 for kcfDataPeer failed, res: %" LOG_PUB "x", res);
         return res;
     }
     PRINT_DEBUG_MSG(kcfDataPeer.val, kcfDataPeer.length, "kcfDataPeer");
@@ -786,11 +786,6 @@ static int32_t EcSpekeClientFinishReqBuildEvent(EcSpekeParams *params, CJson **o
         LOGE("create json failed.");
         return HC_ERR_JSON_CREATE;
     }
-    if (AddIntToJson(json, FIELD_EVENT, CLEINT_FINISH_REQ_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
-        FreeJson(json);
-        return HC_ERR_JSON_ADD;
-    }
     if (AddByteToJson(json, FIELD_EPK_CLIENT, params->epkSelf.val, params->epkSelf.length) != HC_SUCCESS) {
         LOGE("add epkC to json fail.");
         FreeJson(json);
@@ -799,6 +794,11 @@ static int32_t EcSpekeClientFinishReqBuildEvent(EcSpekeParams *params, CJson **o
     if (AddByteToJson(json, FIELD_KCF_DATA_CLIENT, params->kcfDataSelf.val,
         params->kcfDataSelf.length) != HC_SUCCESS) {
         LOGE("add kcfDataC to json fail.");
+        FreeJson(json);
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(json, FIELD_EVENT, CLEINT_FINISH_REQ_EVENT) != HC_SUCCESS) {
+        LOGE("Add eventName to json fail.");
         FreeJson(json);
         return HC_ERR_JSON_ADD;
     }
@@ -910,8 +910,8 @@ static int32_t EcSpekeClientFinish(EcSpekeProtocol *impl, const CJson *inputEven
 
 static void ReturnError(int32_t errorCode, CJson **outputEvent)
 {
-    (void)errorCode;
     (void)outputEvent;
+    (void)errorCode;
     return;
 }
 
@@ -960,6 +960,7 @@ static const ProtocolStateNode STATE_MACHINE[] = {
 static int32_t DecodeEvent(const CJson *receviedMsg)
 {
     if (receviedMsg == NULL) {
+        LOGE("ecsepeke receviedMsg is NULL.");
         return START_AUTH_EVENT;
     }
     int32_t event;
@@ -1085,22 +1086,22 @@ static void DestroyEcSpekeProtocol(BaseProtocol *self)
         LOGD("self is null.");
         return;
     }
-    EcSpekeProtocol *impl = (EcSpekeProtocol *)self;
-    ClearFreeUint8Buff(&impl->base.protectedMsg.selfMsg);
-    ClearFreeUint8Buff(&impl->base.protectedMsg.peerMsg);
-    ClearFreeUint8Buff(&impl->base.sessionKey);
-    ClearFreeUint8Buff(&impl->params.psk);
-    ClearFreeUint8Buff(&impl->params.salt);
-    ClearFreeUint8Buff(&impl->params.base);
-    ClearFreeUint8Buff(&impl->params.eskSelf);
-    ClearFreeUint8Buff(&impl->params.epkSelf);
-    ClearFreeUint8Buff(&impl->params.epkPeer);
-    ClearFreeUint8Buff(&impl->params.authIdSelf);
-    ClearFreeUint8Buff(&impl->params.authIdPeer);
-    ClearFreeUint8Buff(&impl->params.kcfDataSelf);
-    ClearFreeUint8Buff(&impl->params.kcfDataPeer);
-    ClearFreeUint8Buff(&impl->params.sharedSecret);
-    HcFree(impl);
+    EcSpekeProtocol *ecSpekeProtocol = (EcSpekeProtocol *)self;
+    ClearFreeUint8Buff(&ecSpekeProtocol->base.protectedMsg.selfMsg);
+    ClearFreeUint8Buff(&ecSpekeProtocol->base.protectedMsg.peerMsg);
+    ClearFreeUint8Buff(&ecSpekeProtocol->base.sessionKey);
+    ClearFreeUint8Buff(&ecSpekeProtocol->params.psk);
+    ClearFreeUint8Buff(&ecSpekeProtocol->params.salt);
+    ClearFreeUint8Buff(&ecSpekeProtocol->params.base);
+    ClearFreeUint8Buff(&ecSpekeProtocol->params.eskSelf);
+    ClearFreeUint8Buff(&ecSpekeProtocol->params.epkSelf);
+    ClearFreeUint8Buff(&ecSpekeProtocol->params.epkPeer);
+    ClearFreeUint8Buff(&ecSpekeProtocol->params.authIdSelf);
+    ClearFreeUint8Buff(&ecSpekeProtocol->params.authIdPeer);
+    ClearFreeUint8Buff(&ecSpekeProtocol->params.kcfDataSelf);
+    ClearFreeUint8Buff(&ecSpekeProtocol->params.kcfDataPeer);
+    ClearFreeUint8Buff(&ecSpekeProtocol->params.sharedSecret);
+    HcFree(ecSpekeProtocol);
 }
 
 static int32_t BuildEcSpekeProtocolObj(const EcSpekeInitParams *params, bool isClient, EcSpekeProtocol *instance)

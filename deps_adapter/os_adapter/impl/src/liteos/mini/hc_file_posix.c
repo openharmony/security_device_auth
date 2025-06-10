@@ -197,7 +197,7 @@ void HcFileGetSubFileName(const char *path, StringVector *nameVec)
     DIR *dir = NULL;
     struct dirent *entry = NULL;
     if ((dir = opendir(path)) == NULL) {
-        LOGI("opendir failed!");
+        LOGI("open dir failed!");
         return;
     }
     while ((entry = readdir(dir)) != NULL) {
@@ -206,12 +206,12 @@ void HcFileGetSubFileName(const char *path, StringVector *nameVec)
         }
         HcString subFileName = CreateString();
         if (!StringSetPointer(&subFileName, entry->d_name)) {
-            LOGE("Failed to copy subFileName!");
+            LOGE("Failed to copy name to subFileName!");
             DeleteString(&subFileName);
             continue;
         }
         if (nameVec->pushBackT(nameVec, subFileName) == NULL) {
-            LOGE("Failed to push path to pathVec!");
+            LOGE("Failed to push subFileName to nameVec!");
             DeleteString(&subFileName);
         }
     }

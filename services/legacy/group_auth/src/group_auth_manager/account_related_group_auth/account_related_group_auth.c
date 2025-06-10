@@ -58,32 +58,32 @@ static int32_t ReturnSessionKey(int64_t requestId, const CJson *out, const Devic
 {
     const char *returnSessionKeyStr = GetStringFromJson(out, FIELD_SESSION_KEY);
     if (returnSessionKeyStr == NULL) {
-        LOGE("Failed to get sessionKey!");
+        LOGE("Failed to get session key from json!");
         return HC_ERR_JSON_GET;
     }
     uint32_t keyLen = (HcStrlen(returnSessionKeyStr) / BYTE_TO_HEX_OPER_LENGTH);
     uint8_t *sessionKey = (uint8_t *)HcMalloc(keyLen, 0);
     if (sessionKey == NULL) {
-        LOGE("Failed to allocate memory for sessionKey!");
+        LOGE("HcMalloc failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
 
     int32_t res = HC_SUCCESS;
     do {
         if (GetByteFromJson(out, FIELD_SESSION_KEY, sessionKey, keyLen) != HC_SUCCESS) {
-            LOGE("Failed to get sessionKey!");
+            LOGE("Failed to get session key from json!");
             res = HC_ERR_JSON_GET;
             break;
         }
         if ((callback == NULL) || (callback->onSessionKeyReturned == NULL)) {
-            LOGE("The callback of onSessionKeyReturned is null!");
+            LOGE("The callback or callback onSessionKeyReturned is NULL!");
             res = HC_ERR_INVALID_PARAMS;
             break;
         }
-        LOGI("Begin invoke onSessionKeyReturned.");
+        LOGI("Begin execute onSessionKeyReturned!");
         UPDATE_PERFORM_DATA_BY_INPUT_INDEX(requestId, ON_SESSION_KEY_RETURN_TIME, HcGetCurTimeInMillis());
         callback->onSessionKeyReturned(requestId, sessionKey, keyLen);
-        LOGI("End invoke onSessionKeyReturned, res = %" LOG_PUB "d.", res);
+        LOGI("End execute onSessionKeyReturned, res = %" LOG_PUB "d.", res);
     } while (0);
     (void)memset_s(sessionKey, keyLen, 0, keyLen);
     HcFree(sessionKey);
@@ -96,18 +96,18 @@ static int32_t GetSessionKeyForAccount(const CJson *sendToSelf, CJson *returnToS
     int32_t keyLen = DEFAULT_RETURN_KEY_LENGTH;
     uint8_t *sessionKey = (uint8_t *)HcMalloc(keyLen, 0);
     if (sessionKey == NULL) {
-        LOGE("Failed to allocate memory for sessionKey!");
+        LOGE("Failed to malloc memory for sessionKey!");
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t res = HC_SUCCESS;
     do {
         if (GetByteFromJson(sendToSelf, FIELD_SESSION_KEY, sessionKey, keyLen) != HC_SUCCESS) {
-            LOGE("Failed to get sessionKey!");
+            LOGE("Get session key from sendToSelf failed!");
             res = HC_ERR_JSON_GET;
             break;
         }
         if (AddByteToJson(returnToSelf, FIELD_SESSION_KEY, (const uint8_t *)sessionKey, keyLen) != HC_SUCCESS) {
-            LOGE("Failed to add sessionKey for onFinish!");
+            LOGE("Add session key for onFinish from json failed!");
             res = HC_ERR_JSON_FAIL;
             break;
         }

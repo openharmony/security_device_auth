@@ -265,11 +265,11 @@ static int32_t GenerateAddTokenParams(const CJson *deviceInfo, CJson *addParams)
         return HC_ERR_JSON_GET;
     }
     if (AddStringToJson(addParams, FIELD_DEVICE_ID, deviceId) != HC_SUCCESS) {
-        LOGE("Failed to add deviceId to json!");
+        LOGE("Failed to add deviceId to addParams!");
         return HC_ERR_JSON_ADD;
     }
     if (AddStringToJson(addParams, FIELD_USER_ID, userId) != HC_SUCCESS) {
-        LOGE("Failed to add userId to json!");
+        LOGE("Failed to add userId to addParams!");
         return HC_ERR_JSON_ADD;
     }
     return HC_SUCCESS;
@@ -278,15 +278,15 @@ static int32_t GenerateAddTokenParams(const CJson *deviceInfo, CJson *addParams)
 static int32_t GenerateDelTokenParams(const TrustedDeviceEntry *entry, CJson *delParams)
 {
     if (AddIntToJson(delParams, FIELD_CREDENTIAL_TYPE, (int32_t)entry->credential) != HC_SUCCESS) {
-        LOGE("Failed to add credentialType to json!");
+        LOGE("Failed to add credentialType to delParams!");
         return HC_ERR_JSON_ADD;
     }
     if (AddStringToJson(delParams, FIELD_USER_ID, StringGet(&entry->userId)) != HC_SUCCESS) {
-        LOGE("Failed to add userId to json!");
+        LOGE("Failed to add userId to delParams!");
         return HC_ERR_JSON_ADD;
     }
     if (AddStringToJson(delParams, FIELD_DEVICE_ID, StringGet(&entry->authId)) != HC_SUCCESS) {
-        LOGE("Failed to add deviceId to json!");
+        LOGE("Failed to add deviceId to delParams!");
         return HC_ERR_JSON_ADD;
     }
     return HC_SUCCESS;
@@ -385,7 +385,7 @@ static int32_t CheckPeerDeviceNotSelf(const CJson *deviceInfo)
 {
     const char *udid = GetStringFromJson(deviceInfo, FIELD_UDID);
     if (udid == NULL) {
-        LOGE("Failed to get udid from json!");
+        LOGE("Failed to get udid from deviceInfo json!");
         return HC_ERR_JSON_GET;
     }
     return AssertPeerDeviceNotSelf(udid);
@@ -395,12 +395,12 @@ static int32_t AddDeviceAndToken(int32_t osAccountId, const CJson *jsonParams, C
 {
     const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
     if (groupId == NULL) {
-        LOGE("Failed to get groupId from json!");
+        LOGE("Failed to get groupId from jsonParams!");
         return HC_ERR_JSON_GET;
     }
     CJson *credential = GetObjFromJson(deviceInfo, FIELD_CREDENTIAL);
     if (credential == NULL) {
-        LOGE("Failed to get credential from json!");
+        LOGE("Failed to get credential from deviceInfo!");
         return HC_ERR_JSON_GET;
     }
     int32_t res = GenerateAddTokenParams(deviceInfo, credential);
@@ -409,12 +409,12 @@ static int32_t AddDeviceAndToken(int32_t osAccountId, const CJson *jsonParams, C
     }
     res = ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId, IMPORT_TRUSTED_CREDENTIALS, credential, NULL);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to import device token! res: %" LOG_PUB "d", res);
+        LOGE("Failed to import device token! res: %" LOG_PUB "d.", res);
         return res;
     }
     res = AddDeviceToDatabaseByJson(osAccountId, GenerateTrustedDevParams, deviceInfo, groupId);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to add device to database! res: %" LOG_PUB "d", res);
+        LOGE("Failed to add device to database! res: %" LOG_PUB "d.", res);
     }
     return res;
 }
@@ -423,7 +423,7 @@ static int32_t DelPeerDeviceAndToken(int32_t osAccountId, CJson *jsonParams, CJs
 {
     const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
     if (groupId == NULL) {
-        LOGE("Failed to get groupId from json!");
+        LOGE("Failed to get groupId from jsonParams!");
         return HC_ERR_JSON_GET;
     }
     const char *deviceId = GetStringFromJson(deviceInfo, FIELD_DEVICE_ID);
@@ -443,7 +443,7 @@ static int32_t DelPeerDeviceAndToken(int32_t osAccountId, CJson *jsonParams, CJs
     }
     int32_t res = DelDeviceById(osAccountId, groupId, deviceId, false);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to delete device from database! res: %" LOG_PUB "d", res);
+        LOGE("Failed to delete device by deviceId from database! res: %" LOG_PUB "d.", res);
         DestroyDeviceEntry(entry);
         return res;
     }
@@ -575,7 +575,7 @@ static int32_t AddMultiMembersToGroup(int32_t osAccountId, const char *appId, CJ
     }
     CJson *deviceList = GetObjFromJson(jsonParams, FIELD_DEVICE_LIST);
     if (deviceList == NULL) {
-        LOGE("Failed to get deviceList from json!");
+        LOGE("Failed to get deviceList from jsonParams!");
         return HC_ERR_JSON_GET;
     }
     int32_t deviceNum = GetItemNum(deviceList);
@@ -583,7 +583,7 @@ static int32_t AddMultiMembersToGroup(int32_t osAccountId, const char *appId, CJ
     for (int32_t i = 0; i < deviceNum; i++) {
         CJson *deviceInfo = GetItemFromArray(deviceList, i);
         if (deviceInfo == NULL) {
-            LOGE("The deviceInfo is NULL!");
+            LOGE("Get deviceInfo from deviceList failed!");
             continue;
         }
         if (CheckDeviceInfoValid(osAccountId, jsonParams, deviceInfo) != HC_SUCCESS) {
@@ -616,7 +616,7 @@ static int32_t DelMultiMembersFromGroup(int32_t osAccountId, const char *appId, 
     }
     CJson *deviceList = GetObjFromJson(jsonParams, FIELD_DEVICE_LIST);
     if (deviceList == NULL) {
-        LOGE("Failed to get deviceList from json!");
+        LOGE("Failed to get deviceList from jsonParams!");
         return HC_ERR_JSON_GET;
     }
     int32_t deviceNum = GetItemNum(deviceList);
@@ -624,7 +624,7 @@ static int32_t DelMultiMembersFromGroup(int32_t osAccountId, const char *appId, 
     for (int32_t i = 0; i < deviceNum; i++) {
         CJson *deviceInfo = GetItemFromArray(deviceList, i);
         if (deviceInfo == NULL) {
-            LOGE("The deviceInfo is NULL!");
+            LOGE("Get deviceInfo from list failed!");
             continue;
         }
         if (DelPeerDeviceAndToken(osAccountId, jsonParams, deviceInfo) == HC_SUCCESS) {
@@ -633,7 +633,7 @@ static int32_t DelMultiMembersFromGroup(int32_t osAccountId, const char *appId, 
     }
     res = SaveOsAccountDb(osAccountId);
     if (res != HC_SUCCESS) {
-        LOGE("Failed to save database!");
+        LOGE("Failed to save osAccountId data to db!");
         return res;
     }
     LOGI("[End]: Delete multiple members from a across account group successfully! [ListNum]: %" LOG_PUB

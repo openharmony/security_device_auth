@@ -92,27 +92,22 @@ static const uint8_t KEY_TYPE_PAIRS[KEY_ALIAS_TYPE_END][KEY_TYPE_PAIR_LEN] = {
     { 0x00, 0x08 }  /* P2P_AUTH */
 };
 
-static uint8_t *GetKeyTypePair(KeyAliasType keyAliasType)
-{
-    return (uint8_t *)KEY_TYPE_PAIRS[keyAliasType];
-}
-
 static int32_t BuildKeyAliasMsg(const Uint8Buff *serviceId, const Uint8Buff *keyType,
     const Uint8Buff *authId, Uint8Buff *keyAliasMsg)
 {
     uint32_t usedLen = 0;
     if (memcpy_s(keyAliasMsg->val, keyAliasMsg->length, serviceId->val, serviceId->length) != EOK) {
-        LOGE("Copy serviceId failed.");
+        LOGE("Memcopy serviceId to keyAliasMsg failed.");
         return HC_ERR_MEMORY_COPY;
     }
     usedLen = usedLen + serviceId->length;
     if (memcpy_s(keyAliasMsg->val + usedLen, keyAliasMsg->length - usedLen, keyType->val, keyType->length) != EOK) {
-        LOGE("Copy keyType failed.");
+        LOGE("Memcpy keyType to keyAliasMsg failed.");
         return HC_ERR_MEMORY_COPY;
     }
     usedLen = usedLen + keyType->length;
     if (memcpy_s(keyAliasMsg->val + usedLen, keyAliasMsg->length - usedLen, authId->val, authId->length) != EOK) {
-        LOGE("Copy authId failed.");
+        LOGE("Memcopy authId to msg failed.");
         return HC_ERR_MEMORY_COPY;
     }
     return HC_SUCCESS;
@@ -125,7 +120,7 @@ static int32_t CalKeyAlias(const Uint8Buff *serviceId, const Uint8Buff *keyType,
     keyAliasMsg.length = serviceId->length + authId->length + keyType->length;
     keyAliasMsg.val = (uint8_t *)HcMalloc(keyAliasMsg.length, 0);
     if (keyAliasMsg.val == NULL) {
-        LOGE("Malloc mem failed.");
+        LOGE("Malloc keyAlias memory failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
     int32_t res = BuildKeyAliasMsg(serviceId, keyType, authId, &keyAliasMsg);
@@ -136,7 +131,7 @@ static int32_t CalKeyAlias(const Uint8Buff *serviceId, const Uint8Buff *keyType,
     res = GetLoaderInstance()->sha256(&keyAliasMsg, keyAlias);
     HcFree(keyAliasMsg.val);
     if (res != HC_SUCCESS) {
-        LOGE("Sha256 failed.");
+        LOGE("KeyAlias Sha256 failed.");
         return res;
     }
     return HC_SUCCESS;
@@ -170,6 +165,11 @@ static int32_t CalServiceId(const char *appId, const char *groupId, Uint8Buff *s
         return res;
     }
     return HC_SUCCESS;
+}
+
+static uint8_t *GetKeyTypePair(KeyAliasType keyAliasType)
+{
+    return (uint8_t *)KEY_TYPE_PAIRS[keyAliasType];
 }
 
 static int32_t GenerateKeyAlias(const CmdParams *params, Uint8Buff *keyAlias)
@@ -217,16 +217,16 @@ static int32_t GetAuthIdPeerFromInput(const CJson *inputEvent, CmdParams *params
     const char *authIdPeerStr = isClient ? GetStringFromJson(inputEvent, FIELD_AUTH_ID_SERVER) :
         GetStringFromJson(inputEvent, FIELD_AUTH_ID_CLIENT);
     if (authIdPeerStr == NULL) {
-        LOGE("get authIdPeerStr from inputEvent fail.");
+        LOGE("get authIdPeerStr from inputEvent failed.");
         return HC_ERR_JSON_GET;
     }
     uint32_t authIdPeerStrLen = HcStrlen(authIdPeerStr) / BYTE_TO_HEX_OPER_LENGTH;
     if (authIdPeerStrLen == 0) {
-        LOGE("Invalid authIdPeerStrLen: %" LOG_PUB "u.", authIdPeerStrLen);
+        LOGE("AuthIdPeerStrLen is zero.");
         return HC_ERR_CONVERT_FAILED;
     }
     if (InitUint8Buff(&params->authIdPeer, authIdPeerStrLen) != HC_SUCCESS) {
-        LOGE("allocate authIdPeer memory fail.");
+        LOGE("Malloc authIdPeer memory failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (HexStringToByte(authIdPeerStr, params->authIdPeer.val, params->authIdPeer.length) != HC_SUCCESS) {
@@ -367,8 +367,8 @@ static int32_t ClientImportAuthCodeProcEvent(const CmdParams *params)
 
 static void ReturnError(int32_t errorCode, CJson **outputEvent)
 {
-    (void)errorCode;
     (void)outputEvent;
+    (void)errorCode;
     return;
 }
 
@@ -380,12 +380,12 @@ static void NotifyPeerError(int32_t errorCode, CJson **outputEvent)
         return;
     }
     if (AddIntToJson(json, FIELD_EVENT, FAIL_EVENT) != HC_SUCCESS) {
-        LOGE("add eventName to json fail.");
+        LOGE("add eventName to json failed.");
         FreeJson(json);
         return;
     }
     if (AddIntToJson(json, FIELD_ERR_CODE, errorCode) != HC_SUCCESS) {
-        LOGE("add errorCode to json fail.");
+        LOGE("add errorCode to json failed.");
         FreeJson(json);
         return;
     }
