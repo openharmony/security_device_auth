@@ -346,7 +346,8 @@ static int32_t IpcCmAgreeCredential(int32_t osAccountId, const char *selfCredId,
     IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
     int32_t inOutLen;
 
-    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED(IsStrInvalid(selfCredId) || IsStrInvalid(requestParams) || returnData == NULL);
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED(IsStrInvalid(selfCredId) ||
+        IsStrInvalid(requestParams) || returnData == NULL);
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
