@@ -25,8 +25,13 @@
 extern "C" {
 #endif
 
+#define PEER_OCCUR_ERROR 12
+#define ACCOUNT_NOT_LOGIN 36875
+#define ACCOUNT_LOGINED_NOT_SAME_AS_PEER 36876
+
 #ifdef DEV_AUTH_HIVIEW_ENABLE
 DevAuthBizScene GetBizScene(bool isBind, bool isClient);
+void BuildStageRes(DevAuthBehaviorEvent *eventData, int32_t errorCode);
 #endif
 
 const char *GetAddMemberCallEventFuncName(const char *addParams);

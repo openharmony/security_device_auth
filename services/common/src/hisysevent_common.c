@@ -20,6 +20,13 @@
 #include "string_util.h"
 
 #ifdef DEV_AUTH_HIVIEW_ENABLE
+
+static int32_t WHITE_LIST[] = {
+    PEER_OCCUR_ERROR,
+    ACCOUNT_NOT_LOGIN,
+    ACCOUNT_LOGINED_NOT_SAME_AS_PEER
+};
+
 const char *GetAddMemberCallEventFuncName(const char *addParams)
 {
     if (addParams == NULL) {
@@ -59,6 +66,17 @@ DevAuthBizScene GetBizScene(bool isBind, bool isClient)
         }
     }
 }
+void BuildStageRes(DevAuthBehaviorEvent *eventData, int32_t errorCode)
+{
+    for (uint32_t i = 0; i < sizeof(WHITE_LIST) / sizeof(WHITE_LIST[0]); i++) {
+        if (WHITE_LIST[i] == errorCode) {
+            eventData->stageRes = STAGE_RES_IGNORE;
+            return;
+        }
+    }
+    eventData->stageRes = STAGE_RES_FAILED;
+}
+
 #endif
 
 void ReportBehaviorBeginEvent(bool isBind, bool isClient, int64_t reqId)
@@ -120,7 +138,7 @@ void ReportBehaviorBeginResultEvent(bool isBind, bool isClient, int64_t reqId, c
     if (res == HC_SUCCESS) {
         eventData.stageRes = STAGE_RES_SUCCESS;
     } else {
-        eventData.stageRes = STAGE_RES_FAILED;
+        BuildStageRes(&eventData, res);
         eventData.errorCode = res;
     }
     DevAuthReportBehaviorEvent(&eventData);

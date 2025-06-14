@@ -265,7 +265,7 @@ static void ReportBehaviorEvent(const SessionImpl *impl, bool isProcessEnd, bool
         if (res == HC_SUCCESS) {
             eventData.stageRes = STAGE_RES_SUCCESS;
         } else {
-            eventData.stageRes = STAGE_RES_FAILED;
+            BuildStageRes(&eventData, res);
             eventData.errorCode = res;
         }
     }
