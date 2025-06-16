@@ -1670,7 +1670,6 @@ static bool IsTypeForSettingPtr(int32_t type)
             return true;
         }
     }
-    LOGE("Input type is not match.");
     return false;
 }
 
@@ -1686,7 +1685,6 @@ static bool IsTypeForCpyData(int32_t type)
             return true;
         }
     }
-    LOGE("Input type is not match.");
     return false;
 }
 

@@ -170,7 +170,9 @@ typedef enum {
 typedef enum {
     STAGE_RES_IDLE = 0,
     STAGE_RES_SUCCESS,
-    STAGE_RES_FAILED
+    STAGE_RES_FAILED,
+    STAGE_RES_CANCEL,
+    STAGE_RES_IGNORE
 } DevAuthStageRes;
 
 void DevAuthReportCallEvent(const DevAuthCallEvent eventData);
