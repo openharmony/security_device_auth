@@ -214,8 +214,8 @@ static int32_t SetSelfKeyLenByMod(const CJson *inputData, DlSpekeParams *params)
         LOGE("Get isOnly256ModSupported failed.");
         return HC_ERR_JSON_GET;
     }
-    params->primeMod = isOnly256ModSupported ?
-        (params->primeMod & DL_SPEKE_PRIME_MOD_256) : (params->primeMod & DL_SPEKE_PRIME_MOD_384);
+    params->primeMod = isOnly256ModSupported ? (DlSpekePrimeMod)(params->primeMod & DL_SPEKE_PRIME_MOD_256) :
+        (DlSpekePrimeMod)(params->primeMod & DL_SPEKE_PRIME_MOD_384);
     if (((uint32_t)params->primeMod & DL_SPEKE_PRIME_MOD_384) != 0) {
         params->eskSelf.length = DL_SPEKE_ESK_LEN;
         params->innerKeyLen = DL_SPEKE_PRIME_LEN;
@@ -1114,7 +1114,7 @@ static int32_t BuildDlSpekeProtocolObj(const DlSpekeInitParams *params, bool isC
         return HC_ERR_ALLOC_MEMORY;
     }
     instance->params.osAccountId = params->osAccountId;
-    instance->params.primeMod = params->primeMod;
+    instance->params.primeMod = (DlSpekePrimeMod)params->primeMod;
     instance->base.name = PROTOCOL_TYPE_DL_SPEKE;
     instance->base.beginState = isClient ? CREATE_AS_CLIENT_STATE : CREATE_AS_SERVER_STATE;
     instance->base.finishState = isClient ? CLIENT_FINISH_STATE : SERVER_FINISH_STATE;

@@ -755,6 +755,7 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest012, TestSize.Level0)
     (void)AddIntToJson(in, FIELD_IS_CLIENT, false);
     task = CreateAccountTaskT(&taskId, in, out);
     ASSERT_EQ(task, nullptr);
+    DestroyVersionInfos();
     FreeJson(in);
     FreeJson(out);
 }
@@ -1284,9 +1285,11 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest023, TestSize.Level0)
     ASSERT_NE(res, HC_SUCCESS);
     FreeJson(payload);
     FreeJson(in);
+    Uint8Buff authId = { nullptr, 0 };
     res = GetAndCheckAuthIdPeer(nullptr, nullptr, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
     in = CreateJson();
+    (void)GetAndCheckAuthIdPeer(in, &authId, &authId);
     payload = CreateJson();
     (void)AddObjToJson(in, FIELD_PAYLOAD, payload);
     res = GetAndCheckAuthIdPeer(in, nullptr, nullptr);

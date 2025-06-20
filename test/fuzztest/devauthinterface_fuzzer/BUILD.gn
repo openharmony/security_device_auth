@@ -13,7 +13,6 @@
 
 import("//base/security/device_auth/deps_adapter/deviceauth_hals.gni")
 import("//base/security/device_auth/services/deviceauth.gni")
-import("../../unittest/tdd_framework/tdd_framework.gni")
 
 #####################hydra-fuzz###################
 import("//build/config/features.gni")
@@ -22,24 +21,21 @@ import("//build/test.gni")
 module_output_path = "device_auth/device_auth"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("IdentityServiceFuzzTest") {
+ohos_fuzztest("DevAuthInterfaceFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "${deviceauth_path}/test/fuzztest/identityservice_fuzzer"
-
+  fuzz_config_file = "${deviceauth_path}/test/fuzztest/devauthinterface_fuzzer"
   include_dirs = inc_path
   include_dirs += hals_inc_path
 
   include_dirs += [
-    ".",
-    "./include",
-    "./unit_test/include",
     "../../unittest/deviceauth/include",
-    "${tdd_framework_path}/common/inc",
-    "${dev_frameworks_path}/inc/permission_adapter",
     "${dev_frameworks_path}/inc/hiview_adapter",
+    "${frameworks_path}/inc/standard",
+    "${dev_frameworks_path}/inc/permission_adapter",
   ]
 
   sources = hal_common_files
+  sources -= [ "${common_lib_path}/impl/src/json_utils.c" ]
   sources += [
     "${key_management_adapter_path}/impl/src/common/mbedtls_ec_adapter.c",
     "${key_management_adapter_path}/impl/src/huks_adapter.c",
@@ -53,14 +49,15 @@ ohos_fuzztest("IdentityServiceFuzzTest") {
     "${os_adapter_path}/impl/src/linux/hc_thread.c",
     "${os_adapter_path}/impl/src/linux/hc_types.c",
     "../../unittest/deviceauth/source/hc_dev_info_mock.c",
+    "../../unittest/deviceauth/source/json_utils_mock.c",
   ]
 
   sources += dev_frameworks_files
+  sources += identity_service_mock_files
   sources += deviceauth_common_files
   sources += group_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
-  sources += identity_service_files
   sources += session_v1_files
   sources += session_v2_files
   sources += iso_protocol_files
@@ -70,7 +67,8 @@ ohos_fuzztest("IdentityServiceFuzzTest") {
   sources += save_trusted_info_files
   sources += creds_manager_files
   sources += broadcast_manager_files
-  sources += soft_bus_channel_mock_files
+  sources += soft_bus_channel_files
+  sources += deviceauth_ipc_files
   sources += permission_adapter_files
 
   sources += group_auth_files
@@ -93,24 +91,17 @@ ohos_fuzztest("IdentityServiceFuzzTest") {
 
   sources += hiview_adapter_files
 
-  sources -= [
-    "${authenticators_path}/src/account_unrelated/iso_task/iso_task_main.c",
-    "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
-    "${identity_service_path}/src/identity_service.c",
-    "${identity_service_path}/src/identity_operation.c",
-    "${identity_service_path}/src/identity_service_impl.c",
-    "${cred_data_manager_path}/src/credential_data_manager.c",
-  ]
-
   sources += [
-    "${dev_frameworks_path}/src/account_task_manager_mock/account_task_manager_mock.c",
-    "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c",
+    "${dev_frameworks_path}/src/account_task_manager/account_task_manager.c",
+    "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin/account_auth_plugin_proxy.c",
     "../../unittest/deviceauth/source/device_auth_ext_mock.c",
     "../../unittest/deviceauth/source/os_account_adapter_mock.c",
-    "../../unittest/deviceauth/source/protocol_task_main_mock.c",
   ]
-  sources += [ "identityservice_fuzzer.cpp" ]
-
+  sources -= [
+    "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_protocol_task/pake_v1_protocol_task_common.c",
+    "${deviceauth_account_group_manager_path}/src/group_operation/identical_account_group/identical_account_group.c",
+    "${session_manager_path}/src/session/v2/dev_session_util.c",
+  ]
   defines = [
     "P2P_PAKE_DL_PRIME_LEN_384",
     "P2P_PAKE_EC_TYPE",
@@ -125,14 +116,13 @@ ohos_fuzztest("IdentityServiceFuzzTest") {
     "ENABLE_P2P_BIND_EC_SPEKE",
     "ENABLE_P2P_AUTH_ISO",
     "ENABLE_P2P_AUTH_EC_SPEKE",
-    "DEV_AUTH_FUNC_TEST",
     "ENABLE_PSEUDONYM",
     "DEV_AUTH_HIVIEW_ENABLE",
-    "DEV_AUTH_IS_ENABLE",
   ]
 
   sources += identity_manager_files
   include_dirs += identity_manager_inc
+  sources += [ "devauthinterface_fuzzer.cpp" ]
 
   cflags = [ "-DHILOG_ENABLE" ]
   cflags += [
@@ -144,15 +134,19 @@ ohos_fuzztest("IdentityServiceFuzzTest") {
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
+    "bounds_checking_function:libsec_shared",
     "cJSON:cjson",
     "c_utils:utils",
+    "dsoftbus:softbus_client",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "huks:libhukssdk",
+    "init:libbegetutil",
     "ipc:ipc_single",
     "mbedtls:mbedtls_shared",
     "openssl:libcrypto_static",
+    "samgr:samgr_proxy",
   ]
 }
 
@@ -162,7 +156,7 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    ":IdentityServiceFuzzTest",
+    ":DevAuthInterfaceFuzzTest",
   ]
 }
 ###############################################################################
