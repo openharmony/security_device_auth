@@ -705,14 +705,14 @@ static Credential **QueryCredentialPtrIfMatch(const CredentialVec *vec, const Qu
 QueryCredentialParams InitQueryCredentialParams(void)
 {
     QueryCredentialParams params = {
-        .deviceId = NULL,
-        .credOwner = NULL,
         .credId = NULL,
-        .userId = NULL,
-        .credType = DEFAULT_CRED_PARAM_VAL,
-        .ownerUid = DEFAULT_CRED_PARAM_VAL,
+        .deviceId = NULL,
         .subject = DEFAULT_CRED_PARAM_VAL,
+        .userId = NULL,
         .issuer = DEFAULT_CRED_PARAM_VAL,
+        .credType = DEFAULT_CRED_PARAM_VAL,
+        .credOwner = NULL,
+        .ownerUid = DEFAULT_CRED_PARAM_VAL,
     };
     return params;
 }

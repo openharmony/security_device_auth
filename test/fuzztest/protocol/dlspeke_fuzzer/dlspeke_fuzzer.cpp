@@ -27,6 +27,8 @@
 #include "json_utils.h"
 #include "uint8buff_utils.h"
 #include "device_auth.h"
+#include "base/security/device_auth/services/session_manager/src/session/v2/auth_sub_session/protocol_lib/dl_speke_protocol.c"
+
 
 namespace OHOS {
 #define PSK_SIZE 32
@@ -37,6 +39,7 @@ static const char *AUTH_ID_C_VAL = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1
 static const char *AUTH_ID_S_VAL = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
 static const char *MSG_C_VAL = "client send msg";
 static const char *MSG_S_VAL = "server send msg";
+static const int32_t ERROR_CODE = 0;
 
 static Uint8Buff g_psk = { (uint8_t *)PSK_VAL, PSK_SIZE };
 static Uint8Buff g_authIdC = { (uint8_t *)AUTH_ID_C_VAL, 64 };
@@ -457,6 +460,15 @@ static void DlSpekeTest28(void)
     self->destroy(self);
 }
 
+static void DlSpekeTest29(void)
+{
+    CJson *json = CreateJson();
+    ReturnError(ERROR_CODE, nullptr);
+    NotifyPeerError(ERROR_CODE, &json);
+    ThrowException(nullptr, nullptr, nullptr);
+    FreeJson(json);
+}
+
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
     (void)data;
@@ -489,6 +501,7 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     (void)DlSpekeTest26();
     (void)DlSpekeTest27();
     (void)DlSpekeTest28();
+    (void)DlSpekeTest29();
     return true;
 }
 }

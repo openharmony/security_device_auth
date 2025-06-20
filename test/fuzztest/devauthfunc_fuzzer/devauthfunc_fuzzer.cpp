@@ -32,8 +32,10 @@
 #include "json_utils.h"
 #include "protocol_task_main_mock.h"
 #include "securec.h"
+#include "callback_manager.h"
 
 namespace OHOS {
+#define TEST_DATA_LEN 0
 #define TEST_APP_ID "TestAppId"
 #define TEST_APP_ID2 "TestAppId2"
 #define TEST_REQ_ID 123
@@ -1337,6 +1339,27 @@ static int32_t DevAuthTestCase053(void)
     return ret;
 }
 
+static int32_t DevAuthTestCase054(void)
+{
+    DeleteDatabase();
+    int32_t ret = InitDeviceAuthService();
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    do {
+        (void)ProcessTransmitCallback(TEST_REQ_ID, nullptr, TEST_DATA_LEN, nullptr);
+        (void)ProcessSessionKeyCallback(TEST_REQ_ID, nullptr, TEST_DATA_LEN, nullptr);
+        (void)ProcessFinishCallback(TEST_REQ_ID, 0, nullptr, nullptr);
+        (void)ProcessErrorCallback(TEST_REQ_ID, 0, 0, nullptr, nullptr);
+        (void)ProcessRequestCallback(TEST_REQ_ID, 0, nullptr, nullptr);
+        (void)GetGMCallbackByAppId(nullptr);
+        (void)RegGroupManagerCallback(nullptr, nullptr);
+        (void)UnRegGroupManagerCallback(nullptr);
+    } while (0);
+    DestroyDeviceAuthService();
+    return HC_SUCCESS;
+}
+
 bool FuzzDoDevAuthFuncFuzz(const uint8_t* data, size_t size)
 {
     (void)data;
@@ -1374,6 +1397,7 @@ bool FuzzDoDevAuthFuncFuzz(const uint8_t* data, size_t size)
     (void)DevAuthTestCase051();
     (void)DevAuthTestCase052();
     (void)DevAuthTestCase053();
+    (void)DevAuthTestCase054();
     return true;
 }
 }

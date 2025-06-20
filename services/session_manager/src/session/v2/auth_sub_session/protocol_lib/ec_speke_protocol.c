@@ -1122,7 +1122,7 @@ static int32_t BuildEcSpekeProtocolObj(const EcSpekeInitParams *params, bool isC
     instance->base.setPeerProtectedMsg = SetEcSpekePeerProtectedMsg;
     instance->base.getSessionKey = GetEcSpekeSessionKey;
     instance->base.destroy = DestroyEcSpekeProtocol;
-    instance->params.curveType = params->curveType;
+    instance->params.curveType = (EcSpekeCurveType)params->curveType;
     return HC_SUCCESS;
 }
 

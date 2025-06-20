@@ -37,7 +37,6 @@ ohos_fuzztest("IsoFuzzTest") {
   sources = [ "iso_fuzzer.cpp" ]
   sources += deviceauth_ipc_files
   sources += permission_adapter_files
-  sources += iso_protocol_files
   sources += hiview_adapter_files
 
   defines = [ "ENABLE_ISO" ]

@@ -27,17 +27,21 @@
 #include "json_utils.h"
 #include "save_trusted_info.h"
 #include "uint8buff_utils.h"
+#include "base/security/device_auth/services/session_manager/src/session/v2/expand_sub_session/expand_process_lib/save_trusted_info.c"
 
 namespace OHOS {
 static const char *AUTH_ID_C = "5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930";
 static const char *AUTH_ID_S = "52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C";
 static const char *GROUP_ID = "E2EE6F830B176B2C96A9F99BFAE2A61F5D1490B9F4A090E9D8C2874C230C7C21";
+static const char *USER_ID_C = "9F207900038F91FEF95DD042FE2874E44269DC28B639681698809A67EDAD08E3";
 static const char *USER_ID_S = "9F207900038F91FEF95DD042FE2874E44269DC28B639681698809A67EDAD08E3";
+static const char *UDID = "9F207900038F91FEF95DD042FE2874E44269DC28B639681698809A67EDAD08E3";
 static const char *GROUP_NAME = "testGroup";
 static const char *GROUP_OWNER = "testApp";
 
 #define TEST_OS_ACCOUNT_ID1 0
 #define TEST_OS_ACCOUNT_ID2 100
+#define TEST_USER_TYPE 0
 
 static SaveTrustedInfoParams g_paramsC = { TEST_OS_ACCOUNT_ID1, ASYMMETRIC_CRED, DEVICE_TYPE_ACCESSORY,
     GROUP_VISIBILITY_PUBLIC, GROUP_OWNER, GROUP_ID, AUTH_ID_C, false };
@@ -364,6 +368,32 @@ static void SaveTrustedInfoTest21(void)
     self->destroy(self);
 }
 
+static void SaveTrustedInfoTest22(void)
+{
+    CmdParams params = {
+        .osAccountId = TEST_OS_ACCOUNT_ID1,
+        .groupId = nullptr
+    };
+    (void)ServerSendTrustedInfoParseEvent(nullptr, &params);
+
+    CJson *json = CreateJson();
+    (void)AddStringToJson(json, FIELD_AUTH_ID_CLIENT, AUTH_ID_C);
+    (void)ServerSendTrustedInfoParseEvent(json, &params);
+
+    (void)AddStringToJson(json, FIELD_UDID_CLIENT, UDID);
+    (void)ServerSendTrustedInfoParseEvent(json, &params);
+
+    (void)AddIntToJson(json, FIELD_USER_TYPE_CLIENT, TEST_USER_TYPE);
+    (void)ServerSendTrustedInfoParseEvent(json, &params);
+
+    (void)AddStringToJson(json, FIELD_GROUP_NAME, GROUP_NAME);
+    (void)ServerSendTrustedInfoParseEvent(json, &params);
+
+    (void)AddStringToJson(json, FIELD_USER_ID_CLIENT, USER_ID_C);
+    (void)ServerSendTrustedInfoParseEvent(json, &params);
+    FreeJson(json);
+}
+
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
     (void)data;
@@ -388,6 +418,7 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     (void)SaveTrustedInfoTest19();
     (void)SaveTrustedInfoTest20();
     (void)SaveTrustedInfoTest21();
+    (void)SaveTrustedInfoTest22();
     return true;
 }
 }

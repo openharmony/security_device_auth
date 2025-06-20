@@ -31,6 +31,8 @@ using namespace testing::ext;
 namespace {
 
 static const char *NORMAL_STR = "abc";
+static const char *TEST_APP_ID = "TestAppId";
+
 static const Uint8Buff NORMAL_BUFF = { 0, 0 };
 static QueryGroupParams g_queryGroupParams = {
     .groupId = NORMAL_STR,
@@ -501,6 +503,18 @@ HWTEST_F(GroupOperationTest, GroupOperationTest062, TestSize.Level0)
 {
     const uint8_t *info;
     int32_t ret = GetHashResult(info, SHA256_LEN, nullptr, SHA256_LEN);
+    ASSERT_NE(ret, HC_SUCCESS);
+}
+
+HWTEST_F(GroupOperationTest, GroupOperationTest063, TestSize.Level0)
+{
+    int32_t ret = CheckUpgradeIdentity(IS_UPGRADE, TEST_APP_ID, nullptr);
+    ASSERT_NE(ret, HC_SUCCESS);
+}
+
+HWTEST_F(GroupOperationTest, GroupOperationTest064, TestSize.Level0)
+{
+    int32_t ret = CheckUpgradeIdentity(IS_UPGRADE, TEST_APP_ID, TEST_APP_ID);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 }

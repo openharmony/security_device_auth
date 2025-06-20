@@ -24,6 +24,7 @@ group("deviceauth_test_build") {
       "fuzztest/devauth_fuzzer:fuzztest",
       "fuzztest/devauthcb_fuzzer:fuzztest",
       "fuzztest/devauthfunc_fuzzer:fuzztest",
+      "fuzztest/devauthinterface_fuzzer:fuzztest",
       "fuzztest/framework/hiviewadapter_fuzzer:fuzztest",
       "fuzztest/group_auth/account_related/accountrelatedgroupauth_fuzzer:fuzztest",
       "fuzztest/group_auth/authdevice_fuzzer:fuzztest",

@@ -75,7 +75,6 @@ ohos_fuzztest("SaveTrustedInfoFuzzTest") {
   ]
   sources += identity_manager_files
   sources += identity_service_mock_files
-  sources += save_trusted_info_files
   sources += hiview_adapter_files
   sources += [
     "${authenticators_path}/src/account_related/creds_manager/asy_token_manager.c",
