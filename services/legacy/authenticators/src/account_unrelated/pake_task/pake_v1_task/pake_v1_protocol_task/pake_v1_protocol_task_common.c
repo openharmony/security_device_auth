@@ -22,6 +22,7 @@
 #include "pake_v1_protocol_common.h"
 #include "pake_task_common.h"
 #include "das_task_common.h"
+#include "hisysevent_common.h"
 
 #define ASCII_CASE_DIFFERENCE_VALUE 32
 
@@ -591,6 +592,7 @@ static int32_t GenerateSelfPseudonymChlgAndId(const PakeParams *params, Uint8Buf
     res = params->baseParams.loader->computeHmacWithThreeStage(&pskAliasParams, pseudonymChlgBuff, pseudonymIdBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate pseudonym id!");
+        ReportRadarEvent(res);
     }
     return res;
 }
@@ -687,6 +689,7 @@ static int32_t CheckPseudonymIdByCompute(const PakeParams *params, const Uint8Bu
         &computePeerPseudonymIdBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate peer pseudonym id!");
+        ReportRadarEvent(res);
         return res;
     }
     *isEqual = (memcmp(peerPseudonymIdBuff->val, computePeerPseudonymId, PSEUDONYM_ID_LEN) == 0);
@@ -853,6 +856,7 @@ int32_t SaveNextPseudonymIdAndChallenge(PakeParams *params)
         &selfNextPseudonymIdBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to compute next self pseudonym id!");
+        ReportRadarEvent(res);
         return res;
     }
     uint8_t peerNextPseudonymId[PSEUDONYM_ID_LEN] = { 0 };
@@ -862,6 +866,7 @@ int32_t SaveNextPseudonymIdAndChallenge(PakeParams *params)
         &peerNextPseudonymIdBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to compute next peer pseudonym id!");
+        ReportRadarEvent(res);
         return res;
     }
     Uint8Buff extInfoStrBuff = { NULL, 0 };

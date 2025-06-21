@@ -17,6 +17,7 @@
 #include "alg_loader.h"
 #include "hc_log.h"
 #include "identity_manager.h"
+#include "hisysevent_common.h"
 
 static int32_t SetProtocolsToIdentityInfo(IdentityInfo *info)
 {
@@ -363,6 +364,7 @@ static int32_t GetDirectAuthPskAliasCreateIfNeeded(const CJson *in, Uint8Buff *p
     ret = GetLoaderInstance()->checkKeyExist(pskKeyAlias, false, osAccountId);
     if (ret != HC_SUCCESS) {
         ret = ComputeAndSaveDirectAuthPsk(in, selfAuthId, peerAuthId, peerServiceType, pskKeyAlias);
+        ReportRadarEvent(ret);
     }
     return ret;
 }

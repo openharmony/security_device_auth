@@ -42,6 +42,7 @@
 #include "group_auth_data_operation.h"
 #include "group_operation_common.h"
 #include "account_task_manager.h"
+#include "hisysevent_common.h"
 
 #define USER_ID_LEN 65
 #define VERSION_2_0_0 "2.0.0"
@@ -1858,6 +1859,7 @@ static int32_t ProcStartEvent(SessionImpl *impl, SessionEvent *inputEvent, CJson
     (void)inputEvent;
     int32_t res = ProcStartEventInner(impl, sessionMsg);
     if (res != HC_SUCCESS) {
+        ReportRadarEvent(res);
         return RestartSession(impl, policy) == HC_SUCCESS ? HC_SUCCESS : res;
     }
     LOGI("process start event success.");
@@ -1870,6 +1872,7 @@ static int32_t ProcHandshakeReqEvent(SessionImpl *impl, SessionEvent *inputEvent
     int32_t res = ProcHandshakeReqEventInner(impl, inputEvent, sessionMsg);
     if (res != HC_SUCCESS) {
         ErrorInformPeer(res, sessionMsg);
+        ReportRadarEvent(res);
         return RestartSession(impl, policy) == HC_SUCCESS ? HC_SUCCESS : res;
     }
     LOGI("process handshake request event success.");
@@ -1882,6 +1885,7 @@ static int32_t ProcHandshakeRspEvent(SessionImpl *impl, SessionEvent *inputEvent
     int32_t res = ProcHandshakeRspEventInner(impl, inputEvent);
     if (res != HC_SUCCESS) {
         ErrorInformPeer(res, sessionMsg);
+        ReportRadarEvent(res);
         return RestartSession(impl, policy) == HC_SUCCESS ? HC_SUCCESS : res;
     }
     LOGI("process handshake response event success.");
@@ -1895,6 +1899,8 @@ static int32_t ProcFirstAuthEvent(SessionImpl *impl, SessionEvent *inputEvent, C
     int32_t res = ProcAuthEventInner(impl, inputEvent, sessionMsg, &isAuthFinish, true);
     if (res != HC_SUCCESS) {
         ErrorInformPeer(res, sessionMsg);
+        ReportRadarEvent(res);
+
         return RestartSession(impl, policy) == HC_SUCCESS ? HC_SUCCESS : res;
     }
     LOGI("process first auth event success.");
@@ -1908,6 +1914,7 @@ static int32_t ProcAuthEvent(SessionImpl *impl, SessionEvent *inputEvent, CJson 
     int32_t res = ProcAuthEventInner(impl, inputEvent, sessionMsg, &isAuthFinish, false);
     if (res != HC_SUCCESS) {
         ErrorInformPeer(res, sessionMsg);
+        ReportRadarEvent(res);
         return RestartSession(impl, policy) == HC_SUCCESS ? HC_SUCCESS : res;
     }
     LOGI("process auth event success.");
@@ -1926,6 +1933,7 @@ static int32_t ProcExpandEvent(SessionImpl *impl, SessionEvent *inputEvent, CJso
     bool isExpandFinsh = false;
     int32_t res = ProcExpandEventInner(impl, inputEvent, sessionMsg, &isExpandFinsh);
     if (res != HC_SUCCESS) {
+        ReportRadarEvent(res);
         return RestartSession(impl, policy) == HC_SUCCESS ? HC_SUCCESS : res;
     }
     LOGI("process expand event success.");
