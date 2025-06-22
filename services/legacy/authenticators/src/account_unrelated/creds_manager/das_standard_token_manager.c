@@ -17,6 +17,7 @@
 #include "alg_loader.h"
 #include "das_task_common.h"
 #include "hc_log.h"
+#include "hisysevent_common.h"
 
 static int32_t RegisterLocalIdentityStd(const TokenManagerParams *params)
 {
@@ -324,6 +325,7 @@ static int32_t ComputeAndSavePskInner(const PakeParams *params, const Uint8Buff 
         PAKE_PSK_LEN, sharedKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("Failed to agree psk!");
+        ReportRadarEvent(res);
     }
     return res;
 }

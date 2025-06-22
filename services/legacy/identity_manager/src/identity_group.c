@@ -22,6 +22,7 @@
 #include "group_operation_common.h"
 #include "hc_log.h"
 #include "identity_manager.h"
+#include "hisysevent_common.h"
 
 static int32_t GetAccountRelatedCandidateGroups(
     int32_t osAccountId, const CJson *in, bool isDeviceLevel, GroupEntryVec *vec)
@@ -531,6 +532,7 @@ static int32_t AuthGeneratePsk(const CJson *in, const char *groupId, const Uint8
     if (deviceEntry->upgradeFlag == 1) {
         KeyParams keyAliasParams = { { keyAliasBuf.val, keyAliasBuf.length, true }, true, osAccountId };
         ret = GetLoaderInstance()->computeHmacWithThreeStage(&keyAliasParams, seed, sharedSecret);
+        ReportRadarEvent(ret);
     } else {
         KeyParams keyAliasParams = { { keyAliasBuf.val, keyAliasBuf.length, true }, false, osAccountId };
         ret = GetLoaderInstance()->computeHmac(&keyAliasParams, seed, sharedSecret);
@@ -800,6 +802,7 @@ static int32_t GeneratePskAliasAndCheckExist(const CJson *in, const char *groupI
         pskKeyAlias->val[DEV_AUTH_ONE], pskKeyAlias->val[DEV_AUTH_TWO], pskKeyAlias->val[DEV_AUTH_THREE]);
     if (GetLoaderInstance()->checkKeyExist(pskKeyAlias, isPeerFromUpgrade, osAccountId) != HC_SUCCESS) {
         ret = ComputeAndSavePsk(osAccountId, groupId, deviceEntry, pskKeyAlias);
+        ReportRadarEvent(ret);
     }
     DestroyDeviceEntry(deviceEntry);
     return ret;
