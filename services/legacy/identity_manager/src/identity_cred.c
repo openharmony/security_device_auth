@@ -67,6 +67,22 @@ static int32_t ConvertISAlgToCertAlg(uint32_t alg, Algorithm *returnAlg)
     return HC_ERR_NOT_SUPPORT;
 }
 
+static int32_t GetProofTypeFromContext(const CJson *context, uint32_t *returnProofType)
+{
+    CJson *credAuthInfo = GetObjFromJson(context, FIELD_CREDENTIAL_OBJ);
+    if (credAuthInfo == NULL) {
+        LOGE("Get self credAuthInfo fail.");
+        return HC_ERR_JSON_GET;
+    }
+    uint32_t proofType = 0;
+    if (GetUnsignedIntFromJson(credAuthInfo, FIELD_PROOF_TYPE, &proofType) != HC_SUCCESS) {
+        LOGE("Get proofType fail.");
+        return HC_ERR_JSON_GET;
+    }
+    *returnProofType = proofType;
+    return HC_SUCCESS;
+}
+
 static int32_t ISSetISOEntity(IdentityInfo *info)
 {
 #ifdef ENABLE_ACCOUNT_AUTH_ISO
@@ -212,9 +228,13 @@ static int32_t ISSetPreShareUrlAndEntity(const CJson *credAuthInfo, IdentityInfo
     return HC_SUCCESS;
 }
 
-static int32_t ISSetCertProofAndEntity(const CJson *context, const CJson *credAuthInfo,
-    bool isPseudonym, IdentityInfo *info)
+static int32_t ISSetCertProofAndEntity(const CJson *context, bool isPseudonym, IdentityInfo *info)
 {
+    CJson *credAuthInfo = GetObjFromJson(context, FIELD_CREDENTIAL_OBJ);
+    if (credAuthInfo == NULL) {
+        LOGE("Get self credAuthInfo fail.");
+        return HC_ERR_JSON_GET;
+    }
     int32_t res = HC_ERROR;
     if (info->proofType == PRE_SHARED) {
         res = ISSetPreShareUrlAndEntity(credAuthInfo, info);
@@ -240,15 +260,9 @@ static int32_t ISSetCertProofAndEntity(const CJson *context, const CJson *credAu
 
 static int32_t ISGetIdentityInfo(const CJson *context, bool isPseudonym, IdentityInfo **returnInfo)
 {
-    CJson *credAuthInfo = GetObjFromJson(context, FIELD_CREDENTIAL_OBJ);
-    if (credAuthInfo == NULL) {
-        LOGE("Get self credAuthInfo fail.");
-        return HC_ERR_JSON_GET;
-    }
     uint32_t proofType = 0;
-    int32_t res = GetUnsignedIntFromJson(credAuthInfo, FIELD_PROOF_TYPE, &proofType);
+    int32_t res = GetProofTypeFromContext(context, &proofType);
     if (res != HC_SUCCESS) {
-        LOGE("Get proofType fail.");
         return res;
     }
     if (isPseudonym && proofType != PROOF_TYPE_PKI) {
@@ -266,7 +280,7 @@ static int32_t ISGetIdentityInfo(const CJson *context, bool isPseudonym, Identit
             LOGE("unsupport proof type!");
             break;
         }
-        res = ISSetCertProofAndEntity(context, credAuthInfo, isPseudonym, info);
+        res = ISSetCertProofAndEntity(context, isPseudonym, info);
         if (res != HC_SUCCESS) {
             LOGE("Failed to set cert proof and protocol entity!");
             break;
@@ -328,8 +342,17 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
+    uint32_t proofType = 0;
+    int32_t res = GetProofTypeFromContext(in, &proofType);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    if (proofType != PROOF_TYPE_PSK) {
+        LOGE("Proof type not match, cur proof type: %" LOG_PUB "d.", proofType);
+        return IS_AUTH_ERR_PROOF_NOT_MATCH;
+    }
     IdentityInfo *info = NULL;
-    int32_t res = ISGetIdentityInfo(in, false, &info);
+    res = ISGetIdentityInfo(in, false, &info);
     if (res != HC_SUCCESS) {
         LOGE("Get Identity by credAuthInfo fail.");
         return res;
@@ -684,8 +707,17 @@ static int32_t GetCredInfoByPeerCert(const CJson *in, const CertInfo *certInfo, 
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
+    uint32_t proofType = 0;
+    int32_t res = GetProofTypeFromContext(in, &proofType);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    if (proofType != PROOF_TYPE_PKI) {
+        LOGE("Proof type not match, cur proof type: %" LOG_PUB "d.", proofType);
+        return IS_AUTH_ERR_PROOF_NOT_MATCH;
+    }
     IdentityInfo *info = NULL;
-    int32_t res = ISGetIdentityInfo(in, certInfo->isPseudonym, &info);
+    res = ISGetIdentityInfo(in, certInfo->isPseudonym, &info);
     if (res != HC_SUCCESS) {
         LOGE("Get Identity by credAuthInfo fail.");
         return res;
