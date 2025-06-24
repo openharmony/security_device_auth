@@ -650,7 +650,7 @@ int32_t GetPeerCertInfo(CJson *context, const CJson *credInfo, CertInfo *peerCer
     int32_t signAlg;
     if (GetIntFromJson(credInfo, FIELD_SIGN_ALG, &signAlg) != HC_SUCCESS) {
         LOGE("get signAlg from json fail.");
-        return HC_ERR_JSON_ADD;
+        return HC_ERR_JSON_GET;
     }
     char *pkInfoStr = NULL;
     int32_t res = GetRealPkInfoStr(osAccountId, credInfo, &pkInfoStr, &peerCert->isPseudonym);

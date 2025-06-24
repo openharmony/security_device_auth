@@ -989,16 +989,16 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     }
     res = AllocCredentialMgr();
     if (res != HC_SUCCESS) {
-        DestroyGmAndGa();
         DestroyCa();
+        DestroyGmAndGa();
         return res;
     }
     InitOsAccountAdapter();
     res = InitAllModules();
     if (res != HC_SUCCESS) {
-        DestroyGmAndGa();
-        DestroyCa();
         DestroyCredentialMgr();
+        DestroyCa();
+        DestroyGmAndGa();
         return res;
     }
     INIT_PERFORMANCE_DUMPER();
