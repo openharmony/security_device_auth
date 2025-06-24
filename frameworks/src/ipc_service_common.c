@@ -1917,6 +1917,7 @@ int32_t MainRescInit(void)
 #ifdef DEV_AUTH_IS_ENABLE
     ret = ISIpcInit();
     if (ret != HC_SUCCESS) {
+        DeInitIpcCallBackList();
         LOGE("IS ipc init failed.");
         return ret;
     }
