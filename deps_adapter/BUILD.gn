@@ -68,6 +68,11 @@ if (defined(ohos_lite)) {
           "-DOHOS_MEM",
           "-DSET_THREAD_NAME",
         ]
+      } else if (board_toolchain_type == "clang") {
+        cflags += [
+          "-DOHOS_MEM",
+          "-DSET_THREAD_NAME",
+        ]
       } else {
         cflags += build_flags
       }
