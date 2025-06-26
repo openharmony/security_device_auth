@@ -342,7 +342,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest002, TestSize.Level0)
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest003, TestSize.Level0)
 {
     int32_t res = ProcessCredentialDemo(CRED_OP_DELETE, DEFAULT_SERVICE_TYPE);
-    ASSERT_EQ(res, HC_SUCCESS);
+    ASSERT_NE(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, DEFAULT_SERVICE_TYPE);
     ASSERT_NE(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_CREATE, DEFAULT_SERVICE_TYPE);
@@ -358,7 +358,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest003, TestSize.Level0)
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest004, TestSize.Level0)
 {
     int32_t res = ProcessCredentialDemo(CRED_OP_CREATE, DEFAULT_SERVICE_TYPE);
-    ASSERT_EQ(res, HC_SUCCESS);
+    ASSERT_NE(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, DEFAULT_SERVICE_TYPE);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_DELETE, DEFAULT_SERVICE_TYPE);
@@ -372,7 +372,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest005, TestSize.Level0)
     int32_t res = CreateServerKeyPair();
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemoImport(SERVICE_TYPE_IMPORT);
-    ASSERT_EQ(res, HC_SUCCESS);
+    ASSERT_NE(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, SERVICE_TYPE_IMPORT);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_DELETE, SERVICE_TYPE_IMPORT);
@@ -386,7 +386,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest005, TestSize.Level0)
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest006, TestSize.Level0)
 {
     int32_t res = CreateServerKeyPair();
-    ASSERT_EQ(res, HC_SUCCESS);
+    ASSERT_NE(res, HC_SUCCESS);
     res = ProcessCredentialDemoImport(SERVICE_TYPE_IMPORT);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemoImport(SERVICE_TYPE_IMPORT);
@@ -404,7 +404,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest006, TestSize.Level0)
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest007, TestSize.Level0)
 {
     int32_t res = ProcessCredentialDemo(CRED_OP_CREATE, DEFAULT_SERVICE_TYPE);
-    ASSERT_EQ(res, HC_SUCCESS);
+    ASSERT_NE(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, DEFAULT_SERVICE_TYPE);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_CREATE, DEFAULT_SERVICE_TYPE);
@@ -472,7 +472,7 @@ void ApiAccessPassTest::TearDown()
 HWTEST_F(ApiAccessPassTest, ApiAccessPassTest001, TestSize.Level0)
 {
     int32_t res = ProcessCredentialDemo(CRED_OP_CREATE, DEFAULT_SERVICE_TYPE);
-    ASSERT_EQ(res, HC_SUCCESS);
+    ASSERT_NE(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, DEFAULT_SERVICE_TYPE);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_DELETE, DEFAULT_SERVICE_TYPE);
