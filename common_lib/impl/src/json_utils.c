@@ -24,6 +24,10 @@
 
 #define RECURSE_FLAG_TRUE 1
 #define MAX_DEPTH 10
+#define MAX_LEN 5
+#define BIG_INT_ARR "bigIntArr"
+#define SPLIT_LEN_ONE 1
+#define SPLIT_LEN_TWO 2
 
 static int32_t GetCjsonMaxDepth(const char *jsonStr)
 {
@@ -128,12 +132,100 @@ CJson *DetachItemFromJson(CJson *jsonObj, const char *key)
     return cJSON_DetachItemFromObjectCaseSensitive(jsonObj, key);
 }
 
+static void ReplaceStringToInt(char *input, const char *keyName)
+{
+    if (keyName == NULL) {
+        LOGE("input keyName is NULL.");
+        return;
+    }
+    uint32_t keywordLen = SPLIT_LEN_ONE + HcStrlen(keyName) + SPLIT_LEN_TWO;
+    char keyword[keywordLen + 1];
+    keyword[0] = '"';
+    if (strcpy_s(&keyword[1], HcStrlen(keyName) + 1, keyName) != EOK) {
+        LOGE("failed to copy keyword to buffer.");
+        return;
+    }
+    keyword[keywordLen - SPLIT_LEN_TWO] = '"';
+    keyword[keywordLen - SPLIT_LEN_ONE] = ':';
+    keyword[keywordLen] = '\0';
+    const char * const pos1 = strstr(input, keyword);
+    if (pos1 == NULL) {
+        LOGW("keyword not found.");
+        return;
+    }
+    const char * const pos2 = strstr(pos1 + keywordLen + 1, "\"");
+    if (pos2 == NULL) {
+        LOGW("json key format parse error.");
+        return;
+    }
+    uint32_t startOffset = pos1 - input + keywordLen;
+    uint32_t endOffset = pos2 - input;
+
+    bool shouldReplace = true;
+    for (uint32_t i = startOffset + 1; i < endOffset; i++) {
+        // only replace if the content is only composed of digits
+        shouldReplace &= input[i] >= '0' && input[i] <= '9';
+    }
+
+    if (shouldReplace) {
+        uint32_t readI = startOffset + SPLIT_LEN_ONE;
+        uint32_t writeI = startOffset;
+        while (input[readI]) {
+            input[writeI] = input[readI];
+            readI++;
+            writeI++;
+            if (readI == endOffset) {
+                readI++;
+            }
+        }
+        input[writeI] = '\0';
+    }
+}
+
+static char *PackJsonWithBigIntArrToString(const CJson *jsonObj, CJson *arr)
+{
+    int keyListSize = GetItemNum(arr);
+    char *keyList[MAX_LEN];
+    for (int i = 0; i < keyListSize; i++) {
+        const char *str = GetStringValue(GetItemFromArray(arr, i));
+        if (str != NULL) {
+            keyList[i] = strdup(str);
+        } else {
+            keyList[i] = NULL;
+        }
+    }
+    CJson *dupJson = cJSON_Duplicate(jsonObj, RECURSE_FLAG_TRUE);
+    if (dupJson == NULL) {
+        LOGE("duplicate json failed.");
+        return NULL;
+    }
+    cJSON_DeleteItemFromObject(dupJson, BIG_INT_ARR);
+    char *jsonStr = cJSON_PrintUnformatted(dupJson);
+    if (jsonStr == NULL) {
+        cJSON_free(dupJson);
+        LOGE("print unformat failed.");
+        return NULL;
+    }
+    cJSON_free(dupJson);
+    for (int i = 0; i < keyListSize; i++) {
+        if (keyList[i] != NULL) {
+            ReplaceStringToInt(jsonStr, keyList[i]);
+            HcFree(keyList[i]);
+        }
+    }
+    return jsonStr;
+}
+
 char *PackJsonToString(const CJson *jsonObj)
 {
     if (jsonObj == NULL) {
         return NULL;
     }
-    return cJSON_PrintUnformatted(jsonObj);
+    CJson *arr = GetObjFromJson(jsonObj, BIG_INT_ARR);
+    if (arr == NULL) {
+        return cJSON_PrintUnformatted(jsonObj);
+    }
+    return PackJsonWithBigIntArrToString(jsonObj, arr);
 }
 
 void FreeJsonString(char *jsonStr)
@@ -375,6 +467,9 @@ int32_t GetBoolFromJson(const CJson *jsonObj, const char *key, bool *value)
 
 char *GetStringValue(const CJson *item)
 {
+    if (item == NULL) {
+        return NULL;
+    }
     return cJSON_GetStringValue(item);
 }
 
