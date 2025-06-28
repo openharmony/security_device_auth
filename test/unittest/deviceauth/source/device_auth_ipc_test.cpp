@@ -448,6 +448,10 @@ HWTEST_F(GmRegCallbackTest, GmRegCallbackTest002, TestSize.Level0)
     DeviceAuthCallback callback2;
     ret = gm->regCallback(TEST_APP_ID, &callback2);
     ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
+    ASSERT_EQ(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GmRegCallbackTest, GmRegCallbackTest003, TestSize.Level0)
@@ -2101,6 +2105,10 @@ HWTEST_F(GmUnRegDataChangeListenerTest, GmUnRegDataChangeListenerTest001, TestSi
     int32_t ret = gm->regDataChangeListener(TEST_APP_ID, &g_listener);
     ASSERT_EQ(ret, HC_SUCCESS);
     ret = gm->unRegDataChangeListener(TEST_APP_ID);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->regDataChangeListener(TEST_APP_ID, &g_listener);
+    ASSERT_EQ(ret, HC_SUCCESS);
+    ret = gm->regDataChangeListener(TEST_APP_ID, &g_listener);
     ASSERT_EQ(ret, HC_SUCCESS);
 }
 

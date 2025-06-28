@@ -30,8 +30,12 @@ if (os_level == "mini" || os_level == "small") {
       "//foundation/communication/dsoftbus/interfaces/kits/transport",
       "//foundation/communication/dsoftbus/interfaces/inner_kits/transport",
       "${dev_frameworks_path}/inc/hiview_adapter",
+      "${services_path}/sa/inc/critical_handler",
+      "${services_path}/sa/inc/cache_common_event_handler",
     ]
     sources = deviceauth_files
+    sources += critical_handler_mock_files
+    sources += cache_common_event_handler_mock_files
     sources += identity_service_mock_files
     defines = [ "HILOG_ENABLE" ]
     defines += deviceauth_defines
@@ -142,12 +146,14 @@ if (os_level == "mini" || os_level == "small") {
         "//foundation/communication/ipc/interfaces/innerkits/c/ipc/include",
         "//foundation/systemabilitymgr/samgr_lite/interfaces/kits/samgr",
         "${dev_frameworks_path}/inc/hiview_adapter",
+        "${frameworks_path}/sdk/sa_load_on_demand/inc",
       ]
 
       sources = deviceauth_ipc_files
       sources += [ "${frameworks_path}/src/ipc_sdk.c" ]
       sources +=
           [ "${frameworks_path}/src/mock/identity_service_ipc_sdk_mock.c" ]
+      sources += [ "${frameworks_path}/sdk/sa_load_on_demand/src/mock/sa_load_on_demand_mock.cpp" ]
 
       defines = [ "HILOG_ENABLE" ]
       if (ohos_kernel_type == "linux") {
@@ -173,6 +179,8 @@ if (os_level == "mini" || os_level == "small") {
     include_dirs += [
       "${frameworks_path}/inc/standard",
       "${dev_frameworks_path}/inc/hiview_adapter",
+      "${services_path}/sa/inc/cache_common_event_handler",
+      "${services_path}/sa/inc/critical_handler",
       "${dev_frameworks_path}/inc/permission_adapter",
     ]
 
@@ -187,6 +195,11 @@ if (os_level == "mini" || os_level == "small") {
       sources += account_subscriber_files
       sources += sa_subscriber_files
       sources += net_observer_files
+    }
+    if (timeline_memmgr_enable) {
+      sources += sa_load_on_demand_files
+    } else {
+      sources += sa_load_on_demand_mock_files
     }
     sources += permission_adapter_files
     sources += identity_service_files
@@ -246,7 +259,11 @@ if (os_level == "mini" || os_level == "small") {
         "netmanager_base:net_conn_manager_if",
         "os_account:os_account_innerkits",
         "samgr:samgr_proxy",
+        "safwk:system_ability_fwk",
       ]
+    }
+    if (timeline_memmgr_enable) {
+      external_deps += [ "memmgr:memmgrclient" ]
     }
   }
 
@@ -266,6 +283,8 @@ if (os_level == "mini" || os_level == "small") {
 
     include_dirs += [
       "${frameworks_path}/inc/standard",
+      "${frameworks_path}/sdk/sa_listener/inc",
+      "${frameworks_path}/sdk/sa_load_on_demand/inc",
       "${dev_frameworks_path}/inc/permission_adapter",
       "${dev_frameworks_path}/inc/hiview_adapter",
     ]
@@ -274,6 +293,8 @@ if (os_level == "mini" || os_level == "small") {
     sources += permission_adapter_files
     sources += [ "${frameworks_path}/src/ipc_sdk.c" ]
     sources += [ "${frameworks_path}/src/identity_service_ipc_sdk.c" ]
+    sources += [ "${frameworks_path}/sdk/sa_listener/src/sa_listener.cpp" ]
+    sources += [ "${frameworks_path}/sdk/sa_load_on_demand/src/sa_load_on_demand.cpp" ]
 
     defines = [
       "__LINUX__",
@@ -372,6 +393,7 @@ if (os_level == "mini" || os_level == "small") {
       "ipc:ipc_single",
       "safwk:system_ability_fwk",
       "samgr:samgr_proxy",
+      "eventhandler:libeventhandler",
     ]
   }
 }

@@ -4,9 +4,22 @@
         {
             "name": 4701,
             "libpath": "libdeviceauth_service.z.so",
-            "run-on-create": true,
+            "run-on-create": false,
             "distributed": false,
-            "dump_level": 1
+            "dump_level": 1,
+            "cache-common-event": true,
+            "start-on-demand": {
+                "allow-update": false,
+                "commonevent": [
+                    { "name": "usual.event.USER_REMOVED" },
+                    { "name": "usual.event.USER_UNLOCKED" },
+                    { "name": "common.event.DISTRIBUTED_ACCOUNT_LOGIN" },
+                    { "name": "common.event.DISTRIBUTED_ACCOUNT_LOGOUT" },
+                    { "name": "usual.event.bluetooth.host.STATE_UPDATE" },
+                    { "name": "usual.event.USER_SWITCHED" },
+                    { "name": "usual.event.CONNECTIVITY_CHANGE" }
+                ]
+            }
         }
     ]
 }

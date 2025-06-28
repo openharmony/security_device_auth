@@ -58,7 +58,7 @@
 #include "base/security/device_auth/services/legacy/authenticators/src/account_unrelated/pake_task/pake_v1_task/pake_v1_protocol_task/pake_v1_protocol_task_common.c"
 #include "base/security/device_auth/services/session_manager/src/session/v2/dev_session_util.c"
 #include "base/security/device_auth/services/legacy/group_manager/src/group_operation/identical_account_group/identical_account_group.c"
-
+#include "base/security/device_auth/services/sa/src/cache_common_event_handler/cache_common_event_handler.cpp"
 using namespace std;
 using namespace testing::ext;
 
@@ -78,6 +78,7 @@ namespace {
 #define TEST_KEY_LEN_2 40
 #define TEST_OS_ACCOUNT_ID 0
 #define TEST_DEVICE_PK "testDevicePk"
+#define TEST_EVENT_NAME "usual.event.USER_UNLOCKED"
 #define TEST_VERSION 0
 #define TEST_RANDOM_LEN 16
 static const char *EXT_INFO =
@@ -1879,6 +1880,12 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest035, TestSize.Level0)
     tokenParams.userType = KEY_ALIAS_AUTH_TOKEN;
     int32_t res = GenerateKeyAlias(&tokenParams, &outKeyAliasBuff);
     ASSERT_NE(res, HC_SUCCESS);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest036, TestSize.Level0)
+{
+    HandleCacheCommonEvent();
+    HandleCacheCommonEventInner(TEST_EVENT_NAME, 0);
 }
 
 class AvInterfaceTest : public testing::Test {

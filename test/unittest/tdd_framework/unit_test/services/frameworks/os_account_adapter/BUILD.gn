@@ -30,6 +30,7 @@ if (support_os_account) {
     include_dirs += [ "${dev_frameworks_path}/inc/net_observer" ]
 
     sources = deviceauth_files
+    sources += sa_load_on_demand_mock_files
     sources += identity_service_mock_files
     sources += hal_common_files
     sources += hiview_adapter_files

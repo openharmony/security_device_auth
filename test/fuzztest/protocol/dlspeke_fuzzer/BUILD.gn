@@ -37,6 +37,7 @@ ohos_fuzztest("DLSpekeFuzzTest") {
   sources = [ "dlspeke_fuzzer.cpp" ]
   sources += deviceauth_ipc_files
   sources += permission_adapter_files
+  sources += sa_load_on_demand_mock_files
   sources += hiview_adapter_files
 
   defines = [ "ENABLE_P2P_BIND_DL_SPEKE" ]

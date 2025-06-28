@@ -36,6 +36,7 @@ void CancelDevSession(int64_t sessionId, const char *appId);
 
 int32_t PushStartSessionTask(int64_t sessionId);
 int32_t PushProcSessionTask(int64_t sessionId, CJson *receivedMsg);
+void RemoveTimeoutSession(void);
 
 #ifdef __cplusplus
 }

@@ -67,7 +67,9 @@
           "samgr",
           "safwk",
           "ipc",
-          "netmanager_base"
+          "netmanager_base",
+          "memmgr",
+          "eventhandler"
         ],
         "third_party": [],
         "hisysevent_config": [

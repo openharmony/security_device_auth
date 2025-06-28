@@ -52,7 +52,7 @@ static OHOS::DevAuth::OsAccountEventNotifier g_accountEventNotifier;
 static OHOS::DevAuth::SaEventNotifier g_saEventNotifier;
 static OHOS::sptr<NetObserver> g_observer = nullptr;
 
-static void NotifyOsAccountUnlocked(int32_t osAccountId)
+void NotifyOsAccountUnlocked(int32_t osAccountId)
 {
     if (!g_isInitialized) {
         return;
@@ -64,7 +64,7 @@ static void NotifyOsAccountUnlocked(int32_t osAccountId)
     }
 }
 
-static void NotifyOsAccountRemoved(int32_t osAccountId)
+void NotifyOsAccountRemoved(int32_t osAccountId)
 {
     if (!g_isInitialized) {
         return;

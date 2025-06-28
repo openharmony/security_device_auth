@@ -21,6 +21,7 @@
 #include "iremote_broker.h"
 #include "iremote_stub.h"
 #include "nocopyable.h"
+#include "event_handler.h"
 
 #include "ipc_dev_auth_stub.h"
 
@@ -46,12 +47,22 @@ public:
 protected:
     void OnStart() override;
     void OnStop() override;
+    void OnActive(const SystemAbilityOnDemandReason &activeReason) override;
+    int32_t OnIdle(const SystemAbilityOnDemandReason &idleReason) override;
+    void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
+    void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
 
 private:
-    static std::mutex g_instanceLock;
-    static sptr<DeviceAuthAbility> g_instance;
-
+    bool CreateUnloadHandler();
+    void DestroyUnloadHandler();
+    void DelayUnload();
     DeviceAuthAbility();
+    bool CheckDevAuthStatus();
+    bool CheckUnloadStatus();
+
+    std::shared_ptr<AppExecFwk::EventHandler> unloadHandler_;
+    std::recursive_mutex instanceMutex_;
+    bool isUnloading_{false};
 };
 
 } // namespace OHOS

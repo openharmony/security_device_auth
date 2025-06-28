@@ -27,6 +27,7 @@ public:
     ~ProxyDevAuth();
     int32_t DoCallRequest(MessageParcel &dataParcel, MessageParcel &replyParcel, bool withSync);
     static bool ServiceRunning(void);
+    void RetryLoadDeviceAuthSa(void);
 
 private:
     static inline BrokerDelegator<ProxyDevAuth> delegator_;

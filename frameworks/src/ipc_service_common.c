@@ -183,7 +183,7 @@ int32_t IpcServiceGmRegDataChangeListener(const IpcDataInfo *ipcParams, int32_t 
     static int32_t registered = 0;
     int32_t cbObjIdx = -1;
     int32_t inOutLen;
-
+    LOGI("starting ...");
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmRegDataChangeListener failed, get app id error.");

@@ -33,6 +33,8 @@ typedef enum {
 
 typedef void (*OsAccountCallbackFunc)(int32_t osAccountId);
 
+void NotifyOsAccountUnlocked(int32_t osAccountId);
+void NotifyOsAccountRemoved(int32_t osAccountId);
 void AddOsAccountEventCallback(EventCallbackId callbackId, OsAccountCallbackFunc unlockFunc,
     OsAccountCallbackFunc removeFunc);
 void RemoveOsAccountEventCallback(EventCallbackId callbackId);

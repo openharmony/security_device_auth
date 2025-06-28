@@ -26,6 +26,7 @@
 
 #include "ipc_adapt.h"
 #include "securec.h"
+#include "sa_load_on_demand.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -133,9 +134,8 @@ static void GetIpcReplyByType(const IpcDataInfo *ipcData,
     return;
 }
 
-static int32_t IpcGmRegCallback(const char *appId, const DeviceAuthCallback *callback)
+static int32_t IpcGmRegCallbackInner(const char *appId, const DeviceAuthCallback *callback, bool needCache)
 {
-    LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
@@ -151,6 +151,9 @@ static int32_t IpcGmRegCallback(const char *appId, const DeviceAuthCallback *cal
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
         AddIpcCliCallbackCtx(appId, 0, &g_ipcProxyCbList);
+        if (needCache) {
+            ret = AddCallbackInfoToList(appId, callback, NULL, NULL, DEVAUTH_CALLBACK);
+        }
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -158,8 +161,16 @@ static int32_t IpcGmRegCallback(const char *appId, const DeviceAuthCallback *cal
     return ret;
 }
 
+static int32_t IpcGmRegCallback(const char *appId, const DeviceAuthCallback *callback)
+{
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    LOGI("starting ...");
+    return IpcGmRegCallbackInner(appId, callback, true);
+}
+
 static int32_t IpcGmUnRegCallback(const char *appId)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     uintptr_t callCtx = 0x0;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
     int32_t inOutLen;
@@ -174,6 +185,7 @@ static int32_t IpcGmUnRegCallback(const char *appId)
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
         DelIpcCliCallbackCtx(appId, &g_ipcProxyCbList);
+        ret = RemoveCallbackInfoFromList(appId, DEVAUTH_CALLBACK);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -181,9 +193,8 @@ static int32_t IpcGmUnRegCallback(const char *appId)
     return ret;
 }
 
-static int32_t IpcGmRegDataChangeListener(const char *appId, const DataChangeListener *listener)
+static int32_t IpcGmRegDataChangeListenerInner(const char *appId, const DataChangeListener *listener, bool needCache)
 {
-    LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
@@ -199,6 +210,9 @@ static int32_t IpcGmRegDataChangeListener(const char *appId, const DataChangeLis
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
         AddIpcCliCallbackCtx(appId, 0, &g_ipcListenerCbList);
+        if (needCache) {
+            ret = AddCallbackInfoToList(appId, NULL, listener, NULL, GROUP_CHANGE_LISTENER);
+        }
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -206,8 +220,16 @@ static int32_t IpcGmRegDataChangeListener(const char *appId, const DataChangeLis
     return ret;
 }
 
+static int32_t IpcGmRegDataChangeListener(const char *appId, const DataChangeListener *listener)
+{
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    LOGI("starting ...");
+    return IpcGmRegDataChangeListenerInner(appId, listener, true);
+}
+
 static int32_t IpcGmUnRegDataChangeListener(const char *appId)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -222,6 +244,7 @@ static int32_t IpcGmUnRegDataChangeListener(const char *appId)
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
         DelIpcCliCallbackCtx(appId, &g_ipcListenerCbList);
+        ret = RemoveCallbackInfoFromList(appId, GROUP_CHANGE_LISTENER);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -231,6 +254,8 @@ static int32_t IpcGmUnRegDataChangeListener(const char *appId)
 
 static int32_t IpcGmCreateGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -256,6 +281,8 @@ static int32_t IpcGmCreateGroup(int32_t osAccountId, int64_t requestId, const ch
 
 static int32_t IpcGmDeleteGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *delParams)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     uintptr_t callCtx = 0x0;
     int32_t inOutLen;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
@@ -281,6 +308,8 @@ static int32_t IpcGmDeleteGroup(int32_t osAccountId, int64_t requestId, const ch
 
 static int32_t IpcGmAddMemberToGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *addParams)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -306,6 +335,8 @@ static int32_t IpcGmAddMemberToGroup(int32_t osAccountId, int64_t requestId, con
 
 static int32_t IpcGmDelMemberFromGroup(int32_t osAccountId, int64_t requestId, const char *appId, const char *delParams)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -331,6 +362,8 @@ static int32_t IpcGmDelMemberFromGroup(int32_t osAccountId, int64_t requestId, c
 
 static int32_t IpcGmAddMultiMembersToGroup(int32_t osAccountId, const char *appId, const char *addParams)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     int32_t ret;
     uintptr_t callCtx = 0x0;
@@ -355,6 +388,8 @@ static int32_t IpcGmAddMultiMembersToGroup(int32_t osAccountId, const char *appI
 
 static int32_t IpcGmDelMultiMembersFromGroup(int32_t osAccountId, const char *appId, const char *delParams)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     int32_t ret;
     uintptr_t callCtx = 0x0;
@@ -379,6 +414,8 @@ static int32_t IpcGmDelMultiMembersFromGroup(int32_t osAccountId, const char *ap
 
 static int32_t IpcGmProcessData(int64_t requestId, const uint8_t *data, uint32_t dataLen)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -402,6 +439,7 @@ static int32_t IpcGmProcessData(int64_t requestId, const uint8_t *data, uint32_t
 
 static int32_t IpcGmGetRegisterInfo(const char *reqJsonStr, char **registerInfo)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     LOGI("starting ...");
     int32_t ret;
     uintptr_t callCtx = 0x0;
@@ -431,6 +469,8 @@ static int32_t IpcGmGetRegisterInfo(const char *reqJsonStr, char **registerInfo)
 
 static int32_t IpcGmCheckAccessToGroup(int32_t osAccountId, const char *appId, const char *groupId)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     uintptr_t callCtx = 0x0;
     int32_t ret;
     int32_t inOutLen;
@@ -454,6 +494,8 @@ static int32_t IpcGmCheckAccessToGroup(int32_t osAccountId, const char *appId, c
 static int32_t IpcGmGetPkInfoList(int32_t osAccountId, const char *appId, const char *queryParams,
                                   char **returnInfoList, uint32_t *returnInfoNum)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     uintptr_t callCtx = 0x0;
     int32_t ret;
     int32_t inOutLen;
@@ -486,6 +528,8 @@ static int32_t IpcGmGetPkInfoList(int32_t osAccountId, const char *appId, const 
 
 static int32_t IpcGmGetGroupInfoById(int32_t osAccountId, const char *appId, const char *groupId, char **outGroupInfo)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     int32_t ret;
     uintptr_t callCtx = 0x0;
     int32_t inOutLen;
@@ -516,6 +560,8 @@ static int32_t IpcGmGetGroupInfoById(int32_t osAccountId, const char *appId, con
 static int32_t IpcGmGetGroupInfo(int32_t osAccountId, const char *appId, const char *queryParams,
     char **outGroupVec, uint32_t *groupNum)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     int32_t ret;
     uintptr_t callCtx = 0x0;
     int32_t inOutLen;
@@ -549,6 +595,7 @@ static int32_t IpcGmGetGroupInfo(int32_t osAccountId, const char *appId, const c
 static int32_t IpcGmGetJoinedGroups(int32_t osAccountId, const char *appId, int32_t groupType,
     char **outGroupVec, uint32_t *groupNum)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     int32_t ret;
     uintptr_t callCtx = 0x0;
     int32_t inOutLen;
@@ -581,6 +628,7 @@ static int32_t IpcGmGetJoinedGroups(int32_t osAccountId, const char *appId, int3
 static int32_t IpcGmGetRelatedGroups(int32_t osAccountId, const char *appId, const char *peerUdid,
     char **outGroupVec, uint32_t *groupNum)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     uintptr_t callCtx = 0x0;
     int32_t ret;
     int32_t inOutLen;
@@ -614,6 +662,7 @@ static int32_t IpcGmGetRelatedGroups(int32_t osAccountId, const char *appId, con
 static int32_t IpcGmGetDeviceInfoById(int32_t osAccountId, const char *appId, const char *peerUdid, const char *groupId,
     char **outDevInfo)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     uintptr_t callCtx = 0x0;
     int32_t ret;
     int32_t inOutLen;
@@ -646,6 +695,7 @@ static int32_t IpcGmGetDeviceInfoById(int32_t osAccountId, const char *appId, co
 static int32_t IpcGmGetTrustedDevices(int32_t osAccountId, const char *appId,
     const char *groupId, char **outDevInfoVec, uint32_t *deviceNum)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     int32_t ret;
     uintptr_t callCtx = 0x0;
     int32_t inOutLen;
@@ -678,6 +728,7 @@ static int32_t IpcGmGetTrustedDevices(int32_t osAccountId, const char *appId,
 
 static bool IpcGmIsDeviceInGroup(int32_t osAccountId, const char *appId, const char *groupId, const char *udid)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     int32_t ret;
     uintptr_t callCtx = 0x0;
     int32_t inOutLen;
@@ -701,6 +752,7 @@ static bool IpcGmIsDeviceInGroup(int32_t osAccountId, const char *appId, const c
 
 static void IpcGmDestroyInfo(char **returnInfo)
 {
+    RETURN_VOID_IF_LOAD_DEVAUTH_FAILED();
     if ((returnInfo == NULL) || (*returnInfo == NULL)) {
         return;
     }
@@ -710,6 +762,8 @@ static void IpcGmDestroyInfo(char **returnInfo)
 
 static void IpcGmCancelRequest(int64_t requestId, const char *appId)
 {
+    RETURN_VOID_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -757,6 +811,7 @@ static void InitIpcGmMethods(DeviceGroupManager *gmMethodObj)
 static int32_t IpcGaProcessData(int64_t authReqId,
     const uint8_t *data, uint32_t dataLen, const DeviceAuthCallback *callback)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -783,6 +838,7 @@ static int32_t IpcGaProcessData(int64_t authReqId,
 static int32_t IpcGaAuthDevice(int32_t osAccountId, int64_t authReqId, const char *authParams,
     const DeviceAuthCallback *callback)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     LOGI("starting ...");
     int32_t ret;
     int32_t inOutLen;
@@ -809,6 +865,8 @@ static int32_t IpcGaAuthDevice(int32_t osAccountId, int64_t authReqId, const cha
 
 static void IpcGaCancelRequest(int64_t requestId, const char *appId)
 {
+    RETURN_VOID_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -827,6 +885,8 @@ static void IpcGaCancelRequest(int64_t requestId, const char *appId)
 
 static int32_t IpcGaGetRealInfo(int32_t osAccountId, const char *pseudonymId, char **realInfo)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     uintptr_t callCtx = 0x0;
     int32_t ret;
     int32_t inOutLen;
@@ -854,6 +914,8 @@ static int32_t IpcGaGetRealInfo(int32_t osAccountId, const char *pseudonymId, ch
 
 static int32_t IpcGaGetPseudonymId(int32_t osAccountId, const char *indexKey, char **pseudonymId)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     int32_t ret;
     uintptr_t callCtx = 0x0;
     int32_t inOutLen;
@@ -925,6 +987,7 @@ static int32_t SetReturnRandom(const uint8_t *randomVal, uint32_t randomLen, Dat
 
 static void IpcAvDestroyDataBuff(DataBuff *dataBuff)
 {
+    RETURN_VOID_IF_LOAD_DEVAUTH_FAILED();
     if (dataBuff == NULL || dataBuff->data == NULL) {
         return;
     }
@@ -980,6 +1043,8 @@ static int32_t GetSharedKeyAndRandom(const IpcDataInfo *replies, int32_t cacheNu
 static int32_t IpcAvGetClientSharedKey(const char *peerPkWithSig, const char *serviceId, DataBuff *returnSharedKey,
     DataBuff *returnRandom)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     if ((peerPkWithSig == NULL) || (serviceId == NULL) || (returnSharedKey == NULL) || (returnRandom == NULL)) {
         LOGE("Error occurs, params invalid.");
         return HC_ERR_INVALID_PARAMS;
@@ -1050,6 +1115,7 @@ static int32_t GetSharedKey(const IpcDataInfo *replies, int32_t cacheNum, DataBu
 static int32_t IpcAvGetServerSharedKey(const char *peerPkWithSig, const char *serviceId, const DataBuff *random,
     DataBuff *returnSharedKey)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     if ((peerPkWithSig == NULL) || (serviceId == NULL) || (random == NULL) || (random->data == NULL) ||
         (returnSharedKey == NULL)) {
         LOGE("Invalid params.");
@@ -1108,6 +1174,8 @@ static void InitIpcAccountVerifierMethods(AccountVerifier *accountVerifier)
 
 DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const char *reqJsonStr, char **returnData)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -1138,6 +1206,8 @@ DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const ch
 DEVICE_AUTH_API_PUBLIC int32_t ProcessAuthDevice(
     int64_t requestId, const char *authParams, const DeviceAuthCallback *callback)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     int32_t ret;
     uintptr_t callCtx = 0x0;
@@ -1164,6 +1234,8 @@ DEVICE_AUTH_API_PUBLIC int32_t ProcessAuthDevice(
 DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
     int64_t authReqId, const char *authParams, const DeviceAuthCallback *callback)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     int32_t ret;
     uintptr_t callCtx = 0x0;
@@ -1189,6 +1261,8 @@ DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
 
 DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *authParams)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     int32_t ret;
     uintptr_t callCtx = 0x0;
@@ -1212,39 +1286,53 @@ DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *
 
 DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     if (g_devAuthServiceStatus == true) {
-        LOGI("device auth service already init");
+        LOGI("device auth sdk already init");
         return HC_SUCCESS;
     }
     int32_t ret = InitHcMutex(&g_ipcMutex, false);
     if (ret != HC_SUCCESS) {
         return ret;
     }
+    ret = InitLoadOnDemand();
+    if (ret != HC_SUCCESS) {
+        DestroyHcMutex(&g_ipcMutex);
+        return ret;
+    }
     ret = InitISIpc();
     if (ret != HC_SUCCESS) {
+        DeInitLoadOnDemand();
         DestroyHcMutex(&g_ipcMutex);
         return ret;
     }
     ret = InitProxyAdapt();
     if (ret != HC_SUCCESS) {
         DeInitISIpc();
+        DeInitLoadOnDemand();
         DestroyHcMutex(&g_ipcMutex);
         return ret;
     }
     g_devAuthServiceStatus = true;
+    SetRegCallbackFunc(IpcGmRegCallbackInner);
+    SetRegDataChangeListenerFunc(IpcGmRegDataChangeListenerInner);
+    SubscribeDeviceAuthSa();
     return HC_SUCCESS;
 }
 
 DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
 {
+    UnSubscribeDeviceAuthSa();
     UnInitProxyAdapt();
     DeInitISIpc();
+    DeInitLoadOnDemand();
     DestroyHcMutex(&g_ipcMutex);
     g_devAuthServiceStatus = false;
 }
 
 DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
 {
+    RETURN_NULL_IF_LOAD_DEVAUTH_FAILED();
     static GroupAuthManager gaInstCtx;
     static GroupAuthManager *gaInstPtr = NULL;
 
@@ -1257,6 +1345,7 @@ DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
 
 DEVICE_AUTH_API_PUBLIC const DeviceGroupManager *GetGmInstance(void)
 {
+    RETURN_NULL_IF_LOAD_DEVAUTH_FAILED();
     static DeviceGroupManager gmInstCtx;
     static DeviceGroupManager *gmInstPtr = NULL;
 
@@ -1269,6 +1358,7 @@ DEVICE_AUTH_API_PUBLIC const DeviceGroupManager *GetGmInstance(void)
 
 DEVICE_AUTH_API_PUBLIC const AccountVerifier *GetAccountVerifierInstance(void)
 {
+    RETURN_NULL_IF_LOAD_DEVAUTH_FAILED();
     static AccountVerifier avInstCtx;
     static AccountVerifier *avInstPtr = NULL;
     InitIpcAccountVerifierMethods(&avInstCtx);

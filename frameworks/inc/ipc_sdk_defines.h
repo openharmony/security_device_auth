@@ -17,16 +17,38 @@
 #define IPC_SDK_DEFINES_H
 
 #include <stdint.h>
-
+#include "device_auth.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct {
+    char *appId;
+    uint8_t callbackType; // 1 DevAuthCallback, 2 groupListener, 3 credListener
+    union {
+        DeviceAuthCallback *deviceAuthCallback;
+        DataChangeListener *dataChangeListener;
+        CredChangeListener *credChangeListener;
+    } callback;
+} DevAuthCallbackInfo;
+
+typedef void (*SaStatusChangeCallbackFunc)(void);
+typedef struct {
+    SaStatusChangeCallbackFunc onReceivedSaAdd;
+    SaStatusChangeCallbackFunc onReceivedSaRemoved;
+} SaStatusChangeCallback;
 
 #define IPC_CALL_BACK_STUB_AUTH_ID 0
 #define IPC_CALL_BACK_STUB_BIND_ID 1
 #define IPC_CALL_BACK_STUB_DIRECT_AUTH_ID 2
 
+#define DEVICE_AUTH_SA_LOAD_TIME (4 * 1000)
+
 #define IPC_CALL_CONTEXT_INIT 0x0
+
+#define DEVAUTH_CALLBACK 1
+#define GROUP_CHANGE_LISTENER 2
+#define CRED_CHANGE_LISTENER 3
 
 /* params type for ipc call */
 #define PARAM_TYPE_APPID 1
@@ -175,7 +197,7 @@ if (ret != HC_SUCCESS) { \
 #define BREAK_IF_DO_IPC_CALL_FAILED(callCtx, callFunc, isSync) \
 ret = DoBinderCall((callCtx), (callFunc), (isSync)); \
 if (ret != HC_SUCCESS) { \
-    LOGE("ipc call failed."); \
+    LOGE("ipc call failed, ret: %" LOG_PUB "d", ret); \
     break; \
 }
 
@@ -208,6 +230,24 @@ if ((resultNum < (ipcResultNum)) || (inOutLen != sizeof(int32_t))) { \
 }
 
 #define DESTROY_IPC_CTX(callCtx) DestroyCallCtx(&(callCtx))
+
+#define RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED() \
+if (LoadDeviceAuthSaIfNotLoad() != HC_SUCCESS) { \
+    LOGW("sa not load."); \
+    return HC_ERR_IPC_SA_NOT_LOAD; \
+}
+
+#define RETURN_VOID_IF_LOAD_DEVAUTH_FAILED() \
+if (LoadDeviceAuthSaIfNotLoad() != HC_SUCCESS) { \
+    LOGW("sa not load."); \
+    return; \
+}
+
+#define RETURN_NULL_IF_LOAD_DEVAUTH_FAILED() \
+if (LoadDeviceAuthSaIfNotLoad() != HC_SUCCESS) { \
+    LOGW("sa not load."); \
+    return NULL; \
+}
 
 #ifdef __cplusplus
 }

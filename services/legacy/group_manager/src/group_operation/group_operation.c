@@ -38,6 +38,7 @@
 #include "device_auth_common.h"
 #include "performance_dumper.h"
 #include "channel_manager.h"
+#include "critical_handler.h"
 
 #define EXT_PART_APP_ID "ext_part"
 
@@ -460,6 +461,7 @@ static void DoCreateGroup(HcTaskBase *baseTask)
         ProcessFinishCallback(task->reqId, GROUP_CREATE, returnJsonStr, task->cb);
         FreeJsonString(returnJsonStr);
     }
+    DecreaseCriticalCnt();
 }
 
 static void DoDeleteGroup(HcTaskBase *baseTask)
@@ -476,6 +478,7 @@ static void DoDeleteGroup(HcTaskBase *baseTask)
         ProcessFinishCallback(task->reqId, GROUP_DISBAND, returnJsonStr, task->cb);
         FreeJsonString(returnJsonStr);
     }
+    DecreaseCriticalCnt();
 }
 
 static void DoDeleteMember(HcTaskBase *baseTask)
@@ -485,6 +488,7 @@ static void DoDeleteMember(HcTaskBase *baseTask)
     SET_TRACE_ID(task->reqId);
     LOGI("[Start]: DoDeleteMember! [ReqId]: %" LOG_PUB PRId64, task->reqId);
     (void)DeleteMemberFromPeerToPeerGroup(task->osAccountId, task->reqId, task->params, task->cb);
+    DecreaseCriticalCnt();
 }
 
 static int32_t CreateGroupInner(int32_t osAccountId, int64_t requestId, const char *appId, const char *createParams)
@@ -1212,6 +1216,7 @@ static void DoOnChannelOpened(HcTaskBase *baseTask)
 {
     if (baseTask == NULL) {
         LOGE("The input task is NULL!");
+        DecreaseCriticalCnt();
         return;
     }
     SoftBusTask *task = (SoftBusTask *)baseTask;
@@ -1223,6 +1228,7 @@ static void DoOnChannelOpened(HcTaskBase *baseTask)
         LOGE("start session fail.[Res]: %" LOG_PUB "d", res);
         CloseDevSession(task->requestId);
     }
+    DecreaseCriticalCnt();
 }
 
 static void InitSoftBusTask(SoftBusTask *task, int64_t requestId)
@@ -1252,6 +1258,7 @@ static int OnChannelOpenedCb(int64_t requestId, int result)
         CloseDevSession(requestId);
         return HC_ERR_INIT_TASK_FAIL;
     }
+    IncreaseCriticalCnt(ADD_ONE);
     LOGI("[End]: OnChannelOpened!");
     return HC_SUCCESS;
 }
@@ -1777,11 +1784,13 @@ void DestroyGroupManagerTask(HcTaskBase *task)
 {
     if (task == NULL) {
         LOGE("The input task is NULL!");
+        DecreaseCriticalCnt();
         return;
     }
     RemoveAccountTaskIfNeeded(((GroupManagerTask *)task)->opCode, ((GroupManagerTask *)task)->reqId,
         ((GroupManagerTask *)task)->params);
     FreeJson(((GroupManagerTask *)task)->params);
+    DecreaseCriticalCnt();
 }
 
 int32_t AddReqInfoToJson(int64_t requestId, const char *appId, CJson *jsonParams)
@@ -1847,6 +1856,7 @@ int32_t InitAndPushGMTask(int32_t osAccountId, int32_t opCode, int64_t reqId, CJ
         HcFree(task);
         return HC_ERR_INIT_TASK_FAIL;
     }
+    IncreaseCriticalCnt(ADD_TWO);
     return HC_SUCCESS;
 }
 
