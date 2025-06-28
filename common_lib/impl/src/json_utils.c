@@ -182,11 +182,20 @@ static void ReplaceStringToInt(char *input, const char *keyName)
     }
 }
 
+static int MinVal(int val1, int val2)
+{
+    if (val1 < val2) {
+        return val1;
+    }
+    return val2;
+}
+
 static char *PackJsonWithBigIntArrToString(const CJson *jsonObj, CJson *arr)
 {
     int keyListSize = GetItemNum(arr);
+    int minSize = MinVal(keyListSize, MAX_LEN);
     char *keyList[MAX_LEN];
-    for (int i = 0; i < keyListSize; i++) {
+    for (int i = 0; i < minSize; i++) {
         const char *str = GetStringValue(GetItemFromArray(arr, i));
         if (str != NULL) {
             keyList[i] = strdup(str);
@@ -207,7 +216,7 @@ static char *PackJsonWithBigIntArrToString(const CJson *jsonObj, CJson *arr)
         return NULL;
     }
     cJSON_free(dupJson);
-    for (int i = 0; i < keyListSize; i++) {
+    for (int i = 0; i < minSize; i++) {
         if (keyList[i] != NULL) {
             ReplaceStringToInt(jsonStr, keyList[i]);
             HcFree(keyList[i]);
