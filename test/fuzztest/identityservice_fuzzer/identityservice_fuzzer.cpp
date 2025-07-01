@@ -47,6 +47,8 @@ namespace OHOS {
 #define QUERY_RESULT_NUM_2 2
 #define TEST_CRED_TYPE 1
 #define TEST_CRED_TYPE_1 3
+#define TEST_OWNER_UID_1 1
+#define TEST_OWNER_UID_2 2
 
 #define TEST_CRED_DATA_PATH "/data/service/el1/public/deviceauthMock/hccredential.dat"
 
@@ -1275,6 +1277,135 @@ static void IdentityServiceTestCase069()
     cm->destroyInfo(&returnData);
 }
 
+static void IdentityServiceTestCase070()
+{
+    RemoveOsAccountCredInfo(DEFAULT_OS_ACCOUNT);
+    (void)IsOsAccountCredDataLoaded(DEFAULT_OS_ACCOUNT);
+    char *returnData = nullptr;
+    const CredManager *cm = GetCredMgrInstance();
+    (void)cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &returnData);
+    RemoveOsAccountCredInfo(DEFAULT_OS_ACCOUNT);
+    (void)IsOsAccountCredDataLoaded(DEFAULT_OS_ACCOUNT);
+    cm->destroyInfo(&returnData);
+}
+
+static void CompareSubject(Credential *credential, QueryCredentialParams *params)
+{
+    credential->subject = SUBJECT_ACCESSORY_DEVICE;
+    (void)CompareIntParams(params, credential);
+    credential->subject = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->subject = SUBJECT_MASTER_CONTROLLER;
+    credential->subject = SUBJECT_ACCESSORY_DEVICE;
+    (void)CompareIntParams(params, credential);
+    credential->subject = SUBJECT_MASTER_CONTROLLER;
+    (void)CompareIntParams(params, credential);
+    params->subject = DEFAULT_CRED_PARAM_VAL;
+}
+
+static void CompareIssuer(Credential *credential, QueryCredentialParams *params)
+{
+    credential->issuer = SYSTEM_ACCOUNT;
+    (void)CompareIntParams(params, credential);
+    credential->issuer = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->issuer = SYSTEM_ACCOUNT;
+    credential->issuer = SYSTEM_ACCOUNT;
+    (void)CompareIntParams(params, credential);
+    credential->issuer = APP_ACCOUNT;
+    (void)CompareIntParams(params, credential);
+    params->issuer = DEFAULT_CRED_PARAM_VAL;
+}
+
+static void CompareOwnerUid(Credential *credential, QueryCredentialParams *params)
+{
+    credential->ownerUid = TEST_OWNER_UID_1;
+    (void)CompareIntParams(params, credential);
+    credential->ownerUid = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->ownerUid = TEST_OWNER_UID_1;
+    credential->ownerUid = TEST_OWNER_UID_1;
+    (void)CompareIntParams(params, credential);
+    credential->ownerUid = TEST_OWNER_UID_2;
+    (void)CompareIntParams(params, credential);
+    params->ownerUid = DEFAULT_CRED_PARAM_VAL;
+}
+
+static void CompareAuthorziedScope(Credential *credential, QueryCredentialParams *params)
+{
+    credential->authorizedScope = SCOPE_DEVICE;
+    (void)CompareIntParams(params, credential);
+    credential->authorizedScope = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->authorizedScope = SCOPE_DEVICE;
+    credential->authorizedScope = SCOPE_DEVICE;
+    (void)CompareIntParams(params, credential);
+    credential->authorizedScope = SCOPE_USER;
+    (void)CompareIntParams(params, credential);
+    params->authorizedScope = DEFAULT_CRED_PARAM_VAL;
+}
+
+static void CompareKeyFormat(Credential *credential, QueryCredentialParams *params)
+{
+    credential->keyFormat = SYMMETRIC_KEY;
+    (void)CompareIntParams(params, credential);
+    credential->keyFormat = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->keyFormat = SYMMETRIC_KEY;
+    credential->keyFormat = SYMMETRIC_KEY;
+    (void)CompareIntParams(params, credential);
+    credential->keyFormat = ASYMMETRIC_PUB_KEY;
+    (void)CompareIntParams(params, credential);
+    params->keyFormat = DEFAULT_CRED_PARAM_VAL;
+}
+
+static void CompareAlgorithmType(Credential *credential, QueryCredentialParams *params)
+{
+    credential->algorithmType = ALGO_TYPE_AES_256;
+    (void)CompareIntParams(params, credential);
+    credential->algorithmType = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->algorithmType = ALGO_TYPE_AES_256;
+    credential->algorithmType = ALGO_TYPE_AES_256;
+    (void)CompareIntParams(params, credential);
+    credential->algorithmType = ALGO_TYPE_AES_128;
+    (void)CompareIntParams(params, credential);
+    params->algorithmType = DEFAULT_CRED_PARAM_VAL;
+}
+
+static void CompareProofType(Credential *credential, QueryCredentialParams *params)
+{
+    credential->proofType = PROOF_TYPE_PSK;
+    (void)CompareIntParams(params, credential);
+    credential->proofType = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->proofType = PROOF_TYPE_PSK;
+    credential->proofType = PROOF_TYPE_PSK;
+    (void)CompareIntParams(params, credential);
+    credential->proofType = PROOF_TYPE_PKI;
+    (void)CompareIntParams(params, credential);
+    params->proofType = DEFAULT_CRED_PARAM_VAL;
+}
+
+static void IdentityServiceTestCase071()
+{
+    Credential *credential = CreateCredential();
+    QueryCredentialParams params = InitQueryCredentialParams();
+    (void)CompareIntParams(&params, credential);
+    params.credType = ACCOUNT_RELATED;
+    credential->credType = ACCOUNT_UNRELATED;
+    (void)CompareIntParams(&params, credential);
+    params.credType = DEFAULT_CRED_PARAM_VAL;
+    CompareSubject(credential, &params);
+    CompareIssuer(credential, &params);
+    CompareOwnerUid(credential, &params);
+    CompareAuthorziedScope(credential, &params);
+    CompareKeyFormat(credential, &params);
+    CompareAlgorithmType(credential, &params);
+    CompareProofType(credential, &params);
+    DestroyCredential(credential);
+}
+
 static void IdentiyServiceFuzzPart(void)
 {
     DeleteDatabase();
@@ -1303,6 +1434,8 @@ static void IdentiyServiceFuzzPart(void)
     (void)IdentityServiceTestCase067();
     (void)IdentityServiceTestCase068();
     (void)IdentityServiceTestCase069();
+    (void)IdentityServiceTestCase070();
+    (void)IdentityServiceTestCase071();
     DestroyDeviceAuthService();
 }
 

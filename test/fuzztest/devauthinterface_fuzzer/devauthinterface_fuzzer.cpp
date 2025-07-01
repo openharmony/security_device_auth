@@ -416,6 +416,47 @@ static void DevAuthInterfaceTestCase007()
     FreeJson(in);
 }
 
+static int32_t InitCredPlugin(void)
+{
+    return HC_SUCCESS;
+}
+
+static int32_t InitCredPluginFail(void)
+{
+    return HC_ERROR;
+}
+
+static void DestroyCredPlugin(void) {}
+
+static int32_t ProcessCredTest(int32_t osAccountId, int32_t cmdId, CJson *in, CJson *out)
+{
+    (void)osAccountId;
+    (void)cmdId;
+    (void)in;
+    (void)out;
+    return HC_SUCCESS;
+}
+
+static void DevAuthInterfaceTestCase008()
+{
+    // ext_plugin_manager.c interface test
+    (void)InitCredMgr();
+    (void)ProcCred(0, DEFAULT_OS_ACCOUNT, 0, nullptr, nullptr);
+    (void)AddCredPlugin(nullptr);
+    CredPlugin plugin = { 0 };
+    (void)AddCredPlugin(&plugin);
+    plugin.init = InitCredPlugin;
+    (void)AddCredPlugin(&plugin);
+    plugin.destroy = DestroyCredPlugin;
+    (void)AddCredPlugin(&plugin);
+    plugin.procCred = ProcessCredTest;
+    (void)AddCredPlugin(&plugin);
+    plugin.init = InitCredPluginFail;
+    (void)AddCredPlugin(&plugin);
+    DelCredPlugin(0);
+    DestroyCredMgr();
+}
+
 static int OnChannelOpenedTest(int64_t requestId, int result)
 {
     (void)requestId;
@@ -822,8 +863,8 @@ static void DevAuthInterfaceTestCase016()
     (void)IsoServerGenRandomAndToken(baseParams, nullptr);
     (void)IsoClientGenSessionKey(nullptr, 0, nullptr, 0);
     (void)IsoClientGenSessionKey(baseParams, 0, nullptr, 0);
-    uint8_t hmacVal[TEST_KEY_LEN_3] = { 0 };
-    (void)IsoClientGenSessionKey(baseParams, 0, hmacVal, TEST_KEY_LEN_3);
+    uint8_t hmacVal[TEST_KEY_LEN_5] = { 0 };
+    (void)IsoClientGenSessionKey(baseParams, 0, hmacVal, TEST_KEY_LEN_5);
     (void)IsoClientCheckAndGenToken(nullptr, nullptr, nullptr);
     (void)IsoClientCheckAndGenToken(baseParams, nullptr, nullptr);
     Uint8Buff peerToken = { 0 };
@@ -1491,6 +1532,7 @@ static void DevAuthInterfaceTestCasePart1()
     (void)DevAuthInterfaceTestCase005();
     (void)DevAuthInterfaceTestCase006();
     (void)DevAuthInterfaceTestCase007();
+    (void)DevAuthInterfaceTestCase008();
     (void)DevAuthInterfaceTestCase009();
     (void)DevAuthInterfaceTestCase010();
     (void)DevAuthInterfaceTestCase011();
