@@ -17,6 +17,16 @@
 #include "device_auth.h"
 #include "device_auth_defines.h"
 
+void NotifyOsAccountUnlocked(int32_t osAccountId)
+{
+    (void)osAccountId;
+}
+
+void NotifyOsAccountRemoved(int32_t osAccountId)
+{
+    (void)osAccountId;
+}
+
 int32_t DevAuthGetRealOsAccountLocalId(int32_t inputId)
 {
     return inputId;

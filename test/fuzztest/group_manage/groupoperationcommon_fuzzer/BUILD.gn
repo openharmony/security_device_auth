@@ -43,6 +43,7 @@ ohos_fuzztest("GroupOperationCommonFuzzTest") {
   sources = [ "groupoperationcommon_fuzzer.cpp" ]
   sources += identity_service_mock_files
   sources += deviceauth_files
+  sources += sa_load_on_demand_mock_files
   sources += hal_common_files
   sources += hiview_adapter_files
   sources += identity_manager_files

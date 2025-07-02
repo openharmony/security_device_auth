@@ -29,6 +29,19 @@ ProxyDevAuth::ProxyDevAuth(const sptr<IRemoteObject> &impl) : IRemoteProxy<IMeth
 ProxyDevAuth::~ProxyDevAuth()
 {}
 
+void ProxyDevAuth::RetryLoadDeviceAuthSa(void)
+{
+    auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saMgr == nullptr) {
+        LOGE("Get systemabilitymanager instance failed.");
+        return;
+    }
+    auto deviceAuthSa = saMgr->LoadSystemAbility(DEVICE_AUTH_SERVICE_ID, DEVICE_AUTH_SA_LOAD_TIME);
+    if (deviceAuthSa == nullptr) {
+        LOGE("Retry load device auth sa failed.");
+    }
+}
+
 int32_t ProxyDevAuth::DoCallRequest(MessageParcel &dataParcel, MessageParcel &replyParcel, bool withSync)
 {
     int32_t ret;
@@ -46,6 +59,12 @@ int32_t ProxyDevAuth::DoCallRequest(MessageParcel &dataParcel, MessageParcel &re
     }
     ret = remote->SendRequest(static_cast<uint32_t>(DevAuthInterfaceCode::DEV_AUTH_CALL_REQUEST),
         dataParcel, replyParcel, option);
+    if (ret == HC_ERR_IPC_SA_IS_UNLOADING) {
+        LOGI("Try to retry load device auth sa, and send request again, %" LOG_PUB "d.", ret);
+        RetryLoadDeviceAuthSa();
+        ret = remote->SendRequest(static_cast<uint32_t>(DevAuthInterfaceCode::DEV_AUTH_CALL_REQUEST),
+            dataParcel, replyParcel, option);
+    }
     if (ret != ERR_NONE) {
         LOGE("ProxyDevAuth::DoCallRequest SendRequest fail. ret = %" LOG_PUB "d", ret);
         ret = HC_ERR_IPC_INTERNAL_FAILED;

@@ -20,6 +20,7 @@
 #include "device_auth.h"
 #include "hc_log.h"
 #include "hc_mutex.h"
+#include "sa_load_on_demand.h"
 #include "ipc_sdk_defines.h"
 
 #include "ipc_adapt.h"
@@ -121,6 +122,8 @@ static void GetIpcReplyByType(const IpcDataInfo *ipcData,
 
 static int32_t IpcCmAddCredential(int32_t osAccountId, const char *requestParams, char **returnData)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -148,7 +151,7 @@ static int32_t IpcCmAddCredential(int32_t osAccountId, const char *requestParams
     return ret;
 }
 
-static int32_t IpcCmRegChangeListener(const char *appId, CredChangeListener *listener)
+static int32_t IpcCmRegChangeListenerInner(const char *appId, CredChangeListener *listener, bool needCache)
 {
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
@@ -166,14 +169,24 @@ static int32_t IpcCmRegChangeListener(const char *appId, CredChangeListener *lis
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
         AddIpcCliCallbackCtx(appId, 0, &g_ipcCredListenerCbList);
+        if (needCache) {
+            ret = AddCallbackInfoToList(appId, NULL, NULL, listener, CRED_CHANGE_LISTENER);
+        }
     } while (0);
     DESTROY_IPC_CTX(callCtx);
     LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
 
+static int32_t IpcCmRegChangeListener(const char *appId, CredChangeListener *listener)
+{
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    return IpcCmRegChangeListenerInner(appId, listener, true);
+}
+
 static int32_t IpcCmUnRegChangeListener(const char *appId)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -188,6 +201,7 @@ static int32_t IpcCmUnRegChangeListener(const char *appId)
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
         DelIpcCliCallbackCtx(appId, &g_ipcCredListenerCbList);
+        ret = RemoveCallbackInfoFromList(appId, CRED_CHANGE_LISTENER);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -197,6 +211,8 @@ static int32_t IpcCmUnRegChangeListener(const char *appId)
 
 static int32_t IpcCmExportCredential(int32_t osAccountId, const char *credId, char **returnData)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -227,6 +243,8 @@ static int32_t IpcCmExportCredential(int32_t osAccountId, const char *credId, ch
 
 static int32_t IpcCmQueryCredByParams(int32_t osAccountId, const char *requestParams, char **returnCredList)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
@@ -257,6 +275,8 @@ static int32_t IpcCmQueryCredByParams(int32_t osAccountId, const char *requestPa
 
 static int32_t IpcCmQueryCredInfoByCredId(int32_t osAccountId, const char *credId, char **returnCredInfo)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     IpcDataInfo replyCache[IPC_DATA_CACHES_3] = { { 0 } };
@@ -288,6 +308,8 @@ static int32_t IpcCmQueryCredInfoByCredId(int32_t osAccountId, const char *credI
 
 static int32_t IpcCmDeleteCredential(int32_t osAccountId, const char *credId)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -311,6 +333,8 @@ static int32_t IpcCmDeleteCredential(int32_t osAccountId, const char *credId)
 
 static int32_t IpcCmUpdateCredInfo(int32_t osAccountId, const char *credId, const char *requestParams)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -336,6 +360,8 @@ static int32_t IpcCmUpdateCredInfo(int32_t osAccountId, const char *credId, cons
 static int32_t IpcCmAgreeCredential(int32_t osAccountId, const char *selfCredId, const char *requestParams,
     char **returnData)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -369,6 +395,8 @@ static int32_t IpcCmAgreeCredential(int32_t osAccountId, const char *selfCredId,
 
 static int32_t IpcCmDelCredByParams(int32_t osAccountId, const char *requestParams, char **returnData)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -400,6 +428,8 @@ static int32_t IpcCmDelCredByParams(int32_t osAccountId, const char *requestPara
 
 static int32_t IpcCmBatchUpdateCredentials(int32_t osAccountId, const char *requestParams, char **returnData)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -442,6 +472,7 @@ static bool IsJsonString(const char *str)
 
 static void IpcCmDestroyInfo(char **returnData)
 {
+    RETURN_VOID_IF_LOAD_DEVAUTH_FAILED();
     if (returnData == NULL || *returnData == NULL) {
         return;
     }
@@ -473,6 +504,8 @@ static void InitIpcCmMethods(CredManager *cmMethodObj)
 static int32_t IpcCmAuthCredential(int32_t osAccountId, int64_t authReqId, const char *authParams,
     const DeviceAuthCallback *caCallback)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -499,6 +532,8 @@ static int32_t IpcCmAuthCredential(int32_t osAccountId, int64_t authReqId, const
 static int32_t IpcCmProcessCredData(int64_t authReqId, const uint8_t *data, uint32_t dataLen,
     const DeviceAuthCallback *callback)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
+    RegisterDevAuthCallbackIfNeed();
     LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
@@ -529,7 +564,12 @@ static void InitIpcCaMethods(CredAuthManager *caMethodObj)
 
 int32_t InitISIpc(void)
 {
-    return InitHcMutex(&g_ipcMutex, false);
+    int32_t ret = InitHcMutex(&g_ipcMutex, false);
+    if (ret != IS_SUCCESS) {
+        return ret;
+    }
+    SetRegCredChangeListenerFunc(IpcCmRegChangeListenerInner);
+    return IS_SUCCESS;
 }
 
 void DeInitISIpc(void)
@@ -539,6 +579,7 @@ void DeInitISIpc(void)
 
 DEVICE_AUTH_API_PUBLIC const CredManager *GetCredMgrInstance(void)
 {
+    RETURN_NULL_IF_LOAD_DEVAUTH_FAILED();
     static CredManager cmInstCtx;
     static CredManager *cmInstPtr = NULL;
 
@@ -551,6 +592,7 @@ DEVICE_AUTH_API_PUBLIC const CredManager *GetCredMgrInstance(void)
 
 DEVICE_AUTH_API_PUBLIC const CredAuthManager *GetCredAuthInstance(void)
 {
+    RETURN_NULL_IF_LOAD_DEVAUTH_FAILED();
     static CredAuthManager caInstCtx;
     static CredAuthManager *caInstPtr = NULL;
 

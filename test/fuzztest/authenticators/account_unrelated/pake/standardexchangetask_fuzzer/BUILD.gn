@@ -45,6 +45,7 @@ ohos_fuzztest("StandardExchangeTaskFuzzTest") {
   sources += deviceauth_files
   sources += identity_manager_files
   sources += permission_adapter_files
+  sources += sa_load_on_demand_mock_files
 
   if (support_os_account) {
     sources += account_subscriber_files

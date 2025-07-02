@@ -76,6 +76,11 @@ enum {
     HC_ERR_IPC_BAD_PARAM = 0x00003011,                                    // 12305
     HC_ERR_IPC_SERVICE_DIED = 0x00003012,                                 // 12306
     HC_ERR_IPC_PERMISSION_DENIED = 0x00003013,                            // 12307
+    HC_ERR_IPC_CALLBACK_TYPE = 0x00003014,                                // 12308
+    HC_ERR_IPC_SA_NOT_LOAD = 0x00003015,                                  // 12309
+    HC_ERR_IPC_GET_SAMGR_FAILED = 0x00003016,                             // 12310
+    HC_ERR_IPC_LOAD_SA_FAILED = 0x00003017,                               // 12311
+    HC_ERR_IPC_SA_IS_UNLOADING = 0x00003018,                              // 12312
 
     /* error code for module , 0x00004000 ~ 0x00004FFF */
     HC_ERR_MODULE_NOT_FOUNT = 0x00004001,                                 // 16385

@@ -72,6 +72,7 @@ ohos_fuzztest("IdentityServiceFuzzTest") {
   sources += broadcast_manager_files
   sources += soft_bus_channel_mock_files
   sources += permission_adapter_files
+  sources += sa_load_on_demand_mock_files
 
   sources += group_auth_files
   sources += group_auth_account_unrelated_files

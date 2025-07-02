@@ -40,6 +40,7 @@ ohos_fuzztest("CredsManagerFuzzTest") {
   sources = [ "credsmanager_fuzzer.cpp" ]
   sources += identity_service_mock_files
   sources += deviceauth_files
+  sources += sa_load_on_demand_mock_files
   sources += hal_common_files
   sources += hiview_adapter_files
   if (support_os_account) {

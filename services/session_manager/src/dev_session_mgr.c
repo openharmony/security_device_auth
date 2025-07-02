@@ -24,6 +24,7 @@
 #include "hc_time.h"
 #include "hc_vector.h"
 #include "task_manager.h"
+#include "critical_handler.h"
 
 typedef struct {
     DevSession *session;
@@ -61,7 +62,7 @@ static int32_t GetSessionInfo(int64_t sessionId, SessionInfo **returnObj)
     return HC_ERR_SESSION_NOT_EXIST;
 }
 
-static void RemoveTimeoutSession(void)
+void RemoveTimeoutSession(void)
 {
     uint32_t index = 0;
     while (index < g_sessionInfoList.size(&(g_sessionInfoList))) {
@@ -264,6 +265,7 @@ static void DoStartSession(HcTaskBase *task)
     LOGI("start session task begin.");
     if (task == NULL) {
         LOGE("The input task is NULL, can't start session!");
+        DecreaseCriticalCnt();
         return;
     }
     StartSessionTask *realTask = (StartSessionTask *)task;
@@ -274,6 +276,7 @@ static void DoStartSession(HcTaskBase *task)
         LOGE("start session fail.[Res]: %" LOG_PUB "d", res);
         CloseDevSession(realTask->sessionId);
     }
+    DecreaseCriticalCnt();
 }
 
 static void DoProcSession(HcTaskBase *task)
@@ -281,6 +284,7 @@ static void DoProcSession(HcTaskBase *task)
     LOGI("proc session task begin.");
     if (task == NULL) {
         LOGE("The input task is NULL, can't start session!");
+        DecreaseCriticalCnt();
         return;
     }
     ProcSessionTask *realTask = (ProcSessionTask *)task;
@@ -291,12 +295,14 @@ static void DoProcSession(HcTaskBase *task)
     if (res != HC_SUCCESS) {
         LOGE("ProcessDevSession fail. [Res]: %" LOG_PUB "d", res);
         CloseDevSession(realTask->sessionId);
+        DecreaseCriticalCnt();
         return;
     }
     LOGI("ProcessDevSession success. [State]: %" LOG_PUB "s", isFinish ? "FINISH" : "CONTINUE");
     if (isFinish) {
         CloseDevSession(realTask->sessionId);
     }
+    DecreaseCriticalCnt();
 }
 
 static void InitStartSessionTask(StartSessionTask *task, int64_t sessionId)
@@ -310,6 +316,7 @@ static void DestroyProcSessionTask(HcTaskBase *task)
 {
     ProcSessionTask *realTask = (ProcSessionTask *)task;
     FreeJson(realTask->receivedMsg);
+    DecreaseCriticalCnt();
 }
 
 static void InitProcSessionTask(ProcSessionTask *task, int64_t sessionId, CJson *receivedMsg)
@@ -333,6 +340,7 @@ int32_t PushStartSessionTask(int64_t sessionId)
         HcFree(task);
         return HC_ERR_INIT_TASK_FAIL;
     }
+    IncreaseCriticalCnt(ADD_ONE);
     LOGI("push start session task success.");
     return HC_SUCCESS;
 }
@@ -350,6 +358,7 @@ int32_t PushProcSessionTask(int64_t sessionId, CJson *receivedMsg)
         HcFree(task);
         return HC_ERR_INIT_TASK_FAIL;
     }
+    IncreaseCriticalCnt(ADD_TWO);
     LOGI("push start session task success.");
     return HC_SUCCESS;
 }

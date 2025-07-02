@@ -21,6 +21,7 @@
 #include "account_task_manager.h"
 #include "alg_loader.h"
 #include "identity_service.h"
+#include "critical_handler.h"
 
 static AccountLifecyleExtPlug *g_accountLifeCyclePlugin = NULL;
 static AccountLifecyleExtPlugCtx *g_accountPluginCtx = NULL;
@@ -36,18 +37,22 @@ static void DoWorkerTask(HcTaskBase *task)
     LOGD("[ACCOUNT_LIFE_PLUGIN]: Do worker task begin.");
     if (task == NULL) {
         LOGE("[ACCOUNT_LIFE_PLUGIN]: The input task is NULL, cannot do task!");
+        DecreaseCriticalCnt();
         return;
     }
     WorkerTask *workerTask = (WorkerTask *)task;
     if (workerTask->extTask == NULL) {
         LOGE("[ACCOUNT_LIFE_PLUGIN]: The inner task is NULL, cannot do task!");
+        DecreaseCriticalCnt();
         return;
     }
     if (workerTask->extTask->execute == NULL) {
         LOGE("[ACCOUNT_LIFE_PLUGIN]: The ext func is NULL, cannot do task!");
+        DecreaseCriticalCnt();
         return;
     }
     workerTask->extTask->execute(workerTask->extTask);
+    DecreaseCriticalCnt();
     LOGD("[ACCOUNT_LIFE_PLUGIN]: Do worker task end.");
 }
 
@@ -65,10 +70,12 @@ static void DestroyWorkerTask(HcTaskBase *workerTask)
     LOGD("[ACCOUNT_LIFE_PLUGIN]: Destroy worker task begin.");
     if (workerTask == NULL) {
         LOGE("[ACCOUNT_LIFE_PLUGIN]: The inner task is NULL, cannot do task!");
+        DecreaseCriticalCnt();
         return;
     }
     DestroyExtWorkerTask(((WorkerTask *)workerTask)->extTask);
     RemoveAccountTaskRecordAndUnload(((WorkerTask *)workerTask)->taskId);
+    DecreaseCriticalCnt();
     LOGD("[ACCOUNT_LIFE_PLUGIN]: Destroy worker task end.");
 }
 
@@ -109,6 +116,7 @@ static int32_t ExecuteWorkerTask(struct ExtWorkerTask *extTask)
         HcFree(baseTask);
         return HC_ERR_INIT_TASK_FAIL;
     }
+    IncreaseCriticalCnt(ADD_TWO);
     return HC_SUCCESS;
 }
 

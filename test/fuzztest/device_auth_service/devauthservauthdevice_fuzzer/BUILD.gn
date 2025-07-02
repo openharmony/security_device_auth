@@ -33,6 +33,7 @@ ohos_fuzztest("DevAuthServAuthDeviceFuzzTest") {
   sources = [ "devauthservauthdevice_fuzzer.cpp" ]
   sources += identity_service_mock_files
   sources += deviceauth_files
+  sources += sa_load_on_demand_mock_files
   sources += hiview_adapter_files
   if (device_auth_enable_soft_bus_channel == true) {
     sources -= soft_bus_channel_files
