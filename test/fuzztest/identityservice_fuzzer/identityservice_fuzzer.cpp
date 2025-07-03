@@ -47,8 +47,16 @@ namespace OHOS {
 #define QUERY_RESULT_NUM_2 2
 #define TEST_CRED_TYPE 1
 #define TEST_CRED_TYPE_1 3
+#define TEST_REQ_ID 11111111
+#define TEST_REQ_ID_S 22222222
+#define TEST_REQ_ID_AUTH 12312121
+#define TEST_REQ_ID_AUTH_S 4352345234534
 #define TEST_OWNER_UID_1 1
 #define TEST_OWNER_UID_2 2
+#define TEST_OWNER_UID_1 1
+#define TEST_OWNER_UID_2 2
+#define TEST_DEV_AUTH_SLEEP_TIME 50000
+#define DATA_LEN 10
 
 #define TEST_CRED_DATA_PATH "/data/service/el1/public/deviceauthMock/hccredential.dat"
 
@@ -58,6 +66,20 @@ static const char *ADD_PARAMS =
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
     "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
+static const char *CLIENT_AUTH_PARAMS =
+    "{\"credType\":2,\"keyFormat\":1,\"algorithmType\":1,\"subject\":1,"
+    "\"proofType\":1,\"method\":2,\"authorizedScope\":1,"
+    "\"keyValue\":\"1234567812345678123456781234567812345678123456781234567812345678\","
+    "\"deviceId\":\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C\",\"credOwner\":\"TestAppId\","
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"peerUserSpaceId\":\"0\",\"extendInfo\":\"\"}";
+static const char *SERVER_AUTH_PARAMS =
+    "{\"credType\":2,\"keyFormat\":1,\"algorithmType\":1,\"subject\":1,"
+    "\"proofType\":1,\"method\":2,\"authorizedScope\":1,"
+    "\"keyValue\":\"1234567812345678123456781234567812345678123456781234567812345678\","
+    "\"deviceId\":\"5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930\",\"credOwner\":\"TestAppId\","
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"peerUserSpaceId\":\"0\",\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS1 =
     "{\"credType\":0,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
@@ -168,6 +190,21 @@ enum CredListenerStatus {
     CRED_LISTENER_ON_UPDATE = 2,
     CRED_LISTENER_ON_DELETE = 3,
 };
+enum AsyncStatus {
+    ASYNC_STATUS_WAITING = 0,
+    ASYNC_STATUS_TRANSMIT = 1,
+    ASYNC_STATUS_FINISH = 2,
+    ASYNC_STATUS_ERROR = 3
+};
+
+static AsyncStatus volatile g_asyncStatus;
+static uint32_t g_transmitDataMaxLen = 2048;
+static uint8_t g_transmitData[2048] = { 0 };
+static uint32_t g_transmitDataLen = 0;
+static bool g_isBind = false;
+static char g_clientCredId[256] = { 0 };
+static char g_serverCredId[256] = { 0 };
+static const char *PIN_CODE = "000000";
 
 static CredListenerStatus volatile g_credListenerStatus;
 
@@ -201,6 +238,185 @@ static CredChangeListener g_credChangeListener = {
 static void DeleteDatabase()
 {
     HcFileRemove(TEST_CRED_DATA_PATH);
+}
+
+static bool CompareSubject(Credential *credential, QueryCredentialParams *params)
+{
+    credential->subject = SUBJECT_ACCESSORY_DEVICE;
+    (void)CompareIntParams(params, credential);
+    credential->subject = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->subject = SUBJECT_MASTER_CONTROLLER;
+    credential->subject = SUBJECT_ACCESSORY_DEVICE;
+    (void)CompareIntParams(params, credential);
+    credential->subject = SUBJECT_MASTER_CONTROLLER;
+    bool ret = CompareIntParams(params, credential);
+    params->subject = DEFAULT_CRED_PARAM_VAL;
+    return ret;
+}
+
+static bool CompareIssuer(Credential *credential, QueryCredentialParams *params)
+{
+    credential->issuer = SYSTEM_ACCOUNT;
+    (void)CompareIntParams(params, credential);
+    credential->issuer = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->issuer = SYSTEM_ACCOUNT;
+    credential->issuer = SYSTEM_ACCOUNT;
+    (void)CompareIntParams(params, credential);
+    credential->issuer = APP_ACCOUNT;
+    bool ret = CompareIntParams(params, credential);
+    params->issuer = DEFAULT_CRED_PARAM_VAL;
+    return ret;
+}
+
+static bool CompareOwnerUid(Credential *credential, QueryCredentialParams *params)
+{
+    credential->ownerUid = TEST_OWNER_UID_1;
+    (void)CompareIntParams(params, credential);
+    credential->ownerUid = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->ownerUid = TEST_OWNER_UID_1;
+    credential->ownerUid = TEST_OWNER_UID_1;
+    (void)CompareIntParams(params, credential);
+    credential->ownerUid = TEST_OWNER_UID_2;
+    bool ret = CompareIntParams(params, credential);
+    params->ownerUid = DEFAULT_CRED_PARAM_VAL;
+    return ret;
+}
+
+static bool CompareAuthorziedScope(Credential *credential, QueryCredentialParams *params)
+{
+    credential->authorizedScope = SCOPE_DEVICE;
+    (void)CompareIntParams(params, credential);
+    credential->authorizedScope = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->authorizedScope = SCOPE_DEVICE;
+    credential->authorizedScope = SCOPE_DEVICE;
+    (void)CompareIntParams(params, credential);
+    credential->authorizedScope = SCOPE_USER;
+    bool ret = CompareIntParams(params, credential);
+    params->authorizedScope = DEFAULT_CRED_PARAM_VAL;
+    return ret;
+}
+
+static bool CompareKeyFormat(Credential *credential, QueryCredentialParams *params)
+{
+    credential->keyFormat = SYMMETRIC_KEY;
+    (void)CompareIntParams(params, credential);
+    credential->keyFormat = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->keyFormat = SYMMETRIC_KEY;
+    credential->keyFormat = SYMMETRIC_KEY;
+    (void)CompareIntParams(params, credential);
+    credential->keyFormat = ASYMMETRIC_PUB_KEY;
+    bool ret = CompareIntParams(params, credential);
+    params->keyFormat = DEFAULT_CRED_PARAM_VAL;
+    return ret;
+}
+
+static bool CompareAlgorithmType(Credential *credential, QueryCredentialParams *params)
+{
+    credential->algorithmType = ALGO_TYPE_AES_256;
+    (void)CompareIntParams(params, credential);
+    credential->algorithmType = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->algorithmType = ALGO_TYPE_AES_256;
+    credential->algorithmType = ALGO_TYPE_AES_256;
+    (void)CompareIntParams(params, credential);
+    credential->algorithmType = ALGO_TYPE_AES_128;
+    bool ret = CompareIntParams(params, credential);
+    params->algorithmType = DEFAULT_CRED_PARAM_VAL;
+    return ret;
+}
+
+static bool CompareProofType(Credential *credential, QueryCredentialParams *params)
+{
+    credential->proofType = PROOF_TYPE_PSK;
+    (void)CompareIntParams(params, credential);
+    credential->proofType = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->proofType = PROOF_TYPE_PSK;
+    credential->proofType = PROOF_TYPE_PSK;
+    (void)CompareIntParams(params, credential);
+    credential->proofType = PROOF_TYPE_PKI;
+    bool ret = CompareIntParams(params, credential);
+    params->proofType = DEFAULT_CRED_PARAM_VAL;
+    return ret;
+}
+
+
+static bool OnTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
+{
+    if (memcpy_s(g_transmitData, g_transmitDataMaxLen, data, dataLen) != EOK) {
+        return false;
+    }
+    g_transmitDataLen = dataLen;
+    g_asyncStatus = ASYNC_STATUS_TRANSMIT;
+    return true;
+}
+
+static void OnSessionKeyReturned(int64_t requestId, const uint8_t *sessionKey, uint32_t sessionKeyLen)
+{
+    (void)requestId;
+    (void)sessionKey;
+    (void)sessionKeyLen;
+    return;
+}
+
+static void OnFinish(int64_t requestId, int operationCode, const char *authReturn)
+{
+    g_asyncStatus = ASYNC_STATUS_FINISH;
+}
+
+static void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn)
+{
+    g_asyncStatus = ASYNC_STATUS_ERROR;
+}
+
+static char *OnAuthRequest(int64_t requestId, int operationCode, const char* reqParam)
+{
+    CJson *json = CreateJson();
+    AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, DEFAULT_OS_ACCOUNT);
+    if (g_isBind) {
+        AddStringToJson(json, FIELD_PIN_CODE, PIN_CODE);
+    } else {
+        AddStringToJson(json, FIELD_CRED_ID, g_serverCredId);
+    }
+    AddStringToJson(json, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
+static DeviceAuthCallback g_caCallback = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnAuthRequest
+};
+
+static const char *GenerateBindParams()
+{
+    CJson *json = CreateJson();
+    AddStringToJson(json, FIELD_PIN_CODE, PIN_CODE);
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, DEFAULT_OS_ACCOUNT);
+    AddStringToJson(json, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
+static const char *GenerateAuthParams()
+{
+    CJson *json = CreateJson();
+    AddStringToJson(json, FIELD_CRED_ID, g_clientCredId);
+    AddStringToJson(json, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
 }
 
 static int32_t IdentityServiceTestCase001(void)
@@ -1277,6 +1493,71 @@ static void IdentityServiceTestCase069()
     cm->destroyInfo(&returnData);
 }
 
+static void CompareParamsFuzzTestCase(void)
+{
+    Credential *credential = CreateCredential();
+    QueryCredentialParams params = InitQueryCredentialParams();
+    bool ret = CompareIntParams(&params, credential);
+    params.credType = ACCOUNT_RELATED;
+    credential->credType = ACCOUNT_UNRELATED;
+    ret = CompareIntParams(&params, credential);
+    params.credType = DEFAULT_CRED_PARAM_VAL;
+    ret = CompareSubject(credential, &params);
+    ret = CompareIssuer(credential, &params);
+    ret = CompareOwnerUid(credential, &params);
+    ret = CompareAuthorziedScope(credential, &params);
+    ret = CompareKeyFormat(credential, &params);
+    ret = CompareAlgorithmType(credential, &params);
+    ret = CompareProofType(credential, &params);
+    DestroyCredential(credential);
+}
+
+
+static void AuthCredDemo(void)
+{
+    g_asyncStatus = ASYNC_STATUS_WAITING;
+    bool isClient = true;
+    SetDeviceStatus(isClient);
+    const CredAuthManager *ca = GetCredAuthInstance();
+    int32_t ret = ca->authCredential(DEFAULT_OS_ACCOUNT, g_isBind ? TEST_REQ_ID : TEST_REQ_ID_AUTH,
+        g_isBind ? GenerateBindParams() : GenerateAuthParams(), &g_caCallback);
+    if (ret != HC_SUCCESS) {
+        g_asyncStatus = ASYNC_STATUS_ERROR;
+        return;
+    }
+    while (g_asyncStatus == ASYNC_STATUS_WAITING) {
+        usleep(TEST_DEV_AUTH_SLEEP_TIME);
+    }
+    while (g_asyncStatus == ASYNC_STATUS_TRANSMIT) {
+        isClient = !isClient;
+        SetDeviceStatus(isClient);
+        g_asyncStatus = ASYNC_STATUS_WAITING;
+        if (isClient) {
+            ret = ca->processCredData(g_isBind ? TEST_REQ_ID : TEST_REQ_ID_AUTH, g_transmitData, g_transmitDataLen,
+                &g_caCallback);
+        } else {
+            ret = ca->processCredData(g_isBind ? TEST_REQ_ID_S : TEST_REQ_ID_AUTH_S, g_transmitData, g_transmitDataLen,
+                &g_caCallback);
+        }
+        (void)memset_s(g_transmitData, g_transmitDataMaxLen, 0, g_transmitDataMaxLen);
+        g_transmitDataLen = 0;
+        if (ret != HC_SUCCESS) {
+            g_asyncStatus = ASYNC_STATUS_ERROR;
+            return;
+        }
+        while (g_asyncStatus == ASYNC_STATUS_WAITING) {
+            usleep(TEST_DEV_AUTH_SLEEP_TIME);
+        }
+        if (g_asyncStatus == ASYNC_STATUS_ERROR) {
+            break;
+        }
+        if (g_transmitDataLen > 0) {
+            g_asyncStatus = ASYNC_STATUS_TRANSMIT;
+        }
+    }
+    SetDeviceStatus(true);
+}
+
 static void IdentityServiceTestCase070()
 {
     RemoveOsAccountCredInfo(DEFAULT_OS_ACCOUNT);
@@ -1289,121 +1570,41 @@ static void IdentityServiceTestCase070()
     cm->destroyInfo(&returnData);
 }
 
-static void CompareSubject(Credential *credential, QueryCredentialParams *params)
+static void IdentityServiceAuth001(void)
 {
-    credential->subject = SUBJECT_ACCESSORY_DEVICE;
-    (void)CompareIntParams(params, credential);
-    credential->subject = DEFAULT_CRED_PARAM_VAL;
-    (void)CompareIntParams(params, credential);
-    params->subject = SUBJECT_MASTER_CONTROLLER;
-    credential->subject = SUBJECT_ACCESSORY_DEVICE;
-    (void)CompareIntParams(params, credential);
-    credential->subject = SUBJECT_MASTER_CONTROLLER;
-    (void)CompareIntParams(params, credential);
-    params->subject = DEFAULT_CRED_PARAM_VAL;
+    g_isBind = true;
+    AuthCredDemo();
+    const CredManager *cm = GetCredMgrInstance();
+    char *clientReturnData = nullptr;
+    char *serverReturnData = nullptr;
+    (void)cm->addCredential(DEFAULT_OS_ACCOUNT, CLIENT_AUTH_PARAMS, &clientReturnData);
+    (void)cm->addCredential(DEFAULT_OS_ACCOUNT, SERVER_AUTH_PARAMS, &serverReturnData);
+    (void)strcpy_s(g_clientCredId, HcStrlen(clientReturnData) + 1, clientReturnData);
+    (void)strcpy_s(g_serverCredId, HcStrlen(serverReturnData) + 1, serverReturnData);
+    g_isBind = false;
+    AuthCredDemo();
+    cm->destroyInfo(&clientReturnData);
+    cm->destroyInfo(&serverReturnData);
 }
 
-static void CompareIssuer(Credential *credential, QueryCredentialParams *params)
+static void IdentityServiceAuth002(void)
 {
-    credential->issuer = SYSTEM_ACCOUNT;
-    (void)CompareIntParams(params, credential);
-    credential->issuer = DEFAULT_CRED_PARAM_VAL;
-    (void)CompareIntParams(params, credential);
-    params->issuer = SYSTEM_ACCOUNT;
-    credential->issuer = SYSTEM_ACCOUNT;
-    (void)CompareIntParams(params, credential);
-    credential->issuer = APP_ACCOUNT;
-    (void)CompareIntParams(params, credential);
-    params->issuer = DEFAULT_CRED_PARAM_VAL;
+    const CredAuthManager *ca = GetCredAuthInstance();
+    ca->authCredential(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, nullptr, nullptr);
+    ca->authCredential(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, nullptr, &g_caCallback);
+    ca->authCredential(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, GenerateBindParams(), nullptr);
+    ca->processCredData(TEST_REQ_ID, nullptr, DATA_LEN, nullptr);
+    ca->processCredData(TEST_REQ_ID, nullptr, DATA_LEN, &g_caCallback);
+    ca->processCredData(TEST_REQ_ID, (const uint8_t*)GenerateBindParams(), DATA_LEN, nullptr);
 }
 
-static void CompareOwnerUid(Credential *credential, QueryCredentialParams *params)
+static void IdentityServiceAuthPart(void)
 {
-    credential->ownerUid = TEST_OWNER_UID_1;
-    (void)CompareIntParams(params, credential);
-    credential->ownerUid = DEFAULT_CRED_PARAM_VAL;
-    (void)CompareIntParams(params, credential);
-    params->ownerUid = TEST_OWNER_UID_1;
-    credential->ownerUid = TEST_OWNER_UID_1;
-    (void)CompareIntParams(params, credential);
-    credential->ownerUid = TEST_OWNER_UID_2;
-    (void)CompareIntParams(params, credential);
-    params->ownerUid = DEFAULT_CRED_PARAM_VAL;
-}
-
-static void CompareAuthorziedScope(Credential *credential, QueryCredentialParams *params)
-{
-    credential->authorizedScope = SCOPE_DEVICE;
-    (void)CompareIntParams(params, credential);
-    credential->authorizedScope = DEFAULT_CRED_PARAM_VAL;
-    (void)CompareIntParams(params, credential);
-    params->authorizedScope = SCOPE_DEVICE;
-    credential->authorizedScope = SCOPE_DEVICE;
-    (void)CompareIntParams(params, credential);
-    credential->authorizedScope = SCOPE_USER;
-    (void)CompareIntParams(params, credential);
-    params->authorizedScope = DEFAULT_CRED_PARAM_VAL;
-}
-
-static void CompareKeyFormat(Credential *credential, QueryCredentialParams *params)
-{
-    credential->keyFormat = SYMMETRIC_KEY;
-    (void)CompareIntParams(params, credential);
-    credential->keyFormat = DEFAULT_CRED_PARAM_VAL;
-    (void)CompareIntParams(params, credential);
-    params->keyFormat = SYMMETRIC_KEY;
-    credential->keyFormat = SYMMETRIC_KEY;
-    (void)CompareIntParams(params, credential);
-    credential->keyFormat = ASYMMETRIC_PUB_KEY;
-    (void)CompareIntParams(params, credential);
-    params->keyFormat = DEFAULT_CRED_PARAM_VAL;
-}
-
-static void CompareAlgorithmType(Credential *credential, QueryCredentialParams *params)
-{
-    credential->algorithmType = ALGO_TYPE_AES_256;
-    (void)CompareIntParams(params, credential);
-    credential->algorithmType = DEFAULT_CRED_PARAM_VAL;
-    (void)CompareIntParams(params, credential);
-    params->algorithmType = ALGO_TYPE_AES_256;
-    credential->algorithmType = ALGO_TYPE_AES_256;
-    (void)CompareIntParams(params, credential);
-    credential->algorithmType = ALGO_TYPE_AES_128;
-    (void)CompareIntParams(params, credential);
-    params->algorithmType = DEFAULT_CRED_PARAM_VAL;
-}
-
-static void CompareProofType(Credential *credential, QueryCredentialParams *params)
-{
-    credential->proofType = PROOF_TYPE_PSK;
-    (void)CompareIntParams(params, credential);
-    credential->proofType = DEFAULT_CRED_PARAM_VAL;
-    (void)CompareIntParams(params, credential);
-    params->proofType = PROOF_TYPE_PSK;
-    credential->proofType = PROOF_TYPE_PSK;
-    (void)CompareIntParams(params, credential);
-    credential->proofType = PROOF_TYPE_PKI;
-    (void)CompareIntParams(params, credential);
-    params->proofType = DEFAULT_CRED_PARAM_VAL;
-}
-
-static void IdentityServiceTestCase071()
-{
-    Credential *credential = CreateCredential();
-    QueryCredentialParams params = InitQueryCredentialParams();
-    (void)CompareIntParams(&params, credential);
-    params.credType = ACCOUNT_RELATED;
-    credential->credType = ACCOUNT_UNRELATED;
-    (void)CompareIntParams(&params, credential);
-    params.credType = DEFAULT_CRED_PARAM_VAL;
-    CompareSubject(credential, &params);
-    CompareIssuer(credential, &params);
-    CompareOwnerUid(credential, &params);
-    CompareAuthorziedScope(credential, &params);
-    CompareKeyFormat(credential, &params);
-    CompareAlgorithmType(credential, &params);
-    CompareProofType(credential, &params);
-    DestroyCredential(credential);
+    DeleteDatabase();
+    (void)InitDeviceAuthService();
+    IdentityServiceAuth001();
+    IdentityServiceAuth002();
+    DestroyDeviceAuthService();
 }
 
 static void IdentiyServiceFuzzPart(void)
@@ -1435,7 +1636,6 @@ static void IdentiyServiceFuzzPart(void)
     (void)IdentityServiceTestCase068();
     (void)IdentityServiceTestCase069();
     (void)IdentityServiceTestCase070();
-    (void)IdentityServiceTestCase071();
     DestroyDeviceAuthService();
 }
 
@@ -1450,6 +1650,8 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     (void)UpdateCredFuzzPart();
     (void)CredListenerFuzzPart();
     IdentiyServiceFuzzPart();
+    CompareParamsFuzzTestCase();
+    IdentityServiceAuthPart();
     return true;
 }
 }

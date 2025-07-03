@@ -76,6 +76,7 @@ namespace {
 #define TEST_AUTH_ID "TestAuthId"
 #define TEST_KEY_LEN_1 10
 #define TEST_KEY_LEN_2 40
+#define TEST_LEN 16
 #define TEST_OS_ACCOUNT_ID 0
 #define TEST_DEVICE_PK "testDevicePk"
 #define TEST_EVENT_NAME "usual.event.USER_UNLOCKED"
@@ -1797,6 +1798,15 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest033, TestSize.Level0)
     ASSERT_NE(res, HC_SUCCESS);
     res = loader->computeHmacWithThreeStage(nullptr, nullptr, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
+}
+
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0331, TestSize.Level0)
+{
+    // dev_session_util.c interface test
+    (void)GetSelfUserId(DEFAULT_OS_ACCOUNT, nullptr, TEST_LEN);
+    char userId[TEST_LEN];
+    (void)GetSelfUserId(DEFAULT_OS_ACCOUNT, userId, TEST_LEN);
 }
 
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest034, TestSize.Level0)

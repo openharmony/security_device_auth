@@ -38,6 +38,8 @@
 #include "base/security/device_auth/services/identity_service/src/identity_operation.c"
 #include "base/security/device_auth/services/identity_service/src/identity_service_impl.c"
 #include "base/security/device_auth/services/identity_service/session/src/cred_session_util.c"
+#include "base/security/device_auth/services/data_manager/cred_data_manager/src/credential_data_manager.c"
+
 #include "cred_listener.h"
 
 using namespace std;
@@ -54,6 +56,12 @@ namespace {
 #define TEST_CRED_TYPE_1 2
 #define TEST_CRED_TYPE_2 3
 #define TEST_CRED_TYPE_3 4
+#define TEST_REQ_ID 11111111
+#define TEST_REQ_ID_S 22222222
+#define TEST_REQ_ID_AUTH 12312121
+#define TEST_REQ_ID_AUTH_S 4352345234534
+#define TEST_OWNER_UID_1 1
+#define TEST_OWNER_UID_2 2
 #define TEST_CRED_INFO_ID "TestCredInfoId"
 #define TEST_PIN_CODE "123456"
 #define TEST_PIN_CODE_1 ""
@@ -63,7 +71,7 @@ namespace {
 #define DEFAULT_OS_ACCOUNT_ID 100
 #define DEFAULT_VAL 0
 #define DEFAULT_CHANNEL_TYPE 0
-
+#define TEST_DEV_AUTH_SLEEP_TIME 50000
 #define TEST_CRED_DATA_PATH "/data/service/el1/public/deviceauthMock/hccredential.dat"
 static const char *TEST_DATA = "testData";
 static const char *ADD_PARAMS =
@@ -72,6 +80,20 @@ static const char *ADD_PARAMS =
     "\"deviceId\":\"TestDeviceId\",\"credOwner\":\"TestAppId\","
     "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
     "\"peerUserSpaceId\":100,\"extendInfo\":\"\"}";
+static const char *CLIENT_AUTH_PARAMS =
+    "{\"credType\":2,\"keyFormat\":1,\"algorithmType\":1,\"subject\":1,"
+    "\"proofType\":1,\"method\":2,\"authorizedScope\":1,"
+    "\"keyValue\":\"1234567812345678123456781234567812345678123456781234567812345678\","
+    "\"deviceId\":\"52E2706717D5C39D736E134CC1E3BE1BAA2AA52DB7C76A37C749558BD2E6492C\",\"credOwner\":\"TestAppId\","
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"peerUserSpaceId\":\"0\",\"extendInfo\":\"\"}";
+static const char *SERVER_AUTH_PARAMS =
+    "{\"credType\":2,\"keyFormat\":1,\"algorithmType\":1,\"subject\":1,"
+    "\"proofType\":1,\"method\":2,\"authorizedScope\":1,"
+    "\"keyValue\":\"1234567812345678123456781234567812345678123456781234567812345678\","
+    "\"deviceId\":\"5420459D93FE773F9945FD64277FBA2CAB8FB996DDC1D0B97676FBB1242B3930\",\"credOwner\":\"TestAppId\","
+    "\"authorizedAppList\":[\"TestName1\",\"TestName2\",\"TestName3\"],"
+    "\"peerUserSpaceId\":\"0\",\"extendInfo\":\"\"}";
 static const char *ADD_PARAMS1 =
     "{\"credType\":0,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
@@ -206,6 +228,22 @@ static const char *QUERY_PARAMS = "{\"deviceId\":\"TestDeviceId\"}";
 static const char *QUERY_PARAMS1 = "{\"deviceId\":\"TestDeviceId1\"}";
 static const char *DEL_PARAMS = "{\"credOwner\":\"TestAppId\"}";
 static const char *DEL_PARAMS1 = "{\"credOwner\":\"TestAppId\",\"userIdHash\":\"12D2\",\"deviceIdHash\":\"12D2\"}";
+enum AsyncStatus {
+    ASYNC_STATUS_WAITING = 0,
+    ASYNC_STATUS_TRANSMIT = 1,
+    ASYNC_STATUS_FINISH = 2,
+    ASYNC_STATUS_ERROR = 3
+};
+
+static AsyncStatus volatile g_asyncStatus;
+static uint32_t g_transmitDataMaxLen = 2048;
+static uint8_t g_transmitData[2048] = { 0 };
+static uint32_t g_transmitDataLen = 0;
+static bool g_isBind = false;
+static char g_clientCredId[256] = { 0 };
+static char g_serverCredId[256] = { 0 };
+static const char *PIN_CODE = "000000";
+
 enum CredListenerStatus {
     CRED_LISTENER_INIT = 0,
     CRED_LISTENER_ON_ADD = 1,
@@ -245,6 +283,111 @@ static CredChangeListener g_credChangeListener = {
 static void DeleteDatabase()
 {
     HcFileRemove(TEST_CRED_DATA_PATH);
+}
+
+static bool CompareSubject(Credential *credential, QueryCredentialParams *params)
+{
+    credential->subject = SUBJECT_ACCESSORY_DEVICE;
+    (void)CompareIntParams(params, credential);
+    credential->subject = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->subject = SUBJECT_MASTER_CONTROLLER;
+    credential->subject = SUBJECT_ACCESSORY_DEVICE;
+    (void)CompareIntParams(params, credential);
+    credential->subject = SUBJECT_MASTER_CONTROLLER;
+    bool ret = CompareIntParams(params, credential);
+    params->subject = DEFAULT_CRED_PARAM_VAL;
+    return ret;
+}
+
+static bool CompareIssuer(Credential *credential, QueryCredentialParams *params)
+{
+    credential->issuer = SYSTEM_ACCOUNT;
+    (void)CompareIntParams(params, credential);
+    credential->issuer = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->issuer = SYSTEM_ACCOUNT;
+    credential->issuer = SYSTEM_ACCOUNT;
+    (void)CompareIntParams(params, credential);
+    credential->issuer = APP_ACCOUNT;
+    bool ret = CompareIntParams(params, credential);
+    params->issuer = DEFAULT_CRED_PARAM_VAL;
+    return ret;
+}
+
+static bool CompareOwnerUid(Credential *credential, QueryCredentialParams *params)
+{
+    credential->ownerUid = TEST_OWNER_UID_1;
+    (void)CompareIntParams(params, credential);
+    credential->ownerUid = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->ownerUid = TEST_OWNER_UID_1;
+    credential->ownerUid = TEST_OWNER_UID_1;
+    (void)CompareIntParams(params, credential);
+    credential->ownerUid = TEST_OWNER_UID_2;
+    bool ret = CompareIntParams(params, credential);
+    params->ownerUid = DEFAULT_CRED_PARAM_VAL;
+    return ret;
+}
+
+static bool CompareAuthorziedScope(Credential *credential, QueryCredentialParams *params)
+{
+    credential->authorizedScope = SCOPE_DEVICE;
+    (void)CompareIntParams(params, credential);
+    credential->authorizedScope = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->authorizedScope = SCOPE_DEVICE;
+    credential->authorizedScope = SCOPE_DEVICE;
+    (void)CompareIntParams(params, credential);
+    credential->authorizedScope = SCOPE_USER;
+    bool ret = CompareIntParams(params, credential);
+    params->authorizedScope = DEFAULT_CRED_PARAM_VAL;
+    return ret;
+}
+
+static bool CompareKeyFormat(Credential *credential, QueryCredentialParams *params)
+{
+    credential->keyFormat = SYMMETRIC_KEY;
+    (void)CompareIntParams(params, credential);
+    credential->keyFormat = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->keyFormat = SYMMETRIC_KEY;
+    credential->keyFormat = SYMMETRIC_KEY;
+    (void)CompareIntParams(params, credential);
+    credential->keyFormat = ASYMMETRIC_PUB_KEY;
+    bool ret = CompareIntParams(params, credential);
+    params->keyFormat = DEFAULT_CRED_PARAM_VAL;
+    return ret;
+}
+
+static bool CompareAlgorithmType(Credential *credential, QueryCredentialParams *params)
+{
+    credential->algorithmType = ALGO_TYPE_AES_256;
+    (void)CompareIntParams(params, credential);
+    credential->algorithmType = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->algorithmType = ALGO_TYPE_AES_256;
+    credential->algorithmType = ALGO_TYPE_AES_256;
+    (void)CompareIntParams(params, credential);
+    credential->algorithmType = ALGO_TYPE_AES_128;
+    bool ret = CompareIntParams(params, credential);
+    params->algorithmType = DEFAULT_CRED_PARAM_VAL;
+    return ret;
+}
+
+static bool CompareProofType(Credential *credential, QueryCredentialParams *params)
+{
+    credential->proofType = PROOF_TYPE_PSK;
+    (void)CompareIntParams(params, credential);
+    credential->proofType = DEFAULT_CRED_PARAM_VAL;
+    (void)CompareIntParams(params, credential);
+    params->proofType = PROOF_TYPE_PSK;
+    credential->proofType = PROOF_TYPE_PSK;
+    (void)CompareIntParams(params, credential);
+    credential->proofType = PROOF_TYPE_PKI;
+    bool ret = CompareIntParams(params, credential);
+    params->proofType = DEFAULT_CRED_PARAM_VAL;
+    return ret;
 }
 
 class GetCredMgrInstanceTest : public testing::Test {
@@ -474,6 +617,35 @@ HWTEST_F(CredMgrAddCredentialTest, CredMgrAddCredentialTest018, TestSize.Level0)
     ret = cm->deleteCredential(DEFAULT_OS_ACCOUNT, credId);
     HcFree(credId);
     EXPECT_EQ(ret, IS_SUCCESS);
+}
+
+HWTEST_F(CredMgrAddCredentialTest, CredMgrAddCredentialTest019, TestSize.Level0)
+{
+    Credential *credential = CreateCredential();
+    ASSERT_NE(credential, nullptr);
+    QueryCredentialParams params = InitQueryCredentialParams();
+    bool ret = CompareIntParams(&params, credential);
+    EXPECT_EQ(ret, true);
+    params.credType = ACCOUNT_RELATED;
+    credential->credType = ACCOUNT_UNRELATED;
+    ret = CompareIntParams(&params, credential);
+    EXPECT_EQ(ret, false);
+    params.credType = DEFAULT_CRED_PARAM_VAL;
+    ret = CompareSubject(credential, &params);
+    EXPECT_EQ(ret, true);
+    ret = CompareIssuer(credential, &params);
+    EXPECT_EQ(ret, false);
+    ret = CompareOwnerUid(credential, &params);
+    EXPECT_EQ(ret, false);
+    ret = CompareAuthorziedScope(credential, &params);
+    EXPECT_EQ(ret, false);
+    ret = CompareKeyFormat(credential, &params);
+    EXPECT_EQ(ret, false);
+    ret = CompareAlgorithmType(credential, &params);
+    EXPECT_EQ(ret, false);
+    ret = CompareProofType(credential, &params);
+    EXPECT_EQ(ret, false);
+    DestroyCredential(credential);
 }
 
 class CredMgrExportCredentialTest : public testing::Test {
@@ -1667,5 +1839,183 @@ HWTEST_F(CredSessionUtilTest, CredSessionUtilTest012, TestSize.Level0)
     ret = BuildServerCredContext(DEFAULT_REQUEST_ID, nullptr, nullptr, &returnAppId);
     EXPECT_NE(ret, IS_SUCCESS);
     FreeJson(in);
+}
+
+static bool OnTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
+{
+    if (memcpy_s(g_transmitData, g_transmitDataMaxLen, data, dataLen) != EOK) {
+        return false;
+    }
+    g_transmitDataLen = dataLen;
+    g_asyncStatus = ASYNC_STATUS_TRANSMIT;
+    return true;
+}
+
+static void OnSessionKeyReturned(int64_t requestId, const uint8_t *sessionKey, uint32_t sessionKeyLen)
+{
+    (void)requestId;
+    (void)sessionKey;
+    (void)sessionKeyLen;
+    return;
+}
+
+static void OnFinish(int64_t requestId, int operationCode, const char *authReturn)
+{
+    g_asyncStatus = ASYNC_STATUS_FINISH;
+}
+
+static void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn)
+{
+    g_asyncStatus = ASYNC_STATUS_ERROR;
+}
+
+static char *OnAuthRequest(int64_t requestId, int operationCode, const char* reqParam)
+{
+    CJson *json = CreateJson();
+    AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, DEFAULT_OS_ACCOUNT);
+    if (g_isBind) {
+        AddStringToJson(json, FIELD_PIN_CODE, PIN_CODE);
+    } else {
+        AddStringToJson(json, FIELD_CRED_ID, g_serverCredId);
+    }
+    AddStringToJson(json, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
+static DeviceAuthCallback g_caCallback = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnAuthRequest
+};
+
+static const char *GenerateBindParams()
+{
+    CJson *json = CreateJson();
+    AddStringToJson(json, FIELD_PIN_CODE, PIN_CODE);
+    AddIntToJson(json, FIELD_OS_ACCOUNT_ID, DEFAULT_OS_ACCOUNT);
+    AddStringToJson(json, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
+static const char *GenerateAuthParams()
+{
+    CJson *json = CreateJson();
+    AddStringToJson(json, FIELD_CRED_ID, g_clientCredId);
+    AddStringToJson(json, FIELD_SERVICE_PKG_NAME, TEST_APP_ID);
+    char *returnDataStr = PackJsonToString(json);
+    FreeJson(json);
+    return returnDataStr;
+}
+
+static void AuthCredDemo(void)
+{
+    g_asyncStatus = ASYNC_STATUS_WAITING;
+    bool isClient = true;
+    SetDeviceStatus(isClient);
+    const CredAuthManager *ca = GetCredAuthInstance();
+    ASSERT_NE(ca, nullptr);
+    int32_t ret = ca->authCredential(DEFAULT_OS_ACCOUNT, g_isBind ? TEST_REQ_ID : TEST_REQ_ID_AUTH,
+        g_isBind ? GenerateBindParams() : GenerateAuthParams(), &g_caCallback);
+    if (ret != HC_SUCCESS) {
+        g_asyncStatus = ASYNC_STATUS_ERROR;
+        return;
+    }
+    while (g_asyncStatus == ASYNC_STATUS_WAITING) {
+        usleep(TEST_DEV_AUTH_SLEEP_TIME);
+    }
+    while (g_asyncStatus == ASYNC_STATUS_TRANSMIT) {
+        isClient = !isClient;
+        SetDeviceStatus(isClient);
+        g_asyncStatus = ASYNC_STATUS_WAITING;
+        if (isClient) {
+            ret = ca->processCredData(g_isBind ? TEST_REQ_ID : TEST_REQ_ID_AUTH, g_transmitData, g_transmitDataLen,
+                &g_caCallback);
+        } else {
+            ret = ca->processCredData(g_isBind ? TEST_REQ_ID_S : TEST_REQ_ID_AUTH_S, g_transmitData, g_transmitDataLen,
+                &g_caCallback);
+        }
+        (void)memset_s(g_transmitData, g_transmitDataMaxLen, 0, g_transmitDataMaxLen);
+        g_transmitDataLen = 0;
+        if (ret != HC_SUCCESS) {
+            g_asyncStatus = ASYNC_STATUS_ERROR;
+            return;
+        }
+        while (g_asyncStatus == ASYNC_STATUS_WAITING) {
+            usleep(TEST_DEV_AUTH_SLEEP_TIME);
+        }
+        if (g_asyncStatus == ASYNC_STATUS_ERROR) {
+            break;
+        }
+        if (g_transmitDataLen > 0) {
+            g_asyncStatus = ASYNC_STATUS_TRANSMIT;
+        }
+    }
+    SetDeviceStatus(true);
+}
+
+class CredAuthTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+void CredAuthTest::SetUpTestCase() {}
+void CredAuthTest::TearDownTestCase() {}
+
+void CredAuthTest::SetUp()
+{
+    DeleteDatabase();
+    int32_t ret = InitDeviceAuthService();
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+void CredAuthTest::TearDown()
+{
+    DestroyDeviceAuthService();
+}
+
+HWTEST_F(CredAuthTest, CredAuthTest001, TestSize.Level0)
+{
+    const CredAuthManager *ca = GetCredAuthInstance();
+    ASSERT_NE(ca, nullptr);
+    g_isBind = true;
+    AuthCredDemo();
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    const CredManager *cm = GetCredMgrInstance();
+    ASSERT_NE(cm, nullptr);
+    char *clientReturnData = nullptr;
+    char *serverReturnData = nullptr;
+    int32_t ret = cm->addCredential(DEFAULT_OS_ACCOUNT, CLIENT_AUTH_PARAMS, &clientReturnData);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    ret = cm->addCredential(DEFAULT_OS_ACCOUNT, SERVER_AUTH_PARAMS, &serverReturnData);
+    EXPECT_EQ(ret, IS_SUCCESS);
+    (void)strcpy_s(g_clientCredId, HcStrlen(clientReturnData) + 1, clientReturnData);
+    (void)strcpy_s(g_serverCredId, HcStrlen(serverReturnData) + 1, serverReturnData);
+    g_isBind = false;
+    AuthCredDemo();
+    ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    cm->destroyInfo(&clientReturnData);
+    cm->destroyInfo(&serverReturnData);
+}
+
+HWTEST_F(CredAuthTest, CredAuthTest002, TestSize.Level0)
+{
+    const CredAuthManager *ca = GetCredAuthInstance();
+    ASSERT_NE(ca, nullptr);
+    ca->authCredential(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, nullptr, nullptr);
+    ca->authCredential(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, nullptr, &g_caCallback);
+    ca->authCredential(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, GenerateBindParams(), nullptr);
+    ca->processCredData(TEST_REQ_ID, nullptr, DATA_LEN, nullptr);
+    ca->processCredData(TEST_REQ_ID, nullptr, DATA_LEN, &g_caCallback);
+    ca->processCredData(TEST_REQ_ID, (const uint8_t*)GenerateBindParams(), DATA_LEN, nullptr);
 }
 } // namespace

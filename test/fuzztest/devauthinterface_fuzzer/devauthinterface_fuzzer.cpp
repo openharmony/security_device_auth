@@ -1388,6 +1388,14 @@ static void DevAuthInterfaceTestCase032()
     FreeJson(inputDataJson);
 }
 
+static void DevAuthInterfaceTestCase0321()
+{
+    // dev_session_util.c interface test
+    (void)GetSelfUserId(DEFAULT_OS_ACCOUNT, nullptr, TEST_LEN);
+    char userId[TEST_LEN];
+    (void)GetSelfUserId(DEFAULT_OS_ACCOUNT, userId, TEST_LEN);
+}
+
 static void DevAuthInterfaceTestCase033()
 {
     // huks_adapter.c interface test
@@ -1575,6 +1583,7 @@ static void DevAuthInterfaceTestCasePart2()
     (void)DevAuthInterfaceTestCase030();
     (void)DevAuthInterfaceTestCase031();
     (void)DevAuthInterfaceTestCase032();
+    (void)DevAuthInterfaceTestCase0321();
     (void)DevAuthInterfaceTestCase033();
     (void)DevAuthInterfaceTestCase034();
     (void)DevAuthInterfaceTestCase035();

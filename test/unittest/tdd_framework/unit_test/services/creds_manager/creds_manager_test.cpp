@@ -28,6 +28,7 @@
 #include "hc_log.h"
 #include "json_utils.h"
 #include "securec.h"
+#include "base/security/device_auth/services/device_auth.c"
 
 using namespace std;
 using namespace testing::ext;
@@ -1943,6 +1944,43 @@ HWTEST_F(CredsManagerTest, CredsManagerTest064, TestSize.Level0)
     HcFree(certInfo.pkInfoStr.val);
     HcFree(certInfo.pkInfoSignature.val);
     HcFree(sharedSecret.val);
+    FreeJson(json);
+}
+
+class DeviceAuthTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+
+void DeviceAuthTest::SetUpTestCase() {}
+void DeviceAuthTest::TearDownTestCase() {}
+
+void DeviceAuthTest::SetUp()
+{
+    DeleteDatabase();
+    int ret = InitDeviceAuthService();
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+void DeviceAuthTest::TearDown()
+{
+    DestroyDeviceAuthService();
+}
+
+HWTEST_F(DeviceAuthTest, DeviceAuthTest001, TestSize.Level0)
+{
+    int32_t ret = AddOriginDataForPlugin(nullptr, nullptr);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = AddOriginDataForPlugin(nullptr, (const uint8_t*)TEST_ADD_PARAMS.c_str());
+    EXPECT_NE(ret, HC_SUCCESS);
+    CJson *json = CreateJson();
+    ret = AddOriginDataForPlugin(json, (const uint8_t*)TEST_ADD_PARAMS.c_str());
+    EXPECT_EQ(ret, HC_SUCCESS);
+    ret = AddOriginDataForPlugin(json, nullptr);
+    EXPECT_NE(ret, HC_SUCCESS);
     FreeJson(json);
 }
 }

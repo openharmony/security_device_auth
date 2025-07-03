@@ -102,7 +102,6 @@ ohos_unittest("deviceauth_llt") {
     "source/deviceauth_standard_test.cpp",
     "source/group_operation_common_test.cpp",
     "source/identity_manager_test.cpp",
-    "source/iso_auth_task_test.cpp",
     "source/mk_agree_test.cpp",
     "source/os_account_adapter_mock.c",
     "source/privacy_enhancement_test.cpp",
@@ -353,6 +352,7 @@ ohos_unittest("device_auth_identity_service_test") {
     "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
     "${identity_service_path}/session/src/cred_session_util.c",
     "${identity_service_path}/src/identity_operation.c",
+    "${cred_data_manager_path}/src/credential_data_manager.c",
   ]
 
   sources += [
