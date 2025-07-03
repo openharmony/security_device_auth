@@ -60,6 +60,7 @@ ohos_unittest("creds_manager_test") {
     "${tdd_framework_path}/common/src/hc_dev_info_mock.c",
     "${tdd_framework_path}/common/src/os_account_adapter_mock.c",
   ]
+  sources -= [ "${services_path}/device_auth.c" ]
 
   include_dirs += identity_manager_inc
   sources += identity_manager_files
