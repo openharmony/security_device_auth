@@ -579,7 +579,6 @@ void DeInitISIpc(void)
 
 DEVICE_AUTH_API_PUBLIC const CredManager *GetCredMgrInstance(void)
 {
-    RETURN_NULL_IF_LOAD_DEVAUTH_FAILED();
     static CredManager cmInstCtx;
     static CredManager *cmInstPtr = NULL;
 
@@ -592,7 +591,6 @@ DEVICE_AUTH_API_PUBLIC const CredManager *GetCredMgrInstance(void)
 
 DEVICE_AUTH_API_PUBLIC const CredAuthManager *GetCredAuthInstance(void)
 {
-    RETURN_NULL_IF_LOAD_DEVAUTH_FAILED();
     static CredAuthManager caInstCtx;
     static CredAuthManager *caInstPtr = NULL;
 

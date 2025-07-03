@@ -243,12 +243,6 @@ if (LoadDeviceAuthSaIfNotLoad() != HC_SUCCESS) { \
     return; \
 }
 
-#define RETURN_NULL_IF_LOAD_DEVAUTH_FAILED() \
-if (LoadDeviceAuthSaIfNotLoad() != HC_SUCCESS) { \
-    LOGW("sa not load."); \
-    return NULL; \
-}
-
 #ifdef __cplusplus
 }
 #endif

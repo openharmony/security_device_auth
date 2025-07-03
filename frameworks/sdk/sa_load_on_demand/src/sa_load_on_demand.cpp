@@ -166,14 +166,14 @@ static void ClearCallbackInfo(DevAuthCallbackInfo *callbackInfo)
 static bool UpdateCallback(DevAuthCallbackInfo *callbackInfo, const DeviceAuthCallback *callback,
     const DataChangeListener *dataChangeListener, CredChangeListener *listener, uint32_t index)
 {
-    FreeCallbackByType(callbackInfo);
+    DevAuthCallbackInfo tmpCallbackInfo;
+    tmpCallbackInfo.callbackType = callbackInfo->callbackType;
+    tmpCallbackInfo.callback = callbackInfo->callback;
     if (CreateCallbackByType(callbackInfo, callback, dataChangeListener, listener) != HC_SUCCESS) {
-        LOGE("[SDK]: Update callback failed, start to pop callback info.");
-        DevAuthCallbackInfo entry;
-        HC_VECTOR_POPELEMENT(&g_devAuthCallbackList, &entry, index);
-        HcFree(entry.appId);
+        LOGE("[SDK]: Update callback failed.");
         return false;
     }
+    FreeCallbackByType(&tmpCallbackInfo);
     return true;
 }
 

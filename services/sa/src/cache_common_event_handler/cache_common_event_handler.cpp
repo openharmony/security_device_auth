@@ -62,7 +62,6 @@ void HandleCacheCommonEvent(void)
         LOGE("GetCommonEventExtraDataIdlist failed ret is %" LOG_PUB "d.", ret);
         return;
     }
-    LOGI("extra id size: %" LOG_PUB "u", extraDataIdList.size());
     for (auto &item : extraDataIdList) {
         OHOS::MessageParcel extraDataParcel;
         ret = saMgr->GetOnDemandReasonExtraData(item, extraDataParcel);
@@ -77,17 +76,24 @@ void HandleCacheCommonEvent(void)
         }
         LOGI("code: %" LOG_PUB "d, data: %" LOG_PUB "s", extraData->GetCode(), extraData->GetData().c_str());
         auto want = extraData->GetWant();
-        LOGI("want[COMMON_EVENT_ACTION_NAME]: %" LOG_PUB "s.", want[COMMON_EVENT_ACTION_NAME].c_str());
-        if (want[COMMON_EVENT_ACTION_NAME] == OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
+        auto it = want.find(COMMON_EVENT_ACTION_NAME);
+        if (it == want.end()) {
+            LOGW("common event not found.");
+            delete extraData;
+            continue;
+        }
+        LOGI("common event name: %" LOG_PUB "s.", it->second.c_str());
+        if (it->second == OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
             LOGI("[CacheCommonEvent]: user unlocked, userId %" LOG_PUB "d.", extraData->GetCode());
             NotifyOsAccountUnlocked(extraData->GetCode());
-        } else if (want[COMMON_EVENT_ACTION_NAME] == OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED) {
+        } else if (it->second == OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED) {
             LOGI("[CacheCommonEvent]: user removed, userId %" LOG_PUB "d.", extraData->GetCode());
             NotifyOsAccountRemoved(extraData->GetCode());
         } else {
             LOGI("[CacheCommonEvent]: receive other event.");
         }
-        HandleCacheCommonEventInner(want[COMMON_EVENT_ACTION_NAME].c_str(), extraData->GetCode());
+        HandleCacheCommonEventInner(it->second.c_str(), extraData->GetCode());
+        delete extraData;
     }
     return;
 }

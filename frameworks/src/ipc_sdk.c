@@ -1332,7 +1332,6 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
 
 DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
 {
-    RETURN_NULL_IF_LOAD_DEVAUTH_FAILED();
     static GroupAuthManager gaInstCtx;
     static GroupAuthManager *gaInstPtr = NULL;
 
@@ -1345,7 +1344,6 @@ DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
 
 DEVICE_AUTH_API_PUBLIC const DeviceGroupManager *GetGmInstance(void)
 {
-    RETURN_NULL_IF_LOAD_DEVAUTH_FAILED();
     static DeviceGroupManager gmInstCtx;
     static DeviceGroupManager *gmInstPtr = NULL;
 
@@ -1358,7 +1356,6 @@ DEVICE_AUTH_API_PUBLIC const DeviceGroupManager *GetGmInstance(void)
 
 DEVICE_AUTH_API_PUBLIC const AccountVerifier *GetAccountVerifierInstance(void)
 {
-    RETURN_NULL_IF_LOAD_DEVAUTH_FAILED();
     static AccountVerifier avInstCtx;
     static AccountVerifier *avInstPtr = NULL;
     InitIpcAccountVerifierMethods(&avInstCtx);
