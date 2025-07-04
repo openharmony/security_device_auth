@@ -50,7 +50,6 @@
 #include "cache_common_event_handler.h"
 
 #include "mini_session_manager.h"
-#include "stdlib.h"
 #include "huks_adapter.h"
 #include "alg_defs.h"
 
@@ -1362,6 +1361,7 @@ static int32_t StartLightAccountAuthInner(int32_t osAccountId, int64_t requestId
     }
     ProcessTransmitCallback(requestId, (uint8_t *)returnMsg, HcStrlen(returnMsg) + 1, laCallBack);
     DestroyDataBuff(&clientRandom);
+    HcFree(returnMsg);
     return res;
 }
 
@@ -1516,12 +1516,14 @@ static int32_t ConstructKeyInfo(CJson *out, const char *serviceId, Uint8Buff *ke
         res = CopyHwIdsToKeyInfo(keyInfo, keyInfoLen, hwIdStr, peerHwIdStr);
         if (res != HC_SUCCESS) {
             LOGE("CopyHwIdsToKeyInfo failed!");
+            HcFree(keyInfo);
             return res;
         }
     } else {
         res = CopyHwIdsToKeyInfo(keyInfo, keyInfoLen, peerHwIdStr, hwIdStr);
         if (res != HC_SUCCESS) {
             LOGE("CopyHwIdsToKeyInfo failed!");
+            HcFree(keyInfo);
             return res;
         }
     }
@@ -1588,14 +1590,12 @@ static int32_t ComputeHkdfKeyClient(int32_t osAccountId, CJson *out, uint8_t *ra
         return res;
     }
     res = ComputeHkdfKeyInner(osAccountId, out, hkdfSaltBuf, keyInfoBuf, returnKeyBuf);
-    if (res != HC_SUCCESS) {
-        LOGE("ComputeHkdfKeyInner failed!");
-        HcFree(hkdfSaltBuf.val);
-        HcFree(keyInfoBuf.val);
-        return res;
-    }
     HcFree(hkdfSaltBuf.val);
     HcFree(keyInfoBuf.val);
+    if (res != HC_SUCCESS) {
+        LOGE("ComputeHkdfKeyInner failed!");
+        return res;
+    }
     return res;
 }
 
@@ -1654,6 +1654,7 @@ static int32_t LightAuthOnFinish(int64_t requestId, CJson *out, const DeviceAuth
     }
     int32_t opCode = AUTH_FORM_LIGHT_AUTH;
     ProcessFinishCallback(requestId, opCode, returnFinishData, laCallBack);
+    HcFree(returnFinishData);
     return HC_SUCCESS;
 }
 
@@ -1773,11 +1774,13 @@ static int32_t ProcessLightAccountAuthInner(int32_t osAccountId, int64_t request
         }
         int32_t opCode = AUTH_FORM_LIGHT_AUTH;
         char *returnDataStr = ProcessRequestCallback(requestId, opCode, reqParames, laCallBack);
+        HcFree(reqParames);
         if (returnDataStr == NULL) {
             LOGE("Onrequest callback is fail");
             return HC_ERR_REQ_REJECTED;
         }
         CJson *returnDataJson = CreateJsonFromString(returnDataStr);
+        FreeJsonString(returnDataStr);
         if (returnDataJson == NULL) {
             LOGE("Failed to create json from returnDataStr");
             return HC_ERR_JSON_FAIL;
@@ -1792,9 +1795,11 @@ static int32_t ProcessLightAccountAuthInner(int32_t osAccountId, int64_t request
         if (res != HC_SUCCESS) {
             LOGE("ProcessLightAccountAuthServer failed");
             FreeJson(returnDataJson);
+            HcFree(serviceId);
             return res;
         }
         FreeJson(returnDataJson);
+        HcFree(serviceId);
     }
     return res;
 }
