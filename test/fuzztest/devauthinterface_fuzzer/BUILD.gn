@@ -28,6 +28,7 @@ ohos_fuzztest("DevAuthInterfaceFuzzTest") {
   include_dirs += hals_inc_path
 
   include_dirs += [
+    ".",
     "../../unittest/deviceauth/include",
     "${dev_frameworks_path}/inc/hiview_adapter",
     "${frameworks_path}/inc/standard",
@@ -71,6 +72,7 @@ ohos_fuzztest("DevAuthInterfaceFuzzTest") {
   sources += soft_bus_channel_files
   sources += deviceauth_ipc_files
   sources += permission_adapter_files
+  sources += sa_load_on_demand_mock_files
 
   sources += group_auth_files
   sources += group_auth_account_unrelated_files
@@ -148,6 +150,8 @@ ohos_fuzztest("DevAuthInterfaceFuzzTest") {
     "mbedtls:mbedtls_shared",
     "openssl:libcrypto_static",
     "samgr:samgr_proxy",
+    "common_event_service:cesfwk_innerkits",
+    "safwk:system_ability_fwk",
   ]
 }
 

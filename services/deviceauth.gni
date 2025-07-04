@@ -60,6 +60,8 @@ identity_service_mock_files = [
 inc_path = [
   "${inner_api_path}",
   "${device_auth_common}/inc",
+  "${services_path}/sa/inc/cache_common_event_handler",
+  "${services_path}/sa/inc/critical_handler",
   "${frameworks_path}/inc",
   "${ext_plugin_manager_path}/inc",
   "${ext_plugin_manager_path}/inc/account_related",
@@ -151,6 +153,18 @@ security_label_adapter_mock_files = [ "${dev_frameworks_path}/src/security_label
 
 permission_adapter_files =
     [ "${dev_frameworks_path}/src/permission_adapter/permission_adapter.cpp" ]
+
+cache_common_event_handler_files =
+    [ "${services_path}/sa/src/cache_common_event_handler/cache_common_event_handler.cpp" ]
+cache_common_event_handler_mock_files =
+    [ "${services_path}/sa/src/cache_common_event_handler/mock/cache_common_event_handler_mock.cpp" ]
+critical_handler_files =
+    [ "${services_path}/sa/src/critical_handler/critical_handler.cpp" ]
+critical_handler_mock_files =
+    [ "${services_path}/sa/src/critical_handler/mock/critical_handler_mock.cpp" ]
+
+sa_load_on_demand_files = cache_common_event_handler_files + critical_handler_files
+sa_load_on_demand_mock_files = cache_common_event_handler_mock_files + critical_handler_mock_files
 
 hiview_adapter_files = [
   "${dev_frameworks_path}/src/hiview_adapter/hidump_adapter.c",
@@ -461,6 +475,13 @@ if (enable_broadcast == true) {
   deviceauth_files += broadcast_manager_files
 } else {
   deviceauth_files += broadcast_manager_mock_files
+}
+
+if (defined(global_parts_info) && 
+    defined(global_parts_info.resourceschedule_memmgr_override)) {
+  timeline_memmgr_enable = true
+} else {
+  timeline_memmgr_enable = false
 }
 
 if (!defined(ohos_lite) && (!defined(global_parts_info) ||
