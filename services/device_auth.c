@@ -1795,11 +1795,9 @@ static int32_t ProcessLightAccountAuthInner(int32_t osAccountId, int64_t request
         if (res != HC_SUCCESS) {
             LOGE("ProcessLightAccountAuthServer failed");
             FreeJson(returnDataJson);
-            HcFree(serviceId);
             return res;
         }
         FreeJson(returnDataJson);
-        HcFree(serviceId);
     }
     return res;
 }
