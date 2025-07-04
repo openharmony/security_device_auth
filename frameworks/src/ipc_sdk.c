@@ -1433,7 +1433,7 @@ DEVICE_AUTH_API_PUBLIC const LightAccountVerifier *GetLightAccountVerifierInstan
     laInstPtr = &laInstCtx;
     return (const LightAccountVerifier *)(laInstPtr);
 }
-
+  
 
 #ifdef __cplusplus
 }
