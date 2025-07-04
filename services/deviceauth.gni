@@ -329,7 +329,7 @@ broadcast_manager_mock_files = [
   "${group_manager_path}/src/broadcast_manager_mock/broadcast_manager_mock.c",
 ]
 
-deviceauth_files = dev_frameworks_files + deviceauth_common_files + 
+deviceauth_files = dev_frameworks_files + deviceauth_common_files +
                    session_manager_files + creds_manager_files 
 
 if (enable_pseudonym == true) {
