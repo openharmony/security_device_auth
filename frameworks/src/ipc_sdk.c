@@ -1232,9 +1232,6 @@ static void InitIpcLightAccountVerifierMethods(LightAccountVerifier *lightAccoun
     lightAccountVerifier->processLightAccountAuth = IpcLaProcessLightAccountAuth;
 }
 
-
-
-
 DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const char *reqJsonStr, char **returnData)
 {
     RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
