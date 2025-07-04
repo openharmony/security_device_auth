@@ -477,13 +477,6 @@ if (enable_broadcast == true) {
   deviceauth_files += broadcast_manager_mock_files
 }
 
-if (defined(global_parts_info) && 
-    defined(global_parts_info.resourceschedule_memmgr_override)) {
-  timeline_memmgr_enable = true
-} else {
-  timeline_memmgr_enable = false
-}
-
 if (!defined(ohos_lite) && (!defined(global_parts_info) ||
                             defined(global_parts_info.account_os_account))) {
   deviceauth_files += os_account_adapter_files
@@ -498,6 +491,13 @@ if (defined(global_parts_info) &&
   common_event_enabled = true
 } else {
   common_event_enabled = false
+}
+
+if (defined(global_parts_info) && 
+    defined(global_parts_info.resourceschedule_memmgr_override)) {
+  timeline_memmgr_enable = true
+} else {
+  timeline_memmgr_enable = false
 }
 
 if (defined(ohos_lite)) {
