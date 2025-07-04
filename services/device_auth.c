@@ -47,6 +47,7 @@
 #include "cred_session_util.h"
 #include "credential_data_manager.h"
 #include "identity_service_defines.h"
+#include "cache_common_event_handler.h"
 
 #include "mini_session_manager.h"
 #include "stdlib.h"
@@ -1040,6 +1041,7 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     InitPseudonymModule();
     InitAccountTaskManager();
     SetInitStatus();
+    HandleCacheCommonEvent();
     LOGI("[End]: [Service]: Init device auth service successfully!");
     return HC_SUCCESS;
 }
