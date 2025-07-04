@@ -47,11 +47,16 @@
 #include "cred_session_util.h"
 #include "credential_data_manager.h"
 #include "identity_service_defines.h"
-#include "cache_common_event_handler.h"
+
+#include "mini_session_manager.h"
+#include "stdlib.h"
+#include "huks_adapter.h"
+#include "alg_defs.h"
 
 static GroupAuthManager *g_groupAuthManager =  NULL;
 static DeviceGroupManager *g_groupManagerInstance = NULL;
 static AccountVerifier *g_accountVerifierInstance = NULL;
+static LightAccountVerifier *g_lightAccountVerifierInstance = NULL;
 
 static CredManager *g_credManager = NULL;
 static CredAuthManager *g_credAuthManager = NULL;
@@ -62,6 +67,10 @@ static CredAuthManager *g_credAuthManager = NULL;
 #define CLEAN_GROUP_MANAGER 4
 #define CLEAN_IDENTITY_SERVICE 5
 #define CLEAN_ALL 6
+#define CLEAN_LIGHT_SESSION_MANAGER 7
+
+#define RETURN_RANDOM_LEN 16
+#define RETURN_KEY_LEN 32
 
 static int32_t AddOriginDataForPlugin(CJson *receivedMsg, const uint8_t *data)
 {
@@ -830,6 +839,19 @@ static int32_t AllocGmAndGa(void)
             return HC_ERR_ALLOC_MEMORY;
         }
     }
+    if (g_lightAccountVerifierInstance == NULL) {
+        g_lightAccountVerifierInstance = (LightAccountVerifier *)HcMalloc(sizeof(LightAccountVerifier), 0);
+        if (g_lightAccountVerifierInstance == NULL) {
+            LOGE("Failed to allocate lightAccountVerifier Instance memory!");
+            HcFree(g_groupManagerInstance);
+            g_groupManagerInstance = NULL;
+            HcFree(g_groupAuthManager);
+            g_groupAuthManager = NULL;
+            HcFree(g_accountVerifierInstance);
+            g_accountVerifierInstance = NULL;
+            return HC_ERR_ALLOC_MEMORY;
+        }
+    }
     return HC_SUCCESS;
 }
 
@@ -846,6 +868,10 @@ static void DestroyGmAndGa(void)
     if (g_accountVerifierInstance != NULL) {
         HcFree(g_accountVerifierInstance);
         g_accountVerifierInstance = NULL;
+    }
+    if (g_lightAccountVerifierInstance != NULL) {
+        HcFree(g_lightAccountVerifierInstance);
+        g_lightAccountVerifierInstance = NULL;
     }
 }
 
@@ -910,6 +936,9 @@ static void CleanAllModules(int32_t type)
         case CLEAN_CRED:
             DestroyCredMgr();
         // fallthrough
+        case CLEAN_LIGHT_SESSION_MANAGER:
+            DestroyLightSessionManager();
+        // fallthrough
         default:
             break;
     }
@@ -955,6 +984,11 @@ static int32_t InitAllModules(void)
         (void)InitGroupAuthManager();
         if ((res = InitTaskManager()) != HC_SUCCESS) {
             LOGE("[End]: [Service]: Failed to init worker thread!");
+            CleanAllModules(CLEAN_ALL);
+            break;
+        }
+        if ((res = InitLightSessionManager()) != HC_SUCCESS) {
+            LOGE("[End]: [Service]: Failed to init light session manager!");
             CleanAllModules(CLEAN_ALL);
             break;
         }
@@ -1006,7 +1040,6 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     InitPseudonymModule();
     InitAccountTaskManager();
     SetInitStatus();
-    HandleCacheCommonEvent();
     LOGI("[End]: [Service]: Init device auth service successfully!");
     return HC_SUCCESS;
 }
@@ -1022,6 +1055,7 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
     DestroyDevSessionManager();
     DestroyIdentityService();
     DestroyGroupManager();
+    DestroyLightSessionManager();
     DestroyGmAndGa();
     DestroyAccountTaskManager();
     DestroyCa();
@@ -1260,6 +1294,551 @@ static int32_t GetServerSharedKey(const char *peerPkWithSig, const char *service
     return res;
 }
 
+static int32_t GetRandomValFromOutJson(const CJson *out, DataBuff *returnRandom)
+{
+    uint8_t *randomVal = (uint8_t *)HcMalloc(RETURN_RANDOM_LEN, 0);
+    if (randomVal == NULL) {
+        LOGE("Failed to alloc random!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (GetByteFromJson(out, FIELD_ACCOUNT_RANDOM_VAL, randomVal, RETURN_RANDOM_LEN) != HC_SUCCESS) {
+        LOGE("Failed to get random val!");
+        HcFree(randomVal);
+        return HC_ERR_JSON_GET;
+    }
+    returnRandom->data = randomVal;
+    returnRandom->length = RETURN_RANDOM_LEN;
+    return HC_SUCCESS;
+}
+
+static int32_t GetPeerRandomValFromOutJson(const CJson *out, DataBuff *returnRandom)
+{
+    uint8_t *randomVal = (uint8_t *)HcMalloc(RETURN_RANDOM_LEN, 0);
+    if (randomVal == NULL) {
+        LOGE("Failed to alloc random!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (GetByteFromJson(out, FIELD_PEER_ACCOUNT_RANDOM_VAL, randomVal, RETURN_RANDOM_LEN) != HC_SUCCESS) {
+        LOGE("Failed to get random val!");
+        HcFree(randomVal);
+        return HC_ERR_JSON_GET;
+    }
+    returnRandom->data = randomVal;
+    returnRandom->length = RETURN_RANDOM_LEN;
+    return HC_SUCCESS;
+}
+
+static int32_t LightAuthVerifySign(int32_t osAccountId, CJson *msg, CJson *out)
+{
+    int32_t res = ExecuteAccountAuthCmd(osAccountId, LIGHT_ACCOUNT_AUTH_VERIFY_SIGN, msg, out);
+    if (res != HC_SUCCESS) {
+        LOGE("Verify sign failed");
+    }
+    return res;
+}
+
+static int32_t StartLightAccountAuthInner(int32_t osAccountId, int64_t requestId, const char *serviceId,
+    const DeviceAuthCallback *laCallBack, CJson *out)
+{
+    DataBuff clientRandom = { 0 };
+    int32_t res = GetRandomValFromOutJson(out, &clientRandom);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get random!");
+        return res;
+    }
+    res = AddLightSession(requestId, osAccountId, serviceId, clientRandom.data);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to AddLightSession!");
+        DestroyDataBuff(&clientRandom);
+        return res;
+    }
+    char *returnMsg = PackJsonToString(out);
+    if (returnMsg == NULL) {
+        LOGE("pack out to string failed!");
+        DestroyDataBuff(&clientRandom);
+        return HC_ERR_JSON_FAIL;
+    }
+    ProcessTransmitCallback(requestId, (uint8_t *)returnMsg, HcStrlen(returnMsg) + 1, laCallBack);
+    DestroyDataBuff(&clientRandom);
+    return res;
+}
+
+static int32_t StartLightAccountAuth(int32_t osAccountId, int64_t requestId, const char *serviceId,
+    const DeviceAuthCallback *laCallBack)
+{
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(requestId);
+    LOGI("StartLightAccountAuth. [ReqId]:%" LOG_PUB PRId64, requestId);
+    if ((serviceId == NULL) || (laCallBack == NULL) || HcStrlen(serviceId) > MAX_DATA_BUFFER_SIZE) {
+        LOGE("The input auth params is invalid!");
+        ProcessErrorCallback(requestId, AUTH_FORM_LIGHT_AUTH, HC_ERR_INVALID_PARAMS, NULL, laCallBack);
+        return HC_ERR_INVALID_PARAMS;
+    }
+    CJson *out = CreateJson();
+    if (out == NULL) {
+        LOGE("Failed to create out json!");
+        ProcessErrorCallback(requestId, AUTH_FORM_LIGHT_AUTH, HC_ERR_JSON_CREATE, NULL, laCallBack);
+        return HC_ERR_JSON_CREATE;
+    }
+    int32_t res = ExecuteAccountAuthCmd(osAccountId, LIGHT_ACCOUNT_AUTH_START, NULL, out);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to start auth!");
+        FreeJson(out);
+        ProcessErrorCallback(requestId, AUTH_FORM_LIGHT_AUTH, res, NULL, laCallBack);
+        return res;
+    }
+    res = StartLightAccountAuthInner(osAccountId, requestId, serviceId, laCallBack, out);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to start auth inner!");
+        FreeJson(out);
+        ProcessErrorCallback(requestId, AUTH_FORM_LIGHT_AUTH, res, NULL, laCallBack);
+        return res;
+    }
+    FreeJson(out);
+    return res;
+}
+
+static int32_t ConstructSaltInner(DataBuff randomClientBuff, DataBuff randomServerBuff,
+    uint8_t *hkdfSalt, uint32_t hkdfSaltLen)
+{
+    LOGI("ConstructSaltInner start");
+    if (memcpy_s(hkdfSalt, hkdfSaltLen, randomClientBuff.data, randomClientBuff.length) != EOK) {
+        LOGE("Copy randClient failed.");
+        return HC_ERR_MEMORY_COPY;
+    }
+    if (memcpy_s(hkdfSalt + RETURN_RANDOM_LEN, hkdfSaltLen - RETURN_RANDOM_LEN,
+        randomServerBuff.data, randomServerBuff.length) != EOK) {
+        LOGE("Copy randomServer failed.");
+        return HC_ERR_MEMORY_COPY;
+    }
+    return HC_SUCCESS;
+}
+
+
+static int32_t ConstructSalt(CJson *out, uint8_t *randomVal, Uint8Buff *hkdfSaltBuf, bool isClient)
+{
+    DataBuff randomBuff = {0};
+    int32_t res;
+    if (isClient) {
+        randomBuff.data = randomVal;
+        randomBuff.length = RETURN_RANDOM_LEN;
+    } else {
+        (void) randomVal;
+        res = GetRandomValFromOutJson(out, &randomBuff);
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to get random val!");
+            return res;
+        }
+    }
+    DataBuff peerRandomBuff = {0};
+    res = GetPeerRandomValFromOutJson(out, &peerRandomBuff);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get peer random val!");
+        if (!isClient) { DestroyDataBuff(&randomBuff); }
+        DestroyDataBuff(&peerRandomBuff);
+        return res;
+    }
+    uint32_t hkdfSaltLen =  RETURN_RANDOM_LEN + RETURN_RANDOM_LEN;
+    uint8_t *hkdfSalt = (uint8_t *)HcMalloc(hkdfSaltLen, 0);
+    if (hkdfSalt == NULL) {
+        LOGE("Failed to alloc hkdfSalt");
+        if (!isClient) { DestroyDataBuff(&randomBuff); }
+        DestroyDataBuff(&peerRandomBuff);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (isClient) {
+        res = ConstructSaltInner(randomBuff, peerRandomBuff, hkdfSalt, hkdfSaltLen);
+    } else {
+        res = ConstructSaltInner(peerRandomBuff, randomBuff, hkdfSalt, hkdfSaltLen);
+    }
+    if (res != HC_SUCCESS) {
+        LOGE("ConstructSaltInner failed!");
+        if (!isClient) { DestroyDataBuff(&randomBuff); }
+        DestroyDataBuff(&peerRandomBuff);
+        HcFree(hkdfSalt);
+        return res;
+    }
+    hkdfSaltBuf->val = hkdfSalt;
+    hkdfSaltBuf->length = hkdfSaltLen;
+    if (!isClient) { DestroyDataBuff(&randomBuff); }
+    DestroyDataBuff(&peerRandomBuff);
+    return res;
+}
+
+static int32_t GetHwIdAndPeerHwId(CJson *out, const char **hwIdStr, const char **peerHwIdStr)
+{
+    *hwIdStr = GetStringFromJson(out, FIELD_USER_ID);
+    if (*hwIdStr == NULL) {
+        LOGE("get hwIdStr from out fail.");
+        return HC_ERR_JSON_GET;
+    }
+    *peerHwIdStr = GetStringFromJson(out, FIELD_PEER_USER_ID);
+    if (*peerHwIdStr == NULL) {
+        LOGE("get peer hwIdStr from out fail.");
+        return HC_ERR_JSON_GET;
+    }
+    return HC_SUCCESS;
+}
+static int32_t CopyHwIdsToKeyInfo(uint8_t *keyInfo, uint32_t keyInfoLen,
+    const char *clientHwIdStr, const char *serverHwIdStr)
+{
+    if (memcpy_s(keyInfo, keyInfoLen, clientHwIdStr, (uint32_t)HcStrlen(clientHwIdStr)) != EOK) {
+        LOGE("Copy client hwIdStr failed.");
+        return HC_ERR_MEMORY_COPY;
+    }
+    if (memcpy_s(keyInfo + (uint32_t)HcStrlen(clientHwIdStr), keyInfoLen - (uint32_t)HcStrlen(clientHwIdStr),
+        serverHwIdStr, (uint32_t)HcStrlen(serverHwIdStr)) != EOK) {
+        LOGE("Copy server hwIdStr failed.");
+        return HC_ERR_MEMORY_COPY;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t ConstructKeyInfo(CJson *out, const char *serviceId, Uint8Buff *keyInfoBuf, bool isClient)
+{
+    const char *hwIdStr = NULL;
+    const char *peerHwIdStr = NULL;
+    int32_t res = GetHwIdAndPeerHwId(out, &hwIdStr, &peerHwIdStr);
+    if (res != HC_SUCCESS) {
+        LOGE("GetHwIdAndPeerHwId failed!");
+        return res;
+    }
+    uint32_t serviceIdLen = (uint32_t)HcStrlen(serviceId);
+    uint32_t keyInfoLen = (uint32_t)HcStrlen(hwIdStr) + (uint32_t)HcStrlen(peerHwIdStr) + serviceIdLen;
+    uint8_t *keyInfo = (uint8_t *)HcMalloc(keyInfoLen, 0);
+    if (keyInfo == NULL) {
+        LOGE("Failed to alloc keyInfo");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (isClient) {
+        res = CopyHwIdsToKeyInfo(keyInfo, keyInfoLen, hwIdStr, peerHwIdStr);
+        if (res != HC_SUCCESS) {
+            LOGE("CopyHwIdsToKeyInfo failed!");
+            return res;
+        }
+    } else {
+        res = CopyHwIdsToKeyInfo(keyInfo, keyInfoLen, peerHwIdStr, hwIdStr);
+        if (res != HC_SUCCESS) {
+            LOGE("CopyHwIdsToKeyInfo failed!");
+            return res;
+        }
+    }
+    if (memcpy_s(keyInfo + (uint32_t)HcStrlen(hwIdStr) + (uint32_t)HcStrlen(peerHwIdStr),
+        keyInfoLen - (uint32_t)HcStrlen(hwIdStr) - (uint32_t)HcStrlen(peerHwIdStr),
+        serviceId, serviceIdLen) != EOK) {
+        LOGE("Copy serviceId failed.");
+        HcFree(keyInfo);
+        return HC_ERR_MEMORY_COPY;
+    }
+    keyInfoBuf->val = keyInfo;
+    keyInfoBuf->length = keyInfoLen;
+    return HC_SUCCESS;
+}
+
+static int32_t ComputeHkdfKeyInner(int32_t osAccountId, CJson *out,
+    Uint8Buff hkdfSaltBuf, Uint8Buff keyInfoBuf, Uint8Buff *returnKeyBuf)
+{
+    LOGI("ComputeHkdfKeyInner start");
+    DataBuff sharedKey = {0};
+    int32_t res = GetSharedKeyFromOutJson(out, &sharedKey);
+    if (res != HC_SUCCESS) {
+        LOGE("get sharedkey failed!");
+        return res;
+    }
+    KeyParams keyParam = {
+        .keyBuff = {sharedKey.data, sharedKey.length, false},
+        .isDeStorage = false,
+        .osAccountId = osAccountId
+    };
+    uint8_t *returnKey = (uint8_t *)HcMalloc(RETURN_KEY_LEN, 0);
+    if (returnKey == NULL) {
+        LOGE("Failed to alloc returnKey");
+        DestroyDataBuff(&sharedKey);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    returnKeyBuf->val = returnKey;
+    returnKeyBuf->length = RETURN_KEY_LEN;
+    res = GetLoaderInstance()->computeHkdf(&keyParam, &hkdfSaltBuf, &keyInfoBuf, returnKeyBuf);
+    if (res != HC_SUCCESS) {
+        LOGE("computeHkdf failed!");
+        DestroyDataBuff(&sharedKey);
+        HcFree(returnKey);
+        return res;
+    }
+    DestroyDataBuff(&sharedKey);
+    return res;
+}
+
+static int32_t ComputeHkdfKeyClient(int32_t osAccountId, CJson *out, uint8_t *randomVal,
+    const char *serviceId, Uint8Buff *returnKeyBuf)
+{
+    Uint8Buff hkdfSaltBuf = {0};
+    int32_t res = ConstructSalt(out, randomVal, &hkdfSaltBuf, true);
+    if (res != HC_SUCCESS) {
+        LOGE("ConstructSalt failed!");
+        return res;
+    }
+    Uint8Buff keyInfoBuf = {0};
+    res = ConstructKeyInfo(out, serviceId, &keyInfoBuf, true);
+    if (res != HC_SUCCESS) {
+        LOGE("ConstructKeyInfo failed!");
+        HcFree(hkdfSaltBuf.val);
+        return res;
+    }
+    res = ComputeHkdfKeyInner(osAccountId, out, hkdfSaltBuf, keyInfoBuf, returnKeyBuf);
+    if (res != HC_SUCCESS) {
+        LOGE("ComputeHkdfKeyInner failed!");
+        HcFree(hkdfSaltBuf.val);
+        HcFree(keyInfoBuf.val);
+        return res;
+    }
+    HcFree(hkdfSaltBuf.val);
+    HcFree(keyInfoBuf.val);
+    return res;
+}
+
+static int32_t ComputeHkdfKeyServer(int32_t osAccountId, CJson *out, uint8_t *randomVal,
+    const char *serviceId, Uint8Buff *returnKeyBuf)
+{
+    Uint8Buff hkdfSaltBuf = {0};
+    int32_t res = ConstructSalt(out, randomVal, &hkdfSaltBuf, false);
+    if (res != HC_SUCCESS) {
+        LOGE("ConstructSalt failed!");
+        return res;
+    }
+    Uint8Buff keyInfoBuf = {0};
+    res = ConstructKeyInfo(out, serviceId, &keyInfoBuf, false);
+    if (res != HC_SUCCESS) {
+        LOGE("ConstructKeyInfo failed!");
+        HcFree(hkdfSaltBuf.val);
+        return res;
+    }
+    res = ComputeHkdfKeyInner(osAccountId, out, hkdfSaltBuf, keyInfoBuf, returnKeyBuf);
+    if (res != HC_SUCCESS) {
+        LOGE("ComputeHkdfKeyInner failed!");
+        HcFree(hkdfSaltBuf.val);
+        HcFree(keyInfoBuf.val);
+        return res;
+    }
+    HcFree(hkdfSaltBuf.val);
+    HcFree(keyInfoBuf.val);
+    return res;
+}
+
+static int32_t LightAuthOnFinish(int64_t requestId, CJson *out, const DeviceAuthCallback *laCallBack)
+{
+    CJson *outData = CreateJson();
+    if (outData == NULL) {
+        LOGE("Create outData failed!");
+        return HC_ERR_JSON_CREATE;
+    }
+    const char *peerHwIdStr = GetStringFromJson(out, FIELD_PEER_USER_ID);
+    if (peerHwIdStr == NULL) {
+        LOGE("get peerHwIdStr from out failed!");
+        FreeJson(outData);
+        return HC_ERR_JSON_GET;
+    }
+    int32_t res = AddStringToJson(outData, FIELD_PEER_USER_ID, peerHwIdStr);
+    if (res != HC_SUCCESS) {
+        LOGE("add peer userid failed!");
+        FreeJson(outData);
+        return res;
+    }
+    char *returnFinishData = PackJsonToString(outData);
+    if (returnFinishData == NULL) {
+        LOGE("PackJsonToString failed!");
+        FreeJson(outData);
+        return HC_ERR_JSON_FAIL;
+    }
+    int32_t opCode = AUTH_FORM_LIGHT_AUTH;
+    ProcessFinishCallback(requestId, opCode, returnFinishData, laCallBack);
+    return HC_SUCCESS;
+}
+
+static int32_t ProcessLightAccountAuthClient(int64_t requestId, int32_t osAccountId, CJson *msg,
+    const DeviceAuthCallback *laCallBack, LightSession *lightSession)
+{
+    LOGI("ProcessLightAccountAuthClient start!");
+    CJson *out = CreateJson();
+    if (out == NULL) {
+        LOGE("Failed to create out json!");
+        return HC_ERR_JSON_CREATE;
+    }
+    int32_t res = ExecuteAccountAuthCmd(osAccountId, LIGHT_ACCOUNT_AUTH_PROCESS_CLIENT, msg, out);
+    if (res != HC_SUCCESS) {
+        LOGE("get key failed!");
+        FreeJson(out);
+        return res;
+    }
+    Uint8Buff returnKeyBuf = {0};
+    res = ComputeHkdfKeyClient(osAccountId, out, lightSession->randomVal, lightSession->serviceId, &returnKeyBuf);
+    if (res != HC_SUCCESS) {
+        LOGE("aComputeHkdfKeyClient failed!");
+        FreeJson(out);
+        return res;
+    }
+    ProcessSessionKeyCallback(requestId, (const uint8_t *)returnKeyBuf.val, returnKeyBuf.length, laCallBack);
+    res = LightAuthOnFinish(requestId, out, laCallBack);
+    if (res != HC_SUCCESS) {
+        LOGE("LightAuthOnFinish failed!");
+        FreeJson(out);
+        HcFree(returnKeyBuf.val);
+        return res;
+    }
+    FreeJson(out);
+    DeleteLightSession(requestId, osAccountId);
+    HcFree(returnKeyBuf.val);
+    return res;
+}
+
+static int32_t LightAuthOnTransmit(int64_t requestId, CJson *out, const DeviceAuthCallback *laCallBack)
+{
+    CJson *outMsg = GetObjFromJson(out, FIELD_LIGHT_ACCOUNT_MSG);
+    if (outMsg == NULL) {
+        LOGE("Get outMsg from json failed!");
+        return HC_ERR_JSON_GET;
+    }
+    char *returnMsg = PackJsonToString(outMsg);
+    if (returnMsg == NULL) {
+        LOGE("pack returnMsg to string failed");
+        return HC_ERR_JSON_FAIL;
+    }
+    ProcessTransmitCallback(requestId, (uint8_t *)returnMsg, HcStrlen(returnMsg) + 1, laCallBack);
+    FreeJson(outMsg);
+    return HC_SUCCESS;
+}
+
+static int32_t ProcessLightAccountAuthServer(int64_t requestId, int32_t osAccountId,
+    CJson *msg, const DeviceAuthCallback *laCallBack, const char* serviceId)
+{
+    LOGI("ProcessLightAccountAuthServer start!");
+    CJson *out = CreateJson();
+    if (out == NULL) {
+        LOGE("Failed to create out json!");
+        return HC_ERR_JSON_CREATE;
+    }
+    int32_t res = ExecuteAccountAuthCmd(osAccountId, LIGHT_ACCOUNT_AUTH_PROCESS_SERVER, msg, out);
+    if (res != HC_SUCCESS) {
+        LOGE("get key failed!");
+        FreeJson(out);
+        return res;
+    }
+    Uint8Buff returnKeyBuf = { 0 };
+    res = ComputeHkdfKeyServer(osAccountId, out, NULL, serviceId, &returnKeyBuf);
+    if (res != HC_SUCCESS) {
+        LOGE("ComputeHkdfKeyServer failed!");
+        FreeJson(out);
+        return res;
+    }
+    ProcessSessionKeyCallback(requestId, (const uint8_t *)returnKeyBuf.val, returnKeyBuf.length, laCallBack);
+    HcFree(returnKeyBuf.val);
+    res = LightAuthOnTransmit(requestId, out, laCallBack);
+    if (res != HC_SUCCESS) {
+        LOGE("LightAuthOnTransmit failed!");
+        FreeJson(out);
+        return res;
+    }
+    res = LightAuthOnFinish(requestId, out, laCallBack);
+    FreeJson(out);
+    if (res != HC_SUCCESS) {
+        LOGE("LightAuthOnTransmit failed!");
+        return res;
+    }
+    return res;
+}
+
+static int32_t ProcessLightAccountAuthInner(int32_t osAccountId, int64_t requestId,
+    CJson *msg, CJson *out, const DeviceAuthCallback *laCallBack)
+{
+    LightSession *lightSession = NULL;
+    int32_t res = QueryLightSession(requestId, osAccountId, &lightSession);
+    if (res == HC_SUCCESS) { //client
+        res = ProcessLightAccountAuthClient(requestId, osAccountId, msg, laCallBack, lightSession);
+        if (res != HC_SUCCESS) {
+            LOGE("ProcessLightAccountAuthClient failed");
+            return res;
+        }
+        res = DeleteLightSession(requestId, osAccountId);
+        if (res != HC_SUCCESS) {
+            LOGE("DeleteLightSession failed");
+            return res;
+        }
+    } else {
+        char *reqParames = PackJsonToString(out);
+        if (reqParames == NULL) {
+            LOGE("pack out to string failed");
+            return HC_ERR_JSON_FAIL;
+        }
+        int32_t opCode = AUTH_FORM_LIGHT_AUTH;
+        char *returnDataStr = ProcessRequestCallback(requestId, opCode, reqParames, laCallBack);
+        if (returnDataStr == NULL) {
+            LOGE("Onrequest callback is fail");
+            return HC_ERR_REQ_REJECTED;
+        }
+        CJson *returnDataJson = CreateJsonFromString(returnDataStr);
+        if (returnDataJson == NULL) {
+            LOGE("Failed to create json from returnDataStr");
+            return HC_ERR_JSON_FAIL;
+        }
+        const char* serviceId = GetStringFromJson(returnDataJson, FIELD_APP_ID);
+        if (serviceId == NULL) {
+            LOGE("Failed to get serviceId");
+            FreeJson(returnDataJson);
+            return HC_ERR_JSON_FAIL;
+        }
+        res = ProcessLightAccountAuthServer(requestId, osAccountId, msg, laCallBack, serviceId);
+        if (res != HC_SUCCESS) {
+            LOGE("ProcessLightAccountAuthServer failed");
+            FreeJson(returnDataJson);
+            return res;
+        }
+        FreeJson(returnDataJson);
+    }
+    return res;
+}
+
+static int32_t ProcessLightAccountAuth(int32_t osAccountId, int64_t requestId,
+    DataBuff *inMsg, const DeviceAuthCallback *laCallBack)
+{
+    SET_LOG_MODE(TRACE_MODE);
+    SET_TRACE_ID(requestId);
+
+    CJson *out = CreateJson();
+    if (out == NULL) {
+        LOGE("Failed to create out json!");
+        ProcessErrorCallback(requestId, AUTH_FORM_LIGHT_AUTH, HC_ERR_JSON_CREATE, NULL, laCallBack);
+        return HC_ERR_JSON_CREATE;
+    }
+
+    CJson *msg = CreateJsonFromString((const char*)inMsg->data);
+    if (msg == NULL) {
+        LOGE("Failed to CreateJsonFromString");
+        FreeJson(out);
+        ProcessErrorCallback(requestId, AUTH_FORM_LIGHT_AUTH, HC_ERR_JSON_CREATE, NULL, laCallBack);
+        return HC_ERR_JSON_CREATE;
+    }
+
+    int32_t res = LightAuthVerifySign(osAccountId, msg, out);
+    if (res != HC_SUCCESS) {
+        LOGE("LightAuthVerifySign failed");
+        FreeJson(out);
+        FreeJson(msg);
+        ProcessErrorCallback(requestId, AUTH_FORM_LIGHT_AUTH, res, NULL, laCallBack);
+        return res;
+    }
+    res = ProcessLightAccountAuthInner(osAccountId, requestId, msg, out, laCallBack);
+    if (res != HC_SUCCESS) {
+        LOGE("ProcessLightAccountAuthInner failed");
+        FreeJson(out);
+        FreeJson(msg);
+        ProcessErrorCallback(requestId, AUTH_FORM_LIGHT_AUTH, res, NULL, laCallBack);
+        return res;
+    }
+    FreeJson(out);
+    FreeJson(msg);
+    return HC_SUCCESS;
+}
+
 DEVICE_AUTH_API_PUBLIC const AccountVerifier *GetAccountVerifierInstance(void)
 {
     if (g_accountVerifierInstance == NULL) {
@@ -1270,6 +1849,17 @@ DEVICE_AUTH_API_PUBLIC const AccountVerifier *GetAccountVerifierInstance(void)
     g_accountVerifierInstance->getServerSharedKey = GetServerSharedKey;
     g_accountVerifierInstance->destroyDataBuff = DestroyDataBuff;
     return g_accountVerifierInstance;
+}
+
+DEVICE_AUTH_API_PUBLIC const LightAccountVerifier *GetLightAccountVerifierInstance(void)
+{
+    if (g_lightAccountVerifierInstance == NULL) {
+        LOGE("Light account verifier instance not init!");
+        return NULL;
+    }
+    g_lightAccountVerifierInstance->startLightAccountAuth = StartLightAccountAuth;
+    g_lightAccountVerifierInstance->processLightAccountAuth = ProcessLightAccountAuth;
+    return g_lightAccountVerifierInstance;
 }
 
 DEVICE_AUTH_API_PUBLIC const CredManager *GetCredMgrInstance(void)

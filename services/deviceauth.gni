@@ -60,8 +60,6 @@ identity_service_mock_files = [
 inc_path = [
   "${inner_api_path}",
   "${device_auth_common}/inc",
-  "${services_path}/sa/inc/cache_common_event_handler",
-  "${services_path}/sa/inc/critical_handler",
   "${frameworks_path}/inc",
   "${ext_plugin_manager_path}/inc",
   "${ext_plugin_manager_path}/inc/account_related",
@@ -103,6 +101,7 @@ inc_path = [
   "${protocol_path}/inc/iso_protocol",
   "${session_manager_path}/inc",
   "${session_manager_path}/inc/session",
+  "${session_manager_path}/inc/session/minisession",
   "${session_manager_path}/inc/session/v1",
   "${session_manager_path}/inc/session/v1/compatible_bind_sub_session",
   "${session_manager_path}/inc/session/v1/compatible_auth_sub_session",
@@ -152,18 +151,6 @@ security_label_adapter_mock_files = [ "${dev_frameworks_path}/src/security_label
 
 permission_adapter_files =
     [ "${dev_frameworks_path}/src/permission_adapter/permission_adapter.cpp" ]
-
-cache_common_event_handler_files =
-    [ "${services_path}/sa/src/cache_common_event_handler/cache_common_event_handler.cpp" ]
-cache_common_event_handler_mock_files =
-    [ "${services_path}/sa/src/cache_common_event_handler/mock/cache_common_event_handler_mock.cpp" ]
-critical_handler_files =
-    [ "${services_path}/sa/src/critical_handler/critical_handler.cpp" ]
-critical_handler_mock_files =
-    [ "${services_path}/sa/src/critical_handler/mock/critical_handler_mock.cpp" ]
-
-sa_load_on_demand_files = cache_common_event_handler_files + critical_handler_files
-sa_load_on_demand_mock_files = cache_common_event_handler_mock_files + critical_handler_mock_files
 
 hiview_adapter_files = [
   "${dev_frameworks_path}/src/hiview_adapter/hidump_adapter.c",
@@ -229,6 +216,10 @@ group_manager_files = [
 session_manager_files = [
   "${session_manager_path}/src/dev_session_mgr.c",
   "${session_manager_path}/src/session/dev_session_fwk.c",
+]
+
+session_mini_files = [
+  "${session_manager_path}/src/session/minisession/mini_session_manager.c",
 ]
 
 session_v1_files = [
@@ -324,8 +315,8 @@ broadcast_manager_mock_files = [
   "${group_manager_path}/src/broadcast_manager_mock/broadcast_manager_mock.c",
 ]
 
-deviceauth_files = dev_frameworks_files + deviceauth_common_files +
-                   session_manager_files + creds_manager_files
+deviceauth_files = dev_frameworks_files + deviceauth_common_files + 
+                   session_manager_files + creds_manager_files 
 
 if (enable_pseudonym == true) {
   deviceauth_defines += [ "ENABLE_PSEUDONYM" ]
@@ -376,6 +367,10 @@ if (enable_session_v2 == true) {
   deviceauth_files += save_trusted_info_files
 } else {
   deviceauth_files += session_v2_mock_files
+}
+
+if (enable_session_mini == true) {
+  deviceauth_files += session_mini_files
 }
 
 if (enable_session_v1 == true) {
@@ -482,13 +477,6 @@ if (defined(global_parts_info) &&
   common_event_enabled = true
 } else {
   common_event_enabled = false
-}
-
-if (defined(global_parts_info) && 
-    defined(global_parts_info.resourceschedule_memmgr_override)) {
-  timeline_memmgr_enable = true
-} else {
-  timeline_memmgr_enable = false
 }
 
 if (defined(ohos_lite)) {

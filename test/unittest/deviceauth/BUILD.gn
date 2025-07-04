@@ -54,10 +54,10 @@ ohos_unittest("deviceauth_llt") {
   sources += dev_frameworks_files
   sources += identity_service_mock_files
   sources += deviceauth_common_files
-  sources += sa_load_on_demand_mock_files
   sources += group_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
+  sources += session_mini_files
   sources += session_v1_files
   sources += session_v2_mock_files
   sources += creds_manager_files
@@ -102,6 +102,7 @@ ohos_unittest("deviceauth_llt") {
     "source/deviceauth_standard_test.cpp",
     "source/group_operation_common_test.cpp",
     "source/identity_manager_test.cpp",
+    "source/iso_auth_task_test.cpp",
     "source/mk_agree_test.cpp",
     "source/os_account_adapter_mock.c",
     "source/privacy_enhancement_test.cpp",
@@ -178,10 +179,10 @@ ohos_unittest("device_auth_func_test") {
   sources += dev_frameworks_files
   sources += identity_service_mock_files
   sources += deviceauth_common_files
-  sources += sa_load_on_demand_mock_files
   sources += group_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
+  sources += session_mini_files
   sources += session_v1_files
   sources += session_v2_files
   sources += iso_protocol_files
@@ -314,6 +315,7 @@ ohos_unittest("device_auth_identity_service_test") {
   sources += ext_plugin_manager_files
   sources += session_manager_files
   sources += identity_service_files
+  sources += session_mini_files
   sources += session_v1_files
   sources += session_v2_files
   sources += iso_protocol_files
@@ -325,7 +327,6 @@ ohos_unittest("device_auth_identity_service_test") {
   sources += broadcast_manager_files
   sources += soft_bus_channel_mock_files
   sources += permission_adapter_files
-  sources += sa_load_on_demand_mock_files
 
   sources += group_auth_files
   sources += group_auth_account_unrelated_files
@@ -352,7 +353,6 @@ ohos_unittest("device_auth_identity_service_test") {
     "${authenticators_path}/src/account_unrelated/pake_task/pake_v1_task/pake_v1_task_main.c",
     "${identity_service_path}/session/src/cred_session_util.c",
     "${identity_service_path}/src/identity_operation.c",
-    "${cred_data_manager_path}/src/credential_data_manager.c",
   ]
 
   sources += [
@@ -449,6 +449,7 @@ ohos_unittest("device_auth_interface_test") {
   sources += group_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
+  sources += session_mini_files
   sources += session_v1_files
   sources += session_v2_files
   sources += iso_protocol_files
@@ -461,7 +462,6 @@ ohos_unittest("device_auth_interface_test") {
   sources += soft_bus_channel_files
   sources += deviceauth_ipc_files
   sources += permission_adapter_files
-  sources += critical_handler_mock_files
 
   sources += group_auth_files
   sources += group_auth_account_unrelated_files
@@ -511,6 +511,7 @@ ohos_unittest("device_auth_interface_test") {
     "ENABLE_PSEUDONYM",
     "DEV_AUTH_HIVIEW_ENABLE",
   ]
+
   sources += identity_manager_files
   include_dirs += identity_manager_inc
   sources += [ "source/deviceauth_interface_test.cpp" ]
@@ -540,8 +541,6 @@ ohos_unittest("device_auth_interface_test") {
     "mbedtls:mbedtls_shared",
     "openssl:libcrypto_static",
     "samgr:samgr_proxy",
-    "common_event_service:cesfwk_innerkits",
-    "safwk:system_ability_fwk",
   ]
 }
 
@@ -580,10 +579,10 @@ ohos_unittest("deviceauth_unit_test") {
   sources += identity_service_mock_files
   sources += dev_frameworks_files
   sources += deviceauth_common_files
-  sources += sa_load_on_demand_mock_files
   sources += group_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
+  sources += session_mini_files
   sources += session_v1_files
   sources += session_v2_files
   sources += iso_protocol_files

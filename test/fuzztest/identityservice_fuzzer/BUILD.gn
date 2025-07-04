@@ -63,6 +63,7 @@ ohos_fuzztest("IdentityServiceFuzzTest") {
   sources += identity_service_files
   sources += session_v1_files
   sources += session_v2_files
+  sources += session_mini_files
   sources += iso_protocol_files
   sources += ec_speke_protocol_files
   sources += auth_code_import_files
@@ -72,7 +73,6 @@ ohos_fuzztest("IdentityServiceFuzzTest") {
   sources += broadcast_manager_files
   sources += soft_bus_channel_mock_files
   sources += permission_adapter_files
-  sources += sa_load_on_demand_mock_files
 
   sources += group_auth_files
   sources += group_auth_account_unrelated_files
