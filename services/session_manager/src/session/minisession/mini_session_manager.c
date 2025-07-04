@@ -153,6 +153,7 @@ int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serv
     }
     if (g_lightsession.pushBackT(&g_lightsession, *newSession) == NULL) {
         LOGE("push session to list fail.");
+        HcFree(newSession);
         return HC_ERR_MEMORY_COPY;
     }
     return HC_SUCCESS;
