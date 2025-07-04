@@ -1286,7 +1286,6 @@ DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *
 
 DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 {
-    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     if (g_devAuthServiceStatus == true) {
         LOGI("device auth sdk already init");
         return HC_SUCCESS;
