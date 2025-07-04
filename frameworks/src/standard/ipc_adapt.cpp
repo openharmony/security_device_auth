@@ -33,11 +33,11 @@ using namespace OHOS;
 namespace {
     static const int32_t BUFF_MAX_SZ = 128;
     static const int32_t IPC_CALL_BACK_MAX_NODES = 64;
-    static const int32_t IPC_CALL_BACK_STUB_NODES = 3;
+    static const int32_t IPC_CALL_BACK_STUB_NODES = 4;
     static const uint32_t DEV_AUTH_MAX_THREAD_NUM = 2;
 }
 
-static sptr<StubDevAuthCb> g_sdkCbStub[IPC_CALL_BACK_STUB_NODES] = { nullptr, nullptr, nullptr };
+static sptr<StubDevAuthCb> g_sdkCbStub[IPC_CALL_BACK_STUB_NODES] = { nullptr, nullptr, nullptr, nullptr };
 
 typedef struct {
     uintptr_t cbHook;
@@ -1740,7 +1740,8 @@ bool IsCallbackMethod(int32_t methodId)
         (methodId == IPC_CALL_ID_DA_AUTH_DEVICE) || (methodId == IPC_CALL_ID_DA_PROC_DATA) ||
         (methodId == IPC_CALL_ID_GA_PROC_DATA) || (methodId == IPC_CALL_ID_AUTH_DEVICE) ||
         (methodId == IPC_CALL_ID_CM_REG_LISTENER) || (methodId == IPC_CALL_ID_CA_AUTH_CREDENTIAL) ||
-        (methodId == IPC_CALL_ID_CA_PROCESS_CRED_DATA)) {
+        (methodId == IPC_CALL_ID_CA_PROCESS_CRED_DATA) || (methodId == IPC_CALL_ID_LA_START_LIGHT_ACCOUNT_AUTH)||
+        (methodId == IPC_CALL_ID_LA_PROCESS_LIGHT_ACCOUNT_AUTH)) {
         return true;
     }
     return false;
@@ -1751,6 +1752,7 @@ void UnInitProxyAdapt(void)
     g_sdkCbStub[IPC_CALL_BACK_STUB_AUTH_ID] = nullptr;
     g_sdkCbStub[IPC_CALL_BACK_STUB_BIND_ID] = nullptr;
     g_sdkCbStub[IPC_CALL_BACK_STUB_DIRECT_AUTH_ID] = nullptr;
+    g_sdkCbStub[IPC_CALL_BACK_STUB_LIGHT_AUTH_ID] = nullptr;
     return;
 }
 
@@ -1759,8 +1761,9 @@ int32_t InitProxyAdapt(void)
     g_sdkCbStub[IPC_CALL_BACK_STUB_AUTH_ID] = new(std::nothrow) StubDevAuthCb;
     g_sdkCbStub[IPC_CALL_BACK_STUB_BIND_ID] = new(std::nothrow) StubDevAuthCb;
     g_sdkCbStub[IPC_CALL_BACK_STUB_DIRECT_AUTH_ID] = new(std::nothrow) StubDevAuthCb;
+    g_sdkCbStub[IPC_CALL_BACK_STUB_LIGHT_AUTH_ID] = new(std::nothrow) StubDevAuthCb;
     if (!g_sdkCbStub[IPC_CALL_BACK_STUB_AUTH_ID] || !g_sdkCbStub[IPC_CALL_BACK_STUB_BIND_ID] ||
-        !g_sdkCbStub[IPC_CALL_BACK_STUB_DIRECT_AUTH_ID]) {
+        !g_sdkCbStub[IPC_CALL_BACK_STUB_DIRECT_AUTH_ID] || !g_sdkCbStub[IPC_CALL_BACK_STUB_LIGHT_AUTH_ID]) {
         LOGE("alloc callback stub object failed");
         UnInitProxyAdapt();
         return HC_ERR_ALLOC_MEMORY;

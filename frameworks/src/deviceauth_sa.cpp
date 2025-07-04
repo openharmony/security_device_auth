@@ -100,6 +100,8 @@ static IpcCallMap g_ipcCallMaps[] = {
     {IpcServiceCaProcessCredData, IPC_CALL_ID_CA_PROCESS_CRED_DATA},
     {IpcServiceAvGetClientSharedKey, IPC_CALL_ID_AV_GET_CLIENT_SHARED_KEY},
     {IpcServiceAvGetServerSharedKey, IPC_CALL_ID_AV_GET_SERVER_SHARED_KEY},
+    {IpcServiceLaStartLightAccountAuth, IPC_CALL_ID_LA_START_LIGHT_ACCOUNT_AUTH},
+    {IpcServiceLaProcessLightAccountAuth, IPC_CALL_ID_LA_PROCESS_LIGHT_ACCOUNT_AUTH},
 };
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DeviceAuthAbility, SA_ID_DEVAUTH_SERVICE, true);

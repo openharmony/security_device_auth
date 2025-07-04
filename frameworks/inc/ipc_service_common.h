@@ -79,6 +79,10 @@ int32_t IpcServiceCaProcessCredData(const IpcDataInfo *ipcParams, int32_t paramN
 int32_t IpcServiceAvGetClientSharedKey(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
 int32_t IpcServiceAvGetServerSharedKey(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
 
+// Light Account Verifier Interfaces
+int32_t IpcServiceLaStartLightAccountAuth(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+int32_t IpcServiceLaProcessLightAccountAuth(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache);
+
 int32_t MainRescInit(void);
 void DeMainRescInit(void);
 

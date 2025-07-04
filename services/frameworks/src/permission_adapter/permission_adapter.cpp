@@ -61,6 +61,8 @@ static unordered_map<int32_t, vector<string>> g_apiAccessConfig = {
     { IPC_CALL_ID_GET_PK_INFO_LIST, { PROC_NAME_DEVICE_SECURITY_LEVEL } },
     { IPC_CALL_ID_AV_GET_CLIENT_SHARED_KEY, { PROC_NAME_REMOTE_COMM } },
     { IPC_CALL_ID_AV_GET_SERVER_SHARED_KEY, { PROC_NAME_REMOTE_COMM } },
+    { IPC_CALL_ID_LA_START_LIGHT_ACCOUNT_AUTH, { PROC_NAME_SOFT_BUS } },
+    { IPC_CALL_ID_LA_PROCESS_LIGHT_ACCOUNT_AUTH, { PROC_NAME_SOFT_BUS } },
 };
 
 static unordered_set<int32_t> g_credMgrApi = {

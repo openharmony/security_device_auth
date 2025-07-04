@@ -1172,6 +1172,66 @@ static void InitIpcAccountVerifierMethods(AccountVerifier *accountVerifier)
     accountVerifier->destroyDataBuff = IpcAvDestroyDataBuff;
 }
 
+static int32_t IpcLaStartLightAccountAuth(int32_t osAccountId, int64_t requestId,
+    const char *serviceId, const DeviceAuthCallback *laCallBack)
+{
+    LOGI("starting ...");
+    int32_t ret;
+    uintptr_t callCtx = 0x0;
+    int32_t inOutLen;
+    IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
+
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(serviceId) || laCallBack == NULL));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
+    do {
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_SERVICE_ID, serviceId, HcStrlen(serviceId) + 1);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, laCallBack, sizeof(*laCallBack));
+        SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_LIGHT_AUTH_ID);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_LA_START_LIGHT_ACCOUNT_AUTH, true);
+        DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
+    } while (0);
+    DESTROY_IPC_CTX(callCtx);
+
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
+    return ret;
+}
+
+static int32_t IpcLaProcessLightAccountAuth(int32_t osAccountId, int64_t requestId,
+    DataBuff *inMsg, const DeviceAuthCallback *laCallBack)
+{
+    LOGI("starting ...");
+    int32_t ret;
+    uintptr_t callCtx = 0x0;
+    int32_t inOutLen;
+    IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
+
+    RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((!IS_COMM_DATA_VALID(inMsg->data, inMsg->length) || (laCallBack == NULL)));
+    RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
+    do {
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_COMM_DATA, inMsg->data, inMsg->length);
+        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, laCallBack, sizeof(*laCallBack));
+        SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_LIGHT_AUTH_ID);
+        BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_LA_PROCESS_LIGHT_ACCOUNT_AUTH, true);
+        DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
+        BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
+    } while (0);
+    DESTROY_IPC_CTX(callCtx);
+
+    LOGI("process done, ret: %" LOG_PUB "d", ret);
+    return ret;
+}
+
+static void InitIpcLightAccountVerifierMethods(LightAccountVerifier *lightAccountVerifier)
+{
+    lightAccountVerifier->startLightAccountAuth = IpcLaStartLightAccountAuth;
+    lightAccountVerifier->processLightAccountAuth = IpcLaProcessLightAccountAuth;
+}
+
 DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const char *reqJsonStr, char **returnData)
 {
     RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
@@ -1361,6 +1421,16 @@ DEVICE_AUTH_API_PUBLIC const AccountVerifier *GetAccountVerifierInstance(void)
     avInstPtr = &avInstCtx;
     return (const AccountVerifier *)(avInstPtr);
 }
+
+DEVICE_AUTH_API_PUBLIC const LightAccountVerifier *GetLightAccountVerifierInstance(void)
+{
+    static LightAccountVerifier laInstCtx;
+    static LightAccountVerifier *laInstPtr = NULL;
+    InitIpcLightAccountVerifierMethods(&laInstCtx);
+    laInstPtr = &laInstCtx;
+    return (const LightAccountVerifier *)(laInstPtr);
+}
+  
 
 #ifdef __cplusplus
 }

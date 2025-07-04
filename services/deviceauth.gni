@@ -103,6 +103,7 @@ inc_path = [
   "${protocol_path}/inc/iso_protocol",
   "${session_manager_path}/inc",
   "${session_manager_path}/inc/session",
+  "${session_manager_path}/inc/session/minisession",
   "${session_manager_path}/inc/session/v1",
   "${session_manager_path}/inc/session/v1/compatible_bind_sub_session",
   "${session_manager_path}/inc/session/v1/compatible_auth_sub_session",
@@ -231,6 +232,10 @@ session_manager_files = [
   "${session_manager_path}/src/session/dev_session_fwk.c",
 ]
 
+session_mini_files = [
+  "${session_manager_path}/src/session/minisession/mini_session_manager.c",
+]
+
 session_v1_files = [
   "${session_manager_path}/src/session/v1/compatible_sub_session.c",
   "${session_manager_path}/src/session/v1/compatible_bind_sub_session/compatible_bind_sub_session.c",
@@ -325,7 +330,7 @@ broadcast_manager_mock_files = [
 ]
 
 deviceauth_files = dev_frameworks_files + deviceauth_common_files +
-                   session_manager_files + creds_manager_files
+                   session_manager_files + creds_manager_files 
 
 if (enable_pseudonym == true) {
   deviceauth_defines += [ "ENABLE_PSEUDONYM" ]
@@ -376,6 +381,10 @@ if (enable_session_v2 == true) {
   deviceauth_files += save_trusted_info_files
 } else {
   deviceauth_files += session_v2_mock_files
+}
+
+if (enable_session_mini == true) {
+  deviceauth_files += session_mini_files
 }
 
 if (enable_session_v1 == true) {

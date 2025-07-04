@@ -58,6 +58,7 @@ ohos_unittest("deviceauth_llt") {
   sources += group_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
+  sources += session_mini_files
   sources += session_v1_files
   sources += session_v2_mock_files
   sources += creds_manager_files
@@ -182,6 +183,7 @@ ohos_unittest("device_auth_func_test") {
   sources += group_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
+  sources += session_mini_files
   sources += session_v1_files
   sources += session_v2_files
   sources += iso_protocol_files
@@ -314,6 +316,7 @@ ohos_unittest("device_auth_identity_service_test") {
   sources += ext_plugin_manager_files
   sources += session_manager_files
   sources += identity_service_files
+  sources += session_mini_files
   sources += session_v1_files
   sources += session_v2_files
   sources += iso_protocol_files
@@ -449,6 +452,7 @@ ohos_unittest("device_auth_interface_test") {
   sources += group_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
+  sources += session_mini_files
   sources += session_v1_files
   sources += session_v2_files
   sources += iso_protocol_files
@@ -511,6 +515,7 @@ ohos_unittest("device_auth_interface_test") {
     "ENABLE_PSEUDONYM",
     "DEV_AUTH_HIVIEW_ENABLE",
   ]
+
   sources += identity_manager_files
   include_dirs += identity_manager_inc
   sources += [ "source/deviceauth_interface_test.cpp" ]
@@ -584,6 +589,7 @@ ohos_unittest("deviceauth_unit_test") {
   sources += group_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
+  sources += session_mini_files
   sources += session_v1_files
   sources += session_v2_files
   sources += iso_protocol_files
