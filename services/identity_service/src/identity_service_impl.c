@@ -205,6 +205,15 @@ static int32_t CheckQueryPermission(Credential *credential, int32_t uid)
     return IS_SUCCESS;
 }
 
+static int32_t CheckDeletePermission(Credential *credential)
+{
+    if (CheckInterfacePermission(CRED_PRIVILEGE_PERMISSION) == IS_SUCCESS) {
+        LOGI("delete credential with privilege permission!");
+        return IS_SUCCESS;
+    }
+    return CheckOwnerUidPermission(credential);
+}
+
 int32_t QueryCredInfoByCredIdImpl(int32_t osAccountId, int32_t uid, const char *credId, char **returnData)
 {
     Credential *credential = NULL;
@@ -251,7 +260,7 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
         LOGE("Failed to get credential by credId, ret = %" LOG_PUB "d", ret);
         return ret;
     }
-    ret = CheckOwnerUidPermission(credential);
+    ret = CheckDeletePermission(credential);
     int32_t credentialUid = credential->ownerUid;
     DestroyCredential(credential);
     if (ret != IS_SUCCESS) {
