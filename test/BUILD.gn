@@ -19,8 +19,10 @@ group("deviceauth_test_build") {
     testonly = true
     deps += [
       "fuzztest/authenticators/account_related/auth/isoauthtask_fuzzer:fuzztest",
+      "fuzztest/authenticators/account_related/auth/pakeauthtask_fuzzer:fuzztest",
       "fuzztest/authenticators/account_unrelated/pake/standardexchangetask_fuzzer:fuzztest",
       "fuzztest/creds_manager/credsmanager_fuzzer:fuzztest",
+      "fuzztest/commonlib_fuzzer:fuzztest",
       "fuzztest/devauth_fuzzer:fuzztest",
       "fuzztest/devauthcb_fuzzer:fuzztest",
       "fuzztest/devauthfunc_fuzzer:fuzztest",

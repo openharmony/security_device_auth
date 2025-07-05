@@ -1894,8 +1894,11 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest035, TestSize.Level0)
 
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest036, TestSize.Level0)
 {
+    CJson *inputDataJson = CreateJson();
     HandleCacheCommonEvent();
     HandleCacheCommonEventInner(TEST_EVENT_NAME, 0);
+    EXPECT_NE(inputDataJson, nullptr);
+    FreeJson(inputDataJson);
 }
 
 class AvInterfaceTest : public testing::Test {
