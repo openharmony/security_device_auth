@@ -1393,7 +1393,7 @@ DEVICE_AUTH_API_PUBLIC const GroupAuthManager *GetGaInstance(void)
 {
     static GroupAuthManager gaInstCtx;
     static GroupAuthManager *gaInstPtr = NULL;
-
+    (void)InitDeviceAuthService();
     if (gaInstPtr == NULL) {
         InitIpcGaMethods(&gaInstCtx);
         gaInstPtr = &gaInstCtx;
@@ -1405,7 +1405,7 @@ DEVICE_AUTH_API_PUBLIC const DeviceGroupManager *GetGmInstance(void)
 {
     static DeviceGroupManager gmInstCtx;
     static DeviceGroupManager *gmInstPtr = NULL;
-
+    (void)InitDeviceAuthService();
     if (gmInstPtr == NULL) {
         InitIpcGmMethods(&gmInstCtx);
         gmInstPtr = &gmInstCtx;
@@ -1417,6 +1417,7 @@ DEVICE_AUTH_API_PUBLIC const AccountVerifier *GetAccountVerifierInstance(void)
 {
     static AccountVerifier avInstCtx;
     static AccountVerifier *avInstPtr = NULL;
+    (void)InitDeviceAuthService();
     InitIpcAccountVerifierMethods(&avInstCtx);
     avInstPtr = &avInstCtx;
     return (const AccountVerifier *)(avInstPtr);
@@ -1426,11 +1427,11 @@ DEVICE_AUTH_API_PUBLIC const LightAccountVerifier *GetLightAccountVerifierInstan
 {
     static LightAccountVerifier laInstCtx;
     static LightAccountVerifier *laInstPtr = NULL;
+    (void)InitDeviceAuthService();
     InitIpcLightAccountVerifierMethods(&laInstCtx);
     laInstPtr = &laInstCtx;
     return (const LightAccountVerifier *)(laInstPtr);
 }
-  
 
 #ifdef __cplusplus
 }
