@@ -379,7 +379,7 @@ void UnSubscribeDeviceAuthSa(void)
 
 int32_t InitLoadOnDemand(void)
 {
-    int32_t ret = InitHcMutex(&g_devAuthCallbackMutex, false);
+    int32_t ret = InitHcMutex(&g_devAuthCallbackMutex, true);
     if (ret != HC_SUCCESS) {
         return ret;
     }
