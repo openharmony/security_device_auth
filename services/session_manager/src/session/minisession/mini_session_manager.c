@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -53,13 +53,14 @@ static LightSession *CreateSession(int64_t requestId, int32_t osAccountId, const
         return NULL;
     }
     newSession->requestId = requestId;
-    newSession->serviceId = (char *)HcMalloc(HcStrlen(serviceId), 0);
+    uint32_t serviceIdLen = HcStrlen(serviceId) + 1; 
+    newSession->serviceId = (char *)HcMalloc(serviceIdLen, 0);
     if (newSession->serviceId == NULL) {
         LOGE("Copy serviceId failed.");
         HcFree(newSession);
         return NULL;
     }
-    if (memcpy_s(newSession->serviceId, HcStrlen(serviceId), serviceId, HcStrlen(serviceId)) != EOK) {
+    if (memcpy_s(newSession->serviceId, serviceIdLen, serviceId, serviceIdLen) != EOK) {
         LOGE("Copy serviceId failed.");
         HcFree(newSession->serviceId);
         HcFree(newSession);
@@ -153,7 +154,7 @@ int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serv
     }
     if (g_lightsession.pushBackT(&g_lightsession, *newSession) == NULL) {
         LOGE("push session to list fail.");
-        HcFree(newSession);
+        DestroyLightSession(newSession);
         return HC_ERR_MEMORY_COPY;
     }
     return HC_SUCCESS;
