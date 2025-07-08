@@ -1709,7 +1709,7 @@ static int32_t LightAuthOnTransmit(int64_t requestId, CJson *out, const DeviceAu
         return HC_ERR_JSON_FAIL;
     }
     ProcessTransmitCallback(requestId, (uint8_t *)returnMsg, HcStrlen(returnMsg) + 1, laCallBack);
-    FreeJson(returnMsg);
+    HcFree(returnMsg);
     return HC_SUCCESS;
 }
 
