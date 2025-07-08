@@ -35,6 +35,7 @@ DECLARE_HC_VECTOR(DevAuthCallbackInfoVec, DevAuthCallbackInfo)
 IMPLEMENT_HC_VECTOR(DevAuthCallbackInfoVec, DevAuthCallbackInfo, 1)
 static DevAuthCallbackInfoVec g_devAuthCallbackList;
 static bool g_devAuthSaIsActive = false;
+static bool volatile g_devAuthInitStatus = false;
 
 static RegCallbackFunc g_regCallback;
 static RegDataChangeListenerFunc g_regDataChangeListener;
@@ -315,6 +316,10 @@ void SetRegCredChangeListenerFunc(RegCredChangeListenerFunc regCredChangeListene
 
 void RegisterDevAuthCallbackIfNeed(void)
 {
+    if (g_devAuthInitStatus == false) {
+        LOGE("device auth not init.");
+        return;
+    }
     (void)LockHcMutex(&g_devAuthCallbackMutex);
     if (!g_devAuthSaIsActive) {
         LOGE("[SDK]: need to register callback.");
@@ -384,11 +389,13 @@ int32_t InitLoadOnDemand(void)
         return ret;
     }
     g_devAuthCallbackList = CREATE_HC_VECTOR(DevAuthCallbackInfoVec);
+    g_devAuthInitStatus = true;
     return HC_SUCCESS;
 }
 
 void DeInitLoadOnDemand(void)
 {
+    g_devAuthInitStatus = false;
     DESTROY_HC_VECTOR(DevAuthCallbackInfoVec, &g_devAuthCallbackList);
     DestroyHcMutex(&g_devAuthCallbackMutex);
 }
