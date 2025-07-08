@@ -53,7 +53,7 @@ static LightSession *CreateSession(int64_t requestId, int32_t osAccountId, const
         return NULL;
     }
     newSession->requestId = requestId;
-    uint32_t serviceIdLen = HcStrlen(serviceId) + 1; 
+    uint32_t serviceIdLen = HcStrlen(serviceId) + 1;
     newSession->serviceId = (char *)HcMalloc(serviceIdLen, 0);
     if (newSession->serviceId == NULL) {
         LOGE("Copy serviceId failed.");
