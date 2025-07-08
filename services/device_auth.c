@@ -921,6 +921,7 @@ static void CleanAllModules(int32_t type)
     switch (type) {
         case CLEAN_ALL:
             DestroyTaskManager();
+        // fallthrough
         case CLEAN_DEVSESSION:
             DestroyDevSessionManager();
         // fallthrough
