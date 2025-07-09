@@ -68,6 +68,7 @@ static CredAuthManager *g_credAuthManager = NULL;
 #define CLEAN_IDENTITY_SERVICE 5
 #define CLEAN_ALL 6
 #define CLEAN_LIGHT_SESSION_MANAGER 7
+#define CLEAN_DEVSESSION 8
 
 #define RETURN_RANDOM_LEN 16
 #define RETURN_KEY_LEN 32
@@ -919,6 +920,9 @@ static void CleanAllModules(int32_t type)
 {
     switch (type) {
         case CLEAN_ALL:
+            DestroyTaskManager();
+        // fallthrough
+        case CLEAN_DEVSESSION:
             DestroyDevSessionManager();
         // fallthrough
         case CLEAN_IDENTITY_SERVICE:
@@ -984,7 +988,7 @@ static int32_t InitAllModules(void)
         (void)InitGroupAuthManager();
         if ((res = InitTaskManager()) != HC_SUCCESS) {
             LOGE("[End]: [Service]: Failed to init worker thread!");
-            CleanAllModules(CLEAN_ALL);
+            CleanAllModules(CLEAN_DEVSESSION);
             break;
         }
         if ((res = InitLightSessionManager()) != HC_SUCCESS) {
@@ -1024,16 +1028,16 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     }
     res = AllocCredentialMgr();
     if (res != HC_SUCCESS) {
-        DestroyCa();
         DestroyGmAndGa();
+        DestroyCa();
         return res;
     }
     InitOsAccountAdapter();
     res = InitAllModules();
     if (res != HC_SUCCESS) {
-        DestroyCredentialMgr();
-        DestroyCa();
         DestroyGmAndGa();
+        DestroyCa();
+        DestroyCredentialMgr();
         return res;
     }
     INIT_PERFORMANCE_DUMPER();
@@ -1689,7 +1693,6 @@ static int32_t ProcessLightAccountAuthClient(int64_t requestId, int32_t osAccoun
         return res;
     }
     FreeJson(out);
-    DeleteLightSession(requestId, osAccountId);
     HcFree(returnKeyBuf.val);
     return res;
 }
@@ -1707,7 +1710,7 @@ static int32_t LightAuthOnTransmit(int64_t requestId, CJson *out, const DeviceAu
         return HC_ERR_JSON_FAIL;
     }
     ProcessTransmitCallback(requestId, (uint8_t *)returnMsg, HcStrlen(returnMsg) + 1, laCallBack);
-    FreeJson(outMsg);
+    HcFree(returnMsg);
     return HC_SUCCESS;
 }
 
@@ -1759,6 +1762,7 @@ static int32_t ProcessLightAccountAuthInner(int32_t osAccountId, int64_t request
         res = ProcessLightAccountAuthClient(requestId, osAccountId, msg, laCallBack, lightSession);
         if (res != HC_SUCCESS) {
             LOGE("ProcessLightAccountAuthClient failed");
+            DeleteLightSession(requestId, osAccountId);
             return res;
         }
         res = DeleteLightSession(requestId, osAccountId);

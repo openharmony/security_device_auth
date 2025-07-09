@@ -1175,6 +1175,7 @@ static void InitIpcAccountVerifierMethods(AccountVerifier *accountVerifier)
 static int32_t IpcLaStartLightAccountAuth(int32_t osAccountId, int64_t requestId,
     const char *serviceId, const DeviceAuthCallback *laCallBack)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     LOGI("starting ...");
     int32_t ret;
     uintptr_t callCtx = 0x0;
@@ -1202,6 +1203,7 @@ static int32_t IpcLaStartLightAccountAuth(int32_t osAccountId, int64_t requestId
 static int32_t IpcLaProcessLightAccountAuth(int32_t osAccountId, int64_t requestId,
     DataBuff *inMsg, const DeviceAuthCallback *laCallBack)
 {
+    RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED();
     LOGI("starting ...");
     int32_t ret;
     uintptr_t callCtx = 0x0;
