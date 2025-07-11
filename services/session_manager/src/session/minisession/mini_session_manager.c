@@ -161,7 +161,7 @@ int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serv
     }
     newLightSessionInfo.session = newSession;
     newLightSessionInfo.createTime = HcGetCurTime();
-    if (g_lightSessionInfoList.pushBackT(&g_lightSessionInfoList, *newLightSessionInfo) == NULL) {
+    if (g_lightSessionInfoList.pushBackT(&g_lightSessionInfoList, newLightSessionInfo) == NULL) {
         LOGE("push session to list fail.");
         DestroyLightSession(newSession);
         return HC_ERR_MEMORY_COPY;
