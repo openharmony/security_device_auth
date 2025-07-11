@@ -182,38 +182,63 @@ static void ReplaceStringToInt(char *input, const char *keyName)
     }
 }
 
+static char **CreateKeyList(CJson *arr)
+{
+    int keyListSize = GetItemNum(arr);
+    char **keyList = HcMalloc(keyListSize, sizeof(char *));
+    if (keyList == NULL) {
+        LOGE("Malloc keyList failed.");
+        return NULL;
+    }
+    for (int i = 0; i < keyListSize; i++) {
+        const char *str = GetStringValue(GetItemFromArray(arr, i));
+        if (str == NULL) {
+            keyList[i] = NULL;
+        } else {
+            keyList[i] = strdup(str);
+        }
+    }
+    return keyList;
+}
+
+static void DestroyKeyList(int size, char **keyList)
+{
+    for (int i = 0; i < size; i++) {
+        HcFree(keyList[i]);
+    }
+    HcFree(keyList);
+}
+
 static char *PackJsonWithBigIntArrToString(const CJson *jsonObj, CJson *arr)
 {
     int keyListSize = GetItemNum(arr);
-    int minSize = keyListSize < MAX_LEN ? keyListSize : MAX_LEN;
-    char *keyList[MAX_LEN];
-    for (int i = 0; i < minSize; i++) {
-        const char *str = GetStringValue(GetItemFromArray(arr, i));
-        if (str != NULL) {
-            keyList[i] = strdup(str);
-        } else {
-            keyList[i] = NULL;
-        }
+    char **keyList = CreateKeyList(arr);
+    if (keyList == NULL) {
+        return NULL;
     }
     CJson *dupJson = cJSON_Duplicate(jsonObj, RECURSE_FLAG_TRUE);
     if (dupJson == NULL) {
+        DestroyKeyList(keyListSize, keyList);
         LOGE("duplicate json failed.");
         return NULL;
     }
     cJSON_DeleteItemFromObject(dupJson, BIG_INT_ARR);
-    char *jsonStr = cJSON_PrintUnformatted(dupJson);
-    if (jsonStr == NULL) {
-        cJSON_free(dupJson);
-        LOGE("print unformat failed.");
-        return NULL;
-    }
-    cJSON_free(dupJson);
-    for (int i = 0; i < minSize; i++) {
-        if (keyList[i] != NULL) {
-            ReplaceStringToInt(jsonStr, keyList[i]);
-            HcFree(keyList[i]);
+
+    char *jsonStr = NULL;
+    do {
+        jsonStr = cJSON_PrintUnformatted(dupJson);
+        if (jsonStr == NULL) {
+            LOGE("dup json to str failed.");
+            break;
         }
-    }
+        for (int i = 0; i < keyListSize; i++) {
+            if (keyList[i] != NULL) {
+                ReplaceStringToInt(jsonStr, keyList[i]);
+            }
+        }
+    } while (0);
+    cJSON_free(dupJson);
+    DestroyKeyList(keyListSize, keyList);
     return jsonStr;
 }
 
