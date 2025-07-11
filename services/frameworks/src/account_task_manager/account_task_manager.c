@@ -84,7 +84,6 @@ void *ExecuteUnload(void *arg)
     sleep(UNLOAD_DELAY_TIME);
     LockHcMutex(&g_taskMutex);
     if (IsPluginUnloadNeeded() && g_isUnloadState) {
-        DEV_AUTH_UNLOAD_PLUGIN();
         g_isPluginLoaded = false;
         g_isUnloadState = false;
         LOGI("[ACCOUNT_TASK_MGR]: unload plugin successfully.");
@@ -154,7 +153,6 @@ int32_t InitAccountTaskManager(void)
     }
     DEV_AUTH_LOAD_PLUGIN();
     g_hasAccountAuthPlugin = HasAccountAuthPlugin();
-    DEV_AUTH_UNLOAD_PLUGIN();
     g_taskList = CREATE_HC_VECTOR(AccountTaskRecordList);
     g_isInit = true;
     return HC_SUCCESS;
