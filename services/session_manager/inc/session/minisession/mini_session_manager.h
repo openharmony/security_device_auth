@@ -30,10 +30,7 @@ typedef struct {
     int32_t osAccountId;
     char *serviceId;
     uint8_t randomVal[RETURN_RANDOM_LEN];
-    int64_t createTime;
 } LightSession;
-
-DECLARE_HC_VECTOR(LightSessionVec, LightSession)
 
 #ifdef __cplusplus
 extern "C" {

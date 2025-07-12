@@ -34,9 +34,15 @@
 #define TIME_OUT_VALUE_DD 300
 #define MAX_SESSION_NUM_DD 30
 
-IMPLEMENT_HC_VECTOR(LightSessionVec, LightSession, 1)
+typedef struct {
+    LightSession *session;
+    int64_t createTime;
+} LightSessionInfo;
 
-static LightSessionVec g_lightsession;
+DECLARE_HC_VECTOR(LightSessionInfoVec, LightSessionInfo)
+IMPLEMENT_HC_VECTOR(LightSessionInfoVec, LightSessionInfo, 1)
+
+static LightSessionInfoVec g_lightSessionInfoList;
 
 static LightSession *CreateSession(int64_t requestId, int32_t osAccountId, const char *serviceId, uint8_t *randomVal)
 {
@@ -45,7 +51,6 @@ static LightSession *CreateSession(int64_t requestId, int32_t osAccountId, const
         LOGE("Failed to alloc newSession");
         return NULL;
     }
-    newSession->createTime = HcGetCurTime();
     newSession->osAccountId = osAccountId;
     if (memcpy_s(newSession->randomVal, RETURN_RANDOM_LEN, randomVal, RETURN_RANDOM_LEN) != EOK) {
         LOGE("Copy randomVal failed.");
@@ -85,51 +90,52 @@ static void DestroyLightSession(LightSession *lightSessionEntry)
 static void RemoveTimeOutSession(void)
 {
     uint32_t index = 0;
-    while (index < g_lightsession.size(&(g_lightsession))) {
-        LightSession *session = g_lightsession.getp(&(g_lightsession), index);
-        int64_t runningTime = HcGetIntervalTime(session->createTime);
+    while (index < g_lightSessionInfoList.size(&(g_lightSessionInfoList))) {
+        LightSessionInfo *lightSessionInfo = g_lightSessionInfoList.getp(&(g_lightSessionInfoList), index);
+        int64_t runningTime = HcGetIntervalTime(lightSessionInfo->createTime);
         if (runningTime < TIME_OUT_VALUE_DD) {
             index++;
             continue;
         }
+        LightSession *session = lightSessionInfo->session;
         LOGI("session timeout. [Id]: %" LOG_PUB PRId64, session->requestId);
         LOGI("session timeout. [TimeLimit(/s)]: %" LOG_PUB "d, [RunningTime(/s)]: %" LOG_PUB PRId64,
             TIME_OUT_VALUE_DD, runningTime);
         DestroyLightSession(session);
-        g_lightsession.eraseElement(&(g_lightsession), session, index);
+        HC_VECTOR_POPELEMENT(&g_lightSessionInfoList, lightSessionInfo, index);
     }
 }
 
 int32_t InitLightSessionManager(void)
 {
-    g_lightsession = CREATE_HC_VECTOR(LightSessionVec);
+    g_lightSessionInfoList = CREATE_HC_VECTOR(LightSessionInfoVec);
     return HC_SUCCESS;
 }
 
 void DestroyLightSessionManager(void)
 {
     uint32_t index;
-    LightSession *entry;
-    FOR_EACH_HC_VECTOR(g_lightsession, index, entry) {
+    LightSessionInfo *entry;
+    FOR_EACH_HC_VECTOR(g_lightSessionInfoList, index, entry) {
         if (entry == NULL) {
             continue;
         }
-        DestroyLightSession(entry);
+        DestroyLightSession(entry->session);
     }
-    DESTROY_HC_VECTOR(LightSessionVec, &g_lightsession);
+    DESTROY_HC_VECTOR(LightSessionInfoVec, &g_lightSessionInfoList);
 }
 
 int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, LightSession **lightSession)
 {
     RemoveTimeOutSession();
     uint32_t index = 0;
-    LightSession *data = NULL;
-    FOR_EACH_HC_VECTOR(g_lightsession, index, data) {
-        if (data == NULL) {
+    LightSessionInfo *entry;
+    FOR_EACH_HC_VECTOR(g_lightSessionInfoList, index, entry) {
+        if (entry == NULL) {
             continue;
         }
-        if (requestId == data->requestId && osAccountId == data->osAccountId) {
-            *lightSession = data;
+        if (requestId == entry->session->requestId && osAccountId == entry->session->osAccountId) {
+            *lightSession = entry->session;
             LOGI("Light session found. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %" LOG_PUB "d",
                 requestId, osAccountId);
             return HC_SUCCESS;
@@ -143,16 +149,19 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, LightSession *
 int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serviceId, uint8_t *randomVal)
 {
     RemoveTimeOutSession();
-    if (g_lightsession.size(&g_lightsession) >= MAX_SESSION_NUM_DD) {
+    if (g_lightSessionInfoList.size(&g_lightSessionInfoList) >= MAX_SESSION_NUM_DD) {
         LOGE("Reach max session num!");
         return HC_ERR_OUT_OF_LIMIT;
     }
+    LightSessionInfo newLightSessionInfo;
     LightSession *newSession = CreateSession(requestId, osAccountId, serviceId, randomVal);
     if (newSession == NULL) {
         LOGE("create session fail.");
         return HC_ERR_MEMORY_COPY;
     }
-    if (g_lightsession.pushBackT(&g_lightsession, *newSession) == NULL) {
+    newLightSessionInfo.session = newSession;
+    newLightSessionInfo.createTime = HcGetCurTime();
+    if (g_lightSessionInfoList.pushBackT(&g_lightSessionInfoList, newLightSessionInfo) == NULL) {
         LOGE("push session to list fail.");
         DestroyLightSession(newSession);
         return HC_ERR_MEMORY_COPY;
@@ -164,14 +173,15 @@ int32_t DeleteLightSession(int64_t requestId, int32_t osAccountId)
 {
     RemoveTimeOutSession();
     uint32_t index = 0;
-    LightSession *session = NULL;
-    FOR_EACH_HC_VECTOR(g_lightsession, index, session) {
+    LightSessionInfo *ptr = NULL;
+    FOR_EACH_HC_VECTOR(g_lightSessionInfoList, index, ptr) {
+        LightSession *session = ptr->session;
         if (session == NULL) {
             continue;
         }
         if (requestId == session->requestId && osAccountId == session->osAccountId) {
             DestroyLightSession(session);
-            g_lightsession.eraseElement(&(g_lightsession), session, index);
+            HC_VECTOR_POPELEMENT(&g_lightSessionInfoList, ptr, index);
             LOGI("Light session delete. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %"
                 LOG_PUB "d", requestId, osAccountId);
             return HC_SUCCESS;
