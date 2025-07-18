@@ -129,6 +129,7 @@ static int32_t QueryAndAddSelfCredToContext(int32_t osAccountId, CJson *context)
         LOGE("get self credential id from json fail.");
         return HC_ERR_JSON_GET;
     }
+    PRINT_SENSITIVE_DATA("credId", credId);
     char *credDataStr = NULL;
     int32_t ret = QueryCredInfoByCredId(osAccountId, credId, &credDataStr);
     if (ret != HC_SUCCESS) {
@@ -136,13 +137,14 @@ static int32_t QueryAndAddSelfCredToContext(int32_t osAccountId, CJson *context)
         return ret;
     }
     CJson *credDataJson = CreateJsonFromString(credDataStr);
-    HcFree(credDataStr);
+    FreeJsonString(credDataStr);
     if (credDataJson == NULL) {
         LOGE("Faild to create json from string");
         return HC_ERR_JSON_FAIL;
     }
     int32_t res = AddUserIdHashHexStringToContext(context, credDataJson);
     if (res != HC_SUCCESS) {
+        FreeJson(credDataJson);
         LOGE("Failed to replace userId plain to hash hex string!");
         return res;
     }
@@ -385,8 +387,8 @@ static int32_t BuildServerCredAuthContext(int64_t requestId, CJson *context,
         LOGE("add isClient to context fail.");
         return HC_ERR_JSON_ADD;
     }
-    if (((res = QueryAndAddSelfCredToContext(osAccountId, context)) != HC_SUCCESS ||
-        (res = AddCredIdToContextIfNeeded(context) != HC_SUCCESS))) {
+    if ((res = QueryAndAddSelfCredToContext(osAccountId, context)) != HC_SUCCESS ||
+       ((res = AddCredIdToContextIfNeeded(context)) != HC_SUCCESS)) {
         return res;
     }
     const char *appId = GetAppIdByContext(context);

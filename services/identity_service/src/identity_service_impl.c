@@ -425,7 +425,7 @@ static int32_t AddUpdateCred(int32_t osAccountId, CJson *baseInfoJson, QueryCred
     }
     char *addRetStr = NULL;
     ret = AddCredentialImpl(osAccountId, addCredReq, &addRetStr);
-    HcFree(addCredReq);
+    FreeJsonString(addCredReq);
     HcFree(addRetStr);
     return ret;
 }
@@ -516,7 +516,7 @@ static int32_t GetCurrentCredIds(int32_t osAccountId, CJson *baseInfoJson, char 
         return ret;
     }
     ret = QueryCredentialByParamsImpl(osAccountId, queryStr, returnData);
-    HcFree(queryStr);
+    FreeJsonString(queryStr);
     return ret;
 }
 
