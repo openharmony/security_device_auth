@@ -775,6 +775,7 @@ DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
         return HC_ERR_INVALID_PARAMS;
     }
     if (!CheckIsForegroundOsAccountId(osAccountId)) {
+        FreeJson(context);
         LOGE("This access is not from the foreground user, rejected it.");
         return HC_ERR_CROSS_USER_ACCESS;
     }
@@ -1365,7 +1366,7 @@ static int32_t StartLightAccountAuthInner(int32_t osAccountId, int64_t requestId
     }
     ProcessTransmitCallback(requestId, (uint8_t *)returnMsg, HcStrlen(returnMsg) + 1, laCallBack);
     DestroyDataBuff(&clientRandom);
-    HcFree(returnMsg);
+    FreeJsonString(returnMsg);
     return res;
 }
 
@@ -1658,7 +1659,7 @@ static int32_t LightAuthOnFinish(int64_t requestId, CJson *out, const DeviceAuth
     }
     int32_t opCode = AUTH_FORM_LIGHT_AUTH;
     ProcessFinishCallback(requestId, opCode, returnFinishData, laCallBack);
-    HcFree(returnFinishData);
+    FreeJsonString(returnFinishData);
     return HC_SUCCESS;
 }
 
@@ -1710,7 +1711,7 @@ static int32_t LightAuthOnTransmit(int64_t requestId, CJson *out, const DeviceAu
         return HC_ERR_JSON_FAIL;
     }
     ProcessTransmitCallback(requestId, (uint8_t *)returnMsg, HcStrlen(returnMsg) + 1, laCallBack);
-    HcFree(returnMsg);
+    FreeJsonString(returnMsg);
     return HC_SUCCESS;
 }
 
@@ -1778,7 +1779,7 @@ static int32_t ProcessLightAccountAuthInner(int32_t osAccountId, int64_t request
         }
         int32_t opCode = AUTH_FORM_LIGHT_AUTH;
         char *returnDataStr = ProcessRequestCallback(requestId, opCode, reqParames, laCallBack);
-        HcFree(reqParames);
+        FreeJsonString(reqParames);
         if (returnDataStr == NULL) {
             LOGE("Onrequest callback is fail");
             return HC_ERR_REQ_REJECTED;
