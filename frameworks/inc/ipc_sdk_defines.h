@@ -225,7 +225,7 @@ GetIpcReplyByType((cache), REPLAY_CACHE_NUM(cache), (paramType), (uint8_t *)(out
 
 #define BREAK_IF_GET_IPC_RESULT_NUM_FAILED(cache, paramType, ipcResultNum) \
 inOutLen = sizeof(int32_t); \
-int32_t resultNum; \
+int32_t resultNum = 0; \
 GetIpcReplyByType((cache), REPLAY_CACHE_NUM(cache), (paramType), (uint8_t *)(&resultNum), &inOutLen); \
 if ((resultNum < (ipcResultNum)) || (inOutLen != sizeof(int32_t))) { \
     ret = HC_ERR_IPC_OUT_DATA_NUM; \

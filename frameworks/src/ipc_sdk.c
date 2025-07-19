@@ -999,7 +999,7 @@ static void IpcAvDestroyDataBuff(DataBuff *dataBuff)
 static int32_t GetSharedKeyAndRandom(const IpcDataInfo *replies, int32_t cacheNum, DataBuff *returnSharedKey,
     DataBuff *returnRandom)
 {
-    int32_t resultNum;
+    int32_t resultNum = 0;
     int32_t inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_IPC_RESULT_NUM, (uint8_t *)&resultNum, &inOutLen);
     if ((resultNum < IPC_RESULT_NUM_4) || (inOutLen != sizeof(int32_t))) {
@@ -1091,7 +1091,7 @@ static int32_t IpcAvGetClientSharedKey(const char *peerPkWithSig, const char *se
 
 static int32_t GetSharedKey(const IpcDataInfo *replies, int32_t cacheNum, DataBuff *returnSharedKey)
 {
-    int32_t resultNum;
+    int32_t resultNum = 0;
     int32_t inOutLen = sizeof(int32_t);
     GetIpcReplyByType(replies, cacheNum, PARAM_TYPE_IPC_RESULT_NUM, (uint8_t *)&resultNum, &inOutLen);
     if ((resultNum < IPC_RESULT_NUM_2) || (inOutLen != sizeof(int32_t))) {
