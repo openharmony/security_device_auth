@@ -111,6 +111,7 @@ static int32_t GetAuthIdPeerFromInput(const CJson *inputEvent, EcSpekeParams *pa
         LOGE("get authIdPeerStr from inputEvent fail.");
         return HC_ERR_JSON_GET;
     }
+    PRINT_SENSITIVE_DATA("peerAuthId", authIdPeerStr);
     uint32_t authIdPeerStrLen = HcStrlen(authIdPeerStr) / BYTE_TO_HEX_OPER_LENGTH;
     if (authIdPeerStrLen == 0 || authIdPeerStrLen > EC_SPEKE_AUTH_ID_MAX_LEN) {
         LOGE("Error occurs, Invalid authIdPeerStrLen: %" LOG_PUB "u.", authIdPeerStrLen);
@@ -550,24 +551,28 @@ static int32_t GenerateKcfDataMsg(EcSpekeProtocol *impl, bool isClient, bool isV
         LOGE("Memcpy for epkClient failed.");
         return HC_ERR_MEMORY_COPY;
     }
+    PRINT_SENSITIVE_BYTE("epkC", epkClient->val, epkClient->length);
     usedLen += EC_SPEKE_EC_KEY_LEN;
     if (memcpy_s(kcfDataMsg->val + usedLen, kcfDataMsg->length - usedLen,
         epkServer->val, EC_SPEKE_EC_KEY_LEN) != EOK) { // Only the x-coordinate of epk is required
         LOGE("Memcpy for epkServer failed.");
         return HC_ERR_MEMORY_COPY;
     }
+    PRINT_SENSITIVE_BYTE("epkS", epkServer->val, epkServer->length);
     usedLen += EC_SPEKE_EC_KEY_LEN;
     if (memcpy_s(kcfDataMsg->val + usedLen, kcfDataMsg->length - usedLen,
         params->sharedSecret.val, params->sharedSecret.length) != EOK) {
         LOGE("Memcpy for sharedSecret failed.");
         return HC_ERR_MEMORY_COPY;
     }
+    PRINT_SENSITIVE_BYTE("computedMsg", params->sharedSecret.val, params->sharedSecret.length);
     usedLen += params->sharedSecret.length;
     if (memcpy_s(kcfDataMsg->val + usedLen, kcfDataMsg->length - usedLen,
         params->base.val, EC_SPEKE_EC_KEY_LEN) != EOK) { // Only the x-coordinate of base is required
         LOGE("Memcpy for base_X failed.");
         return HC_ERR_MEMORY_COPY;
     }
+    PRINT_SENSITIVE_BYTE("base", params->base.val, params->base.length);
     usedLen += EC_SPEKE_EC_KEY_LEN;
     return CombineProtectedMsg(impl, isVerify, kcfDataMsg, usedLen);
 }

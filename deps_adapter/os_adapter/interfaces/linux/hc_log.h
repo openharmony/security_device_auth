@@ -37,6 +37,16 @@ typedef enum {
         } \
     } while (0)
 
+#define PRINT_SENSITIVE_BYTE(tag, byte, len) \
+    do { \
+        if ((len) < DESENSITIZATION_LEN) { \
+            LOGW("[" tag "]: sensitive str is too short."); \
+        } else { \
+            LOGI("[" tag "]: %" LOG_PUB ".2x%" LOG_PUB ".2x****%" LOG_PUB ".2x%" LOG_PUB ".2x", (byte)[DEV_AUTH_ZERO], \
+                (byte)[DEV_AUTH_ONE], (byte)[(len) - DEV_AUTH_TWO], (byte)[(len) - DEV_AUTH_ONE]); \
+        } \
+    } while (0)
+
 #ifdef HILOG_ENABLE
 
 #include <stdint.h>
