@@ -783,7 +783,7 @@ bool IsPeerSameUserId(int32_t osAccountId, const char *peerUserId)
 {
     if (peerUserId == NULL) {
         LOGE("The input is null ptr!");
-        return HC_ERR_NULL_PTR;
+        return false;
     }
     GroupEntryVec groupVec = CreateGroupEntryVec();
     QueryGroupParams queryParams = InitQueryGroupParams();
