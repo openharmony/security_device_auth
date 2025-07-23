@@ -790,6 +790,7 @@ static int32_t AddCredIdToReturn(const Credential *credInfo, CJson *json)
         LOGE("[CRED#DB]: Failed to add credId to json!");
         return IS_ERR_JSON_ADD;
     }
+    PRINT_SENSITIVE_DATA("credId", credId);
     return IS_SUCCESS;
 }
 
@@ -800,6 +801,7 @@ static int32_t AddCredTypeToReturn(const Credential *credInfo, CJson *json)
         LOGE("[CRED#DB]: Failed to add credType to json!");
         return IS_ERR_JSON_ADD;
     }
+    LOGI("credType: %" LOG_PUB "u", credType);
     return IS_SUCCESS;
 }
 

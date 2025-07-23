@@ -33,11 +33,13 @@ ohos_fuzztest("DLSpekeFuzzTest") {
     "${dev_frameworks_path}/inc/permission_adapter",
     "${dev_frameworks_path}/inc",
     "${session_manager_path}/inc/session/v2/auth_sub_session/protocol_lib",
+    "${frameworks_path}/sdk/sa_load_on_demand/inc",
   ]
   sources = [ "dlspeke_fuzzer.cpp" ]
   sources += deviceauth_ipc_files
   sources += permission_adapter_files
   sources += sa_load_on_demand_mock_files
+  sources += sdk_load_on_demand_mock_files
   sources += hiview_adapter_files
 
   defines = [ "ENABLE_P2P_BIND_DL_SPEKE" ]

@@ -62,6 +62,7 @@ inc_path = [
   "${device_auth_common}/inc",
   "${services_path}/sa/inc/cache_common_event_handler",
   "${services_path}/sa/inc/critical_handler",
+  "${services_path}/sa/inc/unload_handler",
   "${frameworks_path}/inc",
   "${ext_plugin_manager_path}/inc",
   "${ext_plugin_manager_path}/inc/account_related",
@@ -162,9 +163,17 @@ critical_handler_files =
     [ "${services_path}/sa/src/critical_handler/critical_handler.cpp" ]
 critical_handler_mock_files =
     [ "${services_path}/sa/src/critical_handler/mock/critical_handler_mock.cpp" ]
+unload_handler_files =
+    [ "${services_path}/sa/src/unload_handler/unload_handler.cpp" ]
+unload_handler_mock_files =
+    [ "${services_path}/sa/src/unload_handler/mock/unload_handler_mock.cpp" ]
+sdk_load_on_demand_files = 
+    [ "${frameworks_path}/sdk/sa_load_on_demand/src/sa_load_on_demand.cpp" ]
+sdk_load_on_demand_mock_files = 
+    [ "${frameworks_path}/sdk/sa_load_on_demand/src/mock/sa_load_on_demand_mock.cpp" ]
 
 sa_load_on_demand_files = cache_common_event_handler_files + critical_handler_files
-sa_load_on_demand_mock_files = cache_common_event_handler_mock_files + critical_handler_mock_files
+sa_load_on_demand_mock_files = cache_common_event_handler_mock_files + critical_handler_mock_files + unload_handler_mock_files
 
 hiview_adapter_files = [
   "${dev_frameworks_path}/src/hiview_adapter/hidump_adapter.c",
@@ -498,6 +507,13 @@ if (defined(global_parts_info) &&
   timeline_memmgr_enable = true
 } else {
   timeline_memmgr_enable = false
+}
+
+if (defined(global_parts_info) && 
+    defined(global_parts_info.notification_eventhandler)) {
+  event_handler_enabled = true
+} else {
+  event_handler_enabled = false
 }
 
 if (defined(ohos_lite)) {

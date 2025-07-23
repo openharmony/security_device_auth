@@ -153,7 +153,7 @@ if (os_level == "mini" || os_level == "small") {
       sources += [ "${frameworks_path}/src/ipc_sdk.c" ]
       sources +=
           [ "${frameworks_path}/src/mock/identity_service_ipc_sdk_mock.c" ]
-      sources += [ "${frameworks_path}/sdk/sa_load_on_demand/src/mock/sa_load_on_demand_mock.cpp" ]
+      sources += sdk_load_on_demand_mock_files
 
       defines = [ "HILOG_ENABLE" ]
       if (ohos_kernel_type == "linux") {
@@ -199,7 +199,8 @@ if (os_level == "mini" || os_level == "small") {
     if (timeline_memmgr_enable) {
       sources += sa_load_on_demand_files
     } else {
-      sources += sa_load_on_demand_mock_files
+      sources += cache_common_event_handler_mock_files
+      sources += critical_handler_mock_files
     }
     sources += permission_adapter_files
     sources += identity_service_files
@@ -294,7 +295,7 @@ if (os_level == "mini" || os_level == "small") {
     sources += [ "${frameworks_path}/src/ipc_sdk.c" ]
     sources += [ "${frameworks_path}/src/identity_service_ipc_sdk.c" ]
     sources += [ "${frameworks_path}/sdk/sa_listener/src/sa_listener.cpp" ]
-    sources += [ "${frameworks_path}/sdk/sa_load_on_demand/src/sa_load_on_demand.cpp" ]
+    sources += sdk_load_on_demand_files
 
     defines = [
       "__LINUX__",
@@ -360,6 +361,7 @@ if (os_level == "mini" || os_level == "small") {
       "${frameworks_path}/inc/standard",
       "${dev_frameworks_path}/inc/permission_adapter",
       "${dev_frameworks_path}/inc/hiview_adapter",
+      "${frameworks_path}/sdk/sa_load_on_demand/inc",
     ]
 
     defines = [ "HILOG_ENABLE" ]
@@ -376,7 +378,10 @@ if (os_level == "mini" || os_level == "small") {
     sources = deviceauth_ipc_files
     sources += [ "${frameworks_path}/src/deviceauth_sa.cpp" ]
     sources += [ "${frameworks_path}/src/ipc_service_common.c" ]
-
+    sources += sdk_load_on_demand_mock_files
+    if (event_handler_enabled) {
+      sources += unload_handler_files
+    }
     deps = [
       ":deviceauth",
       ":pre_deviceauth_service",
@@ -393,7 +398,9 @@ if (os_level == "mini" || os_level == "small") {
       "ipc:ipc_single",
       "safwk:system_ability_fwk",
       "samgr:samgr_proxy",
-      "eventhandler:libeventhandler",
     ]
+    if (event_handler_enabled) {
+      external_deps += [ "eventhandler:libeventhandler" ]
+    }
   }
 }

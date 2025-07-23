@@ -28,12 +28,12 @@
 #include "hidump_adapter.h"
 #include "string_ex.h"
 #include "ipc_service_common.h"
-#include "event_runner.h"
 
 #include "deviceauth_sa.h"
 #include "iservice_registry.h"
 #include "dev_session_mgr.h"
 #include "critical_handler.h"
+#include "unload_handler.h"
 
 #ifdef DEV_AUTH_USE_JEMALLOC
 #include "malloc.h"
@@ -42,9 +42,6 @@
 namespace OHOS {
 namespace {
     const uint32_t RESTORE_CODE = 14701;
-    const std::string DEVAUTH_UNLOAD_SA_HANDLER = "devauth_unload_sa_handler";
-    const std::string DEVAUTH_UNLOAD_TASK_ID = "devauth_unload_task";
-    const int32_t DEVAUTH_LIFE_TIME = 90000; // 90 * 1000
     const int32_t SA_REFUSE_TO_UNLOAD = -1;
 }
 
@@ -136,60 +133,6 @@ static int32_t SaAddMethodMap(uintptr_t ipcInstance)
     return ret;
 }
 
-bool DeviceAuthAbility::CreateUnloadHandler()
-{
-    std::lock_guard<std::recursive_mutex> lock(instanceMutex_);
-    if (unloadHandler_ != nullptr) {
-        return true;
-    }
-    auto unloadRunner = AppExecFwk::EventRunner::Create(DEVAUTH_UNLOAD_SA_HANDLER);
-    if (unloadRunner == nullptr) {
-        LOGE("Create unloadRunner failed.");
-        return false;
-    }
-    unloadHandler_ = std::make_shared<AppExecFwk::EventHandler>(unloadRunner);
-    if (unloadHandler_ == nullptr) {
-        LOGE("Create unloadHandler failed.");
-        return false;
-    }
-    return true;
-}
-
-void DeviceAuthAbility::DestroyUnloadHandler()
-{
-    std::lock_guard<std::recursive_mutex> lock(instanceMutex_);
-    if (unloadHandler_ == nullptr) {
-        LOGE("unloadHandler is nullptr.");
-        return;
-    }
-    unloadHandler_->RemoveTask(DEVAUTH_UNLOAD_TASK_ID);
-    unloadHandler_ = nullptr;
-}
-
-void DeviceAuthAbility::DelayUnload()
-{
-    if (!CreateUnloadHandler()) {
-        LOGE("UnloadHandler is nullptr.");
-        return;
-    }
-    auto utask = []() {
-        LOGI("The Service starts unloading.");
-        auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (saMgr == nullptr) {
-            LOGE("Get systemabilitymanager instance failed.");
-            return;
-        }
-        int32_t ret = saMgr->UnloadSystemAbility(DEVICE_AUTH_SERVICE_ID);
-        if (ret != ERR_OK) {
-            LOGE("Unload system ability failed.");
-            return;
-        }
-        LOGI("Service unloaded successfully.");
-    };
-    unloadHandler_->RemoveTask(DEVAUTH_UNLOAD_TASK_ID);
-    unloadHandler_->PostTask(utask, DEVAUTH_UNLOAD_TASK_ID, DEVAUTH_LIFE_TIME);
-}
-
 int32_t DeviceAuthAbility::Dump(int32_t fd, const std::vector<std::u16string> &args)
 {
     std::vector<std::string> strArgs;
@@ -258,8 +201,8 @@ static void DevAuthInitMemoryPolicy(void)
 int32_t DeviceAuthAbility::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
-    std::lock_guard<std::recursive_mutex> lock(instanceMutex_);
     DelayUnload();
+    std::lock_guard<std::mutex> lock(instanceMutex_);
     DevAuthInitMemoryPolicy();
     std::u16string readToken = data.ReadInterfaceToken();
 
@@ -285,7 +228,7 @@ int32_t DeviceAuthAbility::OnRemoteRequest(uint32_t code, MessageParcel &data, M
 
 void DeviceAuthAbility::OnActive(const SystemAbilityOnDemandReason &activeReason)
 {
-    std::lock_guard<std::recursive_mutex> lock(instanceMutex_);
+    std::lock_guard<std::mutex> lock(instanceMutex_);
     LOGI("OnActive, activeReason name is %" LOG_PUB "s, isUnloading is %" LOG_PUB "s.",
         activeReason.GetName().c_str(), isUnloading_ ? "YES" : "NO");
     isUnloading_ = false;
@@ -293,7 +236,7 @@ void DeviceAuthAbility::OnActive(const SystemAbilityOnDemandReason &activeReason
 
 int32_t DeviceAuthAbility::OnIdle(const SystemAbilityOnDemandReason &idleReason)
 {
-    std::lock_guard<std::recursive_mutex> lock(instanceMutex_);
+    std::lock_guard<std::mutex> lock(instanceMutex_);
     isUnloading_ = GetCriticalCnt() > 0 ? false : true;
     LOGI("OnIdle, idleReason name is %" LOG_PUB "s, isUnloading is %" LOG_PUB "s.",
         idleReason.GetName().c_str(), isUnloading_ ? "YES" : "NO");
@@ -305,7 +248,7 @@ int32_t DeviceAuthAbility::OnIdle(const SystemAbilityOnDemandReason &idleReason)
 
 void DeviceAuthAbility::OnStop()
 {
-    std::lock_guard<std::recursive_mutex> lock(instanceMutex_);
+    std::lock_guard<std::mutex> lock(instanceMutex_);
     LOGI("DeviceAuthAbility OnStop");
     DestroyUnloadHandler();
     RemoveTimeoutSession();
