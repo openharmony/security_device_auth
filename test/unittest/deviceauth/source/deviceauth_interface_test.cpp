@@ -1577,7 +1577,7 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0287, TestSize.Level0)
 {
     // dev_session_util.c static interface test
     int32_t res = IsPeerSameUserId(TEST_OS_ACCOUNT_ID, nullptr);
-    EXPECT_NE(res, HC_SUCCESS);
+    EXPECT_NE(res, true);
     
     res = GeneratePeerInfoJson(nullptr, nullptr);
     EXPECT_NE(res, HC_SUCCESS);
