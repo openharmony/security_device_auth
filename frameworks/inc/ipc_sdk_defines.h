@@ -234,18 +234,6 @@ if ((resultNum < (ipcResultNum)) || (inOutLen != sizeof(int32_t))) { \
 
 #define DESTROY_IPC_CTX(callCtx) DestroyCallCtx(&(callCtx))
 
-#define RETURN_ERROR_CODE_IF_LOAD_DEVAUTH_FAILED() \
-if (LoadDeviceAuthSaIfNotLoad() != HC_SUCCESS) { \
-    LOGW("sa not load."); \
-    return HC_ERR_IPC_SA_NOT_LOAD; \
-}
-
-#define RETURN_VOID_IF_LOAD_DEVAUTH_FAILED() \
-if (LoadDeviceAuthSaIfNotLoad() != HC_SUCCESS) { \
-    LOGW("sa not load."); \
-    return; \
-}
-
 #ifdef __cplusplus
 }
 #endif

@@ -33,6 +33,7 @@ ohos_fuzztest("DevAuthInterfaceFuzzTest") {
     "${dev_frameworks_path}/inc/hiview_adapter",
     "${frameworks_path}/inc/standard",
     "${dev_frameworks_path}/inc/permission_adapter",
+    "${frameworks_path}/sdk/sa_load_on_demand/inc",
   ]
 
   sources = hal_common_files
@@ -73,6 +74,7 @@ ohos_fuzztest("DevAuthInterfaceFuzzTest") {
   sources += deviceauth_ipc_files
   sources += permission_adapter_files
   sources += sa_load_on_demand_mock_files
+  sources += sdk_load_on_demand_mock_files
 
   sources += group_auth_files
   sources += group_auth_account_unrelated_files

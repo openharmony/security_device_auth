@@ -30,6 +30,7 @@ ohos_fuzztest("DevAuthCbFuzzTest") {
     "${frameworks_path}/inc/standard",
     "${dev_frameworks_path}/inc/hiview_adapter",
     "${dev_frameworks_path}/inc/permission_adapter",
+    "${frameworks_path}/sdk/sa_load_on_demand/inc",
   ]
   sources = [ "devauthcb_fuzzer.cpp" ]
   sources += deviceauth_ipc_files

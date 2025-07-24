@@ -857,43 +857,18 @@ int32_t CheckAndSetCredInfo(int32_t osAccountId,
 int32_t SetQueryParamsFromJson(QueryCredentialParams *queryParams, CJson *json)
 {
     queryParams->credId = GetStringFromJson(json, FIELD_CRED_ID);
-
     queryParams->deviceId = GetStringFromJson(json, FIELD_DEVICE_ID);
-
     queryParams->peerUserSpaceId = GetStringFromJson(json, FIELD_PEER_USER_SPACE_ID);
-
-    if (GetUint8FromJson(json, FIELD_SUBJECT, &queryParams->subject) != IS_SUCCESS) {
-        LOGW("Failed to set query params: subject");
-    }
-
     queryParams->userId = GetStringFromJson(json, FIELD_USER_ID);
 
-    if (GetUint8FromJson(json, FIELD_ISSUER, &queryParams->issuer) != IS_SUCCESS) {
-        LOGW("Failed to set query params: issuer");
-    }
-
-    if (GetUint8FromJson(json, FIELD_CRED_TYPE, &queryParams->credType) != IS_SUCCESS) {
-        LOGW("Failed to set query params: credType");
-    }
-
-    if (GetUint8FromJson(json, FIELD_KEY_FORMAT, &queryParams->keyFormat) != IS_SUCCESS) {
-        LOGW("Failed to set query params: keyFormat");
-    }
-
-    if (GetUint8FromJson(json, FIELD_ALGORITHM_TYPE, &queryParams->algorithmType) != IS_SUCCESS) {
-        LOGW("Failed to set query params: algorithmType");
-    }
-
-    if (GetUint8FromJson(json, FIELD_PROOF_TYPE, &queryParams->proofType) != IS_SUCCESS) {
-        LOGW("Failed to set query params: proofType");
-    }
-
-    if (GetUint8FromJson(json, FIELD_AUTHORIZED_SCOPE, &queryParams->authorizedScope) != IS_SUCCESS) {
-        LOGW("Failed to set query params: authorizedScope");
-    }
-
+    (void)GetUint8FromJson(json, FIELD_SUBJECT, &queryParams->subject);
+    (void)GetUint8FromJson(json, FIELD_ISSUER, &queryParams->issuer);
+    (void)GetUint8FromJson(json, FIELD_CRED_TYPE, &queryParams->credType);
+    (void)GetUint8FromJson(json, FIELD_KEY_FORMAT, &queryParams->keyFormat);
+    (void)GetUint8FromJson(json, FIELD_ALGORITHM_TYPE, &queryParams->algorithmType);
+    (void)GetUint8FromJson(json, FIELD_PROOF_TYPE, &queryParams->proofType);
+    (void)GetUint8FromJson(json, FIELD_AUTHORIZED_SCOPE, &queryParams->authorizedScope);
     queryParams->credOwner = GetStringFromJson(json, FIELD_CRED_OWNER);
-
     return IS_SUCCESS;
 }
 
@@ -1017,8 +992,9 @@ int32_t GetCredIdsFromCredVec(int32_t osAccountId, CJson *reqJson, CredentialVec
             LOGE("Failed to add credId to json");
             return IS_ERR_JSON_ADD;
         }
+        PRINT_SENSITIVE_DATA("credId", credId);
     }
-
+    LOGI("credIdList size is: %" LOG_PUB "d", GetItemNum(credIdJson));
     return IS_SUCCESS;
 }
 

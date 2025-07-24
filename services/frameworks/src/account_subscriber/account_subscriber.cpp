@@ -22,6 +22,7 @@
 #include "hc_log.h"
 #include "json_utils.h"
 #include "want.h"
+#include "unload_handler.h"
 
 namespace OHOS {
 namespace DevAuth {
@@ -32,6 +33,7 @@ AccountSubscriber::AccountSubscriber(const EventFwk::CommonEventSubscribeInfo &s
 
 void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
 {
+    DelayUnload();
     const OHOS::AAFwk::Want& want = eventData.GetWant();
     std::string action = want.GetAction();
     LOGI("[AccountSubscriber]: OnReceiveEvent action: %" LOG_PUB "s.", action.c_str());

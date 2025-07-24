@@ -21,7 +21,6 @@
 #include "iremote_broker.h"
 #include "iremote_stub.h"
 #include "nocopyable.h"
-#include "event_handler.h"
 
 #include "ipc_dev_auth_stub.h"
 
@@ -53,15 +52,8 @@ protected:
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
 
 private:
-    bool CreateUnloadHandler();
-    void DestroyUnloadHandler();
-    void DelayUnload();
     DeviceAuthAbility();
-    bool CheckDevAuthStatus();
-    bool CheckUnloadStatus();
-
-    std::shared_ptr<AppExecFwk::EventHandler> unloadHandler_;
-    std::recursive_mutex instanceMutex_;
+    std::mutex instanceMutex_;
     bool isUnloading_{false};
 };
 
