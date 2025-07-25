@@ -1764,22 +1764,6 @@ static bool IsCallerExtPart(int32_t opCode, CJson *params)
     return true;
 }
 
-static int32_t AddAccountTaskIfNeeded(int32_t opCode, int64_t reqId, CJson *params)
-{
-    if (!IsCallerExtPart(opCode, params)) {
-        return HC_SUCCESS;
-    }
-    return LoadAccountAndAddTaskRecord(reqId);
-}
-
-static void RemoveAccountTaskIfNeeded(int32_t opCode, int64_t reqId, CJson *params)
-{
-    if (!IsCallerExtPart(opCode, params)) {
-        return;
-    }
-    RemoveAccountTaskRecordAndUnload(reqId);
-}
-
 void DestroyGroupManagerTask(HcTaskBase *task)
 {
     if (task == NULL) {
@@ -1787,8 +1771,9 @@ void DestroyGroupManagerTask(HcTaskBase *task)
         DecreaseCriticalCnt();
         return;
     }
-    RemoveAccountTaskIfNeeded(((GroupManagerTask *)task)->opCode, ((GroupManagerTask *)task)->reqId,
-        ((GroupManagerTask *)task)->params);
+    if (IsCallerExtPart(((GroupManagerTask *)task)->opCode, ((GroupManagerTask *)task)->params)) {
+        DecreaseLoadCount();
+    }
     FreeJson(((GroupManagerTask *)task)->params);
     DecreaseCriticalCnt();
 }
@@ -1846,13 +1831,13 @@ int32_t InitAndPushGMTask(int32_t osAccountId, int32_t opCode, int64_t reqId, CJ
         HcFree(task);
         return HC_ERR_INIT_TASK_FAIL;
     }
-    int32_t res = AddAccountTaskIfNeeded(opCode, reqId, params);
-    if (res != HC_SUCCESS) {
-        HcFree(task);
-        return res;
+    if (IsCallerExtPart(opCode, params)) {
+        IncreaseLoadCount();
     }
     if (PushTask((HcTaskBase *)task) != HC_SUCCESS) {
-        RemoveAccountTaskIfNeeded(opCode, reqId, params);
+        if (IsCallerExtPart(opCode, params)) {
+            DecreaseLoadCount();
+        }
         HcFree(task);
         return HC_ERR_INIT_TASK_FAIL;
     }
