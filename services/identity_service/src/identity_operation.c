@@ -860,15 +860,29 @@ int32_t SetQueryParamsFromJson(QueryCredentialParams *queryParams, CJson *json)
     queryParams->deviceId = GetStringFromJson(json, FIELD_DEVICE_ID);
     queryParams->peerUserSpaceId = GetStringFromJson(json, FIELD_PEER_USER_SPACE_ID);
     queryParams->userId = GetStringFromJson(json, FIELD_USER_ID);
-
-    (void)GetUint8FromJson(json, FIELD_SUBJECT, &queryParams->subject);
-    (void)GetUint8FromJson(json, FIELD_ISSUER, &queryParams->issuer);
-    (void)GetUint8FromJson(json, FIELD_CRED_TYPE, &queryParams->credType);
-    (void)GetUint8FromJson(json, FIELD_KEY_FORMAT, &queryParams->keyFormat);
-    (void)GetUint8FromJson(json, FIELD_ALGORITHM_TYPE, &queryParams->algorithmType);
-    (void)GetUint8FromJson(json, FIELD_PROOF_TYPE, &queryParams->proofType);
-    (void)GetUint8FromJson(json, FIELD_AUTHORIZED_SCOPE, &queryParams->authorizedScope);
     queryParams->credOwner = GetStringFromJson(json, FIELD_CRED_OWNER);
+
+    if (GetUint8FromJson(json, FIELD_SUBJECT, &queryParams->subject) == IS_SUCCESS) {
+        LOGI("Set query params: subject");
+    }
+    if (GetUint8FromJson(json, FIELD_ISSUER, &queryParams->issuer) == IS_SUCCESS) {
+        LOGI("Set query params: issuer");
+    }
+    if (GetUint8FromJson(json, FIELD_CRED_TYPE, &queryParams->credType) == IS_SUCCESS) {
+        LOGI("Set query params: credType");
+    }
+    if (GetUint8FromJson(json, FIELD_KEY_FORMAT, &queryParams->keyFormat) == IS_SUCCESS) {
+        LOGI("Set query params: keyFormat");
+    }
+    if (GetUint8FromJson(json, FIELD_ALGORITHM_TYPE, &queryParams->algorithmType) == IS_SUCCESS) {
+        LOGI("Set query params: algorithmType");
+    }
+    if (GetUint8FromJson(json, FIELD_PROOF_TYPE, &queryParams->proofType) == IS_SUCCESS) {
+        LOGI("Set query params: proofType");
+    }
+    if (GetUint8FromJson(json, FIELD_AUTHORIZED_SCOPE, &queryParams->authorizedScope) == IS_SUCCESS) {
+        LOGI("Set query params: authorizedScope");
+    }
     return IS_SUCCESS;
 }
 
