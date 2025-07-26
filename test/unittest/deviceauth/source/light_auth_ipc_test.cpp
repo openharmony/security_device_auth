@@ -204,7 +204,7 @@ HWTEST_F(LaInterfaceTest, LaInterfaceTest003, TestSize.Level0)
     EXPECT_EQ(ret, HC_SUCCESS);
 
     uint32_t hkdfSaltLen = TEST_RANDOM_LEN + TEST_RANDOM_LEN;
-    uint8_t *hkdfSalt = (uint8_t *)HcMalloc(hkdfSaltLen, 0);
+    uint8_t *hkdfSalt = static_cast<uint8_t *>HcMalloc(hkdfSaltLen, 0);
     ret = ConstructSaltInner(returnRandom, returnRandom, hkdfSalt, hkdfSaltLen);
     EXPECT_EQ(ret, HC_SUCCESS);
     HcFree(hkdfSalt);
