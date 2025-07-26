@@ -1458,7 +1458,7 @@ static int32_t ConstructSalt(CJson *out, uint8_t *randomVal, Uint8Buff *hkdfSalt
         return res;
     }
     uint32_t hkdfSaltLen =  RETURN_RANDOM_LEN + RETURN_RANDOM_LEN;
-    uint8_t *hkdfSalt = static_cast<uint8_t *>(HcMalloc(hkdfSaltLen, 0));
+    uint8_t *hkdfSalt = (uint8_t *)HcMalloc(hkdfSaltLen, 0);
     if (hkdfSalt == NULL) {
         LOGE("Failed to alloc hkdfSalt");
         if (!isClient) {
