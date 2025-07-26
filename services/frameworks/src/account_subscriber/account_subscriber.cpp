@@ -39,7 +39,7 @@ void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
     DecreaseCriticalCnt();
 }
 
-void AccountSubscriber::ResponseCommonEvent(const CommonEventData &eventData)
+void AccountSubscriber::ResponseCommonEvent(const EventFwk::CommonEventData &eventData)
 {
     DelayUnload();
     const OHOS::AAFwk::Want& want = eventData.GetWant();
