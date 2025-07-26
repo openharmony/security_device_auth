@@ -22,6 +22,7 @@
 #include "hc_log.h"
 #include "json_utils.h"
 #include "want.h"
+#include "critical_handler.h"
 #include "unload_handler.h"
 
 namespace OHOS {
@@ -33,11 +34,17 @@ AccountSubscriber::AccountSubscriber(const EventFwk::CommonEventSubscribeInfo &s
 
 void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
 {
+    IncreaseCriticalCnt(ADD_ONE);
+    ResponseCommonEvent(eventData);
+    DecreaseCriticalCnt();
+}
+
+void AccountSubscriber::ResponseCommonEvent(const CommonEventData &eventData)
+{
     DelayUnload();
     const OHOS::AAFwk::Want& want = eventData.GetWant();
     std::string action = want.GetAction();
     LOGI("[AccountSubscriber]: OnReceiveEvent action: %" LOG_PUB "s.", action.c_str());
-
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
         LOGI("[AccountSubscriber]: user unlocked, userId: %" LOG_PUB "d.", eventData.GetCode());
         notifier_.notifyOsAccountUnlocked(eventData.GetCode());
@@ -66,5 +73,6 @@ void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
     FreeJson(cmdParamJson);
     LOGI("[AccountSubscriber]: handle common event res: %" LOG_PUB "d", res);
 }
+
 }  // namespace DevAuth
 }  // namespace OHOS
