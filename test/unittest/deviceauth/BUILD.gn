@@ -680,6 +680,7 @@ ohos_unittest("device_auth_ipc_test") {
     "${dev_frameworks_path}/inc/hiview_adapter",
     "${frameworks_path}/inc/standard",
     "${dev_frameworks_path}/inc/permission_adapter",
+    "${frameworks_path}/sdk/sa_load_on_demand/inc",
   ]
 
   sources = hal_common_files
