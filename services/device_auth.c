@@ -1423,20 +1423,18 @@ static int32_t ConstructSaltInner(DataBuff randomClientBuff, DataBuff randomServ
 
 static int32_t GetRandomVal(CJson *out, uint8_t *randomVal, bool isClient, DataBuff *randomBuff)
 {
-    int32_t res;
     if (isClient) {
         randomBuff->data = randomVal;
         randomBuff->length = RETURN_RANDOM_LEN;
     } else {
         (void)randomVal;
-        res = GetRandomValFromOutJson(out, randomBuff);
+        int32_t res = GetRandomValFromOutJson(out, randomBuff);
         if (res != HC_SUCCESS) {
             LOGE("Failed to get randomval");
             return res;
         }
     }
-    res = HC_SUCCESS;
-    return res;
+    return HC_SUCCESS;
 }
 
 static int32_t ConstructSalt(CJson *out, uint8_t *randomVal, Uint8Buff *hkdfSaltBuf, bool isClient)
@@ -1728,9 +1726,9 @@ static int32_t LightAuthOnTransmit(int64_t requestId, CJson *out, const DeviceAu
         LOGE("pack returnMsg to string failed");
         return HC_ERR_JSON_FAIL;
     }
-    bool res = ProcessTransmitCallback(requestId, (uint8_t *)returnMsg, HcStrlen(returnMsg) + 1, laCallBack);
-    if (res ==false) {
+    if (!ProcessTransmitCallback(requestId, (uint8_t *)returnMsg, HcStrlen(returnMsg) + 1, laCallBack)) {
         LOGE("ProcessTransmitCallback failed");
+        FreeJsonString(returnMsg);
         return HC_ERR_TRANSMIT_FAIL;
     }
     FreeJsonString(returnMsg);
