@@ -1057,11 +1057,11 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
         LOGI("[End]: [Service]: The service has not been initialized!");
         return;
     }
+    DestroyLightSessionManager();
     DestroyTaskManager();
     DestroyDevSessionManager();
     DestroyIdentityService();
     DestroyGroupManager();
-    DestroyLightSessionManager();
     DestroyGmAndGa();
     DestroyAccountTaskManager();
     DestroyCa();
@@ -1352,7 +1352,7 @@ static int32_t StartLightAccountAuthInner(int32_t osAccountId, int64_t requestId
         LOGE("Failed to get random!");
         return res;
     }
-    res = AddLightSession(requestId, osAccountId, serviceId, clientRandom.data);
+    res = AddLightSession(requestId, osAccountId, serviceId, clientRandom);
     if (res != HC_SUCCESS) {
         LOGE("Failed to AddLightSession!");
         DestroyDataBuff(&clientRandom);
@@ -1421,27 +1421,37 @@ static int32_t ConstructSaltInner(DataBuff randomClientBuff, DataBuff randomServ
     return HC_SUCCESS;
 }
 
-
-static int32_t ConstructSalt(CJson *out, uint8_t *randomVal, Uint8Buff *hkdfSaltBuf, bool isClient)
+static int32_t GetRandomVal(CJson *out, uint8_t *randomVal, bool isClient, DataBuff *randomBuff)
 {
-    DataBuff randomBuff = {0};
-    int32_t res;
     if (isClient) {
-        randomBuff.data = randomVal;
-        randomBuff.length = RETURN_RANDOM_LEN;
+        randomBuff->data = randomVal;
+        randomBuff->length = RETURN_RANDOM_LEN;
     } else {
-        (void) randomVal;
-        res = GetRandomValFromOutJson(out, &randomBuff);
+        (void)randomVal;
+        int32_t res = GetRandomValFromOutJson(out, randomBuff);
         if (res != HC_SUCCESS) {
-            LOGE("Failed to get random val!");
+            LOGE("Failed to get randomval");
             return res;
         }
     }
-    DataBuff peerRandomBuff = {0};
+    return HC_SUCCESS;
+}
+
+static int32_t ConstructSalt(CJson *out, uint8_t *randomVal, Uint8Buff *hkdfSaltBuf, bool isClient)
+{
+    DataBuff randomBuff = { 0 };
+    int32_t res = GetRandomVal(out, randomVal, isClient, &randomBuff);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get random val");
+        return res;
+    }
+    DataBuff peerRandomBuff = { 0 };
     res = GetPeerRandomValFromOutJson(out, &peerRandomBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to get peer random val!");
-        if (!isClient) { DestroyDataBuff(&randomBuff); }
+        if (!isClient) {
+            DestroyDataBuff(&randomBuff);
+        }
         DestroyDataBuff(&peerRandomBuff);
         return res;
     }
@@ -1449,7 +1459,9 @@ static int32_t ConstructSalt(CJson *out, uint8_t *randomVal, Uint8Buff *hkdfSalt
     uint8_t *hkdfSalt = (uint8_t *)HcMalloc(hkdfSaltLen, 0);
     if (hkdfSalt == NULL) {
         LOGE("Failed to alloc hkdfSalt");
-        if (!isClient) { DestroyDataBuff(&randomBuff); }
+        if (!isClient) {
+            DestroyDataBuff(&randomBuff);
+        }
         DestroyDataBuff(&peerRandomBuff);
         return HC_ERR_ALLOC_MEMORY;
     }
@@ -1460,14 +1472,18 @@ static int32_t ConstructSalt(CJson *out, uint8_t *randomVal, Uint8Buff *hkdfSalt
     }
     if (res != HC_SUCCESS) {
         LOGE("ConstructSaltInner failed!");
-        if (!isClient) { DestroyDataBuff(&randomBuff); }
+        if (!isClient) {
+            DestroyDataBuff(&randomBuff);
+        }
         DestroyDataBuff(&peerRandomBuff);
         HcFree(hkdfSalt);
         return res;
     }
     hkdfSaltBuf->val = hkdfSalt;
     hkdfSaltBuf->length = hkdfSaltLen;
-    if (!isClient) { DestroyDataBuff(&randomBuff); }
+    if (!isClient) {
+        DestroyDataBuff(&randomBuff);
+    }
     DestroyDataBuff(&peerRandomBuff);
     return res;
 }
@@ -1710,7 +1726,11 @@ static int32_t LightAuthOnTransmit(int64_t requestId, CJson *out, const DeviceAu
         LOGE("pack returnMsg to string failed");
         return HC_ERR_JSON_FAIL;
     }
-    ProcessTransmitCallback(requestId, (uint8_t *)returnMsg, HcStrlen(returnMsg) + 1, laCallBack);
+    if (!ProcessTransmitCallback(requestId, (uint8_t *)returnMsg, HcStrlen(returnMsg) + 1, laCallBack)) {
+        LOGE("ProcessTransmitCallback failed");
+        FreeJsonString(returnMsg);
+        return HC_ERR_TRANSMIT_FAIL;
+    }
     FreeJsonString(returnMsg);
     return HC_SUCCESS;
 }

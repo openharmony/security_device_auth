@@ -22,14 +22,13 @@
 #include "hc_tlv_parser.h"
 #include "hc_vector.h"
 #include "json_utils.h"
-
-#define RETURN_RANDOM_LEN 16
+#include "device_auth.h"
 
 typedef struct {
     int64_t requestId;
     int32_t osAccountId;
     char *serviceId;
-    uint8_t randomVal[RETURN_RANDOM_LEN];
+    uint8_t *randomVal;
 } LightSession;
 
 #ifdef __cplusplus
@@ -42,7 +41,7 @@ void DestroyLightSessionManager(void);
 
 int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, LightSession **lightSession);
 
-int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serviceId, uint8_t *randomVal);
+int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serviceId, DataBuff randomBuff);
 
 int32_t DeleteLightSession(int64_t requestId, int32_t osAccountId);
 
