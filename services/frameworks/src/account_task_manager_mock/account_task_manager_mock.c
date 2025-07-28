@@ -61,17 +61,6 @@ int32_t DestroyAccountAuthSession(int32_t sessionId)
     return HC_ERR_NOT_SUPPORT;
 }
 
-int32_t LoadAccountAndAddTaskRecord(int32_t taskId)
-{
-    (void)taskId;
-    return HC_ERR_NOT_SUPPORT;
-}
+void IncreaseLoadCount(void) {}
 
-void RemoveAccountTaskRecordAndUnload(int32_t taskId)
-{
-    (void)taskId;
-}
-
-void NotifyAsyncTaskStart(void) {}
-
-void NotifyAsyncTaskStop(void) {}
+void DecreaseLoadCount(void) {}

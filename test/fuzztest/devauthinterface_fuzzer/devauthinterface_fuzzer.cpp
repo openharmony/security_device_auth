@@ -1441,22 +1441,12 @@ static void DevAuthInterfaceTestCase034()
     (void)CreateAccountAuthSession(&sessionId, nullptr, nullptr);
     (void)ProcessAccountAuthSession(&sessionId, nullptr, nullptr, nullptr);
     (void)DestroyAccountAuthSession(sessionId);
-    (void)LoadAccountAndAddTaskRecord(0);
-    RemoveAccountTaskRecordAndUnload(0);
-    NotifyAsyncTaskStart();
-    NotifyAsyncTaskStop();
     (void)InitAccountTaskManager();
     (void)InitAccountTaskManager();
     (void)ExecuteAccountAuthCmd(DEFAULT_OS_ACCOUNT, IMPORT_SELF_CREDENTIAL, nullptr, nullptr);
     (void)CreateAccountAuthSession(&sessionId, nullptr, nullptr);
     (void)ProcessAccountAuthSession(&sessionId, nullptr, nullptr, nullptr);
     (void)DestroyAccountAuthSession(sessionId);
-    (void)LoadAccountAndAddTaskRecord(0);
-    RemoveAccountTaskRecordAndUnload(0);
-    NotifyAsyncTaskStart();
-    NotifyAsyncTaskStart();
-    NotifyAsyncTaskStop();
-    NotifyAsyncTaskStop();
     DestroyAccountTaskManager();
 }
 

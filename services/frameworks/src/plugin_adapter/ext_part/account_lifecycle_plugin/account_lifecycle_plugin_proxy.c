@@ -29,7 +29,6 @@ static AccountLifecyleExtPlugCtx *g_accountPluginCtx = NULL;
 typedef struct {
     HcTaskBase base;
     ExtWorkerTask *extTask;
-    int32_t taskId;
 } WorkerTask;
 
 static void DoWorkerTask(HcTaskBase *task)
@@ -74,7 +73,7 @@ static void DestroyWorkerTask(HcTaskBase *workerTask)
         return;
     }
     DestroyExtWorkerTask(((WorkerTask *)workerTask)->extTask);
-    RemoveAccountTaskRecordAndUnload(((WorkerTask *)workerTask)->taskId);
+    DecreaseLoadCount();
     DecreaseCriticalCnt();
     LOGD("[ACCOUNT_LIFE_PLUGIN]: Destroy worker task end.");
 }
@@ -94,24 +93,10 @@ static int32_t ExecuteWorkerTask(struct ExtWorkerTask *extTask)
     baseTask->extTask = extTask;
     baseTask->base.doAction = DoWorkerTask;
     baseTask->base.destroy = DestroyWorkerTask;
-    Uint8Buff taskIdBuff = { (uint8_t *)(&baseTask->taskId), sizeof(int32_t) };
-    int32_t res = GetLoaderInstance()->generateRandom(&taskIdBuff);
-    if (res != HC_SUCCESS) {
-        LOGE("Generate taskId failed, res: %" LOG_PUB "d.", res);
-        DestroyExtWorkerTask(extTask);
-        HcFree(baseTask);
-        return res;
-    }
-    res = LoadAccountAndAddTaskRecord(baseTask->taskId);
-    if (res != HC_SUCCESS) {
-        LOGE("Add account task record failed, res: %" LOG_PUB "d.", res);
-        DestroyExtWorkerTask(extTask);
-        HcFree(baseTask);
-        return res;
-    }
+    IncreaseLoadCount();
     if (PushTask((HcTaskBase *)baseTask) != HC_SUCCESS) {
         LOGE("[ACCOUNT_LIFE_PLUGIN]: Push worker task fail.");
-        RemoveAccountTaskRecordAndUnload(baseTask->taskId);
+        DecreaseLoadCount();
         DestroyExtWorkerTask(extTask);
         HcFree(baseTask);
         return HC_ERR_INIT_TASK_FAIL;
@@ -158,8 +143,8 @@ static int32_t InitAccountLifecyclePluginCtx(void)
     g_accountPluginCtx->regCallback = gmInstace->regCallback;
     g_accountPluginCtx->unRegCallback = gmInstace->unRegCallback;
     g_accountPluginCtx->executeWorkerTask = ExecuteWorkerTask;
-    g_accountPluginCtx->notifyAsyncTaskStart = NotifyAsyncTaskStart;
-    g_accountPluginCtx->notifyAsyncTaskStop = NotifyAsyncTaskStop;
+    g_accountPluginCtx->notifyAsyncTaskStart = IncreaseLoadCount;
+    g_accountPluginCtx->notifyAsyncTaskStop = DecreaseLoadCount;
     return HC_SUCCESS;
 }
 

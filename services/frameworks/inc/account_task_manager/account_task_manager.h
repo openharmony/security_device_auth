@@ -31,10 +31,8 @@ int32_t ExecuteAccountAuthCmd(int32_t osAccountId, int32_t cmdId, const CJson *i
 int32_t CreateAccountAuthSession(int32_t *sessionId, const CJson *in, CJson *out);
 int32_t ProcessAccountAuthSession(int32_t *sessionId, const CJson *in, CJson *out, int32_t *status);
 int32_t DestroyAccountAuthSession(int32_t sessionId);
-int32_t LoadAccountAndAddTaskRecord(int32_t taskId);
-void RemoveAccountTaskRecordAndUnload(int32_t taskId);
-void NotifyAsyncTaskStart(void);
-void NotifyAsyncTaskStop(void);
+void IncreaseLoadCount(void);
+void DecreaseLoadCount(void);
 
 #ifdef __cplusplus
 }
