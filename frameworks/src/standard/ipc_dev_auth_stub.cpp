@@ -26,7 +26,6 @@
 #include "hc_string_vector.h"
 #include "hidump_adapter.h"
 #include "string_ex.h"
-#include "critical_handler.h"
 
 #ifdef DEV_AUTH_SERVICE_BUILD
 #include "account_task_manager.h"
@@ -49,22 +48,6 @@ struct CbStubInfo {
 static struct CbStubInfo g_cbStub[MAX_CBSTUB_SIZE];
 static bool g_cbStubInited = false;
 static const uint32_t RESTORE_CODE = 14701;
-static const std::vector<int32_t> IPC_CALL_ID_UN_CRITICAL = {
-    IPC_CALL_ID_APPLY_REG_INFO,
-    IPC_CALL_ID_CHECK_ACCESS_TO_GROUP,
-    IPC_CALL_ID_GET_PK_INFO_LIST,
-    IPC_CALL_ID_GET_GROUP_INFO,
-    IPC_CALL_ID_SEARCH_GROUPS,
-    IPC_CALL_ID_GET_JOINED_GROUPS,
-    IPC_CALL_ID_GET_RELATED_GROUPS,
-    IPC_CALL_ID_GET_DEV_INFO_BY_ID,
-    IPC_CALL_ID_GET_TRUST_DEVICES,
-    IPC_CALL_ID_IS_DEV_IN_GROUP,
-    IPC_CALL_ID_GET_REAL_INFO,
-    IPC_CALL_ID_GET_PSEUDONYM_ID,
-    IPC_CALL_ID_CM_QUERY_CREDENTIAL_BY_PARAMS,
-    IPC_CALL_ID_CM_QUERY_CREDENTIAL_BY_CRED_ID
-};
 
 #ifdef DEV_AUTH_SERVICE_BUILD
 static const uint32_t DEFAULT_UPGRADE_OS_ACCOUNT_ID = 100;
@@ -225,7 +208,6 @@ static void InitCbStubTable()
 
 int32_t ServiceDevAuth::HandleRestoreCall(MessageParcel &data, MessageParcel &reply)
 {
-    IncreaseCriticalCnt(ADD_ONE);
 #ifdef DEV_AUTH_SERVICE_BUILD
     int32_t osAccountId = DEFAULT_UPGRADE_OS_ACCOUNT_ID;
     data.ReadInt32(osAccountId);
@@ -241,20 +223,7 @@ int32_t ServiceDevAuth::HandleRestoreCall(MessageParcel &data, MessageParcel &re
     (void)data;
     (void)reply;
 #endif
-    DecreaseCriticalCnt();
     return 0;
-}
-
-static void SetMethodCritical(int32_t methodId, bool criticalSwitch)
-{
-    if (std::count(IPC_CALL_ID_UN_CRITICAL.begin(), IPC_CALL_ID_UN_CRITICAL.end(), methodId) != 0) {
-        return;
-    }
-    if (criticalSwitch) {
-        IncreaseCriticalCnt(ADD_ONE);
-    } else {
-        DecreaseCriticalCnt();
-    }
 }
 
 int32_t ServiceDevAuth::HandleDeviceAuthCall(uint32_t code, MessageParcel &data, MessageParcel &reply,
@@ -268,6 +237,7 @@ int32_t ServiceDevAuth::HandleDeviceAuthCall(uint32_t code, MessageParcel &data,
     MessageParcel replyCache;
     IpcDataInfo reqParams[MAX_REQUEST_PARAMS_NUM] = { { 0 } };
     IpcServiceCall serviceCall = nullptr;
+
     switch (code) {
         case static_cast<uint32_t>(DevAuthInterfaceCode::DEV_AUTH_CALL_REQUEST):
             ret = GetMethodId(data, methodId);
@@ -293,9 +263,7 @@ int32_t ServiceDevAuth::HandleDeviceAuthCall(uint32_t code, MessageParcel &data,
                 InitCbStubTable();
                 WithObject(methodId, data, reqParams[reqParamNum], reqParamNum);
             }
-            SetMethodCritical(methodId, true);
             ret = serviceCall(reqParams, reqParamNum, reinterpret_cast<uintptr_t>(&replyCache));
-            SetMethodCritical(methodId, false);
             break;
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);

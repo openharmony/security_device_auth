@@ -216,11 +216,13 @@ int32_t DeviceAuthAbility::OnRemoteRequest(uint32_t code, MessageParcel &data, M
         return HC_ERR_IPC_SA_IS_UNLOADING;
     }
     int32_t ret;
+    IncreaseCriticalCnt(ADD_ONE);
     if (isRestoreCall) {
         ret = HandleRestoreCall(data, reply);
     } else {
         ret = HandleDeviceAuthCall(code, data, reply, option);
     }
+    DecreaseCriticalCnt();
     return ret;
 }
 

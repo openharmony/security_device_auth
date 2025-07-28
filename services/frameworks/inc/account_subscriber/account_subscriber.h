@@ -33,7 +33,6 @@ public:
         const OsAccountEventNotifier &notifier);
     virtual ~AccountSubscriber() = default;
     virtual void OnReceiveEvent(const EventFwk::CommonEventData &eventData) override;
-    void ResponseCommonEvent(const EventFwk::CommonEventData &eventData);
 private:
     OsAccountEventNotifier notifier_;
 };
