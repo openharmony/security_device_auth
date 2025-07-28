@@ -12,7 +12,7 @@
 # limitations under the License.
 
 declare_args() {
-  enable_session_mini = true
+  enable_session_mini = false
   enable_session_v2 = false
   enable_session_v1 = true
   enable_extend_plugin = false

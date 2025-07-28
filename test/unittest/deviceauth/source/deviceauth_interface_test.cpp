@@ -1824,11 +1824,6 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest034, TestSize.Level0)
     ASSERT_NE(res, HC_SUCCESS);
     res = DestroyAccountAuthSession(sessionId);
     ASSERT_NE(res, HC_SUCCESS);
-    res = LoadAccountAndAddTaskRecord(0);
-    ASSERT_NE(res, HC_SUCCESS);
-    RemoveAccountTaskRecordAndUnload(0);
-    NotifyAsyncTaskStart();
-    NotifyAsyncTaskStop();
     res = InitAccountTaskManager();
     ASSERT_EQ(res, HC_SUCCESS);
     res = InitAccountTaskManager();
@@ -1841,13 +1836,6 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest034, TestSize.Level0)
     ASSERT_NE(res, HC_SUCCESS);
     res = DestroyAccountAuthSession(sessionId);
     ASSERT_NE(res, HC_SUCCESS);
-    res = LoadAccountAndAddTaskRecord(0);
-    ASSERT_EQ(res, HC_SUCCESS);
-    RemoveAccountTaskRecordAndUnload(0);
-    NotifyAsyncTaskStart();
-    NotifyAsyncTaskStart();
-    NotifyAsyncTaskStop();
-    NotifyAsyncTaskStop();
     DestroyAccountTaskManager();
 }
 

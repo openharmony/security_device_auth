@@ -104,7 +104,7 @@ inc_path = [
   "${protocol_path}/inc/iso_protocol",
   "${session_manager_path}/inc",
   "${session_manager_path}/inc/session",
-  "${session_manager_path}/inc/session/minisession",
+  "${session_manager_path}/inc/session/mini_session",
   "${session_manager_path}/inc/session/v1",
   "${session_manager_path}/inc/session/v1/compatible_bind_sub_session",
   "${session_manager_path}/inc/session/v1/compatible_auth_sub_session",
@@ -242,7 +242,7 @@ session_manager_files = [
 ]
 
 session_mini_files = [
-  "${session_manager_path}/src/session/minisession/mini_session_manager.c",
+  "${session_manager_path}/src/session/mini_session/mini_session_manager.c",
 ]
 
 session_v1_files = [
@@ -263,6 +263,9 @@ session_v2_files = [
 ]
 session_v2_mock_files =
     [ "${session_manager_path}/src/session/v2_mock/dev_session_v2_mock.c" ]
+
+session_mini_mock_files =
+    [ "${session_manager_path}/src/session/mini_mock/mini_session_mock.c" ]
 
 iso_protocol_files = [ "${session_manager_path}/src/session/v2/auth_sub_session/protocol_lib/iso_protocol.c" ]
 dl_speke_protocol_files = [ "${session_manager_path}/src/session/v2/auth_sub_session/protocol_lib/dl_speke_protocol.c" ]
@@ -394,6 +397,9 @@ if (enable_session_v2 == true) {
 
 if (enable_session_mini == true) {
   deviceauth_files += session_mini_files
+}
+else {
+  deviceauth_files += session_mini_mock_files
 }
 
 if (enable_session_v1 == true) {
