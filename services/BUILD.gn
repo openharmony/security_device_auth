@@ -153,7 +153,7 @@ if (os_level == "mini" || os_level == "small") {
       sources += [ "${frameworks_path}/src/ipc_sdk.c" ]
       sources +=
           [ "${frameworks_path}/src/mock/identity_service_ipc_sdk_mock.c" ]
-      sources += sdk_load_on_demand_mock_files + critical_handler_mock_files
+      sources += sdk_load_on_demand_mock_files
 
       defines = [ "HILOG_ENABLE" ]
       if (ohos_kernel_type == "linux") {
@@ -295,7 +295,7 @@ if (os_level == "mini" || os_level == "small") {
     sources += [ "${frameworks_path}/src/ipc_sdk.c" ]
     sources += [ "${frameworks_path}/src/identity_service_ipc_sdk.c" ]
     sources += [ "${frameworks_path}/sdk/sa_listener/src/sa_listener.cpp" ]
-    sources += sdk_load_on_demand_files
+    sources += sdk_load_on_demand_files + critical_handler_mock_files
 
     defines = [
       "__LINUX__",
