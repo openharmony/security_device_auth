@@ -157,10 +157,7 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, LightSession *
     uint32_t index = 0;
     LightSessionInfo *entry;
     FOR_EACH_HC_VECTOR(g_lightSessionInfoList, index, entry) {
-        if (entry == NULL) {
-            continue;
-        }
-        if (entry->session == NULL) {
+        if (entry == NULL || entry->session == NULL) {
             continue;
         }
         if (requestId == entry->session->requestId && osAccountId == entry->session->osAccountId) {
