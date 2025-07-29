@@ -1009,7 +1009,6 @@ static int32_t GetSharedKeyAndRandom(const IpcDataInfo *replies, int32_t cacheNu
 static int32_t IpcAvGetClientSharedKey(const char *peerPkWithSig, const char *serviceId, DataBuff *returnSharedKey,
     DataBuff *returnRandom)
 {
-    RegisterDevAuthCallbackIfNeed();
     if ((peerPkWithSig == NULL) || (serviceId == NULL) || (returnSharedKey == NULL) || (returnRandom == NULL)) {
         LOGE("Error occurs, params invalid.");
         return HC_ERR_INVALID_PARAMS;
@@ -1373,7 +1372,6 @@ DEVICE_AUTH_API_PUBLIC const AccountVerifier *GetAccountVerifierInstance(void)
 {
     static AccountVerifier avInstCtx;
     static AccountVerifier *avInstPtr = NULL;
-
     InitIpcAccountVerifierMethods(&avInstCtx);
     avInstPtr = &avInstCtx;
     return (const AccountVerifier *)(avInstPtr);
@@ -1383,7 +1381,6 @@ DEVICE_AUTH_API_PUBLIC const LightAccountVerifier *GetLightAccountVerifierInstan
 {
     static LightAccountVerifier laInstCtx;
     static LightAccountVerifier *laInstPtr = NULL;
-
     InitIpcLightAccountVerifierMethods(&laInstCtx);
     laInstPtr = &laInstCtx;
     return (const LightAccountVerifier *)(laInstPtr);

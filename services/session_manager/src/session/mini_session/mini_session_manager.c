@@ -87,8 +87,8 @@ static LightSession *CreateSession(int64_t requestId, int32_t osAccountId, const
 
 static void DestroyLightSession(LightSession *lightSessionEntry)
 {
-    if (lightSessionEntry != NULL) {
-        HcFree(lightSessionEntry);
+    if (lightSessionEntry == NULL) {
+        return;
     }
     if (lightSessionEntry->serviceId != NULL) {
         HcFree(lightSessionEntry->serviceId);
@@ -96,6 +96,7 @@ static void DestroyLightSession(LightSession *lightSessionEntry)
     if (lightSessionEntry->randomVal != NULL) {
         HcFree(lightSessionEntry->randomVal);
     }
+    HcFree(lightSessionEntry);
     return;
 }
 

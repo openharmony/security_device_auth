@@ -342,7 +342,7 @@ broadcast_manager_mock_files = [
 ]
 
 deviceauth_files = dev_frameworks_files + deviceauth_common_files +
-                   session_manager_files + creds_manager_files 
+                   session_manager_files + creds_manager_files
 
 if (enable_pseudonym == true) {
   deviceauth_defines += [ "ENABLE_PSEUDONYM" ]
@@ -397,8 +397,7 @@ if (enable_session_v2 == true) {
 
 if (enable_session_mini == true) {
   deviceauth_files += session_mini_files
-}
-else {
+} else {
   deviceauth_files += session_mini_mock_files
 }
 

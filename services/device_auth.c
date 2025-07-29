@@ -52,7 +52,6 @@
 #include "mini_session_manager.h"
 #include "huks_adapter.h"
 #include "alg_defs.h"
-
 static GroupAuthManager *g_groupAuthManager =  NULL;
 static DeviceGroupManager *g_groupManagerInstance = NULL;
 static AccountVerifier *g_accountVerifierInstance = NULL;
@@ -1029,16 +1028,16 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
     }
     res = AllocCredentialMgr();
     if (res != HC_SUCCESS) {
-        DestroyGmAndGa();
         DestroyCa();
+        DestroyGmAndGa();
         return res;
     }
     InitOsAccountAdapter();
     res = InitAllModules();
     if (res != HC_SUCCESS) {
-        DestroyGmAndGa();
-        DestroyCa();
         DestroyCredentialMgr();
+        DestroyCa();
+        DestroyGmAndGa();
         return res;
     }
     INIT_PERFORMANCE_DUMPER();
@@ -1502,6 +1501,7 @@ static int32_t GetHwIdAndPeerHwId(CJson *out, const char **hwIdStr, const char *
     }
     return HC_SUCCESS;
 }
+
 static int32_t CopyHwIdsToKeyInfo(uint8_t *keyInfo, uint32_t keyInfoLen,
     const char *clientHwIdStr, const char *serverHwIdStr)
 {

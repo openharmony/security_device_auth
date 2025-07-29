@@ -1938,7 +1938,6 @@ int32_t MainRescInit(void)
     const GroupAuthManager *gaInst = NULL;
     const AccountVerifier *avInst = NULL;
     const LightAccountVerifier *lvInst = NULL;
-
     ret = InitIpcCallBackList();
     if (ret != HC_SUCCESS) {
         return ret;
