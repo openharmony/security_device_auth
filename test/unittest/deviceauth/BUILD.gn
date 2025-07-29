@@ -517,7 +517,6 @@ ohos_unittest("device_auth_interface_test") {
     "ENABLE_PSEUDONYM",
     "DEV_AUTH_HIVIEW_ENABLE",
   ]
-
   sources += identity_manager_files
   include_dirs += identity_manager_inc
   sources += [ "source/deviceauth_interface_test.cpp" ]

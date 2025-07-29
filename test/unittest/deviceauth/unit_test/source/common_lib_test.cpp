@@ -38,7 +38,7 @@ static const uint32_t PARCEL_POS_1 = 1;
 const uint32_t PARCEL_UINT_MAX = 0xffffffffU;
 static const char *TEST_JSON_STR = "{\"name\":\"test_name\", \"age\":18}";
 static const char *TEST_JSON_STR_1 =
-    "{\"name\":\"test_name\", \"age\":18, \"useBigIntArr\":[\"userId\"], \"userId\":\"12343215234\"}";
+    "{\"name\":\"test_name\", \"age\":18, \"bigIntArr\":[\"userId\"], \"userId\":\"12343215234\"}";
 static const char *TEST_JSON_STR_ARR = "[{\"name\":\"Tom1\",\"age\":18},{\"name\":\"Tom2\",\"age\":19}]";
 static const char *TEST_STR = "test_str";
 static const char TEST_CHAR = '0';

@@ -357,10 +357,6 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
         LOGE("Get Identity by credAuthInfo fail.");
         return res;
     }
-    if (presharedUrl->val == NULL || info->proof.preSharedUrl.val == NULL) {
-        LOGE("presharedUrl exist NULL.");
-        return HC_ERR_NULL_PTR;
-    }
     if (memcmp(presharedUrl->val, info->proof.preSharedUrl.val, presharedUrl->length) != 0) {
         DestroyIdentityInfo(info);
         LOGE("peer presharedUrl is not equal.");
