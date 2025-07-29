@@ -53,7 +53,7 @@ protected:
 
 private:
     DeviceAuthAbility();
-    std::mutex instanceMutex_;
+    std::recursive_mutex instanceMutex_;
     bool isUnloading_{false};
 };
 
