@@ -35,6 +35,8 @@ ohos_shared_library("deviceauth_napi") {
 
   sources = [ "src/credmgr_napi.cpp" ]
 
+  cflags = build_flags
+
   deps = [ "${deps_adapter_path}:${hal_module_name}" ]
   deps += [ "${deviceauth_path}/services:deviceauth_sdk" ]
 
