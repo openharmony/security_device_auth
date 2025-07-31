@@ -100,9 +100,6 @@
 #define FIELD_UPDATE_LISTS "updateLists"
 #define FIELD_PEER_OS_ACCOUNT_ID "peerOsAccountId"
 
-#define HW_ID_CHAR_MAX_LEN 20
-#define INVALID_HW_ID 0
-
 /**
  * @brief protocol expand value for bind
  */
