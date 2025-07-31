@@ -230,7 +230,6 @@ HWTEST_F(LaInterfaceTest, LaInterfaceTest003, TestSize.Level0)
     EXPECT_NE(ret, HC_SUCCESS);
     HcFree(hkdfSaltBuff.val);
     DestroyDataBuff(&returnRandom);
-    FreeJson(out);
     FreeJson(msg);
 
     Uint8Buff keyInfoBuff = { 0 };
@@ -238,6 +237,7 @@ HWTEST_F(LaInterfaceTest, LaInterfaceTest003, TestSize.Level0)
     EXPECT_EQ(ret, HC_SUCCESS);
     ret = ConstructKeyInfo(out, SERVICE_ID, &keyInfoBuff, false);
     EXPECT_EQ(ret, HC_SUCCESS);
+    FreeJson(out);
     HcFree(keyInfoBuff.val);
 }
 
