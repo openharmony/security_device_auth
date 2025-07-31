@@ -1487,31 +1487,31 @@ static int32_t ConstructSalt(CJson *out, uint8_t *randomVal, Uint8Buff *hkdfSalt
     return res;
 }
 
-static int32_t GetHwIdAndPeerHwId(CJson *out, const char **hwIdStr, const char **peerHwIdStr)
+static int32_t GetUserIdAndPeerUserId(CJson *out, const char **userIdStr, const char **peerUserIdStr)
 {
-    *hwIdStr = GetStringFromJson(out, FIELD_USER_ID);
-    if (*hwIdStr == NULL) {
-        LOGE("get hwIdStr from out fail.");
+    *userIdStr = GetStringFromJson(out, FIELD_USER_ID);
+    if (*userIdStr == NULL) {
+        LOGE("get userIdStr from out fail.");
         return HC_ERR_JSON_GET;
     }
-    *peerHwIdStr = GetStringFromJson(out, FIELD_PEER_USER_ID);
-    if (*peerHwIdStr == NULL) {
-        LOGE("get peer hwIdStr from out fail.");
+    *peerUserIdStr = GetStringFromJson(out, FIELD_PEER_USER_ID);
+    if (*peerUserIdStr == NULL) {
+        LOGE("get peer userIdStr from out fail.");
         return HC_ERR_JSON_GET;
     }
     return HC_SUCCESS;
 }
 
-static int32_t CopyHwIdsToKeyInfo(uint8_t *keyInfo, uint32_t keyInfoLen,
-    const char *clientHwIdStr, const char *serverHwIdStr)
+static int32_t CopyUserIdsToKeyInfo(uint8_t *keyInfo, uint32_t keyInfoLen,
+    const char *clientUserIdStr, const char *serverUserIdStr)
 {
-    if (memcpy_s(keyInfo, keyInfoLen, clientHwIdStr, (uint32_t)HcStrlen(clientHwIdStr)) != EOK) {
-        LOGE("Copy client hwIdStr failed.");
+    if (memcpy_s(keyInfo, keyInfoLen, clientUserIdStr, (uint32_t)HcStrlen(clientUserIdStr)) != EOK) {
+        LOGE("Copy client userIdStr failed.");
         return HC_ERR_MEMORY_COPY;
     }
-    if (memcpy_s(keyInfo + (uint32_t)HcStrlen(clientHwIdStr), keyInfoLen - (uint32_t)HcStrlen(clientHwIdStr),
-        serverHwIdStr, (uint32_t)HcStrlen(serverHwIdStr)) != EOK) {
-        LOGE("Copy server hwIdStr failed.");
+    if (memcpy_s(keyInfo + (uint32_t)HcStrlen(clientUserIdStr), keyInfoLen - (uint32_t)HcStrlen(clientUserIdStr),
+        serverUserIdStr, (uint32_t)HcStrlen(serverUserIdStr)) != EOK) {
+        LOGE("Copy server userIdStr failed.");
         return HC_ERR_MEMORY_COPY;
     }
     return HC_SUCCESS;
@@ -1519,37 +1519,37 @@ static int32_t CopyHwIdsToKeyInfo(uint8_t *keyInfo, uint32_t keyInfoLen,
 
 static int32_t ConstructKeyInfo(CJson *out, const char *serviceId, Uint8Buff *keyInfoBuf, bool isClient)
 {
-    const char *hwIdStr = NULL;
-    const char *peerHwIdStr = NULL;
-    int32_t res = GetHwIdAndPeerHwId(out, &hwIdStr, &peerHwIdStr);
+    const char *userIdStr = NULL;
+    const char *peerUserIdStr = NULL;
+    int32_t res = GetUserIdAndPeerUserId(out, &userIdStr, &peerUserIdStr);
     if (res != HC_SUCCESS) {
-        LOGE("GetHwIdAndPeerHwId failed!");
+        LOGE("GetUserIdAndPeerUserId failed!");
         return res;
     }
     uint32_t serviceIdLen = (uint32_t)HcStrlen(serviceId);
-    uint32_t keyInfoLen = (uint32_t)HcStrlen(hwIdStr) + (uint32_t)HcStrlen(peerHwIdStr) + serviceIdLen;
+    uint32_t keyInfoLen = (uint32_t)HcStrlen(userIdStr) + (uint32_t)HcStrlen(peerUserIdStr) + serviceIdLen;
     uint8_t *keyInfo = (uint8_t *)HcMalloc(keyInfoLen, 0);
     if (keyInfo == NULL) {
         LOGE("Failed to alloc keyInfo");
         return HC_ERR_ALLOC_MEMORY;
     }
     if (isClient) {
-        res = CopyHwIdsToKeyInfo(keyInfo, keyInfoLen, hwIdStr, peerHwIdStr);
+        res = CopyUserIdsToKeyInfo(keyInfo, keyInfoLen, userIdStr, peerUserIdStr);
         if (res != HC_SUCCESS) {
-            LOGE("CopyHwIdsToKeyInfo failed!");
+            LOGE("CopyUserIdsToKeyInfo failed!");
             HcFree(keyInfo);
             return res;
         }
     } else {
-        res = CopyHwIdsToKeyInfo(keyInfo, keyInfoLen, peerHwIdStr, hwIdStr);
+        res = CopyUserIdsToKeyInfo(keyInfo, keyInfoLen, peerUserIdStr, userIdStr);
         if (res != HC_SUCCESS) {
-            LOGE("CopyHwIdsToKeyInfo failed!");
+            LOGE("CopyUserIdsToKeyInfo failed!");
             HcFree(keyInfo);
             return res;
         }
     }
-    if (memcpy_s(keyInfo + (uint32_t)HcStrlen(hwIdStr) + (uint32_t)HcStrlen(peerHwIdStr),
-        keyInfoLen - (uint32_t)HcStrlen(hwIdStr) - (uint32_t)HcStrlen(peerHwIdStr),
+    if (memcpy_s(keyInfo + (uint32_t)HcStrlen(userIdStr) + (uint32_t)HcStrlen(peerUserIdStr),
+        keyInfoLen - (uint32_t)HcStrlen(userIdStr) - (uint32_t)HcStrlen(peerUserIdStr),
         serviceId, serviceIdLen) != EOK) {
         LOGE("Copy serviceId failed.");
         HcFree(keyInfo);
@@ -1655,13 +1655,13 @@ static int32_t LightAuthOnFinish(int64_t requestId, CJson *out, const DeviceAuth
         LOGE("Create outData failed!");
         return HC_ERR_JSON_CREATE;
     }
-    const char *peerHwIdStr = GetStringFromJson(out, FIELD_PEER_USER_ID);
-    if (peerHwIdStr == NULL) {
-        LOGE("get peerHwIdStr from out failed!");
+    const char *peerUserIdStr = GetStringFromJson(out, FIELD_PEER_USER_ID);
+    if (peerUserIdStr == NULL) {
+        LOGE("get peerUserIdStr from out failed!");
         FreeJson(outData);
         return HC_ERR_JSON_GET;
     }
-    int32_t res = AddStringToJson(outData, FIELD_PEER_USER_ID, peerHwIdStr);
+    int32_t res = AddStringToJson(outData, FIELD_PEER_USER_ID, peerUserIdStr);
     if (res != HC_SUCCESS) {
         LOGE("add peer userid failed!");
         FreeJson(outData);
