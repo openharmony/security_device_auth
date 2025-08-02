@@ -686,6 +686,7 @@ ohos_unittest("device_auth_ipc_test") {
   external_deps = [
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "selinux_adapter:librestorecon",
     "cJSON:cjson",
     "c_utils:utils",
     "device_auth:deviceauth_sdk",
