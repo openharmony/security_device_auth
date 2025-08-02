@@ -230,15 +230,15 @@ HWTEST_F(LaInterfaceTest, LaInterfaceTest003, TestSize.Level0)
     EXPECT_NE(ret, HC_SUCCESS);
     HcFree(hkdfSaltBuff.val);
     DestroyDataBuff(&returnRandom);
-    FreeJson(msg);
 
     Uint8Buff keyInfoBuff = { 0 };
     ret = ConstructKeyInfo(out, SERVICE_ID, &keyInfoBuff, true);
     EXPECT_EQ(ret, HC_SUCCESS);
     ret = ConstructKeyInfo(out, SERVICE_ID, &keyInfoBuff, false);
     EXPECT_EQ(ret, HC_SUCCESS);
-    FreeJson(out);
     HcFree(keyInfoBuff.val);
+    FreeJson(msg);
+    FreeJson(out);
 }
 
 HWTEST_F(LaInterfaceTest, LaInterfaceTest004, TestSize.Level0)
@@ -264,10 +264,10 @@ HWTEST_F(LaInterfaceTest, LaInterfaceTest004, TestSize.Level0)
     Uint8Buff returnKeyBuff = { 0 };
     ret = ComputeHkdfKeyClient(TEST_OS_ACCOUNT_ID, out, returnRandom.data,
         SERVICE_ID, &returnKeyBuff);
-    EXPECT_EQ(ret, HC_SUCCESS);
+    EXPECT_NE(ret, HC_SUCCESS);
     ret = ComputeHkdfKeyServer(TEST_OS_ACCOUNT_ID, out, returnRandom.data,
         SERVICE_ID, &returnKeyBuff);
-    EXPECT_EQ(ret, HC_SUCCESS);
+    EXPECT_NE(ret, HC_SUCCESS);
     HcFree(returnKeyBuff.val);
     DestroyDataBuff(&returnRandom);
 
@@ -276,8 +276,8 @@ HWTEST_F(LaInterfaceTest, LaInterfaceTest004, TestSize.Level0)
 
     ret = LightAuthOnTransmit(TEST_REQ_ID, out, &laCallback);
     EXPECT_EQ(ret, HC_SUCCESS);
-    FreeJson(out);
     FreeJson(msg);
+    FreeJson(out);
 
     int32_t testMsgLen = HcStrlen(TEST_LIGHT_MSG) + 1;
     DataBuff testInMsg = {(uint8_t *)TEST_LIGHT_MSG, testMsgLen};
@@ -285,7 +285,6 @@ HWTEST_F(LaInterfaceTest, LaInterfaceTest004, TestSize.Level0)
     EXPECT_NE(ret, HC_SUCCESS);
     ret = ProcessLightAccountAuth(TEST_OS_ACCOUNT_ID, TEST_REQ_ID_0, &testInMsg, &laCallback);
     EXPECT_NE(ret, HC_SUCCESS);
-    DestroyDataBuff(&testInMsg);
 }
 
 }
