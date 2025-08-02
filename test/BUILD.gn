@@ -68,6 +68,7 @@ group("deviceauth_test_build") {
       "unittest/deviceauth:device_auth_identity_service_test",
       "unittest/deviceauth:device_auth_interface_test",
       "unittest/deviceauth:device_auth_ipc_test",
+      "unittest/deviceauth:light_auth_test",
       "unittest/deviceauth:deviceauth_llt",
       "unittest/deviceauth:deviceauth_unit_test",
       "unittest/deviceauth:identity_service_ipc_test",
