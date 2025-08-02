@@ -800,8 +800,7 @@ ohos_unittest("light_auth_test") {
   include_dirs += identity_manager_inc
 
   sources += [
-    "source/device_auth_ipc_test.cpp",
-    "source/p2p_bind_ipc_test.cpp",
+    "source/light_auth_test.cpp",
   ]
 
   deps = [ "${deps_adapter_path}:${hal_module_test_name}" ]
