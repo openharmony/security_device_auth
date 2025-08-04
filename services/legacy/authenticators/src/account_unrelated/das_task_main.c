@@ -240,7 +240,7 @@ static int ProcessTaskT(Task *task, const CJson *in, CJson *out, int32_t *status
     int32_t res;
     if (IsPeerErrMessage(in, &res)) {
         LOGE("Receive error message from peer, errCode: %" LOG_PUB "x.", res);
-        DasSendErrMsgToSelf(out, res | PEER_ERROR);
+        DasSendErrMsgToSelf(out, res | PEER_ERROR_MASK);
         return HC_ERR_PEER_ERROR;
     }
     if (task->vec.size(&(task->vec)) == 0) {

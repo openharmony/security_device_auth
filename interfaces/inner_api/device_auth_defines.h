@@ -227,7 +227,7 @@ enum {
     PROOF_MISMATCH = 0xF000000D,                                          // -268435443
 
     /* error code used on DAS service for peer error */
-    PEER_ERROR = 0x0F000000,                                              // 251658240
+    PEER_ERROR_MASK = 0x0F000000,                                         // 251658240
     PEER_INVALID_PARAMETERS = 0xFF000001,                                 // -16777214
     PEER_EXCEED_AUTHORITY = 0xFF000002,                                   // -16777213
     PEER_TIMEOUT = 0xFF000003,                                            // -16777212
