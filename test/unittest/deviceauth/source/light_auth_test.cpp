@@ -167,6 +167,8 @@ HWTEST_F(LaInterfaceTest, LaInterfaceTest002, TestSize.Level0)
     ret = GetPeerRandomValFromOutJson(nullptr, &returnRandom);
     EXPECT_NE(ret, HC_SUCCESS);
     DestroyDataBuff(&returnRandom);
+    FreeJson(msg);
+    FreeJson(out);
 
     ret = LightAuthVerifySign(TEST_OS_ACCOUNT_ID, json, json);
     EXPECT_NE(ret, HC_SUCCESS);
@@ -182,8 +184,6 @@ HWTEST_F(LaInterfaceTest, LaInterfaceTest002, TestSize.Level0)
         TEST_APP_ID, &laCallback, json);
     EXPECT_EQ(ret, HC_SUCCESS);
     FreeJson(json);
-    FreeJson(msg);
-    FreeJson(out);
 
     ret = StartLightAccountAuth(TEST_OS_ACCOUNT_ID, TEST_REQ_ID,
         TEST_APP_ID, &laCallback);
