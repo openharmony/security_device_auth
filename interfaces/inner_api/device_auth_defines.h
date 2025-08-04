@@ -225,6 +225,22 @@ enum {
     BAD_PAYLOAD = 0xF000000B,                                             // -268435445
     ALGORITHM_UNSUPPORTED = 0xF000000C,                                   // -268435444
     PROOF_MISMATCH = 0xF000000D,                                          // -268435443
+
+    /* error code used on DAS service for peer error */
+    PEER_ERROR = 0x0F000000,                                              // 251658240
+    PEER_INVALID_PARAMETERS = 0xFF000001,                                 // -16777214
+    PEER_EXCEED_AUTHORITY = 0xFF000002,                                   // -16777213
+    PEER_TIMEOUT = 0xFF000003,                                            // -16777212
+    PEER_NOT_REGISTERED = 0xFF000004,                                     // -16777211
+    PEER_NOT_TRUST_PEER = 0xFF000005,                                     // -16777210
+    PEER_NOT_TRUST_CONTROLLER = 0xFF000006,                               // -16777209
+    PEER_NOT_TRUST_ACCESSORY = 0xFF000007,                                // -16777208
+    PEER_OVER_MAX_TRUST_NUM = 0xFF000008,                                 // -16777207
+    PEER_CONNECTION_INTERRUPTED = 0xFF000009,                             // -16777206
+    PEER_UNSUPPORTED_VERSION = 0xFF00000A,                                // -16777205
+    PEER_BAD_PAYLOAD = 0xFF00000B,                                        // -16777204
+    PEER_ALGORITHM_UNSUPPORTED = 0xFF00000C,                              // -16777203
+    PEER_PROOF_MISMATCH = 0xFF00000D,                                     // -16777202
 };
 
 #endif
