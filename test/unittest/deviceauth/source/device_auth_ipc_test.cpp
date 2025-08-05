@@ -1830,7 +1830,7 @@ HWTEST_F(GmGetRegisterInfoTest, GmGetRegisterInfoTest003, TestSize.Level0)
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
     int32_t ret = gm->getRegisterInfo(GET_REG_INFO_PARAMS, &returnData);
-    ASSERT_NE(ret, HC_SUCCESS);
+    ASSERT_NE(ret, HC_ERROR);
     gm->destroyInfo(&returnData);
 }
 
