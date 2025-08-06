@@ -56,6 +56,10 @@ static void HandleCacheCommonEventInner(const char *eventName, int32_t eventCode
 void HandleCacheCommonEvent(void)
 {
     auto saMgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saMgr == nullptr) {
+        LOGE("[CacheCommonEvent]: system ability manager is null!");
+        return;
+    }
     std::vector<int64_t> extraDataIdList;
     int32_t ret = saMgr->GetCommonEventExtraDataIdlist(OHOS::DEVICE_AUTH_SERVICE_ID, extraDataIdList);
     if (ret != OHOS::ERR_OK) {
