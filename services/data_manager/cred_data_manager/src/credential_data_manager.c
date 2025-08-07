@@ -30,6 +30,7 @@
 #include "cred_listener.h"
 #include "cred_tlv_parser.h"
 #include "identity_service_defines.h"
+#include "string_util.h"
 
 typedef struct {
     DECLARE_CRED_TLV_STRUCT(17)
@@ -534,7 +535,7 @@ static void LoadDevAuthCredDb(void)
         if (osAccountIdStr == NULL) {
             continue;
         }
-        if (strcmp(osAccountIdStr, "hccredential.dat") == 0) {
+        if (HcStrcmp(osAccountIdStr, "hccredential.dat") == 0) {
             LoadOsAccountCredDb(DEFAULT_OS_ACCOUNT);
         } else if (sscanf_s(osAccountIdStr, "hccredential%d.dat", &osAccountId) == 1) {
             LoadOsAccountCredDb(osAccountId);
@@ -637,20 +638,20 @@ static bool SaveCredInfoToParcel(const OsAccountCredInfo *info, HcParcel *parcel
 
 static bool CompareStringParams(const QueryCredentialParams *params, const Credential *entry)
 {
-    if ((params->deviceId != NULL) && (strcmp(params->deviceId, StringGet(&entry->deviceId)) != 0)) {
+    if ((params->deviceId != NULL) && (HcStrcmp(params->deviceId, StringGet(&entry->deviceId)) != 0)) {
         return false;
     }
-    if ((params->credOwner != NULL) && (strcmp(params->credOwner, StringGet(&entry->credOwner)) != 0)) {
+    if ((params->credOwner != NULL) && (HcStrcmp(params->credOwner, StringGet(&entry->credOwner)) != 0)) {
         return false;
     }
-    if ((params->userId != NULL) && (strcmp(params->userId, StringGet(&entry->userId)) != 0)) {
+    if ((params->userId != NULL) && (HcStrcmp(params->userId, StringGet(&entry->userId)) != 0)) {
         return false;
     }
-    if ((params->credId != NULL) && (strcmp(params->credId, StringGet(&entry->credId)) != 0)) {
+    if ((params->credId != NULL) && (HcStrcmp(params->credId, StringGet(&entry->credId)) != 0)) {
         return false;
     }
     if ((params->peerUserSpaceId != NULL) &&
-        (strcmp(params->peerUserSpaceId, StringGet(&entry->peerUserSpaceId)) != 0)) {
+        (HcStrcmp(params->peerUserSpaceId, StringGet(&entry->peerUserSpaceId)) != 0)) {
         return false;
     }
     return true;

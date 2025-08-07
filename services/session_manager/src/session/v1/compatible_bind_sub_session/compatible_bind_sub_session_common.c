@@ -19,6 +19,7 @@
 #include "group_auth_data_operation.h"
 #include "hc_dev_info.h"
 #include "hc_log.h"
+#include "string_util.h"
 
 static int32_t AddPinCode(const CJson *jsonParams, CompatibleBindSubSession *session)
 {
@@ -163,7 +164,7 @@ static int32_t CheckAuthIdAndUserTypeValid(int32_t osAccountId, int userType, co
         return result;
     }
     const char *oriAuthId = StringGet(&deviceInfo->authId);
-    if ((deviceInfo->devType != userType) || ((oriAuthId != NULL) && (strcmp(oriAuthId, authId) != 0))) {
+    if ((deviceInfo->devType != userType) || ((oriAuthId != NULL) && (HcStrcmp(oriAuthId, authId) != 0))) {
         LOGE("Once a group is created, the service cannot change the local authId and userType used in the group!");
         DestroyDeviceEntry(deviceInfo);
         return HC_ERR_INVALID_PARAMS;

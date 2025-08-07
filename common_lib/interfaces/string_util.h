@@ -93,6 +93,14 @@ void PrintBuffer(const uint8_t *msgBuff, uint32_t msgLen, const char *msgTag);
  */
 int32_t GetAnonymousString(const char *originStr, char *anonymousStr, uint32_t anonymousLen);
 
+/*
+ * Safe compare two strings.
+ * @param str1: the first string.
+ * @param str2: the second string.
+ * @return 0: equal, -1: str1 < str2, str1 or str2 is NULL, 1: str1 > str2.
+ */
+int32_t HcStrcmp(const char *str1, const char *str2);
+
 #ifdef __cplusplus
 }
 #endif

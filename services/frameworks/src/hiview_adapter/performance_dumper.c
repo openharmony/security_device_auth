@@ -23,6 +23,7 @@
 #include "hc_time.h"
 #include "hc_types.h"
 #include "hidump_adapter.h"
+#include "string_util.h"
 
 #define ENABLE_PERFORMANCE_DUMPER "--enable"
 #define DISABLE_PERFORMANCE_DUMPER "--disable"
@@ -361,10 +362,10 @@ static void PerformanceDump(int fd, StringVector *strArgVec)
         return;
     }
     HcString strArg = strArgVec->get(strArgVec, 1);
-    if (strcmp(StringGet(&strArg), ENABLE_PERFORMANCE_DUMPER) == 0) {
+    if (HcStrcmp(StringGet(&strArg), ENABLE_PERFORMANCE_DUMPER) == 0) {
         g_isPerformDumpEnabled = true;
         dprintf(fd, "performance dumper is enabled!\n");
-    } else if (strcmp(StringGet(&strArg), DISABLE_PERFORMANCE_DUMPER) == 0) {
+    } else if (HcStrcmp(StringGet(&strArg), DISABLE_PERFORMANCE_DUMPER) == 0) {
         ClearPerformDataVec();
         g_isPerformDumpEnabled = false;
         dprintf(fd, "performance dumper is disabled!\n");

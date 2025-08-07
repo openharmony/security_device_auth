@@ -21,6 +21,7 @@
 #include "hc_types.h"
 #include "hc_vector.h"
 #include "securec.h"
+#include "string_util.h"
 
 typedef struct {
     char *appId;
@@ -161,7 +162,7 @@ static int32_t UpdateListenerIfExist(const char *appId, const DataChangeListener
     ListenerEntry *entry = NULL;
     (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
-        if (strcmp(entry->appId, appId) == 0) {
+        if (HcStrcmp(entry->appId, appId) == 0) {
             if (memcpy_s(entry->listener, sizeof(DataChangeListener),
                 listener, sizeof(DataChangeListener)) != HC_SUCCESS) {
                 UnlockHcMutex(g_broadcastMutex);
@@ -296,7 +297,7 @@ int32_t RemoveListener(const char *appId)
     uint32_t index;
     ListenerEntry *entry = NULL;
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
-        if (strcmp(entry->appId, appId) == 0) {
+        if (HcStrcmp(entry->appId, appId) == 0) {
             HcFree(entry->appId);
             HcFree(entry->listener);
             ListenerEntry tempEntry;

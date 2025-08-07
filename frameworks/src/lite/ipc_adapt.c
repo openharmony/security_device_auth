@@ -26,6 +26,7 @@
 #include "ipc_service_lite.h"
 #include "ipc_skeleton.h"
 #include "securec.h"
+#include "string_util.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -159,7 +160,7 @@ static IpcCallBackNode *GetIpcCallBackByAppId(const char *appId, int32_t type)
         if (g_ipcCallBackList.ctx[i].appId[0] == 0) {
             continue;
         }
-        ret = strcmp(g_ipcCallBackList.ctx[i].appId, appId);
+        ret = HcStrcmp(g_ipcCallBackList.ctx[i].appId, appId);
         if ((ret == 0) && (g_ipcCallBackList.ctx[i].cbType == type)) {
             return &g_ipcCallBackList.ctx[i];
         }

@@ -19,6 +19,7 @@
 #include "device_auth_defines.h"
 #include "hc_types.h"
 #include "hc_log.h"
+#include "string_util.h"
 
 #define SECURITY_LABEL_XATTR_KEY "user.security"
 
@@ -50,7 +51,7 @@ static bool IsSetLabelNeeded(const char *filePath, const char *labelToSet)
     if (GetSecurityLabel(filePath, &existLabel) != HC_SUCCESS) {
         return true;
     }
-    if (strcmp(existLabel, labelToSet) != 0) {
+    if (HcStrcmp(existLabel, labelToSet) != 0) {
         LOGI("Incorrect security level, need to reset.");
         HcFree(existLabel);
         return true;

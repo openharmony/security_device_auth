@@ -22,6 +22,7 @@
 #include "hc_log.h"
 #include "hc_types.h"
 #include "securec.h"
+#include "string_util.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -200,7 +201,7 @@ void HcFileGetSubFileName(const char *path, StringVector *nameVec)
         return;
     }
     while ((entry = readdir(dir)) != NULL) {
-        if ((strcmp(entry->d_name, ".") == 0) || (strcmp(entry->d_name, "..") == 0)) {
+        if ((HcStrcmp(entry->d_name, ".") == 0) || (HcStrcmp(entry->d_name, "..") == 0)) {
             continue;
         }
         HcString subFileName = CreateString();

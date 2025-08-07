@@ -173,3 +173,11 @@ int32_t GetAnonymousString(const char *originStr, char *anonymousStr, uint32_t a
     }
     return CLIB_SUCCESS;
 }
+
+int32_t HcStrcmp(const char *str1, const char *str2)
+{
+    if (str1 == NULL || str2 == NULL) {
+        return CLIB_FAILED;
+    }
+    return HcStrcmp(str1, str2);
+}

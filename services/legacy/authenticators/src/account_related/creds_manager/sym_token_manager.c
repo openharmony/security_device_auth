@@ -57,7 +57,7 @@ static bool IsTokenMatch(const SymToken *token, const char *userId, const char *
         LOGE("deviceId is null!");
         return false;
     }
-    return (strcmp(userId, token->userId) == 0) && (strcmp(deviceId, token->deviceId) == 0);
+    return (HcStrcmp(userId, token->userId) == 0) && (HcStrcmp(deviceId, token->deviceId) == 0);
 }
 
 static bool GetTokensFilePathCe(int32_t osAccountId, char *tokenPath, uint32_t pathBufferLen)
@@ -732,7 +732,7 @@ static void LoadTokenDb(void)
         if (name == NULL) {
             continue;
         }
-        if (strcmp(name, "account_data_sym.dat") == 0) {
+        if (HcStrcmp(name, "account_data_sym.dat") == 0) {
             LoadOsSymTokensDb(DEFAULT_OS_ACCOUNT);
         } else if (sscanf_s(name, "account_data_sym%d.dat", &osAccountId) == 1) {
             LoadOsSymTokensDb(osAccountId);
