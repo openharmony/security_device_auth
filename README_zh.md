@@ -20,8 +20,9 @@
 
 **图 1**  子系统架构图<a name="fig4460722185514"></a>  
 
-
-![](figures/zh-cn_deviceauth_architecture.png)
+<div align="center">
+    <img src="figures/zh-cn_deviceauth_architecture.png" width="450" height="450">
+</div>
 
 其中，
 
