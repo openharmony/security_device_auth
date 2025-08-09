@@ -201,20 +201,16 @@ int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serv
     uint32_t index = 0;
     LightSessionInfo *ptr = NULL;
     FOR_EACH_HC_VECTOR(g_lightSessionInfoList, index, ptr) {
-        if (ptr == NULL) {
+        if (ptr == NULL || ptr->session == NULL) {
             continue;
         }
         LightSession *session = ptr->session;
-        if (session == NULL) {
-            continue;
-        }
         if (requestId == session->requestId && osAccountId == session->osAccountId) {
             DestroyLightSession(session);
             HC_VECTOR_POPELEMENT(&g_lightSessionInfoList, ptr, index);
             LOGI("Light session delete. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %"
                 LOG_PUB "d", requestId, osAccountId);
-            UnlockHcMutex(&g_lightSessionMutex);
-            continue;
+            break;
         }
     }
     if (g_lightSessionInfoList.size(&g_lightSessionInfoList) >= MAX_SESSION_NUM_LIGHT_AUTH) {
@@ -248,20 +244,16 @@ int32_t DeleteLightSession(int64_t requestId, int32_t osAccountId)
     uint32_t index = 0;
     LightSessionInfo *ptr = NULL;
     FOR_EACH_HC_VECTOR(g_lightSessionInfoList, index, ptr) {
-        if (ptr == NULL) {
+        if (ptr == NULL || ptr->session == NULL) {
             continue;
         }
         LightSession *session = ptr->session;
-        if (session == NULL) {
-            continue;
-        }
         if (requestId == session->requestId && osAccountId == session->osAccountId) {
             DestroyLightSession(session);
             HC_VECTOR_POPELEMENT(&g_lightSessionInfoList, ptr, index);
             LOGI("Light session delete. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %"
                 LOG_PUB "d", requestId, osAccountId);
-            UnlockHcMutex(&g_lightSessionMutex);
-            continue;
+            break;
         }
     }
     UnlockHcMutex(&g_lightSessionMutex);
