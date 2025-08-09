@@ -196,7 +196,6 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
 
 int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serviceId, DataBuff randomBuff)
 {
-    DeleteLightSession(requestId, osAccountId);
     (void)LockHcMutex(&g_lightSessionMutex);
     RemoveTimeOutSession();
     uint32_t index = 0;
