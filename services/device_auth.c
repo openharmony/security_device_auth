@@ -1692,11 +1692,10 @@ static void DestroyLightSessionReturnData(LightSessionReturnData *lightSessionRe
     }
     HcFree(lightSessionReturnData);
     return;
-
 }
 
 static int32_t ProcessLightAccountAuthClient(int64_t requestId, int32_t osAccountId, CJson *msg,
-    const DeviceAuthCallback *laCallBack, LightSessionReturnData *lightSessionReturnData)
+    const DeviceAuthCallback *laCallBack, const LightSessionReturnData *lightSessionReturnData)
 {
     LOGI("ProcessLightAccountAuthClient start!");
     CJson *out = CreateJson();
@@ -1753,7 +1752,7 @@ static int32_t LightAuthOnTransmit(int64_t requestId, CJson *out, const DeviceAu
 }
 
 static int32_t ProcessLightAccountAuthServer(int64_t requestId, int32_t osAccountId,
-    CJson *msg, const DeviceAuthCallback *laCallBack, char *returnDataStr)
+    CJson *msg, const DeviceAuthCallback *laCallBack, const char *returnDataStr)
 {
     LOGI("ProcessLightAccountAuthServer start!");
     CJson *out = CreateJson();
@@ -1770,11 +1769,13 @@ static int32_t ProcessLightAccountAuthServer(int64_t requestId, int32_t osAccoun
     CJson *returnDataJson = CreateJsonFromString(returnDataStr);
     if (returnDataJson == NULL) {
         LOGE("Failed to create json from returnDataStr");
+        FreeJson(out);
         return HC_ERR_JSON_FAIL;
     }
     const char* serviceId = GetStringFromJson(returnDataJson, FIELD_APP_ID);
     if (serviceId == NULL) {
         LOGE("Failed to get serviceId");
+        FreeJson(out);
         FreeJson(returnDataJson);
         return HC_ERR_JSON_FAIL;
     }
@@ -1806,7 +1807,7 @@ static int32_t ProcessLightAccountAuthServer(int64_t requestId, int32_t osAccoun
 static int32_t ProcessLightAccountAuthInner(int32_t osAccountId, int64_t requestId,
     CJson *msg, CJson *out, const DeviceAuthCallback *laCallBack)
 {
-    LightSessionReturnData *lightSessionReturnData = 
+    LightSessionReturnData *lightSessionReturnData =
         (LightSessionReturnData *)HcMalloc(sizeof(LightSessionReturnData), 0);
     if (lightSessionReturnData == NULL) {
         LOGE("Failed to alloc lightSessionReturnData");

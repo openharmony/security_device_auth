@@ -159,15 +159,27 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
         }
         if (requestId == entry->session->requestId && osAccountId == entry->session->osAccountId) {
             *randomVal = (uint8_t *)HcMalloc(entry->session->randomLen, 0);
+            if (*randomVal == NULL) {
+                LOGE("Malloc randomVal failed.");
+                return HC_ERR_MEMORY_COPY;
+            }
             if (memcpy_s(*randomVal, entry->session->randomLen, entry->session->randomVal,
-                    entry->session->randomLen) != EOK) {
+                entry->session->randomLen) != EOK) {
+                HcFree(*randomVal);
                 LOGE("Copy randomVal failed.");
                 return HC_ERR_MEMORY_COPY;
             }
             uint32_t serviceIdLen = (uint32_t)HcStrlen(entry->session->serviceId);
             *serviceId = (char *)HcMalloc(serviceIdLen, 0);
+            if (*serviceId == NULL) {
+                HcFree(*randomVal);
+                LOGE("Malloc serviceId failed.");
+                return HC_ERR_MEMORY_COPY;
+            }
             if (memcpy_s(*serviceId, serviceIdLen, entry->session->serviceId,
                 serviceIdLen) != EOK) {
+                HcFree(*randomVal);
+                HcFree(*serviceId);
                 LOGE("Copy serviceId failed.");
                 return HC_ERR_MEMORY_COPY;
             }
