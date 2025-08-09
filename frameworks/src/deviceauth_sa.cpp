@@ -43,6 +43,7 @@ namespace OHOS {
 namespace {
     const uint32_t RESTORE_CODE = 14701;
     const int32_t SA_REFUSE_TO_UNLOAD = -1;
+    static const uint32_t DEV_AUTH_MAX_THREAD_NUM = 2;
 }
 
 using IpcCallMap = struct {
@@ -161,6 +162,9 @@ int32_t DeviceAuthAbility::Dump(int32_t fd, const std::vector<std::u16string> &a
 void DeviceAuthAbility::OnStart()
 {
     LOGI("DeviceAuthAbility starting ...");
+
+    IPCSkeleton::SetMaxWorkThreadNum(DEV_AUTH_MAX_THREAD_NUM);
+
     int32_t ret = InitDeviceAuthService();
     if (ret != HC_SUCCESS) {
         LOGE("DeviceAuthAbility InitDeviceAuthService failed, ret %" LOG_PUB "d", ret);
