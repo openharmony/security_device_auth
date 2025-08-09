@@ -29,6 +29,7 @@ typedef struct {
     int32_t osAccountId;
     char *serviceId;
     uint8_t *randomVal;
+    uint32_t randomLen;
 } LightSession;
 
 #ifdef __cplusplus
@@ -39,7 +40,7 @@ int32_t InitLightSessionManager(void);
 
 void DestroyLightSessionManager(void);
 
-int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, LightSession **lightSession);
+int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **randomVal, char **serviceId);
 
 int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serviceId, DataBuff randomBuff);
 

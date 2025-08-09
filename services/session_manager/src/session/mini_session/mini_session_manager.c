@@ -54,6 +54,7 @@ static LightSession *CreateSession(int64_t requestId, int32_t osAccountId, const
     }
     newSession->osAccountId = osAccountId;
     uint32_t randomLen = randomBuff.length;
+    newSession->randomLen = randomLen;
     newSession->randomVal = (uint8_t *)HcMalloc(randomLen, 0);
     if (newSession->randomVal == NULL) {
         LOGE("HcMalloc randomVal failed");
@@ -146,7 +147,7 @@ void DestroyLightSessionManager(void)
     DestroyHcMutex(&g_lightSessionMutex);
 }
 
-int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, LightSession **lightSession)
+int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **randomVal, char **serviceId)
 {
     (void)LockHcMutex(&g_lightSessionMutex);
     RemoveTimeOutSession();
@@ -157,14 +158,25 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, LightSession *
             continue;
         }
         if (requestId == entry->session->requestId && osAccountId == entry->session->osAccountId) {
-            *lightSession = entry->session;
+            *randomVal = (uint8_t *)HcMalloc(entry->session->randomLen, 0);
+            if (memcpy_s(*randomVal, entry->session->randomLen, entry->session->randomVal,
+                    entry->session->randomLen) != EOK) {
+                LOGE("Copy randomVal failed.");
+                return HC_ERR_MEMORY_COPY;
+            }
+            uint32_t serviceIdLen = (uint32_t)HcStrlen(entry->session->serviceId);
+            *serviceId = (char *)HcMalloc(serviceIdLen, 0);
+            if (memcpy_s(*serviceId, serviceIdLen, entry->session->serviceId,
+                serviceIdLen) != EOK) {
+                LOGE("Copy serviceId failed.");
+                return HC_ERR_MEMORY_COPY;
+            }
             LOGI("Light session found. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %" LOG_PUB "d",
                 requestId, osAccountId);
             UnlockHcMutex(&g_lightSessionMutex);
             return HC_SUCCESS;
         }
     }
-    *lightSession = NULL;
     LOGI("Light session not exists. ");
     UnlockHcMutex(&g_lightSessionMutex);
     return HC_ERR_SESSION_NOT_EXIST;

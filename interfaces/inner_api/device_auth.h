@@ -540,6 +540,11 @@ typedef struct {
 DEVICE_AUTH_API_PUBLIC const AccountVerifier *GetAccountVerifierInstance(void);
 
 typedef struct {
+    char *serviceId;
+    uint8_t *randomVal;
+} LightSessionReturnData;
+
+typedef struct {
     int32_t (*startLightAccountAuth)(int32_t osAccountId, int64_t requestId,
         const char *serviceId, const DeviceAuthCallback *laCallBack);
     int32_t (*processLightAccountAuth)(int32_t osAccountId, int64_t requestId,

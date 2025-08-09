@@ -22,6 +22,7 @@ typedef struct {
     int32_t osAccountId;
     char *serviceId;
     uint8_t *randomVal;
+    uint32_t randomLen;
 } LightSession;
 
 int32_t InitLightSessionManager(void)
@@ -34,11 +35,12 @@ void DestroyLightSessionManager(void)
     return;
 }
 
-int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, LightSession **lightSession)
+int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **randomVal, char **serviceId)
 {
     (void)requestId;
     (void)osAccountId;
-    (void)lightSession;
+    (void)*serviceId;
+    (void)*randomVal;
     return HC_SUCCESS;
 }
 
