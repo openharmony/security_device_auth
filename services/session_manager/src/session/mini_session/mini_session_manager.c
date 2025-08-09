@@ -196,6 +196,7 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
 
 int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serviceId, DataBuff randomBuff)
 {
+    DeleteLightSession(requestId, osAccountId);
     (void)LockHcMutex(&g_lightSessionMutex);
     RemoveTimeOutSession();
     if (g_lightSessionInfoList.size(&g_lightSessionInfoList) >= MAX_SESSION_NUM_LIGHT_AUTH) {
@@ -242,7 +243,7 @@ int32_t DeleteLightSession(int64_t requestId, int32_t osAccountId)
             LOGI("Light session delete. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %"
                 LOG_PUB "d", requestId, osAccountId);
             UnlockHcMutex(&g_lightSessionMutex);
-            return HC_SUCCESS;
+            continue;
         }
     }
     UnlockHcMutex(&g_lightSessionMutex);
