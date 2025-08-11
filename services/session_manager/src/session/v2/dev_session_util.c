@@ -21,6 +21,7 @@
 #include "pseudonym_manager.h"
 
 #include "dev_session_def.h"
+#include "string_util.h"
 
 #define AUTH_ID_LEN 32
 #define FIELD_AUTH_ID_CLIENT "authIdC"
@@ -794,7 +795,7 @@ bool IsPeerSameUserId(int32_t osAccountId, const char *peerUserId)
         return false;
     }
     TrustedGroupEntry *groupEntry = groupVec.get(&groupVec, 0);
-    bool isSame = (strcmp(StringGet(&(groupEntry->userId)), peerUserId) == 0);
+    bool isSame = (HcStrcmp(StringGet(&(groupEntry->userId)), peerUserId) == 0);
     ClearGroupEntryVec(&groupVec);
     return isSame;
 }

@@ -21,6 +21,7 @@
 #include "identity_manager.h"
 #include "os_account_adapter.h"
 #include "hisysevent_common.h"
+#include "string_util.h"
 
 typedef struct {
     int32_t osAccountId;
@@ -82,7 +83,7 @@ static bool IsPeerDevice(const Uint8Buff *authId)
         HcFree(authIdStr);
         return false;
     }
-    bool isPeerDevice = strcmp(selfUdid, authIdStr) != 0;
+    bool isPeerDevice = HcStrcmp(selfUdid, authIdStr) != 0;
     HcFree(authIdStr);
     return isPeerDevice;
 }

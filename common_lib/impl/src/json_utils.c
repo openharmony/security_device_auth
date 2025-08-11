@@ -101,7 +101,7 @@ void DeleteAllItemExceptOne(CJson *jsonObj, const char *key)
     CJson *nextItem = NULL;
     while (curItem != NULL) {
         nextItem = curItem->next;
-        if (strcmp(key, curItem->string) != 0) {
+        if (HcStrcmp(key, curItem->string) != 0) {
             cJSON_Delete(cJSON_DetachItemViaPointer(jsonObj, curItem));
         }
         curItem = nextItem;

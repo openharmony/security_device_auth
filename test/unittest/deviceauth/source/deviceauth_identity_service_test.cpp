@@ -26,6 +26,7 @@
 #include "json_utils_mock.h"
 #include "permission_adapter.h"
 #include "json_utils.h"
+#include "string_util.h"
 #include "protocol_task_main_mock.h"
 #include "securec.h"
 #include "hc_file.h"
@@ -840,7 +841,7 @@ HWTEST_F(CredMgrQueryCredInfoByCredIdTest, CredMgrQueryCredInfoByCredIdTest001, 
     CJson *credInfoJson = CreateJsonFromString(returnCredInfo);
     HcFree(returnCredInfo);
     const char *deviceId = GetStringFromJson(credInfoJson, FIELD_DEVICE_ID);
-    EXPECT_EQ(strcmp(deviceId, TEST_DEVICE_ID), TEST_RESULT_SUCCESS);
+    EXPECT_EQ(HcStrcmp(deviceId, TEST_DEVICE_ID), TEST_RESULT_SUCCESS);
     FreeJson(credInfoJson);
 }
 

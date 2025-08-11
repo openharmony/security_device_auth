@@ -19,6 +19,7 @@
 #include "hc_log.h"
 #include "protocol_common.h"
 #include "hc_dev_info.h"
+#include "string_util.h"
 
 #define MESSAGE_RETURN 0x8000
 #define MESSAGE_PREFIX 0x0010
@@ -217,7 +218,7 @@ static bool IsPeerDevice(const Uint8Buff *authId)
         HcFree(authIdStr);
         return false;
     }
-    bool isPeerDevice = strcmp(selfUdid, authIdStr) != 0;
+    bool isPeerDevice = HcStrcmp(selfUdid, authIdStr) != 0;
     HcFree(authIdStr);
     return isPeerDevice;
 }

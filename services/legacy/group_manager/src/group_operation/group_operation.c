@@ -39,6 +39,7 @@
 #include "performance_dumper.h"
 #include "channel_manager.h"
 #include "critical_handler.h"
+#include "string_util.h"
 
 #define EXT_PART_APP_ID "ext_part"
 
@@ -1758,7 +1759,7 @@ static bool IsCallerExtPart(int32_t opCode, CJson *params)
         LOGE("Failed to get appId!");
         return false;
     }
-    if (strcmp(appId, EXT_PART_APP_ID) != 0) {
+    if (HcStrcmp(appId, EXT_PART_APP_ID) != 0) {
         return false;
     }
     return true;

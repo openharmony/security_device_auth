@@ -28,6 +28,7 @@
 #include "system_ability_definition.h"
 #include "parameter.h"
 #include "sa_load_on_demand.h"
+#include "string_util.h"
 
 using namespace std;
 using namespace OHOS;
@@ -160,7 +161,7 @@ static IpcCallBackNode *GetIpcCallBackByAppId(const char *appId, int32_t type)
         if (g_ipcCallBackList.ctx[i].appId[0] == 0) {
             continue;
         }
-        ret = strcmp(g_ipcCallBackList.ctx[i].appId, appId);
+        ret = HcStrcmp(g_ipcCallBackList.ctx[i].appId, appId);
         if ((ret == 0) && (g_ipcCallBackList.ctx[i].cbType == type)) {
             return &g_ipcCallBackList.ctx[i];
         }

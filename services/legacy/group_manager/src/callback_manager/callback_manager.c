@@ -21,6 +21,7 @@
 #include "hc_types.h"
 #include "hc_vector.h"
 #include "securec.h"
+#include "string_util.h"
 
 typedef struct {
     char *appId;
@@ -38,7 +39,7 @@ static int32_t UpdateCallbackIfExist(const char *appId, const DeviceAuthCallback
     CallbackEntry *entry = NULL;
     (void)LockHcMutex(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
-        if (strcmp(entry->appId, appId) == 0) {
+        if (HcStrcmp(entry->appId, appId) == 0) {
             if (memcpy_s(entry->callback, sizeof(DeviceAuthCallback),
                 callback, sizeof(DeviceAuthCallback)) != EOK) {
                 UnlockHcMutex(g_callbackMutex);
@@ -163,7 +164,7 @@ const DeviceAuthCallback *GetGMCallbackByAppId(const char *appId)
     CallbackEntry *entry = NULL;
     (void)LockHcMutex(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
-        if (strcmp(entry->appId, appId) == 0) {
+        if (HcStrcmp(entry->appId, appId) == 0) {
             UnlockHcMutex(g_callbackMutex);
             return entry->callback;
         }
@@ -195,7 +196,7 @@ int32_t UnRegGroupManagerCallback(const char *appId)
     CallbackEntry *entry = NULL;
     (void)LockHcMutex(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
-        if (strcmp(entry->appId, appId) == 0) {
+        if (HcStrcmp(entry->appId, appId) == 0) {
             HcFree(entry->appId);
             HcFree(entry->callback);
             CallbackEntry tempEntry;

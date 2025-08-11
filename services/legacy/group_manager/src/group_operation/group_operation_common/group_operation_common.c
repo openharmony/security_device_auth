@@ -24,6 +24,7 @@
 #include "hc_dev_info.h"
 #include "hc_log.h"
 #include "account_task_manager.h"
+#include "string_util.h"
 
 static const char *IDENTITY_FROM_DB = "identityFromDB";
 
@@ -63,7 +64,7 @@ static bool IsGroupManager(const char *appId, const TrustedGroupEntry *entry)
     uint32_t index;
     HcString *manager = NULL;
     FOR_EACH_HC_VECTOR(entry->managers, index, manager) {
-        if ((strcmp(StringGet(manager), appId) == 0) ||
+        if ((HcStrcmp(StringGet(manager), appId) == 0) ||
             CheckUpgradeIdentity(entry->upgradeFlag, appId, StringGet(manager)) == HC_SUCCESS) {
             return true;
         }
@@ -76,7 +77,7 @@ static bool IsGroupFriend(const char *appId, const TrustedGroupEntry *entry)
     uint32_t index;
     HcString *trustedFriend = NULL;
     FOR_EACH_HC_VECTOR(entry->friends, index, trustedFriend) {
-        if ((strcmp(StringGet(trustedFriend), appId) == 0) ||
+        if ((HcStrcmp(StringGet(trustedFriend), appId) == 0) ||
             CheckUpgradeIdentity(entry->upgradeFlag, appId, StringGet(trustedFriend)) == HC_SUCCESS) {
             return true;
         }
@@ -194,7 +195,7 @@ bool IsLocalDevice(const char *udid)
         LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return true;
     }
-    return (strcmp(localUdid, udid) == 0);
+    return (HcStrcmp(localUdid, udid) == 0);
 }
 
 bool IsGroupOwner(int32_t osAccountId, const char *groupId, const char *appId)
@@ -215,7 +216,7 @@ bool IsGroupOwner(int32_t osAccountId, const char *groupId, const char *appId)
         DestroyGroupEntry(entry);
         return false;
     }
-    if ((strcmp(groupOwner, appId) == 0) ||
+    if ((HcStrcmp(groupOwner, appId) == 0) ||
         CheckUpgradeIdentity(entry->upgradeFlag, appId, groupOwner) == HC_SUCCESS) {
         DestroyGroupEntry(entry);
         return true;
@@ -742,7 +743,7 @@ int32_t AssertPeerDeviceNotSelf(const char *peerUdid)
         LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return HC_ERR_DB;
     }
-    if (strcmp(peerUdid, udid) == 0) {
+    if (HcStrcmp(peerUdid, udid) == 0) {
         LOGE("You are not allowed to delete yourself!");
         return HC_ERR_INVALID_PARAMS;
     }

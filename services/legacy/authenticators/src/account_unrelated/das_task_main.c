@@ -26,6 +26,7 @@
 #include "pake_protocol_ec_common.h"
 #include "pake_v1_task_main.h"
 #include "protocol_common.h"
+#include "string_util.h"
 
 typedef struct DasProtocolEntityT {
     ProtocolType type;
@@ -97,7 +98,7 @@ static int CombineJson(CJson *desObj, const CJson *srcObj)
             return HC_ERR_NULL_PTR;
         }
         CJson *payload = GetObjFromJson(desObj, FIELD_PAYLOAD);
-        if (strcmp(key, FIELD_PAYLOAD) == 0 && payload != NULL) {
+        if (HcStrcmp(key, FIELD_PAYLOAD) == 0 && payload != NULL) {
             res = CombineJson(payload, item);
             if (res != HC_SUCCESS) {
                 LOGE("Combine payload failed, res: %" LOG_PUB "x.", res);

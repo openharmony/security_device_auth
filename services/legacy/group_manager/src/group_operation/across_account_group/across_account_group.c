@@ -200,7 +200,7 @@ static int32_t AssertIdenticalGroupExist(int32_t osAccountId, const CJson *jsonP
     uint32_t index;
     TrustedGroupEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
-        if (strcmp(userId, StringGet(&((*entry)->userId))) == 0) {
+        if (HcStrcmp(userId, StringGet(&((*entry)->userId))) == 0) {
             isExist = true;
             break;
         }
@@ -226,7 +226,7 @@ static int32_t AssertSharedUserIdValid(const CJson *jsonParams)
         LOGE("Failed to get sharedUserId from jsonParams!");
         return HC_ERR_JSON_GET;
     }
-    if (strcmp(sharedUserId, userId) == 0) {
+    if (HcStrcmp(sharedUserId, userId) == 0) {
         LOGE("The input peerUserId is the same as the local userId!");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -500,7 +500,7 @@ static int32_t CheckUserIdValid(int32_t osAccountId, const CJson *jsonParams, co
         return HC_ERR_DB;
     }
     FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
-        if (strcmp(userId, StringGet(&(*entry)->sharedUserId)) == 0) {
+        if (HcStrcmp(userId, StringGet(&(*entry)->sharedUserId)) == 0) {
             ClearGroupEntryVec(&groupEntryVec);
             return HC_SUCCESS;
         }

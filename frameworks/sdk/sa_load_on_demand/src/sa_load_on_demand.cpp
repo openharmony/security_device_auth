@@ -24,6 +24,7 @@
 #include "parameter.h"
 #include "sa_listener.h"
 #include "hc_mutex.h"
+#include "string_util.h"
 
 using namespace std;
 using namespace OHOS;
@@ -188,7 +189,7 @@ static bool UpdateCallbackInfoIfExist(const char *appId, const DeviceAuthCallbac
         if (entry == nullptr || entry->appId == nullptr) {
             continue;
         }
-        if (strcmp(entry->appId, appId) == 0 && entry->callbackType == callbackType) {
+        if (HcStrcmp(entry->appId, appId) == 0 && entry->callbackType == callbackType) {
             LOGI("[SDK]:start to update callback, appId: %" LOG_PUB "s, callbackType: %" LOG_PUB "d",
                 appId, callbackType);
             bool ret = UpdateCallback(entry, callback, dataChangeListener, listener, index);
@@ -286,7 +287,7 @@ int32_t RemoveCallbackInfoFromList(const char *appId, int32_t callbackType)
         if (entry == nullptr || entry->appId == nullptr) {
             continue;
         }
-        if (strcmp(entry->appId, appId) == 0 && entry->callbackType == callbackType) {
+        if (HcStrcmp(entry->appId, appId) == 0 && entry->callbackType == callbackType) {
             LOGW("[SDK]: start to remove callbackInfo.");
             DevAuthCallbackInfo deleteCallbackInfo;
             HC_VECTOR_POPELEMENT(&g_devAuthCallbackList, &deleteCallbackInfo, index);

@@ -21,6 +21,7 @@
 #include "hc_dev_info.h"
 #include "hc_log.h"
 #include "hc_types.h"
+#include "string_util.h"
 
 #define PEER_TO_PEER_GROUP 256
 #define DEFAULT_EXPIRE_TIME 90
@@ -368,7 +369,7 @@ static bool IsAcrossAccount(const CmdParams *params)
         LOGW("userIdSelf or userIdPeer is null");
         return false;
     }
-    if (!params->isBind && strcmp(params->userIdSelf, params->userIdPeer) != 0) {
+    if (!params->isBind && HcStrcmp(params->userIdSelf, params->userIdPeer) != 0) {
         LOGI("No peer-to-peer binding and SelfUserId is not equal to PeerUserId, don't need to add peerDevice!");
         return true;
     }

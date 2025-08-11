@@ -16,6 +16,7 @@
 #include "hidump_adapter.h"
 #include "hc_log.h"
 #include "string.h"
+#include "string_util.h"
 
 static DumpCallBack g_dumpCallBack = NULL;
 static CredDumpCallBack g_credDumpCallBack = NULL;
@@ -24,7 +25,7 @@ static PerformanceDumpCallBack g_performDumpCallback = NULL;
 static void DumpByArgs(int fd, StringVector *strArgVec)
 {
     HcString strArg = strArgVec->get(strArgVec, 0);
-    if (strcmp(StringGet(&strArg), PERFORM_DUMP_ARG) == 0) {
+    if (HcStrcmp(StringGet(&strArg), PERFORM_DUMP_ARG) == 0) {
         if (g_performDumpCallback != NULL) {
             g_performDumpCallback(fd, strArgVec);
         }

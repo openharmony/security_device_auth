@@ -502,7 +502,7 @@ static int32_t CheckUserIdValid(int32_t osAccountId, const CJson *jsonParams, co
         return HC_ERR_DB;
     }
     FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
-        if (strcmp(userId, StringGet(&(*entry)->userId)) == 0) {
+        if (HcStrcmp(userId, StringGet(&(*entry)->userId)) == 0) {
             ClearGroupEntryVec(&groupEntryVec);
             return HC_SUCCESS;
         }
