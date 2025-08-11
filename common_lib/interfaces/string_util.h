@@ -97,9 +97,9 @@ int32_t GetAnonymousString(const char *originStr, char *anonymousStr, uint32_t a
  * Safe compare two strings.
  * @param str1: the first string.
  * @param str2: the second string.
- * @return 0: equal, -1: str1 < str2, str1 or str2 is NULL, 1: str1 > str2.
+ * @return if str1 or str2 is NULL return CLIB_FAILED(-1), else return strcmp(str1, str2).
  */
-int32_t HcStrcmp(const char *str1, const char *str2);
+int HcStrcmp(const char *str1, const char *str2);
 
 #ifdef __cplusplus
 }
