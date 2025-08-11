@@ -271,6 +271,18 @@ static int32_t ComputeHmacWithThreeStageInner(const KeyParams *keyParams, const 
     return res;
 }
 
+static int32_t ComputeHmacWithThreeStageIfKeyExist(const KeyParams *keyParams, const Uint8Buff *message,
+    Uint8Buff *outHmac)
+{
+    Uint8Buff keyAlias = { keyParams->keyBuff.key, keyParams->keyBuff.keyLen };
+    int32_t res = CheckKeyExist(&keyAlias, keyParams->isDeStorage, keyParams->osAccountId);
+    if (res != HAL_SUCCESS) {
+        LOGE("huks key is not exist.");
+        return res;
+    }
+    return ComputeHmacWithThreeStageInner(keyParams, message, outHmac);
+}
+
 static int32_t ComputeHmacWithThreeStage(const KeyParams *keyParams, const Uint8Buff *message, Uint8Buff *outHmac)
 {
     int32_t res = CheckHmacWithThreeStageParams(keyParams, message, outHmac);
@@ -278,7 +290,7 @@ static int32_t ComputeHmacWithThreeStage(const KeyParams *keyParams, const Uint8
         return res;
     }
 
-    res = ComputeHmacWithThreeStageInner(keyParams, message, outHmac);
+    res = ComputeHmacWithThreeStageIfKeyExist(keyParams, message, outHmac);
     if (!keyParams->isDeStorage) {
         return res;
     }
@@ -291,7 +303,7 @@ static int32_t ComputeHmacWithThreeStage(const KeyParams *keyParams, const Uint8
             .isDeStorage = false,
             .osAccountId = keyParams->osAccountId
         };
-        res = ComputeHmacWithThreeStageInner(&ceParams, message, outHmac);
+        res = ComputeHmacWithThreeStageIfKeyExist(&ceParams, message, outHmac);
     }
     return res;
 }
@@ -621,6 +633,18 @@ static int32_t AgreeSharedSecretWithStorageP256(const KeyParams *priKeyParams, c
     return res;
 }
 
+static int32_t AgreeSharedSecretIfKeyExist(const KeyParams *priKeyParams, const KeyBuff *pubKeyBuff,
+    struct HksBlob *sharedKeyAliasBlob)
+{
+    Uint8Buff keyAlias = { priKeyParams->keyBuff.key, priKeyParams->keyBuff.keyLen };
+    int32_t res = CheckKeyExist(&keyAlias, priKeyParams->isDeStorage, priKeyParams->osAccountId);
+    if (res != HAL_SUCCESS) {
+        LOGE("huks key is not exist.");
+        return res;
+    }
+    return AgreeSharedSecretWithStorageP256(priKeyParams, pubKeyBuff, sharedKeyAliasBlob);
+}
+
 static int32_t AgreeSharedSecretWithStorage(const KeyParams *priKeyParams, const KeyBuff *pubKeyBuff,
     Algorithm algo, uint32_t sharedKeyLen, const Uint8Buff *sharedKeyAlias)
 {
@@ -632,7 +656,7 @@ static int32_t AgreeSharedSecretWithStorage(const KeyParams *priKeyParams, const
     struct HksBlob sharedKeyAliasBlob = { sharedKeyAlias->length, sharedKeyAlias->val };
     if (g_algToHksAlgorithm[algo] == HKS_ALG_ECC) {
         LOGI("Hks agree key with storage for P256.");
-        return AgreeSharedSecretWithStorageP256(priKeyParams, pubKeyBuff, &sharedKeyAliasBlob);
+        return AgreeSharedSecretIfKeyExist(priKeyParams, pubKeyBuff, &sharedKeyAliasBlob);
     }
     struct HksParamSet *deParamSet = NULL;
     KeyParams keyParams = {
