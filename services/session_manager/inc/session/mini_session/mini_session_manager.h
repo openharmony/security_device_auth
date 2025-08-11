@@ -32,6 +32,11 @@ typedef struct {
     uint32_t randomLen;
 } LightSession;
 
+typedef struct {
+    char *serviceId;
+    uint8_t *randomVal;
+} LightSessionReturnData;
+
 #ifdef __cplusplus
 extern "C" {
 #endif

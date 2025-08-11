@@ -1772,7 +1772,7 @@ static int32_t ProcessLightAccountAuthServer(int64_t requestId, int32_t osAccoun
         FreeJson(out);
         return HC_ERR_JSON_FAIL;
     }
-    const char* serviceId = GetStringFromJson(returnDataJson, FIELD_APP_ID);
+    const char *serviceId = GetStringFromJson(returnDataJson, FIELD_APP_ID);
     if (serviceId == NULL) {
         LOGE("Failed to get serviceId");
         FreeJson(out);

@@ -161,12 +161,14 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
             *randomVal = (uint8_t *)HcMalloc(entry->session->randomLen, 0);
             if (*randomVal == NULL) {
                 LOGE("Malloc randomVal failed.");
+                UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
             }
             if (memcpy_s(*randomVal, entry->session->randomLen, entry->session->randomVal,
                 entry->session->randomLen) != EOK) {
                 HcFree(*randomVal);
                 LOGE("Copy randomVal failed.");
+                UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
             }
             uint32_t serviceIdLen = (uint32_t)HcStrlen(entry->session->serviceId);
@@ -174,6 +176,7 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
             if (*serviceId == NULL) {
                 HcFree(*randomVal);
                 LOGE("Malloc serviceId failed.");
+                UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
             }
             if (memcpy_s(*serviceId, serviceIdLen, entry->session->serviceId,
@@ -181,6 +184,7 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
                 HcFree(*randomVal);
                 HcFree(*serviceId);
                 LOGE("Copy serviceId failed.");
+                UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
             }
             LOGI("Light session found. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %" LOG_PUB "d",
@@ -198,21 +202,6 @@ int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serv
 {
     (void)LockHcMutex(&g_lightSessionMutex);
     RemoveTimeOutSession();
-    uint32_t index = 0;
-    LightSessionInfo *ptr = NULL;
-    FOR_EACH_HC_VECTOR(g_lightSessionInfoList, index, ptr) {
-        if (ptr == NULL || ptr->session == NULL) {
-            continue;
-        }
-        LightSession *session = ptr->session;
-        if (requestId == session->requestId && osAccountId == session->osAccountId) {
-            DestroyLightSession(session);
-            HC_VECTOR_POPELEMENT(&g_lightSessionInfoList, ptr, index);
-            LOGI("Light session delete. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %"
-                LOG_PUB "d", requestId, osAccountId);
-            break;
-        }
-    }
     if (g_lightSessionInfoList.size(&g_lightSessionInfoList) >= MAX_SESSION_NUM_LIGHT_AUTH) {
         LOGE("Reach max session num!");
         UnlockHcMutex(&g_lightSessionMutex);
@@ -244,16 +233,20 @@ int32_t DeleteLightSession(int64_t requestId, int32_t osAccountId)
     uint32_t index = 0;
     LightSessionInfo *ptr = NULL;
     FOR_EACH_HC_VECTOR(g_lightSessionInfoList, index, ptr) {
-        if (ptr == NULL || ptr->session == NULL) {
+        if (ptr == NULL) {
             continue;
         }
         LightSession *session = ptr->session;
+        if (session == NULL) {
+            continue;
+        }
         if (requestId == session->requestId && osAccountId == session->osAccountId) {
             DestroyLightSession(session);
             HC_VECTOR_POPELEMENT(&g_lightSessionInfoList, ptr, index);
             LOGI("Light session delete. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %"
                 LOG_PUB "d", requestId, osAccountId);
-            break;
+            UnlockHcMutex(&g_lightSessionMutex);
+            return HC_SUCCESS;
         }
     }
     UnlockHcMutex(&g_lightSessionMutex);
