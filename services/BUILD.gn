@@ -246,11 +246,17 @@ if (os_level == "mini" || os_level == "small") {
       "bounds_checking_function:libsec_shared",
       "cJSON:cjson",
       "c_utils:utils",
-      "dsoftbus:softbus_client",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
     ]
+
+    if (device_auth_enable_soft_bus_channel) {
+      external_deps += [
+        "dsoftbus:softbus_client",
+      ]
+    }
+
     if (support_os_account) {
       external_deps += [
         "ability_base:want",
