@@ -35,12 +35,14 @@ void DestroyLightSessionManager(void)
     return;
 }
 
-int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **randomVal, char **serviceId)
+int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **randomVal,
+    uint32_t *randomLen, char **serviceId)
 {
     (void)requestId;
     (void)osAccountId;
     (void)*serviceId;
     (void)*randomVal;
+    (void)*randomLen;
     return HC_SUCCESS;
 }
 
