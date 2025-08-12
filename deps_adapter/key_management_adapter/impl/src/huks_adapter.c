@@ -277,7 +277,7 @@ static int32_t ComputeHmacWithThreeStageIfKeyExist(const KeyParams *keyParams, c
     Uint8Buff keyAlias = { keyParams->keyBuff.key, keyParams->keyBuff.keyLen };
     int32_t res = CheckKeyExist(&keyAlias, keyParams->isDeStorage, keyParams->osAccountId);
     if (res != HAL_SUCCESS) {
-        LOGE("huks key is not exist.");
+        LOGE("Huks key is not exist, [Res]: %" LOG_PUB "d", res);
         return res;
     }
     return ComputeHmacWithThreeStageInner(keyParams, message, outHmac);
@@ -639,7 +639,7 @@ static int32_t AgreeSharedSecretIfKeyExist(const KeyParams *priKeyParams, const 
     Uint8Buff keyAlias = { priKeyParams->keyBuff.key, priKeyParams->keyBuff.keyLen };
     int32_t res = CheckKeyExist(&keyAlias, priKeyParams->isDeStorage, priKeyParams->osAccountId);
     if (res != HAL_SUCCESS) {
-        LOGE("huks key is not exist.");
+        LOGE("Huks key is not exist, [Res]: %" LOG_PUB "d", res);
         return res;
     }
     return AgreeSharedSecretWithStorageP256(priKeyParams, pubKeyBuff, sharedKeyAliasBlob);

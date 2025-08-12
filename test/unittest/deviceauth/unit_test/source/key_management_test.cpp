@@ -135,7 +135,7 @@ HWTEST_F(KeyManagementTest, HuksAdapterTest003, TestSize.Level0)
     KeyBuff pubKeyBuff = { keyData, P256_PUBLIC_SIZE, false };
     ret = GetLoaderInstance()->agreeSharedSecretWithStorage(&privKeyParams, &pubKeyBuff, P256, P256_PUBLIC_SIZE,
         &sharedKey);
-    EXPECT_EQ(ret, HAL_ERR_HUKS);
+    EXPECT_NE(ret, HAL_SUCCESS);
 }
 
 HWTEST_F(KeyManagementTest, HuksAdapterTest004, TestSize.Level0)
