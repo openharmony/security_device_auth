@@ -841,7 +841,7 @@ HWTEST_F(CredMgrQueryCredInfoByCredIdTest, CredMgrQueryCredInfoByCredIdTest001, 
     CJson *credInfoJson = CreateJsonFromString(returnCredInfo);
     HcFree(returnCredInfo);
     const char *deviceId = GetStringFromJson(credInfoJson, FIELD_DEVICE_ID);
-    EXPECT_EQ(HcStrcmp(deviceId, TEST_DEVICE_ID), TEST_RESULT_SUCCESS);
+    EXPECT_EQ(IsStrEqual(deviceId, TEST_DEVICE_ID), true);
     FreeJson(credInfoJson);
 }
 

@@ -155,14 +155,12 @@ void ResetIpcCallBackNodeByNodeId(int32_t nodeIdx)
 static IpcCallBackNode *GetIpcCallBackByAppId(const char *appId, int32_t type)
 {
     int32_t i;
-    int32_t ret;
 
     for (i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
         if (g_ipcCallBackList.ctx[i].appId[0] == 0) {
             continue;
         }
-        ret = HcStrcmp(g_ipcCallBackList.ctx[i].appId, appId);
-        if ((ret == 0) && (g_ipcCallBackList.ctx[i].cbType == type)) {
+        if (IsStrEqual(g_ipcCallBackList.ctx[i].appId, appId) && (g_ipcCallBackList.ctx[i].cbType == type)) {
             return &g_ipcCallBackList.ctx[i];
         }
     }

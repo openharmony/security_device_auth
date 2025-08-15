@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -129,7 +129,7 @@ void DeleteAllItemExceptOne(CJson *jsonObj, const char *key)
     CJson *nextItem = NULL;
     while (curItem != NULL) {
         nextItem = curItem->next;
-        if (HcStrcmp(key, curItem->string) != 0) {
+        if (!IsStrEqual(key, curItem->string)) {
             cJSON_Delete(cJSON_DetachItemViaPointer(jsonObj, curItem));
         }
         curItem = nextItem;

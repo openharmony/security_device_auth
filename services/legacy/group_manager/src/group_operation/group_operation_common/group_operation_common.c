@@ -64,7 +64,7 @@ static bool IsGroupManager(const char *appId, const TrustedGroupEntry *entry)
     uint32_t index;
     HcString *manager = NULL;
     FOR_EACH_HC_VECTOR(entry->managers, index, manager) {
-        if ((HcStrcmp(StringGet(manager), appId) == 0) ||
+        if ((IsStrEqual(StringGet(manager), appId)) ||
             CheckUpgradeIdentity(entry->upgradeFlag, appId, StringGet(manager)) == HC_SUCCESS) {
             return true;
         }
@@ -77,7 +77,7 @@ static bool IsGroupFriend(const char *appId, const TrustedGroupEntry *entry)
     uint32_t index;
     HcString *trustedFriend = NULL;
     FOR_EACH_HC_VECTOR(entry->friends, index, trustedFriend) {
-        if ((HcStrcmp(StringGet(trustedFriend), appId) == 0) ||
+        if ((IsStrEqual(StringGet(trustedFriend), appId)) ||
             CheckUpgradeIdentity(entry->upgradeFlag, appId, StringGet(trustedFriend)) == HC_SUCCESS) {
             return true;
         }
@@ -195,7 +195,7 @@ bool IsLocalDevice(const char *udid)
         LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return true;
     }
-    return (HcStrcmp(localUdid, udid) == 0);
+    return IsStrEqual(localUdid, udid);
 }
 
 bool IsGroupOwner(int32_t osAccountId, const char *groupId, const char *appId)
@@ -216,7 +216,7 @@ bool IsGroupOwner(int32_t osAccountId, const char *groupId, const char *appId)
         DestroyGroupEntry(entry);
         return false;
     }
-    if ((HcStrcmp(groupOwner, appId) == 0) ||
+    if ((IsStrEqual(groupOwner, appId)) ||
         CheckUpgradeIdentity(entry->upgradeFlag, appId, groupOwner) == HC_SUCCESS) {
         DestroyGroupEntry(entry);
         return true;
@@ -743,7 +743,7 @@ int32_t AssertPeerDeviceNotSelf(const char *peerUdid)
         LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return HC_ERR_DB;
     }
-    if (HcStrcmp(peerUdid, udid) == 0) {
+    if (IsStrEqual(peerUdid, udid)) {
         LOGE("You are not allowed to delete yourself!");
         return HC_ERR_INVALID_PARAMS;
     }

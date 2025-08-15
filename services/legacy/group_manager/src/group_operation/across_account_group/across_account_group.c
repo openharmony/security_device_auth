@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -200,7 +200,7 @@ static int32_t AssertIdenticalGroupExist(int32_t osAccountId, const CJson *jsonP
     uint32_t index;
     TrustedGroupEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
-        if (HcStrcmp(userId, StringGet(&((*entry)->userId))) == 0) {
+        if (IsStrEqual(userId, StringGet(&((*entry)->userId)))) {
             isExist = true;
             break;
         }
@@ -226,7 +226,7 @@ static int32_t AssertSharedUserIdValid(const CJson *jsonParams)
         LOGE("Failed to get sharedUserId from jsonParams!");
         return HC_ERR_JSON_GET;
     }
-    if (HcStrcmp(sharedUserId, userId) == 0) {
+    if (IsStrEqual(sharedUserId, userId)) {
         LOGE("The input peerUserId is the same as the local userId!");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -500,7 +500,7 @@ static int32_t CheckUserIdValid(int32_t osAccountId, const CJson *jsonParams, co
         return HC_ERR_DB;
     }
     FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
-        if (HcStrcmp(userId, StringGet(&(*entry)->sharedUserId)) == 0) {
+        if (IsStrEqual(userId, StringGet(&(*entry)->sharedUserId))) {
             ClearGroupEntryVec(&groupEntryVec);
             return HC_SUCCESS;
         }

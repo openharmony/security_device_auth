@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,7 +39,7 @@ static int32_t UpdateCallbackIfExist(const char *appId, const DeviceAuthCallback
     CallbackEntry *entry = NULL;
     (void)LockHcMutex(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
-        if (HcStrcmp(entry->appId, appId) == 0) {
+        if (IsStrEqual(entry->appId, appId)) {
             if (memcpy_s(entry->callback, sizeof(DeviceAuthCallback),
                 callback, sizeof(DeviceAuthCallback)) != EOK) {
                 UnlockHcMutex(g_callbackMutex);
@@ -164,7 +164,7 @@ const DeviceAuthCallback *GetGMCallbackByAppId(const char *appId)
     CallbackEntry *entry = NULL;
     (void)LockHcMutex(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
-        if (HcStrcmp(entry->appId, appId) == 0) {
+        if (IsStrEqual(entry->appId, appId)) {
             UnlockHcMutex(g_callbackMutex);
             return entry->callback;
         }
@@ -196,7 +196,7 @@ int32_t UnRegGroupManagerCallback(const char *appId)
     CallbackEntry *entry = NULL;
     (void)LockHcMutex(g_callbackMutex);
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
-        if (HcStrcmp(entry->appId, appId) == 0) {
+        if (IsStrEqual(entry->appId, appId)) {
             HcFree(entry->appId);
             HcFree(entry->callback);
             CallbackEntry tempEntry;

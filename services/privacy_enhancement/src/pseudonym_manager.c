@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -85,7 +85,7 @@ static PseudonymInfo **QueryPseudonymInfoPtrIfMatch(const PseudonymInfoVec *vec,
     uint32_t index;
     PseudonymInfo **pseudonymInfo;
     FOR_EACH_HC_VECTOR(*vec, index, pseudonymInfo) {
-        if (HcStrcmp(realInfo, (*pseudonymInfo)->realInfo) == 0) {
+        if (IsStrEqual(realInfo, (*pseudonymInfo)->realInfo)) {
             return pseudonymInfo;
         }
     }
@@ -386,9 +386,9 @@ static int32_t SavePseudonymInfoToFile(int32_t osAccountId, const PseudonymInfoV
 
 static const char *GetParamByFieldName(const char *fieldName, PseudonymInfo *pseudonymInfoEntry)
 {
-    if (HcStrcmp(fieldName, FIELD_DEVICE_ID) == 0) {
+    if (IsStrEqual(fieldName, FIELD_DEVICE_ID)) {
         return pseudonymInfoEntry->deviceId;
-    } else if (HcStrcmp(fieldName, FIELD_INDEX_KEY) == 0) {
+    } else if (IsStrEqual(fieldName, FIELD_INDEX_KEY)) {
         return pseudonymInfoEntry->indexKey;
     } else {
         LOGE("Not support this field!");
@@ -524,7 +524,7 @@ static int32_t DeletePseudonymInner(int32_t osAccountId, const char *dataTodelet
     while (index < HC_VECTOR_SIZE(&info->pseudonymInfoVec)) {
         pseudonymInfoEntry = info->pseudonymInfoVec.getp(&info->pseudonymInfoVec, index);
         if ((pseudonymInfoEntry == NULL) || (*pseudonymInfoEntry == NULL) ||
-            (HcStrcmp(dataTodelete, GetParamByFieldName(fieldName, *pseudonymInfoEntry))) != 0) {
+            (!IsStrEqual(dataTodelete, GetParamByFieldName(fieldName, *pseudonymInfoEntry)))) {
             index++;
             continue;
         }
@@ -587,7 +587,7 @@ static void LoadPseudonymData(void)
         if (name == NULL) {
             continue;
         }
-        if (HcStrcmp(name, "pseudonym_data.dat") == 0) {
+        if (IsStrEqual(name, "pseudonym_data.dat")) {
             LoadOsAccountPseudonymDb(DEFAULT_OS_ACCOUNT);
         } else if (sscanf_s(name, "pseudonym_data%d.dat", &osAccountId) == 1) {
             LoadOsAccountPseudonymDb(osAccountId);
@@ -615,7 +615,7 @@ static int32_t GetRealInfo(int32_t osAccountId, const char *pseudonymId, char **
     PseudonymInfo **pseudonymInfoEntry = NULL;
     FOR_EACH_HC_VECTOR(info->pseudonymInfoVec, index, pseudonymInfoEntry) {
         if ((pseudonymInfoEntry != NULL) && (*pseudonymInfoEntry != NULL) &&
-            (HcStrcmp((*pseudonymInfoEntry)->pseudonymId, pseudonymId) == 0)) {
+            (IsStrEqual((*pseudonymInfoEntry)->pseudonymId, pseudonymId))) {
             if (DeepCopyString((*pseudonymInfoEntry)->realInfo, realInfo) != HC_SUCCESS) {
                 LOGE("Failed to deep copy pseudonymInfoentry realInfo!");
                 UnlockHcMutex(g_mutex);
@@ -647,7 +647,7 @@ static int32_t GetPseudonymId(int32_t osAccountId, const char *indexKey, char **
     PseudonymInfo **pseudonymInfoEntry = NULL;
     FOR_EACH_HC_VECTOR(info->pseudonymInfoVec, index, pseudonymInfoEntry) {
         if ((pseudonymInfoEntry != NULL) && (*pseudonymInfoEntry != NULL) &&
-            (HcStrcmp((*pseudonymInfoEntry)->indexKey, indexKey) == 0)) {
+            (IsStrEqual((*pseudonymInfoEntry)->indexKey, indexKey))) {
             if (DeepCopyString((*pseudonymInfoEntry)->pseudonymId, pseudonymId) != HC_SUCCESS) {
                 LOGE("Failed to deep copy pseudonymId!");
                 UnlockHcMutex(g_mutex);
@@ -802,7 +802,7 @@ static bool IsNeedRefreshPseudonymId(int32_t osAccountId, const char *indexKey)
     PseudonymInfo **pseudonymInfoEntry = NULL;
     FOR_EACH_HC_VECTOR(info->pseudonymInfoVec, index, pseudonymInfoEntry) {
         if ((pseudonymInfoEntry != NULL) && (*pseudonymInfoEntry != NULL) &&
-            (HcStrcmp((*pseudonymInfoEntry)->indexKey, indexKey) == 0)) {
+            (IsStrEqual((*pseudonymInfoEntry)->indexKey, indexKey))) {
             if (IsNeedRefresh(*pseudonymInfoEntry)) {
                 UnlockHcMutex(g_mutex);
                 return true;

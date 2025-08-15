@@ -248,7 +248,7 @@ void CancelDevSession(int64_t sessionId, const char *appId)
     SessionInfo *ptr;
     FOR_EACH_HC_VECTOR(g_sessionInfoList, index, ptr) {
         DevSession *session = ptr->session;
-        if (session->id == sessionId && HcStrcmp(session->appId, appId) == 0) {
+        if (session->id == sessionId && IsStrEqual(session->appId, appId)) {
             session->destroy(session);
             HC_VECTOR_POPELEMENT(&g_sessionInfoList, ptr, index);
             LOGI("cancel session success. [CurNum]: %" LOG_PUB "u, [Id]: %" LOG_PUB PRId64,

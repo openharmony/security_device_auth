@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -162,7 +162,7 @@ static int32_t UpdateListenerIfExist(const char *appId, const DataChangeListener
     ListenerEntry *entry = NULL;
     (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
-        if (HcStrcmp(entry->appId, appId) == 0) {
+        if (IsStrEqual(entry->appId, appId)) {
             if (memcpy_s(entry->listener, sizeof(DataChangeListener),
                 listener, sizeof(DataChangeListener)) != HC_SUCCESS) {
                 UnlockHcMutex(g_broadcastMutex);
@@ -297,7 +297,7 @@ int32_t RemoveListener(const char *appId)
     uint32_t index;
     ListenerEntry *entry = NULL;
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
-        if (HcStrcmp(entry->appId, appId) == 0) {
+        if (IsStrEqual(entry->appId, appId)) {
             HcFree(entry->appId);
             HcFree(entry->listener);
             ListenerEntry tempEntry;

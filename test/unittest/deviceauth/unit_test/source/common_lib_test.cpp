@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -820,5 +820,18 @@ HWTEST_F(CommonLibTest, ParseTlvNodeTest001, TestSize.Level0)
     ret = ParseTlvNode(&tlvBase, &parcelWithData, true);
     EXPECT_EQ(ret, TLV_FAIL);
     DeleteParcel(&parcelWithData);
+}
+
+HWTEST_F(CommonLibTest, IsStrEqualTest001, TestSize.Level0)
+{
+    EXPECT_EQ(IsStrEqual(nullptr, nullptr), false);
+    EXPECT_EQ(IsStrEqual("123", nullptr), false);
+    EXPECT_EQ(IsStrEqual(nullptr, "123"), false);
+    EXPECT_EQ(IsStrEqual("123", "123"), true);
+    EXPECT_EQ(IsStrEqual("123", "1234"), false);
+    EXPECT_EQ(IsStrEqual("1234", "123"), false);
+    EXPECT_EQ(IsStrEqual("", ""), true);
+    EXPECT_EQ(IsStrEqual("", "123"), false);
+    EXPECT_EQ(IsStrEqual("123", ""), false);
 }
 }
