@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -174,10 +174,11 @@ int32_t GetAnonymousString(const char *originStr, char *anonymousStr, uint32_t a
     return CLIB_SUCCESS;
 }
 
-int HcStrcmp(const char *str1, const char *str2)
+bool IsStrEqual(const char *str1, const char *str2)
 {
     if (str1 == NULL || str2 == NULL) {
-        return CLIB_FAILED;
+        return false;
     }
-    return strcmp(str1, str2);
+
+    return strcmp(str1, str2) == 0;
 }

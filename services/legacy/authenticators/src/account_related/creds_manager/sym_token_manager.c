@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -57,7 +57,7 @@ static bool IsTokenMatch(const SymToken *token, const char *userId, const char *
         LOGE("deviceId is null!");
         return false;
     }
-    return (HcStrcmp(userId, token->userId) == 0) && (HcStrcmp(deviceId, token->deviceId) == 0);
+    return (IsStrEqual(userId, token->userId)) && (IsStrEqual(deviceId, token->deviceId));
 }
 
 static bool GetTokensFilePathCe(int32_t osAccountId, char *tokenPath, uint32_t pathBufferLen)
@@ -732,7 +732,7 @@ static void LoadTokenDb(void)
         if (name == NULL) {
             continue;
         }
-        if (HcStrcmp(name, "account_data_sym.dat") == 0) {
+        if (IsStrEqual(name, "account_data_sym.dat")) {
             LoadOsSymTokensDb(DEFAULT_OS_ACCOUNT);
         } else if (sscanf_s(name, "account_data_sym%d.dat", &osAccountId) == 1) {
             LoadOsSymTokensDb(osAccountId);

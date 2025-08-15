@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -617,8 +617,8 @@ static AccountToken **QueryTokenPtrIfMatch(const AccountTokenVec *vec, const cha
     uint32_t index;
     AccountToken **token;
     FOR_EACH_HC_VECTOR(*vec, index, token) {
-        if ((HcStrcmp(userId, (const char *)((*token)->pkInfo.userId.val)) == 0) &&
-            (HcStrcmp(deviceId, (const char *)((*token)->pkInfo.deviceId.val)) == 0)) {
+        if ((IsStrEqual(userId, (const char *)((*token)->pkInfo.userId.val))) &&
+            (IsStrEqual(deviceId, (const char *)((*token)->pkInfo.deviceId.val)))) {
             return token;
         }
     }
@@ -688,7 +688,7 @@ static int32_t DoExportPkAndCompare(int32_t osAccountId, const char *userId, con
         return ret;
     }
     UnlockHcMutex(g_accountDbMutex);
-    if (HcStrcmp((const char *)devicePk, (const char *)publicKeyVal) == 0) {
+    if (memcmp(devicePk, publicKeyVal, PK_SIZE) == 0) {
         HcFree(publicKeyVal);
         return HC_SUCCESS;
     }
@@ -756,7 +756,7 @@ static int32_t CheckUserId(const char *userId, const CJson *in)
         LOGE("Failed to get userIdFromPk");
         return HC_ERR_JSON_GET;
     }
-    if (HcStrcmp(userId, userIdFromPk) == 0) {
+    if (IsStrEqual(userId, userIdFromPk)) {
         return HC_SUCCESS;
     }
     return HC_ERROR;
@@ -1144,8 +1144,8 @@ static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, const c
     while (index < HC_VECTOR_SIZE(&info->tokens)) {
         token = info->tokens.getp(&info->tokens, index);
         if ((token == NULL) || (*token == NULL) ||
-            (HcStrcmp(userId, (const char *)((*token)->pkInfo.userId.val)) != 0) ||
-            (HcStrcmp(deviceId, (const char *)((*token)->pkInfo.deviceId.val)) != 0)) {
+            (!IsStrEqual(userId, (const char *)((*token)->pkInfo.userId.val))) ||
+            (!IsStrEqual(deviceId, (const char *)((*token)->pkInfo.deviceId.val)))) {
             index++;
             continue;
         }
@@ -1281,7 +1281,7 @@ static void LoadTokenDb(void)
         if (name == NULL) {
             continue;
         }
-        if (HcStrcmp(name, "account_data_asy.dat") == 0) {
+        if (IsStrEqual(name, "account_data_asy.dat")) {
             LoadOsAccountTokenDb(DEFAULT_OS_ACCOUNT);
         } else if (sscanf_s(name, "account_data_asy%d.dat", &osAccountId) == 1) {
             LoadOsAccountTokenDb(osAccountId);

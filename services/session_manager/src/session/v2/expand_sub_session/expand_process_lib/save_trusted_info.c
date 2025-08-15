@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -369,7 +369,7 @@ static bool IsAcrossAccount(const CmdParams *params)
         LOGW("userIdSelf or userIdPeer is null");
         return false;
     }
-    if (!params->isBind && HcStrcmp(params->userIdSelf, params->userIdPeer) != 0) {
+    if (!params->isBind && !IsStrEqual(params->userIdSelf, params->userIdPeer)) {
         LOGI("No peer-to-peer binding and SelfUserId is not equal to PeerUserId, don't need to add peerDevice!");
         return true;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,7 +51,7 @@ static bool IsSetLabelNeeded(const char *filePath, const char *labelToSet)
     if (GetSecurityLabel(filePath, &existLabel) != HC_SUCCESS) {
         return true;
     }
-    if (HcStrcmp(existLabel, labelToSet) != 0) {
+    if (!IsStrEqual(existLabel, labelToSet)) {
         LOGI("Incorrect security level, need to reset.");
         HcFree(existLabel);
         return true;

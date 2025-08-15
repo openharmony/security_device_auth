@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -98,7 +98,7 @@ static int CombineJson(CJson *desObj, const CJson *srcObj)
             return HC_ERR_NULL_PTR;
         }
         CJson *payload = GetObjFromJson(desObj, FIELD_PAYLOAD);
-        if (HcStrcmp(key, FIELD_PAYLOAD) == 0 && payload != NULL) {
+        if (IsStrEqual(key, FIELD_PAYLOAD) && payload != NULL) {
             res = CombineJson(payload, item);
             if (res != HC_SUCCESS) {
                 LOGE("Combine payload failed, res: %" LOG_PUB "x.", res);
