@@ -147,7 +147,8 @@ void DestroyLightSessionManager(void)
     DestroyHcMutex(&g_lightSessionMutex);
 }
 
-int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **randomVal, char **serviceId)
+int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **randomVal,
+    uint32_t *randomLen, char **serviceId)
 {
     (void)LockHcMutex(&g_lightSessionMutex);
     RemoveTimeOutSession();
@@ -158,6 +159,7 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
             continue;
         }
         if (requestId == entry->session->requestId && osAccountId == entry->session->osAccountId) {
+            *randomLen = entry->session->randomLen;
             *randomVal = (uint8_t *)HcMalloc(entry->session->randomLen, 0);
             if (*randomVal == NULL) {
                 LOGE("Malloc randomVal failed.");
@@ -171,7 +173,7 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
                 UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
             }
-            uint32_t serviceIdLen = (uint32_t)HcStrlen(entry->session->serviceId);
+            uint32_t serviceIdLen = (uint32_t)HcStrlen(entry->session->serviceId) + 1;
             *serviceId = (char *)HcMalloc(serviceIdLen, 0);
             if (*serviceId == NULL) {
                 HcFree(*randomVal);
@@ -179,8 +181,7 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
                 UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
             }
-            if (memcpy_s(*serviceId, serviceIdLen, entry->session->serviceId,
-                serviceIdLen) != EOK) {
+            if (memcpy_s(*serviceId, serviceIdLen, entry->session->serviceId, serviceIdLen) != EOK) {
                 HcFree(*randomVal);
                 HcFree(*serviceId);
                 LOGE("Copy serviceId failed.");

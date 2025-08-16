@@ -1813,8 +1813,8 @@ static int32_t ProcessLightAccountAuthInner(int32_t osAccountId, int64_t request
         LOGE("Failed to alloc lightSessionReturnData");
         return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t res = QueryLightSession(requestId, osAccountId,
-        &lightSessionReturnData->randomVal, &lightSessionReturnData->serviceId);
+    int32_t res = QueryLightSession(requestId, osAccountId, &lightSessionReturnData->randomVal,
+        &lightSessionReturnData->randomLen, &lightSessionReturnData->serviceId);
     if (res == HC_SUCCESS) { //client
         res = ProcessLightAccountAuthClient(requestId, osAccountId, msg, laCallBack, lightSessionReturnData);
         DestroyLightSessionReturnData(lightSessionReturnData);
