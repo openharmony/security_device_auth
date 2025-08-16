@@ -581,7 +581,7 @@ static int32_t SetIssuer(Credential *credential, CJson *json)
 static int32_t SetDeviceId(Credential *credential, CJson *json)
 {
     const char *deviceId = GetStringFromJson(json, FIELD_DEVICE_ID);
-    if (deviceId == NULL || IsStrEqual(deviceId, "")) {
+    if (deviceId == NULL || HcStrcmp(deviceId, "") == 0) {
         LOGE("Failed to get deviceId from credReqParam");
         return IS_ERR_JSON_GET;
     }
@@ -595,7 +595,7 @@ static int32_t SetDeviceId(Credential *credential, CJson *json)
 static int32_t SetCredOwner(Credential *credential, CJson *json)
 {
     const char *credOwner = GetStringFromJson(json, FIELD_CRED_OWNER);
-    if (credOwner == NULL || IsStrEqual(credOwner, "")) {
+    if (credOwner == NULL || HcStrcmp(credOwner, "") == 0) {
         LOGE("Failed to get credOwner from credReqParam");
         return IS_ERR_JSON_GET;
     }
@@ -624,7 +624,7 @@ static int32_t SetProofType(Credential *credential, CJson *json)
 static int32_t SetUserId(Credential *credential, CJson *json)
 {
     const char *userId = GetStringFromJson(json, FIELD_USER_ID);
-    if (credential->credType == ACCOUNT_RELATED && (userId == NULL || IsStrEqual(userId, ""))) {
+    if (credential->credType == ACCOUNT_RELATED && (userId == NULL || HcStrcmp(userId, "") == 0)) {
         LOGE("Invalid params, when credType is account, userId is NULL");
         return IS_ERR_INVALID_PARAMS;
     }
@@ -675,7 +675,7 @@ static int32_t SetPeerUserSpaceId(Credential *credential, CJson *json, uint8_t m
 {
     const char *peerUserSpaceId = GetStringFromJson(json, FIELD_PEER_USER_SPACE_ID);
     if (credential->credType == ACCOUNT_UNRELATED && method == METHOD_IMPORT &&
-        (peerUserSpaceId == NULL || IsStrEqual(peerUserSpaceId, ""))) {
+        (peerUserSpaceId == NULL || HcStrcmp(peerUserSpaceId, "") == 0)) {
         LOGE("Invalid params, when credType is not account and method is import, peer osaccount id is NULL");
         return IS_ERR_INVALID_PARAMS;
     }
@@ -710,7 +710,7 @@ static int32_t SetAppList(Credential *credential, CJson *json)
 static int32_t SetExtendInfo(Credential *credential, CJson *json)
 {
     const char *extendInfo = GetStringFromJson(json, FIELD_EXTEND_INFO);
-    if (extendInfo == NULL || IsStrEqual(extendInfo, "")) {
+    if (extendInfo == NULL || HcStrcmp(extendInfo, "") == 0) {
         LOGW("Failed to get extendInfo from credReqParam");
     }
     if (extendInfo == NULL) {
@@ -1267,7 +1267,7 @@ int32_t SetRequiredParamsFromJson(QueryCredentialParams *queryParams, CJson *bas
         return IS_ERR_NOT_SUPPORT;
     }
     const char *credOwner = GetStringFromJson(baseInfoJson, FIELD_CRED_OWNER);
-    if (credOwner == NULL || IsStrEqual(credOwner, "")) {
+    if (credOwner == NULL || HcStrcmp(credOwner, "") == 0) {
         LOGE("Failed to set query params: credOwner");
         return IS_ERR_JSON_GET;
     }
@@ -1278,13 +1278,13 @@ int32_t SetRequiredParamsFromJson(QueryCredentialParams *queryParams, CJson *bas
 int32_t SetUpdateToQueryParams(CJson *json, QueryCredentialParams *queryParams)
 {
     const char *userId = GetStringFromJson(json, FIELD_USER_ID);
-    if (userId == NULL || IsStrEqual(userId, "")) {
+    if (userId == NULL || HcStrcmp(userId, "") == 0) {
         LOGE("Failed to set query params: userId");
         return IS_ERR_JSON_GET;
     }
     queryParams->userId = userId;
     const char *deviceId = GetStringFromJson(json, FIELD_DEVICE_ID);
-    if (deviceId == NULL || IsStrEqual(deviceId, "")) {
+    if (deviceId == NULL || HcStrcmp(deviceId, "") == 0) {
         LOGE("Failed to set query params: deviceId");
         return IS_ERR_JSON_GET;
     }
@@ -1303,7 +1303,7 @@ static int32_t EraseCredIdInVec(const char *credId, CredentialVec *credVec)
             continue;
         }
         const char *itemCredId = StringGet(&(*item)->credId);
-        if (itemCredId != NULL && IsStrEqual(credId, itemCredId)) {
+        if (itemCredId != NULL && HcStrcmp(credId, itemCredId) == 0) {
             credVec->eraseElement(credVec, item, index);
             return IS_SUCCESS;
         }

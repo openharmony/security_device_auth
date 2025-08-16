@@ -1759,7 +1759,7 @@ static bool IsCallerExtPart(int32_t opCode, CJson *params)
         LOGE("Failed to get appId!");
         return false;
     }
-    if (!IsStrEqual(appId, EXT_PART_APP_ID)) {
+    if (HcStrcmp(appId, EXT_PART_APP_ID) != 0) {
         return false;
     }
     return true;

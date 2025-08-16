@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -201,7 +201,7 @@ void HcFileGetSubFileName(const char *path, StringVector *nameVec)
         return;
     }
     while ((entry = readdir(dir)) != NULL) {
-        if (IsStrEqual(entry->d_name, ".") || IsStrEqual(entry->d_name, "..")) {
+        if ((HcStrcmp(entry->d_name, ".") == 0) || (HcStrcmp(entry->d_name, "..") == 0)) {
             continue;
         }
         HcString subFileName = CreateString();

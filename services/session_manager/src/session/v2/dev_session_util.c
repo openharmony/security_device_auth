@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -795,7 +795,7 @@ bool IsPeerSameUserId(int32_t osAccountId, const char *peerUserId)
         return false;
     }
     TrustedGroupEntry *groupEntry = groupVec.get(&groupVec, 0);
-    bool isSame = (IsStrEqual(StringGet(&(groupEntry->userId)), peerUserId));
+    bool isSame = (HcStrcmp(StringGet(&(groupEntry->userId)), peerUserId) == 0);
     ClearGroupEntryVec(&groupVec);
     return isSame;
 }

@@ -20,12 +20,12 @@
 #include "device_auth.h"
 #include "device_auth_defines.h"
 #include "json_utils.h"
-#include "string_util.h"
 #include "hc_types.h"
 #include "securec.h"
 #include "nativetoken_kit.h"
 #include "token_setproc.h"
 #include "accesstoken_kit.h"
+#include "string_util.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -403,7 +403,7 @@ HWTEST_F(CredMgrQueryCredInfoByCredIdTest, CredMgrQueryCredInfoByCredIdTest001, 
     HcFree(returnCredInfo);
     const char *deviceId = GetStringFromJson(credInfoJson, FIELD_DEVICE_ID);
     if (deviceId != nullptr) {
-        EXPECT_EQ(IsStrEqual(deviceId, TEST_DEVICE_ID), true);
+        EXPECT_EQ(HcStrcmp(deviceId, TEST_DEVICE_ID), TEST_RESULT_SUCCESS);
     }
     FreeJson(credInfoJson);
 }

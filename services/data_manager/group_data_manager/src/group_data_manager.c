@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -772,7 +772,7 @@ static void LoadDeviceAuthDb(void)
             LOGW("[DB]: Invalid osAccountIdStr!");
             continue;
         }
-        if (IsStrEqual(osAccountIdStr, "hcgroup.dat")) {
+        if (HcStrcmp(osAccountIdStr, "hcgroup.dat") == 0) {
             LoadOsAccountDb(DEFAULT_OS_ACCOUNT);
         } else if (sscanf_s(osAccountIdStr, "hcgroup%d.dat", &osAccountId) == 1) {
             LoadOsAccountDb(osAccountId);
@@ -912,16 +912,16 @@ static bool SaveInfoToParcel(const OsAccountTrustedInfo *info, HcParcel *parcel)
 
 static bool CompareQueryGroupParams(const QueryGroupParams *params, const TrustedGroupEntry *entry)
 {
-    if ((params->groupId != NULL) && (!IsStrEqual(params->groupId, StringGet(&entry->id)))) {
+    if ((params->groupId != NULL) && (HcStrcmp(params->groupId, StringGet(&entry->id)) != 0)) {
         return false;
     }
-    if ((params->groupName != NULL) && (!IsStrEqual(params->groupName, StringGet(&entry->name)))) {
+    if ((params->groupName != NULL) && (HcStrcmp(params->groupName, StringGet(&entry->name)) != 0)) {
         return false;
     }
-    if ((params->userId != NULL) && (!IsStrEqual(params->userId, StringGet(&entry->userId)))) {
+    if ((params->userId != NULL) && (HcStrcmp(params->userId, StringGet(&entry->userId)) != 0)) {
         return false;
     }
-    if ((params->sharedUserId != NULL) && (!IsStrEqual(params->sharedUserId, StringGet(&entry->sharedUserId)))) {
+    if ((params->sharedUserId != NULL) && (HcStrcmp(params->sharedUserId, StringGet(&entry->sharedUserId)) != 0)) {
         return false;
     }
     if ((params->groupType != ALL_GROUP) && (params->groupType != entry->type)) {
@@ -932,7 +932,7 @@ static bool CompareQueryGroupParams(const QueryGroupParams *params, const Truste
     }
     if (params->ownerName != NULL) {
         HcString entryOwner = HC_VECTOR_GET(&entry->managers, 0);
-        if (!IsStrEqual(params->ownerName, StringGet(&entryOwner))) {
+        if (HcStrcmp(params->ownerName, StringGet(&entryOwner)) != 0) {
             return false;
         }
     }
@@ -941,16 +941,16 @@ static bool CompareQueryGroupParams(const QueryGroupParams *params, const Truste
 
 static bool CompareQueryDeviceParams(const QueryDeviceParams *params, const TrustedDeviceEntry *entry)
 {
-    if ((params->groupId != NULL) && (!IsStrEqual(params->groupId, StringGet(&entry->groupId)))) {
+    if ((params->groupId != NULL) && (HcStrcmp(params->groupId, StringGet(&entry->groupId)) != 0)) {
         return false;
     }
-    if ((params->udid != NULL) && (!IsStrEqual(params->udid, StringGet(&entry->udid)))) {
+    if ((params->udid != NULL) && (HcStrcmp(params->udid, StringGet(&entry->udid)) != 0)) {
         return false;
     }
-    if ((params->authId != NULL) && (!IsStrEqual(params->authId, StringGet(&entry->authId)))) {
+    if ((params->authId != NULL) && (HcStrcmp(params->authId, StringGet(&entry->authId)) != 0)) {
         return false;
     }
-    if ((params->userId != NULL) && (!IsStrEqual(params->userId, StringGet(&entry->userId)))) {
+    if ((params->userId != NULL) && (HcStrcmp(params->userId, StringGet(&entry->userId)) != 0)) {
         return false;
     }
     return true;
@@ -1194,7 +1194,7 @@ static bool IsSelfDeviceEntry(const TrustedDeviceEntry *deviceEntry)
         LOGE("The entryUdid is NULL!");
         return false;
     }
-    return IsStrEqual(selfUdid, entryUdid);
+    return HcStrcmp(selfUdid, entryUdid) == 0;
 }
 
 static int32_t GenerateMessageWithOsAccount(const TrustedGroupEntry *groupEntry, int32_t osAccountId,

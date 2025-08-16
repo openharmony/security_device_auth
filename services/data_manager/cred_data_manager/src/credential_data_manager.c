@@ -535,7 +535,7 @@ static void LoadDevAuthCredDb(void)
         if (osAccountIdStr == NULL) {
             continue;
         }
-        if (IsStrEqual(osAccountIdStr, "hccredential.dat")) {
+        if (HcStrcmp(osAccountIdStr, "hccredential.dat") == 0) {
             LoadOsAccountCredDb(DEFAULT_OS_ACCOUNT);
         } else if (sscanf_s(osAccountIdStr, "hccredential%d.dat", &osAccountId) == 1) {
             LoadOsAccountCredDb(osAccountId);
@@ -638,20 +638,20 @@ static bool SaveCredInfoToParcel(const OsAccountCredInfo *info, HcParcel *parcel
 
 static bool CompareStringParams(const QueryCredentialParams *params, const Credential *entry)
 {
-    if ((params->deviceId != NULL) && (!IsStrEqual(params->deviceId, StringGet(&entry->deviceId)))) {
+    if ((params->deviceId != NULL) && (HcStrcmp(params->deviceId, StringGet(&entry->deviceId)) != 0)) {
         return false;
     }
-    if ((params->credOwner != NULL) && (!IsStrEqual(params->credOwner, StringGet(&entry->credOwner)))) {
+    if ((params->credOwner != NULL) && (HcStrcmp(params->credOwner, StringGet(&entry->credOwner)) != 0)) {
         return false;
     }
-    if ((params->userId != NULL) && (!IsStrEqual(params->userId, StringGet(&entry->userId)))) {
+    if ((params->userId != NULL) && (HcStrcmp(params->userId, StringGet(&entry->userId)) != 0)) {
         return false;
     }
-    if ((params->credId != NULL) && (!IsStrEqual(params->credId, StringGet(&entry->credId)))) {
+    if ((params->credId != NULL) && (HcStrcmp(params->credId, StringGet(&entry->credId)) != 0)) {
         return false;
     }
     if ((params->peerUserSpaceId != NULL) &&
-        (!IsStrEqual(params->peerUserSpaceId, StringGet(&entry->peerUserSpaceId)))) {
+        (HcStrcmp(params->peerUserSpaceId, StringGet(&entry->peerUserSpaceId)) != 0)) {
         return false;
     }
     return true;

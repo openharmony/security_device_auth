@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -362,10 +362,10 @@ static void PerformanceDump(int fd, StringVector *strArgVec)
         return;
     }
     HcString strArg = strArgVec->get(strArgVec, 1);
-    if (IsStrEqual(StringGet(&strArg), ENABLE_PERFORMANCE_DUMPER)) {
+    if (HcStrcmp(StringGet(&strArg), ENABLE_PERFORMANCE_DUMPER) == 0) {
         g_isPerformDumpEnabled = true;
         dprintf(fd, "performance dumper is enabled!\n");
-    } else if (IsStrEqual(StringGet(&strArg), DISABLE_PERFORMANCE_DUMPER)) {
+    } else if (HcStrcmp(StringGet(&strArg), DISABLE_PERFORMANCE_DUMPER) == 0) {
         ClearPerformDataVec();
         g_isPerformDumpEnabled = false;
         dprintf(fd, "performance dumper is disabled!\n");
