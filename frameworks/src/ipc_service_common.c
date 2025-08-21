@@ -1228,7 +1228,7 @@ int32_t IpcServiceGaGetRealInfo(const IpcDataInfo *ipcParams, int32_t paramNum, 
     const char *pseudonymId = NULL;
 
     LOGI("starting ...");
-    int32_t inOutLen = sizeof(int64_t);
+    int32_t inOutLen = sizeof(osAccountId);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGaGetRealInfo failed, get os account id error.");
@@ -1260,7 +1260,7 @@ int32_t IpcServiceGaGetPseudonymId(const IpcDataInfo *ipcParams, int32_t paramNu
     int32_t osAccountId;
     const char *indexKey = NULL;
     LOGI("starting ...");
-    int32_t inOutLen = sizeof(int64_t);
+    int32_t inOutLen = sizeof(osAccountId);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGaGetRealInfo failed, get os account id error.");

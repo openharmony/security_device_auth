@@ -176,6 +176,9 @@ int32_t GetAnonymousString(const char *originStr, char *anonymousStr, uint32_t a
 
 bool IsStrEqual(const char *str1, const char *str2)
 {
+    if (str1 == NULL && str2 == NULL) {
+        return true;
+    }
     if (str1 == NULL || str2 == NULL) {
         return false;
     }
