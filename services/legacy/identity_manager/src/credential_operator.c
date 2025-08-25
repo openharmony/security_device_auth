@@ -20,7 +20,6 @@
 #include "hc_log.h"
 #include "identity_manager.h"
 #include "os_account_adapter.h"
-#include "hisysevent_common.h"
 #include "string_util.h"
 
 typedef struct {
@@ -671,7 +670,6 @@ static int32_t ImportCredential(const char *reqJsonStr, char **returnData)
     res = ComputeAndSavePsk(param.osAccountId, param.serviceType, param.deviceId, param.peerOsAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to ComputeAndSavePsk, delete imported key!");
-        ReportRadarEvent(res);
         if (UnregisterIdentity(&param, KEY_ALIAS_P2P_AUTH) != HC_SUCCESS) {
             LOGW("Failed to delete imported public key!");
         }

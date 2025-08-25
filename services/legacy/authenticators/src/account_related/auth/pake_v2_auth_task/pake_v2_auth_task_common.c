@@ -28,7 +28,6 @@
 #include "pake_v2_auth_server_task.h"
 #include "protocol_common.h"
 #include "string_util.h"
-#include "hisysevent_common.h"
 
 #define P256_SHARED_SECRET_KEY_SIZE 32
 #define P256_PUBLIC_SIZE 64
@@ -122,7 +121,6 @@ int32_t GenerateEcdhSharedKey(PakeAuthParams *params)
     res = params->pakeParams.loader->agreeSharedSecretWithStorage(&privKeyParams, &pubKeyBuff,
         P256, P256_SHARED_SECRET_KEY_SIZE, &(params->pakeParams.psk));
     HcFree(priAliasVal);
-    ReportRadarEvent(res);
     return res;
 }
 

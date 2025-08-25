@@ -27,7 +27,6 @@
 #include "hc_time.h"
 #include "identity_service_defines.h"
 #include "permission_adapter.h"
-#include "hisysevent_common.h"
 #include "string_util.h"
 
 int32_t GetCredentialById(int32_t osAccountId, const char *credId, Credential **returnEntry)
@@ -1179,7 +1178,6 @@ static int32_t ComputeAndSavePskInner(int32_t osAccountId, uint8_t credAlgo, con
     res = GetLoaderInstance()->agreeSharedSecretWithStorage(&selfKeyParams, &peerKeyBuff, algo,
         PSK_LEN, sharedKeyAlias);
     if (res != IS_SUCCESS) {
-        ReportRadarEvent(res);
         LOGE("Agree psk failed.");
     }
     return res;

@@ -21,7 +21,6 @@
 #include "hc_types.h"
 #include "iso_protocol_common.h"
 #include "protocol_common.h"
-#include "hisysevent_common.h"
 
 static int32_t ComputeHkdfByParams(const IsoParams *params, const Uint8Buff *hkdfSaltBuf, Uint8Buff *returnKeyBuf)
 {
@@ -593,9 +592,7 @@ static int AuthGeneratePsk(const Uint8Buff *seed, IsoParams *params)
     Uint8Buff pskBuf = { params->baseParams.psk, sizeof(params->baseParams.psk) };
     if (params->isPeerFromUpgrade) {
         KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, true, params->baseParams.osAccountId };
-        res = params->baseParams.loader->computeHmacWithThreeStage(&keyAliasParams, seed, &pskBuf);
-        ReportRadarEvent(res);
-        return res;
+        return params->baseParams.loader->computeHmacWithThreeStage(&keyAliasParams, seed, &pskBuf);
     } else {
         KeyParams keyAliasParams = { { keyAlias.val, keyAlias.length, true }, false, params->baseParams.osAccountId };
         return params->baseParams.loader->computeHmac(&keyAliasParams, seed, &pskBuf);
