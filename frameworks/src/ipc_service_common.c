@@ -40,50 +40,6 @@ static CredChangeListener g_credListenCbAdt = {NULL};
 static CredAuthManager g_credAuthMgrMethod = {NULL};
 #endif
 
-static inline int32_t GetAndValSize32Param(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
-{
-    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, paramSize);
-    if ((*paramSize) != sizeof(int32_t) || ret != HC_SUCCESS) {
-        LOGE("get param error, type %" LOG_PUB "d", paramType);
-        return HC_ERR_IPC_BAD_PARAM;
-    }
-    return HC_SUCCESS;
-}
-
-static inline int32_t GetAndValSize64Param(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
-{
-    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, paramSize);
-    if ((*paramSize) != sizeof(int64_t) || ret != HC_SUCCESS) {
-        LOGE("get param error, type %" LOG_PUB "d", paramType);
-        return HC_ERR_IPC_BAD_PARAM;
-    }
-    return HC_SUCCESS;
-}
-
-static inline int32_t GetAndValSizeCbParam(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
-{
-    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, paramSize);
-    if ((*paramSize) != sizeof(DeviceAuthCallback) || ret != HC_SUCCESS) {
-        LOGE("get param error, type %" LOG_PUB "d", paramType);
-        return HC_ERR_IPC_BAD_PARAM;
-    }
-    return HC_SUCCESS;
-}
-
-static inline int32_t GetAndValNullParam(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
-{
-    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, NULL);
-    if (param == NULL || ret != HC_SUCCESS) {
-        LOGE("get param error, type %" LOG_PUB "d", paramType);
-        return HC_ERR_IPC_BAD_PARAM;
-    }
-    return HC_SUCCESS;
-}
-
 static int32_t BindRequestIdWithAppId(const char *data)
 {
     const char *appId = NULL;
@@ -115,7 +71,7 @@ int32_t IpcServiceGmRegCallback(const IpcDataInfo *ipcParams, int32_t paramNum, 
     int32_t cbObjIdx = -1;
     int32_t inOutLen;
     LOGI("starting ...");
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmRegCallback failed, get app id error.");
         return HC_ERR_IPC_BAD_PARAM;
@@ -154,7 +110,7 @@ int32_t IpcServiceGmUnRegCallback(const IpcDataInfo *ipcParams, int32_t paramNum
     int32_t ret;
     const char *appId = NULL;
     LOGI("starting ...");
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmUnRegCallback failed, get app id error.");
         return HC_ERR_IPC_BAD_PARAM;
@@ -174,7 +130,7 @@ int32_t IpcServiceGmRegDataChangeListener(const IpcDataInfo *ipcParams, int32_t 
     static int32_t registered = 0;
     int32_t cbObjIdx = -1;
     int32_t inOutLen;
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmRegDataChangeListener failed, get app id error.");
         return HC_ERR_IPC_BAD_PARAM;
@@ -219,7 +175,7 @@ int32_t IpcServiceGmUnRegDataChangeListener(const IpcDataInfo *ipcParams, int32_
     int32_t ret;
     const char *appId = NULL;
     LOGI("starting ...");
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmUnRegDataChangeListener failed, get app id error.");
         return HC_ERR_IPC_BAD_PARAM;
@@ -252,12 +208,12 @@ int32_t IpcServiceGmCreateGroup(const IpcDataInfo *ipcParams, int32_t paramNum, 
         LOGE("IpcServiceGmCreateGroup failed, get req id error.");
         return ret;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmCreateGroup failed, get app id error.");
         return HC_ERR_IPC_BAD_PARAM;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CREATE_PARAMS, (uint8_t *)&createParams, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_CREATE_PARAMS, (uint8_t *)&createParams, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmCreateGroup failed, get create params error.");
         return HC_ERR_IPC_BAD_PARAM;
@@ -295,12 +251,12 @@ int32_t IpcServiceGmDelGroup(const IpcDataInfo *ipcParams, int32_t paramNum, uin
         LOGE("IpcServiceGmDelGroup failed, get req id error.");
         return ret;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmDelGroup failed, get app id error.");
         return HC_ERR_IPC_BAD_PARAM;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEL_PARAMS, (uint8_t *)&delParams, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_DEL_PARAMS, (uint8_t *)&delParams, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmDelGroup failed, get delete params error.");
         return HC_ERR_IPC_BAD_PARAM;
@@ -338,12 +294,12 @@ int32_t IpcServiceGmAddMemberToGroup(const IpcDataInfo *ipcParams, int32_t param
         LOGE("IpcServiceGmAddMemberToGroup failed, get req id error.");
         return ret;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_ADD_PARAMS, (uint8_t *)&addParams, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_ADD_PARAMS, (uint8_t *)&addParams, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmAddMemberToGroup failed, get add params error.");
         return HC_ERR_IPC_BAD_PARAM;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmAddMemberToGroup failed, get app id error.");
         return HC_ERR_IPC_BAD_PARAM;
@@ -380,12 +336,12 @@ int32_t IpcServiceGmDelMemberFromGroup(const IpcDataInfo *ipcParams, int32_t par
         LOGE("IpcServiceGmDelMemberFromGroup failed, get req id error.");
         return ret;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmDelMemberFromGroup failed, get app id error.");
         return HC_ERR_IPC_BAD_PARAM;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEL_PARAMS, (uint8_t *)&delParams, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_DEL_PARAMS, (uint8_t *)&delParams, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmDelMemberFromGroup failed, get del params error.");
         return HC_ERR_IPC_BAD_PARAM;
@@ -416,12 +372,12 @@ int32_t IpcServiceGmAddMultiMembersToGroup(const IpcDataInfo *ipcParams, int32_t
         LOGE("IpcServiceGmAddMultiMembersToGroup failed, get os account id error.");
         return ret;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_ADD_PARAMS, (uint8_t *)&addParams, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_ADD_PARAMS, (uint8_t *)&addParams, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmAddMultiMembersToGroup failed, get add params error.");
         return HC_ERR_IPC_BAD_PARAM;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmAddMultiMembersToGroup failed, get app id error.");
         return HC_ERR_IPC_BAD_PARAM;
@@ -447,12 +403,12 @@ int32_t IpcServiceGmDelMultiMembersFromGroup(const IpcDataInfo *ipcParams, int32
         LOGE("IpcServiceGmDelMultiMembersFromGroup failed, get os account id error.");
         return ret;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmDelMultiMembersFromGroup failed, get app id error.");
         return ret;
     }
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_DEL_PARAMS, (uint8_t *)&delParams, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_DEL_PARAMS, (uint8_t *)&delParams, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmDelMultiMembersFromGroup failed, get del params error.");
         return HC_ERR_IPC_BAD_PARAM;
@@ -846,14 +802,14 @@ int32_t IpcServiceGmGetTrustedDevices(const IpcDataInfo *ipcParams, int32_t para
 int32_t IpcServiceAvGetClientSharedKey(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
 {
     const char *peerPkWithSig = NULL;
-    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_PK_WITH_SIG, (uint8_t *)&peerPkWithSig,
+    int32_t ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_PK_WITH_SIG, (uint8_t *)&peerPkWithSig,
         NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_PK_WITH_SIG);
         return HC_ERR_IPC_BAD_PARAM;
     }
     const char *serviceId = NULL;
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_SERVICE_ID, (uint8_t *)&serviceId, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_SERVICE_ID, (uint8_t *)&serviceId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceAvGetClientSharedKey failed, get service id error.");
         return HC_ERR_IPC_BAD_PARAM;
@@ -891,14 +847,14 @@ int32_t IpcServiceAvGetClientSharedKey(const IpcDataInfo *ipcParams, int32_t par
 int32_t IpcServiceAvGetServerSharedKey(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
 {
     const char *peerPkWithSig = NULL;
-    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_PK_WITH_SIG, (uint8_t *)&peerPkWithSig,
+    int32_t ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_PK_WITH_SIG, (uint8_t *)&peerPkWithSig,
         NULL);
     if (ret != HC_SUCCESS) {
         LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_PK_WITH_SIG);
         return HC_ERR_IPC_BAD_PARAM;
     }
     const char *serviceId = NULL;
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_SERVICE_ID, (uint8_t *)&serviceId, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_SERVICE_ID, (uint8_t *)&serviceId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceAvGetServerSharedKey failed, get service id error.");
         return HC_ERR_IPC_BAD_PARAM;
@@ -1483,7 +1439,7 @@ int32_t IpcServiceCmRegCredChangeListener(const IpcDataInfo *ipcParams, int32_t 
     int32_t inOutLen;
     LOGI("starting ...");
     inOutLen = sizeof(int32_t);
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceCmRegCredChangeListener failed, get app id error.");
         return HC_ERR_IPC_BAD_PARAM;
@@ -1528,7 +1484,7 @@ int32_t IpcServiceCmUnRegCredChangeListener(const IpcDataInfo *ipcParams, int32_
     int32_t ret;
     const char *appId = NULL;
     LOGI("starting ...");
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
+    ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceCmUnRegCredChangeListener failed, get app id error.");
         return HC_ERR_IPC_BAD_PARAM;
