@@ -132,7 +132,6 @@ ohos_unittest("pub_key_exchange_test") {
   sources = pub_key_exchange_files
   sources += [ "pub_key_exchange_test.cpp" ]
   sources += [
-    "${device_auth_common}/src/hisysevent_common.c",
     "${authenticators_path}/src/account_related/creds_manager/asy_token_manager.c",
     "${authenticators_path}/src/account_related/creds_manager/sym_token_manager.c",
     "${authenticators_path}/src/account_unrelated/common/das_task_common.c",

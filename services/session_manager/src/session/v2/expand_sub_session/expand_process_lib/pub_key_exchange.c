@@ -19,7 +19,6 @@
 #include "device_auth_defines.h"
 #include "hc_log.h"
 #include "identity_defines.h"
-#include "hisysevent_common.h"
 
 #define START_CMD_EVENT_NAME "StartCmd"
 #define FAIL_EVENT_NAME "CmdFail"
@@ -379,7 +378,6 @@ static int32_t ComputeAndSavePskInner(int32_t osAccountId, const Uint8Buff *self
         PAKE_PSK_LEN, sharedKeyAlias);
     if (res != HC_SUCCESS) {
         LOGE("Agree psk failed.");
-        ReportRadarEvent(res);
     }
     return res;
 }
