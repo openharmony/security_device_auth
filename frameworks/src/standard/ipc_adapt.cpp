@@ -1672,7 +1672,7 @@ int32_t DecodeIpcData(uintptr_t data, int32_t *type, uint8_t **val, int32_t *val
         return HC_ERR_IPC_BAD_MESSAGE_LENGTH;
     }
     *valSz = dataPtr->ReadInt32();
-    if (*valSz > static_cast<int32_t>(dataPtr->GetReadableBytes())) {
+    if (*valSz < 0 || *valSz > static_cast<int32_t>(dataPtr->GetReadableBytes())) {
         LOGE("Insufficient data available in IPC container. [Data]: val");
         return HC_ERR_IPC_BAD_VAL_LENGTH;
     }
