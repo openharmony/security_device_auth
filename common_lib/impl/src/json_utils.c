@@ -237,7 +237,7 @@ static char *PackJsonWithBigIntArrToString(const CJson *jsonObj, CJson *arr)
             }
         }
     } while (0);
-    cJSON_free(dupJson);
+    cJSON_Delete(dupJson);
     DestroyKeyList(keyListSize, keyList);
     return jsonStr;
 }
