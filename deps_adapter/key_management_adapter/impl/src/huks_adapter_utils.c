@@ -246,12 +246,15 @@ void MoveDeKeyToCe(bool isKeyAlias, int32_t osAccountId, const struct HksBlob *k
     }
     struct HksParamSet *ceParamSet = NULL;
     if (ConstructCeParamSet(osAccountId, &ceParamSet) != HAL_SUCCESS) {
+        FreeParamSet(deParamSet);
         return;
     }
     int32_t res = ChangeStorageLevel(keyAliasBlob, deParamSet, ceParamSet);
     if (res != HKS_SUCCESS) {
         LOGE("Failed to move de key to ce!");
     }
+    FreeParamSet(deParamSet);
+    FreeParamSet(ceParamSet);
 }
 
 int32_t ConstructCheckParamSet(bool isDeStorage, int32_t osAccountId, struct HksParamSet **paramSet)
