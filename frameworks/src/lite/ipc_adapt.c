@@ -72,7 +72,7 @@ int32_t GetAndValSize32Param(const IpcDataInfo *ipcParams,
 {
     int32_t paramSize = sizeof(int32_t);
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, (uint8_t *)param, &paramSize);
-    if (paramSize = sizeof(int32_t) || ret != HC_SUCCESS) {
+    if (paramSize != sizeof(int32_t) || ret != HC_SUCCESS) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
@@ -84,7 +84,7 @@ int32_t GetAndValSize64Param(const IpcDataInfo *ipcParams,
 {
     int32_t paramSize = sizeof(int64_t);
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, (uint8_t *)param, &paramSize);
-    if (paramSize) != sizeof(int64_t) || ret != HC_SUCCESS) {
+    if (paramSize != sizeof(int64_t) || ret != HC_SUCCESS) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
@@ -505,7 +505,7 @@ static void OnSessKeyStub(CallbackParams params)
     uint32_t dataLen = 0u;
     void (*onSessKeyHook)(int64_t, uint8_t *, uint32_t) = (void (*)(int64_t, uint8_t *, uint32_t))(params.cbHook);
 
-    (void)GetAndValSize64Param(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID, requestId);
+    (void)GetAndValSize64Param(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID, &requestId);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_SESS_KEY,
         (uint8_t *)(&keyData), (int32_t *)(&dataLen));
 
@@ -522,7 +522,7 @@ static void OnFinishStub(CallbackParams params)
     void (*onFinishHook)(int64_t, int32_t, char *) = (void (*)(int64_t, int32_t, char *))(params.cbHook);
     (void)GetAndValSize64Param(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID, &requestId);
     (void)GetAndValSize32Param(params.cbDataCache, params.cacheNum, PARAM_TYPE_OPCODE, &opCode);
-    (void)GetAndValStringParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_COMM_DATA, &data);
+    (void)GetAndValStringParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_COMM_DATA, (const char **)&data);
 
     onFinishHook(requestId, opCode, data);
     WriteInt32(params.reply, HC_SUCCESS);
@@ -541,7 +541,7 @@ static void OnErrorStub(CallbackParams params)
     (void)GetAndValSize64Param(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID, &requestId);
     (void)GetAndValSize32Param(params.cbDataCache, params.cacheNum, PARAM_TYPE_OPCODE, &opCode);
     (void)GetAndValSize32Param(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERRCODE, &errCode);
-    (void)GetAndValStringParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERR_INFO, &errInfo);
+    (void)GetAndValStringParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERR_INFO, (const char **)&errInfo);
 
     onErrorHook(requestId, opCode, errCode, errInfo);
     WriteInt32(params.reply, HC_SUCCESS);
@@ -558,7 +558,7 @@ static void OnRequestStub(CallbackParams params)
 
     (void)GetAndValSize64Param(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID, &requestId);
     (void)GetAndValSize32Param(params.cbDataCache, params.cacheNum, PARAM_TYPE_OPCODE, &opCode);
-    (void)GetAndValStringParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQ_INFO, &reqParams);
+    (void)GetAndValStringParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQ_INFO, (const char **)&reqParams);
 
     reqResult = onReqHook(requestId, opCode, reqParams);
     if (reqResult == NULL) {
