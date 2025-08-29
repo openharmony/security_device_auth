@@ -99,16 +99,16 @@ void UnInitProxyAdapt(void);
 void InitDevAuthCredListenerCbCtx(CredChangeListener *ctx);
 
 int32_t GetAndValSize32Param(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize);
+    int32_t paramNum, int32_t paramType, int32_t *param);
 
 int32_t GetAndValSize64Param(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize);
+    int32_t paramNum, int32_t paramType, int64_t *param);
 
-int32_t GetAndValSizeCbParam(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize);
+int32_t GetAndValSizeStruckParam(const IpcDataInfo *ipcParams,
+    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t paramSize);
 
-int32_t GetAndValNullParam(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize);
+int32_t GetAndValStringParam(const IpcDataInfo *ipcParams,
+    int32_t paramNum, int32_t paramType, const char **param);
 
 #ifdef __cplusplus
 }
