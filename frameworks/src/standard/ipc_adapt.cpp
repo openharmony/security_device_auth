@@ -538,7 +538,8 @@ __attribute__((no_sanitize("cfi"))) static void OnErrorStub(CallbackParams param
     (void)GetAndValSize32Param(params.cbDataCache, params.cacheNum, PARAM_TYPE_OPCODE, &opCode);
     (void)GetAndValSize32Param(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERRCODE,
         &errCode);
-    (void)GetAndValStringParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERR_INFO, const_cast<const char **>(&errInfo));
+    (void)GetAndValStringParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERR_INFO,
+        const_cast<const char **>(&errInfo));
     onErrorHook(requestId, opCode, errCode, errInfo);
     return;
 }
