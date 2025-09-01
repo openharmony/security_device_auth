@@ -67,58 +67,6 @@ static StubDevAuthCb g_sdkCbStub;
 static IClientProxy *g_proxyInstance = NULL;
 static IpcObjectStub g_objectStub;
 
-int32_t GetAndValSize32Param(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, int32_t *param)
-{
-    int32_t paramSize = sizeof(int32_t);
-    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, (uint8_t *)param, &paramSize);
-    if (paramSize != sizeof(int32_t) || ret != HC_SUCCESS) {
-        LOGE("get param error, type %" LOG_PUB "d", paramType);
-        return HC_ERR_IPC_BAD_PARAM;
-    }
-    return HC_SUCCESS;
-}
-
-int32_t GetAndValSize64Param(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, int64_t *param)
-{
-    int32_t paramSize = sizeof(int64_t);
-    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, (uint8_t *)param, &paramSize);
-    if (paramSize != sizeof(int64_t) || ret != HC_SUCCESS) {
-        LOGE("get param error, type %" LOG_PUB "d", paramType);
-        return HC_ERR_IPC_BAD_PARAM;
-    }
-    return HC_SUCCESS;
-}
-
-int32_t GetAndValSizeStruckParam(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t paramSize)
-{
-    int32_t inOutLen = 0;
-    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, &inOutLen);
-    if (inOutLen != paramSize || ret != HC_SUCCESS || param == NULL) {
-        LOGE("get param error, type %" LOG_PUB "d", paramType);
-        return HC_ERR_IPC_BAD_PARAM;
-    }
-    return HC_SUCCESS;
-}
-
-int32_t GetAndValStringParam(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, const char **param)
-{
-    int32_t size = 0;
-    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, (uint8_t *)param, &size);
-    if ((ret != HC_SUCCESS) || (param == NULL) || (size <= 0)) {
-        LOGE("get param error, type %" LOG_PUB "d", paramType);
-        return HC_ERR_IPC_BAD_PARAM;
-    }
-    if ((*param == NULL) || ((*param)[size - 1] != '\0')) {
-        LOGE("The input parameter is not a valid string type.");
-        return HC_ERR_IPC_BAD_PARAM;
-    }
-    return HC_SUCCESS;
-}
-
 static void SetIpcCallBackNodeDefault(IpcCallBackNode *node)
 {
     (void)memset_s(node, sizeof(IpcCallBackNode), 0, sizeof(IpcCallBackNode));
@@ -490,7 +438,7 @@ static void OnTransmitStub(CallbackParams params)
     bool (*onTransmitHook)(int64_t, uint8_t *, uint32_t) = (bool (*)(int64_t, uint8_t *, uint32_t))(params.cbHook);
 
     (void)GetAndValSize64Param(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID, &requestId);
-    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum,
+    (void)GetAndValParam(params.cbDataCache, params.cacheNum,
         PARAM_TYPE_COMM_DATA, (uint8_t *)&data, (int32_t *)(&dataLen));
 
     bRet = onTransmitHook(requestId, data, dataLen);
@@ -506,7 +454,7 @@ static void OnSessKeyStub(CallbackParams params)
     void (*onSessKeyHook)(int64_t, uint8_t *, uint32_t) = (void (*)(int64_t, uint8_t *, uint32_t))(params.cbHook);
 
     (void)GetAndValSize64Param(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID, &requestId);
-    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_SESS_KEY,
+    (void)GetAndValParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_SESS_KEY,
         (uint8_t *)(&keyData), (int32_t *)(&dataLen));
 
     onSessKeyHook(requestId, keyData, dataLen);
@@ -1571,7 +1519,7 @@ static bool IsTypeForSettingPtr(int32_t type)
     return false;
 }
 
-int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
+static int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
     int32_t type, uint8_t *paramCache, int32_t *cacheLen)
 {
     int32_t i;
@@ -1608,6 +1556,69 @@ int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
         break;
     }
     return ret;
+}
+
+int32_t GetAndValSize32Param(const IpcDataInfo *ipcParams,
+    int32_t paramNum, int32_t paramType, int32_t *param)
+{
+    int32_t paramSize = sizeof(int32_t);
+    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, (uint8_t *)param, &paramSize);
+    if (ret != HC_SUCCESS || param == NULL || paramSize != sizeof(int32_t)) {
+        LOGE("get param error, type %" LOG_PUB "d", paramType);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    return HC_SUCCESS;
+}
+
+int32_t GetAndValSize64Param(const IpcDataInfo *ipcParams,
+    int32_t paramNum, int32_t paramType, int64_t *param)
+{
+    int32_t paramSize = sizeof(int64_t);
+    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, (uint8_t *)param, &paramSize);
+    if (ret != HC_SUCCESS || param == NULL || paramSize != sizeof(int64_t)) {
+        LOGE("get param error, type %" LOG_PUB "d", paramType);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    return HC_SUCCESS;
+}
+
+int32_t GetAndValSizeStructParam(const IpcDataInfo *ipcParams,
+    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t paramSize)
+{
+    int32_t inOutLen = 0;
+    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, &inOutLen);
+    if (ret != HC_SUCCESS || param == NULL || inOutLen != paramSize) {
+        LOGE("get param error, type %" LOG_PUB "d", paramType);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    return HC_SUCCESS;
+}
+
+int32_t GetAndValStringParam(const IpcDataInfo *ipcParams,
+    int32_t paramNum, int32_t paramType, const char **param)
+{
+    int32_t paramSize = 0;
+    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, (uint8_t *)param, &paramSize);
+    if ((ret != HC_SUCCESS) || (param == NULL) || (paramSize <= 0)) {
+        LOGE("get param error, type %" LOG_PUB "d", paramType);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    if ((*param == NULL) || ((*param)[paramSize - 1] != '\0')) {
+        LOGE("The input parameter is not a valid string type.");
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    return HC_SUCCESS;
+}
+
+int32_t GetAndValParam(const IpcDataInfo *ipcParams,
+    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
+{
+    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, (uint8_t *)param, paramSize);
+    if ((ret != HC_SUCCESS) || (param == NULL) || (*paramSize <= 0)) {
+        LOGE("get param error, type %" LOG_PUB "d", paramType);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    return HC_SUCCESS;
 }
 
 bool IsCallbackMethod(int32_t methodId)
