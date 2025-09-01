@@ -1672,10 +1672,12 @@ static int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t pa
         }
         ret = HC_SUCCESS;
         if (IsTypeForSettingPtr(type)) {
-            *(reinterpret_cast<uint8_t **>(paramCache)) = ipcParams[i].val;
-            if (cacheLen != nullptr) {
-                *cacheLen = ipcParams[i].valSz;
+            if (ipcParams[i].val == nullptr) {
+                ret = HC_ERR_INVALID_PARAMS;
+                break;
             }
+            *(reinterpret_cast<uint8_t **>(paramCache)) = ipcParams[i].val;
+            *cacheLen = ipcParams[i].valSz;
             break;
         }
         if (IsTypeForCpyData(type)) {
@@ -1743,11 +1745,11 @@ int32_t GetAndValStringParam(const IpcDataInfo *ipcParams,
     int32_t size = 0;
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType,
         reinterpret_cast<uint8_t *> (param), &size);
-    if ((ret != HC_SUCCESS) || (param == NULL) || (size <= 0)) {
+    if ((ret != HC_SUCCESS) || (size <= 0)) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
-    if ((*param == NULL) || ((*param)[size - 1] != '\0')) {
+    if ((*param)[size - 1] != '\0') {
         LOGE("The input parameter is not a valid string type.");
         return HC_ERR_IPC_BAD_PARAM;
     }
@@ -1759,7 +1761,7 @@ int32_t GetAndValParam(const IpcDataInfo *ipcParams,
 {
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType,
         reinterpret_cast<uint8_t *> (param), paramSize);
-    if ((ret != HC_SUCCESS) || (param == NULL) || (*paramSize <= 0)) {
+    if ((ret != HC_SUCCESS) || (*paramSize <= 0)) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }

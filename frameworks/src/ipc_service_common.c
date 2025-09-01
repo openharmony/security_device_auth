@@ -411,7 +411,7 @@ int32_t IpcServiceGmProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, 
         return ret;
     }
     ret = GetAndValStringParam(ipcParams, paramNum, PARAM_TYPE_COMM_DATA, &data);
-    if ((dataLen <= 0) || (ret != HC_SUCCESS)) {
+    if (ret != HC_SUCCESS) {
         LOGE("get param error, type %" LOG_PUB "d, data length %" LOG_PUB "d", PARAM_TYPE_COMM_DATA, dataLen);
         return HC_ERR_IPC_BAD_PARAM;
     }
@@ -1691,7 +1691,7 @@ int32_t IpcServiceCaAuthCredential(const IpcDataInfo *ipcParams, int32_t paramNu
         return ret;
     }
     ret = GetAndValSizeStructParam(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&caCallback,
-    sizeof(DeviceAuthCallback));
+        sizeof(DeviceAuthCallback));
     if (ret != HC_SUCCESS) {
         return ret;
     }
@@ -1731,13 +1731,13 @@ int32_t IpcServiceCaProcessCredData(const IpcDataInfo *ipcParams, int32_t paramN
         return ret;
     }
     ret = GetAndValStringParam(ipcParams, paramNum, PARAM_TYPE_COMM_DATA, &data);
-    if ((data == NULL) || (ret != HC_SUCCESS)) {
+    if (ret != HC_SUCCESS) {
         LOGE("IpcServiceCaProcessCredData failed, get comm data error.");
         return HC_ERR_IPC_BAD_PARAM;
     }
     dataLen = HcStrlen(data) + 1;
     ret = GetAndValSizeStructParam(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&caCallback,
-    sizeof(DeviceAuthCallback));
+        sizeof(DeviceAuthCallback));
     if (ret != HC_SUCCESS) {
         return ret;
     }

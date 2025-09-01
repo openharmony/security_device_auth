@@ -1532,10 +1532,12 @@ static int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t pa
         }
         ret = HC_SUCCESS;
         if (IsTypeForSettingPtr(type)) {
-            *(uint8_t **)paramCache = ipcParams[i].val;
-            if (cacheLen != NULL) {
-                *cacheLen = ipcParams[i].valSz;
+            if (ipcParams[i].val == NULL) {
+                ret = HC_ERR_INVALID_PARAMS;
+                break;
             }
+            *(uint8_t **)paramCache = ipcParams[i].val;
+            *cacheLen = ipcParams[i].valSz;
             break;
         }
         if (IsTypeForCpyData(type)) {
@@ -1563,7 +1565,7 @@ int32_t GetAndValSize32Param(const IpcDataInfo *ipcParams,
 {
     int32_t paramSize = sizeof(int32_t);
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, (uint8_t *)param, &paramSize);
-    if (ret != HC_SUCCESS || param == NULL || paramSize != sizeof(int32_t)) {
+    if (ret != HC_SUCCESS || paramSize != sizeof(int32_t)) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
@@ -1575,7 +1577,7 @@ int32_t GetAndValSize64Param(const IpcDataInfo *ipcParams,
 {
     int32_t paramSize = sizeof(int64_t);
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, (uint8_t *)param, &paramSize);
-    if (ret != HC_SUCCESS || param == NULL || paramSize != sizeof(int64_t)) {
+    if (ret != HC_SUCCESS || paramSize != sizeof(int64_t)) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
@@ -1587,7 +1589,7 @@ int32_t GetAndValSizeStructParam(const IpcDataInfo *ipcParams,
 {
     int32_t inOutLen = 0;
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, &inOutLen);
-    if (ret != HC_SUCCESS || param == NULL || inOutLen != paramSize) {
+    if (ret != HC_SUCCESS || inOutLen != paramSize) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
@@ -1599,7 +1601,7 @@ int32_t GetAndValStringParam(const IpcDataInfo *ipcParams,
 {
     int32_t paramSize = 0;
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, (uint8_t *)param, &paramSize);
-    if ((ret != HC_SUCCESS) || (param == NULL) || (paramSize <= 0)) {
+    if ((ret != HC_SUCCESS) || (paramSize <= 0)) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
@@ -1614,7 +1616,7 @@ int32_t GetAndValParam(const IpcDataInfo *ipcParams,
     int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
 {
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, (uint8_t *)param, paramSize);
-    if ((ret != HC_SUCCESS) || (param == NULL) || (*paramSize <= 0)) {
+    if ((ret != HC_SUCCESS) || (*paramSize <= 0)) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
