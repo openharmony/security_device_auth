@@ -317,9 +317,8 @@ int32_t GetRelatedGroups(int32_t osAccountId, const char *peerDeviceId, bool isU
     FOR_EACH_HC_VECTOR(deviceEntryVec, index, entry) {
         TrustedGroupEntry *groupEntry = GetGroupEntryById(osAccountId, StringGet(&(*entry)->groupId));
         if (groupEntry == NULL) {
-            LOGE("Failed to get group entry by id!");
-            ClearDeviceEntryVec(&deviceEntryVec);
-            return HC_ERR_GROUP_NOT_EXIST;
+            LOGW("Failed to get group entry by id!");
+            continue;
         }
         if (returnGroupEntryVec->pushBackT(returnGroupEntryVec, groupEntry) == NULL) {
             DestroyGroupEntry(groupEntry);
