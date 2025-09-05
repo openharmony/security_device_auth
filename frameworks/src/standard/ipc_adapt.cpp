@@ -1732,7 +1732,7 @@ int32_t GetAndValSizeStructParam(const IpcDataInfo *ipcParams,
 {
     int32_t inOutLen = 0;
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, &inOutLen);
-    if (inOutLen != paramSize || ret != HC_SUCCESS || param == NULL) {
+    if (ret != HC_SUCCESS || inOutLen != paramSize) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
