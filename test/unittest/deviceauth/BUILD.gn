@@ -679,7 +679,6 @@ ohos_unittest("device_auth_ipc_test") {
   include_dirs += []
 
   sources = [
-    "source/device_auth_ipc_test.cpp",
     "source/p2p_bind_ipc_test.cpp"
   ]
 
