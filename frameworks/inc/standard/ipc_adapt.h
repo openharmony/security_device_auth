@@ -85,8 +85,6 @@ int32_t DecodeIpcData(uintptr_t data, int32_t *type, uint8_t **val, int32_t *val
 void ProcCbHook(int32_t callbackId, uintptr_t cbHook,
     const IpcDataInfo *cbDataCache, int32_t cacheNum, uintptr_t replyCtx);
 
-int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
-    int32_t type, uint8_t *paramCache, int32_t *cacheLen);
 int32_t AddReqIdByAppId(const char *appId, int64_t reqId);
 void AddIpcCbObjByAppId(const char *appId, int32_t objIdx, int32_t type);
 void AddIpcCbObjByReqId(int64_t reqId, int32_t objIdx, int32_t type);
@@ -99,15 +97,18 @@ void UnInitProxyAdapt(void);
 void InitDevAuthCredListenerCbCtx(CredChangeListener *ctx);
 
 int32_t GetAndValSize32Param(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize);
+    int32_t paramNum, int32_t paramType, int32_t *param);
 
 int32_t GetAndValSize64Param(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize);
+    int32_t paramNum, int32_t paramType, int64_t *param);
 
-int32_t GetAndValSizeCbParam(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize);
+int32_t GetAndValSizeStructParam(const IpcDataInfo *ipcParams,
+    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t paramSize);
 
-int32_t GetAndValNullParam(const IpcDataInfo *ipcParams,
+int32_t GetAndValStringParam(const IpcDataInfo *ipcParams,
+    int32_t paramNum, int32_t paramType, const char **param);
+
+int32_t GetAndValParam(const IpcDataInfo *ipcParams,
     int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize);
 
 #ifdef __cplusplus
