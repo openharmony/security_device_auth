@@ -142,7 +142,6 @@ ohos_fuzztest("DevAuthInterfaceFuzzTest") {
     "bounds_checking_function:libsec_shared",
     "cJSON:cjson",
     "c_utils:utils",
-    "dsoftbus:softbus_client",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
@@ -155,6 +154,9 @@ ohos_fuzztest("DevAuthInterfaceFuzzTest") {
     "common_event_service:cesfwk_innerkits",
     "safwk:system_ability_fwk",
   ]
+  if (device_auth_enable_soft_bus_channel) {
+    external_deps += [ "dsoftbus:softbus_client" ]
+  }
 }
 
 ###############################################################################

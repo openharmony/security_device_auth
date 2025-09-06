@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Copyright (C) 2023-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -34,8 +34,10 @@ if (support_os_account) {
     sources += identity_service_mock_files
     sources += hal_common_files
     sources += hiview_adapter_files
-    sources -= soft_bus_channel_files
-    sources += soft_bus_channel_mock_files
+    if (device_auth_enable_soft_bus_channel) {
+      sources -= soft_bus_channel_files
+      sources += soft_bus_channel_mock_files
+    }
     if (enable_extend_plugin) {
       sources -= account_auth_plugin_files
       sources -= account_task_manager_files
@@ -96,7 +98,6 @@ if (support_os_account) {
       "cJSON:cjson",
       "c_utils:utils",
       "common_event_service:cesfwk_innerkits",
-      "dsoftbus:softbus_client",
       "googletest:gmock_main",
       "googletest:gtest_main",
       "hilog:libhilog",
@@ -111,6 +112,9 @@ if (support_os_account) {
       "os_account:os_account_innerkits",
       "samgr:samgr_proxy",
     ]
+    if (device_auth_enable_soft_bus_channel) {
+      external_deps += [ "dsoftbus:softbus_client" ]
+    }
   }
 }
 
