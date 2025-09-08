@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2023-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -47,8 +47,10 @@ ohos_fuzztest("GroupOperationCommonFuzzTest") {
   sources += hal_common_files
   sources += hiview_adapter_files
   sources += identity_manager_files
-  sources -= soft_bus_channel_files
-  sources += soft_bus_channel_mock_files
+  if (device_auth_enable_soft_bus_channel) {
+    sources -= soft_bus_channel_files
+    sources += soft_bus_channel_mock_files
+  }
   if (support_os_account) {
     sources += account_subscriber_files
     sources += sa_subscriber_files
@@ -83,7 +85,6 @@ ohos_fuzztest("GroupOperationCommonFuzzTest") {
   external_deps = [
     "cJSON:cjson",
     "c_utils:utils",
-    "dsoftbus:softbus_client",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
@@ -91,6 +92,10 @@ ohos_fuzztest("GroupOperationCommonFuzzTest") {
     "mbedtls:mbedtls_shared",
     "openssl:libcrypto_static",
   ]
+  if (device_auth_enable_soft_bus_channel) {
+    external_deps += [ "dsoftbus:softbus_client" ]
+  }
+
   if (support_os_account) {
     external_deps += [
       "ability_base:want",

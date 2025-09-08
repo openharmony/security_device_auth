@@ -250,7 +250,6 @@ if (os_level == "mini" || os_level == "small") {
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
     ]
-
     if (device_auth_enable_soft_bus_channel) {
       external_deps += [
         "dsoftbus:softbus_client",
