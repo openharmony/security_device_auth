@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "access_token.h"
 #include "accesstoken_kit.h"
@@ -61,6 +62,7 @@ static void NativeTokenSet(const char *procName)
 
 bool FuzzDoRegCallback(const uint8_t* data, size_t size)
 {
+    FuzzedDataProvider provider(data, size);
     (void)InitDeviceAuthService();
     (void)MainRescInit();
     ServiceDevAuth *serviceObj = new(std::nothrow) ServiceDevAuth();
@@ -70,26 +72,24 @@ bool FuzzDoRegCallback(const uint8_t* data, size_t size)
     sptr<ServiceDevAuth> sptrObj = serviceObj;
     uintptr_t serviceCtx = reinterpret_cast<uintptr_t>(serviceObj);
     (void)AddMethodMap(serviceCtx);
-    for (int32_t i = IPC_CALL_ID_REG_CB; i <= IPC_CALL_ID_GET_PSEUDONYM_ID; i++) {
-        if (i == IPC_CALL_ID_AUTH_DEVICE || i == IPC_CALL_ID_GA_PROC_DATA || i == IPC_CALL_GA_CANCEL_REQUEST) {
+    int32_t methodId = provider.ConsumeIntegral<int32_t>();
+    if (methodId == IPC_CALL_ID_AUTH_DEVICE
+        || methodId == IPC_CALL_ID_GA_PROC_DATA
+        || methodId == IPC_CALL_GA_CANCEL_REQUEST) {
             NativeTokenSet("softbus_server");
-        } else if (i == IPC_CALL_ID_GET_PK_INFO_LIST) {
+        } else if (methodId == IPC_CALL_ID_GET_PK_INFO_LIST) {
             NativeTokenSet("dslm_service");
         } else {
             NativeTokenSet("device_manager");
         }
-        MessageParcel datas;
-        datas.WriteInterfaceToken(DEV_AUTH_SERVICE_INTERFACE_TOKEN);
-        datas.WriteInt32(i);
-        datas.WriteInt32(size + sizeof(int32_t));
-        datas.WriteInt32(0);
-        datas.WriteInt32(size);
-        datas.WriteBuffer(data, size);
-        datas.RewindRead(0);
-        MessageParcel reply;
-        MessageOption option;
-        (void)serviceObj->OnRemoteRequest(1, datas, reply, option);
-    }
+    std::vector<uint8_t> subData = provider.ConsumeRemainingBytes<uint8_t>();
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DEV_AUTH_SERVICE_INTERFACE_TOKEN);
+    datas.WriteInt32(methodId);
+    datas.WriteBuffer(subData.data(), subData.size());
+    MessageParcel reply;
+    MessageOption option;
+    (void)serviceObj->OnRemoteRequest(1, datas, reply, option);
     DestroyDeviceAuthService();
     return true;
 }

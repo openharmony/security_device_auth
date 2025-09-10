@@ -32,8 +32,10 @@ namespace OHOS {
         FuzzedDataProvider fdp(data, size);
 
         const int32_t osAccountId = fdp.ConsumeIntegral<int32_t>();
-        std::string appId(fdp.ConsumeBytesAsString(size));
-        std::string groupId(fdp.ConsumeBytesAsString(size));
+        const int32_t appIdLen = fdp.ConsumeIntegral<int32_t>();
+        const int32_t groupIdLen = fdp.ConsumeIntegral<int32_t>();
+        std::string appId(fdp.ConsumeBytesAsString(appIdLen));
+        std::string groupId(fdp.ConsumeBytesAsString(groupIdLen));
         gmInstance->checkAccessToGroup(osAccountId, appId.c_str(), groupId.c_str());
         return true;
     }

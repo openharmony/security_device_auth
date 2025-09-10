@@ -32,7 +32,8 @@ namespace OHOS {
         FuzzedDataProvider fdp(data, size);
         const int32_t osAccountId = fdp.ConsumeIntegral<int32_t>();
         const int groupType = fdp.ConsumeIntegral<int32_t>();
-        std::string appId(fdp.ConsumeBytesAsString(size));
+        const int32_t appIdLen = fdp.ConsumeIntegral<int32_t>();
+        std::string appId(fdp.ConsumeBytesAsString(appIdLen));
         char *outGroups = nullptr;
         uint32_t groupNum = 0;
         gmInstance->getJoinedGroups(osAccountId, appId.c_str(), groupType, &outGroups, &groupNum);

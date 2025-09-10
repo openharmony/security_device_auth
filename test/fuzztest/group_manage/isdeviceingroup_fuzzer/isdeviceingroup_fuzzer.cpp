@@ -31,9 +31,12 @@ namespace OHOS {
         }
         FuzzedDataProvider fdp(data, size);
         const int32_t osAccountId = fdp.ConsumeIntegral<int32_t>();
-        std::string appId(fdp.ConsumeBytesAsString(size));
-        std::string groupId(fdp.ConsumeBytesAsString(size));
-        std::string deviceId(fdp.ConsumeBytesAsString(size));
+        const int32_t appIdLen = fdp.ConsumeIntegral<int32_t>();
+        const int32_t groupIdLen = fdp.ConsumeIntegral<int32_t>();
+        const int32_t deviceIdLen = fdp.ConsumeIntegral<int32_t>();
+        std::string appId(fdp.ConsumeBytesAsString(appIdLen));
+        std::string groupId(fdp.ConsumeBytesAsString(groupIdLen));
+        std::string deviceId(fdp.ConsumeBytesAsString(deviceIdLen));
         gmInstance->isDeviceInGroup(osAccountId, appId.c_str(), groupId.c_str(), deviceId.c_str());
         return true;
     }
