@@ -31,8 +31,10 @@ namespace OHOS {
         }
         FuzzedDataProvider fdp(data, size);
         const int32_t osAccountId = fdp.ConsumeIntegral<int32_t>();
-        std::string appId(fdp.ConsumeBytesAsString(size));
-        std::string groupId(fdp.ConsumeBytesAsString(size));
+        const int32_t appIdSize = fdp.ConsumeIntegral<int32_t>();
+        const int32_t groupIdSize = fdp.ConsumeIntegral<int32_t>();
+        std::string appId(fdp.ConsumeBytesAsString(appIdSize));
+        std::string groupId(fdp.ConsumeBytesAsString(groupIdSize));
         char *groupInfo = nullptr;
         gmInstance->getGroupInfoById(osAccountId, appId.c_str(), groupId.c_str(), &groupInfo);
         return true;

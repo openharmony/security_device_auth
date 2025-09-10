@@ -32,8 +32,10 @@ namespace OHOS {
         FuzzedDataProvider fdp(data, size);
         const int32_t osAccountId = fdp.ConsumeIntegral<int32_t>();
         const int64_t requestId = fdp.ConsumeIntegral<int64_t>();
-        std::string appId(fdp.ConsumeBytesAsString(size));
-        std::string deleteParams(fdp.ConsumeBytesAsString(size));
+        const int32_t appIdLen = fdp.ConsumeIntegral<int32_t>();
+        const int32_t deleteParamsLen = fdp.ConsumeIntegral<int32_t>();
+        std::string appId(fdp.ConsumeBytesAsString(appIdLen));
+        std::string deleteParams(fdp.ConsumeBytesAsString(deleteParamsLen));
         gmInstance->deleteMemberFromGroup(osAccountId, requestId, appId.c_str(), deleteParams.c_str());
         return true;
     }

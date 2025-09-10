@@ -14,6 +14,7 @@
  */
 
 #include "cancelbindrequest_fuzzer.h"
+#include "fuzzer/FuzzedDataProvider.h"
 
 namespace OHOS {
     constexpr int64_t TEST_REQ_ID = 123;
@@ -23,11 +24,13 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
+        FuzzedDataProvider fdp(data, size);
         const DeviceGroupManager *gmInstance = GetGmInstance();
         if (gmInstance == nullptr) {
             return false;
         }
-        std::string appId(reinterpret_cast<const char *>(data), size);
+        int8_t appIdLen = fdp.ConsumeIntegral<int8_t>();
+        std::string appId(fdp.ConsumeBytesAsString(appIdLen));
         gmInstance->cancelRequest(TEST_REQ_ID, appId.c_str());
         return true;
     }
