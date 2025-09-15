@@ -174,6 +174,20 @@ CLEAN_UP:
     return res;
 }
 
+static void PrintPskValue(const uint8_t *pskVal, uint32_t pskLen)
+{
+    char *pskStr = (char *)HcMalloc(pskLen + 1, 0);
+    if (pskStr == NULL) {
+        return;
+    }
+    if (memcpy_s(pskStr, pskLen, pskVal, pskLen) != EOK) {
+        HcFree(pskStr);
+        return;
+    }
+    PRINT_SENSITIVE_DATA("pskValue", pskStr);
+    HcFree(pskStr);
+}
+
 static int32_t GeneratePakeParams(PakeBaseParams *params)
 {
     int32_t res;
@@ -198,7 +212,7 @@ static int32_t GeneratePakeParams(PakeBaseParams *params)
     Uint8Buff keyInfo = { (uint8_t *)HICHAIN_SPEKE_BASE_INFO, HcStrlen(HICHAIN_SPEKE_BASE_INFO) };
     KeyParams keyParams = { { params->psk.val, params->psk.length, false }, false, params->osAccountId };
     res = params->loader->computeHkdf(&keyParams, &(params->salt), &keyInfo, &secret);
-    PRINT_SENSITIVE_DATA("pskValue", (char *)params->psk.val);
+    PrintPskValue(params->psk.val, params->psk.length);
     PRINT_DEBUG_MSG(secret.val, secret.length, "secretValue");
     if (res != HC_SUCCESS) {
         LOGE("Derive secret from psk failed, res: %" LOG_PUB "x.", res);
