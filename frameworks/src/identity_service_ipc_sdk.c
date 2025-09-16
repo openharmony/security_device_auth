@@ -50,10 +50,11 @@ static HcMutex g_ipcMutex;
 
 static void DelIpcCliCallbackCtx(const char *appId, IpcProxyCbInfo *cbCache)
 {
+    (void)LockHcMutex(&g_ipcMutex);
     if (cbCache->appId[0] == 0) {
+        UnlockHcMutex(&g_ipcMutex);
         return;
     }
-    (void)LockHcMutex(&g_ipcMutex);
     int32_t ret = memcmp(appId, cbCache->appId, HcStrlen(cbCache->appId) + 1);
     if (ret == 0) {
         cbCache->appId[0] = 0;
