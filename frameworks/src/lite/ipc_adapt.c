@@ -67,6 +67,57 @@ static StubDevAuthCb g_sdkCbStub;
 static IClientProxy *g_proxyInstance = NULL;
 static IpcObjectStub g_objectStub;
 
+int32_t GetAndValSize32Param(const IpcDataInfo *ipcParams,
+    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
+{
+    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, paramSize);
+    if ((*paramSize) != sizeof(int32_t) || ret != HC_SUCCESS) {
+        LOGE("get param error, type %" LOG_PUB "d", paramType);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    return HC_SUCCESS;
+}
+
+int32_t GetAndValSize64Param(const IpcDataInfo *ipcParams,
+    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
+{
+    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, paramSize);
+    if ((*paramSize) != sizeof(int64_t) || ret != HC_SUCCESS) {
+        LOGE("get param error, type %" LOG_PUB "d", paramType);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    return HC_SUCCESS;
+}
+
+int32_t GetAndValSizeCbParam(const IpcDataInfo *ipcParams,
+    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
+{
+    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, paramSize);
+    if ((*paramSize) != sizeof(DeviceAuthCallback) || ret != HC_SUCCESS) {
+        LOGE("get param error, type %" LOG_PUB "d", paramType);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    return HC_SUCCESS;
+}
+
+int32_t GetAndValNullParam(const IpcDataInfo *ipcParams,
+    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
+{
+    (void)paramSize;
+    int32_t size = 0;
+    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, &size);
+    if ((ret != HC_SUCCESS) || (param == NULL) || (size <= 0)) {
+        LOGE("get param error, type %" LOG_PUB "d", paramType);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    char *str = (*(char **)param);
+    if ((str == NULL) || (str[size - 1] != '\0')) {
+        LOGE("The input parameter is not a valid string type.");
+        return HC_ERR_IPC_BAD_PARAM;
+    }
+    return HC_SUCCESS;
+}
+
 static void SetIpcCallBackNodeDefault(IpcCallBackNode *node)
 {
     (void)memset_s(node, sizeof(IpcCallBackNode), 0, sizeof(IpcCallBackNode));
@@ -480,7 +531,7 @@ static void OnFinishStub(CallbackParams params)
     inOutLen = sizeof(opCode);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_OPCODE,
         (uint8_t *)(&opCode), &inOutLen);
-    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_COMM_DATA, (uint8_t *)(&data), NULL);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_COMM_DATA, (uint8_t *)(&data), NULL);
 
     onFinishHook(requestId, opCode, data);
     WriteInt32(params.reply, HC_SUCCESS);
@@ -505,7 +556,7 @@ static void OnErrorStub(CallbackParams params)
         (uint8_t *)(&opCode), &inOutLen);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERRCODE,
         (uint8_t *)(&errCode), &inOutLen);
-    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERR_INFO,
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERR_INFO,
         (uint8_t *)(&errInfo), NULL);
 
     onErrorHook(requestId, opCode, errCode, errInfo);
@@ -528,7 +579,7 @@ static void OnRequestStub(CallbackParams params)
     inOutLen = sizeof(opCode);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_OPCODE,
         (uint8_t *)(&opCode), &inOutLen);
-    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQ_INFO,
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQ_INFO,
         (uint8_t *)(&reqParams), NULL);
 
     reqResult = onReqHook(requestId, opCode, reqParams);
@@ -548,7 +599,7 @@ static void OnGroupCreatedStub(CallbackParams params)
     const char *groupInfo = NULL;
     void (*onGroupCreatedHook)(const char *) = (void (*)(const char *))(params.cbHook);
 
-    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum,
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum,
         PARAM_TYPE_GROUP_INFO, (uint8_t *)(&groupInfo), NULL);
 
     onGroupCreatedHook(groupInfo);
@@ -561,7 +612,7 @@ static void OnGroupDeletedStub(CallbackParams params)
     const char *groupInfo = NULL;
     void (*onDelGroupHook)(const char *) = (void (*)(const char *))(params.cbHook);
 
-    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum,
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum,
         PARAM_TYPE_GROUP_INFO, (uint8_t *)(&groupInfo), NULL);
 
     onDelGroupHook(groupInfo);
@@ -575,8 +626,8 @@ static void OnDevBoundStub(CallbackParams params)
     const char *udid = NULL;
     void (*onDevBoundHook)(const char *, const char *) = (void (*)(const char *, const char *))(params.cbHook);
 
-    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID, (uint8_t *)(&udid), NULL);
-    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum,
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID, (uint8_t *)(&udid), NULL);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum,
         PARAM_TYPE_GROUP_INFO, (uint8_t *)(&groupInfo), NULL);
 
     onDevBoundHook(udid, groupInfo);
@@ -590,8 +641,8 @@ static void OnDevUnboundStub(CallbackParams params)
     const char *udid = NULL;
     void (*onDevUnBoundHook)(const char *, const char *) = (void (*)(const char *, const char *))(params.cbHook);
 
-    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID, (uint8_t *)(&udid), NULL);
-    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum,
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID, (uint8_t *)(&udid), NULL);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum,
         PARAM_TYPE_GROUP_INFO, (uint8_t *)(&groupInfo), NULL);
 
     onDevUnBoundHook(udid, groupInfo);
@@ -604,7 +655,7 @@ static void OnDevUnTrustStub(CallbackParams params)
     const char *udid = NULL;
     void (*onDevUnTrustHook)(const char *) = (void (*)(const char *))(params.cbHook);
 
-    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID, (uint8_t *)(&udid), NULL);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID, (uint8_t *)(&udid), NULL);
 
     onDevUnTrustHook(udid);
     WriteInt32(params.reply, HC_SUCCESS);
@@ -618,7 +669,7 @@ static void OnDelLastGroupStub(CallbackParams params)
     int32_t inOutLen;
     void (*onDelLastGroupHook)(const char *, int32_t) = (void (*)(const char *, int32_t))(params.cbHook);
 
-    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID, (uint8_t *)(&udid), NULL);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID, (uint8_t *)(&udid), NULL);
     inOutLen = sizeof(groupType);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum,
         PARAM_TYPE_GROUP_TYPE, (uint8_t *)(&groupType), &inOutLen);

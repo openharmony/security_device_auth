@@ -27,7 +27,6 @@
 #include "identity_common.h"
 #include "pseudonym_manager.h"
 #include "sym_token_manager.h"
-#include "hisysevent_common.h"
 
 #define FIELD_SHARED_SECRET "sharedSecret"
 
@@ -347,7 +346,6 @@ static int32_t GetSharedSecretForAccountInPake(int32_t osAccountId, const char *
     ClearFreeUint8Buff(&peerPkBuff);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to agree shared secret!");
-        ReportRadarEvent(ret);
         FreeBuffData(sharedSecret);
     }
     return ret;

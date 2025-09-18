@@ -38,7 +38,6 @@ const char *GetAddMemberCallEventFuncName(const char *addParams);
 
 void ReportBehaviorBeginEvent(bool isBind, bool isClient, int64_t reqId);
 void ReportBehaviorBeginResultEvent(bool isBind, bool isClient, int64_t reqId, const char *peerUdid, int32_t res);
-void ReportRadarEvent(int32_t res);
 
 #ifdef __cplusplus
 }

@@ -25,7 +25,6 @@
 #include "json_utils.h"
 #include "pseudonym_manager.h"
 #include "uint8buff_utils.h"
-#include "hisysevent_common.h"
 
 #define PAKE_X25519_KEY_PAIR_LEN 32
 #define MK_LEN 32
@@ -218,7 +217,6 @@ int32_t GenerateMk(int32_t osAccountId, const char *peerDeviceId, const Uint8Buf
         MK_LEN, &mkAliasBuff);
     if (res != HC_SUCCESS) {
         LOGE("Failed to agree sharedSecret!");
-        ReportRadarEvent(res);
         return res;
     }
     LOGI("Generate mk successfully!");
