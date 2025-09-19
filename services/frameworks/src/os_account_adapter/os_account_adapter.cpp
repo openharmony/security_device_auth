@@ -314,15 +314,13 @@ int32_t DevAuthGetRealOsAccountLocalId(int32_t inputId)
     }
 }
 
-bool CheckIsForegroundOsAccountId(int32_t inputOsAccountId)
+bool CheckIsForegroundOsAccountId(int32_t osAccountId)
 {
-    int32_t foregroundOsAccountId = GetCurrentActiveOsAccountId();
-    if (foregroundOsAccountId == INVALID_OS_ACCOUNT) {
-        LOGE("[OsAccountAdapter]: get foreground osAccountId fail!");
-        return false;
-    }
-    if (inputOsAccountId != foregroundOsAccountId) {
-        LOGE("[OsAccountAdapter]: input osAccountId is not same as foreground osAccountId!");
+    bool isForeground = false;
+    OHOS::ErrCode res = OHOS::AccountSA::OsAccountManager::IsOsAccountForeground(osAccountId, isForeground);
+    if (res != OHOS::ERR_OK) {
+        LOGE("[OsAccountAdapter]: Check whether account is foreground failed, res: \
+            %" LOG_PUB "d, accountId: %" LOG_PUB "d", res, osAccountId);
         return false;
     }
     return true;

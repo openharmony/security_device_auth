@@ -58,8 +58,10 @@ if (support_os_account) {
       "${os_adapter_path}/impl/src/linux/hc_types.c",
     ]
     sources += [ "${tdd_framework_path}/common/src/hc_dev_info_mock.c" ]
-    sources += [ "os_account_adapter_test.cpp" ]
-    sources += account_subscriber_files
+    sources += [
+      "os_account_adapter_test.cpp",
+      "account_subscriber_test.cpp"
+    ]
     sources += sa_subscriber_files
     sources += net_observer_files
 
