@@ -15,8 +15,6 @@
 
 #include "account_task_manager.h"
 
-#include <pthread.h>
-#include <unistd.h>
 #include "device_auth_defines.h"
 #include "hc_log.h"
 #include "hc_mutex.h"
@@ -66,22 +64,6 @@ static bool ShouldUnloadPlugin(void)
     return true;
 }
 
-void *ExecuteUnload(void *arg)
-{
-    LOGI("[ACCOUNT_TASK_MGR]: unload task execute.");
-    sleep(UNLOAD_DELAY_TIME);
-    LockHcMutex(&g_taskMutex);
-    if (ShouldUnloadPlugin() && g_isInUnloadStatus) {
-        g_isPluginLoaded = false;
-        g_isInUnloadStatus = false;
-        LOGI("[ACCOUNT_TASK_MGR]: unload plugin successfully.");
-    } else {
-        LOGI("[ACCOUNT_TASK_MGR]: no need to unload.");
-    }
-    UnlockHcMutex(&g_taskMutex);
-    return NULL;
-}
-
 static void UnloadAccountAuthPlugin(void)
 {
     LockHcMutex(&g_taskMutex);
@@ -94,9 +76,6 @@ static void UnloadAccountAuthPlugin(void)
         return;
     }
     g_isInUnloadStatus = true;
-    pthread_t tid;
-    pthread_create(&tid, NULL, ExecuteUnload, NULL);
-    pthread_detach(tid);
     UnlockHcMutex(&g_taskMutex);
 }
 
@@ -111,10 +90,10 @@ int32_t InitAccountTaskManager(void)
         LOGE("[ACCOUNT_TASK_MGR]: init account task mutex failed.");
         return res;
     }
+    (void)LockHcMutex(&g_taskMutex);
     DEV_AUTH_LOAD_PLUGIN();
     g_hasAccountAuthPlugin = HasAccountAuthPlugin();
-    (void)LockHcMutex(&g_taskMutex);
-    g_isPluginLoaded = false;
+    g_isPluginLoaded = true;
     g_isInUnloadStatus = false;
     g_loadCount = 0;
     UnlockHcMutex(&g_taskMutex);
@@ -130,8 +109,10 @@ void DestroyAccountTaskManager(void)
     }
     g_isInit = false;
     (void)LockHcMutex(&g_taskMutex);
-    g_isInUnloadStatus = false;
+    DEV_AUTH_UNLOAD_PLUGIN();
+    g_hasAccountAuthPlugin = false;
     g_isPluginLoaded = false;
+    g_isInUnloadStatus = false;
     g_loadCount = 0;
     UnlockHcMutex(&g_taskMutex);
     DestroyHcMutex(&g_taskMutex);

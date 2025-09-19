@@ -260,28 +260,32 @@ static int32_t ServerGenAuthCodeProcEvent(CmdParams *params)
         LOGE("generate auth code failed, res:%" LOG_PUB "d", res);
         return res;
     }
-    if (DeepCopyUint8Buff(&authCode, &params->authCode) != HC_SUCCESS) {
-        LOGE("copy authcode fail.");
-        return HC_ERR_MEMORY_COPY;
-    }
-    uint8_t keyAliasVal[KEY_ALIAS_LEN] = { 0 };
-    Uint8Buff keyAlias = { keyAliasVal, KEY_ALIAS_LEN };
-    res = GenerateKeyAlias(params, &keyAlias);
-    if (res != HC_SUCCESS) {
-        LOGE("GenerateKeyAliasInIso failed, res:%" LOG_PUB "d", res);
-        return res;
-    }
-    LOGI("AuthCode alias(HEX): %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x****.",
-        keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
-        keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
-    ExtraInfo exInfo = { params->authIdPeer, params->userTypePeer, PAIR_TYPE_BIND };
-    KeyParams keyParams = { { keyAlias.val, keyAlias.length, true }, false, params->osAccountId };
-    res = GetLoaderInstance()->importSymmetricKey(&keyParams, &authCode, KEY_PURPOSE_MAC, &exInfo);
-    if (res != HC_SUCCESS) {
-        LOGE("import sym key fail.");
-        return res;
-    }
-    return HC_SUCCESS;
+    do {
+        if (DeepCopyUint8Buff(&authCode, &params->authCode) != HC_SUCCESS) {
+            LOGE("copy authcode fail.");
+            res = HC_ERR_MEMORY_COPY;
+            break;
+        }
+        uint8_t keyAliasVal[KEY_ALIAS_LEN] = { 0 };
+        Uint8Buff keyAlias = { keyAliasVal, KEY_ALIAS_LEN };
+        res = GenerateKeyAlias(params, &keyAlias);
+        if (res != HC_SUCCESS) {
+            LOGE("GenerateKeyAliasInIso failed, res:%" LOG_PUB "d", res);
+            break;
+        }
+        LOGI("AuthCode alias(HEX): %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x %" LOG_PUB "x****.",
+            keyAliasVal[DEV_AUTH_ZERO], keyAliasVal[DEV_AUTH_ONE],
+            keyAliasVal[DEV_AUTH_TWO], keyAliasVal[DEV_AUTH_THREE]);
+        ExtraInfo exInfo = { params->authIdPeer, params->userTypePeer, PAIR_TYPE_BIND };
+        KeyParams keyParams = { { keyAlias.val, keyAlias.length, true }, false, params->osAccountId };
+        res = GetLoaderInstance()->importSymmetricKey(&keyParams, &authCode, KEY_PURPOSE_MAC, &exInfo);
+        if (res != HC_SUCCESS) {
+            LOGE("import sym key fail.");
+            break;
+        }
+    } while (0);
+    (void)memset_s(authCode.val, AUTH_CODE_LEN, 0, AUTH_CODE_LEN);
+    return res;
 }
 
 static int32_t ServerSendAuthCodeBuildEvent(const CmdParams *params, CJson **outputEvent)

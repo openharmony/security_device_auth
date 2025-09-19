@@ -444,7 +444,16 @@ static int32_t DeleteMemberFromPeerToPeerGroup(int32_t osAccountId, int64_t requ
         LOGE("Peer to peer group is not supported!");
         return HC_ERR_NOT_SUPPORT;
     }
-    PeerToPeerGroup *instance = (PeerToPeerGroup *)GetPeerToPeerGroupInstance();
+    BaseGroup *baseGroupInstance = GetPeerToPeerGroupInstance();
+    if (baseGroupInstance == NULL) {
+        LOGE("get instance failed.");
+        return HC_ERR_NULL_PTR;
+    }
+    PeerToPeerGroup *instance = (PeerToPeerGroup *)baseGroupInstance;
+    if (instance->deleteMember == NULL) {
+        LOGE("deleteMember is null.");
+        return HC_ERR_NULL_PTR;
+    }
     return instance->deleteMember(osAccountId, requestId, jsonParams, callback);
 }
 
@@ -1071,6 +1080,36 @@ static int32_t RequestDeleteMemberFromGroup(int32_t osAccountId, int64_t request
     return res;
 }
 
+static int32_t AddMultiMembersToIdenticalGroup(int32_t osAccountId, const char *appId, CJson *addParams)
+{
+    BaseGroup *baseGroupInstance = GetIdenticalAccountGroupInstance();
+    if (baseGroupInstance == NULL) {
+        LOGE("get instance failed.");
+        return HC_ERR_NULL_PTR;
+    }
+    IdenticalAccountGroup *instance = (IdenticalAccountGroup *)baseGroupInstance;
+    if (instance->addMultiMembersToGroup == NULL) {
+        LOGE("addMultiMembersToGroup is null.");
+        return HC_ERR_NULL_PTR;
+    }
+    return instance->addMultiMembersToGroup(osAccountId, appId, addParams);
+}
+
+static int32_t AddMultiMembersToAcrossGroup(int32_t osAccountId, const char *appId, CJson *addParams)
+{
+    BaseGroup *baseGroupInstance = GetAcrossAccountGroupInstance();
+    if (baseGroupInstance == NULL) {
+        LOGE("get instance failed.");
+        return HC_ERR_NULL_PTR;
+    }
+    AcrossAccountGroup *instance = (AcrossAccountGroup *)baseGroupInstance;
+    if (instance->addMultiMembersToGroup == NULL) {
+        LOGE("addMultiMembersToGroup is null.");
+        return HC_ERR_NULL_PTR;
+    }
+    return instance->addMultiMembersToGroup(osAccountId, appId, addParams);
+}
+
 static int32_t AddMultiMembersToGroupInner(int32_t osAccountId, const char *appId, const char *addParams)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
@@ -1100,11 +1139,9 @@ static int32_t AddMultiMembersToGroupInner(int32_t osAccountId, const char *appI
     }
     int32_t res;
     if (groupType == IDENTICAL_ACCOUNT_GROUP) {
-        IdenticalAccountGroup *instance = (IdenticalAccountGroup *)GetIdenticalAccountGroupInstance();
-        res = instance->addMultiMembersToGroup(osAccountId, appId, params);
+        res = AddMultiMembersToIdenticalGroup(osAccountId, appId, params);
     } else if (groupType == ACROSS_ACCOUNT_AUTHORIZE_GROUP) {
-        AcrossAccountGroup *instance = (AcrossAccountGroup *)GetAcrossAccountGroupInstance();
-        res = instance->addMultiMembersToGroup(osAccountId, appId, params);
+        res = AddMultiMembersToAcrossGroup(osAccountId, appId, params);
     } else {
         LOGE("The input groupType is invalid! [GroupType]: %" LOG_PUB "d", groupType);
         res = HC_ERR_INVALID_PARAMS;
@@ -1148,6 +1185,36 @@ static int32_t RequestAddMultiMembersToGroup(int32_t osAccountId, const char *ap
     return res;
 }
 
+static int32_t DeleteMultiMembersFromIdenticalGroup(int32_t osAccountId, const char *appId, CJson *deleteParams)
+{
+    BaseGroup *baseGroupInstance = GetIdenticalAccountGroupInstance();
+    if (baseGroupInstance == NULL) {
+        LOGE("get instance failed.");
+        return HC_ERR_NULL_PTR;
+    }
+    IdenticalAccountGroup *instance = (IdenticalAccountGroup *)baseGroupInstance;
+    if (instance->delMultiMembersFromGroup == NULL) {
+        LOGE("delMultiMembersFromGroup is null.");
+        return HC_ERR_NULL_PTR;
+    }
+    return instance->delMultiMembersFromGroup(osAccountId, appId, deleteParams);
+}
+
+static int32_t DeleteMultiMembersFromAcrossGroup(int32_t osAccountId, const char *appId, CJson *deleteParams)
+{
+    BaseGroup *baseGroupInstance = GetAcrossAccountGroupInstance();
+    if (baseGroupInstance == NULL) {
+        LOGE("get instance failed.");
+        return HC_ERR_NULL_PTR;
+    }
+    AcrossAccountGroup *instance = (AcrossAccountGroup *)baseGroupInstance;
+    if (instance->delMultiMembersFromGroup == NULL) {
+        LOGE("delMultiMembersFromGroup is null.");
+        return HC_ERR_NULL_PTR;
+    }
+    return instance->delMultiMembersFromGroup(osAccountId, appId, deleteParams);
+}
+
 static int32_t DelMultiMembersFromGroupInner(int32_t osAccountId, const char *appId, const char *deleteParams)
 {
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
@@ -1177,11 +1244,9 @@ static int32_t DelMultiMembersFromGroupInner(int32_t osAccountId, const char *ap
     }
     int32_t res;
     if (groupType == IDENTICAL_ACCOUNT_GROUP) {
-        IdenticalAccountGroup *instance = (IdenticalAccountGroup *)GetIdenticalAccountGroupInstance();
-        res = instance->delMultiMembersFromGroup(osAccountId, appId, params);
+        res = DeleteMultiMembersFromIdenticalGroup(osAccountId, appId, params);
     } else if (groupType == ACROSS_ACCOUNT_AUTHORIZE_GROUP) {
-        AcrossAccountGroup *instance = (AcrossAccountGroup *)GetAcrossAccountGroupInstance();
-        res = instance->delMultiMembersFromGroup(osAccountId, appId, params);
+        res = DeleteMultiMembersFromAcrossGroup(osAccountId, appId, params);
     } else {
         LOGE("The input groupType is invalid! [GroupType]: %" LOG_PUB "d", groupType);
         res = HC_ERR_INVALID_PARAMS;

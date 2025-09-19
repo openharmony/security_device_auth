@@ -33,7 +33,6 @@
 
 #define TIME_OUT_VALUE_LIGHT_AUTH 300
 #define MAX_SESSION_NUM_LIGHT_AUTH 30
-
 typedef struct {
     LightSession *session;
     int64_t createTime;

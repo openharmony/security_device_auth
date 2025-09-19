@@ -19,7 +19,6 @@
 #include "hc_dev_info.h"
 #include "string_util.h"
 
-#define REQ_ID 999999999999
 #ifdef DEV_AUTH_HIVIEW_ENABLE
 
 static int32_t WHITE_LIST[] = {
@@ -150,10 +149,4 @@ void ReportBehaviorBeginResultEvent(bool isBind, bool isClient, int64_t reqId, c
     (void)peerUdid;
     (void)res;
 #endif
-}
-
-void ReportRadarEvent(int32_t res)
-{
-    ReportBehaviorBeginEvent(false, true, REQ_ID);
-    ReportBehaviorBeginResultEvent(false, true, REQ_ID, NULL, res);
 }
