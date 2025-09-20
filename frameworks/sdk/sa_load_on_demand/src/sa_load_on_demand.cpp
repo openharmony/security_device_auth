@@ -26,10 +26,7 @@
 #include "hc_mutex.h"
 #include "string_util.h"
 
-using namespace std;
-using namespace OHOS;
-
-static sptr<DevAuth::SaListener> g_saListener = nullptr;
+static OHOS::sptr<OHOS::DevAuth::SaListener> g_saListener = nullptr;
 static HcMutex g_devAuthCallbackMutex;
 
 DECLARE_HC_VECTOR(DevAuthCallbackInfoVec, DevAuthCallbackInfo)
@@ -331,16 +328,16 @@ void RegisterDevAuthCallbackIfNeed(void)
 
 int32_t LoadDeviceAuthSaIfNotLoad(void)
 {
-    auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    auto saMgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saMgr == nullptr) {
         LOGE("[SDK]: Get systemabilitymanager instance failed.");
         return HC_ERR_IPC_GET_SAMGR_FAILED;
     }
-    auto deviceAuthSa = saMgr->CheckSystemAbility(DEVICE_AUTH_SERVICE_ID);
+    auto deviceAuthSa = saMgr->CheckSystemAbility(OHOS::DEVICE_AUTH_SERVICE_ID);
     if (deviceAuthSa != nullptr) {
         return HC_SUCCESS;
     }
-    deviceAuthSa = saMgr->LoadSystemAbility(DEVICE_AUTH_SERVICE_ID, DEVICE_AUTH_SA_LOAD_TIME);
+    deviceAuthSa = saMgr->LoadSystemAbility(OHOS::DEVICE_AUTH_SERVICE_ID, DEVICE_AUTH_SA_LOAD_TIME);
     if (deviceAuthSa == nullptr) {
         LOGE("[SDK]: SaMgr load device auth sa failed, reason is loading timeout probably.");
         return HC_ERR_IPC_LOAD_SA_FAILED;
@@ -350,7 +347,7 @@ int32_t LoadDeviceAuthSaIfNotLoad(void)
 
 void SubscribeDeviceAuthSa(void)
 {
-    auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    auto saMgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saMgr == nullptr) {
         LOGE("[SDK]: Get systemabilitymanager instance failed.");
         return;
@@ -360,9 +357,9 @@ void SubscribeDeviceAuthSa(void)
     statusChangeCallback.onReceivedSaAdd = OnReceivedDevAuthAdded;
     statusChangeCallback.onReceivedSaRemoved = OnReceivedDevAuthRemoved;
     if (g_saListener == nullptr) {
-        g_saListener = new DevAuth::SaListener(statusChangeCallback);
+        g_saListener = new OHOS::DevAuth::SaListener(statusChangeCallback);
     }
-    if (saMgr->SubscribeSystemAbility(DEVICE_AUTH_SERVICE_ID, g_saListener) == OHOS::ERR_OK) {
+    if (saMgr->SubscribeSystemAbility(OHOS::DEVICE_AUTH_SERVICE_ID, g_saListener) == OHOS::ERR_OK) {
         LOGI("[SDK]: Subscribe device auth sa successfully.");
     } else {
         LOGE("[SDK]: Subscribe device auth sa failed.");
@@ -371,12 +368,12 @@ void SubscribeDeviceAuthSa(void)
 
 void UnSubscribeDeviceAuthSa(void)
 {
-    auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    auto saMgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saMgr == nullptr) {
         LOGE("[SDK]: Get systemabilitymanager instance failed.");
         return;
     }
-    if (saMgr->UnSubscribeSystemAbility(DEVICE_AUTH_SERVICE_ID, g_saListener) == OHOS::ERR_OK) {
+    if (saMgr->UnSubscribeSystemAbility(OHOS::DEVICE_AUTH_SERVICE_ID, g_saListener) == OHOS::ERR_OK) {
         LOGI("[SDK]: UnSubscribe device auth sa successfully.");
     } else {
         LOGE("[SDK]: UnSubscribe device auth sa failed.");
