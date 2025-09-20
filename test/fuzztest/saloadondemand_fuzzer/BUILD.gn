@@ -1,0 +1,84 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/security/device_auth/deps_adapter/deviceauth_hals.gni")
+import("//base/security/device_auth/services/deviceauth.gni")
+
+#####################hydra-fuzz###################
+import("//build/config/features.gni")
+import("//build/ohos.gni")
+import("//build/test.gni")
+module_output_path = "device_auth/device_auth"
+
+##############################fuzztest##########################################
+ohos_fuzztest("SaLoadOnDemandFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "${deviceauth_path}/test/fuzztest/saloadondemand_fuzzer"
+  include_dirs = inc_path
+  include_dirs += hals_inc_path
+
+  include_dirs += [
+    ".",
+    "../../unittest/deviceauth/include",
+    "${dev_frameworks_path}/inc/hiview_adapter",
+    "${frameworks_path}/inc/standard",
+    "${dev_frameworks_path}/inc/permission_adapter",
+    "${frameworks_path}/sdk/sa_load_on_demand/inc",
+  ]
+
+  sources = [ "saloadondemand_fuzzer.cpp" ]
+
+  include_dirs += [
+    "${frameworks_path}/inc/standard",
+    "${frameworks_path}/sdk/sa_listener/inc",
+    "${frameworks_path}/sdk/sa_load_on_demand/inc",
+    "${dev_frameworks_path}/inc/permission_adapter",
+    "${dev_frameworks_path}/inc/hiview_adapter",
+  ]
+
+  sources += deviceauth_ipc_files
+  sources += permission_adapter_files
+  sources += [ "${frameworks_path}/sdk/sa_listener/src/sa_listener.cpp" ]
+
+  defines = [
+    "__LINUX__",
+    "HILOG_ENABLE",
+  ]
+  defines += [ "DEV_AUTH_IS_ENABLE" ]
+
+  deps = [ "${deps_adapter_path}:${hal_module_name}" ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "ipc:ipc_single",
+    "samgr:samgr_proxy",
+  ]
+}
+
+###############################################################################
+group("fuzztest") {
+  testonly = true
+  deps = []
+  deps += [
+    # deps file
+    ":SaLoadOnDemandFuzzTest",
+  ]
+}
+###############################################################################
