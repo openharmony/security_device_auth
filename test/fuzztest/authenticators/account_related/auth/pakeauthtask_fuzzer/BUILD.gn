@@ -61,6 +61,7 @@ ohos_fuzztest("PakeAuthTaskFuzzTest") {
   sources += session_manager_files
   sources += session_v1_files
   sources += session_v2_mock_files
+  sources += session_mini_mock_files
   sources += creds_manager_files
   sources += broadcast_manager_files
   sources += soft_bus_channel_mock_files

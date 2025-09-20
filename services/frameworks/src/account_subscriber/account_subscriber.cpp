@@ -32,6 +32,21 @@ AccountSubscriber::AccountSubscriber(const EventFwk::CommonEventSubscribeInfo &s
     : EventFwk::CommonEventSubscriber(subscriberInfo), notifier_(notifier)
 {}
 
+static int32_t AddOsAccountIdInEventData(const EventFwk::CommonEventData &eventData, CJson *out)
+{
+    std::string action = eventData.GetWant().GetAction();
+    int32_t osAccountId = eventData.GetCode();
+    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGIN ||
+        action == EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGOUT) {
+        osAccountId = eventData.GetWant().GetParams().GetIntParam("userId", DEFAULT_OS_ACCOUNT);
+    }
+    if (AddIntToJson(out, FIELD_COMMON_EVENT_CODE, osAccountId) != HC_SUCCESS) {
+        LOGE("[AccountSubscriber]: Failed to add common event code to json!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
 {
     IncreaseCriticalCnt(ADD_ONE);
@@ -51,6 +66,12 @@ void AccountSubscriber::ResponseCommonEvent(const EventFwk::CommonEventData &eve
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED) {
         LOGI("[AccountSubscriber]: user removed, userId: %" LOG_PUB "d.", eventData.GetCode());
         notifier_.notifyOsAccountRemoved(eventData.GetCode());
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
+        LOGI("[AccountSubscriber]: user switch, userId: %" LOG_PUB "d.", eventData.GetCode());
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGIN ||
+        action == EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGOUT) {
+        LOGI("[AccountSubscriber]: account state change, userId: %" LOG_PUB "d.",
+            want.GetParams().GetIntParam("userId", DEFAULT_OS_ACCOUNT));
     } else {
         LOGI("[AccountSubscriber]: receive other event.");
     }
@@ -64,7 +85,7 @@ void AccountSubscriber::ResponseCommonEvent(const EventFwk::CommonEventData &eve
         FreeJson(cmdParamJson);
         return;
     }
-    if (AddIntToJson(cmdParamJson, FIELD_COMMON_EVENT_CODE, eventData.GetCode()) != HC_SUCCESS) {
+    if (AddOsAccountIdInEventData(eventData, cmdParamJson) != HC_SUCCESS) {
         LOGE("[AccountSubscriber]: Failed to add common event code to json!");
         FreeJson(cmdParamJson);
         return;

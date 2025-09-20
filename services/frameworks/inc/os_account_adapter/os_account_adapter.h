@@ -40,7 +40,7 @@ void AddOsAccountEventCallback(EventCallbackId callbackId, OsAccountCallbackFunc
 void RemoveOsAccountEventCallback(EventCallbackId callbackId);
 bool IsOsAccountUnlocked(int32_t osAccountId);
 int32_t DevAuthGetRealOsAccountLocalId(int32_t inputId);
-bool CheckIsForegroundOsAccountId(int32_t inputOsAccountId);
+bool CheckIsForegroundOsAccountId(int32_t osAccountId);
 void InitOsAccountAdapter(void);
 void DestroyOsAccountAdapter(void);
 int32_t GetAllOsAccountIds(int32_t **osAccountIds, uint32_t *size);

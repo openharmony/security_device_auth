@@ -23,9 +23,9 @@ int32_t DevAuthGetRealOsAccountLocalId(int32_t inputId)
     return DEFAULT_OS_ACCOUNT;
 }
 
-bool CheckIsForegroundOsAccountId(int32_t inputOsAccountId)
+bool CheckIsForegroundOsAccountId(int32_t osAccountId)
 {
-    (void)inputOsAccountId;
+    (void)osAccountId;
     return true;
 }
 
