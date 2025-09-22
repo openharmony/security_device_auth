@@ -47,6 +47,7 @@ ohos_fuzztest("SaLoadOnDemandFuzzTest") {
   ]
 
   sources += deviceauth_ipc_files
+  sources += sa_load_on_demand_mock_files
   sources += permission_adapter_files
   sources += [ "${frameworks_path}/sdk/sa_listener/src/sa_listener.cpp" ]
 
