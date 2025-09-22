@@ -357,7 +357,11 @@ void SubscribeDeviceAuthSa(void)
     statusChangeCallback.onReceivedSaAdd = OnReceivedDevAuthAdded;
     statusChangeCallback.onReceivedSaRemoved = OnReceivedDevAuthRemoved;
     if (g_saListener == nullptr) {
-        g_saListener = new OHOS::DevAuth::SaListener(statusChangeCallback);
+        g_saListener = new(std::nothrow) OHOS::DevAuth::SaListener(statusChangeCallback);
+        if (g_saListener == nullptr) {
+            LOGI("[SDK]: g_saListener is nullptr.");
+            return;
+        }
     }
     if (saMgr->SubscribeSystemAbility(OHOS::DEVICE_AUTH_SERVICE_ID, g_saListener) == OHOS::ERR_OK) {
         LOGI("[SDK]: Subscribe device auth sa successfully.");
@@ -371,6 +375,10 @@ void UnSubscribeDeviceAuthSa(void)
     auto saMgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saMgr == nullptr) {
         LOGE("[SDK]: Get systemabilitymanager instance failed.");
+        return;
+    }
+    if (g_saListener == nullptr) {
+        LOGE("[SDK]: g_saListener is nullptr.");
         return;
     }
     if (saMgr->UnSubscribeSystemAbility(OHOS::DEVICE_AUTH_SERVICE_ID, g_saListener) == OHOS::ERR_OK) {
