@@ -359,7 +359,7 @@ void SubscribeDeviceAuthSa(void)
     if (g_saListener == nullptr) {
         g_saListener = new(std::nothrow) OHOS::DevAuth::SaListener(statusChangeCallback);
         if (g_saListener == nullptr) {
-            LOGI("[SDK]: g_saListener is nullptr.");
+            LOGE("[SDK]: g_saListener is nullptr.");
             return;
         }
     }

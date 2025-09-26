@@ -22,6 +22,7 @@
 #include "hc_log.h"
 #include "net_conn_client.h"
 #include "net_conn_constants.h"
+#include "unload_handler.h"
 
 using namespace OHOS;
 using namespace OHOS::NetManagerStandard;
@@ -76,6 +77,7 @@ int32_t NetObserver::HandleNetAllCap(const NetAllCapabilities &netAllCap)
         return 0;
     }
     LOGI("[NetObserver]: Net available, reload credential manager.");
+    DelayUnload();
     int32_t res = ExecuteAccountAuthCmd(DEFAULT_OS_ACCOUNT, RELOAD_CRED_MGR, nullptr, nullptr);
     LOGI("[NetObserver]: Reload credential manager res: %" LOG_PUB "d.", res);
     return 0;
