@@ -82,6 +82,8 @@ namespace {
 #define TEST_EVENT_NAME "usual.event.USER_UNLOCKED"
 #define TEST_VERSION 0
 #define TEST_RANDOM_LEN 16
+#define MAIN_OS_ACCOUNT_ID 100
+#define MAIN_OS_ACCOUNT_ID_STR "100"
 static const char *EXT_INFO =
     "{\"credType\":1,\"keyFormat\":4,\"algorithmType\":3,\"subject\":1,\"issuer\":1,"
     "\"proofType\":1,\"method\":1,\"authorizedScope\":1,\"userId\":\"TestUserId\","
@@ -1887,6 +1889,24 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest036, TestSize.Level0)
     HandleCacheCommonEventInner(TEST_EVENT_NAME, 0);
     EXPECT_NE(inputDataJson, nullptr);
     FreeJson(inputDataJson);
+}
+
+HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest037, TestSize.Level0)
+{
+    int32_t code = DEFAULT_OS_ACCOUNT;
+    std::string data("");
+    std::map<std::string, std::string> want;
+    OHOS::OnDemandReasonExtraData extraData(code, data, want);
+    int32_t osAccountId = GetOsAccountFromExtraData(&extraData,
+        OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED, want);
+    EXPECT_EQ(osAccountId, DEFAULT_OS_ACCOUNT);
+    osAccountId = GetOsAccountFromExtraData(&extraData,
+        OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGIN, want);
+    EXPECT_EQ(osAccountId, DEFAULT_OS_ACCOUNT);
+    want.insert(std::pair<std::string, std::string>(FIELD_USER_ID, MAIN_OS_ACCOUNT_ID_STR));
+    osAccountId = GetOsAccountFromExtraData(&extraData,
+        OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGOUT, want);
+    EXPECT_EQ(osAccountId, MAIN_OS_ACCOUNT_ID);
 }
 
 class AvInterfaceTest : public testing::Test {
