@@ -109,7 +109,6 @@ void DestroyAccountTaskManager(void)
     }
     g_isInit = false;
     (void)LockHcMutex(&g_taskMutex);
-    DEV_AUTH_UNLOAD_PLUGIN();
     g_hasAccountAuthPlugin = false;
     g_isPluginLoaded = false;
     g_isInUnloadStatus = false;
