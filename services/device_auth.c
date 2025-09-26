@@ -940,9 +940,6 @@ static void CleanAllModules(int32_t type)
         case CLEAN_CRED:
             DestroyCredMgr();
         // fallthrough
-        case CLEAN_LIGHT_SESSION_MANAGER:
-            DestroyLightSessionManager();
-        // fallthrough
         default:
             break;
     }
