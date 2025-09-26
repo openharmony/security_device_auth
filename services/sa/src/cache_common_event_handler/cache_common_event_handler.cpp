@@ -25,6 +25,7 @@
 #include "os_account_adapter.h"
 #include "account_task_manager.h"
 #include "json_utils.h"
+#include "string_util.h"
 #include "common_defs.h"
 
 static const std::string COMMON_EVENT_ACTION_NAME = "common_event_action_name";
@@ -51,6 +52,23 @@ static void HandleCacheCommonEventInner(const char *eventName, int32_t eventCode
     int32_t res = ExecuteAccountAuthCmd(DEFAULT_OS_ACCOUNT, HANDLE_COMMON_EVENT, cmdParamJson, nullptr);
     FreeJson(cmdParamJson);
     LOGI("[CacheCommonEvent]: handle common event res: %" LOG_PUB "d.", res);
+}
+
+static int32_t GetOsAccountFromExtraData(const OHOS::OnDemandReasonExtraData* extraData, const std::string& eventType,
+    const std::map<std::string, std::string>& want)
+{
+    if ((eventType != OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGIN) &&
+        (eventType != OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGOUT)) {
+        return extraData->GetCode();
+    }
+    auto it = want.find(FIELD_USER_ID);
+    if (it == want.end()) {
+        LOGE("extract userId failed!");
+        return DEFAULT_OS_ACCOUNT;
+    }
+    int32_t osAccountId = static_cast<int32_t>(StringToInt64(it->second.c_str()));
+    LOGI("[CacheCommonEvent]: OsAccountId:%" LOG_PUB "d", osAccountId);
+    return osAccountId;
 }
 
 void HandleCacheCommonEvent(void)
@@ -86,18 +104,18 @@ void HandleCacheCommonEvent(void)
             delete extraData;
             continue;
         }
+        int32_t osAccountId = GetOsAccountFromExtraData(extraData, it->second, want);
         LOGI("common event name: %" LOG_PUB "s.", it->second.c_str());
         if (it->second == OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
-            LOGI("[CacheCommonEvent]: user unlocked, userId %" LOG_PUB "d.", extraData->GetCode());
-            NotifyOsAccountUnlocked(extraData->GetCode());
+            LOGI("[CacheCommonEvent]: user unlocked, userId %" LOG_PUB "d.", osAccountId);
+            NotifyOsAccountUnlocked(osAccountId);
         } else if (it->second == OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED) {
-            LOGI("[CacheCommonEvent]: user removed, userId %" LOG_PUB "d.", extraData->GetCode());
-            NotifyOsAccountRemoved(extraData->GetCode());
+            LOGI("[CacheCommonEvent]: user removed, userId %" LOG_PUB "d.", osAccountId);
+            NotifyOsAccountRemoved(osAccountId);
         } else {
             LOGI("[CacheCommonEvent]: receive other event.");
         }
-        HandleCacheCommonEventInner(it->second.c_str(), extraData->GetCode());
+        HandleCacheCommonEventInner(it->second.c_str(), osAccountId);
         delete extraData;
     }
-    return;
 }
