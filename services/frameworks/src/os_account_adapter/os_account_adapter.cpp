@@ -323,7 +323,7 @@ bool CheckIsForegroundOsAccountId(int32_t osAccountId)
             %" LOG_PUB "d, accountId: %" LOG_PUB "d", res, osAccountId);
         return false;
     }
-    return true;
+    return isForeground;
 }
 
 void AddOsAccountEventCallback(EventCallbackId callbackId, OsAccountCallbackFunc unlockFunc,
