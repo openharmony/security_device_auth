@@ -83,6 +83,7 @@ static uint32_t g_transmitDataLen = 0;
 
 static bool OnTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
 {
+    (void)requestId;
     if (memcpy_s(g_transmitData, sizeof(g_transmitData), data, dataLen) != EOK) {
         return false;
     }
@@ -132,6 +133,9 @@ static char *OnBindRequest(int64_t requestId, int operationCode, const char* req
 
 static char *OnAuthRequest(int64_t requestId, int operationCode, const char* reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
@@ -434,6 +438,7 @@ static void CreateServerSymIdenticalAccountGroup(void)
 static CJson *GetAddMultiParams(int32_t osAccountId, const char *udid, const char *deviceId, const char *userId,
     const char *registerInfoParams)
 {
+    (void)osAccountId;
     const DeviceGroupManager *gm = GetGmInstance();
     if (gm == nullptr) {
         return nullptr;
