@@ -91,7 +91,6 @@ CJson *CreateCredUrlJson(int32_t credentailType, int32_t keyType, int32_t trustT
     return urlJson;
 }
 
-#if 1
 
 IMPLEMENT_HC_VECTOR(ProtocolEntityVec, ProtocolEntity *, 1)
 IMPLEMENT_HC_VECTOR(IdentityInfoVec, IdentityInfo *, 1)
@@ -188,5 +187,3 @@ void ClearProtocolEntityVec(ProtocolEntityVec *vec)
     }
     DESTROY_HC_VECTOR(ProtocolEntityVec, vec);
 }
-
-#endif
