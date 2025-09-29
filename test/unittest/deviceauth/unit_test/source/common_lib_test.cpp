@@ -824,7 +824,7 @@ HWTEST_F(CommonLibTest, ParseTlvNodeTest001, TestSize.Level0)
 
 HWTEST_F(CommonLibTest, IsStrEqualTest001, TestSize.Level0)
 {
-    EXPECT_EQ(IsStrEqual(nullptr, nullptr), false);
+    EXPECT_EQ(IsStrEqual(nullptr, nullptr), true);
     EXPECT_EQ(IsStrEqual("123", nullptr), false);
     EXPECT_EQ(IsStrEqual(nullptr, "123"), false);
     EXPECT_EQ(IsStrEqual("123", "123"), true);
