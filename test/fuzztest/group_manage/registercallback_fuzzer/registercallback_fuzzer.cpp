@@ -16,19 +16,41 @@
 #include "registercallback_fuzzer.h"
 
 namespace OHOS {
-    void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn) {}
+    void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn)
+    {
+        (void)requestId;
+        (void)operationCode;
+        (void)errorCode;
+        (void)errorReturn;
+    }
 
-    void OnFinish(int64_t requestId, int operationCode, const char *authReturn) {}
+    void OnFinish(int64_t requestId, int operationCode, const char *authReturn)
+    {
+        (void)requestId;
+        (void)operationCode;
+        (void)authReturn;
+    }
 
-    void OnSessionKeyReturned(int64_t requestId, const uint8_t *sessionKey, uint32_t sessionKeyLen) {}
+    void OnSessionKeyReturned(int64_t requestId, const uint8_t *sessionKey, uint32_t sessionKeyLen)
+    {
+        (void)requestId;
+        (void)sessionKey;
+        (void)sessionKeyLen;
+    }
 
     bool OnTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
     {
+        (void)requestId;
+        (void)data;
+        (void)dataLen;
         return true;
     }
 
     char *OnRequest(int64_t requestId, int operationCode, const char* reqParam)
     {
+        (void)requestId;
+        (void)operationCode;
+        (void)reqParam;
         return nullptr;
     }
 
