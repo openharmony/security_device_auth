@@ -35,6 +35,7 @@ namespace OHOS {
 
     static void OnFinish(int64_t requestId, int operationCode, const char *authReturn)
     {
+        (void)requestId;
         LOGI("return value: %" LOG_PUB "s", authReturn);
         if (operationCode == GROUP_CREATE) {
             CJson *json = CreateJsonFromString(authReturn);
