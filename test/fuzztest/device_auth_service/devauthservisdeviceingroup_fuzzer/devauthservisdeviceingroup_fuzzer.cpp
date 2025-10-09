@@ -27,11 +27,15 @@ namespace OHOS {
 
     static void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn)
     {
+        (void)requestId;
+        (void)operationCode;
+        (void)errorCode;
         LOGE("error return: %" LOG_PUB "s", errorReturn);
     }
 
     static void OnFinish(int64_t requestId, int operationCode, const char *authReturn)
     {
+        (void)requestId;
         LOGI("return value: %" LOG_PUB "s", authReturn);
         if (operationCode == GROUP_CREATE) {
             CJson *json = CreateJsonFromString(authReturn);
@@ -46,15 +50,26 @@ namespace OHOS {
         }
     }
 
-    static void OnSessionKeyReturned(int64_t requestId, const uint8_t *sessionKey, uint32_t sessionKeyLen) {}
+    static void OnSessionKeyReturned(int64_t requestId, const uint8_t *sessionKey, uint32_t sessionKeyLen)
+    {
+        (void)requestId;
+        (void)sessionKey;
+        (void)sessionKeyLen;
+    }
 
     static bool OnTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
     {
+        (void) requestId;
+        (void) data;
+        (void) dataLen;
         return true;
     }
 
     static char *OnRequest(int64_t requestId, int operationCode, const char* reqParam)
     {
+        (void) requestId;
+        (void) operationCode;
+        (void) reqParam;
         return nullptr;
     }
 

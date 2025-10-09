@@ -121,6 +121,7 @@ static uint32_t g_transmitDataLen = 0;
 
 static bool OnTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
 {
+    (void)requestId;
     if (memcpy_s(g_transmitData, TEST_TRANSMIT_DATA_LEN, data, dataLen) != EOK) {
         return false;
     }
@@ -139,16 +140,26 @@ static void OnSessionKeyReturned(int64_t requestId, const uint8_t *sessionKey, u
 
 static void OnFinish(int64_t requestId, int operationCode, const char *authReturn)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)authReturn;
     g_asyncStatus = ASYNC_STATUS_FINISH;
 }
 
 static void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)errorCode;
+    (void)errorReturn;
     g_asyncStatus = ASYNC_STATUS_ERROR;
 }
 
 static char *OnBindRequest(int64_t requestId, int operationCode, const char* reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
@@ -161,6 +172,9 @@ static char *OnBindRequest(int64_t requestId, int operationCode, const char* req
 
 static char *OnAuthRequest(int64_t requestId, int operationCode, const char* reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
@@ -187,19 +201,43 @@ static DeviceAuthCallback g_gaCallback = {
     .onRequest = OnAuthRequest
 };
 
-static void OnGroupCreated(const char *groupInfo) {}
+static void OnGroupCreated(const char *groupInfo)
+{
+    (void)groupInfo;
+}
 
-static void OnGroupDeleted(const char *groupInfo) {}
+static void OnGroupDeleted(const char *groupInfo)
+{
+    (void)groupInfo;
+}
 
-static void OnDeviceBound(const char *peerUdid, const char* groupInfo) {}
+static void OnDeviceBound(const char *peerUdid, const char* groupInfo)
+{
+    (void)peerUdid;
+    (void)groupInfo;
+}
 
-static void OnDeviceUnBound(const char *peerUdid, const char* groupInfo) {}
+static void OnDeviceUnBound(const char *peerUdid, const char* groupInfo)
+{
+    (void)peerUdid;
+    (void)groupInfo;
+}
 
-static void OnDeviceNotTrusted(const char *peerUdid) {}
+static void OnDeviceNotTrusted(const char *peerUdid)
+{
+    (void)peerUdid;
+}
 
-static void OnLastGroupDeleted(const char *peerUdid, int groupType) {}
+static void OnLastGroupDeleted(const char *peerUdid, int groupType)
+{
+    (void)peerUdid;
+    (void)groupType;
+}
 
-static void OnTrustedDeviceNumChanged(int curTrustedDeviceNum) {}
+static void OnTrustedDeviceNumChanged(int curTrustedDeviceNum)
+{
+    (void)curTrustedDeviceNum;
+}
 
 static DataChangeListener g_listener = {
     .onGroupCreated = OnGroupCreated,

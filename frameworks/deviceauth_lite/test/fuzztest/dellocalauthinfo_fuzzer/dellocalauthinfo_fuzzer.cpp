@@ -22,27 +22,41 @@
 namespace OHOS {
     static void TransmitCb(const struct session_identity *identity, const void *data, uint32_t length)
     {
+        (void)identity;
+        (void)data;
+        (void)length;
         return;
     }
 
     static int32_t ConfirmReceiveRequestFunc(const struct session_identity *identity, int32_t operationCode)
     {
+        (void)identity;
+        (void)operationCode;
         return HC_OK;
     }
 
     static void GetProtocolParamsCb(const struct session_identity *identity, int32_t operationCode,
                                     struct hc_pin *pin, struct operation_parameter *para)
     {
+        (void)identity;
+        (void)operationCode;
+        (void)pin;
+        (void)para;
         return;
     }
 
     static void SetSessionKeyFunc(const struct session_identity *identity, const struct hc_session_key *sessionKey)
     {
+        (void)identity;
+        (void)sessionKey;
         return;
     }
 
     static void SetServiceResultFunc(const struct session_identity *identity, int32_t result, int32_t errorCode)
     {
+        (void)identity;
+        (void)result;
+        (void)errorCode;
         return;
     }
 

@@ -109,6 +109,7 @@ static uint32_t g_transmitDataLen = 0;
 
 static bool OnTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
 {
+    (void)requestId;
     if (memcpy_s(g_transmitData, TRANSMIT_DATA_MAX_LEN, data, dataLen) != EOK) {
         return false;
     }
@@ -127,16 +128,26 @@ static void OnSessionKeyReturned(int64_t requestId, const uint8_t *sessionKey, u
 
 static void OnFinish(int64_t requestId, int operationCode, const char *authReturn)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)authReturn;
     g_asyncStatus = ASYNC_STATUS_FINISH;
 }
 
 static void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)errorCode;
+    (void)errorReturn;
     g_asyncStatus = ASYNC_STATUS_ERROR;
 }
 
 static char *OnBindRequest(int64_t requestId, int operationCode, const char* reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
@@ -149,6 +160,9 @@ static char *OnBindRequest(int64_t requestId, int operationCode, const char* req
 
 static char *OnBindRequestMismatch(int64_t requestId, int operationCode, const char* reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
@@ -161,6 +175,9 @@ static char *OnBindRequestMismatch(int64_t requestId, int operationCode, const c
 
 static char *OnBindRequest1(int64_t requestId, int operationCode, const char* reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
     AddStringToJson(json, FIELD_PIN_CODE, TEST_PIN_CODE);
@@ -172,6 +189,9 @@ static char *OnBindRequest1(int64_t requestId, int operationCode, const char* re
 
 static char *OnBindRequest2(int64_t requestId, int operationCode, const char* reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, INVALID_OS_ACCOUNT);
@@ -184,6 +204,9 @@ static char *OnBindRequest2(int64_t requestId, int operationCode, const char* re
 
 static char *OnAuthRequest(int64_t requestId, int operationCode, const char *reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
@@ -196,6 +219,9 @@ static char *OnAuthRequest(int64_t requestId, int operationCode, const char *req
 
 static char *OnRejectRequest(int64_t requestId, int operationCode, const char *reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_REJECTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
@@ -216,6 +242,9 @@ static char *OnInvalidRequest(int64_t requestId, int operationCode, const char *
 
 static char *OnInvalidRequest1(int64_t requestId, int operationCode, const char *reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
     AddStringToJson(json, FIELD_PEER_CONN_DEVICE_ID, TEST_UDID_CLIENT);
@@ -227,6 +256,9 @@ static char *OnInvalidRequest1(int64_t requestId, int operationCode, const char 
 
 static char *OnInvalidRequest2(int64_t requestId, int operationCode, const char *reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, INVALID_OS_ACCOUNT);
@@ -239,6 +271,9 @@ static char *OnInvalidRequest2(int64_t requestId, int operationCode, const char 
 
 static char *OnInvalidRequest3(int64_t requestId, int operationCode, const char *reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
@@ -250,6 +285,9 @@ static char *OnInvalidRequest3(int64_t requestId, int operationCode, const char 
 
 static char *OnInvalidRequest4(int64_t requestId, int operationCode, const char *reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);
@@ -261,6 +299,9 @@ static char *OnInvalidRequest4(int64_t requestId, int operationCode, const char 
 
 static char *OnAuthRequestDirectTmp(int64_t requestId, int operationCode, const char *reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddStringToJson(json, FIELD_PIN_CODE, TEST_PIN_CODE);
@@ -272,6 +313,9 @@ static char *OnAuthRequestDirectTmp(int64_t requestId, int operationCode, const 
 
 static char *OnAuthRequestDirect(int64_t requestId, int operationCode, const char *reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddStringToJson(json, FIELD_PEER_CONN_DEVICE_ID, TEST_UDID_CLIENT);
@@ -284,6 +328,9 @@ static char *OnAuthRequestDirect(int64_t requestId, int operationCode, const cha
 
 static char *OnDaAuthRequest(int64_t requestId, int operationCode, const char *reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddIntToJson(json, FIELD_OS_ACCOUNT_ID, TEST_AUTH_OS_ACCOUNT_ID);

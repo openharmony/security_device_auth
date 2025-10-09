@@ -326,6 +326,7 @@ int32_t BuildClientCredContext(int32_t osAccountId, int64_t requestId, CJson *co
 static int32_t BuildServerCredBindContext(int64_t requestId, CJson *context,
     char **returnPeerUdid, const char **returnAppId)
 {
+    (void)returnPeerUdid;
     int32_t res = CheckConfirmationExist(context);
     if (res != HC_SUCCESS) {
         return res;
@@ -369,6 +370,7 @@ static int32_t BuildServerCredBindContext(int64_t requestId, CJson *context,
 static int32_t BuildServerCredAuthContext(int64_t requestId, CJson *context,
     char **returnPeerUdid, const char **returnAppId)
 {
+    (void) returnPeerUdid;
     int32_t res = CheckConfirmationExist(context);
     if (res != HC_SUCCESS) {
         return res;

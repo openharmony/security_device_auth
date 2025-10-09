@@ -219,6 +219,8 @@ error:
 
 static int32_t get_operation_code(const struct header_analysis *nav, const struct message *receive)
 {
+    (void)nav;
+    (void)receive;
     int32_t operation_code = NO_OPERATION_CODE;
 
     LOGI("Receive message had operation code is %d", operation_code);

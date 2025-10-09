@@ -20,19 +20,43 @@
 #include "hc_log.h"
 
 namespace OHOS {
-    static void OnGroupCreated(const char *groupInfo) {}
+    static void OnGroupCreated(const char *groupInfo)
+    {
+        (void)groupInfo;
+    }
 
-    static void OnGroupDeleted(const char *groupInfo) {}
+    static void OnGroupDeleted(const char *groupInfo)
+    {
+        (void)groupInfo;
+    }
 
-    static void OnDeviceBound(const char *peerUdid, const char *groupInfo) {}
+    static void OnDeviceBound(const char *peerUdid, const char *groupInfo)
+    {
+        (void)peerUdid;
+        (void)groupInfo;
+    }
 
-    static void OnDeviceUnBound(const char *peerUdid, const char *groupInfo) {}
+    static void OnDeviceUnBound(const char *peerUdid, const char *groupInfo)
+    {
+        (void)peerUdid;
+        (void)groupInfo;
+    }
 
-    static void OnDeviceNotTrusted(const char *peerUdid) {}
+    static void OnDeviceNotTrusted(const char *peerUdid)
+    {
+        (void)peerUdid;
+    }
 
-    static void OnLastGroupDeleted(const char *peerUdid, int groupType) {}
+    static void OnLastGroupDeleted(const char *peerUdid, int groupType)
+    {
+        (void)peerUdid;
+        (void)groupType;
+    }
 
-    static void OnTrustedDeviceNumChanged(int curTrustedDeviceNum) {}
+    static void OnTrustedDeviceNumChanged(int curTrustedDeviceNum)
+    {
+        (void)curTrustedDeviceNum;
+    }
 
     static DataChangeListener g_listener = {
         .onGroupCreated = OnGroupCreated,
