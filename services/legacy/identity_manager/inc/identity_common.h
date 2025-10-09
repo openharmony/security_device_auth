@@ -29,7 +29,6 @@ int32_t ConvertPsk(const Uint8Buff *srcPsk, Uint8Buff *sharedSecret);
 int32_t SetPreSharedUrlForProof(const char *urlStr, Uint8Buff *preSharedUrl);
 CJson *CreateCredUrlJson(int32_t credentailType, int32_t keyType, int32_t trustType);
 
-#if 1
 int32_t GetSelfDeviceEntry(int32_t osAccountId, const char *groupId, TrustedDeviceEntry *deviceEntry);
 const char *GetPeerDevIdFromJson(const CJson *in, bool *isUdid);
 int32_t GetPeerDeviceEntry(
@@ -45,7 +44,6 @@ void ClearIdentityInfoVec(IdentityInfoVec *vec);
 
 ProtocolEntityVec CreateProtocolEntityVec(void);
 void ClearProtocolEntityVec(ProtocolEntityVec *vec);
-#endif
 
 #ifdef __cplusplus
 }

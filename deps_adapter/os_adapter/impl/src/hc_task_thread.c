@@ -100,7 +100,7 @@ static int TaskThreadLoop(void* args)
         return -1;
     }
 
-    while (1) {
+    while (true) {
         if (thread->quit) {
             LOGW("thread quit!");
             break;

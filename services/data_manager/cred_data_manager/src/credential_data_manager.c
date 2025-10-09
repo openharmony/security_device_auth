@@ -135,7 +135,7 @@ static bool LoadStringVectorFromParcel(StringVector *vec, HcParcel *parcel)
                 return false;
             }
         }
-    } while (1);
+    } while (true);
 }
 
 static bool SaveStringVectorToParcel(const StringVector *vec, HcParcel *parcel)

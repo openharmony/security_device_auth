@@ -16,19 +16,43 @@
 #include "registerdatachangelistener_fuzzer.h"
 
 namespace OHOS {
-    void onGroupCreated(const char *groupInfo) {}
+    void OnGroupCreated(const char *groupInfo)
+    {
+        (void)groupInfo;
+    }
 
-    void onGroupDeleted(const char *groupInfo) {}
+    void OnGroupDeleted(const char *groupInfo)
+    {
+        (void)groupInfo;
+    }
 
-    void onDeviceBound(const char *peerUdid, const char *groupInfo) {}
+    void OnDeviceBound(const char *peerUdid, const char *groupInfo)
+    {
+        (void)peerUdid;
+        (void)groupInfo;
+    }
 
-    void onDeviceUnBound(const char *peerUdid, const char *groupInfo) {}
+    void OnDeviceUnBound(const char *peerUdid, const char *groupInfo)
+    {
+        (void)peerUdid;
+        (void)groupInfo;
+    }
 
-    void onDeviceNotTrusted(const char *peerUdid) {}
+    void OnDeviceNotTrusted(const char *peerUdid)
+    {
+        (void)peerUdid;
+    }
 
-    void onLastGroupDeleted(const char *peerUdid, int groupType) {}
+    void OnLastGroupDeleted(const char *peerUdid, int groupType)
+    {
+        (void)peerUdid;
+        (void)groupType;
+    }
 
-    void onTrustedDeviceNumChanged(int curTrustedDeviceNum) {}
+    void OnTrustedDeviceNumChanged(int curTrustedDeviceNum)
+    {
+        (void)curTrustedDeviceNum;
+    }
 
     bool FuzzDoRegDataChangeListener(const uint8_t* data, size_t size)
     {
@@ -41,13 +65,13 @@ namespace OHOS {
         }
         std::string appId(reinterpret_cast<const char *>(data), size);
         DataChangeListener listener;
-        listener.onGroupCreated = onGroupCreated;
-        listener.onGroupDeleted = onGroupDeleted;
-        listener.onDeviceBound = onDeviceBound;
-        listener.onDeviceUnBound = onDeviceUnBound;
-        listener.onDeviceNotTrusted = onDeviceNotTrusted;
-        listener.onLastGroupDeleted = onLastGroupDeleted;
-        listener.onTrustedDeviceNumChanged = onTrustedDeviceNumChanged;
+        listener.onGroupCreated = OnGroupCreated;
+        listener.onGroupDeleted = OnGroupDeleted;
+        listener.onDeviceBound = OnDeviceBound;
+        listener.onDeviceUnBound = OnDeviceUnBound;
+        listener.onDeviceNotTrusted = OnDeviceNotTrusted;
+        listener.onLastGroupDeleted = OnLastGroupDeleted;
+        listener.onTrustedDeviceNumChanged = OnTrustedDeviceNumChanged;
         gmInstance->regDataChangeListener(appId.c_str(), &listener);
         return true;
     }

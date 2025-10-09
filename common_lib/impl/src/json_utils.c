@@ -170,7 +170,7 @@ static void ReplaceStringToInt(char *input, const char *keyName)
     if (shouldReplace) {
         uint32_t readI = startOffset + SPLIT_LEN_ONE;
         uint32_t writeI = startOffset;
-        while (input[readI]) {
+        while (input[readI] != '\0') {
             input[writeI] = input[readI];
             readI++;
             writeI++;

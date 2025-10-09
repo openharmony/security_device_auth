@@ -77,6 +77,9 @@ static bool OnLightTransmit(int64_t requestId, const uint8_t *data, uint32_t dat
 
 static char *OnLightAuthRequest(int64_t requestId, int operationCode, const char *reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddStringToJson(json, FIELD_APP_ID, TEST_APP_ID);
     char *returnDataStr = PackJsonToString(json);

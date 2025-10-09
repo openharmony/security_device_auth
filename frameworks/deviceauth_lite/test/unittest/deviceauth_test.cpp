@@ -118,6 +118,7 @@ enum HksErrorCode {
 
 static void Transmit(const struct session_identity *identity, const void *data, uint32_t length)
 {
+    (void)data;
     LOG("--------Transmit--------");
     LOG("identity session_id[%d] package_name[%s]", identity->session_id, identity->package_name.name);
     LOG("length[%u]", length);
@@ -148,6 +149,8 @@ static void SetSessionKey(const struct session_identity *identity, const struct 
 
 static void SetServiceResult(const struct session_identity *identity, int32_t result, int32_t errorCode)
 {
+    (void)identity;
+    (void)errorCode;
     LOG("--------SetServiceResult--------");
     LOG("identity session_id[%d] package_name[%s]", identity->session_id, identity->package_name.name);
     LOG("result[%d]", result);
@@ -1713,6 +1716,8 @@ const int32_t MAX_LOG_BUFF_LENGTH = 1024;
 
 void TestLogd(const char *tag, const char *funcName, const char *format, ...)
 {
+    (void)tag;
+    (void)funcName;
     va_list ap;
     char logBuff[MAX_LOG_BUFF_LENGTH];
     va_start(ap, format);

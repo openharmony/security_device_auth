@@ -90,6 +90,7 @@ static void NativeTokenSet(const char *procName)
 
 static bool OnTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
 {
+    (void)requestId;
     if (memcpy_s(g_transmitData, g_transmitDataMaxLen, data, dataLen) != EOK) {
         return false;
     }
@@ -108,16 +109,26 @@ static void OnSessionKeyReturned(int64_t requestId, const uint8_t *sessionKey, u
 
 static void OnFinish(int64_t requestId, int operationCode, const char *authReturn)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)authReturn;
     g_asyncStatus = ASYNC_STATUS_FINISH;
 }
 
 static void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)errorCode;
+    (void)errorReturn;
     g_asyncStatus = ASYNC_STATUS_ERROR;
 }
 
 static char *OnAuthRequestDirectTmp(int64_t requestId, int operationCode, const char *reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddStringToJson(json, FIELD_PIN_CODE, TEST_PIN_CODE);
@@ -129,6 +140,9 @@ static char *OnAuthRequestDirectTmp(int64_t requestId, int operationCode, const 
 
 static char *OnAuthRequestDirect(int64_t requestId, int operationCode, const char *reqParam)
 {
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
     CJson *json = CreateJson();
     AddIntToJson(json, FIELD_CONFIRMATION, REQUEST_ACCEPTED);
     AddStringToJson(json, FIELD_PEER_CONN_DEVICE_ID, TEST_UDID_CLIENT);
