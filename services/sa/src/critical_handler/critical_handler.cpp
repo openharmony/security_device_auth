@@ -21,6 +21,7 @@
 #include <system_ability_definition.h>
 
 static int32_t g_count = 0;
+static bool g_saIsStopping = false;
 static std::mutex g_criticalLock;
 
 void NotifyProcessIsActive(void)
@@ -59,4 +60,17 @@ int32_t GetCriticalCnt(void)
 {
     std::lock_guard<std::mutex> autoLock(g_criticalLock);
     return g_count;
+}
+
+void SetStatusIsStopping(bool isStopping)
+{
+    std::lock_guard<std::mutex> autoLock(g_criticalLock);
+    LOGI("Set status isStopping is %" LOG_PUB "d", isStopping);
+    g_saIsStopping = isStopping;
+}
+
+bool CheckIsStopping(void)
+{
+    std::lock_guard<std::mutex> autoLock(g_criticalLock);
+    return g_saIsStopping;
 }

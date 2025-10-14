@@ -30,3 +30,13 @@ int32_t GetCriticalCnt(void)
 {
     return 0;
 }
+
+void SetStatusIsStopping(bool isStopping)
+{
+    (void)isStopping;
+}
+
+bool CheckIsStopping(void)
+{
+    return false;
+}

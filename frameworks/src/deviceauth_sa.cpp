@@ -252,6 +252,7 @@ void DeviceAuthAbility::OnStop()
 {
     std::lock_guard<std::recursive_mutex> lock(instanceMutex_);
     LOGI("DeviceAuthAbility OnStop");
+    SetStatusIsStopping(true);
     DestroyUnloadHandler();
     RemoveTimeoutSession();
     DeMainRescInit();
