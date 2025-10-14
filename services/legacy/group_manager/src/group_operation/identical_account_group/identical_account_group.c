@@ -451,15 +451,15 @@ static int32_t CheckChangeParams(int32_t osAccountId, const char *appId, CJson *
 
 static int32_t AddGroupAndToken(int32_t osAccountId, CJson *jsonParams, const char *groupId)
 {
-    int32_t res = AddGroupToDatabaseByJson(osAccountId, GenerateGroupParams, jsonParams, groupId);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to add group to database!");
-        return res;
-    }
-    res = ImportSelfToken(osAccountId, jsonParams);
+    int32_t res = ImportSelfToken(osAccountId, jsonParams);
     if (res != HC_SUCCESS) {
         LOGE("Failed to import self token!");
-        (void)DelGroupFromDb(osAccountId, groupId);
+        return res;
+    }
+    res = AddGroupToDatabaseByJson(osAccountId, GenerateGroupParams, jsonParams, groupId);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to add group to database!");
+        (void)DelSelfToken(osAccountId, jsonParams);
         return res;
     }
     res = AddDeviceToDatabaseByJson(osAccountId, GenerateDevParams, jsonParams, groupId);
