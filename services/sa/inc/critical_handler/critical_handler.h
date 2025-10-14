@@ -29,6 +29,8 @@ void NotifyProcessIsStop(void);
 void IncreaseCriticalCnt(int addCnt);
 void DecreaseCriticalCnt(void);
 int32_t GetCriticalCnt(void);
+void SetStatusIsStopping(bool isStopping);
+bool CheckIsStopping(void);
 
 #ifdef __cplusplus
 }

@@ -23,6 +23,7 @@
 #include "net_conn_client.h"
 #include "net_conn_constants.h"
 #include "unload_handler.h"
+#include "critical_handler.h"
 
 using namespace OHOS;
 using namespace OHOS::NetManagerStandard;
@@ -69,6 +70,10 @@ int32_t NetObserver::NetAvailable(sptr<NetHandle> &netHandle)
 
 int32_t NetObserver::HandleNetAllCap(const NetAllCapabilities &netAllCap)
 {
+    if (CheckIsStopping()) {
+        LOGW("Device auth is destroying, not handle net cap.");
+        return 0;
+    }
     if (netAllCap.netCaps_.count(NET_CAPABILITY_INTERNET) <= 0 ||
         netAllCap.netCaps_.count(NET_CAPABILITY_VALIDATED) <= 0) {
         for (auto netCap : netAllCap.netCaps_) {
