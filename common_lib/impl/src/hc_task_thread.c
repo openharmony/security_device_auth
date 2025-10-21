@@ -16,6 +16,8 @@
 #include "hc_task_thread.h"
 #include "hal_error.h"
 #include "hc_log.h"
+#include "hc_types.h"
+#include "hc_thread.h"
 
 #define TASK_ALLOC_UINT 5
 

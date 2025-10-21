@@ -51,7 +51,6 @@ ohos_fuzztest("IdentityServiceFuzzTest") {
     "${os_adapter_path}/impl/src/linux/hc_file.c",
     "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
     "${os_adapter_path}/impl/src/linux/hc_thread.c",
-    "${os_adapter_path}/impl/src/linux/hc_types.c",
     "../../unittest/deviceauth/source/hc_dev_info_mock.c",
   ]
 

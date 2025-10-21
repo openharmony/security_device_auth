@@ -52,7 +52,6 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
     "${os_adapter_path}/impl/src/linux/hc_file.c",
     "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
     "${os_adapter_path}/impl/src/linux/hc_thread.c",
-    "${os_adapter_path}/impl/src/linux/hc_types.c",
   ]
 
   include_dirs += identity_manager_inc
