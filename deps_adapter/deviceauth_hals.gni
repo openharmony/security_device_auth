@@ -52,7 +52,7 @@ hal_common_files = [
   "${common_lib_path}/impl/src/string_util.c",
   "${common_lib_path}/impl/src/uint8buff_utils.c",
   "${common_lib_path}/impl/src/hc_mutex.c",
-  "${common_lib_path}/impl/src/hc_task_thread.c",
+  "${os_adapter_path}/impl/src/hc_task_thread.c",
   "${common_lib_path}/impl/src/hc_time.c",
   "${common_lib_path}/impl/src/hc_types.c",
   "${key_management_adapter_path}/impl/src/alg_loader.c",

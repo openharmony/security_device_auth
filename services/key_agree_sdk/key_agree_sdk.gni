@@ -54,7 +54,7 @@ key_agree_hal_common_files = [
 
   "${os_adapter_path}/impl/src/hc_log.c",
   "${common_lib_path}/impl/src/hc_mutex.c",
-  "${common_lib_path}/impl/src/hc_task_thread.c",
+  "${os_adapter_path}/impl/src/hc_task_thread.c",
   "${common_lib_path}/impl/src/hc_time.c",
 ]
 
