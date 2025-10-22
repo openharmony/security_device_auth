@@ -15,9 +15,16 @@
 
 #include "hc_types.h"
 #include <stdlib.h>
-#include <string.h>
 #include "hc_log.h"
+#include "securec.h"
+
+#if defined(OHOS_MEM)
 #include "ohos_mem_pool.h"
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define MAX_STR_LEN (512 * 1024)
 
@@ -61,3 +68,6 @@ uint32_t HcStrlen(const char *str)
     return p - str - 1;
 }
 
+#ifdef __cplusplus
+}
+#endif

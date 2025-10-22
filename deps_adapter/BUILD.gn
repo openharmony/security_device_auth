@@ -40,7 +40,6 @@ if (defined(ohos_lite)) {
         "${os_adapter_path}/impl/src/liteos/hc_condition.c",
         "${os_adapter_path}/impl/src/liteos/hc_dev_info.c",
         "${os_adapter_path}/impl/src/liteos/hc_thread.c",
-        "${os_adapter_path}/impl/src/liteos/hc_types.c",
         "${os_adapter_path}/impl/src/liteos/mini/hc_init_protection.c",
       ]
 
@@ -113,7 +112,6 @@ if (defined(ohos_lite)) {
         "${os_adapter_path}/impl/src/linux/hc_file.c",
         "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
         "${os_adapter_path}/impl/src/linux/hc_thread.c",
-        "${os_adapter_path}/impl/src/linux/hc_types.c",
       ]
 
       defines = []
@@ -157,7 +155,6 @@ if (defined(ohos_lite)) {
       "${os_adapter_path}/impl/src/linux/hc_file.c",
       "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
       "${os_adapter_path}/impl/src/linux/hc_thread.c",
-      "${os_adapter_path}/impl/src/linux/hc_types.c",
     ]
 
     defines = []
@@ -211,7 +208,6 @@ if (defined(ohos_lite)) {
       "${os_adapter_path}/impl/src/linux/hc_file.c",
       "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
       "${os_adapter_path}/impl/src/linux/hc_thread.c",
-      "${os_adapter_path}/impl/src/linux/hc_types.c",
     ]
 
     defines = []

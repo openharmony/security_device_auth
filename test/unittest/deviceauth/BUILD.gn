@@ -46,7 +46,6 @@ ohos_unittest("deviceauth_llt") {
     "${os_adapter_path}/impl/src/linux/hc_file.c",
     "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
     "${os_adapter_path}/impl/src/linux/hc_thread.c",
-    "${os_adapter_path}/impl/src/linux/hc_types.c",
     "source/hc_dev_info_mock.c",
     "source/json_utils_mock.c",
   ]
@@ -171,7 +170,6 @@ ohos_unittest("device_auth_func_test") {
     "${os_adapter_path}/impl/src/linux/hc_file.c",
     "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
     "${os_adapter_path}/impl/src/linux/hc_thread.c",
-    "${os_adapter_path}/impl/src/linux/hc_types.c",
     "source/hc_dev_info_mock.c",
     "source/json_utils_mock.c",
   ]
@@ -305,7 +303,6 @@ ohos_unittest("device_auth_identity_service_test") {
     "${os_adapter_path}/impl/src/linux/hc_file.c",
     "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
     "${os_adapter_path}/impl/src/linux/hc_thread.c",
-    "${os_adapter_path}/impl/src/linux/hc_types.c",
     "source/hc_dev_info_mock.c",
     "source/json_utils_mock.c",
   ]
@@ -442,7 +439,6 @@ ohos_unittest("device_auth_interface_test") {
     "${os_adapter_path}/impl/src/linux/hc_file.c",
     "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
     "${os_adapter_path}/impl/src/linux/hc_thread.c",
-    "${os_adapter_path}/impl/src/linux/hc_types.c",
     "source/hc_dev_info_mock.c",
     "source/json_utils_mock.c",
   ]
@@ -579,7 +575,6 @@ ohos_unittest("deviceauth_unit_test") {
     "${os_adapter_path}/impl/src/linux/hc_file.c",
     "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
     "${os_adapter_path}/impl/src/linux/hc_thread.c",
-    "${os_adapter_path}/impl/src/linux/hc_types.c",
     "source/hc_dev_info_mock.c",
   ]
 
@@ -726,7 +721,6 @@ ohos_unittest("light_auth_test") {
     "${os_adapter_path}/impl/src/linux/hc_file.c",
     "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
     "${os_adapter_path}/impl/src/linux/hc_thread.c",
-    "${os_adapter_path}/impl/src/linux/hc_types.c",
     "source/hc_dev_info_mock.c",
     "source/json_utils_mock.c",
   ]

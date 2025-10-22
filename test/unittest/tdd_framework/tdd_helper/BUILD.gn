@@ -37,11 +37,10 @@ ohos_static_library("device_auth_test_hal") {
     "${os_adapter_path}/impl/src/linux/hc_file.c",
     "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
     "${os_adapter_path}/impl/src/linux/hc_thread.c",
-    "${os_adapter_path}/impl/src/linux/hc_types.c",
   ]
   sources -= [
     "${os_adapter_path}/impl/src/linux/hc_dev_info.c",
-    "${os_adapter_path}/impl/src/linux/hc_types.c",
+    "${common_lib_path}/impl/src/hc_types.c",
   ]
   sources += [
     "dev_info_mock/src/dev_info_mock.c",
