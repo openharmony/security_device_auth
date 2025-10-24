@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -396,12 +396,12 @@ int32_t ServiceDevAuth::SetRemoteObject(sptr<IRemoteObject> &object)
 
 void ServiceDevAuth::AddCbDeathRecipient(int32_t cbStubIdx, int32_t cbDataIdx)
 {
+    std::lock_guard<std::mutex> autoLock(g_cBMutex);
     bool bRet = false;
     if ((cbStubIdx < 0) || (cbStubIdx >= MAX_CBSTUB_SIZE) || (!g_cbStub[cbStubIdx].inUse)) {
         return;
     }
 
-    std::lock_guard<std::mutex> autoLock(g_cBMutex);
     DevAuthDeathRecipient *deathRecipient = new(std::nothrow) DevAuthDeathRecipient(cbDataIdx);
     if (deathRecipient == nullptr) {
         LOGE("Failed to create death recipient");
@@ -425,6 +425,7 @@ void ServiceDevAuth::ResetRemoteObject(int32_t idx)
 void ServiceDevAuth::ActCallback(int32_t objIdx, int32_t callbackId, bool sync,
     uintptr_t cbHook, MessageParcel &dataParcel, MessageParcel &reply)
 {
+    std::lock_guard<std::mutex> autoLock(g_cBMutex);
     if ((objIdx < 0) || (objIdx >= MAX_CBSTUB_SIZE) || (!g_cbStub[objIdx].inUse)) {
         LOGW("nothing to do, callback id %" LOG_PUB "d, remote object id %" LOG_PUB "d", callbackId, objIdx);
         return;
@@ -433,7 +434,6 @@ void ServiceDevAuth::ActCallback(int32_t objIdx, int32_t callbackId, bool sync,
     if (!sync) {
         option.SetFlags(MessageOption::TF_ASYNC);
     }
-    std::lock_guard<std::mutex> autoLock(g_cBMutex);
     sptr<ICommIpcCallback> proxy = iface_cast<ICommIpcCallback>(g_cbStub[objIdx].cbStub);
     proxy->DoCallBack(callbackId, cbHook, dataParcel, reply, option);
     return;
