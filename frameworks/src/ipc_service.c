@@ -1042,7 +1042,7 @@ static int32_t IpcServiceGaGetRealInfo(const IpcDataInfo *ipcParams, int32_t par
     const char *pseudonymId = NULL;
 
     LOGI("starting ...");
-    int32_t inOutLen = sizeof(int64_t);
+    int32_t inOutLen = sizeof(osAccountId);
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if ((inOutLen != sizeof(int32_t)) || (ret != HC_SUCCESS)) {
         LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
@@ -1074,7 +1074,7 @@ static int32_t IpcServiceGaGetPseudonymId(const IpcDataInfo *ipcParams, int32_t 
     const char *indexKey = NULL;
 
     LOGI("starting ...");
-    int32_t inOutLen = sizeof(int64_t);
+    int32_t inOutLen = sizeof(osAccountId);
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if ((inOutLen != sizeof(int32_t)) || (ret != HC_SUCCESS)) {
         LOGE("get param error, type %d", PARAM_TYPE_OS_ACCOUNT_ID);
