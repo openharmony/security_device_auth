@@ -40,7 +40,7 @@ static int32_t CreateDirectory(const char *filePath)
             chPtr++;
             continue;
         }
-        if (memcpy_s(dirCache, sizeof(dirCache), filePath, len) != EOK) {
+        if (len >= MAX_FOLDER_NAME_SIZE || memcpy_s(dirCache, sizeof(dirCache), filePath, len) != EOK) {
             LOGE("memory copy failed");
             return -1;
         }
