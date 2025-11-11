@@ -173,16 +173,15 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
                 UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
             }
+            *randomVal = tempRandomVal;
             uint32_t serviceIdLen = (uint32_t)HcStrlen(entry->session->serviceId) + 1;
             char *tempServiceId = (char *)HcMalloc(serviceIdLen, 0);
             if (tempServiceId == NULL) {
-                HcFree(tempRandomVal);
                 LOGE("Malloc serviceId failed.");
                 UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
             }
             if (memcpy_s(tempServiceId, serviceIdLen, entry->session->serviceId, serviceIdLen) != EOK) {
-                HcFree(tempRandomVal);
                 HcFree(tempServiceId);
                 LOGE("Copy serviceId failed.");
                 UnlockHcMutex(&g_lightSessionMutex);
@@ -190,7 +189,6 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
             }
             LOGI("Light session found. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %" LOG_PUB "d",
                 requestId, osAccountId);
-            *randomVal = tempRandomVal;
             *serviceId = tempServiceId;
             UnlockHcMutex(&g_lightSessionMutex);
             return HC_SUCCESS;
