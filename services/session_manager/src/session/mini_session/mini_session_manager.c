@@ -175,7 +175,7 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
             continue;
         }
         if (requestId == entry->session->requestId && osAccountId == entry->session->osAccountId) {
-            int ret = HC_FALSE;
+            int ret = HC_ERROR;
             uint8_t *tempRandomVal = NULL;
             ret = CopyLightSessionValue(entry->session->randomVal, entry->session->randomLen, &tempRandomVal);
             if (ret != HC_SUCCESS) {
