@@ -1539,11 +1539,11 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0283, TestSize.Level0)
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0284, TestSize.Level0)
 {
     // dev_session_util.c static interface test
-    int32_t res = BuildPeerCertInfo(nullptr, nullptr, 0, nullptr);
+    int32_t res = BuildPeerCertInfo(nullptr, nullptr, 0, 0, nullptr);
     EXPECT_NE(res, HC_SUCCESS);
-    res = BuildPeerCertInfo(TEST_PK_INFO, nullptr, 0, nullptr);
+    res = BuildPeerCertInfo(TEST_PK_INFO, nullptr, 0, 0, nullptr);
     EXPECT_NE(res, HC_SUCCESS);
-    res = BuildPeerCertInfo(TEST_PK_INFO, TEST_PK_INFO_SIGN, 0, nullptr);
+    res = BuildPeerCertInfo(TEST_PK_INFO, TEST_PK_INFO_SIGN, 0, 0, nullptr);
     EXPECT_NE(res, HC_SUCCESS);
 }
 

@@ -473,6 +473,10 @@ static int32_t AddPreSharedCredInfo(SessionImpl *impl, IdentityInfo *cred, CJson
 
 static int32_t AddCertCredInfo(SessionImpl *impl, IdentityInfo *cred, CJson *credInfo)
 {
+    if (AddIntToJson(credInfo, FIELD_CERT_VERSION, cred->proof.certInfo.certVersion) != HC_SUCCESS) {
+        LOGE("add certVersion to json fail.");
+        return HC_ERR_JSON_ADD;
+    }
     if (AddIntToJson(credInfo, FIELD_SIGN_ALG, cred->proof.certInfo.signAlg) != HC_SUCCESS) {
         LOGE("add signAlg to json fail.");
         return HC_ERR_JSON_ADD;

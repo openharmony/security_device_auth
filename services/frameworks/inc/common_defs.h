@@ -89,6 +89,7 @@
 #define FIELD_PIN_CODE "pinCode"
 #define FIELD_PUBLIC_KEY "publicKey"
 #define FIELD_SIGN_ALG "signAlg"
+#define FIELD_CERT_VERSION "certVersion"
 #define FIELD_PK_INFO "pkInfo"
 #define FIELD_REAL_INFO "realInfo"
 #define FIELD_PSEUDONYM_ID "pseudonymId"

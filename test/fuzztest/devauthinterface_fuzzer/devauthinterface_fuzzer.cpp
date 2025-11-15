@@ -1225,9 +1225,9 @@ static void DevAuthInterfaceTestCase0283()
 static void DevAuthInterfaceTestCase0284()
 {
     // dev_session_util.c static interface test
-    (void)BuildPeerCertInfo(nullptr, nullptr, 0, nullptr);
-    (void)BuildPeerCertInfo(TEST_PK_INFO, nullptr, 0, nullptr);
-    (void)BuildPeerCertInfo(TEST_PK_INFO, TEST_PK_INFO_SIGN, 0, nullptr);
+    (void)BuildPeerCertInfo(nullptr, nullptr, 0, 0, nullptr);
+    (void)BuildPeerCertInfo(TEST_PK_INFO, nullptr, 0, 0, nullptr);
+    (void)BuildPeerCertInfo(TEST_PK_INFO, TEST_PK_INFO_SIGN, 0, 0, nullptr);
 }
 
 static void DevAuthInterfaceTestCase0285()
