@@ -166,14 +166,14 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
             Uint8Buff tempRandomVal = {NULL, 0};
             int32_t ret = DeepCopyUint8Buff(&sessionRandom, &tempRandomVal);
             if (ret != CLIB_SUCCESS) {
-                LOGE("Deep copy random value failed, ret = %d", ret);
+                LOGE("Deep copy random value failed");
                 UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
             }
             char *tempServiceId = NULL;
             ret = DeepCopyString(entry->session->serviceId, &tempServiceId);
             if (ret != CLIB_SUCCESS) {
-                LOGE("Deep copy service id failed, ret = %d", ret);
+                LOGE("Deep copy service id failed");
                 FreeUint8Buff(&tempRandomVal);
                 UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
