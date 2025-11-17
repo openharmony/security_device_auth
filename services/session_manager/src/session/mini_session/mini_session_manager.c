@@ -178,7 +178,7 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
                 UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
             }
-            *randomLen = tempRandomVal.len;
+            *randomLen = tempRandomVal.length;
             *randomVal = tempRandomVal.val;
             *serviceId = tempServiceId;
             UnlockHcMutex(&g_lightSessionMutex);
