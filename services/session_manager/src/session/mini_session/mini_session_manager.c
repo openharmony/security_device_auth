@@ -30,6 +30,9 @@
 #include "account_task_manager.h"
 #include "mini_session_manager.h"
 #include "hc_time.h"
+#include "string_util.h"
+#include "uint8buff_utils.h"
+#include "clib_error.h"
 
 #define TIME_OUT_VALUE_LIGHT_AUTH 300
 #define MAX_SESSION_NUM_LIGHT_AUTH 30
@@ -147,22 +150,6 @@ void DestroyLightSessionManager(void)
     DestroyHcMutex(&g_lightSessionMutex);
 }
 
-static int32_t CopyLightSessionValue(uint8_t *addr, size_t len, uint8_t **out)
-{
-    uint8_t *tempValue = (uint8_t *)HcMalloc(len, 0);
-    if (tempValue == NULL) {
-        LOGE("Malloc tempValue failed.");
-        return HC_ERR_MEMORY_COPY;
-    }
-    if (memcpy_s(tempValue, len, addr, len) != EOK) {
-        HcFree(tempValue);
-        LOGE("Copy tempValue failed.");
-        return HC_ERR_MEMORY_COPY;
-    }
-    *out = tempValue;
-    return HC_SUCCESS;
-}
-
 int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **randomVal,
     uint32_t *randomLen, char **serviceId)
 {
@@ -175,27 +162,24 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
             continue;
         }
         if (requestId == entry->session->requestId && osAccountId == entry->session->osAccountId) {
-            int ret = HC_ERROR;
-            uint8_t *tempRandomVal = NULL;
-            ret = CopyLightSessionValue(entry->session->randomVal, entry->session->randomLen, &tempRandomVal);
-            if (ret != HC_SUCCESS) {
-                LOGE("Copy randomVal failed.");
+            Uint8Buff sessionRandom = {entry->session->randomVal, entry->session->randomLen};
+            Uint8Buff tempRandomVal = {NULL, 0};
+            int32_t ret = DeepCopyUint8Buff(&sessionRandom, &tempRandomVal);
+            if (ret != CLIB_SUCCESS) {
+                LOGE("Deep copy random value failed, ret = %d", ret);
                 UnlockHcMutex(&g_lightSessionMutex);
-                return ret;
+                return HC_ERR_MEMORY_COPY;
             }
             char *tempServiceId = NULL;
-            ret = CopyLightSessionValue((uint8_t *)entry->session->serviceId,
-                (uint32_t)HcStrlen(entry->session->serviceId) + 1, (uint8_t **) &tempServiceId);
-            if (ret != HC_SUCCESS) {
-                HcFree(tempRandomVal);
-                LOGE("Copy serviceId failed.");
+            ret = DeepCopyString(entry->session->serviceId, &tempServiceId);
+            if (ret != CLIB_SUCCESS) {
+                LOGE("Deep copy service id failed, ret = %d", ret);
+                FreeUint8Buff(&tempRandomVal);
                 UnlockHcMutex(&g_lightSessionMutex);
-                return ret;
+                return HC_ERR_MEMORY_COPY;
             }
-            LOGI("Light session found. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %" LOG_PUB "d",
-                requestId, osAccountId);
-            *randomLen = entry->session->randomLen;
-            *randomVal = tempRandomVal;
+            *randomLen = tempRandomVal.len;
+            *randomVal = tempRandomVal.val;
             *serviceId = tempServiceId;
             UnlockHcMutex(&g_lightSessionMutex);
             return HC_SUCCESS;
