@@ -162,8 +162,8 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
             continue;
         }
         if (requestId == entry->session->requestId && osAccountId == entry->session->osAccountId) {
-            Uint8Buff sessionRandom = {entry->session->randomVal, entry->session->randomLen};
-            Uint8Buff tempRandomVal = {NULL, 0};
+            Uint8Buff sessionRandom = { entry->session->randomVal, entry->session->randomLen };
+            Uint8Buff tempRandomVal = { NULL, 0 };
             int32_t ret = DeepCopyUint8Buff(&sessionRandom, &tempRandomVal);
             if (ret != CLIB_SUCCESS) {
                 LOGE("Deep copy random value failed");
