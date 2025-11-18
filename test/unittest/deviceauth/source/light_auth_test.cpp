@@ -27,6 +27,7 @@
 #include "hc_dev_info.h"
 #include "hc_types.h"
 #include "base/security/device_auth/services/device_auth.c"
+#include "mini_session_manager.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -290,4 +291,84 @@ HWTEST_F(LaInterfaceTest, LaInterfaceTest004, TestSize.Level0)
     EXPECT_NE(ret, HC_SUCCESS);
 }
 
+class MiniSessionManagerTest  : public testing::Test {
+public:
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
+};
+
+void MiniSessionManagerTest::SetUpTestCase(void)
+{
+    // input testsuit setup step，setup invoked before all testcases
+}
+
+void MiniSessionManagerTest::TearDownTestCase(void)
+{
+    // input testsuit teardown step，teardown invoked after all testcases
+}
+
+void MiniSessionManagerTest::SetUp(void)
+{
+   int32_t ret = InitLightSessionManager();
+   ASSERT_NE(ret, HC_SUCCESS);
+}
+
+void MiniSessionManagerTest::TearDown(void)
+{
+    DestroyLightSessionManager();
+}
+
+HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest001, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    const char *testMsg = "testMsg";
+    DataBuff testBuff = {(uint8_t *)testMsg, strlen(testMsg) + 1};
+    ret = AddLightSession(123456, 100, "serviceId", testBuff);
+    char *serviceId = nullptr;
+    uint8_t *randomVal = nullptr;
+    uint32_t randomLen = 0;
+    ret = QueryLightSession(123456, 100, &randomVal, &randomLen, &serviceId);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest002, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    const char *testMsg = "testMsg";
+    DataBuff testBuff = {(uint8_t *)testMsg, strlen(testMsg) + 1};
+    ret = AddLightSession(54321, 100, "serviceId", testBuff);
+    char *serviceId = nullptr;
+    uint8_t *randomVal = nullptr;
+    uint32_t randomLen = 0;
+    ret = QueryLightSession(123456, 100, &randomVal, &randomLen, &serviceId);
+    EXPECT_EQ(ret, HC_ERR_SESSION_NOT_EXIST);
+}
+
+HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest003, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    const char *testMsg = "testMsg";
+    DataBuff testBuff = {(uint8_t *)testMsg, strlen(testMsg) + 1};
+    ret = AddLightSession(123456, 100, "error", testBuff);
+    char *serviceId = nullptr;
+    uint8_t *randomVal = nullptr;
+    uint32_t randomLen = 0;
+    ret = QueryLightSession(123456, 100, &randomVal, &randomLen, &serviceId);
+    EXPECT_EQ(ret, HC_ERR_MEMORY_COPY);
+}
+
+HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest004, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    const char *testMsg = "error";
+    DataBuff testBuff = {(uint8_t *)testMsg, strlen(testMsg) + 1};
+    ret = AddLightSession(123456, 100, "serviceId", testBuff);
+    char *serviceId = nullptr;
+    uint8_t *randomVal = nullptr;
+    uint32_t randomLen = 0;
+    ret = QueryLightSession(123456, 100, &randomVal, &randomLen, &serviceId);
+    EXPECT_EQ(ret, HC_ERR_MEMORY_COPY);
+}
 }

@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "mini_session_manager.h"
 #include "common_defs.h"
-
 #include "device_auth.h"
 #include "device_auth_defines.h"
 #include "hc_dev_info.h"
@@ -28,7 +28,6 @@
 #include "pseudonym_manager.h"
 #include "security_label_adapter.h"
 #include "account_task_manager.h"
-#include "mini_session_manager.h"
 #include "hc_time.h"
 #include "string_util.h"
 #include "uint8buff_utils.h"
