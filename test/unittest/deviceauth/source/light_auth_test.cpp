@@ -311,8 +311,8 @@ void MiniSessionManagerTest::TearDownTestCase(void)
 
 void MiniSessionManagerTest::SetUp(void)
 {
-   int32_t ret = InitLightSessionManager();
-   ASSERT_NE(ret, HC_SUCCESS);
+    int32_t ret = InitLightSessionManager();
+    ASSERT_EQ(ret, HC_SUCCESS);
 }
 
 void MiniSessionManagerTest::TearDown(void)

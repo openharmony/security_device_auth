@@ -124,9 +124,6 @@ int32_t DeepCopyString(const char *str, char **newStr)
         return CLIB_ERR_NULL_PTR;
     }
     if (str == NULL || newStr == NULL) {
-        
-    }
-    if (str == NULL || newStr == NULL) {
         return CLIB_ERR_NULL_PTR;
     }
     uint32_t len = HcStrlen(str);
@@ -137,7 +134,10 @@ int32_t DeepCopyString(const char *str, char **newStr)
     if (val == NULL) {
         return CLIB_ERR_BAD_ALLOC;
     }
-    (void)memcpy_s(val, len, str, len);
+    if (memcpy_s(val, len, str, len) != EOK) {
+        HcFree(val);
+        return CLIB_ERR_BAD_ALLOC;
+    };
     *newStr = val;
     return CLIB_SUCCESS;
 }
