@@ -29,6 +29,7 @@
 #define MIN_ANONYMOUS_LEN 12
 #define ANONYMOUS_ASTERISK_LEN 2
 #define ANONYMOUS_DIVIDER 2
+#define ERROR_MOCK "error"
 
 static char HexToChar(uint8_t hex)
 {
@@ -120,11 +121,10 @@ int32_t ToUpperCase(const char *oriStr, char **desStr)
 
 int32_t DeepCopyString(const char *str, char **newStr)
 {
-    static const char *ERROR = "error";
     if (str == NULL || newStr == NULL) {
         return CLIB_ERR_NULL_PTR;
     }
-    if (IsStrEqual(str, ERROR)) {
+    if (IsStrEqual(str, ERROR_MOCK)) {
         return CLIB_ERR_NULL_PTR;
     }
     uint32_t len = HcStrlen(str);

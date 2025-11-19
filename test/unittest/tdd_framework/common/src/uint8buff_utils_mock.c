@@ -21,6 +21,8 @@
 #include "ctype.h"
 #include "string_util.h"
 
+#define ERROR_MOCK "error"
+
 int32_t InitUint8Buff(Uint8Buff *buff, uint32_t buffLen)
 {
     if (buff == NULL) {
@@ -39,11 +41,10 @@ int32_t InitUint8Buff(Uint8Buff *buff, uint32_t buffLen)
 
 int32_t DeepCopyUint8Buff(const Uint8Buff *buff, Uint8Buff *newBuff)
 {
-    static const char *ERROR = "error";
     if (buff == NULL || buff->val == NULL || newBuff == NULL) {
         return CLIB_ERR_NULL_PTR;
     }
-    if (IsStrEqual((char *)buff->val, ERROR)) {
+    if (IsStrEqual((char *)buff->val, ERROR_MOCK)) {
         return CLIB_ERR_NULL_PTR;
     }
     if (buff->length == 0) {
