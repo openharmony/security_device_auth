@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -120,10 +120,11 @@ int32_t ToUpperCase(const char *oriStr, char **desStr)
 
 int32_t DeepCopyString(const char *str, char **newStr)
 {
-    if (IsStrEqual(str, "error")) {
+    static const char *ERROR = "error";
+    if (str == NULL || newStr == NULL) {
         return CLIB_ERR_NULL_PTR;
     }
-    if (str == NULL || newStr == NULL) {
+    if (IsStrEqual(str, ERROR)) {
         return CLIB_ERR_NULL_PTR;
     }
     uint32_t len = HcStrlen(str);

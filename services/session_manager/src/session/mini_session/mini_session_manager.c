@@ -31,7 +31,6 @@
 #include "hc_time.h"
 #include "string_util.h"
 #include "uint8buff_utils.h"
-#include "clib_error.h"
 
 #define TIME_OUT_VALUE_LIGHT_AUTH 300
 #define MAX_SESSION_NUM_LIGHT_AUTH 30
@@ -162,23 +161,23 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
         }
         if (requestId == entry->session->requestId && osAccountId == entry->session->osAccountId) {
             Uint8Buff sessionRandom = { entry->session->randomVal, entry->session->randomLen };
-            Uint8Buff tempRandomVal = { NULL, 0 };
-            int32_t ret = DeepCopyUint8Buff(&sessionRandom, &tempRandomVal);
-            if (ret != CLIB_SUCCESS) {
+            Uint8Buff tempRandomBuff = { NULL, 0 };
+            int32_t ret = DeepCopyUint8Buff(&sessionRandom, &tempRandomBuff);
+            if (ret != HC_SUCCESS) {
                 LOGE("Deep copy random value failed");
                 UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
             }
             char *tempServiceId = NULL;
             ret = DeepCopyString(entry->session->serviceId, &tempServiceId);
-            if (ret != CLIB_SUCCESS) {
+            if (ret != HC_SUCCESS) {
                 LOGE("Deep copy service id failed");
-                FreeUint8Buff(&tempRandomVal);
+                FreeUint8Buff(&tempRandomBuff);
                 UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
             }
-            *randomLen = tempRandomVal.length;
-            *randomVal = tempRandomVal.val;
+            *randomLen = tempRandomBuff.length;
+            *randomVal = tempRandomBuff.val;
             *serviceId = tempServiceId;
             UnlockHcMutex(&g_lightSessionMutex);
             return HC_SUCCESS;

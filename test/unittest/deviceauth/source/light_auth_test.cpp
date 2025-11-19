@@ -68,6 +68,10 @@ static const char *OUT_DATA =
 
 static const char *SERVICE_ID = "testServiceID";
 
+static const char *ERROR_SERVICE_ID = "error";
+
+static const char *ERROR_MESSAGE = "error";
+
 static bool OnLightTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
 {
     (void)requestId;
@@ -323,52 +327,48 @@ void MiniSessionManagerTest::TearDown(void)
 HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest001, TestSize.Level0)
 {
     int32_t ret = HC_SUCCESS;
-    const char *testMsg = "testMsg";
-    DataBuff testBuff = {(uint8_t *)testMsg, strlen(testMsg) + 1};
-    ret = AddLightSession(123456, 100, "serviceId", testBuff);
+    DataBuff testBuff = { (uint8_t *)TEST_LIGHT_MSG, strlen(TEST_LIGHT_MSG) + 1 };
+    ret = AddLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, SERVICE_ID, testBuff);
     char *serviceId = nullptr;
     uint8_t *randomVal = nullptr;
     uint32_t randomLen = 0;
-    ret = QueryLightSession(123456, 100, &randomVal, &randomLen, &serviceId);
+    ret = QueryLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, &randomVal, &randomLen, &serviceId);
     EXPECT_EQ(ret, HC_SUCCESS);
 }
 
 HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest002, TestSize.Level0)
 {
     int32_t ret = HC_SUCCESS;
-    const char *testMsg = "testMsg";
-    DataBuff testBuff = {(uint8_t *)testMsg, strlen(testMsg) + 1};
-    ret = AddLightSession(54321, 100, "serviceId", testBuff);
+    DataBuff testBuff = { (uint8_t *)TEST_LIGHT_MSG, strlen(TEST_LIGHT_MSG) + 1 };
+    ret = AddLightSession(TEST_REQ_ID2, TEST_OS_ACCOUNT_ID, SERVICE_ID, testBuff);
     char *serviceId = nullptr;
     uint8_t *randomVal = nullptr;
     uint32_t randomLen = 0;
-    ret = QueryLightSession(123456, 100, &randomVal, &randomLen, &serviceId);
+    ret = QueryLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, &randomVal, &randomLen, &serviceId);
     EXPECT_EQ(ret, HC_ERR_SESSION_NOT_EXIST);
 }
 
 HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest003, TestSize.Level0)
 {
     int32_t ret = HC_SUCCESS;
-    const char *testMsg = "testMsg";
-    DataBuff testBuff = {(uint8_t *)testMsg, strlen(testMsg) + 1};
-    ret = AddLightSession(123456, 100, "error", testBuff);
+    DataBuff testBuff = { (uint8_t *)TEST_LIGHT_MSG, strlen(TEST_LIGHT_MSG) + 1 };
+    ret = AddLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, ERROR_SERVICE_ID, testBuff);
     char *serviceId = nullptr;
     uint8_t *randomVal = nullptr;
     uint32_t randomLen = 0;
-    ret = QueryLightSession(123456, 100, &randomVal, &randomLen, &serviceId);
+    ret = QueryLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, &randomVal, &randomLen, &serviceId);
     EXPECT_EQ(ret, HC_ERR_MEMORY_COPY);
 }
 
 HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest004, TestSize.Level0)
 {
     int32_t ret = HC_SUCCESS;
-    const char *testMsg = "error";
-    DataBuff testBuff = {(uint8_t *)testMsg, strlen(testMsg) + 1};
-    ret = AddLightSession(123456, 100, "serviceId", testBuff);
+    DataBuff testBuff = { (uint8_t *)ERROR_MESSAGE, strlen(ERROR_MESSAGE) + 1 };
+    ret = AddLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, SERVICE_ID, testBuff);
     char *serviceId = nullptr;
     uint8_t *randomVal = nullptr;
     uint32_t randomLen = 0;
-    ret = QueryLightSession(123456, 100, &randomVal, &randomLen, &serviceId);
+    ret = QueryLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, &randomVal, &randomLen, &serviceId);
     EXPECT_EQ(ret, HC_ERR_MEMORY_COPY);
 }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,10 +39,11 @@ int32_t InitUint8Buff(Uint8Buff *buff, uint32_t buffLen)
 
 int32_t DeepCopyUint8Buff(const Uint8Buff *buff, Uint8Buff *newBuff)
 {
-    if (IsStrEqual((char *)buff->val, "error")) {
+    static const char *ERROR = "error";
+    if (buff == NULL || buff->val == NULL || newBuff == NULL) {
         return CLIB_ERR_NULL_PTR;
     }
-    if (buff == NULL || buff->val == NULL || newBuff == NULL) {
+    if (IsStrEqual((char *)buff->val, ERROR)) {
         return CLIB_ERR_NULL_PTR;
     }
     if (buff->length == 0) {
