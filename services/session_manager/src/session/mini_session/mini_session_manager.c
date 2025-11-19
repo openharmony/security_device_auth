@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "mini_session_manager.h"
 #include "common_defs.h"
-
 #include "device_auth.h"
 #include "device_auth_defines.h"
 #include "hc_dev_info.h"
@@ -28,8 +28,9 @@
 #include "pseudonym_manager.h"
 #include "security_label_adapter.h"
 #include "account_task_manager.h"
-#include "mini_session_manager.h"
 #include "hc_time.h"
+#include "string_util.h"
+#include "uint8buff_utils.h"
 
 #define TIME_OUT_VALUE_LIGHT_AUTH 300
 #define MAX_SESSION_NUM_LIGHT_AUTH 30
@@ -159,37 +160,25 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
             continue;
         }
         if (requestId == entry->session->requestId && osAccountId == entry->session->osAccountId) {
-            *randomLen = entry->session->randomLen;
-            *randomVal = (uint8_t *)HcMalloc(entry->session->randomLen, 0);
-            if (*randomVal == NULL) {
-                LOGE("Malloc randomVal failed.");
+            Uint8Buff sessionRandom = { entry->session->randomVal, entry->session->randomLen };
+            Uint8Buff tempRandomBuff = { NULL, 0 };
+            int32_t ret = DeepCopyUint8Buff(&sessionRandom, &tempRandomBuff);
+            if (ret != HC_SUCCESS) {
+                LOGE("Deep copy random value failed");
                 UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
             }
-            if (memcpy_s(*randomVal, entry->session->randomLen, entry->session->randomVal,
-                entry->session->randomLen) != EOK) {
-                HcFree(*randomVal);
-                LOGE("Copy randomVal failed.");
+            char *tempServiceId = NULL;
+            ret = DeepCopyString(entry->session->serviceId, &tempServiceId);
+            if (ret != HC_SUCCESS) {
+                LOGE("Deep copy service id failed");
+                FreeUint8Buff(&tempRandomBuff);
                 UnlockHcMutex(&g_lightSessionMutex);
                 return HC_ERR_MEMORY_COPY;
             }
-            uint32_t serviceIdLen = (uint32_t)HcStrlen(entry->session->serviceId) + 1;
-            *serviceId = (char *)HcMalloc(serviceIdLen, 0);
-            if (*serviceId == NULL) {
-                HcFree(*randomVal);
-                LOGE("Malloc serviceId failed.");
-                UnlockHcMutex(&g_lightSessionMutex);
-                return HC_ERR_MEMORY_COPY;
-            }
-            if (memcpy_s(*serviceId, serviceIdLen, entry->session->serviceId, serviceIdLen) != EOK) {
-                HcFree(*randomVal);
-                HcFree(*serviceId);
-                LOGE("Copy serviceId failed.");
-                UnlockHcMutex(&g_lightSessionMutex);
-                return HC_ERR_MEMORY_COPY;
-            }
-            LOGI("Light session found. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %" LOG_PUB "d",
-                requestId, osAccountId);
+            *randomLen = tempRandomBuff.length;
+            *randomVal = tempRandomBuff.val;
+            *serviceId = tempServiceId;
             UnlockHcMutex(&g_lightSessionMutex);
             return HC_SUCCESS;
         }

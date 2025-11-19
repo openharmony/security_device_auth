@@ -797,6 +797,16 @@ ohos_unittest("light_auth_test") {
   sources += identity_manager_files
   include_dirs += identity_manager_inc
 
+  sources -= [
+    "${common_lib_path}/impl/src/string_util.c",
+    "${common_lib_path}/impl/src/uint8buff_utils.c"
+  ]
+
+  sources += [
+    "//base/security/device_auth/test/unittest/tdd_framework/common/src/string_util_mock.c",
+    "//base/security/device_auth/test/unittest/tdd_framework/common/src/uint8buff_utils_mock.c",
+  ]
+
   sources += [
     "source/light_auth_test.cpp",
   ]

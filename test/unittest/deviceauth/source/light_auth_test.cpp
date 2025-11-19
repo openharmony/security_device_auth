@@ -27,6 +27,7 @@
 #include "hc_dev_info.h"
 #include "hc_types.h"
 #include "base/security/device_auth/services/device_auth.c"
+#include "mini_session_manager.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -66,6 +67,10 @@ static const char *OUT_DATA =
 "\"peerUserId\": \"12345678901234567\"}";
 
 static const char *SERVICE_ID = "testServiceID";
+
+static const char *ERROR_SERVICE_ID = "error";
+
+static const char *ERROR_MESSAGE = "error";
 
 static bool OnLightTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
 {
@@ -290,4 +295,80 @@ HWTEST_F(LaInterfaceTest, LaInterfaceTest004, TestSize.Level0)
     EXPECT_NE(ret, HC_SUCCESS);
 }
 
+class MiniSessionManagerTest  : public testing::Test {
+public:
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
+};
+
+void MiniSessionManagerTest::SetUpTestCase(void)
+{
+    // input testsuit setup step，setup invoked before all testcases
+}
+
+void MiniSessionManagerTest::TearDownTestCase(void)
+{
+    // input testsuit teardown step，teardown invoked after all testcases
+}
+
+void MiniSessionManagerTest::SetUp(void)
+{
+    int32_t ret = InitLightSessionManager();
+    ASSERT_EQ(ret, HC_SUCCESS);
+}
+
+void MiniSessionManagerTest::TearDown(void)
+{
+    DestroyLightSessionManager();
+}
+
+HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest001, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    DataBuff testBuff = { (uint8_t *)TEST_LIGHT_MSG, strlen(TEST_LIGHT_MSG) + 1 };
+    ret = AddLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, SERVICE_ID, testBuff);
+    char *serviceId = nullptr;
+    uint8_t *randomVal = nullptr;
+    uint32_t randomLen = 0;
+    ret = QueryLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, &randomVal, &randomLen, &serviceId);
+    EXPECT_EQ(ret, HC_SUCCESS);
+}
+
+HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest002, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    DataBuff testBuff = { (uint8_t *)TEST_LIGHT_MSG, strlen(TEST_LIGHT_MSG) + 1 };
+    ret = AddLightSession(TEST_REQ_ID2, TEST_OS_ACCOUNT_ID, SERVICE_ID, testBuff);
+    char *serviceId = nullptr;
+    uint8_t *randomVal = nullptr;
+    uint32_t randomLen = 0;
+    ret = QueryLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, &randomVal, &randomLen, &serviceId);
+    EXPECT_EQ(ret, HC_ERR_SESSION_NOT_EXIST);
+}
+
+HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest003, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    DataBuff testBuff = { (uint8_t *)TEST_LIGHT_MSG, strlen(TEST_LIGHT_MSG) + 1 };
+    ret = AddLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, ERROR_SERVICE_ID, testBuff);
+    char *serviceId = nullptr;
+    uint8_t *randomVal = nullptr;
+    uint32_t randomLen = 0;
+    ret = QueryLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, &randomVal, &randomLen, &serviceId);
+    EXPECT_EQ(ret, HC_ERR_MEMORY_COPY);
+}
+
+HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest004, TestSize.Level0)
+{
+    int32_t ret = HC_SUCCESS;
+    DataBuff testBuff = { (uint8_t *)ERROR_MESSAGE, strlen(ERROR_MESSAGE) + 1 };
+    ret = AddLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, SERVICE_ID, testBuff);
+    char *serviceId = nullptr;
+    uint8_t *randomVal = nullptr;
+    uint32_t randomLen = 0;
+    ret = QueryLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, &randomVal, &randomLen, &serviceId);
+    EXPECT_EQ(ret, HC_ERR_MEMORY_COPY);
+}
 }
