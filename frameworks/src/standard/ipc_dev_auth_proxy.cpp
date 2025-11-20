@@ -148,7 +148,9 @@ sptr<ProxyDevAuth> ProxyDevAuthData::GetProxy() const
         return nullptr;
     }
 
-    return iface_cast<ProxyDevAuth>(daSa);
+    auto interface = iface_cast<IMethodsIpcCall>(daSa);
+    // Objects obtained across processes must be proxy.
+    return static_cast<ProxyDevAuth *>(interface.GetRefPtr());
 }
 
 int32_t ProxyDevAuthData::ActCall(bool withSync)
