@@ -59,6 +59,7 @@
 #define FIELD_EX_AUTH_INFO "exAuthInfo"
 #define FIELD_EXPIRE_TIME "expireTime"
 #define FIELD_ERROR_CODE "errorCode"
+#define FIELD_ERROR_INFO "errorInfo"
 #define FIELD_GROUP_INFO "groupInfo"
 #define FIELD_GROUP_MANAGERS "groupManagers"
 #define FIELD_GROUP_NAME "groupName"

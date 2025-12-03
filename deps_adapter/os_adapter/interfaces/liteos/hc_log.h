@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,21 +18,16 @@
 
 #include <inttypes.h>
 #include "log.h"
+#include "hc_err_trace.h"
 
 #define LOGD(fmt, ...) HILOG_DEBUG(HILOG_MODULE_SCY, fmt, ##__VA_ARGS__)
 #define LOGI(fmt, ...) HILOG_INFO(HILOG_MODULE_SCY, fmt, ##__VA_ARGS__)
 #define LOGW(fmt, ...) HILOG_WARN(HILOG_MODULE_SCY, fmt, ##__VA_ARGS__)
 #define LOGE(fmt, ...) HILOG_ERROR(HILOG_MODULE_SCY, fmt, ##__VA_ARGS__)
 
-typedef enum {
-    NORMAL_MODE = 0,
-    TRACE_MODE = 1,
-} LogMode;
+#define PRINT_ERR_TRACE()
 
 #define LOG_PUB ""
-
-#define SET_LOG_MODE(mode)
-#define SET_TRACE_ID(traceId)
 
 #define DESENSITIZATION_LEN 12
 #define DEV_AUTH_ZERO 0

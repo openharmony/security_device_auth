@@ -704,7 +704,6 @@ int32_t IpcServiceGmGetRelatedGroups(const IpcDataInfo *ipcParams, int32_t param
     }
     callRet = g_devGroupMgrMethod.getRelatedGroups(osAccountId, appId, peerUdid, &outGroups, &groupNum);
     (void)ExecuteAccountAuthCmd(osAccountId, CHECK_CE_DATA, NULL, NULL);
-
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM,
                               (const uint8_t *)&IPC_RESULT_NUM_2, sizeof(int32_t));

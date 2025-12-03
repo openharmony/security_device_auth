@@ -21,6 +21,7 @@
 #include "common_defs.h"
 #include "ext_plugin_manager.h"
 #include "group_data_manager.h"
+#include "operation_data_manager.h"
 #include "dev_auth_module_manager.h"
 #include "dev_session_mgr.h"
 #include "group_manager.h"
@@ -60,6 +61,16 @@ static LightAccountVerifier *g_lightAccountVerifierInstance = NULL;
 static CredManager *g_credManager = NULL;
 static CredAuthManager *g_credAuthManager = NULL;
 
+#define RETURN_IF_INIT_FAILED(res, initFunc, cleanFlag) \
+    do { \
+        if (((res) = (initFunc)() != HC_SUCCESS)) { \
+            LOGE("[End]: [Service]: " #initFunc "Failed"); \
+            CleanAllModules((cleanFlag)); \
+            return (res); \
+        } \
+    } while (0)
+
+#define CLEAN_NONE 0
 #define CLEAN_CRED 1
 #define CLEAN_MODULE 2
 #define CLEAN_CALLBACK 3
@@ -68,6 +79,7 @@ static CredAuthManager *g_credAuthManager = NULL;
 #define CLEAN_ALL 6
 #define CLEAN_LIGHT_SESSION_MANAGER 7
 #define CLEAN_DEVSESSION 8
+#define CLEAN_TASK_MANAGER 9
 
 #define RETURN_RANDOM_LEN 16
 #define RETURN_KEY_LEN 32
@@ -161,7 +173,7 @@ static int32_t BuildP2PBindContext(CJson *context)
 static int32_t AuthDeviceInner(int32_t osAccountId, int64_t authReqId, const char *authParams,
     const DeviceAuthCallback *gaCallback, char **returnPeerUdid)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(authReqId);
     ADD_PERFORM_DATA(authReqId, false, true, HcGetCurTimeInMillis());
     osAccountId = DevAuthGetRealOsAccountLocalId(osAccountId);
@@ -424,7 +436,7 @@ static int32_t OpenServerAuthSessionForP2P(
 static int32_t ProcessDataInner(int64_t authReqId, const uint8_t *data, uint32_t dataLen,
     const DeviceAuthCallback *gaCallback, char **returnPeerUdid)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(authReqId);
     if (!IsSessionExist(authReqId)) {
         ADD_PERFORM_DATA(authReqId, false, false, HcGetCurTimeInMillis());
@@ -523,7 +535,7 @@ static int32_t OpenServerCredSession(int64_t requestId, const CJson *receivedMsg
 static int32_t AuthCredentialInner(int32_t osAccountId, int64_t authReqId, const char *authParams,
     const DeviceAuthCallback *caCallback, char **returnPeerUdid)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(authReqId);
     ADD_PERFORM_DATA(authReqId, false, true, HcGetCurTimeInMillis());
     LOGI("Begin AuthCredential. [ReqId]: %" LOG_PUB PRId64 ", [OsAccountId]: %" LOG_PUB "d", authReqId, osAccountId);
@@ -575,7 +587,7 @@ int32_t AuthCredential(int32_t osAccountId, int64_t authReqId, const char *authP
 static int32_t ProcessCredDataInner(int64_t authReqId, const uint8_t *data, uint32_t dataLen,
     const DeviceAuthCallback *caCallback, char **returnPeerUdid)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(authReqId);
     if (!IsSessionExist(authReqId)) {
         ADD_PERFORM_DATA(authReqId, false, false, HcGetCurTimeInMillis());
@@ -629,7 +641,7 @@ static int32_t ProcessCredData(int64_t authReqId, const uint8_t *data, uint32_t 
 
 static void CancelRequest(int64_t requestId, const char *appId)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(requestId);
     DEV_AUTH_REPORT_UE_CALL_EVENT_BY_PARAMS(DEFAULT_OS_ACCOUNT, NULL, appId, CANCEL_REQUEST_EVENT);
     if (appId == NULL) {
@@ -706,7 +718,7 @@ DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const ch
 DEVICE_AUTH_API_PUBLIC int32_t ProcessAuthDevice(
     int64_t authReqId, const char *authParams, const DeviceAuthCallback *callback)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(authReqId);
     LOGI("[DA] Begin ProcessAuthDevice [ReqId]: %" LOG_PUB PRId64, authReqId);
     if (authParams == NULL || HcStrlen(authParams) > MAX_DATA_BUFFER_SIZE) {
@@ -749,7 +761,7 @@ DEVICE_AUTH_API_PUBLIC int32_t ProcessAuthDevice(
 DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
     int64_t authReqId, const char *authParams, const DeviceAuthCallback *callback)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(authReqId);
     LOGI("StartAuthDevice. [ReqId]:%" LOG_PUB PRId64, authReqId);
 
@@ -800,7 +812,7 @@ DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
 
 DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *authParams)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(requestId);
     if (authParams == NULL || HcStrlen(authParams) > MAX_DATA_BUFFER_SIZE) {
         LOGE("Invalid authParams!");
@@ -918,30 +930,32 @@ static void DestroyCa(void)
 
 static void CleanAllModules(int32_t type)
 {
-    switch (type) {
-        case CLEAN_ALL:
-            DestroyTaskManager();
-        // fallthrough
-        case CLEAN_DEVSESSION:
-            DestroyDevSessionManager();
-        // fallthrough
-        case CLEAN_IDENTITY_SERVICE:
-            DestroyIdentityService();
-        // fallthrough
-        case CLEAN_GROUP_MANAGER:
-            DestroyGroupManager();
-        // fallthrough
-        case CLEAN_CALLBACK:
-            DestroyCallbackManager();
-        // fallthrough
-        case CLEAN_MODULE:
-            DestroyModules();
-        // fallthrough
-        case CLEAN_CRED:
-            DestroyCredMgr();
-        // fallthrough
-        default:
-            break;
+    typedef struct {
+        int32_t cleanType;
+        void (*cleanFunc)(void);
+    } CleanOperation;
+
+    CleanOperation cleanOps[] = {
+        { CLEAN_ALL, DestroyLightSessionManager },
+        { CLEAN_TASK_MANAGER, DestroyTaskManager },
+        { CLEAN_DEVSESSION, DestroyDevSessionManager },
+        { CLEAN_IDENTITY_SERVICE, DestroyIdentityService },
+        { CLEAN_GROUP_MANAGER, DestroyGroupManager },
+        { CLEAN_CALLBACK, DestroyCallbackManager },
+        { CLEAN_MODULE, DestroyModules },
+        { CLEAN_CRED, DestroyCredMgr }
+    };
+
+    bool startClean = false;
+    size_t cleanOpsCount = sizeof(cleanOps) / sizeof(cleanOps[0]);
+
+    for (size_t i = 0; i < cleanOpsCount; i++) {
+        if (type == cleanOps[i].cleanType) {
+            startClean = true;
+        }
+        if (startClean) {
+            cleanOps[i].cleanFunc();
+        }
     }
 }
 
@@ -952,48 +966,16 @@ static int32_t InitAllModules(void)
         LOGE("[End]: [Service]: Failed to init algorithm module!");
         return res;
     }
-    do {
-        if ((res = InitCredMgr()) != HC_SUCCESS) {
-            LOGE("[End]: [Service]: Failed to init cred mgr!");
-            break;
-        }
-        if ((res = InitModules()) != HC_SUCCESS) {
-            LOGE("[End]: [Service]: Failed to init all authenticator modules!");
-            CleanAllModules(CLEAN_CRED);
-            break;
-        }
-        if ((res = InitCallbackManager()) != HC_SUCCESS) {
-            LOGE("[End]: [Service]: Failed to init callback manage module!");
-            CleanAllModules(CLEAN_MODULE);
-            break;
-        }
-        if ((res = InitGroupManager()) != HC_SUCCESS) {
-            LOGE("[End]: [Service]: Failed to init group manage module!");
-            CleanAllModules(CLEAN_CALLBACK);
-            break;
-        }
-        if ((res = InitIdentityService()) != HC_SUCCESS) {
-            LOGE("[End]: [Service]: Failed to init IS module!");
-            CleanAllModules(CLEAN_GROUP_MANAGER);
-            break;
-        }
-        if ((res = InitDevSessionManager()) != HC_SUCCESS) {
-            LOGE("[End]: [Service]: Failed to init dev session manager module!");
-            CleanAllModules(CLEAN_IDENTITY_SERVICE);
-            break;
-        }
-        (void)InitGroupAuthManager();
-        if ((res = InitTaskManager()) != HC_SUCCESS) {
-            LOGE("[End]: [Service]: Failed to init worker thread!");
-            CleanAllModules(CLEAN_DEVSESSION);
-            break;
-        }
-        if ((res = InitLightSessionManager()) != HC_SUCCESS) {
-            LOGE("[End]: [Service]: Failed to init light session manager!");
-            CleanAllModules(CLEAN_ALL);
-            break;
-        }
-    } while (0);
+    RETURN_IF_INIT_FAILED(res, InitCredMgr, CLEAN_NONE);
+    RETURN_IF_INIT_FAILED(res, InitModules, CLEAN_CRED);
+    RETURN_IF_INIT_FAILED(res, InitCallbackManager, CLEAN_MODULE);
+    RETURN_IF_INIT_FAILED(res, InitGroupManager, CLEAN_CALLBACK);
+    RETURN_IF_INIT_FAILED(res, InitIdentityService, CLEAN_GROUP_MANAGER);
+    RETURN_IF_INIT_FAILED(res, InitDevSessionManager, CLEAN_IDENTITY_SERVICE);
+    (void)InitGroupAuthManager();
+    RETURN_IF_INIT_FAILED(res, InitTaskManager, CLEAN_DEVSESSION);
+    RETURN_IF_INIT_FAILED(res, InitLightSessionManager, CLEAN_TASK_MANAGER);
+    RETURN_IF_INIT_FAILED(res, InitOperationDataManager, CLEAN_ALL);
     return res;
 }
 
@@ -1053,6 +1035,7 @@ DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
         LOGI("[End]: [Service]: The service has not been initialized!");
         return;
     }
+    DestroyOperationDataManager();
     DestroyLightSessionManager();
     DestroyTaskManager();
     DestroyDevSessionManager();
@@ -1369,7 +1352,7 @@ static int32_t StartLightAccountAuthInner(int32_t osAccountId, int64_t requestId
 static int32_t StartLightAccountAuth(int32_t osAccountId, int64_t requestId, const char *serviceId,
     const DeviceAuthCallback *laCallBack)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(requestId);
     LOGI("StartLightAccountAuth. [ReqId]:%" LOG_PUB PRId64, requestId);
     if ((serviceId == NULL) || (laCallBack == NULL) || HcStrlen(serviceId) > MAX_DATA_BUFFER_SIZE) {
@@ -1852,7 +1835,7 @@ static int32_t ProcessLightAccountAuthInner(int32_t osAccountId, int64_t request
 static int32_t ProcessLightAccountAuth(int32_t osAccountId, int64_t requestId,
     DataBuff *inMsg, const DeviceAuthCallback *laCallBack)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(requestId);
 
     CJson *out = CreateJson();

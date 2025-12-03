@@ -25,7 +25,7 @@
 
 int32_t AddCredential(int32_t osAccountId, const char *requestParams, char **returnData)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
 
     if (requestParams == NULL || returnData == NULL) {
         LOGE("Failed to add credential, NULL params!");
@@ -47,7 +47,7 @@ int32_t AddCredential(int32_t osAccountId, const char *requestParams, char **ret
 
 int32_t ExportCredential(int32_t osAccountId, const char *credId, char **returnData)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
 
     if (credId == NULL || returnData == NULL) {
         LOGE("Failed to export credential, NULL params!");
@@ -69,7 +69,7 @@ int32_t ExportCredential(int32_t osAccountId, const char *credId, char **returnD
 
 int32_t QueryCredentialByParams(int32_t osAccountId, const char *requestParams, char **returnData)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
 
     if (requestParams == NULL || returnData == NULL) {
         LOGE("Failed to query credential by params, NULL params!");
@@ -98,7 +98,7 @@ int32_t QueryCredInfoByCredIdAndUid(int32_t osAccountId, int32_t uid, const char
 
 int32_t QueryCredInfoByCredId(int32_t osAccountId, const char *credId, char **returnData)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
 
     if (credId == NULL || returnData == NULL) {
         LOGE("Failed to query credential info by credId, NULL params!");
@@ -121,7 +121,7 @@ int32_t QueryCredInfoByCredId(int32_t osAccountId, const char *credId, char **re
 
 int32_t DeleteCredential(int32_t osAccountId, const char *credId)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
 
     if (credId == NULL) {
         LOGE("Failed to delete credential, NULL credId!");
@@ -144,7 +144,7 @@ int32_t DeleteCredential(int32_t osAccountId, const char *credId)
 
 int32_t DeleteCredByParams(int32_t osAccountId, const char *requestParams, char **returnData)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
 
     if (requestParams == NULL || returnData == NULL) {
         LOGE("Failed to batch delete credential, NULL params!");
@@ -166,7 +166,7 @@ int32_t DeleteCredByParams(int32_t osAccountId, const char *requestParams, char 
 
 int32_t UpdateCredInfo(int32_t osAccountId, const char *credId, const char *requestParams)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
 
     if (credId == NULL || requestParams == NULL) {
         LOGE("Failed to update credential, NULL params!");
@@ -189,7 +189,7 @@ int32_t UpdateCredInfo(int32_t osAccountId, const char *credId, const char *requ
 
 int32_t BatchUpdateCredentials(int32_t osAccountId, const char *requestParams, char **returnData)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
 
     if (requestParams == NULL || returnData == NULL) {
         LOGE("Failed to batch update credential, NULL params!");
@@ -211,7 +211,7 @@ int32_t BatchUpdateCredentials(int32_t osAccountId, const char *requestParams, c
 
 int32_t AgreeCredential(int32_t osAccountId, const char *selfCredId, const char *requestParams, char **returnData)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
 
     if (selfCredId == NULL || requestParams == NULL || returnData == NULL) {
         LOGE("Failed to agree credential, NULL params!");
@@ -234,15 +234,15 @@ int32_t AgreeCredential(int32_t osAccountId, const char *selfCredId, const char 
 
 int32_t RegisterChangeListener(const char *appId, CredChangeListener *listener)
 {
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
 
     return IsCredListenerSupported() ? RegCredListener(appId, listener) : HC_ERR_NOT_SUPPORT;
 }
 
 int32_t UnregisterChangeListener(const char *appId)
 {
-    SET_LOG_MODE(TRACE_MODE);
-    
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
+
     return IsCredListenerSupported() ? UnRegCredListener(appId) : HC_ERR_NOT_SUPPORT;
 }
 

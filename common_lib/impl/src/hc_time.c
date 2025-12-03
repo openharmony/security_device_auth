@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -64,6 +64,17 @@ int64_t HcGetIntervalTime(int64_t startTime)
         return -1;
     }
     return (end.tv_sec - startTime);
+}
+
+int64_t HcGetRealTime(void)
+{
+    struct timespec start;
+    int res = clock_gettime(CLOCK_REALTIME, &start);
+    if (res != 0) {
+        LOGE("[TIMER]: clock_time fail. [Res] :%" LOG_PUB "d", res);
+        return -1;
+    }
+    return start.tv_sec;
 }
 
 #ifdef __cplusplus

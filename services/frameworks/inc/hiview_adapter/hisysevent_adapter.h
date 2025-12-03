@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,6 +39,7 @@
 #define UPDATE_CREDENTIAL_INFO_EVENT "UpdateCredInfo"
 #define BATCH_UPDATE_CREDENTIALS_EVENT "BatchUpdateCredentials"
 #define AGREE_CREDENTIAL_EVENT "AgreeCredential"
+#define AUTH_IDENTITY_SERVICE_EVENT "AuthIdentityService"
 
 #define ADD_MEMBER_WITH_LITE_COMPATIBILITY "AddMemberWithLiteCompatibility"
 #define ADD_MEMBER_WITH_LITE_STANDARD "AddMemberWithLiteStandard"
@@ -55,7 +56,7 @@
 #define DEFAULT_MULTI_MEMBER_GROUP_TYPE 1
 #define DEFAULT_CRED_TYPE 0
 #define DEFAULT_CALL_RESULT 0
-#define DEFAULT_APPID NULL
+#define DEFAULT_APPID "unknown appId"
 
 #define DEFAULT_EXECUTION_TIME 0
 #define DEFAULT_REQ_ID 0
@@ -83,7 +84,8 @@ enum DevAuthReportProcessCode {
     PROCESS_DELETE_CREDENTIAL_BY_PARAMS,        //4111
     PROCESS_UPDATE_CREDENTIAL_INFO,             //4112
     PROCESS_BATCH_UPDATE_CREDENTIALS,           //4113
-    PROCESS_AGREE_CREDENTIAL                    //4114
+    PROCESS_AGREE_CREDENTIAL,                   //4114
+    PROCESS_AUTH_IDENTITY_SERVICE,              //4115
 };
 
 #define DEFAULT_PNAMEID "device_auth"

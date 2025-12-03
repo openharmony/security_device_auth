@@ -30,7 +30,7 @@
 
 namespace OHOS {
 static const uint32_t TEST_BUFFER_SIZE = 16;
-static const uint32_t TEST_MIN_ANONYMOUS_LEN = 12;
+static const uint32_t TEST_MIN_ANONYMOUS_LEN = 6;
 static const uint32_t TEST_LEN_TWO = 2;
 static const uint32_t TEST_INVALID_BUFFER_SIZE = 0;
 static const uint32_t TEST_LENGTH_ZERO = 0;
@@ -566,10 +566,10 @@ static void HcStringUtilTest004()
 {
     const char oriData[] = "abcd";
     char anonymousData[TEST_MIN_ANONYMOUS_LEN + TEST_LEN_TWO] = { 0 };
-    (void)GetAnonymousString(oriData, nullptr, TEST_MIN_ANONYMOUS_LEN + 1);
-    (void)GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN - 1);
-    (void)GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN + 1);
-    (void)GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN + TEST_LEN_TWO);
+    (void)GetAnonymousString(oriData, nullptr, TEST_MIN_ANONYMOUS_LEN + 1, true);
+    (void)GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN - 1, true);
+    (void)GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN + 1, true);
+    (void)GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN + TEST_LEN_TWO, true);
 }
 
 static void ParseTlvHeadTest001()

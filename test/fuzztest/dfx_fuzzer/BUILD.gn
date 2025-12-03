@@ -1,0 +1,83 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/security/device_auth/deps_adapter/deviceauth_hals.gni")
+import("//base/security/device_auth/services/deviceauth.gni")
+import("../../unittest/tdd_framework/tdd_framework.gni")
+
+#####################hydra-fuzz###################
+import("//build/config/features.gni")
+import("//build/ohos.gni")
+import("//build/test.gni")
+module_output_path = "device_auth/device_auth"
+
+##############################fuzztest##########################################
+ohos_fuzztest("DfxFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "${deviceauth_path}/test/fuzztest/dfx_fuzzer"
+
+  include_dirs = inc_path
+  include_dirs += hals_inc_path
+
+  include_dirs += [
+    ".",
+    "./include",
+    "./unit_test/include",
+    "../../unittest/deviceauth/include",
+    "${tdd_framework_path}/common/inc",
+    "${operation_data_manager_path}/inc",
+    "${dev_frameworks_path}/inc/hiview_adapter",
+  ]
+
+  sources = hal_common_files
+  sources += [
+    "${os_adapter_path}/impl/src/hc_err_trace.c",
+    "${os_adapter_path}/impl/src/hc_log.c",
+    "${os_adapter_path}/impl/src/linux/hc_file.c",
+    "../../unittest/deviceauth/source/os_account_adapter_mock.c",
+    "../../unittest/deviceauth/source/hc_dev_info_mock.c",
+  ]
+
+  sources += security_label_adapter_files
+  sources += broadcast_manager_files
+  sources += hiview_adapter_files
+
+  sources += [ "dfx_fuzzer.cpp" ]
+
+  defines = [
+    "DEV_AUTH_HIVIEW_ENABLE",
+  ]
+
+  cflags = [ "-DHILOG_ENABLE" ]
+
+  deps = []
+
+  external_deps = [
+    "cJSON:cjson",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+  ]
+}
+
+###############################################################################
+group("fuzztest") {
+  testonly = true
+  deps = []
+  deps += [
+    # deps file
+    ":DfxFuzzTest",
+  ]
+}
+###############################################################################
