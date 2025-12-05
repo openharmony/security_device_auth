@@ -918,30 +918,31 @@ static void DestroyCa(void)
 
 static void CleanAllModules(int32_t type)
 {
-    switch (type) {
-        case CLEAN_ALL:
-            DestroyTaskManager();
-        // fallthrough
-        case CLEAN_DEVSESSION:
-            DestroyDevSessionManager();
-        // fallthrough
-        case CLEAN_IDENTITY_SERVICE:
-            DestroyIdentityService();
-        // fallthrough
-        case CLEAN_GROUP_MANAGER:
-            DestroyGroupManager();
-        // fallthrough
-        case CLEAN_CALLBACK:
-            DestroyCallbackManager();
-        // fallthrough
-        case CLEAN_MODULE:
-            DestroyModules();
-        // fallthrough
-        case CLEAN_CRED:
-            DestroyCredMgr();
-        // fallthrough
-        default:
-            break;
+    typedef struct {
+        int32_t cleanType;
+        void (*cleanFunc)(void);
+    } CleanOperation;
+
+    CleanOperation cleanOps[] = {
+        { CLEAN_ALL, DestroyTaskManager },
+        { CLEAN_DEVSESSION, DestroyDevSessionManager },
+        { CLEAN_IDENTITY_SERVICE, DestroyIdentityService },
+        { CLEAN_GROUP_MANAGER, DestroyGroupManager },
+        { CLEAN_CALLBACK, DestroyCallbackManager },
+        { CLEAN_MODULE, DestroyModules },
+        { CLEAN_CRED, DestroyCredMgr }
+    };
+
+    bool startClean = false;
+    size_t cleanOpsCount = sizeof(cleanOps) / sizeof(cleanOps[0]);
+
+    for (size_t i = 0; i < cleanOpsCount; i++) {
+        if (type == cleanOps[i].cleanType) {
+            startClean = true;
+        }
+        if (startClean) {
+            cleanOps[i].cleanFunc();
+        }
     }
 }
 
