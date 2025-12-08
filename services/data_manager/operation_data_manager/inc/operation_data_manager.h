@@ -57,8 +57,6 @@ int32_t RecordOperationData(int32_t osAccountId, const Operation *operation);
 int32_t GetOperationDataRecently(int32_t osAccountId, DevAuthOperationType type, char *record,
     uint32_t recordSize, uint32_t maxOperationCnt);
 
-Operation *GetRecentOperation(int32_t osAccountId);
-
 int32_t InitOperationDataManager(void);
 void DestroyOperationDataManager(void);
 Operation *CreateOperationRecord(void);
