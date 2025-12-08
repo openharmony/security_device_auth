@@ -187,7 +187,7 @@ int32_t RegGroupManagerCallback(const char *appId, const DeviceAuthCallback *cal
 
 int32_t UnRegGroupManagerCallback(const char *appId)
 {
-    SET_LOG_MODE(NORMAL_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(NORMAL_MODE, true);
     if (appId == NULL) {
         LOGE("The input appId is NULL!");
         return HC_ERR_INVALID_PARAMS;

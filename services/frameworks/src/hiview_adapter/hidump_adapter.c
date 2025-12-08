@@ -20,6 +20,7 @@
 
 static DumpCallBack g_dumpCallBack = NULL;
 static CredDumpCallBack g_credDumpCallBack = NULL;
+static OperationDumpCallBack g_operationDumpCallBack = NULL;
 static PerformanceDumpCallBack g_performDumpCallback = NULL;
 
 static void DumpByArgs(int fd, StringVector *strArgVec)
@@ -29,6 +30,8 @@ static void DumpByArgs(int fd, StringVector *strArgVec)
         if (g_performDumpCallback != NULL) {
             g_performDumpCallback(fd, strArgVec);
         }
+    } else if (IsStrEqual(StringGet(&strArg), OPERATION_DUMP_ARG) && g_operationDumpCallBack != NULL) {
+        g_operationDumpCallBack(fd);
     } else {
         LOGE("Invalid dumper command!");
     }
@@ -60,6 +63,11 @@ void RegisterDumpFunc(DumpCallBack func)
 void RegisterCredDumpFunc(CredDumpCallBack func)
 {
     g_credDumpCallBack = func;
+}
+
+void RegisterOperationDumpFunc(OperationDumpCallBack func)
+{
+    g_operationDumpCallBack = func;
 }
 
 void RegisterPerformDumpFunc(PerformanceDumpCallBack func)

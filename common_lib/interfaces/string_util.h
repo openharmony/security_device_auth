@@ -23,6 +23,7 @@
 #define BYTE_TO_BASE64_DIVISOR 3
 #define BYTE_TO_BASE64_MULTIPLIER 4
 #define DEC 10
+#define DEFAULT_ANONYMOUS_LEN 6
 
 #ifndef DEV_AUTH_PRINT_DEBUG_MSG
 #define PRINT_DEBUG_MSG(msgBuff, msgLen, msgTag)
@@ -89,9 +90,10 @@ void PrintBuffer(const uint8_t *msgBuff, uint32_t msgLen, const char *msgTag);
  * @param originStr: the original string.
  * @param anonymousStr: the anonymous string.
  * @param anonymousLen: the anonymous string len.
+ * @param maskMiddle: whether to mask the middle.
  * @return success(0), otherwise, failure.
  */
-int32_t GetAnonymousString(const char *originStr, char *anonymousStr, uint32_t anonymousLen);
+int32_t GetAnonymousString(const char *originStr, char *anonymousStr, uint32_t anonymousLen, bool maskMiddle);
 
 /*
  * Safe compare two strings.

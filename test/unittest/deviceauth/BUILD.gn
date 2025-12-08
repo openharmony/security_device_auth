@@ -41,6 +41,7 @@ ohos_unittest("deviceauth_llt") {
     "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
+    "${os_adapter_path}/impl/src/hc_err_trace.c",
     "${os_adapter_path}/impl/src/hc_log.c",
     "${os_adapter_path}/impl/src/linux/hc_condition.c",
     "${os_adapter_path}/impl/src/linux/hc_file.c",
@@ -55,6 +56,7 @@ ohos_unittest("deviceauth_llt") {
   sources += deviceauth_common_files
   sources += sa_load_on_demand_mock_files
   sources += group_database_manager_files
+  sources += operation_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
   sources += session_mini_files
@@ -165,6 +167,7 @@ ohos_unittest("device_auth_func_test") {
     "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
+    "${os_adapter_path}/impl/src/hc_err_trace.c",
     "${os_adapter_path}/impl/src/hc_log.c",
     "${os_adapter_path}/impl/src/linux/hc_condition.c",
     "${os_adapter_path}/impl/src/linux/hc_file.c",
@@ -179,6 +182,7 @@ ohos_unittest("device_auth_func_test") {
   sources += deviceauth_common_files
   sources += sa_load_on_demand_mock_files
   sources += group_database_manager_files
+  sources += operation_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
   sources += session_mini_files
@@ -269,6 +273,7 @@ ohos_unittest("device_auth_func_test") {
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "huks:libhukssdk",
@@ -298,6 +303,7 @@ ohos_unittest("device_auth_identity_service_test") {
     "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
+    "${os_adapter_path}/impl/src/hc_err_trace.c",
     "${os_adapter_path}/impl/src/hc_log.c",
     "${os_adapter_path}/impl/src/linux/hc_condition.c",
     "${os_adapter_path}/impl/src/linux/hc_file.c",
@@ -310,6 +316,7 @@ ohos_unittest("device_auth_identity_service_test") {
   sources += dev_frameworks_files
   sources += deviceauth_common_files
   sources += group_database_manager_files
+  sources += operation_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
   sources += identity_service_files
@@ -434,6 +441,7 @@ ohos_unittest("device_auth_interface_test") {
     "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
+    "${os_adapter_path}/impl/src/hc_err_trace.c",
     "${os_adapter_path}/impl/src/hc_log.c",
     "${os_adapter_path}/impl/src/linux/hc_condition.c",
     "${os_adapter_path}/impl/src/linux/hc_file.c",
@@ -447,6 +455,7 @@ ohos_unittest("device_auth_interface_test") {
   sources += identity_service_mock_files
   sources += deviceauth_common_files
   sources += group_database_manager_files
+  sources += operation_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
   sources += session_mini_files
@@ -570,6 +579,7 @@ ohos_unittest("deviceauth_unit_test") {
     "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
+    "${os_adapter_path}/impl/src/hc_err_trace.c",
     "${os_adapter_path}/impl/src/hc_log.c",
     "${os_adapter_path}/impl/src/linux/hc_condition.c",
     "${os_adapter_path}/impl/src/linux/hc_file.c",
@@ -585,6 +595,7 @@ ohos_unittest("deviceauth_unit_test") {
   sources += deviceauth_common_files
   sources += sa_load_on_demand_mock_files
   sources += group_database_manager_files
+  sources += operation_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
   sources += session_mini_files
@@ -716,6 +727,7 @@ ohos_unittest("light_auth_test") {
     "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
+    "${os_adapter_path}/impl/src/hc_err_trace.c",
     "${os_adapter_path}/impl/src/hc_log.c",
     "${os_adapter_path}/impl/src/linux/hc_condition.c",
     "${os_adapter_path}/impl/src/linux/hc_file.c",
@@ -729,6 +741,7 @@ ohos_unittest("light_auth_test") {
   sources += identity_service_mock_files
   sources += deviceauth_common_files
   sources += group_database_manager_files
+  sources += operation_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
   sources += session_mini_files
@@ -871,6 +884,51 @@ ohos_unittest("identity_service_ipc_test") {
     "cJSON:cjson",
     "c_utils:utils",
     "device_auth:deviceauth_sdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("dfx_operation_common_test") {
+  module_out_path = module_output_path
+
+  include_dirs = inc_path
+  include_dirs += hals_inc_path
+  include_dirs += [
+    "./include",
+    "${operation_data_manager_path}/inc",
+    "${dev_frameworks_path}/inc/hiview_adapter",
+  ]
+
+  sources = hal_common_files
+
+  sources += security_label_adapter_files
+  sources += broadcast_manager_files
+  sources += hiview_adapter_files
+
+  sources += [
+    "source/dfx_operation_common_test.cpp",
+  ]
+
+  sources += [
+    "${os_adapter_path}/impl/src/hc_err_trace.c",
+    "${os_adapter_path}/impl/src/hc_log.c",
+    "${os_adapter_path}/impl/src/linux/hc_file.c",
+    "source/os_account_adapter_mock.c",
+    "source/hc_dev_info_mock.c",
+  ]
+
+  defines = [
+    "DEV_AUTH_HIVIEW_ENABLE",
+  ]
+
+  cflags = [ "-DHILOG_ENABLE" ]
+  external_deps = [
+    "cJSON:cjson",
+    "c_utils:utils",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",

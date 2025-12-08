@@ -94,7 +94,7 @@ void ReportBehaviorBeginEvent(bool isBind, bool isClient, int64_t reqId)
         eventData.hostPkg = AUTH_DEVICE_HOST_PKG_NAME;
         char selfUdid[INPUT_UDID_LEN] = { 0 };
         (void)HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
-        if (GetAnonymousString(selfUdid, anonymousLocalUdid, ANONYMOUS_UDID_LEN) == HC_SUCCESS) {
+        if (GetAnonymousString(selfUdid, anonymousLocalUdid, ANONYMOUS_UDID_LEN, true) == HC_SUCCESS) {
             eventData.localUdid = anonymousLocalUdid;
         }
     }
@@ -125,10 +125,10 @@ void ReportBehaviorBeginResultEvent(bool isBind, bool isClient, int64_t reqId, c
         eventData.hostPkg = AUTH_DEVICE_HOST_PKG_NAME;
         char selfUdid[INPUT_UDID_LEN] = { 0 };
         (void)HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
-        if (GetAnonymousString(selfUdid, anonymousLocalUdid, ANONYMOUS_UDID_LEN) == HC_SUCCESS) {
+        if (GetAnonymousString(selfUdid, anonymousLocalUdid, ANONYMOUS_UDID_LEN, true) == HC_SUCCESS) {
             eventData.localUdid = anonymousLocalUdid;
         }
-        if (GetAnonymousString(peerUdid, anonymousPeerUdid, ANONYMOUS_UDID_LEN) == HC_SUCCESS) {
+        if (GetAnonymousString(peerUdid, anonymousPeerUdid, ANONYMOUS_UDID_LEN, true) == HC_SUCCESS) {
             eventData.peerUdid = anonymousPeerUdid;
         }
     }

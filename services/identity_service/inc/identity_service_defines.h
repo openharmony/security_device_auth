@@ -53,6 +53,9 @@
 #define UPDATE_MATCHED_NUM_ZERO 0
 #define UPDATE_MATCHED_NUM_ONE 1
 #define DEV_AUTH_UID 3333
+#define ADD_CREDENTIAL "addCredential"
+#define DEL_CREDENTIAL "delCredential"
+#define UPDATE_CREDENTIAL "updateCredential"
 
 #ifdef __cplusplus
 extern "C" {

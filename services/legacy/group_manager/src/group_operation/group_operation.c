@@ -460,7 +460,7 @@ static int32_t DeleteMemberFromPeerToPeerGroup(int32_t osAccountId, int64_t requ
 static void DoCreateGroup(HcTaskBase *baseTask)
 {
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(task->reqId);
     LOGI("[Start]: DoCreateGroup! [ReqId]: %" LOG_PUB PRId64, task->reqId);
     char *returnJsonStr = NULL;
@@ -477,7 +477,7 @@ static void DoCreateGroup(HcTaskBase *baseTask)
 static void DoDeleteGroup(HcTaskBase *baseTask)
 {
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(task->reqId);
     LOGI("[Start]: DoDeleteGroup! [ReqId]: %" LOG_PUB PRId64, task->reqId);
     char *returnJsonStr = NULL;
@@ -494,7 +494,7 @@ static void DoDeleteGroup(HcTaskBase *baseTask)
 static void DoDeleteMember(HcTaskBase *baseTask)
 {
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(task->reqId);
     LOGI("[Start]: DoDeleteMember! [ReqId]: %" LOG_PUB PRId64, task->reqId);
     (void)DeleteMemberFromPeerToPeerGroup(task->osAccountId, task->reqId, task->params, task->cb);
@@ -1286,7 +1286,7 @@ static void DoOnChannelOpened(HcTaskBase *baseTask)
         return;
     }
     SoftBusTask *task = (SoftBusTask *)baseTask;
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(task->requestId);
     LOGI("[Start]: DoOnChannelOpened!");
     int32_t res = StartDevSession(task->requestId);

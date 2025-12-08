@@ -270,7 +270,7 @@ static void DoStartSession(HcTaskBase *task)
         return;
     }
     StartSessionTask *realTask = (StartSessionTask *)task;
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(realTask->sessionId);
     int32_t res = StartDevSession(realTask->sessionId);
     if (res != HC_SUCCESS) {
@@ -289,7 +289,7 @@ static void DoProcSession(HcTaskBase *task)
         return;
     }
     ProcSessionTask *realTask = (ProcSessionTask *)task;
-    SET_LOG_MODE(TRACE_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(realTask->sessionId);
     bool isFinish = false;
     int32_t res = ProcessDevSession(realTask->sessionId, realTask->receivedMsg, &isFinish);

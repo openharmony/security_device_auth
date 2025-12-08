@@ -260,7 +260,7 @@ static void SetMethodCritical(int32_t methodId, bool criticalSwitch)
 int32_t ServiceDevAuth::HandleDeviceAuthCall(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
-    SET_LOG_MODE(NORMAL_MODE);
+    SET_LOG_MODE_AND_ERR_TRACE(NORMAL_MODE, true);
     int32_t ret = HC_ERR_IPC_UNKNOW_OPCODE;
     uint32_t dataLen;
     int32_t methodId = 0;

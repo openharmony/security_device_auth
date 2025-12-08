@@ -46,6 +46,7 @@ ohos_fuzztest("IdentityServiceFuzzTest") {
     "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
+    "${os_adapter_path}/impl/src/hc_err_trace.c",
     "${os_adapter_path}/impl/src/hc_log.c",
     "${os_adapter_path}/impl/src/linux/hc_condition.c",
     "${os_adapter_path}/impl/src/linux/hc_file.c",
@@ -78,6 +79,7 @@ ohos_fuzztest("IdentityServiceFuzzTest") {
   sources += group_auth_account_unrelated_files
 
   sources += group_manager_files
+  sources += operation_database_manager_files
   sources += group_manager_peer_to_peer_files
 
   sources += authenticators_p2p_files

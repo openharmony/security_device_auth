@@ -33,6 +33,7 @@
 #include "hc_types.h"
 #include "performance_dumper.h"
 #include "hisysevent_common.h"
+#include "operation_data_manager.h"
 
 static int32_t StartV1Session(SessionImpl *impl, CJson **sendMsg)
 {
@@ -250,11 +251,11 @@ static void ReportBehaviorEvent(const SessionImpl *impl, bool isProcessEnd, bool
         eventData.hostPkg = AUTH_DEVICE_HOST_PKG_NAME;
         char selfUdid[INPUT_UDID_LEN] = { 0 };
         (void)HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
-        if (GetAnonymousString(selfUdid, anonymousLocalUdid, ANONYMOUS_UDID_LEN) == HC_SUCCESS) {
+        if (GetAnonymousString(selfUdid, anonymousLocalUdid, ANONYMOUS_UDID_LEN, true) == HC_SUCCESS) {
             eventData.localUdid = anonymousLocalUdid;
         }
         const char *peerUdid = GetStringFromJson(impl->context, FIELD_PEER_CONN_DEVICE_ID);
-        if (GetAnonymousString(peerUdid, anonymousPeerUdid, ANONYMOUS_UDID_LEN) == HC_SUCCESS) {
+        if (GetAnonymousString(peerUdid, anonymousPeerUdid, ANONYMOUS_UDID_LEN, true) == HC_SUCCESS) {
             eventData.peerUdid = anonymousPeerUdid;
         }
     }
@@ -288,7 +289,10 @@ static void ReportBindAndAuthCallEvent(const SessionImpl *impl, int32_t callResu
     eventData.credType = DEFAULT_CRED_TYPE;
     bool isBind = true;
     (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
-    if (isBind) {
+    if (impl->isCredAuth) {
+        eventData.funcName = AUTH_IDENTITY_SERVICE_EVENT;
+        eventData.processCode = PROCESS_AUTH_IDENTITY_SERVICE;
+    } else if (isBind) {
         eventData.funcName = ADD_MEMBER_EVENT;
         eventData.processCode = isV1Session ? PROCESS_BIND_V1 : PROCESS_BIND_V2;
         eventData.groupType = PEER_TO_PEER_GROUP;
@@ -311,15 +315,42 @@ static void ReportBindAndAuthCallEvent(const SessionImpl *impl, int32_t callResu
 
 static void ReportBindAndAuthFaultEvent(const SessionImpl *impl, int32_t errorCode, bool isV1Session)
 {
+    char operationRecord[DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE] = {0};
+    int32_t osAccountId = ANY_OS_ACCOUNT;
+    (void)GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId);
+    (void)GetOperationDataRecently(osAccountId, (impl->isCredAuth ? OPERATION_IDENTITY_SERVICE : OPERATION_GROUP),
+        operationRecord, DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE, DEFAULT_RECENT_OPERATION_CNT);
+    LOGI("Recent operation : %" LOG_PUB "s", operationRecord);
 #ifdef DEV_AUTH_HIVIEW_ENABLE
+    CJson *extJson = CreateJson();
+    if (extJson == NULL) {
+        return;
+    }
+    (void)AddStringToJson(extJson, FIELD_OPERATION_RECORD, operationRecord);
+    (void)AddStringToJson(extJson, FIELD_ERR_TRACE, GET_ERR_TRACE());
+    char anonymousId[DEFAULT_ANONYMOUS_LEN + 1] = { 0 };
+    char anonymousPeerUdid[DEFAULT_ANONYMOUS_LEN + 1] = { 0 };
+    const char *credId = GetStringFromJson(impl->context, FIELD_CRED_ID);
+    const char *id = (credId == NULL) ? GetStringFromJson(impl->context, FIELD_GROUP_ID) : credId;
+    const char *peerUdid = GetStringFromJson(impl->context, FIELD_PEER_UDID);
+    if (GetAnonymousString(id, anonymousId, DEFAULT_ANONYMOUS_LEN, false) == HC_SUCCESS) {
+        (void)AddStringToJson(extJson, (credId == NULL) ? FIELD_GROUP_ID : FIELD_CRED_ID, anonymousId);
+    }
+    if (GetAnonymousString(peerUdid, anonymousPeerUdid, DEFAULT_ANONYMOUS_LEN, false) == HC_SUCCESS) {
+        (void)AddStringToJson(extJson, FIELD_PEER_UDID, anonymousPeerUdid);
+    }
+    char *extJsonString = PackJsonToString(extJson);
     DevAuthFaultEvent eventData;
     eventData.appId = impl->base.appId;
     eventData.reqId = impl->base.id;
     eventData.errorCode = errorCode;
-    eventData.faultInfo = DEFAULT_FAULT_INFO;
+    eventData.faultInfo = extJsonString;
     bool isBind = true;
     (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
-    if (isBind) {
+    if (impl->isCredAuth) {
+        eventData.funcName = AUTH_IDENTITY_SERVICE_EVENT;
+        eventData.processCode = PROCESS_AUTH_IDENTITY_SERVICE;
+    } else if (isBind) {
         eventData.funcName = ADD_MEMBER_EVENT;
         eventData.processCode = isV1Session ? PROCESS_BIND_V1 : PROCESS_BIND_V2;
     } else {
@@ -327,12 +358,11 @@ static void ReportBindAndAuthFaultEvent(const SessionImpl *impl, int32_t errorCo
         eventData.processCode = isV1Session ? PROCESS_AUTH_V1 : PROCESS_AUTH_V2;
     }
     DEV_AUTH_REPORT_FAULT_EVENT(eventData);
-    return;
+    FreeJsonString(extJsonString);
+    FreeJson(extJson);
 #endif
-    (void)impl;
     (void)errorCode;
     (void)isV1Session;
-    return;
 }
 
 static void OnDevSessionError(const SessionImpl *impl, int32_t errorCode, const char *errorReturn, bool isV1Session)
@@ -373,7 +403,8 @@ static int32_t StartSession(DevSession *self)
         sendMsg = (sendMsg == NULL ? CreateJson() : sendMsg);
         if (sendMsg == NULL) {
             LOGE("allocate sendMsg fail.");
-            return HC_ERR_ALLOC_MEMORY;
+            res = HC_ERR_ALLOC_MEMORY;
+            break;
         }
         if (IsSupportSessionV2() && !IsMetaNode(impl->context)) {
             res = StartV2Session(impl, sendMsg);

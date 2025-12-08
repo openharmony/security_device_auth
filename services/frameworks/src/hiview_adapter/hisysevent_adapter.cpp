@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 - 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "hisysevent_adapter.h"
 #include "common_defs.h"
+#include "hc_err_trace.h"
 
 #include "hisysevent.h"
 
@@ -122,7 +123,7 @@ void DevAuthReportFaultEventWithErrCode(const char *funcName, const int32_t proc
     eventData.funcName = funcName;
     eventData.reqId = DEFAULT_REQ_ID;
     eventData.errorCode = errorCode;
-    eventData.faultInfo = DEFAULT_FAULT_INFO;
+    eventData.faultInfo = GET_ERR_TRACE();
     DevAuthReportFaultEvent(eventData);
 }
 

@@ -19,6 +19,7 @@
 #include "alg_loader.h"
 #include "clib_error.h"
 #include "common_defs.h"
+#include "operation_data_manager.h"
 #include "credential_data_manager.h"
 #include "device_auth.h"
 #include "device_auth_defines.h"
@@ -28,6 +29,65 @@
 #include "identity_operation.h"
 #include "identity_service_defines.h"
 #include "permission_adapter.h"
+#include "hisysevent_adapter.h"
+
+static void SetStringForcely(HcString *self, const char *str)
+{
+    if (StringAppendPointer(self, str) != HC_TRUE) {
+        DeleteString(self);
+        *self = CreateString();
+    }
+}
+
+static void ISRecordAndReport(int32_t osAccountId, const Credential *credential,
+    const char *funcName, int32_t processCode, int32_t ret)
+{
+    if (ret != IS_SUCCESS) {
+        return;
+    }
+    CJson *operationInfo = CreateJson();
+    if (operationInfo == NULL) {
+        return;
+    }
+    Operation *operation = CreateOperationRecord();
+    if (operation == NULL) {
+        FreeJson(operationInfo);
+        return;
+    }
+    const char *appId = StringGet(&(credential->credOwner));
+    char anonymous[DEFAULT_ANONYMOUS_LEN + 1] = { 0 };
+    if (GetAnonymousString(StringGet(&(credential->credId)), anonymous, DEFAULT_ANONYMOUS_LEN, false) != HC_SUCCESS) {
+        memset_s(anonymous, DEFAULT_ANONYMOUS_LEN + 1, 0, DEFAULT_ANONYMOUS_LEN + 1);
+    }
+    (void)AddIntToJson(operationInfo, FIELD_CRED_TYPE, (int32_t)(credential->credType));
+    (void)AddStringToJson(operationInfo, FIELD_CRED_ID, anonymous);
+    char *operationInfoString = PackJsonToString(operationInfo);
+    if (operationInfoString != NULL) {
+        SetStringForcely(&operation->operationInfo, operationInfoString);
+        FreeJsonString(operationInfoString);
+    }
+    SetStringForcely(&operation->caller, appId);
+    SetStringForcely(&operation->function, funcName);
+    operation->operationType = OPERATION_IDENTITY_SERVICE;
+    RecordOperationData(osAccountId, operation);
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    DevAuthCallEvent eventData;
+    eventData.funcName = funcName;
+    eventData.osAccountId = osAccountId;
+    eventData.callResult = ret;
+    eventData.processCode = processCode;
+    eventData.appId = appId;
+    eventData.credType = credential->credType;
+    eventData.groupType = DEFAULT_GROUP_TYPE;
+    eventData.executionTime = DEFAULT_EXECUTION_TIME;
+    eventData.extInfo = StringGet(&(operation->operationInfo));
+    DEV_AUTH_REPORT_CALL_EVENT(eventData);
+#else
+    (void)processCode;
+#endif
+    DestroyOperationRecord(operation);
+    FreeJson(operationInfo);
+}
 
 static int32_t AddCredentialImplInner(int32_t osAccountId, CJson *reqJson, Credential *credential,
     char **returnData)
@@ -78,6 +138,7 @@ int32_t AddCredentialImpl(int32_t osAccountId, const char *requestParams, char *
         return IS_ERR_ALLOC_MEMORY;
     }
     int32_t ret = AddCredentialImplInner(osAccountId, reqJson, credential, returnData);
+    ISRecordAndReport(osAccountId, credential, ADD_CREDENTIAL_EVENT, PROCESS_ADD_CREDENTIAL, ret);
     FreeJson(reqJson);
     DestroyCredential(credential);
     return ret;
@@ -262,35 +323,42 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
     }
     ret = CheckDeletePermission(credential);
     int32_t credentialUid = credential->ownerUid;
-    DestroyCredential(credential);
-    if (ret != IS_SUCCESS) {
-        return ret;
-    }
+    do {
+        if (ret != IS_SUCCESS) {
+            break;
+        }
 
-    uint32_t credIdByteLen = HcStrlen(credId) / BYTE_TO_HEX_OPER_LENGTH;
-    Uint8Buff credIdByte = { NULL, credIdByteLen };
-    credIdByte.val = (uint8_t *)HcMalloc(credIdByteLen, 0);
-    if (credIdByte.val == NULL) {
-        LOGE("Failed to malloc credIdByte");
-        return IS_ERR_ALLOC_MEMORY;
-    }
+        uint32_t credIdByteLen = HcStrlen(credId) / BYTE_TO_HEX_OPER_LENGTH;
+        Uint8Buff credIdByte = { NULL, credIdByteLen };
+        credIdByte.val = (uint8_t *)HcMalloc(credIdByteLen, 0);
+        if (credIdByte.val == NULL) {
+            LOGE("Failed to malloc credIdByte");
+            ret = IS_ERR_ALLOC_MEMORY;
+            break;
+        }
 
-    ret = HexStringToByte(credId, credIdByte.val, credIdByte.length);
-    if (ret != IS_SUCCESS) {
-        LOGE("Failed to convert credId to byte, invalid credId, ret: %" LOG_PUB "d", ret);
+        ret = HexStringToByte(credId, credIdByte.val, credIdByte.length);
+        if (ret != IS_SUCCESS) {
+            LOGE("Failed to convert credId to byte, invalid credId, ret: %" LOG_PUB "d", ret);
+            HcFree(credIdByte.val);
+            DestroyCredential(credential);
+            ret = IS_ERR_INVALID_HEX_STRING;
+            break;
+        }
+
+        if (credentialUid != DEV_AUTH_UID) {
+            ret = GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId);
+        }
         HcFree(credIdByte.val);
-        return IS_ERR_INVALID_HEX_STRING;
-    }
+        if (ret == HAL_ERR_HUKS) {
+            LOGW("Huks delete key failed, error: %" LOG_PUB "d," \
+                "continue to delete local cred", IS_ERR_HUKS_DELETE_FAILED);
+        }
 
-    if (credentialUid != DEV_AUTH_UID) {
-        ret = GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId);
-    }
-    HcFree(credIdByte.val);
-    if (ret == HAL_ERR_HUKS) {
-        LOGW("Huks delete key failed, error: %" LOG_PUB "d, continue to delete local cred", IS_ERR_HUKS_DELETE_FAILED);
-    }
-
-    ret = DelCredById(osAccountId, credId);
+        ret = DelCredById(osAccountId, credId);
+    } while (0);
+    ISRecordAndReport(osAccountId, credential, DELETE_CREDENTIAL_EVENT, PROCESS_DELETE_CREDENTIAL, ret);
+    DestroyCredential(credential);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to delete local credential");
         return ret;
@@ -402,6 +470,7 @@ int32_t UpdateCredInfoImpl(int32_t osAccountId, const char *credId, const char *
     }
 
     ret = AddCredAndSaveDb(osAccountId, credential);
+    ISRecordAndReport(osAccountId, credential, UPDATE_CREDENTIAL_INFO_EVENT, PROCESS_UPDATE_CREDENTIAL_INFO, ret);
     DestroyCredential(credential);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to add credential to db");
@@ -630,6 +699,7 @@ int32_t AgreeCredentialImpl(int32_t osAccountId, const char *selfCredId, const c
         return IS_ERR_ALLOC_MEMORY;
     }
     int32_t ret = AgreeCredentialImplInner(osAccountId, selfCredId, reqJson, agreeCredential, returnData);
+    ISRecordAndReport(osAccountId, agreeCredential, AGREE_CREDENTIAL_EVENT, PROCESS_AGREE_CREDENTIAL, ret);
     FreeJson(reqJson);
     DestroyCredential(agreeCredential);
     return ret;

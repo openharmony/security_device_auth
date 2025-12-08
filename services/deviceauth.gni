@@ -19,6 +19,7 @@ protocol_path = "${services_path}/protocol"
 ext_plugin_manager_path = "${services_path}/ext_plugin_manager"
 group_data_manager_path = "${services_path}/data_manager/group_data_manager"
 cred_data_manager_path = "${services_path}/data_manager/cred_data_manager"
+operation_data_manager_path = "${services_path}/data_manager/operation_data_manager"
 cred_listener_path = "${services_path}/identity_service/listener"
 cred_session_path = "${services_path}/identity_service/session"
 privacy_enhancement_path = "${services_path}/privacy_enhancement"
@@ -67,6 +68,7 @@ inc_path = [
   "${ext_plugin_manager_path}/inc",
   "${ext_plugin_manager_path}/inc/account_related",
   "${group_data_manager_path}/inc",
+  "${operation_data_manager_path}/inc",
   "${privacy_enhancement_path}/inc",
   "${group_auth_path}/inc",
   "${group_auth_path}/inc/account_unrelated_group_auth",
@@ -214,6 +216,9 @@ ext_plugin_manager_files =
 
 group_database_manager_files =
     [ "${group_data_manager_path}/src/group_data_manager.c" ]
+
+operation_database_manager_files = 
+    [ "${operation_data_manager_path}/src/operation_data_manager.c" ]
 
 privacy_enhancement_files =
     [ "${privacy_enhancement_path}/src/pseudonym_manager.c" ]
@@ -413,7 +418,7 @@ if (enable_p2p_pake_dl_prime_len_256 == true) {
 }
 
 deviceauth_files += group_auth_files + group_manager_files +
-                    group_database_manager_files + ext_plugin_manager_files
+                    group_database_manager_files + ext_plugin_manager_files + operation_database_manager_files
 
 account_unrelated_deviceauth =
     enable_p2p_bind_lite_protocol || enable_p2p_auth_lite_protocol ||

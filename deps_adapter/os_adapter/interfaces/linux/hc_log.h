@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,11 +15,6 @@
 
 #ifndef HC_LOG_H
 #define HC_LOG_H
-
-typedef enum {
-    NORMAL_MODE = 0,
-    TRACE_MODE = 1,
-} LogMode;
 
 #define DESENSITIZATION_LEN 12
 #define DEV_AUTH_ZERO 0
@@ -82,26 +77,25 @@ typedef enum {
 #else
 
 #include "hilog/log.h"
+#include "hc_err_trace.h"
 
 #define LOG_PUB "{public}"
 
 #define LOGD(fmt, ...) HILOG_DEBUG(LOG_CORE, "%" LOG_PUB "s: " fmt, __FUNCTION__, ##__VA_ARGS__)
 #define LOGI(fmt, ...) HILOG_INFO(LOG_CORE, "%" LOG_PUB "s: " fmt, __FUNCTION__, ##__VA_ARGS__)
 #define LOGW(fmt, ...) HILOG_WARN(LOG_CORE, "%" LOG_PUB "s: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOGE(fmt, ...) HILOG_ERROR(LOG_CORE, "%" LOG_PUB "s: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOGE(fmt, ...) LogAndRecordError(__FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
+
+#define PRINT_ERR_TRACE() HILOG_ERROR(LOG_CORE, "%" LOG_PUB "s: <errtrace> %" LOG_PUB "s", \
+    GetTraceInfo(__FUNCTION__), GET_ERR_TRACE())
 
 #endif
-
-#define SET_LOG_MODE(mode) SetLogMode(mode)
-#define SET_TRACE_ID(traceId) SetTraceId(traceId)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void DevAuthLogPrint(DevAuthLogLevel level, const char *funName, const char *fmt, ...);
-void SetLogMode(LogMode mode);
-void SetTraceId(int64_t traceId);
+void LogAndRecordError(const char *funName, uint32_t lineNum, const char *fmt, ...);
 
 #ifdef __cplusplus
 }
@@ -119,9 +113,6 @@ void SetTraceId(int64_t traceId);
 #define LOGI(fmt, ...) printf("[I][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
 #define LOGW(fmt, ...) printf("[W][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
 #define LOGE(fmt, ...) printf("[E][DEVAUTH]%s: " fmt "\n", __FUNCTION__, ##__VA_ARGS__)
-
-#define SET_LOG_MODE(mode)
-#define SET_TRACE_ID(traceId)
 
 #endif
 

@@ -65,6 +65,7 @@ ohos_fuzztest("CredsManagerFuzzTest") {
     "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
+    "${os_adapter_path}/impl/src/hc_err_trace.c",
     "${os_adapter_path}/impl/src/hc_log.c",
     "${os_adapter_path}/impl/src/linux/hc_condition.c",
     "${os_adapter_path}/impl/src/linux/hc_file.c",

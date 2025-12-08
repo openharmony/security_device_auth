@@ -27,7 +27,7 @@ using namespace testing::ext;
 
 namespace {
 static const uint32_t TEST_BUFFER_SIZE = 16;
-static const uint32_t TEST_MIN_ANONYMOUS_LEN = 12;
+static const uint32_t TEST_MIN_ANONYMOUS_LEN = 6;
 static const uint32_t TEST_INVALID_BUFFER_SIZE = 0;
 static const uint32_t TEST_LENGTH_ZERO = 0;
 static const uint32_t TEST_SRC_DATA = 4;
@@ -769,13 +769,13 @@ HWTEST_F(CommonLibTest, HcStringUtilTest004, TestSize.Level0)
 {
     const char oriData[] = "abcd";
     char anonymousData[TEST_MIN_ANONYMOUS_LEN + 2] = { 0 };
-    int32_t ret = GetAnonymousString(oriData, nullptr, TEST_MIN_ANONYMOUS_LEN + 1);
+    int32_t ret = GetAnonymousString(oriData, nullptr, TEST_MIN_ANONYMOUS_LEN + 1, true);
     EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
-    ret = GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN - 1);
+    ret = GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN - 1, true);
     EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
-    ret = GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN + 1);
+    ret = GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN + 1, true);
     EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
-    ret = GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN + 2);
+    ret = GetAnonymousString(oriData, anonymousData, TEST_MIN_ANONYMOUS_LEN + 2, true);
     EXPECT_EQ(ret, CLIB_ERR_INVALID_LEN);
 }
 

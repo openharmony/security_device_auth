@@ -16,19 +16,60 @@
 #include "hc_log.h"
 
 #include <inttypes.h>
+#include <stdlib.h>
 #include "securec.h"
 #include "hc_types.h"
 
-static __thread int32_t g_logMode = 0;
-static __thread int64_t g_traceId = 0;
+#define LOG_PRINT_MAX_LEN 1024
 
-void SetLogMode(LogMode mode)
+static bool RemovePublicString(const char *fmt, char outStr[LOG_PRINT_MAX_LEN])
 {
-    g_logMode = mode;
-    g_traceId = 0;
+    char *pos;
+    uint32_t subStrLen = strlen(LOG_PUB);
+    if (subStrLen == 0) {
+        return true;
+    }
+    uint32_t fmtLen = strlen(fmt);
+    uint32_t i = 0;
+    uint32_t j = 0;
+    while (j < fmtLen && (pos = strstr(fmt + j, LOG_PUB)) != NULL) {
+        if (memcpy_s(outStr + i, LOG_PRINT_MAX_LEN - i - 1, fmt + j, pos - fmt - j) != EOK) {
+            return false;
+        }
+        i += pos - fmt - j;
+        j = pos - fmt + subStrLen;
+    }
+    while (j < fmtLen && i < LOG_PRINT_MAX_LEN - 1) {
+        outStr[i++] = *(fmt + j);
+        j++;
+    }
+    outStr[i] = '\0';
+    return true;
 }
 
-void SetTraceId(int64_t traceId)
+void LogAndRecordError(const char *funName, uint32_t lineNum, const char *fmt, ...)
 {
-    g_traceId = traceId;
+    int32_t ulPos = 0;
+    char outStr[LOG_PRINT_MAX_LEN] = {0};
+    char newFmt[LOG_PRINT_MAX_LEN] = {0};
+    int32_t ret = sprintf_s(outStr, sizeof(outStr), "%s[%u]: ", funName, lineNum);
+    if (ret < 0) {
+        HILOG_ERROR(LOG_CORE, "%" LOG_PUB "s[%" LOG_PUB "u] unknown", funName, lineNum);
+        return;
+    }
+    if (!RemovePublicString(fmt, newFmt)) {
+        HILOG_ERROR(LOG_CORE, "%" LOG_PUB "s unknown", outStr);
+        return;
+    }
+    ulPos = strlen(outStr);
+    va_list arg;
+    va_start(arg, fmt);
+    RECORD_ERR_TRACE(funName, lineNum, newFmt, arg);
+    ret = vsprintf_s(&outStr[ulPos], sizeof(outStr) - ulPos, newFmt, arg);
+    va_end(arg);
+    if (ret < 0) {
+        HILOG_ERROR(LOG_CORE, "%s unknown", outStr);
+        return;
+    }
+    HILOG_ERROR(LOG_CORE, "%" LOG_PUB "s", outStr);
 }

@@ -46,6 +46,7 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
     "${key_management_adapter_path}/impl/src/huks_adapter_utils.c",
     "${key_management_adapter_path}/impl/src/standard/crypto_hash_to_point.c",
     "${key_management_adapter_path}/impl/src/standard/huks_adapter_diff_impl.c",
+    "${os_adapter_path}/impl/src/hc_err_trace.c",
     "${os_adapter_path}/impl/src/hc_log.c",
     "${os_adapter_path}/impl/src/linux/hc_condition.c",
     "${os_adapter_path}/impl/src/linux/hc_dev_info.c",
@@ -61,6 +62,7 @@ ohos_fuzztest("AccountRelatedGroupAuthFuzzTest") {
   sources += deviceauth_common_files
   sources += sa_load_on_demand_mock_files
   sources += group_database_manager_files
+  sources += operation_database_manager_files
   sources += ext_plugin_manager_files
   sources += session_manager_files
   sources += session_mini_files
