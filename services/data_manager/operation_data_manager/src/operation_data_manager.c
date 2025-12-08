@@ -83,7 +83,6 @@ IMPLEMENT_HC_VECTOR(OperationDb, OsAccountOperationInfo, 1)
 static HcMutex *g_operationMutex = NULL;
 static OperationDb g_operationDb;
 
-
 static bool IsOsAccountOperationInfoLoaded(int32_t osAccountId)
 {
     uint32_t index = 0;
@@ -593,6 +592,7 @@ int32_t GetOperationDataRecently(int32_t osAccountId, DevAuthOperationType type,
         cnt++;
     }
     UnlockHcMutex(g_operationMutex);
+    LOGI("[Operation]: get operation record success!");
     return offset;
 }
 
@@ -686,7 +686,7 @@ static void DevAuthDataBaseDump(int fd)
 
 int32_t InitOperationDataManager(void)
 {
-        if (g_operationMutex == NULL) {
+    if (g_operationMutex == NULL) {
         g_operationMutex = (HcMutex *)HcMalloc(sizeof(HcMutex), 0);
         if (g_operationMutex == NULL) {
             LOGE("[Operation]: Alloc operation mutex failed.");

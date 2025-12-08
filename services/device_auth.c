@@ -937,8 +937,7 @@ static void CleanAllModules(int32_t type)
     } CleanOperation;
 
     CleanOperation cleanOps[] = {
-        { CLEAN_ALL, DestroyLightSessionManager },
-        { CLEAN_TASK_MANAGER, DestroyTaskManager },
+        { CLEAN_ALL, DestroyTaskManager },
         { CLEAN_DEVSESSION, DestroyDevSessionManager },
         { CLEAN_IDENTITY_SERVICE, DestroyIdentityService },
         { CLEAN_GROUP_MANAGER, DestroyGroupManager },
