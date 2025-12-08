@@ -173,39 +173,14 @@ static int32_t regCredChangeListenerMock(const char *appId, CredChangeListener *
 
 static void SaLoadOnDemandFuzz001(void)
 {
-    (void)InitLoadOnDemand();
-    SubscribeDeviceAuthSa();
-    UnSubscribeDeviceAuthSa();
-    DeInitLoadOnDemand();
-}
-
-static void SaLoadOnDemandFuzz002(void)
-{
-    (void)InitLoadOnDemand();
-    LoadDeviceAuthSaIfNotLoad();
-    DeInitLoadOnDemand();
-}
-
-static void SaLoadOnDemandFuzz003(void)
-{
-    (void)InitLoadOnDemand();
-    LoadDeviceAuthSaIfNotLoad();
-    DeInitLoadOnDemand();
-}
-
-static void SaLoadOnDemandFuzz004(void)
-{
-    (void)InitLoadOnDemand();
     SetRegCallbackFunc(regCallbackMock);
     SetRegDataChangeListenerFunc(regDataChangeListenerMock);
     SetRegCredChangeListenerFunc(regCredChangeListenerMock);
     RegisterDevAuthCallbackIfNeed();
-    DeInitLoadOnDemand();
 }
 
-static void SaLoadOnDemandFuzz005(void)
+static void SaLoadOnDemandFuzz002(void)
 {
-    (void)InitLoadOnDemand();
     SetRegCallbackFunc(regCallbackMock);
     SetRegDataChangeListenerFunc(regDataChangeListenerMock);
     SetRegCredChangeListenerFunc(regCredChangeListenerMock);
@@ -215,12 +190,10 @@ static void SaLoadOnDemandFuzz005(void)
     (void)RemoveCallbackInfoFromList(TEST_APP_ID, DEVAUTH_CALLBACK);
     (void)RemoveCallbackInfoFromList(TEST_APP_ID, GROUP_CHANGE_LISTENER);
     (void)RemoveCallbackInfoFromList(TEST_APP_ID, CRED_CHANGE_LISTENER);
-    DeInitLoadOnDemand();
 }
 
-static void SaLoadOnDemandFuzz006(void)
+static void SaLoadOnDemandFuzz003(void)
 {
-    (void)InitLoadOnDemand();
     SetRegCallbackFunc(regCallbackMock);
     SetRegDataChangeListenerFunc(regDataChangeListenerMock);
     SetRegCredChangeListenerFunc(regCredChangeListenerMock);
@@ -233,12 +206,10 @@ static void SaLoadOnDemandFuzz006(void)
     (void)RemoveCallbackInfoFromList(TEST_APP_ID, DEVAUTH_CALLBACK);
     (void)RemoveCallbackInfoFromList(TEST_APP_ID, GROUP_CHANGE_LISTENER);
     (void)RemoveCallbackInfoFromList(TEST_APP_ID, CRED_CHANGE_LISTENER);
-    DeInitLoadOnDemand();
 }
 
-static void SaLoadOnDemandFuzz007(void)
+static void SaLoadOnDemandFuzz004(void)
 {
-    (void)InitLoadOnDemand();
     SetRegCallbackFunc(regCallbackMock);
     SetRegDataChangeListenerFunc(regDataChangeListenerMock);
     SetRegCredChangeListenerFunc(regCredChangeListenerMock);
@@ -257,20 +228,21 @@ static void SaLoadOnDemandFuzz007(void)
     (void)RemoveCallbackInfoFromList(TEST_APP_ID_1, DEVAUTH_CALLBACK);
     (void)RemoveCallbackInfoFromList(TEST_APP_ID_1, GROUP_CHANGE_LISTENER);
     (void)RemoveCallbackInfoFromList(TEST_APP_ID_1, CRED_CHANGE_LISTENER);
-    DeInitLoadOnDemand();
 }
 
 bool FuzzDoSaLoadOnDemandFuzz(const uint8_t* data, size_t size)
 {
     (void)data;
     (void)size;
+    (void)InitLoadOnDemand();
+    LoadDeviceAuthSaIfNotLoad();
+    SubscribeDeviceAuthSa();
     SaLoadOnDemandFuzz001();
     SaLoadOnDemandFuzz002();
     SaLoadOnDemandFuzz003();
     SaLoadOnDemandFuzz004();
-    SaLoadOnDemandFuzz005();
-    SaLoadOnDemandFuzz006();
-    SaLoadOnDemandFuzz007();
+    UnSubscribeDeviceAuthSa();
+    DeInitLoadOnDemand();
     return true;
 }
 }
@@ -282,4 +254,3 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::FuzzDoSaLoadOnDemandFuzz(data, size);
     return 0;
 }
-
