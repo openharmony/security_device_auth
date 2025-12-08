@@ -80,6 +80,7 @@ static CredAuthManager *g_credAuthManager = NULL;
 #define CLEAN_LIGHT_SESSION_MANAGER 7
 #define CLEAN_DEVSESSION 8
 #define CLEAN_TASK_MANAGER 9
+#define CLEAN_OPERATION_DATA_MANAGER 10
 
 #define RETURN_RANDOM_LEN 16
 #define RETURN_KEY_LEN 32
@@ -941,6 +942,7 @@ static void CleanAllModules(int32_t type)
         { CLEAN_DEVSESSION, DestroyDevSessionManager },
         { CLEAN_IDENTITY_SERVICE, DestroyIdentityService },
         { CLEAN_GROUP_MANAGER, DestroyGroupManager },
+        { CLEAN_OPERATION_DATA_MANAGER, DestroyOperationDataManager },
         { CLEAN_CALLBACK, DestroyCallbackManager },
         { CLEAN_MODULE, DestroyModules },
         { CLEAN_CRED, DestroyCredMgr }
@@ -969,13 +971,13 @@ static int32_t InitAllModules(void)
     RETURN_IF_INIT_FAILED(res, InitCredMgr, CLEAN_NONE);
     RETURN_IF_INIT_FAILED(res, InitModules, CLEAN_CRED);
     RETURN_IF_INIT_FAILED(res, InitCallbackManager, CLEAN_MODULE);
-    RETURN_IF_INIT_FAILED(res, InitGroupManager, CLEAN_CALLBACK);
+    RETURN_IF_INIT_FAILED(res, InitOperationDataManager, CLEAN_CALLBACK);
+    RETURN_IF_INIT_FAILED(res, InitGroupManager, CLEAN_OPERATION_DATA_MANAGER);
     RETURN_IF_INIT_FAILED(res, InitIdentityService, CLEAN_GROUP_MANAGER);
     RETURN_IF_INIT_FAILED(res, InitDevSessionManager, CLEAN_IDENTITY_SERVICE);
     (void)InitGroupAuthManager();
     RETURN_IF_INIT_FAILED(res, InitTaskManager, CLEAN_DEVSESSION);
-    RETURN_IF_INIT_FAILED(res, InitLightSessionManager, CLEAN_TASK_MANAGER);
-    RETURN_IF_INIT_FAILED(res, InitOperationDataManager, CLEAN_ALL);
+    RETURN_IF_INIT_FAILED(res, InitLightSessionManager, CLEAN_ALL);
     return res;
 }
 
