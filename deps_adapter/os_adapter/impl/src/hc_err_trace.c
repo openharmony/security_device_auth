@@ -34,7 +34,7 @@ static __thread char g_traceInfo[MAX_TRACE_INFO_SIZE] = {0};
 
 static __thread uint32_t g_errTraceLen = 0;
 static __thread char g_errTrace[MAX_ERROR_TRACE_LEN + 1] = {0};
-static __thread uint32_t g_isErrTraceOn = false;
+static __thread bool g_isErrTraceOn = false;
 
 void SetLogModeAndErrTrace(LogMode mode, bool isErrTraceOn)
 {

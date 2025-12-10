@@ -667,10 +667,6 @@ static void LoadAllAccountsData(void)
 
 static void DevAuthDataBaseDump(int fd)
 {
-    if (g_operationMutex == NULL) {
-        LOGE("[Operation]: Init mutex failed");
-        return;
-    }
     (void)LockHcMutex(g_operationMutex);
     if (IsOsAccountSupported()) {
         LoadAllAccountsData();

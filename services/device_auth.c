@@ -63,7 +63,7 @@ static CredAuthManager *g_credAuthManager = NULL;
 
 #define RETURN_IF_INIT_FAILED(res, initFunc, cleanFlag) \
     do { \
-        if (((res) = (initFunc)() != HC_SUCCESS)) { \
+        if (((res) = (initFunc)()) != HC_SUCCESS) { \
             LOGE("[End]: [Service]: " #initFunc "Failed"); \
             CleanAllModules((cleanFlag)); \
             return (res); \
