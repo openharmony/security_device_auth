@@ -1474,7 +1474,7 @@ HWTEST_F(IdentityOperationTest, IdentityOperationTest010, TestSize.Level0)
     EXPECT_NE(ret, IS_SUCCESS);
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     LoadAllAccountsData();
-    DevAuthDataBaseDump();
+    DevAuthDataBaseDump(DEFAULT_VAL);
 #endif
     LoadDataIfNotLoaded(DEFAULT_OS_ACCOUNT_ID);
     OnOsAccountUnlocked(DEFAULT_OS_ACCOUNT_ID);

@@ -371,7 +371,7 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest014, TestSize.Level0)
 HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest015, TestSize.Level0)
 {
     bool ret = SaveTainedOperation(TEST_OS_ACCOUNT_ID);
-    EXPECT_NE(ret, true);
+    EXPECT_EQ(ret, true);
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     LoadAllAccountsData();
 #endif
@@ -384,8 +384,10 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest015, TestSize.Level0)
     char record[TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE] = { 0 };
     res = GetOperationDataRecently(TEST_OS_ACCOUNT_ID, OPERATION_ANY, record,
         TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE, TEST_NUM_ONE);
-    EXPECT_EQ(res, -1);
+    EXPECT_NE(res, -1);
+#ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthDataBaseDump(0);
+#endif
     DestroyOperationRecord(operation1);
 }
 }

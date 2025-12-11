@@ -328,8 +328,10 @@ static int32_t DfxTestCase015(void)
     char record[TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE] = { 0 };
     res = GetOperationDataRecently(TEST_OS_ACCOUNT_ID, OPERATION_ANY, record,
         TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE, TEST_NUM_ONE);
+#ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthDataBaseDump(0);
-    DestroyOperationRecord(operation1);
+#endif
+DestroyOperationRecord(operation1);
     return res;
 }
 

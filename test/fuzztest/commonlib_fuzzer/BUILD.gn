@@ -79,6 +79,7 @@ ohos_fuzztest("CommonLibFuzzTest") {
 
   sources += group_manager_files
   sources += group_manager_peer_to_peer_files
+  sources += operation_database_manager_files
 
   sources += authenticators_p2p_files
   sources += authenticators_p2p_iso_files
