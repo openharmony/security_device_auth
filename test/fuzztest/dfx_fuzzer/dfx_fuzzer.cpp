@@ -331,7 +331,7 @@ static int32_t DfxTestCase015(void)
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     DevAuthDataBaseDump(0);
 #endif
-DestroyOperationRecord(operation1);
+    DestroyOperationRecord(operation1);
     return res;
 }
 
