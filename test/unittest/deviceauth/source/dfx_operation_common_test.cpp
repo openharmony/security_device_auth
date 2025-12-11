@@ -380,7 +380,7 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest015, TestSize.Level0)
     EXPECT_EQ(ret, false);
     Operation *operation1 = CreateOperationRecord();
     int32_t res = RecordOperationData(TEST_OS_ACCOUNT_ID, operation1);
-    EXPECT_EQ(ret, HC_SUCCESS);
+    EXPECT_EQ(res, HC_SUCCESS);
     char record[TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE] = { 0 };
     res = GetOperationDataRecently(TEST_OS_ACCOUNT_ID, OPERATION_ANY, record,
         TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE, TEST_NUM_ONE);
