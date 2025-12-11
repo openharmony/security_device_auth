@@ -57,7 +57,7 @@ static void ISRecordAndReport(int32_t osAccountId, const Credential *credential,
     const char *appId = StringGet(&(credential->credOwner));
     char anonymous[DEFAULT_ANONYMOUS_LEN + 1] = { 0 };
     if (GetAnonymousString(StringGet(&(credential->credId)), anonymous, DEFAULT_ANONYMOUS_LEN, false) != HC_SUCCESS) {
-        memset_s(anonymous, DEFAULT_ANONYMOUS_LEN + 1, 0, DEFAULT_ANONYMOUS_LEN + 1);
+        (void)memset_s(anonymous, DEFAULT_ANONYMOUS_LEN + 1, 0, DEFAULT_ANONYMOUS_LEN + 1);
     }
     (void)AddIntToJson(operationInfo, FIELD_CRED_TYPE, (int32_t)(credential->credType));
     (void)AddStringToJson(operationInfo, FIELD_CRED_ID, anonymous);
@@ -341,7 +341,6 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
         if (ret != IS_SUCCESS) {
             LOGE("Failed to convert credId to byte, invalid credId, ret: %" LOG_PUB "d", ret);
             HcFree(credIdByte.val);
-            DestroyCredential(credential);
             ret = IS_ERR_INVALID_HEX_STRING;
             break;
         }

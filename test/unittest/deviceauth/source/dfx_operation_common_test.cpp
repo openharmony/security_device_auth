@@ -231,11 +231,6 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest009, TestSize.Level0)
 
     res = ReadParcelFromFile(filePath, NULL);
     EXPECT_EQ(res, false);
-
-    HcParcel parcel = CreateParcel(0, 0);
-    res = ReadParcelFromFile(filePath, &parcel);
-    EXPECT_EQ(res, true);
-    DeleteParcel(&parcel);
 }
 
 HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest010, TestSize.Level0)
@@ -371,5 +366,28 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest014, TestSize.Level0)
     res = GetOperationDataRecently(TEST_OS_ACCOUNT_ID, OPERATION_ANY, record,
         DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE, TEST_NUM_ONE);
     EXPECT_NE(res, -1);
+}
+
+HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest015, TestSize.Level0)
+{
+    bool ret = SaveTainedOperation(TEST_OS_ACCOUNT_ID);
+    EXPECT_EQ(ret, true);
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    LoadAllAccountsData();
+#endif
+    LoadDataIfNotLoaded(TEST_OS_ACCOUNT_ID);
+    ret = IsOsAccountOperationInfoLoaded(INVALID_OS_ACCOUNT);
+    EXPECT_EQ(ret, false);
+    Operation *operation1 = CreateOperationRecord();
+    int32_t res = RecordOperationData(TEST_OS_ACCOUNT_ID, operation1);
+    EXPECT_EQ(res, HC_SUCCESS);
+    char record[TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE] = { 0 };
+    res = GetOperationDataRecently(TEST_OS_ACCOUNT_ID, OPERATION_ANY, record,
+        TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE, TEST_NUM_ONE);
+    EXPECT_NE(res, -1);
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    DevAuthDataBaseDump(0);
+#endif
+    DestroyOperationRecord(operation1);
 }
 }

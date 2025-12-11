@@ -1472,6 +1472,14 @@ HWTEST_F(IdentityOperationTest, IdentityOperationTest010, TestSize.Level0)
 {
     int32_t ret = Sha256BaseCredId(nullptr, nullptr, nullptr);
     EXPECT_NE(ret, IS_SUCCESS);
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    LoadAllAccountsData();
+    DevAuthDataBaseDump(DEFAULT_VAL);
+#endif
+    LoadDataIfNotLoaded(DEFAULT_OS_ACCOUNT_ID);
+    OnOsAccountUnlocked(DEFAULT_OS_ACCOUNT_ID);
+    LoadDataIfNotLoaded(DEFAULT_OS_ACCOUNT_ID);
+    OnOsAccountRemoved(DEFAULT_OS_ACCOUNT_ID);
 }
 
 class IdentityServiceImplTest : public testing::Test {

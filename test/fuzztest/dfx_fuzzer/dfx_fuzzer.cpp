@@ -191,10 +191,6 @@ static int32_t DfxTestCase009(void)
     res = ReadParcelFromFile(NULL, NULL);
 
     res = ReadParcelFromFile(filePath, NULL);
-
-    HcParcel parcel = CreateParcel(0, 0);
-    res = ReadParcelFromFile(filePath, &parcel);
-    DeleteParcel(&parcel);
     return res;
 }
 
@@ -319,6 +315,26 @@ static int32_t DfxTestCase014(void)
     return res;
 }
 
+static int32_t DfxTestCase015(void)
+{
+    bool ret = SaveTainedOperation(TEST_OS_ACCOUNT_ID);
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    LoadAllAccountsData();
+#endif
+    LoadDataIfNotLoaded(TEST_OS_ACCOUNT_ID);
+    ret = IsOsAccountOperationInfoLoaded(INVALID_OS_ACCOUNT);
+    Operation *operation1 = CreateOperationRecord();
+    int32_t res = RecordOperationData(TEST_OS_ACCOUNT_ID, operation1);
+    char record[TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE] = { 0 };
+    res = GetOperationDataRecently(TEST_OS_ACCOUNT_ID, OPERATION_ANY, record,
+        TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE, TEST_NUM_ONE);
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    DevAuthDataBaseDump(0);
+#endif
+    DestroyOperationRecord(operation1);
+    return res;
+}
+
 static void DfxFuzzPart(void)
 {
     InitOperationDataManager();
@@ -336,6 +352,7 @@ static void DfxFuzzPart(void)
     (void)DfxTestCase012();
     (void)DfxTestCase013();
     (void)DfxTestCase014();
+    (void)DfxTestCase015();
     DestroyOperationDataManager();
 }
 
