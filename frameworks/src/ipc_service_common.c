@@ -576,7 +576,6 @@ int32_t IpcServiceGmGetGroupInfoById(const IpcDataInfo *ipcParams, int32_t param
         return ret;
     }
     callRet = g_devGroupMgrMethod.getGroupInfoById(osAccountId, appId, groupId, &groupInfo);
-    (void)ExecuteAccountAuthCmd(osAccountId, CHECK_CE_DATA, NULL, NULL);
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM,
                               (const uint8_t *)&IPC_RESULT_NUM_1, sizeof(int32_t));
@@ -661,7 +660,6 @@ int32_t IpcServiceGmGetJoinedGroups(const IpcDataInfo *ipcParams, int32_t paramN
         return HC_ERR_IPC_BAD_PARAM;
     }
     callRet = g_devGroupMgrMethod.getJoinedGroups(osAccountId, appId, groupType, &outGroups, &groupNum);
-    (void)ExecuteAccountAuthCmd(osAccountId, CHECK_CE_DATA, NULL, NULL);
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM,
                               (const uint8_t *)&IPC_RESULT_NUM_2, sizeof(int32_t));
@@ -703,7 +701,6 @@ int32_t IpcServiceGmGetRelatedGroups(const IpcDataInfo *ipcParams, int32_t param
         return ret;
     }
     callRet = g_devGroupMgrMethod.getRelatedGroups(osAccountId, appId, peerUdid, &outGroups, &groupNum);
-    (void)ExecuteAccountAuthCmd(osAccountId, CHECK_CE_DATA, NULL, NULL);
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM,
                               (const uint8_t *)&IPC_RESULT_NUM_2, sizeof(int32_t));
@@ -1556,7 +1553,6 @@ int32_t IpcServiceCmQueryCredentialByParams(const IpcDataInfo *ipcParams, int32_
         return ret;
     }
     callRet = g_devCredMgrMethod.queryCredentialByParams(osAccountId, requestParams, &returnCredList);
-    (void)ExecuteAccountAuthCmd(osAccountId, CHECK_CE_DATA, NULL, NULL);
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_1, sizeof(int32_t));
     if (returnCredList != NULL) {
@@ -1591,7 +1587,6 @@ int32_t IpcServiceCmQueryCredentialByCredId(const IpcDataInfo *ipcParams, int32_
         return ret;
     }
     callRet = g_devCredMgrMethod.queryCredInfoByCredId(osAccountId, credId, &returnCredInfo);
-    (void)ExecuteAccountAuthCmd(osAccountId, CHECK_CE_DATA, NULL, NULL);
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
     ret += IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT_NUM, (const uint8_t *)&IPC_RESULT_NUM_1, sizeof(int32_t));
     if (returnCredInfo != NULL) {
