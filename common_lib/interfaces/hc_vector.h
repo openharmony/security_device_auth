@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -102,7 +102,7 @@ uint32_t VSize##ClassName(const ClassName* obj) \
 Element VGet##ClassName(const ClassName* obj, uint32_t index) \
 { \
     Element e; \
-    (void)memset_s(&e, sizeof(e), 0, sizeof(e)); \
+    (void)memset_s(&e, sizeof(Element), 0, sizeof(Element)); \
     if (NULL != obj) { \
         if (index < obj->size(obj)) { \
             if (GetParcelData(&obj->parcel)) { \
@@ -112,7 +112,7 @@ Element VGet##ClassName(const ClassName* obj, uint32_t index) \
             } \
         } \
     } \
-    (void)memset_s(&e, sizeof(e), 0, sizeof(e)); \
+    (void)memset_s(&e, sizeof(Element), 0, sizeof(Element)); \
     return e; \
 } \
 Element* VGetPointer##ClassName(const ClassName* obj, uint32_t index) \
@@ -158,15 +158,13 @@ void Destroy##ClassName(ClassName* obj) \
 /* Use these two macros to create and destroy vector */
 #define CREATE_HC_VECTOR(classname) Create##classname()
 #define DESTROY_HC_VECTOR(classname, obj) Destroy##classname(obj)
-
-#define FOR_EACH_HC_VECTOR(vec, index, iter) for (index = 0; index < (vec).size(&(vec)) && \
-    (iter = (vec).getp(&(vec), index)); ++index)
-
 #define HC_VECTOR_PUSHBACK(obj, element) (obj)->pushBack((obj), (element))
 #define HC_VECTOR_POPFRONT(obj, element) (obj)->popFront((obj), (element))
 #define HC_VECTOR_POPELEMENT(obj, element, index) (obj)->eraseElement((obj), (element), (index))
 #define HC_VECTOR_SIZE(obj) (obj)->size(obj)
 #define HC_VECTOR_GET(obj, index) (obj)->get((obj), (index))
 #define HC_VECTOR_GETP(_obj, _index) (_obj)->getp((_obj), (_index))
+#define FOR_EACH_HC_VECTOR(vec, idx, iter) \
+for (idx = 0, iter = (vec).getp(&(vec), idx); idx < (vec).size(&(vec)); ++idx, iter = (vec).getp(&(vec), idx))
 
 #endif

@@ -99,6 +99,7 @@ ohos_unittest("DeviceAuthTest") {
     "./unittest_mock/huks_adapter_mock.c",
     "deviceauth_test.cpp",
     "hichain_receivedata_test.cpp",
+    "commonutil_test.cpp",
   ]
 
   cflags = [

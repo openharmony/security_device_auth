@@ -496,9 +496,9 @@ static void SaveAllOperationInfo(void)
     }
 }
 
-static void RemoveRedundantRecord(OsAccountOperationInfo *info, int32_t maxRecord)
+static void RemoveRedundantRecord(OsAccountOperationInfo *info, uint32_t maxRecord)
 {
-    int32_t operationSize = HC_VECTOR_SIZE(&info->operations);
+    uint32_t operationSize = HC_VECTOR_SIZE(&info->operations);
     if (operationSize <= maxRecord) {
         return;
     }
@@ -580,7 +580,7 @@ int32_t GetOperationDataRecently(int32_t osAccountId, DevAuthOperationType type,
             continue;
         }
         int32_t incOffset = sprintf_s(record + offset, recordSize - offset - 1,
-            "[caller: %s, function: %s, operationInfo: %s, type:%d opTime: %ld]",
+            "[caller: %s, function: %s, operationInfo: %s, type:%u opTime: %ld]",
             StringGet(&(*entry)->caller), StringGet(&(*entry)->function),
             StringGet(&(*entry)->operationInfo), (*entry)->operationType,
             (*entry)->operationTime);

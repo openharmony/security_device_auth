@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2020-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -276,7 +276,7 @@ int32_t CheckDlSpekePublicKey(const struct var_buffer *key, uint32_t bigNumLen)
         LOGE("Malloc primeVal failed.");
         return HC_MALLOC_FAILED;
     }
-    if (hex_string_to_byte(primeHex, strlen(primeHex), primeVal) != ERROR_CODE_SUCCESS) {
+    if (hex_string_to_byte(primeHex, strlen(primeHex), primeVal, primeLen) != ERROR_CODE_SUCCESS) {
         LOGE("hex_string_to_byte for prime num failed");
         FREE(primeVal);
         return HC_INPUT_ERROR;

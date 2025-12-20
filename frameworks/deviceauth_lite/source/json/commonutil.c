@@ -37,14 +37,17 @@ void byte_to_hex_string(const uint8_t *hex, int32_t hex_len, uint8_t *buf, int32
     }
 }
 
-int32_t hex_string_to_byte(const char *str, int32_t len, uint8_t *hex)
+int32_t hex_string_to_byte(const char *str, int32_t len, uint8_t *hex, int32_t hex_len)
 {
     if (len % BYTE_TO_HEX_OPER_LENGTH) { /* even number or not */
         LOGE("Length is not even number");
         return HC_INPUT_ERROR;
     }
 
-    int32_t hex_len = len / BYTE_TO_HEX_OPER_LENGTH; /* Halve the length */
+    if (hex_len != len / BYTE_TO_HEX_OPER_LENGTH) {
+        LOGE("Length overflow");
+        return HC_INPUT_ERROR;
+    }
     uint8_t nibble[BYTE_TO_HEX_OPER_LENGTH]; /* create array */
 
     for (int32_t i = 0; i < hex_len; i++) {
@@ -93,7 +96,7 @@ int32_t byte_convert(json_pobject obj, const char *field, uint8_t *hex, uint32_t
     if ((len / BYTE_TO_HEX_OPER_LENGTH) > max_len) {
         return HC_INPUT_ERROR;
     }
-    if (hex_string_to_byte(str_json, len, hex) != HC_OK) {
+    if (hex_string_to_byte(str_json, len, hex, len / BYTE_TO_HEX_OPER_LENGTH) != HC_OK) {
         return HC_INPUT_ERROR;
     }
     *length = len / BYTE_TO_HEX_OPER_LENGTH;

@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-int32_t hex_string_to_byte(const char *str, int32_t len, uint8_t *hex);
+int32_t hex_string_to_byte(const char *str, int32_t len, uint8_t *hex, int32_t hex_len);
 void byte_to_hex_string(const uint8_t *hex, int32_t hex_len, uint8_t *buf, int32_t buf_len);
 
 void print_bytes(uint8_t *buf, int32_t buf_len);
