@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Huawei Device Co., Ltd.
+ * Copyright (c) 2020-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,7 +63,8 @@ static void *get_single_json_from_buff(const char *payload, const char *name, en
     if (request_data->val == NULL) {
         goto error;
     }
-    if (hex_string_to_byte(client_chall, json_data_len, request_data->val) != HC_OK) {
+    if (hex_string_to_byte(client_chall, json_data_len, request_data->val,
+        request_data->size) != HC_OK) {
         goto error;
     }
     free_payload(obj, data_type);

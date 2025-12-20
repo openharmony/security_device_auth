@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Huawei Device Co., Ltd.
+ * Copyright (c) 2020-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -56,7 +56,8 @@ void *parse_exchange_response(const char *payload, enum json_object_data_type da
         goto error;
     }
     (void)memset_s(exchange_response->cipher.val, exchange_response->cipher.size, 0, exchange_response->cipher.size);
-    if (hex_string_to_byte(ex_auth_info, len_ex_auth_info, exchange_response->cipher.val) != HC_OK) {
+    if (hex_string_to_byte(ex_auth_info, len_ex_auth_info, exchange_response->cipher.val,
+        exchange_response->cipher.size) != HC_OK) {
         goto error;
     }
     free_payload(obj, data_type);

@@ -37,7 +37,7 @@ typedef struct {
     HcString function;
     HcString operationInfo; // （credId/groupId，deviceId）
     uint32_t operationType;
-    int64_t operationTime;
+    uint64_t operationTime;
 } Operation;
 DECLARE_HC_VECTOR(OperationVec, Operation*)
 

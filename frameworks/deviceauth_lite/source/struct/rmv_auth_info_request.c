@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Huawei Device Co., Ltd.
+ * Copyright (c) 2020-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -56,7 +56,8 @@ void *parse_rmv_auth_info_request(const char *payload, enum json_object_data_typ
     }
     (void)memset_s(rmv_auth_info_request->cipher.val, rmv_auth_info_request->cipher.size,
                    0, rmv_auth_info_request->cipher.size);
-    if (hex_string_to_byte(add_return, len_rmv_return, rmv_auth_info_request->cipher.val) != HC_OK) {
+    if (hex_string_to_byte(add_return, len_rmv_return, rmv_auth_info_request->cipher.val,
+        rmv_auth_info_request->cipher.size) != HC_OK) {
         goto error;
     }
     free_payload(obj, data_type);

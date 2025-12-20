@@ -339,7 +339,6 @@ int32_t ServiceDevAuth::SetCallMap(IpcServiceCall method, int32_t methodId)
     int32_t len;
     errno_t eno;
     IpcServiceCallMap *callMapTmp = nullptr;
-
     if ((1 + callMapElemNum) > maxCallMapSz) {
         maxCallMapSz += MAX_CALLMAP_SIZE;
         if (standardCallMapTable != nullptr) {
