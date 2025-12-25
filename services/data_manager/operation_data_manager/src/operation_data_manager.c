@@ -79,6 +79,7 @@ IMPLEMENT_HC_VECTOR(OperationDb, OsAccountOperationInfo, 1)
 
 #define MAX_DB_PATH_LEN 256
 #define TAINED_OPERATION "tained operation record!"
+#define TIME_LEN 20
 
 static HcMutex *g_operationMutex = NULL;
 static OperationDb g_operationDb;
@@ -625,29 +626,41 @@ static void LoadDeviceAuthDb(void)
 
 
 #ifdef DEV_AUTH_HIVIEW_ENABLE
+static char *HcFormatTime(int64_t timestamp)
+{
+    char *curTime = (char*)HcMalloc(TIME_LEN, 0);
+    if (curTime != NULL) {
+        struct tm *tm_info = localtime((time_t*)&timestamp);
+        strftime(curTime, TIME_LEN, "%Y-%m-%d %H:%M:%S", tm_info);
+        return curTime;
+    }
+    return NULL;
+}
 static void DumpOperation(int fd, const Operation *operation)
 {
-    dprintf(fd, "||----------------------------Operation----------------------------|                   |\n");
-    dprintf(fd, "||%-12s = %s                   \n", "caller", StringGet(&operation->caller));
-    dprintf(fd, "||%-12s = %s                   \n", "function", StringGet(&operation->function));
-    dprintf(fd, "||%-12s = %s                   \n", "operationInfo", StringGet(&operation->operationInfo));
-    dprintf(fd, "||%-12s = %d                   \n", "operationType", operation->operationType);
-    dprintf(fd, "||%-12s = %d                   \n", "operationTime", operation->operationTime);
-    dprintf(fd, "||----------------------------Operation----------------------------|                   |\n");
+    dprintf(fd, "||---------------------------Operation---------------------------|                  |\n");
+    dprintf(fd, "||%-12s = %47s|                  |\n", "caller", StringGet(&operation->caller));
+    dprintf(fd, "||%-12s = %47s|                  |\n", "function", StringGet(&operation->function));
+    dprintf(fd, "||%-12s = %47s|                  |\n", "operationInfo", StringGet(&operation->operationInfo));
+    dprintf(fd, "||%-12s = %47d|                  |\n", "operationType", operation->operationType);
+    char *curTime = HcFormatTime(operation->operationTime);
+    dprintf(fd, "||%-12s = %47d                   \n", "operationTime", operation->operationTime);
+    dprintf(fd, "||---------------------------Operation---------------------------|                  |\n");
+    HcFree(curTime);
 }
 
 static void DumpDb(int fd, const OsAccountOperationInfo *db)
 {
     const OperationVec *operations = &db->operations;
-    dprintf(fd, "|-------------------------------------OperationDB-------------------------------------|\n");
-    dprintf(fd, "|%-12s = %-67d|\n", "osAccountId", db->osAccountId);
-    dprintf(fd, "|%-12s = %-67d|\n", "operationNum", operations->size(operations));
+    dprintf(fd, "|------------------------------------OperationDB------------------------------------|\n");
+    dprintf(fd, "|%-12s = %-68d|\n", "osAccountId", db->osAccountId);
+    dprintf(fd, "|%-12s = %-68d|\n", "operationNum", operations->size(operations));
     uint32_t index;
     Operation **operation;
     FOR_EACH_HC_VECTOR(*operations, index, operation) {
         DumpOperation(fd, *operation);
     }
-    dprintf(fd, "|-------------------------------------OperationDB-------------------------------------|\n");
+    dprintf(fd, "|------------------------------------OperationDB------------------------------------|\n");
 }
 
 static void LoadAllAccountsData(void)

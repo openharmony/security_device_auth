@@ -1254,8 +1254,9 @@ static void DumpCredential(int fd, const Credential *credential)
         dprintf(fd, "||%-16s %d = %-43.8s|                  |\n", "app", index, StringGet(authorizedApp));
     }
     dprintf(fd, "||%-16s = %-43d|                  |\n", "authorizedScope", credential->authorizedScope);
-    dprintf(fd, "||%-16s = %-43.8s|                  |\n", "credOwner", StringGet(&credential->credOwner));
-    dprintf(fd, "||%-16s = %-43.8s|                  |\n", "extendInfo", StringGet(&credential->extendInfo));
+    dprintf(fd, "||%-16s = %-43.20s|                  |\n", "credOwner", StringGet(&credential->credOwner));
+    dprintf(fd, "||%-16s = %-43.11s|                  |\n", "extendInfo", StringGet(&credential->extendInfo));
+    dprintf(fd, "||%-16s = %-43d|                  |\n", "ownerUid", credential->ownerUid);
     dprintf(fd, "||--------------------------Credential--------------------------|                  |\n");
 }
 

@@ -17,6 +17,7 @@
 #define HC_TIME_H
 
 #include <stdint.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {
