@@ -15,7 +15,6 @@
 
 #include "hc_time.h"
 #include <stdio.h>
-#include <time.h>
 #include "hc_log.h"
 
 #define SECOND_TO_MILLISECOND 1000
