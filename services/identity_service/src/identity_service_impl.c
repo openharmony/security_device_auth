@@ -154,6 +154,7 @@ int32_t ExportCredentialImpl(int32_t osAccountId, const char *credId, char **ret
     ret = CheckOwnerUidPermission(credential);
     DestroyCredential(credential);
     if (ret != IS_SUCCESS) {
+        LOGE("Check Uid failed when export credential.");
         return ret;
     }
     Uint8Buff credIdByte = { NULL, 0 };
@@ -322,9 +323,10 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
         return ret;
     }
     ret = CheckDeletePermission(credential);
-    int32_t credentialUid = credential->ownerUid;
+    int32_t currentUid = GetCallingUid();
     do {
         if (ret != IS_SUCCESS) {
+            LOGE("Check Uid failed when delete credential.");
             break;
         }
 
@@ -345,7 +347,7 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
             break;
         }
 
-        if (credentialUid != DEV_AUTH_UID) {
+        if (currentUid != DEV_AUTH_UID) {
             ret = GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId);
         }
         HcFree(credIdByte.val);
@@ -450,6 +452,7 @@ int32_t UpdateCredInfoImpl(int32_t osAccountId, const char *credId, const char *
 
     ret = CheckOwnerUidPermission(credential);
     if (ret != IS_SUCCESS) {
+        LOGE("Check Uid failed when update credinfo.");
         DestroyCredential(credential);
         return ret;
     }

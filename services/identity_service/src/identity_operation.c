@@ -1117,8 +1117,12 @@ int32_t GenerateReturnEmptyArrayStr(char **returnVec)
 int32_t CheckOwnerUidPermission(Credential *credential)
 {
     int32_t currentUid = GetCallingUid();
+    if (currentUid == DEV_AUTH_UID && credential->credType == ACCOUNT_RELATED) {
+        return IS_SUCCESS;
+    }
     if (currentUid != credential->ownerUid) {
-        LOGE("currentUid is not the same as the ownerUid of the credential");
+        LOGE("check Onwer Uid failed, currentUid: %" LOG_PUB "d, ownerUid: %" LOG_PUB "d",
+            currentUid, credential->ownerUid);
         return IS_ERR_OWNER_UID;
     }
     return IS_SUCCESS;
