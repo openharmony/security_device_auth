@@ -688,7 +688,10 @@ ohos_unittest("device_auth_ipc_test") {
     "source/p2p_bind_ipc_test.cpp",
   ]
 
-  deps = [ "${deps_adapter_path}:${hal_module_test_name}" ]
+  deps = [
+    "${deps_adapter_path}:${hal_module_test_name}",
+    "//base/security/device_auth/services:deviceauth_sdk",
+  ]
 
   cflags = [ "-DHILOG_ENABLE" ]
 
@@ -698,7 +701,6 @@ ohos_unittest("device_auth_ipc_test") {
     "selinux_adapter:librestorecon",
     "cJSON:cjson",
     "c_utils:utils",
-    "device_auth:deviceauth_sdk",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -824,7 +826,10 @@ ohos_unittest("light_auth_test") {
     "source/light_auth_test.cpp",
   ]
 
-  deps = [ "${deps_adapter_path}:${hal_module_test_name}" ]
+  deps = [
+    "${deps_adapter_path}:${hal_module_test_name}",
+    "//base/security/device_auth/services:deviceauth_sdk",
+    ]
 
   cflags = [ "-DHILOG_ENABLE" ]
   cflags += [
@@ -853,7 +858,6 @@ ohos_unittest("light_auth_test") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "selinux_adapter:librestorecon",
-    "device_auth:deviceauth_sdk",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -871,7 +875,10 @@ ohos_unittest("identity_service_ipc_test") {
 
   sources = [ "source/identity_service_ipc_test.cpp" ]
 
-  deps = [ "${deps_adapter_path}:${hal_module_test_name}" ]
+  deps = [
+    "${deps_adapter_path}:${hal_module_test_name}",
+    "//base/security/device_auth/services:deviceauth_sdk",
+  ]
 
   defines = [ "DEV_AUTH_IS_ENABLE" ]
 
@@ -883,7 +890,6 @@ ohos_unittest("identity_service_ipc_test") {
     "selinux_adapter:librestorecon",
     "cJSON:cjson",
     "c_utils:utils",
-    "device_auth:deviceauth_sdk",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
