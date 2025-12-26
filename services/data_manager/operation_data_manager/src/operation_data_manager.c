@@ -225,6 +225,8 @@ static bool SaveTainedOperation(int32_t osAccountId)
     tainedOperation->operationTime = HcGetRealTime();
     if (StringAppendPointer(&(tainedOperation->operationInfo), TAINED_OPERATION) == HC_FALSE) {
         LOGE("failed to append tained operation info!");
+        DeleteString(&(tainedOperation->operationInfo));
+        tainedOperation->operationInfo = CreateString();
     }
     OsAccountOperationInfo tainedInfo;
     tainedInfo.osAccountId = osAccountId;
