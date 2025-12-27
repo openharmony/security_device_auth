@@ -32,6 +32,8 @@
 #include "pseudonym_manager.h"
 #include "security_label_adapter.h"
 #include "account_task_manager.h"
+#include "operation_data_manager.h"
+#include "hisysevent_adapter.h"
 #include "string_util.h"
 
 typedef struct {
@@ -1484,6 +1486,35 @@ int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
     return HC_SUCCESS;
 }
 
+static void RecordAddTrustDeviceEvent(int32_t osAccountId, const TrustedDeviceEntry *deviceEntry)
+{
+    CJson *operationInfo = CreateJson();
+    if (operationInfo == NULL) {
+        return;
+    }
+    SetAnonymousField(StringGet(&(deviceEntry->groupId)), FIELD_GROUP_ID, operationInfo);
+    SetAnonymousField(StringGet(&(deviceEntry->udid)), FIELD_UDID, operationInfo);
+    if (deviceEntry->groupEntry != NULL) {
+        (void)AddStringToJson(operationInfo, FIELD_GROUP_NAME, StringGet(&(deviceEntry->groupEntry->name)));
+    }
+    OperationRecord *operation = CreateOperationRecord();
+    if (operation == NULL) {
+        FreeJson(operationInfo);
+        return;
+    }
+    char *operationInfoString = PackJsonToString(operationInfo);
+    if (operationInfoString != NULL) {
+        CopyHcStringForcibly(&operation->operationInfo, operationInfoString);
+        FreeJsonString(operationInfoString);
+    }
+    CopyHcStringForcibly(&operation->function, ADD_MEMBER_EVENT);
+    CopyHcStringForcibly(&operation->caller, DEFAULT_APPID);
+    operation->operationType = OPERATION_GROUP;
+    RecordOperationData(osAccountId, operation);
+    DestroyOperationRecord(operation);
+    FreeJson(operationInfo);
+}
+
 int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEntry)
 {
     LOGI("[DB]: Start to add a trusted device to database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
@@ -1520,6 +1551,7 @@ int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEn
         LOGE("[DB]: Failed to push deviceEntry to vec!");
         return HC_ERR_MEMORY_COPY;
     }
+    RecordAddTrustDeviceEvent(osAccountId, deviceEntry);
     PostDeviceBoundMsg(info, newEntry);
     UnlockHcMutex(g_databaseMutex);
     LOGI("[DB]: Add a trusted device to database successfully!");

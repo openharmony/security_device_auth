@@ -1471,6 +1471,7 @@ HWTEST_F(DevAuthTest, DevAuthTest001, TestSize.Level0)
     CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS);
     ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
     DestroyDeviceAuthService();
+    DeleteDatabase();
     uint32_t mallocCount = GetJsonCallNum();
     printf("mock count: %u\n", mallocCount);
     for (int i = 0; i < mallocCount; i++) {
@@ -1493,7 +1494,9 @@ HWTEST_F(DevAuthTest, DevAuthTest001, TestSize.Level0)
             continue;
         }
         DestroyDeviceAuthService();
+        DeleteDatabase();
     }
+    EndRecordJsonCallNum();
 }
 
 HWTEST_F(DevAuthTest, DevAuthTest101, TestSize.Level0)
@@ -1536,7 +1539,9 @@ HWTEST_F(DevAuthTest, DevAuthTest101, TestSize.Level0)
             continue;
         }
         DestroyDeviceAuthService();
+        DeleteDatabase();
     }
+    EndRecordJsonCallNum();
 }
 
 HWTEST_F(DevAuthTest, DevAuthTest002, TestSize.Level0)
@@ -1549,6 +1554,8 @@ HWTEST_F(DevAuthTest, DevAuthTest002, TestSize.Level0)
     ASSERT_EQ(ret, HC_SUCCESS);
     CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS);
     ASSERT_EQ(g_asyncStatus, ASYNC_STATUS_FINISH);
+    CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS);
+    ASSERT_NE(g_asyncStatus, ASYNC_STATUS_FINISH);
 
     StartRecordJsonCallNum();
     ret = gm->checkAccessToGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_GROUP_ID);
@@ -1563,6 +1570,7 @@ HWTEST_F(DevAuthTest, DevAuthTest002, TestSize.Level0)
         }
     }
     DestroyDeviceAuthService();
+    EndRecordJsonCallNum();
 }
 
 HWTEST_F(DevAuthTest, DevAuthTest003, TestSize.Level0)
@@ -1595,6 +1603,7 @@ HWTEST_F(DevAuthTest, DevAuthTest003, TestSize.Level0)
         gm->destroyInfo(&returnData);
     }
     DestroyDeviceAuthService();
+    EndRecordJsonCallNum();
 }
 
 HWTEST_F(DevAuthTest, DevAuthTest004, TestSize.Level0)
@@ -1624,6 +1633,7 @@ HWTEST_F(DevAuthTest, DevAuthTest004, TestSize.Level0)
         gm->destroyInfo(&returnData);
     }
     DestroyDeviceAuthService();
+    EndRecordJsonCallNum();
 }
 
 HWTEST_F(DevAuthTest, DevAuthTest005, TestSize.Level0)
@@ -1655,6 +1665,7 @@ HWTEST_F(DevAuthTest, DevAuthTest005, TestSize.Level0)
         gm->destroyInfo(&returnData);
     }
     DestroyDeviceAuthService();
+    EndRecordJsonCallNum();
 }
 
 HWTEST_F(DevAuthTest, DevAuthTest006, TestSize.Level0)
@@ -1685,6 +1696,7 @@ HWTEST_F(DevAuthTest, DevAuthTest006, TestSize.Level0)
         gm->destroyInfo(&returnData);
     }
     DestroyDeviceAuthService();
+    EndRecordJsonCallNum();
 }
 
 HWTEST_F(DevAuthTest, DevAuthTest007, TestSize.Level0)
@@ -1715,6 +1727,7 @@ HWTEST_F(DevAuthTest, DevAuthTest007, TestSize.Level0)
         gm->destroyInfo(&returnData);
     }
     DestroyDeviceAuthService();
+    EndRecordJsonCallNum();
 }
 
 HWTEST_F(DevAuthTest, DevAuthTest008, TestSize.Level0)
@@ -1744,6 +1757,7 @@ HWTEST_F(DevAuthTest, DevAuthTest008, TestSize.Level0)
         gm->destroyInfo(&returnData);
     }
     DestroyDeviceAuthService();
+    EndRecordJsonCallNum();
 }
 
 HWTEST_F(DevAuthTest, DevAuthTest009, TestSize.Level0)
@@ -1774,6 +1788,7 @@ HWTEST_F(DevAuthTest, DevAuthTest009, TestSize.Level0)
         gm->destroyInfo(&returnData);
     }
     DestroyDeviceAuthService();
+    EndRecordJsonCallNum();
 }
 
 HWTEST_F(DevAuthTest, DevAuthTest010, TestSize.Level0)
@@ -1802,6 +1817,7 @@ HWTEST_F(DevAuthTest, DevAuthTest010, TestSize.Level0)
         }
     }
     DestroyDeviceAuthService();
+    EndRecordJsonCallNum();
 }
 
 class ExtPartTest : public testing::Test {

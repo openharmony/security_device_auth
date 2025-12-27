@@ -29,6 +29,7 @@ using namespace std;
 using namespace testing::ext;
 
 namespace {
+#define EMPTY_STRING ""
 #define TEST_STRING "test"
 #define TEST_STRING_128 "1234567812345678123456781234567812345678123456781234567812345678" \
     "1234567812345678123456781234567812345678123456781234567812345678"
@@ -66,6 +67,10 @@ void DFXOperationCommonTest::TearDown()
 
 HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest001, TestSize.Level0)
 {
+    LogAndRecordError(NULL, TEST_NUM, NULL);
+    LogAndRecordError(TEST_STRING, TEST_NUM, NULL);
+    LogAndRecordError(TEST_STRING, TEST_NUM, EMPTY_STRING);
+    LogAndRecordError(TEST_STRING, TEST_NUM, LOG_PUB);
     LOGE(TEST_STRING);
     SET_TRACE_ID(TEST_NUM);
     SET_LOG_MODE_AND_ERR_TRACE(NORMAL_MODE, false);
@@ -105,7 +110,7 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest004, TestSize.Level0)
     bool res = IsOsAccountOperationInfoLoaded(INVALID_OS_ACCOUNT);
     EXPECT_EQ(res, false);
     TlvOperation tlvOperation;
-    Operation entry;
+    OperationRecord entry;
     tlvOperation.caller.data.parcel.data = NULL;
     tlvOperation.caller.data.parcel.beginPos = TEST_NUM_ZERO;
     tlvOperation.caller.data.parcel.endPos = TEST_NUM_ZERO;
@@ -139,10 +144,24 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest004, TestSize.Level0)
 
 HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest005, TestSize.Level0)
 {
+    HcString str = CreateString();
+    CopyHcStringForcibly(NULL, NULL);
+    CopyHcStringForcibly(&str, NULL);
+    CopyHcStringForcibly(&str, TEST_STRING);
+    DeleteString(&str);
+
+    CJson *operationInfo = CreateJson();
+    SetAnonymousField(NULL, NULL, NULL);
+    SetAnonymousField(TEST_STRING, NULL, NULL);
+    SetAnonymousField(TEST_STRING, TEST_STRING, NULL);
+    SetAnonymousField(TEST_STRING, TEST_STRING, operationInfo);
+    SetAnonymousField(TEST_STRING_128, TEST_STRING, operationInfo);
+    FreeJson(operationInfo);
+
     OperationVec vec = CreateOperationVec();
     HcOperationDataBaseV1 dbv1;
-    Operation *operation1 = CreateOperationRecord();
-    Operation operation2;
+    OperationRecord *operation1 = CreateOperationRecord();
+    OperationRecord operation2;
     operation2.caller.parcel.data = NULL;
     operation2.caller.parcel.beginPos = TEST_NUM_ZERO;
     operation2.caller.parcel.endPos = TEST_NUM_ZERO;
@@ -236,7 +255,7 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest009, TestSize.Level0)
 HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest010, TestSize.Level0)
 {
     TlvOperation tlvOperation;
-    Operation entry;
+    OperationRecord entry;
     entry.caller.parcel.data = NULL;
     entry.caller.parcel.beginPos = TEST_NUM_ZERO;
     entry.caller.parcel.endPos = TEST_NUM_ZERO;
@@ -295,8 +314,8 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest012, TestSize.Level0)
     OsAccountOperationInfo *info = GetOperationInfoByOsAccountId(DEFAULT_OS_ACCOUNT);
     EXPECT_NE(info, NULL);
 
-    Operation entry2;
-    Operation entry1;
+    OperationRecord entry2;
+    OperationRecord entry1;
     entry1.caller.parcel.data = NULL;
     entry1.caller.parcel.beginPos = TEST_NUM_ZERO;
     entry1.caller.parcel.endPos = TEST_NUM_ZERO;
@@ -331,12 +350,12 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest012, TestSize.Level0)
 HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest013, TestSize.Level0)
 {
     ClearOperationVec(NULL);
-    Operation entry1;
+    OperationRecord entry1;
     entry1.caller.parcel.data = NULL;
     entry1.caller.parcel.beginPos = TEST_NUM_ZERO;
     entry1.caller.parcel.endPos = TEST_NUM_ZERO;
-    Operation *operation1 = CreateOperationRecord();
-    Operation *operation2 = DeepCopyOperationRecord(NULL);
+    OperationRecord *operation1 = CreateOperationRecord();
+    OperationRecord *operation2 = DeepCopyOperationRecord(NULL);
     EXPECT_EQ(operation2, NULL);
     operation2 = DeepCopyOperationRecord(&entry1);
     EXPECT_EQ(operation2, NULL);
@@ -378,7 +397,7 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest015, TestSize.Level0)
     LoadDataIfNotLoaded(TEST_OS_ACCOUNT_ID);
     ret = IsOsAccountOperationInfoLoaded(INVALID_OS_ACCOUNT);
     EXPECT_EQ(ret, false);
-    Operation *operation1 = CreateOperationRecord();
+    OperationRecord *operation1 = CreateOperationRecord();
     int32_t res = RecordOperationData(TEST_OS_ACCOUNT_ID, operation1);
     EXPECT_EQ(res, HC_SUCCESS);
     char record[TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE] = { 0 };
@@ -389,5 +408,23 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest015, TestSize.Level0)
     DevAuthDataBaseDump(0);
 #endif
     DestroyOperationRecord(operation1);
+}
+
+HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest016, TestSize.Level0)
+{
+    InitOperationDataManager();
+    DestroyOperationDataManager();
+    DestroyOperationDataManager();
+    OperationRecord *operation1 = CreateOperationRecord();
+    int32_t res = RecordOperationData(TEST_OS_ACCOUNT_ID, operation1);
+    EXPECT_EQ(res, HC_ERR_INIT_FAILED);
+
+    char record[TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE] = { 0 };
+    res = GetOperationDataRecently(TEST_OS_ACCOUNT_ID, OPERATION_ANY, record,
+        TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE, TEST_NUM_ONE);
+    EXPECT_EQ(res, -1);
+
+    DestroyOperationRecord(operation1);
+    InitOperationDataManager();
 }
 }

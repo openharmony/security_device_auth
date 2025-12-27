@@ -154,12 +154,9 @@ int32_t InitIpcCallBackList(void)
 
 static void ResetIpcCallBackNode(IpcCallBackNode &node)
 {
-    char errStr[] = "invalid";
-    char *appId = errStr;
     if ((node.appId[0] != 0) && (node.appId[sizeof(node.appId) - 1] == 0)) {
-        appId = node.appId;
+        LOGI("appid is %" LOG_PUB "s ", node.appId);
     }
-    LOGI("appid is %" LOG_PUB "s ", appId);
     ServiceDevAuth::ResetRemoteObject(node.proxyId);
     SetIpcCallBackNodeDefault(node);
     return;
@@ -294,7 +291,6 @@ int32_t AddIpcCallBackByAppId(const char *appId, const uint8_t *cbPtr, int32_t c
         return HC_SUCCESS;
     }
 
-    LOGI("new callback to add, appid: %" LOG_PUB "s", appId);
     node = GetFreeIpcCallBackNode();
     if (node == nullptr) {
         LOGE("get free node failed");

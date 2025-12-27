@@ -24,7 +24,8 @@ module_output_path = "device_auth/device_auth"
 ohos_fuzztest("SaveTrustedInfoFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file = "${deviceauth_path}/test/fuzztest/session_manager/session/v2/expand_sub_session/expand_process_lib/savetrustedinfo_fuzzer"
-  include_dirs = hals_inc_path
+  include_dirs = inc_path
+  include_dirs += hals_inc_path
   include_dirs += [
     ".",
     "${inner_api_path}",
@@ -76,6 +77,7 @@ ohos_fuzztest("SaveTrustedInfoFuzzTest") {
   sources += identity_manager_files
   sources += identity_service_mock_files
   sources += hiview_adapter_files
+  sources += operation_database_manager_files
   sources += [
     "${device_auth_common}/src/hisysevent_common.c",
     "${authenticators_path}/src/account_related/creds_manager/asy_token_manager.c",

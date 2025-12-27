@@ -153,7 +153,6 @@ static int32_t IpcCmAddCredential(int32_t osAccountId, const char *requestParams
 
 static int32_t IpcCmRegChangeListenerInner(const char *appId, CredChangeListener *listener, bool needCache)
 {
-    LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
     IpcDataInfo replyCache[IPC_DATA_CACHES_1] = { { 0 } };
@@ -180,6 +179,7 @@ static int32_t IpcCmRegChangeListenerInner(const char *appId, CredChangeListener
 
 static int32_t IpcCmRegChangeListener(const char *appId, CredChangeListener *listener)
 {
+    LOGI("starting ...");
     return IpcCmRegChangeListenerInner(appId, listener, true);
 }
 

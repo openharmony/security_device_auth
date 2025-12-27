@@ -50,6 +50,14 @@
 #define ADD_MEMBER_HOST_PKG_NAME "deviceManager"
 #define AUTH_DEVICE_HOST_PKG_NAME "dsoftbus"
 
+#define DIRECT_QUERY_CREDENTIAL "directQueryCredential"
+#define DIRECT_GENERATE_CREDENTIAL "directGenerateCredential"
+#define DIRECT_IMPORT_CREDENTIAL "directImportCredential"
+#define DIRECT_DELETE_CREDENTIAL "directDeleteCredential"
+
+#define COMMON_EVENT "CommonEvent"
+#define CACHE_COMMON_EVENT "CacheCommonEvent"
+
 #define ANONYMOUS_UDID_LEN 12
 
 #define DEFAULT_GROUP_TYPE 0
@@ -57,6 +65,7 @@
 #define DEFAULT_CRED_TYPE 0
 #define DEFAULT_CALL_RESULT 0
 #define DEFAULT_APPID "unknown appId"
+#define DEFAULT_FUNC_NAME "unknown function"
 
 #define DEFAULT_EXECUTION_TIME 0
 #define DEFAULT_REQ_ID 0
@@ -86,6 +95,14 @@ enum DevAuthReportProcessCode {
     PROCESS_BATCH_UPDATE_CREDENTIALS,           //4113
     PROCESS_AGREE_CREDENTIAL,                   //4114
     PROCESS_AUTH_IDENTITY_SERVICE,              //4115
+
+    PROCESS_DIRECT_QUERY_CREDENTIAL = 4150,     //4150
+    PROCESS_DIRECT_GENERATE_CREDENTIAL,         //4151
+    PROCESS_DIRECT_IMPORT_CREDENTIAL,           //4152
+    PROCESS_DIRECT_DELETE_CREDENTIAL,           //4153
+
+    PROCESS_COMMON_EVENT = 4200,                //4200
+    PROCESS_CACHE_COMMON_EVENT,                 //4201
 };
 
 #define DEFAULT_PNAMEID "device_auth"

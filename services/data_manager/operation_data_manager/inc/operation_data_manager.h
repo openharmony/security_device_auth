@@ -20,16 +20,21 @@
 #include "hc_string.h"
 #include "hc_tlv_parser.h"
 #include "hc_vector.h"
+#include "json_utils.h"
 
 #define FIELD_OPERATION_RECORD "operationRecord"
+#define FIELD_COMMON_EVENT_RECORD "commonEventRecord"
 
-#define DEFAULT_RECORD_OPERATION_SIZE 128
-#define DEFAULT_RECENT_OPERATION_CNT 20
+#define DEFAULT_RECORD_OPERATION_SIZE 180
 
 #ifdef LITE_DEVICE
 #define MAX_RECENT_OPERATION_CNT 30
+#define DEFAULT_RECENT_OPERATION_CNT 15
+#define DEFAULT_COMMON_EVENT_CNT 0
 #else
 #define MAX_RECENT_OPERATION_CNT 150
+#define DEFAULT_RECENT_OPERATION_CNT 20
+#define DEFAULT_COMMON_EVENT_CNT 5
 #endif
 
 typedef struct {
@@ -38,30 +43,31 @@ typedef struct {
     HcString operationInfo; // （credId/groupId，deviceId）
     uint32_t operationType;
     uint64_t operationTime;
-} Operation;
-DECLARE_HC_VECTOR(OperationVec, Operation*)
+} OperationRecord;
+DECLARE_HC_VECTOR(OperationVec, OperationRecord*)
 
 typedef enum DevAuthOperationType {
-    OPERATION_CREDENTIAL = 0,                  //0
-    OPERATION_COMMON_EVENT,                    //1
-    OPERATION_GROUP,                           //2
-    OPERATION_IDENTITY_SERVICE,                //3
-    OPERATION_ANY = 100,                       //100
+    OPERATION_COMMON_EVENT        = 1,
+    OPERATION_GROUP               = 2,
+    OPERATION_IDENTITY_SERVICE    = 4,
+    OPERATION_ANY                 = 0xFFFFFFFF
 } DevAuthOperationType;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t RecordOperationData(int32_t osAccountId, const Operation *operation);
-int32_t GetOperationDataRecently(int32_t osAccountId, DevAuthOperationType type, char *record,
+void CopyHcStringForcibly(HcString *self, const char *str);
+void SetAnonymousField(const char *str, const char *field, CJson *operationInfo);
+int32_t RecordOperationData(int32_t osAccountId, const OperationRecord *operation);
+int32_t GetOperationDataRecently(int32_t osAccountId, uint32_t types, char *record,
     uint32_t recordSize, uint32_t maxOperationCnt);
 
 int32_t InitOperationDataManager(void);
 void DestroyOperationDataManager(void);
-Operation *CreateOperationRecord(void);
-Operation *DeepCopyOperationRecord(const Operation *entry);
-void DestroyOperationRecord(Operation *operation);
+OperationRecord *CreateOperationRecord(void);
+OperationRecord *DeepCopyOperationRecord(const OperationRecord *entry);
+void DestroyOperationRecord(OperationRecord *operation);
 void ClearOperationVec(OperationVec *vec);
 
 #ifdef __cplusplus

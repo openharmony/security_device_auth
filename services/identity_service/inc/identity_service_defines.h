@@ -40,6 +40,7 @@
 #define FIELD_CRED_ID_LIST "credIdList"
 #define FIELD_BASE_INFO "baseInfo"
 #define FIELD_UPDATE_LISTS "updateLists"
+#define FIELD_UID "uid"
 #define DEFAULT_VAL 0
 #define RAND_NUM_LENGTH 16
 #define KEY_VALUE_MAX_LENGTH 128

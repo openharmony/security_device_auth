@@ -316,29 +316,28 @@ static void ReportBindAndAuthCallEvent(const SessionImpl *impl, int32_t callResu
 static void ReportBindAndAuthFaultEvent(const SessionImpl *impl, int32_t errorCode, bool isV1Session)
 {
     char operationRecord[DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE] = {0};
+    char commonEventRecord[DEFAULT_COMMON_EVENT_CNT * DEFAULT_RECORD_OPERATION_SIZE] = {0};
     int32_t osAccountId = ANY_OS_ACCOUNT;
     (void)GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId);
-    (void)GetOperationDataRecently(osAccountId, (impl->isCredAuth ? OPERATION_IDENTITY_SERVICE : OPERATION_GROUP),
-        operationRecord, DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE, DEFAULT_RECENT_OPERATION_CNT);
-    LOGI("Recent operation : %" LOG_PUB "s", operationRecord);
+    uint32_t type = (impl->isCredAuth ? OPERATION_IDENTITY_SERVICE : OPERATION_GROUP);
+    (void)GetOperationDataRecently(osAccountId, type, operationRecord,
+        DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE, DEFAULT_RECENT_OPERATION_CNT);
+    (void)GetOperationDataRecently(osAccountId, OPERATION_COMMON_EVENT, commonEventRecord,
+        DEFAULT_COMMON_EVENT_CNT * DEFAULT_RECORD_OPERATION_SIZE, DEFAULT_COMMON_EVENT_CNT);
+    LOGI("Recent operation : %" LOG_PUB "s\n, Recent event : %" LOG_PUB "s", operationRecord, commonEventRecord);
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     CJson *extJson = CreateJson();
     if (extJson == NULL) {
         return;
     }
     (void)AddStringToJson(extJson, FIELD_OPERATION_RECORD, operationRecord);
+    (void)AddStringToJson(extJson, FIELD_COMMON_EVENT_RECORD, commonEventRecord);
     (void)AddStringToJson(extJson, FIELD_ERR_TRACE, GET_ERR_TRACE());
-    char anonymousId[DEFAULT_ANONYMOUS_LEN + 1] = { 0 };
-    char anonymousPeerUdid[DEFAULT_ANONYMOUS_LEN + 1] = { 0 };
     const char *credId = GetStringFromJson(impl->context, FIELD_CRED_ID);
     const char *id = (credId == NULL) ? GetStringFromJson(impl->context, FIELD_GROUP_ID) : credId;
     const char *peerUdid = GetStringFromJson(impl->context, FIELD_PEER_UDID);
-    if (GetAnonymousString(id, anonymousId, DEFAULT_ANONYMOUS_LEN, false) == HC_SUCCESS) {
-        (void)AddStringToJson(extJson, (credId == NULL) ? FIELD_GROUP_ID : FIELD_CRED_ID, anonymousId);
-    }
-    if (GetAnonymousString(peerUdid, anonymousPeerUdid, DEFAULT_ANONYMOUS_LEN, false) == HC_SUCCESS) {
-        (void)AddStringToJson(extJson, FIELD_PEER_UDID, anonymousPeerUdid);
-    }
+    SetAnonymousField(id, (credId == NULL) ? FIELD_GROUP_ID : FIELD_CRED_ID, extJson);
+    SetAnonymousField(peerUdid, FIELD_PEER_UDID, extJson);
     char *extJsonString = PackJsonToString(extJson);
     DevAuthFaultEvent eventData;
     eventData.appId = impl->base.appId;

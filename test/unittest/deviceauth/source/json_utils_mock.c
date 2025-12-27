@@ -21,8 +21,14 @@
 #include "hc_types.h"
 #include "securec.h"
 #include "string_util.h"
+#include "hc_log.h"
 
 #define RECURSE_FLAG_TRUE 1
+#define MAX_DEPTH 10
+#define MAX_LEN 5
+#define BIG_INT_ARR "bigIntArr"
+#define SPLIT_LEN_ONE 1
+#define SPLIT_LEN_TWO 2
 
 static uint32_t g_mockIndex = __INT32_MAX__;
 static uint32_t g_callNum = 0;
@@ -68,12 +74,35 @@ void SetJsonCallMockIndex(uint32_t index)
     g_mockIndex = index;
 }
 
+static int32_t GetCjsonMaxDepth(const char *jsonStr)
+{
+    int32_t max = 0;
+    uint32_t len = HcStrlen(jsonStr);
+    int32_t cnt = 0;
+    for (uint32_t i = 0; i < len; i++) {
+        if (jsonStr[i] == '{' || jsonStr[i] == '[') {
+            cnt++;
+            if (cnt > max) {
+                max = cnt;
+            }
+        } else if (jsonStr[i] == '}' || jsonStr[i] == ']') {
+            cnt--;
+        }
+    }
+    return max;
+}
+
 CJson *CreateJsonFromString(const char *jsonStr)
 {
     if (jsonStr == NULL) {
         return NULL;
     }
     if (Is_Need_Mock()) {
+        return NULL;
+    }
+    int32_t depth = GetCjsonMaxDepth(jsonStr);
+    if (depth > MAX_DEPTH) {
+        LOGE("jsonStr depth %" LOG_PUB "d over 10", depth);
         return NULL;
     }
     return cJSON_Parse(jsonStr);
@@ -160,6 +189,116 @@ CJson *DetachItemFromJson(CJson *jsonObj, const char *key)
     return cJSON_DetachItemFromObjectCaseSensitive(jsonObj, key);
 }
 
+static void ReplaceStringToInt(char *input, const char *keyName)
+{
+    if (keyName == NULL) {
+        LOGE("input keyName is NULL.");
+        return;
+    }
+    uint32_t keywordLen = SPLIT_LEN_ONE + HcStrlen(keyName) + SPLIT_LEN_TWO;
+    char keyword[keywordLen + 1];
+    keyword[0] = '"';
+    if (strcpy_s(&keyword[1], HcStrlen(keyName) + 1, keyName) != EOK) {
+        LOGE("failed to copy keyword to buffer.");
+        return;
+    }
+    keyword[keywordLen - SPLIT_LEN_TWO] = '"';
+    keyword[keywordLen - SPLIT_LEN_ONE] = ':';
+    keyword[keywordLen] = '\0';
+    const char * const pos1 = strstr(input, keyword);
+    if (pos1 == NULL) {
+        LOGW("keyword not found.");
+        return;
+    }
+    const char * const pos2 = strstr(pos1 + keywordLen + 1, "\"");
+    if (pos2 == NULL) {
+        LOGW("json key format parse error.");
+        return;
+    }
+    uint32_t startOffset = pos1 - input + keywordLen;
+    uint32_t endOffset = pos2 - input;
+
+    bool shouldReplace = true;
+    for (uint32_t i = startOffset + 1; i < endOffset; i++) {
+        // only replace if the content is only composed of digits
+        shouldReplace &= input[i] >= '0' && input[i] <= '9';
+    }
+
+    if (shouldReplace) {
+        uint32_t readI = startOffset + SPLIT_LEN_ONE;
+        uint32_t writeI = startOffset;
+        while (input[readI] != '\0') {
+            input[writeI] = input[readI];
+            readI++;
+            writeI++;
+            if (readI == endOffset) {
+                readI++;
+            }
+        }
+        input[writeI] = '\0';
+    }
+}
+
+static char **CreateKeyList(CJson *arr)
+{
+    int keyListSize = GetItemNum(arr);
+    char **keyList = HcMalloc(keyListSize, sizeof(char *));
+    if (keyList == NULL) {
+        LOGE("Malloc keyList failed.");
+        return NULL;
+    }
+    for (int i = 0; i < keyListSize; i++) {
+        const char *str = GetStringValue(GetItemFromArray(arr, i));
+        if (str == NULL) {
+            keyList[i] = NULL;
+        } else {
+            keyList[i] = strdup(str);
+        }
+    }
+    return keyList;
+}
+
+static void DestroyKeyList(int size, char **keyList)
+{
+    for (int i = 0; i < size; i++) {
+        HcFree(keyList[i]);
+    }
+    HcFree(keyList);
+}
+
+static char *PackJsonWithBigIntArrToString(const CJson *jsonObj, CJson *arr)
+{
+    int keyListSize = GetItemNum(arr);
+    char **keyList = CreateKeyList(arr);
+    if (keyList == NULL) {
+        return NULL;
+    }
+    CJson *dupJson = cJSON_Duplicate(jsonObj, RECURSE_FLAG_TRUE);
+    if (dupJson == NULL) {
+        DestroyKeyList(keyListSize, keyList);
+        LOGE("duplicate json failed.");
+        return NULL;
+    }
+    cJSON_DeleteItemFromObject(dupJson, BIG_INT_ARR);
+
+    char *jsonStr = NULL;
+    do {
+        jsonStr = cJSON_PrintUnformatted(dupJson);
+        if (jsonStr == NULL) {
+            LOGE("dup json to str failed.");
+            break;
+        }
+        for (int i = 0; i < keyListSize; i++) {
+            if (keyList[i] != NULL) {
+                ReplaceStringToInt(jsonStr, keyList[i]);
+            }
+        }
+    } while (0);
+    cJSON_Delete(dupJson);
+    DestroyKeyList(keyListSize, keyList);
+    return jsonStr;
+}
+
 char *PackJsonToString(const CJson *jsonObj)
 {
     if (jsonObj == NULL) {
@@ -168,12 +307,18 @@ char *PackJsonToString(const CJson *jsonObj)
     if (Is_Need_Mock()) {
         return NULL;
     }
-    return cJSON_PrintUnformatted(jsonObj);
+    CJson *arr = GetObjFromJson(jsonObj, BIG_INT_ARR);
+    if (arr == NULL) {
+        return cJSON_PrintUnformatted(jsonObj);
+    }
+    return PackJsonWithBigIntArrToString(jsonObj, arr);
 }
 
 void FreeJsonString(char *jsonStr)
 {
-    cJSON_free(jsonStr);
+    if (jsonStr != NULL) {
+        cJSON_free(jsonStr);
+    }
 }
 
 int GetItemNum(const CJson *jsonObj)
@@ -260,7 +405,7 @@ int32_t GetByteLenFromJson(const CJson *jsonObj, const char *key, uint32_t *byte
     if (valueStr == NULL) {
         return CLIB_ERR_JSON_GET;
     }
-    *byteLen = strlen(valueStr) / BYTE_TO_HEX_OPER_LENGTH;
+    *byteLen = HcStrlen(valueStr) / BYTE_TO_HEX_OPER_LENGTH;
     return CLIB_SUCCESS;
 }
 
@@ -274,7 +419,7 @@ int32_t GetByteFromJson(const CJson *jsonObj, const char *key, uint8_t *byte, ui
     if (valueStr == NULL) {
         return CLIB_ERR_JSON_GET;
     }
-    if (len < strlen(valueStr) / BYTE_TO_HEX_OPER_LENGTH) {
+    if (len < HcStrlen(valueStr) / BYTE_TO_HEX_OPER_LENGTH) {
         return CLIB_ERR_INVALID_LEN;
     }
     return HexStringToByte(valueStr, byte, len);
@@ -408,6 +553,9 @@ int32_t GetBoolFromJson(const CJson *jsonObj, const char *key, bool *value)
 
 char *GetStringValue(const CJson *item)
 {
+    if (item == NULL) {
+        return NULL;
+    }
     return cJSON_GetStringValue(item);
 }
 
@@ -493,6 +641,7 @@ int32_t AddStringToJson(CJson *jsonObj, const char *key, const char *value)
     } else {
         cJSON *tmp = cJSON_CreateString(value);
         if (tmp == NULL) {
+            LOGE("The operation of cJSON_CreateString failed.");
             return CLIB_ERR_BAD_ALLOC;
         }
         if (cJSON_ReplaceItemInObjectCaseSensitive(jsonObj, key, tmp) == false) {
@@ -545,6 +694,7 @@ int32_t AddBoolToJson(CJson *jsonObj, const char *key, bool value)
     } else {
         cJSON *tmp = cJSON_CreateBool(value);
         if (tmp == NULL) {
+            LOGE("cJSON_CreateString failed.");
             return CLIB_ERR_BAD_ALLOC;
         }
         if (cJSON_ReplaceItemInObjectCaseSensitive(jsonObj, key, tmp) == false) {
@@ -619,7 +769,7 @@ void ClearSensitiveStringInJson(CJson *jsonObj, const char *key)
     if (str == NULL) {
         return;
     }
-    (void)memset_s(str, strlen(str), 0, strlen(str));
+    (void)memset_s(str, HcStrlen(str), 0, HcStrlen(str));
 }
 
 void ClearAndFreeJsonString(char *jsonStr)
@@ -627,6 +777,6 @@ void ClearAndFreeJsonString(char *jsonStr)
     if (jsonStr == NULL) {
         return;
     }
-    (void)memset_s(jsonStr, strlen(jsonStr), 0, strlen(jsonStr));
+    (void)memset_s(jsonStr, HcStrlen(jsonStr), 0, HcStrlen(jsonStr));
     FreeJsonString(jsonStr);
 }

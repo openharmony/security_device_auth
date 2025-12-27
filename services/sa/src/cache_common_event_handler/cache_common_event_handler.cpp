@@ -26,6 +26,8 @@
 #include "account_task_manager.h"
 #include "json_utils.h"
 #include "string_util.h"
+#include "operation_data_manager.h"
+#include "hisysevent_adapter.h"
 #include "common_defs.h"
 
 static const std::string COMMON_EVENT_ACTION_NAME = "common_event_action_name";
@@ -71,6 +73,39 @@ static int32_t GetOsAccountFromExtraData(const OHOS::OnDemandReasonExtraData* ex
     return osAccountId;
 }
 
+static void RecordAndReportCacheEvent(int32_t osAccountId, const std::string &eventType)
+{
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    DevAuthCallEvent eventData;
+    eventData.funcName = CACHE_COMMON_EVENT;
+    eventData.osAccountId = osAccountId;
+    eventData.callResult = DEFAULT_CALL_RESULT;
+    eventData.processCode = PROCESS_CACHE_COMMON_EVENT;
+    eventData.appId = DEFAULT_APPID;
+    eventData.credType = DEFAULT_CRED_TYPE;
+    eventData.groupType = DEFAULT_GROUP_TYPE;
+    eventData.executionTime = DEFAULT_EXECUTION_TIME;
+    eventData.extInfo = eventType.c_str();
+    DEV_AUTH_REPORT_CALL_EVENT(eventData);
+#endif
+    if ((eventType != OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) &&
+        eventType != OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED &&
+        eventType != OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGIN &&
+        eventType != OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGOUT) {
+        return;
+    }
+    OperationRecord *operation = CreateOperationRecord();
+    if (operation == NULL) {
+        return;
+    }
+    CopyHcStringForcibly(&operation->operationInfo, eventType.c_str());
+    CopyHcStringForcibly(&operation->function, CACHE_COMMON_EVENT);
+    CopyHcStringForcibly(&operation->caller, DEFAULT_APPID);
+    operation->operationType = OPERATION_COMMON_EVENT;
+    RecordOperationData(osAccountId, operation);
+    DestroyOperationRecord(operation);
+}
+
 void HandleCacheCommonEvent(void)
 {
     auto saMgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -106,6 +141,7 @@ void HandleCacheCommonEvent(void)
         }
         int32_t osAccountId = GetOsAccountFromExtraData(extraData, it->second, want);
         LOGI("common event name: %" LOG_PUB "s.", it->second.c_str());
+        RecordAndReportCacheEvent(osAccountId, it->second);
         if (it->second == OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
             LOGI("[CacheCommonEvent]: user unlocked, userId %" LOG_PUB "d.", osAccountId);
             NotifyOsAccountUnlocked(osAccountId);
