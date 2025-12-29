@@ -102,62 +102,47 @@ static void IsoAuthTaskTest01(void)
 {
     CJson *inJson = CreateJson();
     CJson *outJson = CreateJson();
-
     TaskBase *task = CreateIsoAuthTask(nullptr, nullptr, nullptr);
-
     (void)AddIntToJson(inJson, FIELD_AUTH_FORM, AUTH_FORM_IDENTICAL_ACCOUNT);
     AccountVersionInfo info = { AUTH_PAKE_V2_EC_P256, PAKE_V2, PAKE_ALG_EC, CURVE_256, false, nullptr, nullptr};
     task = CreateIsoAuthClientTask(inJson, outJson, &info);
-
     (void)AddIntToJson(inJson, FIELD_CREDENTIAL_TYPE, SYMMETRIC_CRED);
     task = CreateIsoAuthClientTask(inJson, outJson, &info);
-
     (void)AddIntToJson(inJson, FIELD_LOCAL_DEVICE_TYPE, DEVICE_TYPE_CONTROLLER);
     task = CreateIsoAuthClientTask(inJson, outJson, &info);
-
     (void)AddStringToJson(inJson, FIELD_SELF_USER_ID, TEST_USER_ID.c_str());
     task = CreateIsoAuthClientTask(inJson, outJson, &info);
-
     (void)AddStringToJson(inJson, FIELD_SELF_DEV_ID, TEST_DEV_ID_EXCEED.c_str());
     task = CreateIsoAuthClientTask(inJson, outJson, &info);
-
     (void)AddStringToJson(inJson, FIELD_SELF_DEV_ID, TEST_UDID.c_str());
     task = CreateIsoAuthClientTask(inJson, outJson, &info);
-
     (void)AddIntToJson(inJson, FIELD_CREDENTIAL_TYPE, ASYMMETRIC_CRED);
     (void)AddIntToJson(inJson, FIELD_LOCAL_DEVICE_TYPE, DEVICE_TYPE_ACCESSORY);
     (void)AddStringToJson(inJson, FIELD_SELF_DEVICE_ID, TEST_AUTH_ID.c_str());
     task = CreateIsoAuthClientTask(inJson, outJson, &info);
-
     FreeJson(inJson);
     FreeJson(outJson);
 }
 
 static void IsoAuthTaskTest02(void)
 {
-    int32_t ret = InitDeviceAuthService();
-
     IsoAuthParams *params = static_cast<IsoAuthParams *>(HcMalloc(sizeof(IsoAuthParams), 0));
     params->localDevType = DEVICE_TYPE_CONTROLLER;
-    ret = AccountAuthGeneratePsk(params);
-
+    AccountAuthGeneratePsk(params);
     const char *userId = TEST_USER_ID.c_str();
     uint32_t userIdLen = HcStrlen(userId) + 1;
     params->userIdPeer = static_cast<char *>(HcMalloc(userIdLen, 0));
-
     (void)memcpy_s(params->userIdPeer, userIdLen, userId, userIdLen);
-
     const char *udid = TEST_UDID.c_str();
     uint32_t udidLen = HcStrlen(udid) + 1;
     params->devIdPeer.val = static_cast<uint8_t *>(HcMalloc(udidLen, 0));
     (void)memcpy_s(params->devIdPeer.val, udidLen, udid, udidLen);
     params->devIdPeer.length = udidLen;
     params->isoBaseParams.loader = GetLoaderInstance();
-    ret = AccountAuthGeneratePsk(params);
+    AccountAuthGeneratePsk(params);
     HcFree(params->devIdPeer.val);
     HcFree(params->userIdPeer);
     HcFree(params);
-    DestroyDeviceAuthService();
 }
 
 static uint8_t *GetSessionKey()
@@ -195,24 +180,19 @@ static void IsoAuthTaskTest03(void)
 
 static void IsoAuthTaskTest05(void)
 {
-    InitDeviceAuthService();
     CJson *outJson = CreateJson();
     AccountVersionInfo info = { AUTH_PAKE_V2_EC_P256, PAKE_V2, PAKE_ALG_EC, CURVE_256, false, nullptr, nullptr};
     TaskBase *task = CreateIsoAuthServerTask(nullptr, outJson, &info);
-
     CJson *inJson = CreateJson();
     task = CreateIsoAuthServerTask(inJson, nullptr, &info);
     task = CreateIsoAuthServerTask(inJson, outJson, nullptr);
     task = CreateIsoAuthServerTask(inJson, outJson, &info);
-
     FreeJson(inJson);
     FreeJson(outJson);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest06(void)
 {
-    InitDeviceAuthService();
     TaskBase *task = CreateServerTask();
     (void)task->getTaskType();
     CJson *in = CreateJson();
@@ -223,12 +203,10 @@ static void IsoAuthTaskTest06(void)
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest07(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateServerTask();
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, CMD_ISO_AUTH_MAIN_ONE);
@@ -238,54 +216,44 @@ static void IsoAuthTaskTest07(void)
     IsoAuthServerTask *innerTask = reinterpret_cast<IsoAuthServerTask *>(task);
     HcFree(innerTask->params.userIdPeer);
     innerTask->params.userIdPeer = nullptr;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest08(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateServerTask();
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, CMD_ISO_AUTH_MAIN_ONE);
     (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID.c_str());
     CJson *out = CreateJson();
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest09(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateServerTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, CMD_ISO_AUTH_MAIN_ONE);
     (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID.c_str());
     (void)AddStringToJson(in, FIELD_SEED, TEST_SEED.c_str());
     CJson *out = CreateJson();
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest10(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateServerTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, CMD_ISO_AUTH_MAIN_ONE);
     (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID.c_str());
@@ -293,259 +261,197 @@ static void IsoAuthTaskTest10(void)
     (void)AddStringToJson(in, FIELD_SALT, TEST_SALT.c_str());
     CJson *out = CreateJson();
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest11(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateServerTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, CMD_ISO_AUTH_MAIN_ONE);
     CJson *out = CreateJson();
     int32_t status = 0;
     task->taskStatus = INVALID_TASK_STATUS;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest12(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateServerTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, CMD_ISO_AUTH_MAIN_ONE);
     CJson *out = CreateJson();
     int32_t status = 0;
     task->taskStatus = TASK_STATUS_SERVER_GEN_SESSION_KEY;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest13(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateServerTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, CMD_ISO_AUTH_MAIN_TWO);
     CJson *out = CreateJson();
     int32_t status = 0;
     task->taskStatus = TASK_STATUS_SERVER_BEGIN_TOKEN;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest14(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateServerTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, CMD_ISO_AUTH_MAIN_TWO);
     CJson *out = CreateJson();
     int32_t status = 0;
     task->taskStatus = TASK_STATUS_SERVER_END;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest15(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateServerTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, CMD_ISO_AUTH_MAIN_TWO);
     CJson *out = CreateJson();
     int32_t status = 0;
     task->taskStatus = TASK_STATUS_SERVER_GEN_SESSION_KEY;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest16(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateServerTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, CMD_ISO_AUTH_MAIN_TWO);
     (void)AddStringToJson(in, FIELD_TOKEN, TEST_AUTH_CODE.c_str());
     CJson *out = CreateJson();
     int32_t status = 0;
     task->taskStatus = TASK_STATUS_SERVER_GEN_SESSION_KEY;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest17(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateServerTask();
-
     int32_t status = 0;
-    ret = task->process(task, nullptr, nullptr, &status);
-
+    task->process(task, nullptr, nullptr, &status);
     task->destroyTask(task);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest18(void)
 {
-    InitDeviceAuthService();
-
     CJson *outJson = CreateJson();
     AccountVersionInfo info = { AUTH_PAKE_V2_EC_P256, PAKE_V2, PAKE_ALG_EC, CURVE_256, false, nullptr, nullptr};
     TaskBase *task = CreateIsoAuthClientTask(nullptr, outJson, &info);
-
     CJson *inJson = CreateJson();
     task = CreateIsoAuthClientTask(inJson, nullptr, &info);
     task = CreateIsoAuthClientTask(inJson, outJson, nullptr);
     task = CreateIsoAuthClientTask(inJson, outJson, &info);
-
     FreeJson(inJson);
     FreeJson(outJson);
-    DestroyDeviceAuthService();
 }
 
 
 static void IsoAuthTaskTest19(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     (void)task->getTaskType();
-
     CJson *out = CreateJson();
     int32_t status = 0;
     IsoAuthClientTask *innerTask = reinterpret_cast<IsoAuthClientTask *>(task);
     HcFree(innerTask->params.isoBaseParams.authIdSelf.val);
     innerTask->params.isoBaseParams.authIdSelf.val = nullptr;
-    ret = task->process(task, nullptr, out, &status);
-
+    task->process(task, nullptr, out, &status);
     task->destroyTask(task);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest20(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *out = CreateJson();
     int32_t status = 0;
     IsoAuthClientTask *innerTask = reinterpret_cast<IsoAuthClientTask *>(task);
     HcFree(innerTask->params.userIdSelf);
     innerTask->params.userIdSelf = nullptr;
-    ret = task->process(task, nullptr, out, &status);
-
+    task->process(task, nullptr, out, &status);
     task->destroyTask(task);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest21(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *out = CreateJson();
     int32_t status = 0;
     IsoAuthClientTask *innerTask = reinterpret_cast<IsoAuthClientTask *>(task);
     HcFree(innerTask->params.devIdSelf.val);
     innerTask->params.devIdSelf.val = nullptr;
-    ret = task->process(task, nullptr, out, &status);
-
+    task->process(task, nullptr, out, &status);
     task->destroyTask(task);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest22(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *out = CreateJson();
     int32_t status = 0;
     IsoAuthClientTask *innerTask = reinterpret_cast<IsoAuthClientTask *>(task);
     HcFree(innerTask->params.deviceIdSelf);
     innerTask->params.deviceIdSelf = nullptr;
-    ret = task->process(task, nullptr, out, &status);
-
+    task->process(task, nullptr, out, &status);
     task->destroyTask(task);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest23(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     int32_t status = 0;
-    ret = task->process(task, nullptr, nullptr, &status);
-
+    task->process(task, nullptr, nullptr, &status);
     task->destroyTask(task);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest24(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, RET_ISO_AUTH_FOLLOWER_ONE);
     CJson *out = CreateJson();
     task->taskStatus = TASK_STATUS_ISO_MAIN_STEP_ONE;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest25(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, RET_ISO_AUTH_FOLLOWER_ONE);
     (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID.c_str());
@@ -555,19 +461,15 @@ static void IsoAuthTaskTest25(void)
     HcFree(innerTask->params.userIdPeer);
     innerTask->params.userIdPeer = nullptr;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest26(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, RET_ISO_AUTH_FOLLOWER_ONE);
     (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID.c_str());
@@ -575,19 +477,15 @@ static void IsoAuthTaskTest26(void)
     CJson *out = CreateJson();
     task->taskStatus = TASK_STATUS_ISO_MAIN_STEP_ONE;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest04(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, RET_ISO_AUTH_FOLLOWER_ONE);
     (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID.c_str());
@@ -596,19 +494,15 @@ static void IsoAuthTaskTest04(void)
     CJson *out = CreateJson();
     task->taskStatus = TASK_STATUS_ISO_MAIN_STEP_ONE;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest27(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, RET_ISO_AUTH_FOLLOWER_ONE);
     (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID.c_str());
@@ -618,19 +512,16 @@ static void IsoAuthTaskTest27(void)
     CJson *out = CreateJson();
     task->taskStatus = TASK_STATUS_ISO_MAIN_STEP_ONE;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
+    task->process(task, in, out, &status);
 
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest28(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, RET_ISO_AUTH_FOLLOWER_ONE);
     (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID.c_str());
@@ -640,19 +531,15 @@ static void IsoAuthTaskTest28(void)
     CJson *out = CreateJson();
     task->taskStatus = TASK_STATUS_ISO_MAIN_STEP_ONE;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest29(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, RET_ISO_AUTH_FOLLOWER_ONE);
     (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID.c_str());
@@ -664,17 +551,14 @@ static void IsoAuthTaskTest29(void)
     CJson *out = CreateJson();
     task->taskStatus = TASK_STATUS_ISO_MAIN_STEP_ONE;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest30(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
 
     CJson *in = CreateJson();
@@ -687,19 +571,16 @@ static void IsoAuthTaskTest30(void)
     CJson *out = CreateJson();
     task->taskStatus = TASK_STATUS_ISO_MAIN_STEP_ONE;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
+    task->process(task, in, out, &status);
 
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest31(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, RET_ISO_AUTH_FOLLOWER_ONE);
     (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID.c_str());
@@ -711,108 +592,84 @@ static void IsoAuthTaskTest31(void)
     CJson *out = CreateJson();
     task->taskStatus = TASK_STATUS_ISO_MAIN_STEP_ONE;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest32(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, RET_ISO_AUTH_FOLLOWER_ONE);
     CJson *out = CreateJson();
     task->taskStatus = INVALID_TASK_STATUS;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest33(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, RET_ISO_AUTH_FOLLOWER_ONE);
     CJson *out = CreateJson();
     task->taskStatus = TASK_STATUS_ISO_MAIN_STEP_TWO;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest34(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, RET_ISO_AUTH_FOLLOWER_TWO);
     CJson *out = CreateJson();
     task->taskStatus = TASK_STATUS_ISO_MAIN_STEP_ONE;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest35(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, RET_ISO_AUTH_FOLLOWER_TWO);
     CJson *out = CreateJson();
     task->taskStatus = TASK_STATUS_ISO_MAIN_END;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest36(void)
 {
-    int32_t ret = InitDeviceAuthService();
-
     TaskBase *task = CreateClientTask();
-
     CJson *in = CreateJson();
     (void)AddIntToJson(in, FIELD_STEP, RET_ISO_AUTH_FOLLOWER_TWO);
     CJson *out = CreateJson();
     task->taskStatus = TASK_STATUS_ISO_MAIN_STEP_TWO;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest37(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
 
     CJson *in = CreateJson();
@@ -821,31 +678,26 @@ static void IsoAuthTaskTest37(void)
     CJson *out = CreateJson();
     task->taskStatus = TASK_STATUS_ISO_MAIN_STEP_TWO;
     int32_t status = 0;
-    ret = task->process(task, in, out, &status);
-
+    task->process(task, in, out, &status);
     task->destroyTask(task);
     FreeJson(in);
     FreeJson(out);
-    DestroyDeviceAuthService();
 }
 
 static void IsoAuthTaskTest38(void)
 {
-    int32_t ret = InitDeviceAuthService();
     TaskBase *task = CreateClientTask();
-
     task->taskStatus = TASK_STATUS_ISO_MAIN_STEP_ONE;
     int32_t status = 0;
-    ret = task->process(task, nullptr, nullptr, &status);
-
+    task->process(task, nullptr, nullptr, &status);
     task->destroyTask(task);
-    DestroyDeviceAuthService();
 }
 
 bool FuzzDoRegCallback(const uint8_t* data, size_t size)
 {
     (void)data;
     (void)size;
+    InitDeviceAuthService();
     (void)IsoAuthTaskTest01();
     (void)IsoAuthTaskTest02();
     (void)IsoAuthTaskTest03();
@@ -884,9 +736,9 @@ bool FuzzDoRegCallback(const uint8_t* data, size_t size)
     (void)IsoAuthTaskTest36();
     (void)IsoAuthTaskTest37();
     (void)IsoAuthTaskTest38();
+    DestroyDeviceAuthService();
     return true;
 }
-
 }
 
 /* Fuzzer entry point */

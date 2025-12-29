@@ -150,8 +150,6 @@ static void HiviewAdapterTest01(void)
     UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_SESSION_KEY_RETURN_TIME, curTimeInMillis);
 
     EnablePerformDumper();
-    ADD_PERFORM_DATA(TEST_REQ_ID, true, true, curTimeInMillis);
-    ADD_PERFORM_DATA(TEST_REQ_ID, true, true, curTimeInMillis); // remove existed request
     UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTimeInMillis + TEST_TIME_INTERVAL1);
     UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTimeInMillis + TEST_TIME_INTERVAL2);
     UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTimeInMillis + TEST_TIME_INTERVAL3);
@@ -163,12 +161,6 @@ static void HiviewAdapterTest01(void)
     UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_SESSION_KEY_RETURN_TIME, curTimeInMillis + TEST_TIME_INTERVAL9);
     UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_FINISH_TIME, curTimeInMillis + TEST_TIME_INTERVAL10);
     UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, FIRST_START_TIME, curTimeInMillis + TEST_TIME_INTERVAL10);
-    ADD_PERFORM_DATA(TEST_REQ_ID1, true, false, curTimeInMillis);
-    ADD_PERFORM_DATA(TEST_REQ_ID1, true, false, curTimeInMillis); // remove existed request
-    ADD_PERFORM_DATA(TEST_REQ_ID2, false, true, curTimeInMillis);
-    ADD_PERFORM_DATA(TEST_REQ_ID2, false, true, curTimeInMillis); // remove existed request
-    ADD_PERFORM_DATA(TEST_REQ_ID3, false, false, curTimeInMillis);
-    ADD_PERFORM_DATA(TEST_REQ_ID3, false, false, curTimeInMillis); // remove existed request
     DumpPerformData();
     RESET_PERFORM_DATA(TEST_REQ_ID);
     DisablePerformDumper();
@@ -181,23 +173,6 @@ static void HiviewAdapterTest02(void)
 {
     INIT_PERFORMANCE_DUMPER();
     EnablePerformDumper();
-
-    int64_t curTimeInMillis = HcGetCurTimeInMillis();
-    for (uint32_t i = 0; i <= MAX_SESSION_NUM; i++) {
-        ADD_PERFORM_DATA(i, true, true, curTimeInMillis + i);
-    }
-
-    for (uint32_t i = MAX_SESSION_NUM; i <= MAX_SESSION_NUM * COUNT_TWO_NUM; i++) {
-        ADD_PERFORM_DATA(i, true, false, curTimeInMillis + i);
-    }
-
-    for (uint32_t i = MAX_SESSION_NUM * COUNT_TWO_NUM; i <= MAX_SESSION_NUM * COUNT_THREE_NUM; i++) {
-        ADD_PERFORM_DATA(i, false, true, curTimeInMillis + i);
-    }
-
-    for (uint32_t i = MAX_SESSION_NUM * COUNT_THREE_NUM; i <= MAX_SESSION_NUM * COUNT_FOUR_NUM; i++) {
-        ADD_PERFORM_DATA(i, false, false, curTimeInMillis + i);
-    }
 
     DumpPerformData();
 
@@ -227,6 +202,7 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     (void)HiviewAdapterTest01();
     (void)HiviewAdapterTest02();
     (void)HiviewAdapterTest03();
+    DestroyPerformanceDumper();
     return true;
 }
 }

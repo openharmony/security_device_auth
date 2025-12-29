@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <mutex>
 #include "sa_load_on_demand.h"
 #include "common_defs.h"
 #include "hc_log.h"
@@ -23,11 +24,10 @@
 #include "system_ability_definition.h"
 #include "parameter.h"
 #include "sa_listener.h"
-#include "hc_mutex.h"
 #include "string_util.h"
 
 static OHOS::sptr<OHOS::DevAuth::SaListener> g_saListener = nullptr;
-static HcMutex g_devAuthCallbackMutex;
+static std::recursive_mutex g_devAuthCallbackMutex;
 
 DECLARE_HC_VECTOR(DevAuthCallbackInfoVec, DevAuthCallbackInfo)
 IMPLEMENT_HC_VECTOR(DevAuthCallbackInfoVec, DevAuthCallbackInfo, 1)
@@ -137,7 +137,7 @@ static int32_t BuildCallbackInfo(DevAuthCallbackInfo *callbackInfo, const char *
     const DeviceAuthCallback *callback, const DataChangeListener *dataChangeListener, CredChangeListener *listener)
 {
     uint32_t appIdLen = HcStrlen(appId) + 1;
-    char *copyAppId = (char *)HcMalloc(appIdLen, 0);
+    char *copyAppId = static_cast<char *>(HcMalloc(appIdLen, 0));
     if (copyAppId == nullptr) {
         LOGE("[SDK]: Failed to malloc appId.");
         return HC_ERR_ALLOC_MEMORY;
@@ -181,7 +181,7 @@ static bool UpdateCallbackInfoIfExist(const char *appId, const DeviceAuthCallbac
 {
     uint32_t index;
     DevAuthCallbackInfo *entry = nullptr;
-    (void)LockHcMutex(&g_devAuthCallbackMutex);
+    std::lock_guard<std::recursive_mutex> autoLock(g_devAuthCallbackMutex);
     FOR_EACH_HC_VECTOR(g_devAuthCallbackList, index, entry) {
         if (entry == nullptr || entry->appId == nullptr) {
             continue;
@@ -190,11 +190,9 @@ static bool UpdateCallbackInfoIfExist(const char *appId, const DeviceAuthCallbac
             LOGI("[SDK]:start to update callback, appId: %" LOG_PUB "s, callbackType: %" LOG_PUB "d",
                 appId, callbackType);
             bool ret = UpdateCallback(entry, callback, dataChangeListener, listener, index);
-            UnlockHcMutex(&g_devAuthCallbackMutex);
             return ret;
         }
     }
-    UnlockHcMutex(&g_devAuthCallbackMutex);
     return false;
 }
 
@@ -203,7 +201,7 @@ static void RegisterDevAuthCallback()
     uint32_t index;
     DevAuthCallbackInfo *callbackInfo = nullptr;
     int32_t ret = HC_SUCCESS;
-    (void)LockHcMutex(&g_devAuthCallbackMutex);
+    std::lock_guard<std::recursive_mutex> autoLock(g_devAuthCallbackMutex);
     LOGI("[SDK]: cache list size: %" LOG_PUB "d", g_devAuthCallbackList.size(&g_devAuthCallbackList));
     FOR_EACH_HC_VECTOR(g_devAuthCallbackList, index, callbackInfo) {
         if (callbackInfo == nullptr || callbackInfo->appId == nullptr) {
@@ -228,24 +226,21 @@ static void RegisterDevAuthCallback()
         }
         LOGI("register result: %" LOG_PUB "d.", ret);
     }
-    UnlockHcMutex(&g_devAuthCallbackMutex);
 }
 
 static void OnReceivedDevAuthAdded()
 {
     LOGI("SA load, need to register cache callback.");
     RegisterDevAuthCallback();
-    (void)LockHcMutex(&g_devAuthCallbackMutex);
+    std::lock_guard<std::recursive_mutex> autoLock(g_devAuthCallbackMutex);
     g_devAuthSaIsActive = true;
-    UnlockHcMutex(&g_devAuthCallbackMutex);
 }
 
 static void OnReceivedDevAuthRemoved()
 {
     LOGI("SA unload.");
-    (void)LockHcMutex(&g_devAuthCallbackMutex);
+    std::lock_guard<std::recursive_mutex> autoLock(g_devAuthCallbackMutex);
     g_devAuthSaIsActive = false;
-    UnlockHcMutex(&g_devAuthCallbackMutex);
 }
 
 int32_t AddCallbackInfoToList(const char *appId, const DeviceAuthCallback *callback,
@@ -261,16 +256,14 @@ int32_t AddCallbackInfoToList(const char *appId, const DeviceAuthCallback *callb
     if (ret != HC_SUCCESS) {
         return ret;
     }
-    (void)LockHcMutex(&g_devAuthCallbackMutex);
+    std::lock_guard<std::recursive_mutex> autoLock(g_devAuthCallbackMutex);
     if (g_devAuthCallbackList.pushBack(&g_devAuthCallbackList, &callbackInfo) == nullptr) {
         LOGE("[SDK]: Failed to add callbackInfo.");
         ClearCallbackInfo(&callbackInfo);
-        UnlockHcMutex(&g_devAuthCallbackMutex);
         return HC_ERR_ALLOC_MEMORY;
     }
     LOGI("[SDK]: Add callback info successfully, cache list size: %" LOG_PUB "d.",
         g_devAuthCallbackList.size(&g_devAuthCallbackList));
-    UnlockHcMutex(&g_devAuthCallbackMutex);
     return HC_SUCCESS;
 }
 
@@ -279,7 +272,7 @@ int32_t RemoveCallbackInfoFromList(const char *appId, int32_t callbackType)
     uint32_t index;
     DevAuthCallbackInfo *entry = nullptr;
     int32_t ret = HC_SUCCESS;
-    (void)LockHcMutex(&g_devAuthCallbackMutex);
+    std::lock_guard<std::recursive_mutex> autoLock(g_devAuthCallbackMutex);
     FOR_EACH_HC_VECTOR(g_devAuthCallbackList, index, entry) {
         if (entry == nullptr || entry->appId == nullptr) {
             continue;
@@ -289,11 +282,9 @@ int32_t RemoveCallbackInfoFromList(const char *appId, int32_t callbackType)
             DevAuthCallbackInfo deleteCallbackInfo;
             HC_VECTOR_POPELEMENT(&g_devAuthCallbackList, &deleteCallbackInfo, index);
             ClearCallbackInfo(&deleteCallbackInfo);
-            UnlockHcMutex(&g_devAuthCallbackMutex);
             return ret;
         }
     }
-    UnlockHcMutex(&g_devAuthCallbackMutex);
     return ret;
 }
 
@@ -318,12 +309,11 @@ void RegisterDevAuthCallbackIfNeed(void)
         LOGE("device auth not init.");
         return;
     }
-    (void)LockHcMutex(&g_devAuthCallbackMutex);
+    std::lock_guard<std::recursive_mutex> autoLock(g_devAuthCallbackMutex);
     if (!g_devAuthSaIsActive) {
         LOGE("[SDK]: need to register callback.");
         RegisterDevAuthCallback();
     }
-    UnlockHcMutex(&g_devAuthCallbackMutex);
 }
 
 int32_t LoadDeviceAuthSaIfNotLoad(void)
@@ -390,10 +380,6 @@ void UnSubscribeDeviceAuthSa(void)
 
 int32_t InitLoadOnDemand(void)
 {
-    int32_t ret = InitHcMutex(&g_devAuthCallbackMutex, true);
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
     g_devAuthCallbackList = CREATE_HC_VECTOR(DevAuthCallbackInfoVec);
     g_devAuthInitStatus = true;
     return HC_SUCCESS;
@@ -403,5 +389,4 @@ void DeInitLoadOnDemand(void)
 {
     g_devAuthInitStatus = false;
     DESTROY_HC_VECTOR(DevAuthCallbackInfoVec, &g_devAuthCallbackList);
-    DestroyHcMutex(&g_devAuthCallbackMutex);
 }
