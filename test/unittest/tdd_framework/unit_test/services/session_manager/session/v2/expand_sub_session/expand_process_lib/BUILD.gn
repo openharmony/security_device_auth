@@ -18,7 +18,8 @@ module_output_path = "device_auth/device_auth"
 ohos_unittest("auth_code_import_test") {
   module_out_path = module_output_path
 
-  include_dirs = hals_inc_path
+  include_dirs = inc_path
+  include_dirs += hals_inc_path
   include_dirs += [
     "${inner_api_path}",
     "${frameworks_path}/inc/standard",
@@ -63,6 +64,7 @@ ohos_unittest("auth_code_import_test") {
     "${device_auth_common}/inc",
     "${protocol_path}/inc",
   ]
+  sources += operation_database_manager_files
   sources += identity_manager_files
   sources += identity_service_mock_files
   sources += [
@@ -104,7 +106,8 @@ ohos_unittest("auth_code_import_test") {
 ohos_unittest("pub_key_exchange_test") {
   module_out_path = module_output_path
 
-  include_dirs = hals_inc_path
+  include_dirs = inc_path
+  include_dirs += hals_inc_path
   include_dirs += [
     "${inner_api_path}",
     "${frameworks_path}/inc/standard",
@@ -166,6 +169,7 @@ ohos_unittest("pub_key_exchange_test") {
     "${authenticators_path}/inc/account_unrelated/pake_task",
     "${authenticators_path}/inc/account_unrelated",
   ]
+  sources += operation_database_manager_files
   sources += identity_manager_files
   sources += identity_service_mock_files
 
@@ -215,6 +219,7 @@ ohos_unittest("save_trusted_info_test") {
   sources = broadcast_manager_mock_files
   sources += account_auth_plugin_mock_files
   sources += account_task_manager_mock_files
+  sources += operation_database_manager_files
   sources += group_database_manager_files
   sources += save_trusted_info_files
   sources += privacy_enhancement_mock_files

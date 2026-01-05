@@ -31,14 +31,6 @@
 #include "permission_adapter.h"
 #include "hisysevent_adapter.h"
 
-static void SetStringForcely(HcString *self, const char *str)
-{
-    if (StringAppendPointer(self, str) != HC_TRUE) {
-        DeleteString(self);
-        *self = CreateString();
-    }
-}
-
 static void ISRecordAndReport(int32_t osAccountId, const Credential *credential,
     const char *funcName, int32_t processCode, int32_t ret)
 {
@@ -49,7 +41,7 @@ static void ISRecordAndReport(int32_t osAccountId, const Credential *credential,
     if (operationInfo == NULL) {
         return;
     }
-    Operation *operation = CreateOperationRecord();
+    OperationRecord *operation = CreateOperationRecord();
     if (operation == NULL) {
         FreeJson(operationInfo);
         return;
@@ -60,14 +52,15 @@ static void ISRecordAndReport(int32_t osAccountId, const Credential *credential,
         (void)memset_s(anonymous, DEFAULT_ANONYMOUS_LEN + 1, 0, DEFAULT_ANONYMOUS_LEN + 1);
     }
     (void)AddIntToJson(operationInfo, FIELD_CRED_TYPE, (int32_t)(credential->credType));
+    (void)AddIntToJson(operationInfo, FIELD_UID, (int32_t)(credential->ownerUid));
     (void)AddStringToJson(operationInfo, FIELD_CRED_ID, anonymous);
     char *operationInfoString = PackJsonToString(operationInfo);
     if (operationInfoString != NULL) {
-        SetStringForcely(&operation->operationInfo, operationInfoString);
+        CopyHcStringForcibly(&operation->operationInfo, operationInfoString);
         FreeJsonString(operationInfoString);
     }
-    SetStringForcely(&operation->caller, appId);
-    SetStringForcely(&operation->function, funcName);
+    CopyHcStringForcibly(&operation->caller, appId);
+    CopyHcStringForcibly(&operation->function, funcName);
     operation->operationType = OPERATION_IDENTITY_SERVICE;
     RecordOperationData(osAccountId, operation);
 #ifdef DEV_AUTH_HIVIEW_ENABLE

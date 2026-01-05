@@ -72,7 +72,6 @@ int32_t IpcServiceGmRegCallback(const IpcDataInfo *ipcParams, int32_t paramNum, 
     const DeviceAuthCallback *callback = NULL;
     int32_t cbObjIdx = -1;
     int32_t inOutLen;
-    LOGI("starting ...");
     ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmRegCallback failed, get app id error.");
@@ -111,7 +110,6 @@ int32_t IpcServiceGmUnRegCallback(const IpcDataInfo *ipcParams, int32_t paramNum
     int32_t callRet = HC_SUCCESS;
     int32_t ret;
     const char *appId = NULL;
-    LOGI("starting ...");
     ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmUnRegCallback failed, get app id error.");
@@ -176,7 +174,6 @@ int32_t IpcServiceGmUnRegDataChangeListener(const IpcDataInfo *ipcParams, int32_
     int32_t callRet = HC_SUCCESS;
     int32_t ret;
     const char *appId = NULL;
-    LOGI("starting ...");
     ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmUnRegDataChangeListener failed, get app id error.");
@@ -197,7 +194,6 @@ int32_t IpcServiceGmCreateGroup(const IpcDataInfo *ipcParams, int32_t paramNum, 
     int32_t inOutLen;
     const char *createParams = NULL;
     const char *appId = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -240,7 +236,6 @@ int32_t IpcServiceGmDelGroup(const IpcDataInfo *ipcParams, int32_t paramNum, uin
     int32_t inOutLen;
     const char *appId = NULL;
     const char *delParams = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -283,7 +278,6 @@ int32_t IpcServiceGmAddMemberToGroup(const IpcDataInfo *ipcParams, int32_t param
     int64_t requestId = 0;
     const char *addParams = NULL;
     const char *appId = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -325,7 +319,6 @@ int32_t IpcServiceGmDelMemberFromGroup(const IpcDataInfo *ipcParams, int32_t par
     int64_t requestId = 0;
     const char *delParams = NULL;
     const char *appId = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -367,7 +360,6 @@ int32_t IpcServiceGmAddMultiMembersToGroup(const IpcDataInfo *ipcParams, int32_t
     int32_t osAccountId;
     const char *addParams = NULL;
     const char *appId = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -398,7 +390,6 @@ int32_t IpcServiceGmDelMultiMembersFromGroup(const IpcDataInfo *ipcParams, int32
     int32_t osAccountId;
     const char *delParams = NULL;
     const char *appId = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -429,7 +420,6 @@ int32_t IpcServiceGmProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, 
     int32_t inOutLen;
     int64_t requestId = 0;
     const uint8_t *data = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int64_t);
     ret = GetAndValSize64Param(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&requestId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -457,7 +447,6 @@ int32_t IpcServiceGmApplyRegisterInfo(const IpcDataInfo *ipcParams, int32_t para
     int32_t ret;
     const char *reqJsonStr = NULL;
     char *registerInfo = NULL;
-    LOGI("starting ...");
     ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_REQ_JSON, (uint8_t *)&reqJsonStr, NULL);
     if (ret != HC_SUCCESS) {
         return ret;
@@ -485,7 +474,6 @@ int32_t IpcServiceGmCheckAccessToGroup(const IpcDataInfo *ipcParams, int32_t par
     int32_t osAccountId;
     const char *appId = NULL;
     const char *groupId = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -558,7 +546,6 @@ int32_t IpcServiceGmGetGroupInfoById(const IpcDataInfo *ipcParams, int32_t param
     const char *appId = NULL;
     const char *groupId = NULL;
     char *groupInfo = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -599,7 +586,6 @@ int32_t IpcServiceGmGetGroupInfo(const IpcDataInfo *ipcParams, int32_t paramNum,
     const char *queryParams = NULL;
     char *outGroups = NULL;
     uint32_t groupNum = 0;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -641,7 +627,6 @@ int32_t IpcServiceGmGetJoinedGroups(const IpcDataInfo *ipcParams, int32_t paramN
     const char *appId = NULL;
     char *outGroups = NULL;
     uint32_t groupNum = 0;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -724,7 +709,6 @@ int32_t IpcServiceGmGetDeviceInfoById(const IpcDataInfo *ipcParams, int32_t para
     const char *peerUdid = NULL;
     const char *groupId = NULL;
     char *outDevInfo = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1001,7 +985,6 @@ int32_t IpcServiceGmIsDeviceInGroup(const IpcDataInfo *ipcParams, int32_t paramN
     const char *appId = NULL;
     const char *udid = NULL;
     const char *groupId = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1037,7 +1020,6 @@ int32_t IpcServiceGmCancelRequest(const IpcDataInfo *ipcParams, int32_t paramNum
     int64_t requestId = 0;
     const char *appId = NULL;
 
-    LOGI("starting ...");
     int32_t inOutLen = sizeof(int64_t);
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&requestId, &inOutLen);
     if ((inOutLen != sizeof(requestId)) || (ret != HC_SUCCESS)) {
@@ -1065,7 +1047,6 @@ int32_t IpcServiceGaProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, 
     int32_t inOutLen;
     int32_t cbObjIdx = -1;
 
-    LOGI("starting ...");
     inOutLen = sizeof(int64_t);
     ret = GetAndValSize64Param(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&reqId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1160,7 +1141,6 @@ int32_t IpcServiceGaCancelRequest(const IpcDataInfo *ipcParams, int32_t paramNum
     int64_t requestId = 0;
     const char *appId = NULL;
 
-    LOGI("starting ...");
     int32_t inOutLen = sizeof(int64_t);
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&requestId, &inOutLen);
     if ((inOutLen != sizeof(requestId)) || (ret != HC_SUCCESS)) {
@@ -1185,7 +1165,6 @@ int32_t IpcServiceGaGetRealInfo(const IpcDataInfo *ipcParams, int32_t paramNum, 
     int32_t osAccountId;
     const char *pseudonymId = NULL;
 
-    LOGI("starting ...");
     int32_t inOutLen = sizeof(osAccountId);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1217,7 +1196,6 @@ int32_t IpcServiceGaGetPseudonymId(const IpcDataInfo *ipcParams, int32_t paramNu
     int32_t ret;
     int32_t osAccountId;
     const char *indexKey = NULL;
-    LOGI("starting ...");
     int32_t inOutLen = sizeof(osAccountId);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1250,7 +1228,6 @@ int32_t IpcServiceDaProcessCredential(const IpcDataInfo *ipcParams, int32_t para
     int32_t operationCode = 0;
     const char *reqJsonStr = NULL;
     char *returnData = NULL;
-    LOGI("starting ...");
     int32_t inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OPCODE, (uint8_t *)&operationCode, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1283,7 +1260,6 @@ int32_t IpcServiceDaProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, 
     const char *authParams = NULL;
     int32_t inOutLen;
     int32_t cbObjIdx = -1;
-    LOGI("starting ...");
     inOutLen = sizeof(int64_t);
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&authReqId, &inOutLen);
     if ((ret != HC_SUCCESS) || (inOutLen != sizeof(authReqId))) {
@@ -1331,7 +1307,6 @@ int32_t IpcServiceDaAuthDevice(const IpcDataInfo *ipcParams, int32_t paramNum, u
     const char *authParams = NULL;
     int32_t inOutLen;
     int32_t cbObjIdx = -1;
-    LOGI("starting ...");
     inOutLen = sizeof(int64_t);
     ret = GetAndValSize64Param(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&authReqId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1377,7 +1352,6 @@ int32_t IpcServiceDaCancelRequest(const IpcDataInfo *ipcParams, int32_t paramNum
     int32_t ret;
     int64_t requestId = 0;
     const char *authParams = NULL;
-    LOGI("starting ...");
     int32_t inOutLen = sizeof(int64_t);
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&requestId, &inOutLen);
     if ((inOutLen != sizeof(requestId)) || (ret != HC_SUCCESS)) {
@@ -1405,7 +1379,6 @@ int32_t IpcServiceCmAddCredential(const IpcDataInfo *ipcParams, int32_t paramNum
     const char *requestParams = NULL;
     char *credId = NULL;
 
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1438,9 +1411,7 @@ int32_t IpcServiceCmRegCredChangeListener(const IpcDataInfo *ipcParams, int32_t 
     const CredChangeListener *listener = NULL;
     static int32_t registered = 0;
     int32_t cbObjIdx = -1;
-    int32_t inOutLen;
-    LOGI("starting ...");
-    inOutLen = sizeof(int32_t);
+    int32_t inOutLen = sizeof(int32_t);
     ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceCmRegCredChangeListener failed, get app id error.");
@@ -1485,7 +1456,6 @@ int32_t IpcServiceCmUnRegCredChangeListener(const IpcDataInfo *ipcParams, int32_
     int32_t callRet = HC_SUCCESS;
     int32_t ret;
     const char *appId = NULL;
-    LOGI("starting ...");
     ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceCmUnRegCredChangeListener failed, get app id error.");
@@ -1506,7 +1476,6 @@ int32_t IpcServiceCmExportCredential(const IpcDataInfo *ipcParams, int32_t param
     int32_t inOutLen;
     const char *credId = NULL;
     char *returnCredVal = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1540,7 +1509,6 @@ int32_t IpcServiceCmQueryCredentialByParams(const IpcDataInfo *ipcParams, int32_
     int32_t inOutLen;
     const char *requestParams = NULL;
     char *returnCredList = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1574,7 +1542,6 @@ int32_t IpcServiceCmQueryCredentialByCredId(const IpcDataInfo *ipcParams, int32_
     int32_t inOutLen;
     const char *credId = NULL;
     char *returnCredInfo = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1607,7 +1574,6 @@ int32_t IpcServiceCmDeleteCredential(const IpcDataInfo *ipcParams, int32_t param
     int32_t osAccountId;
     int32_t inOutLen;
     const char *credId = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1633,7 +1599,6 @@ int32_t IpcServiceCmUpdateCredInfo(const IpcDataInfo *ipcParams, int32_t paramNu
     int32_t inOutLen;
     const char *credId = NULL;
     const char *requestParams = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1665,7 +1630,6 @@ int32_t IpcServiceCmAgreeCredential(const IpcDataInfo *ipcParams, int32_t paramN
     const char *selfCredId = NULL;
     const char *requestParams = NULL;
     char *agreeCredId = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1704,7 +1668,6 @@ int32_t IpcServiceCmDelCredByParams(const IpcDataInfo *ipcParams, int32_t paramN
     int32_t inOutLen;
     const char *requestParams = NULL;
     char *returnCredList = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1738,7 +1701,6 @@ int32_t IpcServiceCmBatchUpdateCredentials(const IpcDataInfo *ipcParams, int32_t
     int32_t inOutLen;
     const char *requestParams = NULL;
     char *returnCredList = NULL;
-    LOGI("starting ...");
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -1826,7 +1788,6 @@ int32_t IpcServiceCaProcessCredData(const IpcDataInfo *ipcParams, int32_t paramN
     uint32_t dataLen = 0;
     int32_t inOutLen;
     int32_t cbObjIdx = -1;
-    LOGI("starting ...");
     inOutLen = sizeof(int64_t);
     ret = GetAndValSize64Param(ipcParams, paramNum, PARAM_TYPE_REQID, (uint8_t *)&reqId, &inOutLen);
     if (ret != HC_SUCCESS) {

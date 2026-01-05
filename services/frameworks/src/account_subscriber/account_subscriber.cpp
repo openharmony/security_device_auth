@@ -24,6 +24,8 @@
 #include "want.h"
 #include "critical_handler.h"
 #include "unload_handler.h"
+#include "hisysevent_adapter.h"
+#include "operation_data_manager.h"
 
 namespace OHOS {
 namespace DevAuth {
@@ -52,6 +54,41 @@ void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
     IncreaseCriticalCnt(ADD_ONE);
     ResponseCommonEvent(eventData);
     DecreaseCriticalCnt();
+}
+
+static void RecordAndReportCommonEvent(const CJson *cmdParamJson, const std::string &eventType)
+{
+    int osAccountId = DEFAULT_OS_ACCOUNT;
+    (void)GetIntFromJson(cmdParamJson, FIELD_COMMON_EVENT_CODE, &osAccountId);
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    DevAuthCallEvent eventData;
+    eventData.funcName = COMMON_EVENT;
+    eventData.osAccountId = osAccountId;
+    eventData.callResult = DEFAULT_CALL_RESULT;
+    eventData.processCode = PROCESS_COMMON_EVENT;
+    eventData.appId = DEFAULT_APPID;
+    eventData.credType = DEFAULT_CRED_TYPE;
+    eventData.groupType = DEFAULT_GROUP_TYPE;
+    eventData.executionTime = DEFAULT_EXECUTION_TIME;
+    eventData.extInfo = eventType.c_str();
+    DEV_AUTH_REPORT_CALL_EVENT(eventData);
+#endif
+    if ((eventType != EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) &&
+        eventType != EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED &&
+        eventType != EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGIN &&
+        eventType != EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGOUT) {
+        return;
+    }
+    OperationRecord *operation = CreateOperationRecord();
+    if (operation == NULL) {
+        return;
+    }
+    CopyHcStringForcibly(&operation->operationInfo, eventType.c_str());
+    CopyHcStringForcibly(&operation->function, COMMON_EVENT);
+    CopyHcStringForcibly(&operation->caller, DEFAULT_APPID);
+    operation->operationType = OPERATION_COMMON_EVENT;
+    RecordOperationData(osAccountId, operation);
+    DestroyOperationRecord(operation);
 }
 
 void AccountSubscriber::ResponseCommonEvent(const EventFwk::CommonEventData &eventData)
@@ -91,6 +128,7 @@ void AccountSubscriber::ResponseCommonEvent(const EventFwk::CommonEventData &eve
         return;
     }
     int32_t res = ExecuteAccountAuthCmd(DEFAULT_OS_ACCOUNT, HANDLE_COMMON_EVENT, cmdParamJson, nullptr);
+    RecordAndReportCommonEvent(cmdParamJson, action);
     FreeJson(cmdParamJson);
     LOGI("[AccountSubscriber]: handle common event res: %" LOG_PUB "d", res);
 }

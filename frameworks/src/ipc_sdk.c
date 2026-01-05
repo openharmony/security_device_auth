@@ -458,6 +458,7 @@ static int32_t IpcGmGetRegisterInfo(const char *reqJsonStr, char **registerInfo)
 
 static int32_t IpcGmCheckAccessToGroup(int32_t osAccountId, const char *appId, const char *groupId)
 {
+    LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
     int32_t inOutLen;
@@ -481,6 +482,7 @@ static int32_t IpcGmCheckAccessToGroup(int32_t osAccountId, const char *appId, c
 static int32_t IpcGmGetPkInfoList(int32_t osAccountId, const char *appId, const char *queryParams,
                                   char **returnInfoList, uint32_t *returnInfoNum)
 {
+    LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
     int32_t inOutLen;
@@ -513,6 +515,7 @@ static int32_t IpcGmGetPkInfoList(int32_t osAccountId, const char *appId, const 
 
 static int32_t IpcGmGetGroupInfoById(int32_t osAccountId, const char *appId, const char *groupId, char **outGroupInfo)
 {
+    LOGI("starting ...");
     int32_t ret;
     uintptr_t callCtx = 0x0;
     int32_t inOutLen;
@@ -543,6 +546,7 @@ static int32_t IpcGmGetGroupInfoById(int32_t osAccountId, const char *appId, con
 static int32_t IpcGmGetGroupInfo(int32_t osAccountId, const char *appId, const char *queryParams,
     char **outGroupVec, uint32_t *groupNum)
 {
+    LOGI("starting ...");
     int32_t ret;
     uintptr_t callCtx = 0x0;
     int32_t inOutLen;
@@ -576,6 +580,7 @@ static int32_t IpcGmGetGroupInfo(int32_t osAccountId, const char *appId, const c
 static int32_t IpcGmGetJoinedGroups(int32_t osAccountId, const char *appId, int32_t groupType,
     char **outGroupVec, uint32_t *groupNum)
 {
+    LOGI("starting ...");
     int32_t ret;
     uintptr_t callCtx = 0x0;
     int32_t inOutLen;
@@ -608,6 +613,7 @@ static int32_t IpcGmGetJoinedGroups(int32_t osAccountId, const char *appId, int3
 static int32_t IpcGmGetRelatedGroups(int32_t osAccountId, const char *appId, const char *peerUdid,
     char **outGroupVec, uint32_t *groupNum)
 {
+    LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
     int32_t inOutLen;
@@ -641,6 +647,7 @@ static int32_t IpcGmGetRelatedGroups(int32_t osAccountId, const char *appId, con
 static int32_t IpcGmGetDeviceInfoById(int32_t osAccountId, const char *appId, const char *peerUdid, const char *groupId,
     char **outDevInfo)
 {
+    LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
     int32_t inOutLen;
@@ -673,6 +680,7 @@ static int32_t IpcGmGetDeviceInfoById(int32_t osAccountId, const char *appId, co
 static int32_t IpcGmGetTrustedDevices(int32_t osAccountId, const char *appId,
     const char *groupId, char **outDevInfoVec, uint32_t *deviceNum)
 {
+    LOGI("starting ...");
     int32_t ret;
     uintptr_t callCtx = 0x0;
     int32_t inOutLen;
@@ -705,6 +713,7 @@ static int32_t IpcGmGetTrustedDevices(int32_t osAccountId, const char *appId,
 
 static bool IpcGmIsDeviceInGroup(int32_t osAccountId, const char *appId, const char *groupId, const char *udid)
 {
+    LOGI("starting ...");
     int32_t ret;
     uintptr_t callCtx = 0x0;
     int32_t inOutLen;
@@ -856,6 +865,7 @@ static void IpcGaCancelRequest(int64_t requestId, const char *appId)
 
 static int32_t IpcGaGetRealInfo(int32_t osAccountId, const char *pseudonymId, char **realInfo)
 {
+    LOGI("starting ...");
     uintptr_t callCtx = 0x0;
     int32_t ret;
     int32_t inOutLen;
@@ -883,6 +893,7 @@ static int32_t IpcGaGetRealInfo(int32_t osAccountId, const char *pseudonymId, ch
 
 static int32_t IpcGaGetPseudonymId(int32_t osAccountId, const char *indexKey, char **pseudonymId)
 {
+    LOGI("starting ...");
     RegisterDevAuthCallbackIfNeed();
     int32_t ret;
     uintptr_t callCtx = 0x0;
@@ -1010,6 +1021,7 @@ static int32_t GetSharedKeyAndRandom(const IpcDataInfo *replies, int32_t cacheNu
 static int32_t IpcAvGetClientSharedKey(const char *peerPkWithSig, const char *serviceId, DataBuff *returnSharedKey,
     DataBuff *returnRandom)
 {
+    LOGI("starting ...");
     if ((peerPkWithSig == NULL) || (serviceId == NULL) || (returnSharedKey == NULL) || (returnRandom == NULL)) {
         LOGE("Error occurs, params invalid.");
         return HC_ERR_INVALID_PARAMS;
@@ -1080,6 +1092,7 @@ static int32_t GetSharedKey(const IpcDataInfo *replies, int32_t cacheNum, DataBu
 static int32_t IpcAvGetServerSharedKey(const char *peerPkWithSig, const char *serviceId, const DataBuff *random,
     DataBuff *returnSharedKey)
 {
+    LOGI("starting ...");
     if ((peerPkWithSig == NULL) || (serviceId == NULL) || (random == NULL) || (random->data == NULL) ||
         (returnSharedKey == NULL)) {
         LOGE("Invalid params.");

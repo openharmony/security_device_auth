@@ -1889,6 +1889,20 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest036, TestSize.Level0)
     HandleCacheCommonEventInner(TEST_EVENT_NAME, 0);
     EXPECT_NE(inputDataJson, nullptr);
     FreeJson(inputDataJson);
+    int32_t res = InitOperationDataManager();
+    ASSERT_EQ(res, HC_SUCCESS);
+    int32_t osAccountId = DEFAULT_OS_ACCOUNT;
+    std::string action = "usual.event.USER_UNLOCKED";
+    RecordAndReportCacheEvent(osAccountId, action);
+    action = "common.event.DISTRIBUTED_ACCOUNT_LOGIN";
+    RecordAndReportCacheEvent(osAccountId, action);
+    action = "common.event.DISTRIBUTED_ACCOUNT_LOGOUT";
+    RecordAndReportCacheEvent(osAccountId, action);
+    action = "usual.event.USER_SWITCHED";
+    RecordAndReportCacheEvent(osAccountId, action);
+    action = "common.event.USER_REMOVED";
+    RecordAndReportCacheEvent(osAccountId, action);
+    DestroyOperationDataManager();
 }
 
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest037, TestSize.Level0)

@@ -533,6 +533,17 @@ static int32_t OpenServerCredSession(int64_t requestId, const CJson *receivedMsg
     return res;
 }
 
+static void ISPrintOperation(int32_t osAccountId)
+{
+    char operationRecord[DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE] = {0};
+    char commonEventRecord[DEFAULT_COMMON_EVENT_CNT * DEFAULT_RECORD_OPERATION_SIZE] = {0};
+    (void)GetOperationDataRecently(osAccountId, OPERATION_IDENTITY_SERVICE, operationRecord,
+        DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE, DEFAULT_RECENT_OPERATION_CNT);
+    (void)GetOperationDataRecently(osAccountId, OPERATION_COMMON_EVENT, commonEventRecord,
+        DEFAULT_COMMON_EVENT_CNT * DEFAULT_RECORD_OPERATION_SIZE, DEFAULT_COMMON_EVENT_CNT);
+    LOGI("Recent IS operation : %" LOG_PUB "s\n, Recent event : %" LOG_PUB "s", operationRecord, commonEventRecord);
+}
+
 static int32_t AuthCredentialInner(int32_t osAccountId, int64_t authReqId, const char *authParams,
     const DeviceAuthCallback *caCallback, char **returnPeerUdid)
 {
@@ -569,6 +580,7 @@ static int32_t AuthCredentialInner(int32_t osAccountId, int64_t authReqId, const
     FreeJson(context);
     if (res != HC_SUCCESS) {
         LOGE("OpenDevSession fail. [Res]: %" LOG_PUB "d", res);
+        ISPrintOperation(osAccountId);
         return res;
     }
     return PushStartSessionTask(authReqId);
@@ -681,6 +693,78 @@ static int32_t GetPseudonymId(int32_t osAccountId, const char *indexKey, char **
     return pseudonymInstance->getPseudonymId(osAccountId, indexKey, pseudonymId);
 }
 
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+static void ReportCredentialInfo(const char *reqJsonStr, DevAuthCallEvent *eventData)
+{
+    CJson *reqJson = CreateJsonFromString(reqJsonStr);
+    if (reqJson == NULL) {
+        return;
+    }
+    CJson *operationInfo = CreateJson();
+    if (operationInfo == NULL) {
+        FreeJson(reqJson);
+        return;
+    }
+    int32_t peerOsAccountId = DEFAULT_OS_ACCOUNT;
+    (void)GetIntFromJson(reqJson, FIELD_OS_ACCOUNT_ID, &(eventData->osAccountId));
+    (void)GetIntFromJson(reqJson, FIELD_PEER_OS_ACCOUNT_ID, &(peerOsAccountId));
+    (void)AddIntToJson(operationInfo, FIELD_PEER_OS_ACCOUNT_ID, peerOsAccountId);
+    const char *deviceId = GetStringFromJson(reqJson, FIELD_DEVICE_ID);
+    char anonymous[DEFAULT_ANONYMOUS_LEN + 1] = { 0 };
+    if (GetAnonymousString(deviceId, anonymous, DEFAULT_ANONYMOUS_LEN, false) == HC_SUCCESS) {
+        (void)AddStringToJson(operationInfo, FIELD_DEVICE_ID, anonymous);
+    }
+    char *operationInfoStr = PackJsonToString(operationInfo);
+    eventData->extInfo = operationInfoStr;
+    DEV_AUTH_REPORT_CALL_EVENT(*eventData);
+    FreeJsonString(operationInfoStr);
+    FreeJson(operationInfo);
+    FreeJson(reqJson);
+    eventData->extInfo = NULL;
+}
+#endif
+
+static void ReportCredentialEvent(int32_t errorCode, int32_t operationCode, const char *reqJsonStr)
+{
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    DevAuthCallEvent eventData;
+    switch (operationCode) {
+        case CRED_OP_QUERY:
+            eventData.processCode = PROCESS_DIRECT_QUERY_CREDENTIAL;
+            eventData.funcName = DIRECT_QUERY_CREDENTIAL;
+            break;
+        case CRED_OP_CREATE:
+            eventData.processCode = PROCESS_DIRECT_GENERATE_CREDENTIAL;
+            eventData.funcName = DIRECT_GENERATE_CREDENTIAL;
+            break;
+        case CRED_OP_IMPORT:
+            eventData.processCode = PROCESS_DIRECT_IMPORT_CREDENTIAL;
+            eventData.funcName = DIRECT_IMPORT_CREDENTIAL;
+            break;
+        case CRED_OP_DELETE:
+            eventData.processCode = PROCESS_DIRECT_DELETE_CREDENTIAL;
+            eventData.funcName = DIRECT_DELETE_CREDENTIAL;
+            break;
+        default:
+            return;
+    }
+    if (errorCode != HC_SUCCESS) {
+        DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(eventData.funcName, eventData.processCode, errorCode);
+    }
+    eventData.appId = DEFAULT_APPID;
+    eventData.osAccountId = DEFAULT_OS_ACCOUNT;
+    eventData.callResult = errorCode;
+    eventData.credType = DEFAULT_CRED_TYPE;
+    eventData.groupType = DEFAULT_GROUP_TYPE;
+    eventData.executionTime = DEFAULT_EXECUTION_TIME;
+    eventData.extInfo = NULL;
+    ReportCredentialInfo(reqJsonStr, &eventData);
+#endif
+    (void)errorCode;
+    (void)operationCode;
+    (void)reqJsonStr;
+}
+
 DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const char *reqJsonStr, char **returnData)
 {
     if (reqJsonStr == NULL || returnData == NULL) {
@@ -713,6 +797,7 @@ DEVICE_AUTH_API_PUBLIC int32_t ProcessCredential(int32_t operationCode, const ch
             break;
     }
 
+    ReportCredentialEvent(res, operationCode, reqJsonStr);
     return res;
 }
 

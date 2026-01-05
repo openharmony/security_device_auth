@@ -40,6 +40,7 @@
 #include "channel_manager.h"
 #include "critical_handler.h"
 #include "string_util.h"
+#include "operation_data_manager.h"
 
 #define EXT_PART_APP_ID "ext_part"
 
@@ -457,6 +458,117 @@ static int32_t DeleteMemberFromPeerToPeerGroup(int32_t osAccountId, int64_t requ
     return instance->deleteMember(osAccountId, requestId, jsonParams, callback);
 }
 
+static void SetAnonymousGroupIdByReturn(const char *returnJsonStr, CJson *operationInfo)
+{
+    CJson *returnJson = CreateJsonFromString(returnJsonStr);
+    if (returnJson == NULL) {
+        return;
+    }
+    const char *groupId = GetStringFromJson(returnJson, FIELD_GROUP_ID);
+    SetAnonymousField(groupId, FIELD_GROUP_ID, operationInfo);
+    FreeJson(returnJson);
+}
+
+static void SetGroupInfoByInput(const CJson *jsonParams, CJson *operationInfo)
+{
+    const char *groupId = GetStringFromJson(jsonParams, FIELD_GROUP_ID);
+    SetAnonymousField(groupId, FIELD_GROUP_ID, operationInfo);
+    int32_t groupType = DEFAULT_GROUP_TYPE;
+    if (GetIntFromJson(jsonParams, FIELD_GROUP_TYPE, &groupType) == HC_SUCCESS) {
+        (void)AddIntToJson(operationInfo, FIELD_GROUP_TYPE, groupType);
+    }
+    // peer to peer
+    const char *groupName = GetStringFromJson(jsonParams, FIELD_GROUP_NAME);
+    (void)AddStringToJson(operationInfo, FIELD_GROUP_NAME, groupName);
+    const char *groupOwner = GetStringFromJson(jsonParams, FIELD_GROUP_OWNER);
+    (void)AddStringToJson(operationInfo, FIELD_GROUP_OWNER, groupOwner);
+    // identical
+    const char *userId = GetStringFromJson(jsonParams, FIELD_USER_ID);
+    (void)SetAnonymousField(userId, FIELD_USER_ID, operationInfo);
+    // delete
+    const char *peerAuthId = GetStringFromJson(jsonParams, FIELD_DELETE_ID);
+    SetAnonymousField(peerAuthId, FIELD_DELETE_ID, operationInfo);
+}
+
+static const char *ConvertProcessCodeToFuncName(int32_t processCode)
+{
+    switch (processCode) {
+        case PROCESS_CREATE_GROUP:
+            return CREATE_GROUP_EVENT;
+        case PROCESS_DELETE_GROUP:
+            return DELETE_GROUP_EVENT;
+        case PROCESS_DELETE_MEMBER_FROM_GROUP:
+            return DEL_MEMBER_EVENT;
+        default:
+            break;
+    }
+    return DEFAULT_FUNC_NAME;
+}
+
+static void ReportGroupFaultEvent(CJson *operationInfo, const GroupManagerTask *task, const char *appId,
+    int32_t processCode, int32_t errorCode)
+{
+    char operationRecord[DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE] = {0};
+    (void)GetOperationDataRecently(task->osAccountId, OPERATION_GROUP,
+        operationRecord, DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE, DEFAULT_RECENT_OPERATION_CNT);
+    LOGI("Recent operation : %" LOG_PUB "s", operationRecord);
+#ifdef DEV_AUTH_HIVIEW_ENABLE
+    (void)AddStringToJson(operationInfo, FIELD_OPERATION_RECORD, operationRecord);
+    (void)AddStringToJson(operationInfo, FIELD_ERR_TRACE, GET_ERR_TRACE());
+    char *extJsonString = PackJsonToString(operationInfo);
+    DevAuthFaultEvent eventData;
+    eventData.appId = appId;
+    eventData.reqId = task->reqId;
+    eventData.errorCode = errorCode;
+    eventData.processCode = processCode;
+    eventData.funcName = ConvertProcessCodeToFuncName(processCode);
+    eventData.faultInfo = extJsonString;
+    DEV_AUTH_REPORT_FAULT_EVENT(eventData);
+    FreeJsonString(extJsonString);
+    eventData.faultInfo = NULL;
+#endif
+    (void)operationInfo;
+    (void)task;
+    (void)appId;
+    (void)processCode;
+    (void)errorCode;
+}
+
+static void RecordOrReportFaultEvent(const GroupManagerTask *task, const char *returnJsonStr,
+    int32_t processCode, int32_t ret)
+{
+    const char *funcName = ConvertProcessCodeToFuncName(processCode);
+    CJson *operationInfo = CreateJson();
+    if (operationInfo == NULL) {
+        return;
+    }
+    SetAnonymousGroupIdByReturn(returnJsonStr, operationInfo);
+    SetGroupInfoByInput(task->params, operationInfo);
+    const char *appId = GetStringFromJson(task->params, FIELD_APP_ID);
+    if (ret != HC_SUCCESS) {
+        ReportGroupFaultEvent(operationInfo, task, appId, processCode, ret);
+        FreeJson(operationInfo);
+        return;
+    }
+    OperationRecord *operation = CreateOperationRecord();
+    if (operation == NULL) {
+        FreeJson(operationInfo);
+        return;
+    }
+    char *operationInfoString = PackJsonToString(operationInfo);
+    if (operationInfoString != NULL) {
+        CopyHcStringForcibly(&operation->operationInfo, operationInfoString);
+        FreeJsonString(operationInfoString);
+    }
+    CopyHcStringForcibly(&operation->function, funcName);
+    CopyHcStringForcibly(&operation->caller, appId == NULL ? DEFAULT_APPID : appId);
+    operation->operationType = OPERATION_GROUP;
+    RecordOperationData(task->osAccountId, operation);
+    DestroyOperationRecord(operation);
+    FreeJson(operationInfo);
+    LOGI("%" LOG_PUB "s: Record operation success!", funcName);
+}
+
 static void DoCreateGroup(HcTaskBase *baseTask)
 {
     GroupManagerTask *task = (GroupManagerTask *)baseTask;
@@ -465,6 +577,7 @@ static void DoCreateGroup(HcTaskBase *baseTask)
     LOGI("[Start]: DoCreateGroup! [ReqId]: %" LOG_PUB PRId64, task->reqId);
     char *returnJsonStr = NULL;
     int32_t result = CreateGroup(task->osAccountId, task->params, &returnJsonStr);
+    RecordOrReportFaultEvent(task, returnJsonStr, PROCESS_CREATE_GROUP, result);
     if (result != HC_SUCCESS) {
         ProcessErrorCallback(task->reqId, GROUP_CREATE, result, NULL, task->cb);
     } else {
@@ -482,6 +595,7 @@ static void DoDeleteGroup(HcTaskBase *baseTask)
     LOGI("[Start]: DoDeleteGroup! [ReqId]: %" LOG_PUB PRId64, task->reqId);
     char *returnJsonStr = NULL;
     int32_t result = DeleteGroup(task->osAccountId, task->params, &returnJsonStr);
+    RecordOrReportFaultEvent(task, NULL, PROCESS_DELETE_GROUP, result);
     if (result != HC_SUCCESS) {
         ProcessErrorCallback(task->reqId, GROUP_DISBAND, result, NULL, task->cb);
     } else {
@@ -497,7 +611,8 @@ static void DoDeleteMember(HcTaskBase *baseTask)
     SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
     SET_TRACE_ID(task->reqId);
     LOGI("[Start]: DoDeleteMember! [ReqId]: %" LOG_PUB PRId64, task->reqId);
-    (void)DeleteMemberFromPeerToPeerGroup(task->osAccountId, task->reqId, task->params, task->cb);
+    int32_t result = DeleteMemberFromPeerToPeerGroup(task->osAccountId, task->reqId, task->params, task->cb);
+    RecordOrReportFaultEvent(task, NULL, PROCESS_DELETE_MEMBER_FROM_GROUP, result);
     DecreaseCriticalCnt();
 }
 

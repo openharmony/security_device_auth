@@ -22,22 +22,27 @@
 
 #define LOG_PRINT_MAX_LEN 1024
 
-static bool RemovePublicString(const char *fmt, char outStr[LOG_PRINT_MAX_LEN])
+static bool RemoveSubString(const char *fmt, char outStr[LOG_PRINT_MAX_LEN], char *subStr)
 {
     char *pos;
-    uint32_t subStrLen = strlen(LOG_PUB);
-    if (subStrLen == 0) {
+    uint32_t fmtLen = strlen(fmt);
+    uint32_t subStrLen = strlen(subStr);
+    if ((fmtLen == 0) || (subStrLen == 0)) {
         return true;
     }
-    uint32_t fmtLen = strlen(fmt);
     uint32_t i = 0;
     uint32_t j = 0;
-    while (j < fmtLen && (pos = strstr(fmt + j, LOG_PUB)) != NULL) {
+    pos = strstr(fmt, subStr);
+    while (pos != NULL) {
         if (memcpy_s(outStr + i, LOG_PRINT_MAX_LEN - i - 1, fmt + j, pos - fmt - j) != EOK) {
             return false;
         }
         i += pos - fmt - j;
         j = pos - fmt + subStrLen;
+        if (j >= fmtLen) {
+            break;
+        }
+        pos = strstr(fmt + j, subStr);
     }
     while (j < fmtLen && i < LOG_PRINT_MAX_LEN - 1) {
         outStr[i++] = *(fmt + j);
@@ -49,6 +54,9 @@ static bool RemovePublicString(const char *fmt, char outStr[LOG_PRINT_MAX_LEN])
 
 void LogAndRecordError(const char *funName, uint32_t lineNum, const char *fmt, ...)
 {
+    if ((funName == NULL) || (fmt == NULL)) {
+        return;
+    }
     int32_t ulPos = 0;
     char outStr[LOG_PRINT_MAX_LEN] = {0};
     char newFmt[LOG_PRINT_MAX_LEN] = {0};
@@ -57,7 +65,7 @@ void LogAndRecordError(const char *funName, uint32_t lineNum, const char *fmt, .
         HILOG_ERROR(LOG_CORE, "%" LOG_PUB "s[%" LOG_PUB "u] unknown", funName, lineNum);
         return;
     }
-    if (!RemovePublicString(fmt, newFmt)) {
+    if (!RemoveSubString(fmt, newFmt, LOG_PUB)) {
         HILOG_ERROR(LOG_CORE, "%" LOG_PUB "s unknown", outStr);
         return;
     }

@@ -40,7 +40,7 @@ typedef struct {
     TlvString function;
     TlvString operationInfo;
     TlvUint32 operationType;
-    TlvInt64 operationTime;
+    TlvUint64 operationTime;
 } TlvOperation;
 DECLEAR_INIT_FUNC(TlvOperation)
 DECLARE_TLV_VECTOR(TlvOperationVec, TlvOperation)
@@ -57,7 +57,7 @@ BEGIN_TLV_STRUCT_DEFINE(TlvOperation, 0x0001)
     TLV_MEMBER(TlvString, function, 0x4002)
     TLV_MEMBER(TlvString, operationInfo, 0x4003)
     TLV_MEMBER(TlvUint32, operationType, 0x4004)
-    TLV_MEMBER(TlvInt64, operationTime, 0x4005)
+    TLV_MEMBER(TlvUint64, operationTime, 0x4005)
 END_TLV_STRUCT_DEFINE()
 IMPLEMENT_TLV_VECTOR(TlvOperationVec, TlvOperation, 1)
 
@@ -66,7 +66,7 @@ BEGIN_TLV_STRUCT_DEFINE(HcOperationDataBaseV1, 0x0001)
     TLV_MEMBER(TlvOperationVec, operations, 0x6002)
 END_TLV_STRUCT_DEFINE()
 
-IMPLEMENT_HC_VECTOR(OperationVec, Operation*, 1)
+IMPLEMENT_HC_VECTOR(OperationVec, OperationRecord*, 1)
 
 typedef struct {
     int32_t osAccountId;
@@ -83,6 +83,29 @@ IMPLEMENT_HC_VECTOR(OperationDb, OsAccountOperationInfo, 1)
 
 static HcMutex *g_operationMutex = NULL;
 static OperationDb g_operationDb;
+static bool g_isOperationDbInitialized = false;
+
+void CopyHcStringForcibly(HcString *self, const char *str)
+{
+    if ((self == NULL) || (str == NULL)) {
+        return;
+    }
+    if (StringAppendPointer(self, str) != HC_TRUE) {
+        DeleteString(self);
+        *self = CreateString();
+    }
+}
+
+void SetAnonymousField(const char *str, const char *field, CJson *operationInfo)
+{
+    if ((str == NULL) || (field == NULL) || (operationInfo == NULL)) {
+        return;
+    }
+    char anonymous[DEFAULT_ANONYMOUS_LEN + 1] = { 0 };
+    if (GetAnonymousString(str, anonymous, DEFAULT_ANONYMOUS_LEN, false) == HC_SUCCESS) {
+        (void)AddStringToJson(operationInfo, field, anonymous);
+    }
+}
 
 static bool IsOsAccountOperationInfoLoaded(int32_t osAccountId)
 {
@@ -96,7 +119,7 @@ static bool IsOsAccountOperationInfoLoaded(int32_t osAccountId)
     return false;
 }
 
-static bool SetOperationElement(TlvOperation *element, Operation *entry)
+static bool SetOperationElement(TlvOperation *element, OperationRecord *entry)
 {
     if (!StringSet(&element->caller.data, entry->caller)) {
         LOGE("[Operation]: Failed to copy caller!");
@@ -118,7 +141,7 @@ static bool SetOperationElement(TlvOperation *element, Operation *entry)
 static bool SaveOperations(const OperationVec *vec, HcOperationDataBaseV1 *db)
 {
     uint32_t index = 0;
-    Operation **entry;
+    OperationRecord **entry;
     FOR_EACH_HC_VECTOR(*vec, index, entry) {
         TlvOperation tmp;
         TlvOperation *element = db->operations.data.pushBack(&db->operations.data, &tmp);
@@ -217,12 +240,12 @@ static int32_t SaveOperationInfo(const OsAccountOperationInfo *info)
 
 static bool SaveTainedOperation(int32_t osAccountId)
 {
-    Operation *tainedOperation = CreateOperationRecord();
+    OperationRecord *tainedOperation = CreateOperationRecord();
     if (tainedOperation == NULL) {
         LOGE("failed to create tained operation!");
         return false;
     }
-    tainedOperation->operationTime = HcGetRealTime();
+    tainedOperation->operationTime = (uint64_t)HcGetRealTime();
     if (StringAppendPointer(&(tainedOperation->operationInfo), TAINED_OPERATION) == HC_FALSE) {
         LOGE("failed to append tained operation info!");
         DeleteString(&(tainedOperation->operationInfo));
@@ -280,7 +303,7 @@ static bool ReadParcelFromFile(const char *filePath, HcParcel *parcel)
     return true;
 }
 
-static bool GenerateOperationFromTlv(TlvOperation *operation, Operation *entry)
+static bool GenerateOperationFromTlv(TlvOperation *operation, OperationRecord *entry)
 {
     if (!StringSet(&entry->caller, operation->caller.data)) {
         LOGE("[Operation]: Failed to load caller from tlv!");
@@ -307,7 +330,7 @@ static bool LoadOperations(HcOperationDataBaseV1 *db, OperationVec *vec)
         if (operation == NULL) {
             continue;
         }
-        Operation *entry = CreateOperationRecord();
+        OperationRecord *entry = CreateOperationRecord();
         if (entry == NULL) {
             LOGE("[Operation]: Failed to allocate entry memory!");
             ClearOperationVec(vec);
@@ -410,7 +433,7 @@ static OsAccountOperationInfo *GetOperationInfoByOsAccountId(int32_t osAccountId
     return returnInfo;
 }
 
-static bool GenerateOperationFromOperation(const Operation *entry, Operation *returnEntry)
+static bool GenerateOperationFromOperation(const OperationRecord *entry, OperationRecord *returnEntry)
 {
     if (!StringSet(&returnEntry->caller, entry->caller)) {
         LOGE("[Operation]: Failed to copy caller!");
@@ -429,9 +452,9 @@ static bool GenerateOperationFromOperation(const Operation *entry, Operation *re
     return true;
 }
 
-Operation *CreateOperationRecord(void)
+OperationRecord *CreateOperationRecord(void)
 {
-    Operation *ptr = (Operation *)HcMalloc(sizeof(Operation), 0);
+    OperationRecord *ptr = (OperationRecord *)HcMalloc(sizeof(OperationRecord), 0);
     if (ptr == NULL) {
         LOGE("[Operation]: Failed to allocate operation memory!");
         return NULL;
@@ -442,7 +465,7 @@ Operation *CreateOperationRecord(void)
     return ptr;
 }
 
-void DestroyOperationRecord(Operation *operation)
+void DestroyOperationRecord(OperationRecord *operation)
 {
     if (operation == NULL) {
         return;
@@ -453,12 +476,12 @@ void DestroyOperationRecord(Operation *operation)
     HcFree(operation);
 }
 
-Operation *DeepCopyOperationRecord(const Operation *entry)
+OperationRecord *DeepCopyOperationRecord(const OperationRecord *entry)
 {
     if (entry == NULL) {
         return NULL;
     }
-    Operation *returnEntry = CreateOperationRecord();
+    OperationRecord *returnEntry = CreateOperationRecord();
     if (returnEntry == NULL) {
         return NULL;
     }
@@ -475,7 +498,7 @@ void ClearOperationVec(OperationVec *vec)
         return;
     }
     uint32_t index;
-    Operation **entry;
+    OperationRecord **entry;
     FOR_EACH_HC_VECTOR(*vec, index, entry) {
         if (entry == NULL || *entry == NULL) {
             continue;
@@ -505,16 +528,16 @@ static void RemoveRedundantRecord(OsAccountOperationInfo *info, uint32_t maxReco
     if (operationSize <= maxRecord) {
         return;
     }
-    int32_t needRemoveCnt = operationSize - maxRecord;
+    int64_t needRemoveCnt = (int64_t)operationSize - (int64_t)maxRecord;
     uint32_t index = 0;
-    Operation **entry = NULL;
+    OperationRecord **entry = NULL;
     while (index < HC_VECTOR_SIZE(&info->operations) && needRemoveCnt > 0) {
         entry = info->operations.getp(&info->operations, index);
         if ((entry == NULL) || (*entry == NULL)) {
             index++;
             continue;
         }
-        Operation *popEntry;
+        OperationRecord *popEntry;
         HC_VECTOR_POPELEMENT(&info->operations, &popEntry, index);
         DestroyOperationRecord(popEntry);
         needRemoveCnt--;
@@ -522,9 +545,12 @@ static void RemoveRedundantRecord(OsAccountOperationInfo *info, uint32_t maxReco
     return;
 }
 
-int32_t RecordOperationData(int32_t osAccountId, const Operation *entry)
+int32_t RecordOperationData(int32_t osAccountId, const OperationRecord *entry)
 {
-    LOGI("[Operation]: Start to add a operation to database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
+    if (!g_isOperationDbInitialized) {
+        LOGW("[Operation]: Operation data manager not init.");
+        return HC_ERR_INIT_FAILED;
+    }
     if (entry == NULL) {
         LOGE("[Operation]: The input entry is NULL!");
         return HC_ERR_NULL_PTR;
@@ -535,12 +561,12 @@ int32_t RecordOperationData(int32_t osAccountId, const Operation *entry)
         UnlockHcMutex(g_operationMutex);
         return HC_ERR_INVALID_PARAMS;
     }
-    Operation *newEntry = DeepCopyOperationRecord(entry);
+    OperationRecord *newEntry = DeepCopyOperationRecord(entry);
     if (newEntry == NULL) {
         UnlockHcMutex(g_operationMutex);
         return HC_ERR_MEMORY_COPY;
     }
-    newEntry->operationTime = HcGetRealTime();
+    newEntry->operationTime = (uint64_t)HcGetRealTime();
     if (info->operations.pushBackT(&info->operations, newEntry) == NULL) {
         DestroyOperationRecord(newEntry);
         UnlockHcMutex(g_operationMutex);
@@ -557,9 +583,25 @@ int32_t RecordOperationData(int32_t osAccountId, const Operation *entry)
     return HC_SUCCESS;
 }
 
-int32_t GetOperationDataRecently(int32_t osAccountId, DevAuthOperationType type, char *record,
+static char *HcFormatTime(int64_t timestamp)
+{
+    char *curTime = (char*)HcMalloc(TIME_LEN, 0);
+    if (curTime != NULL) {
+        struct tm *tmInfo = localtime((time_t*)&timestamp);
+        strftime(curTime, TIME_LEN, "%Y-%m-%d %H:%M:%S", tmInfo);
+        return curTime;
+    }
+    LOGE("convert time failed.");
+    return NULL;
+}
+
+int32_t GetOperationDataRecently(int32_t osAccountId, uint32_t types, char *record,
     uint32_t recordSize, uint32_t maxOperationCnt)
 {
+    if (!g_isOperationDbInitialized) {
+        LOGW("[Operation]: Operation data manager not init.");
+        return -1;
+    }
     (void)LockHcMutex(g_operationMutex);
     if (record == NULL) {
         UnlockHcMutex(g_operationMutex);
@@ -572,21 +614,23 @@ int32_t GetOperationDataRecently(int32_t osAccountId, DevAuthOperationType type,
     }
     uint32_t cnt = 0;
     int32_t offset = 0;
-    Operation **entry;
+    OperationRecord **entry;
     memset_s(record, recordSize, 0, recordSize);
     int64_t index = ((int64_t)HC_VECTOR_SIZE(&info->operations)) - 1;
     while (index >= 0 && cnt < maxOperationCnt) {
         entry = info->operations.getp(&info->operations, index);
         if ((entry == NULL) || (*entry == NULL) ||
-            ((type != OPERATION_ANY) && ((*entry)->operationType != type))) {
+            (((*entry)->operationType & types) == 0)) {
             index--;
             continue;
         }
+        char *curTime = HcFormatTime((*entry)->operationTime);
         int32_t incOffset = sprintf_s(record + offset, recordSize - offset - 1,
-            "[caller: %s, function: %s, operationInfo: %s, type:%u opTime: %ld]",
+            "[caller: %s, function: %s, operationInfo: %s, type:%u opTime: %s]",
             StringGet(&(*entry)->caller), StringGet(&(*entry)->function),
             StringGet(&(*entry)->operationInfo), (*entry)->operationType,
-            (*entry)->operationTime);
+            (curTime == NULL) ? "" : curTime);
+        HcFree(curTime);
         if (incOffset <= 0) {
             break;
         }
@@ -628,41 +672,35 @@ static void LoadDeviceAuthDb(void)
 
 
 #ifdef DEV_AUTH_HIVIEW_ENABLE
-static char *HcFormatTime(int64_t timestamp)
+static void DumpOperation(int fd, const OperationRecord *operation)
 {
-    char *curTime = (char*)HcMalloc(TIME_LEN, 0);
-    if (curTime != NULL) {
-        struct tm *tm_info = localtime((time_t*)&timestamp);
-        strftime(curTime, TIME_LEN, "%Y-%m-%d %H:%M:%S", tm_info);
-        return curTime;
-    }
-    return NULL;
-}
-static void DumpOperation(int fd, const Operation *operation)
-{
-    dprintf(fd, "||---------------------------Operation---------------------------|                  |\n");
-    dprintf(fd, "||%-12s = %47s|                  |\n", "caller", StringGet(&operation->caller));
-    dprintf(fd, "||%-12s = %47s|                  |\n", "function", StringGet(&operation->function));
-    dprintf(fd, "||%-12s = %47s|                  |\n", "operationInfo", StringGet(&operation->operationInfo));
-    dprintf(fd, "||%-12s = %47d|                  |\n", "operationType", operation->operationType);
+    dprintf(fd, "||---------------------------------------Operation"
+        "---------------------------------------|                  |\n");
+    dprintf(fd, "||%-13s = %-71s|                  |\n", "caller", StringGet(&operation->caller));
+    dprintf(fd, "||%-13s = %-71s|                  |\n", "function", StringGet(&operation->function));
+    dprintf(fd, "||%-13s = %-71s|                  |\n", "operationInfo", StringGet(&operation->operationInfo));
+    dprintf(fd, "||%-13s = %-71d|                  |\n", "operationType", operation->operationType);
     char *curTime = HcFormatTime(operation->operationTime);
-    dprintf(fd, "||%-12s = %47d                   \n", "operationTime", operation->operationTime);
-    dprintf(fd, "||---------------------------Operation---------------------------|                  |\n");
+    dprintf(fd, "||%-13s = %-71s|                  |\n", "operationTime", (curTime == NULL) ? "" : curTime);
+    dprintf(fd, "||---------------------------------------Operation"
+        "---------------------------------------|                  |\n");
     HcFree(curTime);
 }
 
 static void DumpDb(int fd, const OsAccountOperationInfo *db)
 {
     const OperationVec *operations = &db->operations;
-    dprintf(fd, "|------------------------------------OperationDB------------------------------------|\n");
-    dprintf(fd, "|%-12s = %-68d|\n", "osAccountId", db->osAccountId);
-    dprintf(fd, "|%-12s = %-68d|\n", "operationNum", operations->size(operations));
+    dprintf(fd, "|------------------------------------------------OperationDB"
+        "------------------------------------------------|\n");
+    dprintf(fd, "|%-13s = %-91d|\n", "osAccountId", db->osAccountId);
+    dprintf(fd, "|%-13s = %-91d|\n", "operationNum", operations->size(operations));
     uint32_t index;
-    Operation **operation;
+    OperationRecord **operation;
     FOR_EACH_HC_VECTOR(*operations, index, operation) {
         DumpOperation(fd, *operation);
     }
-    dprintf(fd, "|------------------------------------OperationDB------------------------------------|\n");
+    dprintf(fd, "|------------------------------------------------OperationDB"
+        "------------------------------------------------|\n");
 }
 
 static void LoadAllAccountsData(void)
@@ -701,6 +739,10 @@ static void DevAuthDataBaseDump(int fd)
 
 int32_t InitOperationDataManager(void)
 {
+    if (g_isOperationDbInitialized) {
+        LOGW("[Operation]: Operation data manager already init.");
+        return HC_SUCCESS;
+    }
     if (g_operationMutex == NULL) {
         g_operationMutex = (HcMutex *)HcMalloc(sizeof(HcMutex), 0);
         if (g_operationMutex == NULL) {
@@ -717,11 +759,16 @@ int32_t InitOperationDataManager(void)
     g_operationDb = CREATE_HC_VECTOR(OperationDb);
     LoadDeviceAuthDb();
     DEV_AUTH_REG_OPERATION_DUMP_FUNC(DevAuthDataBaseDump);
+    g_isOperationDbInitialized = true;
     return HC_SUCCESS;
 }
 
 void DestroyOperationDataManager(void)
 {
+    if (!g_isOperationDbInitialized) {
+        LOGW("[Operation]: Operation data manager not init.");
+        return;
+    }
     (void)LockHcMutex(g_operationMutex);
     SaveAllOperationInfo();
     uint32_t index;
@@ -733,6 +780,7 @@ void DestroyOperationDataManager(void)
         ClearOperationVec(&info->operations);
     }
     DESTROY_HC_VECTOR(OperationDb, &g_operationDb);
+    g_isOperationDbInitialized = false;
     UnlockHcMutex(g_operationMutex);
     DestroyHcMutex(g_operationMutex);
     HcFree(g_operationMutex);
