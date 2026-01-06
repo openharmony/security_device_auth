@@ -85,13 +85,21 @@ static CredAuthManager *g_credAuthManager = NULL;
 #define RETURN_RANDOM_LEN 16
 #define RETURN_KEY_LEN 32
 
-static int32_t AddOriginDataForPlugin(CJson *receivedMsg, const uint8_t *data)
+static int32_t AddOriginDataForPlugin(CJson *receivedMsg, const uint8_t *data, uint32_t dataLen)
 {
     if ((receivedMsg == NULL) || (data == NULL)) {
         LOGE("Invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
-    return AddStringToJson(receivedMsg, FIELD_PLUGIN_EXT_DATA, (const char *)data);
+    char *dataStr = NULL;
+    int32_t res = GenerateStringFromData(data, dataLen, &dataStr);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to generate string from data!");
+        return res;
+    }
+    res = AddStringToJson(receivedMsg, FIELD_PLUGIN_EXT_DATA, dataStr);
+    HcFree(dataStr);
+    return res;
 }
 
 static int32_t BuildClientAuthContext(int32_t osAccountId, int64_t requestId, const char *appId, CJson *context,
@@ -449,12 +457,12 @@ static int32_t ProcessDataInner(int64_t authReqId, const uint8_t *data, uint32_t
         LOGE("Invalid input for ProcessData!");
         return HC_ERR_INVALID_PARAMS;
     }
-    CJson *receivedMsg = CreateJsonFromString((const char *)data);
-    if (receivedMsg == NULL) {
-        LOGE("Failed to create json from string!");
-        return HC_ERR_JSON_FAIL;
+    CJson *receivedMsg = NULL;
+    int32_t res = CreateJsonFromData(data, dataLen, &receivedMsg);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to create json from data!");
+        return res;
     }
-    int32_t res;
     if (!IsSessionExist(authReqId)) {
         res = OpenServerAuthSession(authReqId, receivedMsg, gaCallback, returnPeerUdid);
         if (res != HC_SUCCESS) {
@@ -463,7 +471,7 @@ static int32_t ProcessDataInner(int64_t authReqId, const uint8_t *data, uint32_t
         }
     }
     if (HasAccountPlugin()) {
-        res = AddOriginDataForPlugin(receivedMsg, data);
+        res = AddOriginDataForPlugin(receivedMsg, data, dataLen);
         if (res != HC_SUCCESS) {
             FreeJson(receivedMsg);
             return res;
@@ -600,12 +608,12 @@ static int32_t ProcessCredDataInner(int64_t authReqId, const uint8_t *data, uint
         LOGE("Invalid input for ProcessCredData!");
         return HC_ERR_INVALID_PARAMS;
     }
-    CJson *receivedMsg = CreateJsonFromString((const char *)data);
-    if (receivedMsg == NULL) {
-        LOGE("Failed to create json from string!");
-        return HC_ERR_JSON_CREATE;
+    CJson *receivedMsg = NULL;
+    int32_t res = CreateJsonFromData(data, dataLen, &receivedMsg);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to create json from data!");
+        return res;
     }
-    int32_t res;
     if (!IsSessionExist(authReqId)) {
         res = OpenServerCredSession(authReqId, receivedMsg, caCallback, returnPeerUdid);
         if (res != HC_SUCCESS) {
@@ -614,7 +622,7 @@ static int32_t ProcessCredDataInner(int64_t authReqId, const uint8_t *data, uint
         }
     }
     if (HasAccountPlugin()) {
-        res = AddOriginDataForPlugin(receivedMsg, data);
+        res = AddOriginDataForPlugin(receivedMsg, data, dataLen);
         if (res != HC_SUCCESS) {
             FreeJson(receivedMsg);
             LOGE("AddOriginDataForPlugin occurred error!");

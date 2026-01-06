@@ -42,22 +42,21 @@ static CredChangeListener g_credListenCbAdt = {NULL};
 static CredAuthManager g_credAuthMgrMethod = {NULL};
 #endif
 
-static int32_t BindRequestIdWithAppId(const char *data)
+static int32_t BindRequestIdWithAppId(const uint8_t *data, uint32_t dataLen)
 {
-    const char *appId = NULL;
-    int32_t ret;
-    int64_t requestId = -1;
-    CJson *dataJson = CreateJsonFromString(data);
-    if (dataJson == NULL) {
-        LOGE("failed to create json from string!");
-        return HC_ERR_JSON_CREATE;
+    CJson *dataJson = NULL;
+    int32_t ret = CreateJsonFromData(data, dataLen, &dataJson);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to create json from data!");
+        return ret;
     }
-    appId = GetStringFromJson(dataJson, FIELD_APP_ID);
+    const char *appId = GetStringFromJson(dataJson, FIELD_APP_ID);
     if (appId == NULL) {
         LOGE("failed to get appId from json object!");
         FreeJson(dataJson);
-        return HC_ERROR;
+        return HC_ERR_JSON_GET;
     }
+    int64_t requestId = -1;
     (void)GetInt64FromJson(dataJson, FIELD_REQUEST_ID, &requestId);
     ret = AddReqIdByAppId(appId, requestId);
     FreeJson(dataJson);
@@ -441,7 +440,7 @@ int32_t IpcServiceGmProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, 
         LOGE("get param error, type %" LOG_PUB "d, data length %" LOG_PUB "d", PARAM_TYPE_COMM_DATA, dataLen);
         return HC_ERR_IPC_BAD_PARAM;
     }
-    ret = BindRequestIdWithAppId((const char *)data);
+    ret = BindRequestIdWithAppId(data, dataLen);
     if (ret != HC_SUCCESS) {
         return ret;
     }

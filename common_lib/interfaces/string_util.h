@@ -103,6 +103,14 @@ int32_t GetAnonymousString(const char *originStr, char *anonymousStr, uint32_t a
  */
 bool IsStrEqual(const char *str1, const char *str2);
 
+/*
+ * Generate string from raw data.
+ * @param data: the raw data.
+ * @param dataLen: the data length.
+ * @return success(0), otherwise, failure.
+ */
+int32_t GenerateStringFromData(const uint8_t *data, uint32_t dataLen, char **outStr);
+
 #ifdef __cplusplus
 }
 #endif

@@ -60,6 +60,24 @@ CJson *CreateJsonFromString(const char *jsonStr)
     return cJSON_Parse(jsonStr);
 }
 
+int32_t CreateJsonFromData(const uint8_t *data, uint32_t dataLen, CJson **outJson)
+{
+    char *dataStr = NULL;
+    int32_t ret = GenerateStringFromData(data, dataLen, &dataStr);
+    if (ret != CLIB_SUCCESS) {
+        LOGE("Failed to generate string from data!");
+        return ret;
+    }
+    CJson *tmpJson = CreateJsonFromString(dataStr);
+    HcFree(dataStr);
+    if (tmpJson == NULL) {
+        LOGE("Failed to create data json!");
+        return CLIB_ERR_JSON_CREATE;
+    }
+    *outJson = tmpJson;
+    return CLIB_SUCCESS;
+}
+
 CJson *CreateJson(void)
 {
     return cJSON_CreateObject();

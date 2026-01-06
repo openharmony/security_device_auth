@@ -27,5 +27,7 @@ enum {
     CLIB_ERR_JSON_ADD = -7,
     CLIB_ERR_JSON_REPLACE = -8,
     CLIB_ERR_JSON_DUPLICATE = -9,
+    CLIB_ERR_MEMORY_COPY = -10,
+    CLIB_ERR_JSON_CREATE = -11,
 };
 #endif

@@ -196,3 +196,20 @@ bool IsStrEqual(const char *str1, const char *str2)
 
     return strcmp(str1, str2) == 0;
 }
+
+int32_t GenerateStringFromData(const uint8_t *data, uint32_t dataLen, char **outStr)
+{
+    if (data == NULL || dataLen == 0 || outStr == NULL) {
+        return CLIB_ERR_INVALID_PARAM;
+    }
+    char *tmpStr = (char *)HcMalloc(dataLen + 1, 0);
+    if (tmpStr == NULL) {
+        return CLIB_ERR_BAD_ALLOC;
+    }
+    if (memcpy_s(tmpStr, dataLen + 1, data, dataLen) != EOK) {
+        HcFree(tmpStr);
+        return CLIB_ERR_MEMORY_COPY;
+    }
+    *outStr = tmpStr;
+    return CLIB_SUCCESS;
+}
