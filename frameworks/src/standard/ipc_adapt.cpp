@@ -37,6 +37,8 @@ namespace {
     static const int32_t IPC_CALL_BACK_MAX_NODES = 64;
     static const int32_t IPC_CALL_BACK_STUB_NODES = 4;
     static const uint32_t DEV_AUTH_MAX_THREAD_NUM = 2;
+    static const int32_t DEFAULT_CALLBACK_PROXY_ID = -1;
+    static const int32_t DEFAULT_CALLBACK_NODE_IDX = -1;
 }
 
 static sptr<StubDevAuthCb> g_sdkCbStub[IPC_CALL_BACK_STUB_NODES] = { nullptr, nullptr, nullptr, nullptr };
@@ -124,8 +126,8 @@ int32_t GetAndValNullParam(const IpcDataInfo *ipcParams,
 static void SetIpcCallBackNodeDefault(IpcCallBackNode &node)
 {
     (void)memset_s(&node, sizeof(IpcCallBackNode), 0, sizeof(IpcCallBackNode));
-    node.proxyId = -1;
-    node.nodeIdx = -1;
+    node.proxyId = DEFAULT_CALLBACK_PROXY_ID;
+    node.nodeIdx = DEFAULT_CALLBACK_NODE_IDX;
     return;
 }
 
@@ -171,6 +173,9 @@ void DeInitIpcCallBackList(void)
         return;
     }
     for (i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
+        if (g_ipcCallBackList.ctx[i].nodeIdx == DEFAULT_CALLBACK_NODE_IDX) {
+            continue;
+        }
         ResetIpcCallBackNode(g_ipcCallBackList.ctx[i]);
     }
     delete[] g_ipcCallBackList.ctx;
@@ -285,7 +290,7 @@ int32_t AddIpcCallBackByAppId(const char *appId, const uint8_t *cbPtr, int32_t c
         }
         if (node->proxyId >= 0) {
             ServiceDevAuth::ResetRemoteObject(node->proxyId);
-            node->proxyId = -1;
+            node->proxyId = DEFAULT_CALLBACK_PROXY_ID;
         }
         LOGI("Callback add success, appid: %" LOG_PUB "s", appId);
         return HC_SUCCESS;
@@ -309,7 +314,7 @@ int32_t AddIpcCallBackByAppId(const char *appId, const uint8_t *cbPtr, int32_t c
         LOGE("callback context memory copy failed");
         return HC_ERROR;
     }
-    node->proxyId = -1;
+    node->proxyId = DEFAULT_CALLBACK_PROXY_ID;
     g_ipcCallBackList.nodeCnt++;
     LOGI("callback add success, appid: %" LOG_PUB "s, type %" LOG_PUB "d", node->appId, node->cbType);
     return HC_SUCCESS;
@@ -415,7 +420,7 @@ int32_t AddIpcCallBackByReqId(int64_t reqId, const uint8_t *cbPtr, int32_t cbSz,
         }
         if (node->proxyId >= 0) {
             ServiceDevAuth::ResetRemoteObject(node->proxyId);
-            node->proxyId = -1;
+            node->proxyId = DEFAULT_CALLBACK_PROXY_ID;
         }
         LOGI("callback replaced success, request id %" LOG_PUB "lld, type %" LOG_PUB "d",
             static_cast<long long>(reqId), type);
@@ -438,7 +443,7 @@ int32_t AddIpcCallBackByReqId(int64_t reqId, const uint8_t *cbPtr, int32_t cbSz,
         return HC_ERROR;
     }
     node->delOnFni = 1;
-    node->proxyId = -1;
+    node->proxyId = DEFAULT_CALLBACK_PROXY_ID;
     g_ipcCallBackList.nodeCnt++;
     LOGI("callback added success, request id %" LOG_PUB "lld, type %" LOG_PUB "d",
         static_cast<long long>(reqId), type);
