@@ -164,7 +164,7 @@ void Destroy##ClassName(ClassName* obj) \
 #define HC_VECTOR_SIZE(obj) (obj)->size(obj)
 #define HC_VECTOR_GET(obj, index) (obj)->get((obj), (index))
 #define HC_VECTOR_GETP(_obj, _index) (_obj)->getp((_obj), (_index))
-#define FOR_EACH_HC_VECTOR(vec, idx, iter) \
-for (idx = 0, iter = (vec).getp(&(vec), idx); idx < (vec).size(&(vec)); ++idx, iter = (vec).getp(&(vec), idx))
+#define FOR_EACH_HC_VECTOR(vec, i, iter) \
+for ((i) = 0, (iter) = (vec).getp(&(vec), (i)); (i) < (vec).size(&(vec)); ++(i), (iter) = (vec).getp(&(vec), (i)))
 
 #endif
