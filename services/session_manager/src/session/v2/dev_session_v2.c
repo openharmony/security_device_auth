@@ -570,7 +570,7 @@ static int32_t GetSelfCredByInput(SessionImpl *impl, const CJson *inputData)
         LOGE("get cred type from json fail.");
         return HC_ERR_JSON_GET;
     }
-    int32_t res;
+    int32_t res = HC_ERROR;
     IdentityInfo *info = NULL;
     if (credType == PRE_SHARED) {
         res = GetPreSharedCredInfo(impl, inputData, &info);
@@ -710,7 +710,7 @@ static int32_t SetAuthProtectedMsg(SessionImpl *impl, const CJson *msgJson, bool
         return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
     }
     Uint8Buff msg = { (uint8_t *)msgStr, HcStrlen(msgStr) + 1 };
-    int32_t res;
+    int32_t res = HC_ERROR;
     uint32_t index;
     AuthSubSession **ptr;
     FOR_EACH_HC_VECTOR(impl->authSubSessionList, index, ptr) {
@@ -976,7 +976,7 @@ static int32_t AddGroupInfoToContext(SessionImpl *impl, int32_t osAccountId, con
         LOGE("The group cannot be found!");
         return HC_ERR_GROUP_NOT_EXIST;
     }
-    int32_t res;
+    int32_t res = HC_ERROR;
     if (entry->type == IDENTICAL_ACCOUNT_GROUP) {
         res = AddIdenticalAccountGroupInfoToContext(impl, entry);
     } else if (entry->type == PEER_TO_PEER_GROUP) {
@@ -1184,7 +1184,7 @@ static int32_t AddAuthInfoToContextByCred(SessionImpl *impl, IdentityInfo *cred)
 
 static int32_t AddAuthSubSessionToVec(SessionImpl *impl, IdentityInfo *cred, ProtocolEntity *entity)
 {
-    int32_t res;
+    int32_t res = HC_ERROR;
     AuthSubSession *authSubSession = NULL;
     if (entity->protocolType == ALG_EC_SPEKE) {
         res = CreateEcSpekeSubSession(impl, cred, &authSubSession);
@@ -1229,7 +1229,7 @@ static int32_t ClientCreateAuthSubSessionByCred(SessionImpl *impl, IdentityInfo 
 
 static int32_t ProcStartEventInner(SessionImpl *impl, CJson *sessionMsg)
 {
-    int32_t res;
+    int32_t res = HC_ERROR;
     if (impl->credTotalNum == 0) {
         res = GetAllCredsWithPeer(impl);
         if (res != HC_SUCCESS) {
