@@ -101,6 +101,7 @@ void ClearSensitiveStringInJson(CJson *jsonObj, const char *key);
 void ClearAndFreeJsonString(char *jsonStr);
 int32_t GetUnsignedIntFromJson(const CJson *jsonObj, const char *key, uint32_t *value);
 int32_t GetUint8FromJson(const CJson *jsonObj, const char *key, uint8_t *value);
+int32_t CreateJsonFromData(const uint8_t *data, uint32_t dataLen, CJson **outJson);
 
 #ifdef __cplusplus
 }

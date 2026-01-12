@@ -1143,12 +1143,12 @@ static int32_t RequestProcessBindDataInner(int64_t requestId, const uint8_t *dat
         return HC_ERR_INVALID_PARAMS;
     }
     LOGI("[Start]: RequestProcessBindData! [ReqId]: %" LOG_PUB PRId64, requestId);
-    CJson *receivedMsg = CreateJsonFromString((const char *)data);
-    if (receivedMsg == NULL) {
-        LOGE("Failed to create json from string!");
-        return HC_ERR_JSON_FAIL;
+    CJson *receivedMsg = NULL;
+    int32_t res = CreateJsonFromData(data, dataLen, &receivedMsg);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to create json from data!");
+        return res;
     }
-    int32_t res;
     if (!IsSessionExist(requestId)) {
         res = OpenServerBindSession(requestId, receivedMsg);
         if (res != HC_SUCCESS) {

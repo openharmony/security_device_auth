@@ -1977,14 +1977,15 @@ void DeviceAuthTest::TearDown()
 
 HWTEST_F(DeviceAuthTest, DeviceAuthTest001, TestSize.Level0)
 {
-    int32_t ret = AddOriginDataForPlugin(nullptr, nullptr);
+    int32_t ret = AddOriginDataForPlugin(nullptr, nullptr, 0);
     EXPECT_NE(ret, HC_SUCCESS);
-    ret = AddOriginDataForPlugin(nullptr, (const uint8_t*)TEST_ADD_PARAMS.c_str());
+    const char *paramStr = TEST_ADD_PARAMS.c_str();
+    ret = AddOriginDataForPlugin(nullptr, reinterpret_cast<const uint8_t *>(paramStr), strlen(paramStr));
     EXPECT_NE(ret, HC_SUCCESS);
     CJson *json = CreateJson();
-    ret = AddOriginDataForPlugin(json, (const uint8_t*)TEST_ADD_PARAMS.c_str());
+    ret = AddOriginDataForPlugin(json, reinterpret_cast<const uint8_t *>(paramStr), strlen(paramStr));
     EXPECT_EQ(ret, HC_SUCCESS);
-    ret = AddOriginDataForPlugin(json, nullptr);
+    ret = AddOriginDataForPlugin(json, nullptr, 0);
     EXPECT_NE(ret, HC_SUCCESS);
     FreeJson(json);
 }
