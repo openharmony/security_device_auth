@@ -1316,7 +1316,6 @@ DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *
 DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 {
     if (g_devAuthServiceStatus == true) {
-        LOGI("device auth sdk already init");
         return HC_SUCCESS;
     }
     int32_t ret = InitHcMutex(&g_ipcMutex, false);

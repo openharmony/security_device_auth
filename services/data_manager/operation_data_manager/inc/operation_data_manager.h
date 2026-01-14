@@ -40,7 +40,7 @@
 typedef struct {
     HcString caller;
     HcString function;
-    HcString operationInfo; // （credId/groupId，deviceId）
+    HcString operationInfo; // （credId/groupId, deviceId）
     uint32_t operationType;
     uint64_t operationTime;
 } OperationRecord;

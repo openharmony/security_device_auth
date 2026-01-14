@@ -91,7 +91,8 @@ static void RecordAndReportCacheEvent(int32_t osAccountId, const std::string &ev
     if ((eventType != OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) &&
         eventType != OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED &&
         eventType != OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGIN &&
-        eventType != OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGOUT) {
+        eventType != OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGOUT &&
+        eventType != OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
         return;
     }
     OperationRecord *operation = CreateOperationRecord();

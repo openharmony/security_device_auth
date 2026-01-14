@@ -290,8 +290,8 @@ static void ReportBindAndAuthCallEvent(const SessionImpl *impl, int32_t callResu
     bool isBind = true;
     (void)GetBoolFromJson(impl->context, FIELD_IS_BIND, &isBind);
     if (impl->isCredAuth) {
-        eventData.funcName = AUTH_IDENTITY_SERVICE_EVENT;
-        eventData.processCode = PROCESS_AUTH_IDENTITY_SERVICE;
+        eventData.funcName = isBind ? BIND_IDENTITY_SERVICE_EVENT : AUTH_IDENTITY_SERVICE_EVENT;
+        eventData.processCode = isBind ? PROCESS_BIND_IDENTITY_SERVICE : PROCESS_AUTH_IDENTITY_SERVICE;
     } else if (isBind) {
         eventData.funcName = ADD_MEMBER_EVENT;
         eventData.processCode = isV1Session ? PROCESS_BIND_V1 : PROCESS_BIND_V2;
