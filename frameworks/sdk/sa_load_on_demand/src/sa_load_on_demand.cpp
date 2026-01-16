@@ -163,7 +163,7 @@ static void ClearCallbackInfo(DevAuthCallbackInfo *callbackInfo)
 }
 
 static bool UpdateCallback(DevAuthCallbackInfo *callbackInfo, const DeviceAuthCallback *callback,
-    const DataChangeListener *dataChangeListener, CredChangeListener *listener, uint32_t index)
+    const DataChangeListener *dataChangeListener, CredChangeListener *listener)
 {
     DevAuthCallbackInfo tmpCallbackInfo;
     tmpCallbackInfo.callbackType = callbackInfo->callbackType;
@@ -189,7 +189,7 @@ static bool UpdateCallbackInfoIfExist(const char *appId, const DeviceAuthCallbac
         if (IsStrEqual(entry->appId, appId) && entry->callbackType == callbackType) {
             LOGI("[SDK]:start to update callback, appId: %" LOG_PUB "s, callbackType: %" LOG_PUB "d",
                 appId, callbackType);
-            bool ret = UpdateCallback(entry, callback, dataChangeListener, listener, index);
+            bool ret = UpdateCallback(entry, callback, dataChangeListener, listener);
             return ret;
         }
     }

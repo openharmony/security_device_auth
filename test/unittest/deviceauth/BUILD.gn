@@ -524,7 +524,10 @@ ohos_unittest("device_auth_interface_test") {
   ]
   sources += identity_manager_files
   include_dirs += identity_manager_inc
-  sources += [ "source/deviceauth_interface_test.cpp" ]
+  sources += [
+    "source/deviceauth_interface_test.cpp",
+    "source/ipc_adapt_test.cpp",
+  ]
 
   cflags = [ "-DHILOG_ENABLE" ]
   cflags += [
