@@ -43,17 +43,14 @@ static void LoadAccountAuthPlugin(void)
 {
     (void)LockHcMutex(&g_taskMutex);
     g_loadCount++;
-    LOGI("[ACCOUNT_TASK_MGR]: load count increase to: %" LOG_PUB "d.", g_loadCount);
     g_isInUnloadStatus = false;
     if (g_isPluginLoaded) {
         UnlockHcMutex(&g_taskMutex);
-        LOGI("[ACCOUNT_TASK_MGR]: plugin is loaded.");
         return;
     }
     DEV_AUTH_LOAD_PLUGIN();
     g_isPluginLoaded = true;
     UnlockHcMutex(&g_taskMutex);
-    LOGI("[ACCOUNT_TASK_MGR]: load plugin successfully.");
 }
 
 static bool ShouldUnloadPlugin(void)
@@ -61,12 +58,10 @@ static bool ShouldUnloadPlugin(void)
     (void)LockHcMutex(&g_taskMutex);
     if (!g_isPluginLoaded) {
         UnlockHcMutex(&g_taskMutex);
-        LOGI("[ACCOUNT_TASK_MGR]: plugin is not loaded.");
         return false;
     }
     if (g_loadCount > 0) {
         UnlockHcMutex(&g_taskMutex);
-        LOGI("[ACCOUNT_TASK_MGR]: plugin is in use.");
         return false;
     }
     UnlockHcMutex(&g_taskMutex);
@@ -79,7 +74,6 @@ static void UnloadAccountAuthPlugin(void)
     if (g_loadCount > 0) {
         g_loadCount--;
     }
-    LOGI("[ACCOUNT_TASK_MGR]: load count decrease to: %" LOG_PUB "d.", g_loadCount);
     if (!ShouldUnloadPlugin() || g_isInUnloadStatus) {
         UnlockHcMutex(&g_taskMutex);
         return;
@@ -99,7 +93,6 @@ static int32_t AddAuthSessionRecord(int32_t sessionId)
         return HC_ERR_MEMORY_COPY;
     }
     UnlockHcMutex(&g_taskMutex);
-    LOGI("[ACCOUNT_TASK_MGR]: add session record succeeded, sessionId: %" LOG_PUB "d", sessionId);
     return HC_SUCCESS;
 }
 
@@ -127,12 +120,11 @@ static void RemoveAuthSessionRecord(int32_t sessionId)
         if (ptr->sessionId == sessionId) {
             HC_VECTOR_POPELEMENT(&g_sessionList, ptr, index);
             UnlockHcMutex(&g_taskMutex);
-            LOGI("[ACCOUNT_TASK_MGR]: remove session record succeeded, sessionId: %" LOG_PUB "d", sessionId);
             return;
         }
     }
     UnlockHcMutex(&g_taskMutex);
-    LOGW("[ACCOUNT_TASK_MGR]: session record not exist, sessionId: %" LOG_PUB "d", sessionId);
+    LOGE("[ACCOUNT_TASK_MGR]: session record not exist, sessionId: %" LOG_PUB "d", sessionId);
 }
 
 int32_t InitAccountTaskManager(void)
