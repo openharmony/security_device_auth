@@ -35,7 +35,7 @@ int32_t AddPkInfoWithPdid(const CJson *context, CJson *credInfo, bool isCredAuth
 TrustedDeviceEntry *GetDeviceEntryById(int32_t osAccountId, const char *deviceId, bool isUdid,
     const char *groupId);
 int32_t BuildPeerCertInfo(const char *pkInfoStr, const char *pkInfoSignHexStr, int32_t signAlg,
-    CertInfo *peerCert);
+    int32_t certVersion, CertInfo *peerCert);
 void DestroyCertInfo(CertInfo *certInfo);
 int32_t GetPeerCertInfo(CJson *context, const CJson *credInfo, CertInfo *peerCert);
 int32_t CalSalt(Uint8Buff *salt);

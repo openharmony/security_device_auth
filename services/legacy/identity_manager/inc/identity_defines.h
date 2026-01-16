@@ -81,6 +81,9 @@ typedef enum {
     CMD_MK_AGREE = 0x0008,
 } ExpandProcessCmd;
 
+#define DEFAULT_CERT_VERSION 2
+#define CERT_VERSION_V3 3
+
 typedef enum {
     DEFAULT_ID_TYPE = 0,
     P2P_DIRECT_AUTH = 1,
@@ -97,6 +100,7 @@ typedef struct {
     Uint8Buff pkInfoSignature;
     Algorithm signAlg;
     bool isPseudonym;
+    int32_t certVersion;
 } CertInfo;
 
 typedef struct {

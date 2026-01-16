@@ -148,6 +148,7 @@ IdentityInfo *CreateIdentityInfo(void)
     info->proof.preSharedUrl.val = NULL;
     info->proof.certInfo.pkInfoStr.val = NULL;
     info->proof.certInfo.pkInfoSignature.val = NULL;
+    info->proof.certInfo.certVersion = DEFAULT_CERT_VERSION;
     info->protocolVec = CreateProtocolEntityVec();
     return info;
 }

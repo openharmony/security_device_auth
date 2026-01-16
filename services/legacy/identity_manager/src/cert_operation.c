@@ -114,6 +114,10 @@ int32_t AddCertInfoToJson(const CertInfo *certInfo, CJson *out)
         LOGE("add sign alg to json failed!");
         return HC_ERR_JSON_ADD;
     }
+    if (AddIntToJson(out, FIELD_CERT_VERSION, certInfo->certVersion) != HC_SUCCESS) {
+        LOGE("add cert version to json failed!");
+        return HC_ERR_JSON_ADD;
+    }
     if (AddStringToJson(out, FIELD_PK_INFO, (const char *)certInfo->pkInfoStr.val) != HC_SUCCESS) {
         LOGE("add pk info str to json failed!");
         return HC_ERR_JSON_ADD;
@@ -386,6 +390,8 @@ int32_t GenerateCertInfo(const Uint8Buff *pkInfoStr, const Uint8Buff *pkInfoSign
         return HC_ERR_MEMORY_COPY;
     }
     certInfo->pkInfoSignature.length = signatureLen;
+
+    certInfo->certVersion = CERT_VERSION_V3;
     return HC_SUCCESS;
 }
 
@@ -662,6 +668,28 @@ int32_t GetAccountRelatedCredInfo(
     }
 }
 
+static int32_t SetSharedKyFromPluginOutput(const CJson *output, Uint8Buff *sharedSecret)
+{
+    uint32_t sharedKyLen = 0;
+    if (GetByteLenFromJson(output, FIELD_SHARED_SECRET, &sharedKyLen) != HC_SUCCESS) {
+        LOGE("Get shared ky len failed!");
+        return HC_ERR_JSON_GET;
+    }
+    uint8_t *sharedKy = (uint8_t *)HcMalloc(sharedKyLen, 0);
+    if (sharedKy == NULL) {
+        LOGE("Failed to alloc memory for shared ky!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (GetByteFromJson(output, FIELD_SHARED_SECRET, sharedKy, sharedKyLen) != HC_SUCCESS) {
+        LOGE("Get shared ky failed!");
+        HcFree(sharedKy);
+        return HC_ERR_JSON_GET;
+    }
+    sharedSecret->val = sharedKy;
+    sharedSecret->length = sharedKyLen;
+    return HC_SUCCESS;
+}
+
 static int32_t GetSharedSecretByPeerCertFromPlugin(int32_t osAccountId, const char *id, const char *idField,
     const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
 {
@@ -683,24 +711,7 @@ static int32_t GetSharedSecretByPeerCertFromPlugin(int32_t osAccountId, const ch
     }
     GOTO_ERR_AND_SET_RET(AddCertInfoToJson(peerCertInfo, input), res);
     GOTO_ERR_AND_SET_RET(ExecuteAccountAuthCmd(osAccountId, GET_SHARED_SECRET_BY_PEER_CERT, input, output), res);
-    res = HC_ERR_JSON_GET;
-    const char *sharedKeyAlias = GetStringFromJson(output, FIELD_SHARED_SECRET);
-    if (sharedKeyAlias == NULL) {
-        LOGE("Get alias failed!");
-        goto ERR;
-    }
-    uint32_t sharedKeyAliasLen = HcStrlen(sharedKeyAlias) + 1;
-    uint8_t *aliasVal = (uint8_t *)HcMalloc(sharedKeyAliasLen, 0);
-    GOTO_IF_CHECK_NULL(aliasVal, FIELD_SHARED_SECRET);
-    if (memcpy_s(aliasVal, sharedKeyAliasLen, sharedKeyAlias, sharedKeyAliasLen) != EOK) {
-        LOGE("parse output result set memcpy alias failed!");
-        HcFree(aliasVal);
-        aliasVal = NULL;
-        goto ERR;
-    }
-    sharedSecret->val = aliasVal;
-    sharedSecret->length = sharedKeyAliasLen;
-    res = HC_SUCCESS;
+    GOTO_ERR_AND_SET_RET(SetSharedKyFromPluginOutput(output, sharedSecret), res);
 ERR:
     FreeJson(input);
     FreeJson(output);

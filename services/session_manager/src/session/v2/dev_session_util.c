@@ -603,7 +603,7 @@ TrustedDeviceEntry *GetDeviceEntryById(int32_t osAccountId, const char *deviceId
 }
 
 int32_t BuildPeerCertInfo(const char *pkInfoStr, const char *pkInfoSignHexStr, int32_t signAlg,
-    CertInfo *peerCert)
+    int32_t certVersion, CertInfo *peerCert)
 {
     if ((pkInfoStr == NULL) || (pkInfoSignHexStr == NULL) || (peerCert == NULL)) {
         LOGE("The input contains null ptr!");
@@ -628,6 +628,7 @@ int32_t BuildPeerCertInfo(const char *pkInfoStr, const char *pkInfoSignHexStr, i
         return HC_ERR_JSON_ADD;
     }
     peerCert->signAlg = (Algorithm)signAlg;
+    peerCert->certVersion = certVersion;
     return HC_SUCCESS;
 }
 
@@ -665,7 +666,12 @@ int32_t GetPeerCertInfo(CJson *context, const CJson *credInfo, CertInfo *peerCer
         HcFree(pkInfoStr);
         return HC_ERR_JSON_GET;
     }
-    res = BuildPeerCertInfo(pkInfoStr, pkInfoSignHexStr, signAlg, peerCert);
+
+    int32_t certVersion = DEFAULT_CERT_VERSION;
+    (void)GetIntFromJson(credInfo, FIELD_CERT_VERSION, &certVersion);
+    LOGI("Peer cert version is: %" LOG_PUB "d", certVersion);
+
+    res = BuildPeerCertInfo(pkInfoStr, pkInfoSignHexStr, signAlg, certVersion, peerCert);
     HcFree(pkInfoStr);
     return res;
 }
