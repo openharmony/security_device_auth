@@ -980,7 +980,7 @@ static int32_t RequestAddMemberToGroup(int32_t osAccountId, int64_t requestId, c
 static int32_t CreateAppIdJsonString(const char *appId, char **reqParames)
 {
     CJson *reqJson = CreateJson();
-    if ((reqJson == NULL) || (reqParames == NULL)) {
+    if (reqJson == NULL) {
         LOGE("Failed to create json!");
         return HC_ERR_JSON_CREATE;
     }

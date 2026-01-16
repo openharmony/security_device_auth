@@ -1302,6 +1302,7 @@ static int32_t GetSharedSecret(SessionImpl *impl, const CJson *inputData, Identi
     }
     if (impl->isCredAuth && (!HasAccountPlugin())) {
         LOGE("The account plugin used by IS is missing!");
+        DestroyCertInfo(&peerCert);
         return HC_ERR_NOT_SUPPORT;
     }
     // verify and set psk "SHARED_KEY_ALIAS"
