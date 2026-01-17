@@ -24,14 +24,14 @@ int32_t AddCallbackInfoToList(const char *appId, const DeviceAuthCallback *callb
     (void)dataChangeListener;
     (void)credChangeListener;
     (void)callbackType;
-    return HC_ERR_NOT_SUPPORT;
+    return HC_SUCCESS;
 }
 
 int32_t RemoveCallbackInfoFromList(const char *appId, int32_t callbackType)
 {
     (void)appId;
     (void)callbackType;
-    return HC_ERR_NOT_SUPPORT;
+    return HC_SUCCESS;
 }
 
 void SetRegCallbackFunc(RegCallbackFunc regCallbackFunc)
@@ -53,7 +53,7 @@ void RegisterDevAuthCallbackIfNeed(void) {}
 
 int32_t LoadDeviceAuthSaIfNotLoad(void)
 {
-    return HC_ERR_NOT_SUPPORT;
+    return HC_SUCCESS;
 }
 
 void SubscribeDeviceAuthSa(void) {}
@@ -62,7 +62,7 @@ void UnSubscribeDeviceAuthSa(void) {}
 
 int32_t InitLoadOnDemand(void)
 {
-    return HC_ERR_NOT_SUPPORT;
+    return HC_SUCCESS;
 }
 
 void DeInitLoadOnDemand(void) {}
