@@ -120,6 +120,7 @@ static int TaskThreadLoop(void* args)
             thread->thread.wait(&thread->thread);
         }
     }
+    LOGI("task loop finish.");
     return 0;
 }
 
