@@ -36,12 +36,16 @@ void *StaticThreadFunc(void *args)
     }
 #endif
 
+    LOGI("[OS]: run thread func.");
     if (thread->threadFunc) {
         thread->threadFunc(args);
     }
+    LOGI("[OS]: thread func finish.");
     (void)LockHcMutex(&thread->threadLock);
+    LOGI("[OS]: notify thread wait obj enter.");
     thread->running = HC_FALSE;
     thread->threadWaitObj.notifyWithoutLock(&thread->threadWaitObj);
+    LOGI("[OS]: notify thread wait obj quit.");
     UnlockHcMutex(&thread->threadLock);
     return NULL;
 }
@@ -85,6 +89,7 @@ void Join(struct HcThreadT *thread)
     }
 
     if (thread->running) {
+        LOGI("[OS]: thread is running, wait thread to finish.");
         thread->threadWaitObj.waitWithoutLock(&thread->threadWaitObj);
     }
     void *status = NULL;
