@@ -579,9 +579,9 @@ int32_t RecordOperationData(int32_t osAccountId, const OperationRecord *entry)
     return HC_SUCCESS;
 }
 
-static char* HcFormatTime(int64_t timestamp)
+static char *HcFormatTime(int64_t timestamp)
 {
-    char *curTime = (char*)HcMalloc(TIME_LEN, 0);
+    char *curTime = (char *)HcMalloc(TIME_LEN, 0);
     if (curTime != NULL) {
         struct tm *tmInfo = localtime((time_t*)&timestamp);
         strftime(curTime, TIME_LEN, "%Y-%m-%d %H:%M:%S", tmInfo);
