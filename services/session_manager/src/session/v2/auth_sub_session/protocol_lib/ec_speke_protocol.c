@@ -111,7 +111,6 @@ static int32_t GetAuthIdPeerFromInput(const CJson *inputEvent, EcSpekeParams *pa
         LOGE("get authIdPeerStr from inputEvent fail.");
         return HC_ERR_JSON_GET;
     }
-    PRINT_SENSITIVE_DATA("peerAuthId", authIdPeerStr);
     uint32_t authIdPeerStrLen = HcStrlen(authIdPeerStr) / BYTE_TO_HEX_OPER_LENGTH;
     if (authIdPeerStrLen == 0 || authIdPeerStrLen > EC_SPEKE_AUTH_ID_MAX_LEN) {
         LOGE("Error occurs, Invalid authIdPeerStrLen: %" LOG_PUB "u.", authIdPeerStrLen);
@@ -551,6 +550,8 @@ static int32_t GenerateKcfDataMsg(EcSpekeProtocol *impl, bool isClient, bool isV
         LOGE("Memcpy for epkClient failed.");
         return HC_ERR_MEMORY_COPY;
     }
+    PRINT_SENSITIVE_BYTE("selfAuthId", params->authIdSelf.val, params->authIdSelf.length);
+    PRINT_SENSITIVE_BYTE("peerAuthId", params->authIdPeer.val, params->authIdPeer.length);
     PRINT_SENSITIVE_BYTE("epkC", epkClient->val, epkClient->length);
     usedLen += EC_SPEKE_EC_KEY_LEN;
     if (memcpy_s(kcfDataMsg->val + usedLen, kcfDataMsg->length - usedLen,

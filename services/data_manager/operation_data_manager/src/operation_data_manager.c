@@ -333,18 +333,15 @@ static bool LoadOperations(HcOperationDataBaseV1 *db, OperationVec *vec)
         OperationRecord *entry = CreateOperationRecord();
         if (entry == NULL) {
             LOGE("[Operation]: Failed to allocate entry memory!");
-            ClearOperationVec(vec);
             return false;
         }
         if (!GenerateOperationFromTlv(operation, entry)) {
             DestroyOperationRecord(entry);
-            ClearOperationVec(vec);
             return false;
         }
         if (vec->pushBackT(vec, entry) == NULL) {
             LOGE("[Operation]: Failed to push entry to vec!");
             DestroyOperationRecord(entry);
-            ClearOperationVec(vec);
             return false;
         }
     }
@@ -386,14 +383,14 @@ static void LoadOsAccountDb(int32_t osAccountId)
     info.isTained = false;
     info.operations = CreateOperationVec();
     if (!ReadInfoFromParcel(&parcel, &info)) {
-        DestroyOperationVec(&info.operations);
+        ClearOperationVec(&info.operations);
         DeleteParcel(&parcel);
         return;
     }
     DeleteParcel(&parcel);
     if (g_operationDb.pushBackT(&g_operationDb, info) == NULL) {
         LOGE("[Operation]: Failed to push osAccountInfo to database!");
-        DestroyOperationVec(&info.operations);
+        ClearOperationVec(&info.operations);
         return;
     }
     LOGI("[Operation]: Load os account db successfully! [Id]: %" LOG_PUB "d", osAccountId);
@@ -542,7 +539,6 @@ static void RemoveRedundantRecord(OsAccountOperationInfo *info, uint32_t maxReco
         DestroyOperationRecord(popEntry);
         needRemoveCnt--;
     }
-    return;
 }
 
 int32_t RecordOperationData(int32_t osAccountId, const OperationRecord *entry)
@@ -583,7 +579,7 @@ int32_t RecordOperationData(int32_t osAccountId, const OperationRecord *entry)
     return HC_SUCCESS;
 }
 
-static char *HcFormatTime(int64_t timestamp)
+static char* HcFormatTime(int64_t timestamp)
 {
     char *curTime = (char*)HcMalloc(TIME_LEN, 0);
     if (curTime != NULL) {

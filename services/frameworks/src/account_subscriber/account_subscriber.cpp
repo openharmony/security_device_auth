@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -76,7 +76,8 @@ static void RecordAndReportCommonEvent(const CJson *cmdParamJson, const std::str
     if ((eventType != EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) &&
         eventType != EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED &&
         eventType != EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGIN &&
-        eventType != EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGOUT) {
+        eventType != EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGOUT &&
+        eventType != EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
         return;
     }
     OperationRecord *operation = CreateOperationRecord();

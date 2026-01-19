@@ -63,7 +63,6 @@ void DelayUnload()
         LOGE("UnloadHandler is nullptr.");
         return;
     }
-    LOGI("Start to set delay unload.");
     std::lock_guard<std::mutex> autoLock(g_unloadMutex);
     auto utask = []() {
         LOGI("The Service starts unloading.");

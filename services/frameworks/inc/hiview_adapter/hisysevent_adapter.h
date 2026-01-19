@@ -40,6 +40,7 @@
 #define BATCH_UPDATE_CREDENTIALS_EVENT "BatchUpdateCredentials"
 #define AGREE_CREDENTIAL_EVENT "AgreeCredential"
 #define AUTH_IDENTITY_SERVICE_EVENT "AuthIdentityService"
+#define BIND_IDENTITY_SERVICE_EVENT "BindIdentityService"
 
 #define ADD_MEMBER_WITH_LITE_COMPATIBILITY "AddMemberWithLiteCompatibility"
 #define ADD_MEMBER_WITH_LITE_STANDARD "AddMemberWithLiteStandard"
@@ -94,7 +95,9 @@ enum DevAuthReportProcessCode {
     PROCESS_UPDATE_CREDENTIAL_INFO,             //4112
     PROCESS_BATCH_UPDATE_CREDENTIALS,           //4113
     PROCESS_AGREE_CREDENTIAL,                   //4114
-    PROCESS_AUTH_IDENTITY_SERVICE,              //4115
+
+    PROCESS_AUTH_IDENTITY_SERVICE = 4120,       //4120
+    PROCESS_BIND_IDENTITY_SERVICE,              //4121
 
     PROCESS_DIRECT_QUERY_CREDENTIAL = 4150,     //4150
     PROCESS_DIRECT_GENERATE_CREDENTIAL,         //4151

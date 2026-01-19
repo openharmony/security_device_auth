@@ -59,7 +59,7 @@ static const char *GetTraceInfo(const char* funcName)
         return funcName;
     }
 
-    if (sprintf_s(g_traceInfo, MAX_TRACE_INFO_SIZE,
+    if (sprintf_s(g_traceInfo, MAX_TRACE_INFO_SIZE - 1,
         "[%" PRId64 "]%s", g_traceId, funcName) <= 0) {
         return funcName;
     }
@@ -74,7 +74,7 @@ void RecordErrTrace(const char *funName, uint32_t lineNum, const char *fmt, va_l
     if (g_errTraceLen != 0) {
         if (memcpy_s(g_errTrace + g_errTraceLen, MAX_ERROR_TRACE_LEN - g_errTraceLen,
             INTERVAL_STR, INTERVAL_STR_LEN) != EOK) {
-                return;
+            return;
         }
         g_errTraceLen += INTERVAL_STR_LEN;
     }
