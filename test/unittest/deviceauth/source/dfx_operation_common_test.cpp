@@ -304,7 +304,7 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest011, TestSize.Level0)
     EXPECT_EQ(res, false);
 
     TLV_DEINIT(dbv1)
-    DestroyOperationVec(&info.operations);
+    ClearOperationVec(&info.operations);
 }
 
 HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest012, TestSize.Level0)
@@ -379,7 +379,7 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest013, TestSize.Level0)
 
 HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest014, TestSize.Level0)
 {
-    char record[DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE] = { 0 };
+    char record[DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE + 1] = { 0 };
     int32_t res = GetOperationDataRecently(TEST_OS_ACCOUNT_ID, OPERATION_ANY, NULL, TEST_NUM_ZERO, TEST_NUM_ONE);
     EXPECT_EQ(res, -1);
     res = GetOperationDataRecently(TEST_OS_ACCOUNT_ID, OPERATION_ANY, record,
@@ -400,7 +400,7 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest015, TestSize.Level0)
     OperationRecord *operation1 = CreateOperationRecord();
     int32_t res = RecordOperationData(TEST_OS_ACCOUNT_ID, operation1);
     EXPECT_EQ(res, HC_SUCCESS);
-    char record[TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE] = { 0 };
+    char record[TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE + 1] = { 0 };
     res = GetOperationDataRecently(TEST_OS_ACCOUNT_ID, OPERATION_ANY, record,
         TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE, TEST_NUM_ONE);
     EXPECT_NE(res, -1);
@@ -419,7 +419,7 @@ HWTEST_F(DFXOperationCommonTest, DFXOperationCommonTest016, TestSize.Level0)
     int32_t res = RecordOperationData(TEST_OS_ACCOUNT_ID, operation1);
     EXPECT_EQ(res, HC_ERR_INIT_FAILED);
 
-    char record[TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE] = { 0 };
+    char record[TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE + 1] = { 0 };
     res = GetOperationDataRecently(TEST_OS_ACCOUNT_ID, OPERATION_ANY, record,
         TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE, TEST_NUM_ONE);
     EXPECT_EQ(res, -1);
