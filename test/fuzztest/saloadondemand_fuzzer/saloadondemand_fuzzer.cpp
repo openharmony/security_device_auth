@@ -235,7 +235,6 @@ bool FuzzDoSaLoadOnDemandFuzz(const uint8_t* data, size_t size)
     (void)data;
     (void)size;
     (void)InitLoadOnDemand();
-    LoadDeviceAuthSaIfNotLoad();
     SubscribeDeviceAuthSa();
     SaLoadOnDemandFuzz001();
     SaLoadOnDemandFuzz002();

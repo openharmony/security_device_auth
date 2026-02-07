@@ -316,25 +316,6 @@ void RegisterDevAuthCallbackIfNeed(void)
     }
 }
 
-int32_t LoadDeviceAuthSaIfNotLoad(void)
-{
-    auto saMgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (saMgr == nullptr) {
-        LOGE("[SDK]: Get systemabilitymanager instance failed.");
-        return HC_ERR_IPC_GET_SAMGR_FAILED;
-    }
-    auto deviceAuthSa = saMgr->CheckSystemAbility(OHOS::DEVICE_AUTH_SERVICE_ID);
-    if (deviceAuthSa != nullptr) {
-        return HC_SUCCESS;
-    }
-    deviceAuthSa = saMgr->LoadSystemAbility(OHOS::DEVICE_AUTH_SERVICE_ID, DEVICE_AUTH_SA_LOAD_TIME);
-    if (deviceAuthSa == nullptr) {
-        LOGE("[SDK]: SaMgr load device auth sa failed, reason is loading timeout probably.");
-        return HC_ERR_IPC_LOAD_SA_FAILED;
-    }
-    return HC_SUCCESS;
-}
-
 void SubscribeDeviceAuthSa(void)
 {
     auto saMgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
