@@ -1565,10 +1565,6 @@ int32_t SetCallRequestParamInfo(uintptr_t callCtx, int32_t type, const uint8_t *
 
 int32_t DoBinderCall(uintptr_t callCtx, int32_t methodId, bool withSync)
 {
-    if (LoadDeviceAuthSaIfNotLoad() != HC_SUCCESS) {
-        LOGW("sa not load.");
-        return HC_ERR_IPC_SA_NOT_LOAD;
-    }
     int32_t ret;
     ProxyDevAuthData *dataCache = reinterpret_cast<ProxyDevAuthData *>(callCtx);
 
@@ -1576,7 +1572,12 @@ int32_t DoBinderCall(uintptr_t callCtx, int32_t methodId, bool withSync)
     if (ret != HC_SUCCESS) {
         return ret;
     }
-    return dataCache->ActCall(withSync);
+    ret = dataCache->ActCall(withSync);
+    if (ret != HC_SUCCESS) {
+        LOGW("call ipc failed, retry one time.");
+        ret = dataCache->ActCall(withSync);
+    }
+    return ret;
 }
 
 /* ipc service process adapter */

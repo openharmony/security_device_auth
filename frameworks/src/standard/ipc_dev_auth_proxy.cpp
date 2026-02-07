@@ -111,7 +111,7 @@ int32_t ProxyDevAuthData::FinalCallRequest(int32_t methodId)
     auto proxy = GetProxy();
     if (proxy == nullptr) {
         LOGE("get proxy failed");
-        return HC_ERR_IPC_GET_PROXY;
+        return HC_ERR_IPC_SA_NOT_LOAD;
     }
     if (!dataParcel.WriteInterfaceToken(proxy->GetDescriptor())) {
         LOGE("[IPC][C->S]: Failed to write interface token!");
@@ -142,12 +142,14 @@ sptr<ProxyDevAuth> ProxyDevAuthData::GetProxy() const
         LOGE("GetSystemAbilityManager failed");
         return nullptr;
     }
-    auto daSa = saMgr->GetSystemAbility(DEVICE_AUTH_SERVICE_ID);
+    auto daSa = saMgr->CheckSystemAbility(DEVICE_AUTH_SERVICE_ID);
     if (daSa == nullptr) {
-        LOGE("GetSystemAbility failed");
-        return nullptr;
+        daSa = saMgr->LoadSystemAbility(DEVICE_AUTH_SERVICE_ID, DEVICE_AUTH_SA_LOAD_TIME);
+        if (daSa == nullptr) {
+            LOGE("[SDK]: SaMgr load device auth sa failed, reason is loading timeout probably.");
+            return nullptr;
+        }
     }
-
     auto interface = iface_cast<IMethodsIpcCall>(daSa);
     // Objects obtained across processes must be proxy.
     return static_cast<ProxyDevAuth *>(interface.GetRefPtr());
@@ -158,7 +160,7 @@ int32_t ProxyDevAuthData::ActCall(bool withSync)
     auto proxy = GetProxy();
     if (proxy == nullptr) {
         LOGE("proxy failed");
-        return HC_ERR_IPC_GET_PROXY;
+        return HC_ERR_IPC_SA_NOT_LOAD;
     }
     return proxy->DoCallRequest(dataParcel, replyParcel, withSync);
 }

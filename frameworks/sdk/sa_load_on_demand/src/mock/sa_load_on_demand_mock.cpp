@@ -51,11 +51,6 @@ void SetRegCredChangeListenerFunc(RegCredChangeListenerFunc regCredChangeListene
 
 void RegisterDevAuthCallbackIfNeed(void) {}
 
-int32_t LoadDeviceAuthSaIfNotLoad(void)
-{
-    return HC_SUCCESS;
-}
-
 void SubscribeDeviceAuthSa(void) {}
 
 void UnSubscribeDeviceAuthSa(void) {}

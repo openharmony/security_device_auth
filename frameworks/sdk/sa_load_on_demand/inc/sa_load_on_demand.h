@@ -38,7 +38,6 @@ void SetRegDataChangeListenerFunc(RegDataChangeListenerFunc regDataChangeListene
 void SetRegCredChangeListenerFunc(RegCredChangeListenerFunc regCredChangeListenerFunc);
 void RegisterDevAuthCallbackIfNeed(void);
 
-int32_t LoadDeviceAuthSaIfNotLoad(void);
 void SubscribeDeviceAuthSa(void);
 void UnSubscribeDeviceAuthSa(void);
 
