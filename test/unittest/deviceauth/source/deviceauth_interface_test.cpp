@@ -433,9 +433,9 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest005, TestSize.Level0)
     (void)InitIpcCallBackList();
     AddIpcCbObjByAppId(TEST_APP_ID, 0, 0);
     DeInitIpcCallBackList();
-    AddIpcCallBackByAppId(TEST_APP_ID, nullptr, 0, 0);
+    AddIpcCallBackByAppId(TEST_APP_ID, 0);
     (void)InitIpcCallBackList();
-    AddIpcCallBackByAppId(TEST_APP_ID, nullptr, 0, 0);
+    AddIpcCallBackByAppId(TEST_APP_ID, 0);
     DeInitIpcCallBackList();
     DelIpcCallBackByAppId(TEST_APP_ID, 0);
     (void)InitIpcCallBackList();
@@ -451,11 +451,11 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest005, TestSize.Level0)
     (void)InitIpcCallBackList();
     AddIpcCbObjByReqId(123, 0, 0);
     DeInitIpcCallBackList();
-    res = AddIpcCallBackByReqId(123, nullptr, 0, 0);
+    res = AddIpcCallBackByReqId(123, 0);
     ASSERT_NE(res, HC_SUCCESS);
     (void)InitIpcCallBackList();
-    res = AddIpcCallBackByReqId(123, nullptr, 0, 0);
-    ASSERT_NE(res, HC_SUCCESS);
+    res = AddIpcCallBackByReqId(123, 0);
+    ASSERT_EQ(res, HC_SUCCESS);
     DeInitIpcCallBackList();
     DelIpcCallBackByReqId(123, 0, true);
     DelIpcCallBackByReqId(123, 0, false);

@@ -40,7 +40,7 @@ int32_t SetCallMap(IpcServiceCall method, int32_t methodId);
 int32_t SetRemoteObject(const SvcIdentity *object);
 void AddCbDeathRecipient(int32_t cbStubIdx, int32_t cbDataIdx);
 void ResetRemoteObject(int32_t idx);
-void ActCallback(int32_t objIdx, int32_t callbackId, uintptr_t cbHook, IpcIo *dataParcel, IpcIo *reply);
+void ActCallback(int32_t objIdx, int32_t callbackId, IpcIo *dataParcel, IpcIo *reply);
 int32_t OnRemoteInvoke(IServerProxy *iProxy, int32_t reqId, void *origin, IpcIo *req, IpcIo *reply);
 
 #ifdef __cplusplus

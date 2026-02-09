@@ -361,9 +361,9 @@ static void DevAuthInterfaceTestCase005()
     (void)InitIpcCallBackList();
     AddIpcCbObjByAppId(TEST_APP_ID, 0, 0);
     DeInitIpcCallBackList();
-    AddIpcCallBackByAppId(TEST_APP_ID, nullptr, 0, 0);
+    AddIpcCallBackByAppId(TEST_APP_ID, 0);
     (void)InitIpcCallBackList();
-    AddIpcCallBackByAppId(TEST_APP_ID, nullptr, 0, 0);
+    AddIpcCallBackByAppId(TEST_APP_ID, 0);
     DeInitIpcCallBackList();
     DelIpcCallBackByAppId(TEST_APP_ID, 0);
     (void)InitIpcCallBackList();
@@ -377,9 +377,9 @@ static void DevAuthInterfaceTestCase005()
     (void)InitIpcCallBackList();
     AddIpcCbObjByReqId(TEST_REQ_ID, 0, 0);
     DeInitIpcCallBackList();
-    (void)AddIpcCallBackByReqId(TEST_REQ_ID, nullptr, 0, 0);
+    (void)AddIpcCallBackByReqId(TEST_REQ_ID, 0);
     (void)InitIpcCallBackList();
-    (void)AddIpcCallBackByReqId(TEST_REQ_ID, nullptr, 0, 0);
+    (void)AddIpcCallBackByReqId(TEST_REQ_ID, 0);
     DeInitIpcCallBackList();
     DelIpcCallBackByReqId(TEST_REQ_ID, 0, true);
     DelIpcCallBackByReqId(TEST_REQ_ID, 0, false);

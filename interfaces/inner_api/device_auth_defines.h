@@ -81,6 +81,7 @@ enum {
     HC_ERR_IPC_GET_SAMGR_FAILED = 0x00003016,                             // 12310
     HC_ERR_IPC_LOAD_SA_FAILED = 0x00003017,                               // 12311
     HC_ERR_IPC_SA_IS_UNLOADING = 0x00003018,                              // 12312
+    HC_ERR_IPC_CALLBACK_NOT_MATCH = 0x00003019,                           // 12313
 
     /* error code for module , 0x00004000 ~ 0x00004FFF */
     HC_ERR_MODULE_NOT_FOUNT = 0x00004001,                                 // 16385

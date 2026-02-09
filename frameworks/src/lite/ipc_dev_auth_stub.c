@@ -345,7 +345,7 @@ void ResetRemoteObject(int32_t idx)
     return;
 }
 
-void ActCallback(int32_t objIdx, int32_t callbackId, uintptr_t cbHook, IpcIo *dataParcel, IpcIo *reply)
+void ActCallback(int32_t objIdx, int32_t callbackId, IpcIo *dataParcel, IpcIo *reply)
 {
     if ((objIdx < 0) || (objIdx >= MAX_CBSTUB_SIZE) || (!g_cbStub[objIdx].inUse)) {
         LOGW("nothing to do, callback id %" LOG_PUB "d, remote object id %" LOG_PUB "d", callbackId, objIdx);
@@ -354,7 +354,7 @@ void ActCallback(int32_t objIdx, int32_t callbackId, uintptr_t cbHook, IpcIo *da
 
     ShowIpcSvcInfo(&g_cbStub[objIdx].cbStub);
     LockCbStubTable();
-    CbProxySendRequest(g_cbStub[objIdx].cbStub, callbackId, cbHook, dataParcel, reply);
+    CbProxySendRequest(g_cbStub[objIdx].cbStub, callbackId, dataParcel, reply);
     UnLockCbStubTable();
     return;
 }

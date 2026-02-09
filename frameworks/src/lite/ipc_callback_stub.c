@@ -26,16 +26,11 @@
 extern "C" {
 #endif
 
-static void DoCallBack(int32_t callbackId, uintptr_t cbHook, IpcIo *data, IpcIo *reply)
+static void DoCallBack(int32_t callbackId, IpcIo *data, IpcIo *reply)
 {
     int32_t ret;
     int32_t i;
     IpcDataInfo cbDataCache[MAX_REQUEST_PARAMS_NUM] = { { 0 } };
-
-    if (cbHook == 0x0) {
-        LOGE("Invalid call back hook");
-        return;
-    }
 
     uint32_t len = 0;
     ReadUint32(data, &len); /* skip flat object length information */
@@ -47,7 +42,7 @@ static void DoCallBack(int32_t callbackId, uintptr_t cbHook, IpcIo *data, IpcIo 
             return;
         }
     }
-    ProcCbHook(callbackId, cbHook, cbDataCache, MAX_REQUEST_PARAMS_NUM, (uintptr_t)(reply));
+    ProcCbHook(callbackId, cbDataCache, MAX_REQUEST_PARAMS_NUM, (uintptr_t)(reply));
     return;
 }
 
@@ -55,7 +50,6 @@ int32_t CbStubOnRemoteRequest(uint32_t code, IpcIo *data, IpcIo *reply, MessageO
 {
     (void)option;
     int32_t callbackId;
-    uintptr_t cbHook = 0x0;
 
     LOGI("enter invoking callback...");
     if (data == NULL) {
@@ -67,8 +61,7 @@ int32_t CbStubOnRemoteRequest(uint32_t code, IpcIo *data, IpcIo *reply, MessageO
     switch (code) {
         case DEV_AUTH_CALLBACK_REQUEST:
             ReadInt32(data, &callbackId);
-            cbHook = ReadPointer(data);
-            DoCallBack(callbackId, cbHook, data, reply);
+            DoCallBack(callbackId, data, reply);
             break;
         default:
             LOGE("Invoke callback cmd code(%" LOG_PUB "u) error", code);

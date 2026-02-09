@@ -42,7 +42,7 @@ public:
     static void AddCbDeathRecipient(int32_t cbStubIdx, int32_t cbDataIdx);
     static void ResetRemoteObject(int32_t idx);
     static void ActCallback(int32_t objIdx, int32_t callbackId, bool sync,
-        uintptr_t cbHook, MessageParcel &dataParcel, MessageParcel &reply);
+        MessageParcel &dataParcel, MessageParcel &reply);
 
 protected:
     int32_t HandleRestoreCall(MessageParcel &data, MessageParcel &reply);

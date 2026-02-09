@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 #include "device_auth.h"
+#include "ipc_sdk_defines.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,6 +54,16 @@ enum {
     CB_ID_ON_CRED_ADD,
     CB_ID_ON_CRED_DELETE,
     CB_ID_ON_CRED_UPDATE,
+    CB_ID_ON_TRANS_TMP,
+    CB_ID_SESS_KEY_DONE_TMP,
+    CB_ID_ON_FINISH_TMP,
+    CB_ID_ON_ERROR_TMP,
+    CB_ID_ON_REQUEST_TMP,
+    CB_ID_ON_TRANS_CRED,
+    CB_ID_SESS_KEY_DONE_CRED,
+    CB_ID_ON_FINISH_CRED,
+    CB_ID_ON_ERROR_CRED,
+    CB_ID_ON_REQUEST_CRED,
 };
 
 typedef int32_t (*IpcServiceCall)(const IpcDataInfo *, int32_t, uintptr_t);
@@ -76,14 +87,13 @@ int32_t InitIpcCallBackList(void);
 void DeInitIpcCallBackList(void);
 void InitDeviceAuthCbCtx(DeviceAuthCallback *ctx, int32_t type);
 void InitDevAuthListenerCbCtx(DataChangeListener *ctx);
-int32_t AddIpcCallBackByAppId(const char *appId, const uint8_t *cbPtr, int32_t cbSz, int32_t type);
+int32_t AddIpcCallBackByAppId(const char *appId, int32_t type);
 void DelIpcCallBackByAppId(const char *appId, int32_t type);
-int32_t AddIpcCallBackByReqId(int64_t reqId, const uint8_t *cbPtr, int32_t cbSz, int32_t type);
+int32_t AddIpcCallBackByReqId(int64_t reqId, int32_t type);
 void DelIpcCallBackByReqId(int64_t reqId, int32_t type, bool withLock);
 
 int32_t DecodeIpcData(uintptr_t data, int32_t *type, uint8_t **val, int32_t *valSz);
-void ProcCbHook(int32_t callbackId, uintptr_t cbHook,
-    const IpcDataInfo *cbDataCache, int32_t cacheNum, uintptr_t replyCtx);
+void ProcCbHook(int32_t callbackId, const IpcDataInfo *cbDataCache, int32_t cacheNum, uintptr_t replyCtx);
 
 int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
     int32_t type, uint8_t *paramCache, int32_t *cacheLen);
@@ -109,6 +119,16 @@ int32_t GetAndValSizeCbParam(const IpcDataInfo *ipcParams,
 
 int32_t GetAndValNullParam(const IpcDataInfo *ipcParams,
     int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize);
+
+int32_t InitSdkIpcCallBackList(void);
+void DeInitSdkIpcCallBackList(void);
+int32_t AddSdkCallBackByAppId(const char *appId, uint8_t cbType, uint8_t *val, int32_t valSize);
+void RemoveSdkCallBackByAppId(const char *appId, uint8_t cbType);
+int32_t AddSdkCallBackByRequestId(int64_t requestId, uint8_t cbType, uint8_t *val, int32_t valSize);
+void RemoveSdkCallBackByRequestId(int64_t requestId, uint8_t cbType);
+int32_t AddRequestIdByAppId(const char *appId, int64_t requestId);
+void RegisterSdkCallBack(RegCallbackFunc regCallbackFunc, RegDataChangeListenerFunc regDataChangeListenerFunc,
+    RegCredChangeListenerFunc regCredChangeListenerFunc);
 
 #ifdef __cplusplus
 }

@@ -25,7 +25,7 @@ ProxyDevAuthCb::ProxyDevAuthCb(const sptr<IRemoteObject> &impl) : IRemoteProxy<I
 ProxyDevAuthCb::~ProxyDevAuthCb()
 {}
 
-void ProxyDevAuthCb::DoCallBack(int32_t callbackId, uintptr_t cbHook,
+void ProxyDevAuthCb::DoCallBack(int32_t callbackId,
     MessageParcel &dataParcel, MessageParcel &reply, MessageOption &option)
 {
     int32_t ret;
@@ -41,7 +41,6 @@ void ProxyDevAuthCb::DoCallBack(int32_t callbackId, uintptr_t cbHook,
         return;
     }
     (void)data.WriteInt32(callbackId);
-    (void)data.WritePointer(cbHook);
     if (dataParcel.GetDataSize() > 0) {
         (void)data.WriteBuffer(reinterpret_cast<const void *>(dataParcel.GetData()), dataParcel.GetDataSize());
     }

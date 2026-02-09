@@ -19,6 +19,7 @@
 namespace OHOS {
     bool FuzzDoAddMemberToGroup(const uint8_t* data, size_t size)
     {
+        (void)InitDeviceAuthService();
         const DeviceGroupManager *gmInstance = GetGmInstance();
         if (gmInstance == nullptr) {
             return false;
@@ -37,6 +38,7 @@ namespace OHOS {
         std::string appId(fdp.ConsumeBytesAsString(appIdLen));
         std::string addParams(fdp.ConsumeBytesAsString(addParamsLen));
         gmInstance->addMemberToGroup(osAccountId, requestId, appId.c_str(), addParams.c_str());
+        DestroyDeviceAuthService();
         return true;
     }
 }

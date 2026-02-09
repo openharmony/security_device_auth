@@ -19,6 +19,7 @@
 namespace OHOS {
     bool FuzzDoDeleteMember(const uint8_t* data, size_t size)
     {
+        (void)InitDeviceAuthService();
         const DeviceGroupManager *gmInstance = GetGmInstance();
         if (gmInstance == nullptr) {
             return false;
@@ -37,6 +38,7 @@ namespace OHOS {
         std::string appId(fdp.ConsumeBytesAsString(appIdLen));
         std::string deleteParams(fdp.ConsumeBytesAsString(deleteParamsLen));
         gmInstance->deleteMemberFromGroup(osAccountId, requestId, appId.c_str(), deleteParams.c_str());
+        DestroyDeviceAuthService();
         return true;
     }
 }

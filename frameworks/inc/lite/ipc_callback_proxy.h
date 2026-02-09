@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-void CbProxySendRequest(SvcIdentity sid, int32_t callbackId, uintptr_t cbHook, IpcIo *data, IpcIo *reply);
+void CbProxySendRequest(SvcIdentity sid, int32_t callbackId, IpcIo *data, IpcIo *reply);
 
 #ifdef __cplusplus
 }

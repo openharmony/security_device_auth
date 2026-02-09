@@ -57,6 +57,7 @@ namespace OHOS {
 
     bool FuzzDoAuthDevice(const uint8_t* data, size_t size)
     {
+        (void)InitDeviceAuthService();
         const GroupAuthManager *gaInstance = GetGaInstance();
         if (gaInstance == nullptr) {
             return false;
@@ -78,6 +79,7 @@ namespace OHOS {
         gaCallback.onTransmit = OnTransmit;
         gaCallback.onRequest = OnRequest;
         gaInstance->authDevice(osAccountId, authReqId, authParams.c_str(), &gaCallback);
+        DestroyDeviceAuthService();
         return true;
     }
 }
