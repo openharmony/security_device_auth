@@ -203,7 +203,7 @@ static void ReplaceStringToInt(char *input, const char *keyName)
 static char **CreateKeyList(CJson *arr)
 {
     int keyListSize = GetItemNum(arr);
-    char **keyList = HcMalloc(keyListSize, sizeof(char *));
+    char **keyList = HcMalloc(keyListSize * sizeof(char *), 0);
     if (keyList == NULL) {
         LOGE("Malloc keyList failed.");
         return NULL;
