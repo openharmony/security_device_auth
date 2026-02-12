@@ -84,7 +84,7 @@ static IpcObjectStub g_objectStub;
 int32_t InitSdkIpcCallBackList(void)
 {
     g_sdkIpcCallBackList = CREATE_HC_VECTOR(SdkIpcCallBackList);
-    (void)InitHcMutex(&g_cbSdkListLock, false);
+    (void)InitHcMutex(&g_cbSdkListLock, true);
     return HC_SUCCESS;
 }
 

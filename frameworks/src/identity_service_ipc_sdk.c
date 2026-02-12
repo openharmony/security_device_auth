@@ -162,7 +162,6 @@ static int32_t IpcCmRegChangeListenerInner(const char *appId, CredChangeListener
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_LISTENER, listener, sizeof(*listener));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_BIND_ID);
         BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_CM_REG_LISTENER, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
@@ -535,7 +534,6 @@ static int32_t IpcCmProcessCredData(int64_t authReqId, const uint8_t *data, uint
             sizeof(DeviceAuthCallback));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &authReqId, sizeof(authReqId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_COMM_DATA, data, dataLen);
-        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
         SetCbCtxToDataCtx(callCtx, 0x0);
         BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_CA_PROCESS_CRED_DATA, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
