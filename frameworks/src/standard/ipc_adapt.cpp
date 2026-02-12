@@ -82,7 +82,19 @@ IMPLEMENT_HC_VECTOR(SdkIpcCallBackList, SdkIpcCallBackNode, 1)
 static SdkIpcCallBackList g_sdkIpcCallBackList;
 
 static std::mutex g_cbListLock;
-static std::mutex g_cbSdkListLock;
+static std::recursive_mutex g_cbSdkListLock;
+
+static void FreeSdkIpcCallBackList(SdkIpcCallBackList *ipcCallBackList)
+{
+    uint32_t index;
+    SdkIpcCallBackNode *node = nullptr;
+    FOR_EACH_HC_VECTOR(*ipcCallBackList, index, node) {
+        if (node == nullptr) {
+            continue;
+        }
+        memset_s(node, sizeof(SdkIpcCallBackNode), 0, sizeof(SdkIpcCallBackNode));
+    }
+}
 
 int32_t InitSdkIpcCallBackList(void)
 {
@@ -92,13 +104,14 @@ int32_t InitSdkIpcCallBackList(void)
 
 void DeInitSdkIpcCallBackList(void)
 {
+    FreeSdkIpcCallBackList(&g_sdkIpcCallBackList);
     DESTROY_HC_VECTOR(SdkIpcCallBackList, &g_sdkIpcCallBackList);
     return;
 }
 
 int32_t AddSdkCallBackByAppId(const char *appId, uint8_t cbType, uint8_t *val, int32_t valSize)
 {
-    std::lock_guard<std::mutex> autoLock(g_cbSdkListLock);
+    std::lock_guard<std::recursive_mutex> Lock(g_cbSdkListLock);
     uint32_t index;
     SdkIpcCallBackNode *entry = nullptr;
     FOR_EACH_HC_VECTOR(g_sdkIpcCallBackList, index, entry) {
@@ -137,7 +150,7 @@ int32_t AddSdkCallBackByAppId(const char *appId, uint8_t cbType, uint8_t *val, i
 
 int32_t AddSdkCallBackByRequestId(int64_t requestId, uint8_t cbType, uint8_t *val, int32_t valSize)
 {
-    std::lock_guard<std::mutex> autoLock(g_cbSdkListLock);
+    std::lock_guard<std::recursive_mutex> Lock(g_cbSdkListLock);
     uint32_t index;
     SdkIpcCallBackNode *entry = nullptr;
     FOR_EACH_HC_VECTOR(g_sdkIpcCallBackList, index, entry) {
@@ -186,7 +199,7 @@ static uint8_t GetCbType(int32_t callbackId)
 
 static int32_t GetSdkCallBackByRequestId(int64_t callbackId, int64_t requestId, uint8_t *val, int32_t valSize)
 {
-    std::lock_guard<std::mutex> autoLock(g_cbSdkListLock);
+    std::lock_guard<std::recursive_mutex> Lock(g_cbSdkListLock);
     uint32_t index;
     SdkIpcCallBackNode *entry = nullptr;
     LOGI("requestId: %" LOG_PUB "lld, callbackId: %" LOG_PUB "lld", static_cast<long long>(requestId),
@@ -213,7 +226,7 @@ static int32_t GetSdkCallBackByRequestId(int64_t callbackId, int64_t requestId, 
 
 static int32_t GetSdkCallBackByAppId(const char *appId, uint8_t cbType, uint8_t *val, int32_t valSize)
 {
-    std::lock_guard<std::mutex> autoLock(g_cbSdkListLock);
+    std::lock_guard<std::recursive_mutex> Lock(g_cbSdkListLock);
     uint32_t index;
     SdkIpcCallBackNode *entry = nullptr;
     LOGI("appId: %" LOG_PUB "s, cbType: %" LOG_PUB "u", appId, cbType);
@@ -246,7 +259,7 @@ static void RemoveSdkCallBackByCallBackId(int64_t callbackId, int64_t requestId)
 
 int32_t AddRequestIdByAppId(const char *appId, int64_t requestId)
 {
-    std::lock_guard<std::mutex> autoLock(g_cbSdkListLock);
+    std::lock_guard<std::recursive_mutex> Lock(g_cbSdkListLock);
     uint32_t index;
     SdkIpcCallBackNode *entry = nullptr;
     FOR_EACH_HC_VECTOR(g_sdkIpcCallBackList, index, entry) {
@@ -266,7 +279,7 @@ int32_t AddRequestIdByAppId(const char *appId, int64_t requestId)
 
 void RemoveSdkCallBackByAppId(const char *appId, uint8_t cbType)
 {
-    std::lock_guard<std::mutex> autoLock(g_cbSdkListLock);
+    std::lock_guard<std::recursive_mutex> Lock(g_cbSdkListLock);
     uint32_t index;
     SdkIpcCallBackNode *entry = nullptr;
     FOR_EACH_HC_VECTOR(g_sdkIpcCallBackList, index, entry) {
@@ -289,7 +302,7 @@ void RemoveSdkCallBackByAppId(const char *appId, uint8_t cbType)
 
 void RemoveSdkCallBackByRequestId(int64_t requestId, uint8_t cbType)
 {
-    std::lock_guard<std::mutex> autoLock(g_cbSdkListLock);
+    std::lock_guard<std::recursive_mutex> Lock(g_cbSdkListLock);
     uint32_t index;
     SdkIpcCallBackNode *entry = nullptr;
     FOR_EACH_HC_VECTOR(g_sdkIpcCallBackList, index, entry) {
@@ -310,15 +323,34 @@ void RemoveSdkCallBackByRequestId(int64_t requestId, uint8_t cbType)
     return;
 }
 
-void RegisterSdkCallBack(RegCallbackFunc regCallbackFunc, RegDataChangeListenerFunc regDataChangeListenerFunc,
-    RegCredChangeListenerFunc regCredChangeListenerFunc)
+static void CopySdkCallBackFromCache(SdkIpcCallBackList *tmpIpcCallBackList)
 {
-    std::lock_guard<std::mutex> autoLock(g_cbSdkListLock);
+    std::lock_guard<std::recursive_mutex> Lock(g_cbSdkListLock);
+    uint32_t index;
+    SdkIpcCallBackNode *entry = nullptr;
+    LOGI("g_sdkIpcCallBackList size: %" LOG_PUB "d", g_sdkIpcCallBackList.size(&g_sdkIpcCallBackList));
+    FOR_EACH_HC_VECTOR(g_sdkIpcCallBackList, index, entry) {
+        if (entry == nullptr || entry->appId[0] == 0) {
+            continue;
+        }
+        SdkIpcCallBackNode node;
+        if (memcpy_s(&node, sizeof(SdkIpcCallBackNode), entry, sizeof(SdkIpcCallBackNode)) != HC_SUCCESS) {
+            continue;
+        }
+        if (tmpIpcCallBackList->pushBack(tmpIpcCallBackList, &node) == nullptr) {
+            memset_s(&node, sizeof(SdkIpcCallBackNode), 0, sizeof(SdkIpcCallBackNode));
+            continue;
+        }
+    }
+}
+
+static void RegisterSdkCallBackByCbType(SdkIpcCallBackList *tmpIpcCallBackList, RegCallbackFunc regCallbackFunc,
+    RegDataChangeListenerFunc regDataChangeListenerFunc, RegCredChangeListenerFunc regCredChangeListenerFunc)
+{
     uint32_t index;
     SdkIpcCallBackNode *entry = nullptr;
     int32_t ret = HC_SUCCESS;
-    LOGI("g_sdkIpcCallBackList size: %" LOG_PUB "d", g_sdkIpcCallBackList.size(&g_sdkIpcCallBackList));
-    FOR_EACH_HC_VECTOR(g_sdkIpcCallBackList, index, entry) {
+    FOR_EACH_HC_VECTOR(*tmpIpcCallBackList, index, entry) {
         if (entry == nullptr || entry->appId[0] == 0) {
             continue;
         }
@@ -341,6 +373,19 @@ void RegisterSdkCallBack(RegCallbackFunc regCallbackFunc, RegDataChangeListenerF
         }
         LOGI("register result: %" LOG_PUB "d.", ret);
     }
+}
+
+void RegisterSdkCallBack(RegCallbackFunc regCallbackFunc, RegDataChangeListenerFunc regDataChangeListenerFunc,
+    RegCredChangeListenerFunc regCredChangeListenerFunc)
+{
+    SdkIpcCallBackList tmpIpcCallBackList = CREATE_HC_VECTOR(SdkIpcCallBackList);
+
+    CopySdkCallBackFromCache(&tmpIpcCallBackList);
+    RegisterSdkCallBackByCbType(&tmpIpcCallBackList, regCallbackFunc, regDataChangeListenerFunc,
+        regCredChangeListenerFunc);
+    
+    FreeSdkIpcCallBackList(&tmpIpcCallBackList);
+    DESTROY_HC_VECTOR(SdkIpcCallBackList, &tmpIpcCallBackList);
 }
 
 int32_t GetAndValSize32Param(const IpcDataInfo *ipcParams,
@@ -728,14 +773,12 @@ void DelIpcCallBackByReqId(int64_t reqId, int32_t type, bool withLock)
 __attribute__((no_sanitize("cfi"))) static void OnTransmitStub(CallbackParams params)
 {
     int64_t requestId = 0;
-    int32_t inOutLen = 0;
     uint8_t *data = nullptr;
     uint32_t dataLen = 0u;
-    bool bRet = false;
     DeviceAuthCallback callback;
     int32_t ret;
 
-    inOutLen = sizeof(requestId);
+    int32_t inOutLen = sizeof(requestId);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID,
         reinterpret_cast<uint8_t *>(&requestId), &inOutLen);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum,
@@ -748,7 +791,7 @@ __attribute__((no_sanitize("cfi"))) static void OnTransmitStub(CallbackParams pa
         return;
     }
     if (callback.onTransmit != nullptr) {
-        bRet = callback.onTransmit(requestId, data, dataLen);
+        bool bRet = callback.onTransmit(requestId, data, dataLen);
         LOGI("onTransmit successfully.");
         (bRet == true) ? params.reply.WriteInt32(HC_SUCCESS) : params.reply.WriteInt32(HC_ERROR);
     }
@@ -758,19 +801,17 @@ __attribute__((no_sanitize("cfi"))) static void OnTransmitStub(CallbackParams pa
 __attribute__((no_sanitize("cfi"))) static void OnSessKeyStub(CallbackParams params)
 {
     int64_t requestId = 0;
-    int32_t inOutLen = 0;
     uint8_t *keyData = nullptr;
     uint32_t dataLen = 0u;
-    int32_t ret;
     DeviceAuthCallback callback;
 
     (void)params.reply;
-    inOutLen = sizeof(requestId);
+    int32_t inOutLen = sizeof(requestId);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID,
         reinterpret_cast<uint8_t *>(&requestId), &inOutLen);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_SESS_KEY,
         reinterpret_cast<uint8_t *>(&keyData), reinterpret_cast<int32_t *>(&dataLen));
-    ret = GetSdkCallBackByRequestId(params.callbackId, requestId, reinterpret_cast<uint8_t *>(&callback),
+    int32_t ret = GetSdkCallBackByRequestId(params.callbackId, requestId, reinterpret_cast<uint8_t *>(&callback),
         sizeof(DeviceAuthCallback));
     if (ret != HC_SUCCESS) {
         LOGE("GetSdkCallBackByRequestId failed, ret: %" LOG_PUB "d", ret);
@@ -787,13 +828,12 @@ __attribute__((no_sanitize("cfi"))) static void OnFinishStub(CallbackParams para
 {
     int64_t requestId = 0;
     int32_t opCode = 0;
-    int32_t inOutLen = 0;
     char *data = nullptr;
     DeviceAuthCallback callback;
     int32_t ret;
 
     (void)params.reply;
-    inOutLen = sizeof(requestId);
+    int32_t inOutLen = sizeof(requestId);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID,
         reinterpret_cast<uint8_t *>(&requestId), &inOutLen);
     inOutLen = sizeof(opCode);
@@ -820,12 +860,10 @@ __attribute__((no_sanitize("cfi"))) static void OnErrorStub(CallbackParams param
     int64_t requestId = 0;
     int32_t opCode = 0;
     int32_t errCode = 0;
-    int32_t inOutLen = 0;
-    int32_t ret;
     char *errInfo = nullptr;
     DeviceAuthCallback callback;
 
-    inOutLen = sizeof(requestId);
+    int32_t inOutLen = sizeof(requestId);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID,
         reinterpret_cast<uint8_t *>(&requestId), &inOutLen);
     inOutLen = sizeof(opCode);
@@ -835,7 +873,7 @@ __attribute__((no_sanitize("cfi"))) static void OnErrorStub(CallbackParams param
         reinterpret_cast<uint8_t *>(&errCode), &inOutLen);
     (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERR_INFO,
         reinterpret_cast<uint8_t *>(&errInfo), nullptr);
-    ret = GetSdkCallBackByRequestId(params.callbackId, requestId, reinterpret_cast<uint8_t *>(&callback),
+    int32_t ret = GetSdkCallBackByRequestId(params.callbackId, requestId, reinterpret_cast<uint8_t *>(&callback),
         sizeof(DeviceAuthCallback));
     if (ret != HC_SUCCESS) {
         LOGE("GetSdkCallBackByRequestId failed, ret: %" LOG_PUB "d", ret);
@@ -854,13 +892,10 @@ __attribute__((no_sanitize("cfi"))) static void OnRequestStub(CallbackParams par
 {
     int64_t requestId = 0;
     int32_t opCode = 0;
-    int32_t inOutLen = 0;
     char *reqParams = nullptr;
-    char *reqResult = nullptr;
-    int32_t ret;
     DeviceAuthCallback callback;
 
-    inOutLen = sizeof(requestId);
+    int32_t inOutLen = sizeof(requestId);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID,
         reinterpret_cast<uint8_t *>(&requestId), &inOutLen);
     inOutLen = sizeof(opCode);
@@ -869,7 +904,7 @@ __attribute__((no_sanitize("cfi"))) static void OnRequestStub(CallbackParams par
     (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQ_INFO,
         reinterpret_cast<uint8_t *>(&reqParams), nullptr);
 
-    ret = GetSdkCallBackByRequestId(params.callbackId, requestId, reinterpret_cast<uint8_t *>(&callback),
+    int32_t ret = GetSdkCallBackByRequestId(params.callbackId, requestId, reinterpret_cast<uint8_t *>(&callback),
         sizeof(DeviceAuthCallback));
     if (ret != HC_SUCCESS) {
         LOGE("GetSdkCallBackByRequestId failed, ret: %" LOG_PUB "d", ret);
@@ -877,7 +912,7 @@ __attribute__((no_sanitize("cfi"))) static void OnRequestStub(CallbackParams par
         return;
     }
     if (callback.onRequest != nullptr) {
-        reqResult = callback.onRequest(requestId, opCode, reqParams);
+        char *reqResult = callback.onRequest(requestId, opCode, reqParams);
         if (reqResult == nullptr) {
             params.reply.WriteInt32(HC_ERROR);
             return;
@@ -1014,11 +1049,10 @@ __attribute__((no_sanitize("cfi"))) static void OnDelLastGroupStub(CallbackParam
     DataChangeListener callback;
     const char *udid = nullptr;
     int32_t groupType = 0;
-    int32_t inOutLen = 0;
 
     (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID,
         reinterpret_cast<uint8_t *>(&udid), nullptr);
-    inOutLen = sizeof(groupType);
+    int32_t inOutLen = sizeof(groupType);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_GROUP_TYPE,
         reinterpret_cast<uint8_t *>(&groupType), &inOutLen);
     (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
@@ -1040,9 +1074,8 @@ __attribute__((no_sanitize("cfi"))) static void OnTrustDevNumChangedStub(Callbac
     const char *appId = nullptr;
     DataChangeListener callback;
     int32_t devNum = 0;
-    int32_t inOutLen = 0;
 
-    inOutLen = sizeof(devNum);
+    int32_t inOutLen = sizeof(devNum);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_DATA_NUM,
         reinterpret_cast<uint8_t *>(&devNum), &inOutLen);
     (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
@@ -1156,10 +1189,8 @@ void ProcCbHook(int32_t callbackId, const IpcDataInfo *cbDataCache, int32_t cach
 
 static uint32_t EncodeCallData(MessageParcel &dataParcel, int32_t type, const uint8_t *param, int32_t paramSz)
 {
-    const uint8_t *paramTmp = nullptr;
     int32_t zeroVal = 0;
-
-    paramTmp = param;
+    const uint8_t *paramTmp = param;
     if ((param == nullptr) || (paramSz == 0)) {
         paramTmp = reinterpret_cast<const uint8_t *>(&zeroVal);
         paramSz = sizeof(zeroVal);
@@ -1176,19 +1207,17 @@ static bool GaCbOnTransmitWithType(int64_t requestId, const uint8_t *data, uint3
     int32_t callbackId)
 {
     int32_t ret = -1;
-    uint32_t uRet;
     MessageParcel dataParcel;
     MessageParcel reply;
-    IpcCallBackNode *node = nullptr;
 
     LOGI("starting ... request id: %" LOG_PUB "lld, type %" LOG_PUB "d", static_cast<long long>(requestId), type);
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
-    node = GetIpcCallBackByReqId(requestId, type);
+    IpcCallBackNode *node = GetIpcCallBackByReqId(requestId, type);
     if (node == nullptr) {
         LOGE("onTransmit hook is null, request id %" LOG_PUB "lld", static_cast<long long>(requestId));
         return false;
     }
-    uRet = EncodeCallData(dataParcel, PARAM_TYPE_REQID,
+    uint32_t uRet = EncodeCallData(dataParcel, PARAM_TYPE_REQID,
         reinterpret_cast<const uint8_t *>(&requestId), sizeof(requestId));
     uRet |= EncodeCallData(dataParcel, PARAM_TYPE_COMM_DATA, data, dataLen);
     if (uRet != HC_SUCCESS) {
@@ -1221,20 +1250,19 @@ static bool IpcCaCbOnTransmit(int64_t requestId, const uint8_t *data, uint32_t d
 static void GaCbOnSessionKeyRetWithType(int64_t requestId, const uint8_t *sessKey, uint32_t sessKeyLen, int32_t type,
     int32_t callbackId)
 {
-    uint32_t ret;
     MessageParcel dataParcel;
     MessageParcel reply;
-    IpcCallBackNode *node = nullptr;
 
     LOGI("starting ... request id: %" LOG_PUB "lld, type %" LOG_PUB "d", static_cast<long long>(requestId), type);
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
-    node = GetIpcCallBackByReqId(requestId, type);
+    IpcCallBackNode *node = GetIpcCallBackByReqId(requestId, type);
     if (node == nullptr) {
         LOGE("onSessionKeyReturned hook is null, request id %" LOG_PUB "lld", static_cast<long long>(requestId));
         return;
     }
 
-    ret = EncodeCallData(dataParcel, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&requestId), sizeof(requestId));
+    uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&requestId),
+        sizeof(requestId));
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_SESS_KEY, sessKey, sessKeyLen);
     if (ret != HC_SUCCESS) {
         LOGE("Error occurs, encode trans data failed.");
@@ -1266,19 +1294,18 @@ static void IpcCaCbOnSessionKeyReturned(int64_t requestId, const uint8_t *sessKe
 static void GaCbOnFinishWithType(int64_t requestId, int32_t operationCode, const char *returnData, int32_t type,
     int32_t callbackId)
 {
-    uint32_t ret;
     MessageParcel dataParcel;
     MessageParcel reply;
-    IpcCallBackNode *node = nullptr;
 
     LOGI("starting ... request id: %" LOG_PUB "lld, type %" LOG_PUB "d", static_cast<long long>(requestId), type);
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
-    node = GetIpcCallBackByReqId(requestId, type);
+    IpcCallBackNode *node = GetIpcCallBackByReqId(requestId, type);
     if (node == nullptr) {
         LOGE("onFinish hook is null, request id %" LOG_PUB "lld", static_cast<long long>(requestId));
         return;
     }
-    ret = EncodeCallData(dataParcel, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&requestId), sizeof(requestId));
+    uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&requestId),
+        sizeof(requestId));
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_OPCODE,
         reinterpret_cast<uint8_t *>(&operationCode), sizeof(operationCode));
     if (returnData != nullptr) {
@@ -1317,19 +1344,18 @@ static void IpcCaCbOnFinish(int64_t requestId, int32_t operationCode, const char
 static void GaCbOnErrorWithType(int64_t requestId, int32_t operationCode,
     int32_t errorCode, const char *errorReturn, int32_t type)
 {
-    uint32_t ret;
     MessageParcel dataParcel;
     MessageParcel reply;
-    IpcCallBackNode *node = nullptr;
 
     LOGI("starting ... request id: %" LOG_PUB "lld, type %" LOG_PUB "d", static_cast<long long>(requestId), type);
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
-    node = GetIpcCallBackByReqId(requestId, type);
+    IpcCallBackNode *node = GetIpcCallBackByReqId(requestId, type);
     if (node == nullptr) {
         LOGE("onError hook is null, request id %" LOG_PUB "lld", static_cast<long long>(requestId));
         return;
     }
-    ret = EncodeCallData(dataParcel, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&requestId), sizeof(requestId));
+    uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&requestId),
+        sizeof(requestId));
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_OPCODE,
         reinterpret_cast<uint8_t *>(&operationCode), sizeof(operationCode));
     ret |= EncodeCallData(dataParcel, PARAM_TYPE_ERRCODE, reinterpret_cast<uint8_t *>(&errorCode), sizeof(errorCode));
@@ -1378,21 +1404,20 @@ static char *GaCbOnRequestWithType(int64_t requestId, int32_t operationCode, con
     int32_t callbackId)
 {
     int32_t ret = -1;
-    uint32_t uRet;
     MessageParcel dataParcel;
     MessageParcel reply;
     const char *dPtr = nullptr;
-    IpcCallBackNode *node = nullptr;
 
     LOGI("starting ... request id: %" LOG_PUB "lld, type %" LOG_PUB "d", static_cast<long long>(requestId), type);
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
-    node = GetIpcCallBackByReqId(requestId, type);
+    IpcCallBackNode *node = GetIpcCallBackByReqId(requestId, type);
     if (node == nullptr) {
         LOGE("onRequest hook is null, request id %" LOG_PUB "lld", static_cast<long long>(requestId));
         return nullptr;
     }
 
-    uRet = EncodeCallData(dataParcel, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&requestId), sizeof(requestId));
+    uint32_t uRet = EncodeCallData(dataParcel, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&requestId),
+        sizeof(requestId));
     uRet |= EncodeCallData(dataParcel, PARAM_TYPE_OPCODE,
         reinterpret_cast<uint8_t *>(&operationCode), sizeof(operationCode));
     if (reqParams != nullptr) {
@@ -1883,9 +1908,8 @@ int32_t CreateCallCtx(uintptr_t *callCtx)
 
 void DestroyCallCtx(uintptr_t *callCtx)
 {
-    ProxyDevAuthData *dataCache = nullptr;
     if ((callCtx != nullptr) && (*callCtx != 0)) {
-        dataCache = reinterpret_cast<ProxyDevAuthData *>(*callCtx);
+        ProxyDevAuthData *dataCache = reinterpret_cast<ProxyDevAuthData *>(*callCtx);
         delete dataCache;
         *callCtx = 0;
     }
@@ -1894,9 +1918,8 @@ void DestroyCallCtx(uintptr_t *callCtx)
 
 void SetCbCtxToDataCtx(uintptr_t callCtx, int32_t cbIdx)
 {
-    ProxyDevAuthData *dataCache = nullptr;
     sptr<IRemoteObject> remote = g_sdkCbStub[cbIdx];
-    dataCache = reinterpret_cast<ProxyDevAuthData *>(callCtx);
+    ProxyDevAuthData *dataCache = reinterpret_cast<ProxyDevAuthData *>(callCtx);
     dataCache->SetCallbackStub(remote);
     return;
 }
@@ -1910,10 +1933,9 @@ int32_t SetCallRequestParamInfo(uintptr_t callCtx, int32_t type, const uint8_t *
 
 int32_t DoBinderCall(uintptr_t callCtx, int32_t methodId, bool withSync)
 {
-    int32_t ret;
     ProxyDevAuthData *dataCache = reinterpret_cast<ProxyDevAuthData *>(callCtx);
 
-    ret = dataCache->FinalCallRequest(methodId);
+    int32_t ret = dataCache->FinalCallRequest(methodId);
     if (ret != HC_SUCCESS) {
         return ret;
     }
@@ -1938,8 +1960,7 @@ uint32_t SetIpcCallMap(uintptr_t ipcInstance, IpcServiceCall method, int32_t met
 
 int32_t CreateServiceInstance(uintptr_t *ipcInstance)
 {
-    ServiceDevAuth *service = nullptr;
-    service = new(std::nothrow) ServiceDevAuth();
+    ServiceDevAuth *service = new(std::nothrow) ServiceDevAuth();
     if (service == nullptr) {
         return HC_ERR_ALLOC_MEMORY;
     }
@@ -1981,10 +2002,9 @@ int32_t AddDevAuthServiceToManager(uintptr_t serviceInstance)
 int32_t IpcEncodeCallReply(uintptr_t replayCache, int32_t type, const uint8_t *result, int32_t resultSz)
 {
     int32_t errCnt = 0;
-    MessageParcel *replyParcel = nullptr;
     unsigned long valZero = 0uL;
 
-    replyParcel = reinterpret_cast<MessageParcel *>(replayCache);
+    MessageParcel *replyParcel = reinterpret_cast<MessageParcel *>(replayCache);
     errCnt += replyParcel->WriteInt32(type) ? 0 : 1;
     errCnt += replyParcel->WriteInt32(resultSz) ? 0 : 1;
     if ((result != nullptr) && (resultSz > 0)) {
@@ -2003,9 +2023,7 @@ int32_t IpcEncodeCallReply(uintptr_t replayCache, int32_t type, const uint8_t *r
 
 int32_t DecodeIpcData(uintptr_t data, int32_t *type, uint8_t **val, int32_t *valSz)
 {
-    MessageParcel *dataPtr = nullptr;
-
-    dataPtr = reinterpret_cast<MessageParcel *>(data);
+    MessageParcel *dataPtr = reinterpret_cast<MessageParcel *>(data);
     if (dataPtr->GetReadableBytes() == 0) {
         return HC_SUCCESS;
     }
@@ -2029,24 +2047,20 @@ int32_t DecodeIpcData(uintptr_t data, int32_t *type, uint8_t **val, int32_t *val
 
 void DecodeCallReply(uintptr_t callCtx, IpcDataInfo *replyCache, int32_t cacheNum)
 {
-    int32_t dataLen = 0;
-    int32_t i;
-    int32_t ret;
-
     ProxyDevAuthData *dataCache = reinterpret_cast<ProxyDevAuthData *>(callCtx);
     MessageParcel *tmpParcel = dataCache->GetReplyParcel();
     if (tmpParcel->GetReadableBytes() < sizeof(int32_t)) {
         LOGE("Insufficient data available in IPC container. [Data]: dataLen");
         return;
     }
-    dataLen = tmpParcel->ReadInt32();
+    int32_t dataLen = tmpParcel->ReadInt32();
     if ((dataLen <= 0) || (dataLen != static_cast<int32_t>(tmpParcel->GetReadableBytes()))) {
         LOGE("decode failed, data length %" LOG_PUB "d", dataLen);
         return;
     }
 
-    for (i = 0; i < cacheNum; i++) {
-        ret = DecodeIpcData(reinterpret_cast<uintptr_t>(tmpParcel),
+    for (int32_t i = 0; i < cacheNum; i++) {
+        int32_t ret = DecodeIpcData(reinterpret_cast<uintptr_t>(tmpParcel),
             &(replyCache[i].type), &(replyCache[i].val), &(replyCache[i].valSz));
         if (ret != HC_SUCCESS) {
             return;
@@ -2065,9 +2079,8 @@ static bool IsTypeForSettingPtr(int32_t type)
         PARAM_TYPE_PSEUDONYM_ID, PARAM_TYPE_INDEX_KEY, PARAM_TYPE_ERR_INFO, PARAM_TYPE_REQUEST_PARAMS,
         PARAM_TYPE_CRED_ID, PARAM_TYPE_PK_WITH_SIG, PARAM_TYPE_SERVICE_ID, PARAM_TYPE_RANDOM, PARAM_TYPE_CRED_INFO,
     };
-    int32_t i;
     int32_t n = sizeof(typeList) / sizeof(typeList[0]);
-    for (i = 0; i < n; i++) {
+    for (int32_t i = 0; i < n; i++) {
         if (typeList[i] == type) {
             return true;
         }
@@ -2080,9 +2093,8 @@ static bool IsTypeForCpyData(int32_t type)
     int32_t typeList[] = {
         PARAM_TYPE_REQID, PARAM_TYPE_GROUP_TYPE, PARAM_TYPE_OPCODE, PARAM_TYPE_ERRCODE, PARAM_TYPE_OS_ACCOUNT_ID
     };
-    int32_t i;
     int32_t n = sizeof(typeList) / sizeof(typeList[0]);
-    for (i = 0; i < n; i++) {
+    for (int32_t i = 0; i < n; i++) {
         if (typeList[i] == type) {
             return true;
         }
@@ -2099,11 +2111,10 @@ void DevAuthDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remoteObject
 int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
     int32_t type, uint8_t *paramCache, int32_t *cacheLen)
 {
-    int32_t i;
     int32_t ret = HC_ERR_IPC_BAD_MSG_TYPE;
     errno_t eno;
 
-    for (i = 0; i < paramNum; i++) {
+    for (int32_t i = 0; i < paramNum; i++) {
         if (ipcParams[i].type != type) {
             continue;
         }

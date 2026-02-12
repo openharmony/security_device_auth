@@ -205,7 +205,6 @@ static void DevAuthInitMemoryPolicy(void)
 int32_t DeviceAuthAbility::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
-    std::lock_guard<std::recursive_mutex> lock(instanceMutex_);
     DelayUnload();
     DevAuthInitMemoryPolicy();
     std::u16string readToken = data.ReadInterfaceToken();
@@ -230,7 +229,6 @@ int32_t DeviceAuthAbility::OnRemoteRequest(uint32_t code, MessageParcel &data, M
 
 void DeviceAuthAbility::OnActive(const SystemAbilityOnDemandReason &activeReason)
 {
-    std::lock_guard<std::recursive_mutex> lock(instanceMutex_);
     LOGI("OnActive, activeReason name is %" LOG_PUB "s, isUnloading is %" LOG_PUB "s.",
         activeReason.GetName().c_str(), isUnloading_ ? "YES" : "NO");
     isUnloading_ = false;
@@ -238,7 +236,6 @@ void DeviceAuthAbility::OnActive(const SystemAbilityOnDemandReason &activeReason
 
 int32_t DeviceAuthAbility::OnIdle(const SystemAbilityOnDemandReason &idleReason)
 {
-    std::lock_guard<std::recursive_mutex> lock(instanceMutex_);
     isUnloading_ = GetCriticalCnt() > 0 ? false : true;
     LOGI("OnIdle, idleReason name is %" LOG_PUB "s, isUnloading is %" LOG_PUB "s.",
         idleReason.GetName().c_str(), isUnloading_ ? "YES" : "NO");
@@ -250,7 +247,6 @@ int32_t DeviceAuthAbility::OnIdle(const SystemAbilityOnDemandReason &idleReason)
 
 void DeviceAuthAbility::OnStop()
 {
-    std::lock_guard<std::recursive_mutex> lock(instanceMutex_);
     LOGI("DeviceAuthAbility OnStop");
     SetStatusIsStopping(true);
     DestroyUnloadHandler();

@@ -62,6 +62,7 @@ int32_t ProxyDevAuth::DoCallRequest(MessageParcel &dataParcel, MessageParcel &re
     if (ret == HC_ERR_IPC_SA_IS_UNLOADING) {
         LOGI("Try to retry load device auth sa, and send request again, %" LOG_PUB "d.", ret);
         RetryLoadDeviceAuthSa();
+        remote = Remote();
         ret = remote->SendRequest(static_cast<uint32_t>(DevAuthInterfaceCode::DEV_AUTH_CALL_REQUEST),
             dataParcel, replyParcel, option);
     }
