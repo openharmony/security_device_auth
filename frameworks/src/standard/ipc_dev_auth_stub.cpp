@@ -423,7 +423,7 @@ void ServiceDevAuth::ResetRemoteObject(int32_t idx)
 }
 
 void ServiceDevAuth::ActCallback(int32_t objIdx, int32_t callbackId, bool sync,
-    uintptr_t cbHook, MessageParcel &dataParcel, MessageParcel &reply)
+    MessageParcel &dataParcel, MessageParcel &reply)
 {
     std::lock_guard<std::mutex> autoLock(g_cBMutex);
     if ((objIdx < 0) || (objIdx >= MAX_CBSTUB_SIZE) || (!g_cbStub[objIdx].inUse)) {
@@ -435,7 +435,7 @@ void ServiceDevAuth::ActCallback(int32_t objIdx, int32_t callbackId, bool sync,
         option.SetFlags(MessageOption::TF_ASYNC);
     }
     sptr<ICommIpcCallback> proxy = iface_cast<ICommIpcCallback>(g_cbStub[objIdx].cbStub);
-    proxy->DoCallBack(callbackId, cbHook, dataParcel, reply, option);
+    proxy->DoCallBack(callbackId, dataParcel, reply, option);
     return;
 }
 

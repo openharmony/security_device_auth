@@ -68,7 +68,6 @@ int32_t IpcServiceGmRegCallback(const IpcDataInfo *ipcParams, int32_t paramNum, 
     int32_t callRet;
     int32_t ret;
     const char *appId = NULL;
-    const DeviceAuthCallback *callback = NULL;
     int32_t cbObjIdx = -1;
     int32_t inOutLen;
     ret = GetAndValNullParam(ipcParams, paramNum, PARAM_TYPE_APPID, (uint8_t *)&appId, NULL);
@@ -76,12 +75,7 @@ int32_t IpcServiceGmRegCallback(const IpcDataInfo *ipcParams, int32_t paramNum, 
         LOGE("IpcServiceGmRegCallback failed, get app id error.");
         return HC_ERR_IPC_BAD_PARAM;
     }
-    inOutLen = sizeof(DeviceAuthCallback);
-    ret = GetAndValSizeCbParam(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&callback, &inOutLen);
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
-    ret = AddIpcCallBackByAppId(appId, (const uint8_t *)callback, sizeof(DeviceAuthCallback), CB_TYPE_DEV_AUTH);
+    ret = AddIpcCallBackByAppId(appId, CB_TYPE_DEV_AUTH);
     if (ret != HC_SUCCESS) {
         LOGE("add ipc callback failed");
         return HC_ERROR;
@@ -125,7 +119,6 @@ int32_t IpcServiceGmRegDataChangeListener(const IpcDataInfo *ipcParams, int32_t 
     int32_t callRet;
     int32_t ret;
     const char *appId = NULL;
-    const DataChangeListener *callback = NULL;
     static int32_t registered = 0;
     int32_t cbObjIdx = -1;
     int32_t inOutLen;
@@ -134,13 +127,7 @@ int32_t IpcServiceGmRegDataChangeListener(const IpcDataInfo *ipcParams, int32_t 
         LOGE("IpcServiceGmRegDataChangeListener failed, get app id error.");
         return HC_ERR_IPC_BAD_PARAM;
     }
-    inOutLen = sizeof(DataChangeListener);
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_LISTENER, (uint8_t *)&callback, &inOutLen);
-    if ((ret != HC_SUCCESS) || (inOutLen != sizeof(DataChangeListener))) {
-        LOGE("get param error, type %" LOG_PUB "d", PARAM_TYPE_LISTENER);
-        return HC_ERR_IPC_BAD_PARAM;
-    }
-    ret = AddIpcCallBackByAppId(appId, (const uint8_t *)callback, sizeof(DataChangeListener), CB_TYPE_LISTENER);
+    ret = AddIpcCallBackByAppId(appId, CB_TYPE_LISTENER);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmRegDataChangeListener failed, add ipc callback failed.");
         return HC_ERROR;
@@ -149,7 +136,7 @@ int32_t IpcServiceGmRegDataChangeListener(const IpcDataInfo *ipcParams, int32_t 
     ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_CB_OBJECT, (uint8_t *)&cbObjIdx, &inOutLen);
     if (ret != HC_SUCCESS) {
         LOGE("IpcServiceGmRegDataChangeListener failed, get cb object error.");
-        DelIpcCallBackByAppId(appId, CB_TYPE_DEV_AUTH);
+        DelIpcCallBackByAppId(appId, CB_TYPE_LISTENER);
         return HC_ERR_IPC_BAD_PARAM;
     }
     AddIpcCbObjByAppId(appId, cbObjIdx, CB_TYPE_LISTENER);
@@ -879,7 +866,6 @@ int32_t IpcServiceLaStartLightAccountAuth(const IpcDataInfo *ipcParams, int32_t 
     int32_t osAccountId;
     int64_t requestId;
     const char *serviceId = NULL;
-    const DeviceAuthCallback *laCallBack = NULL;
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -894,14 +880,8 @@ int32_t IpcServiceLaStartLightAccountAuth(const IpcDataInfo *ipcParams, int32_t 
     if (ret != HC_SUCCESS) {
         return ret;
     }
-    inOutLen = sizeof(DeviceAuthCallback);
-    ret = GetAndValSizeCbParam(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&laCallBack, &inOutLen);
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
     /* add call back */
-    ret = AddIpcCallBackByReqId(requestId, (const uint8_t *)laCallBack,
-        sizeof(DeviceAuthCallback), CB_TYPE_TMP_DEV_AUTH);
+    ret = AddIpcCallBackByReqId(requestId, CB_TYPE_TMP_DEV_AUTH);
     if (ret != HC_SUCCESS) {
         return ret;
     }
@@ -928,7 +908,6 @@ int32_t IpcServiceLaProcessLightAccountAuth(const IpcDataInfo *ipcParams, int32_
     int32_t cbObjIdx = -1;
     int32_t osAccountId;
     int64_t requestId;
-    const DeviceAuthCallback *laCallBack = NULL;
     inOutLen = sizeof(int32_t);
     ret = GetAndValSize32Param(ipcParams, paramNum, PARAM_TYPE_OS_ACCOUNT_ID, (uint8_t *)&osAccountId, &inOutLen);
     if (ret != HC_SUCCESS) {
@@ -947,14 +926,8 @@ int32_t IpcServiceLaProcessLightAccountAuth(const IpcDataInfo *ipcParams, int32_
         return HC_ERR_IPC_BAD_PARAM;
     }
     DataBuff inMsgBuff = { (uint8_t *)msgVal, (uint32_t)msgLen };
-    inOutLen = sizeof(DeviceAuthCallback);
-    ret = GetAndValSizeCbParam(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&laCallBack, &inOutLen);
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
     /* add call back */
-    ret = AddIpcCallBackByReqId(requestId, (const uint8_t *)laCallBack,
-        sizeof(DeviceAuthCallback), CB_TYPE_TMP_DEV_AUTH);
+    ret = AddIpcCallBackByReqId(requestId, CB_TYPE_TMP_DEV_AUTH);
     if (ret != HC_SUCCESS) {
         return ret;
     }
@@ -1005,7 +978,6 @@ int32_t IpcServiceGmIsDeviceInGroup(const IpcDataInfo *ipcParams, int32_t paramN
         LOGE("IpcServiceGmIsDeviceInGroup failed, get group id error.");
         return ret;
     }
-
     bRet = g_devGroupMgrMethod.isDeviceInGroup(osAccountId, appId, groupId, udid);
     callRet = ((bRet == true) ? HC_SUCCESS : HC_ERROR);
     ret = IpcEncodeCallReply(outCache, PARAM_TYPE_IPC_RESULT, (const uint8_t *)&callRet, sizeof(int32_t));
@@ -1039,7 +1011,6 @@ int32_t IpcServiceGaProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, 
 {
     int32_t callRet;
     int32_t ret;
-    const DeviceAuthCallback *gaCallback = NULL;
     int64_t reqId = 0;
     uint8_t *data = NULL;
     uint32_t dataLen = 0;
@@ -1056,13 +1027,8 @@ int32_t IpcServiceGaProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, 
         LOGE("IpcServiceGaProcessData failed, get comm data error.");
         return HC_ERR_IPC_BAD_PARAM;
     }
-    inOutLen = sizeof(DeviceAuthCallback);
-    ret = GetAndValSizeCbParam(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&gaCallback, &inOutLen);
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
     /* add call back */
-    ret = AddIpcCallBackByReqId(reqId, (const uint8_t *)gaCallback, sizeof(DeviceAuthCallback), CB_TYPE_TMP_DEV_AUTH);
+    ret = AddIpcCallBackByReqId(reqId, CB_TYPE_TMP_DEV_AUTH);
     if (ret != HC_SUCCESS) {
         LOGE("add ipc callback failed");
         return ret;
@@ -1086,7 +1052,6 @@ int32_t IpcServiceGaProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, 
 int32_t IpcServiceGaAuthDevice(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
 {
     int32_t ret;
-    DeviceAuthCallback *gaCallback = NULL;
     int32_t osAccountId;
     int64_t reqId = 0;
     const char *authParams = NULL;
@@ -1107,14 +1072,9 @@ int32_t IpcServiceGaAuthDevice(const IpcDataInfo *ipcParams, int32_t paramNum, u
     if (ret != HC_SUCCESS) {
         return ret;
     }
-    inOutLen = sizeof(DeviceAuthCallback);
-    ret = GetAndValSizeCbParam(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&gaCallback, &inOutLen);
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
 
     /* add call back */
-    ret = AddIpcCallBackByReqId(reqId, (const uint8_t *)gaCallback, sizeof(DeviceAuthCallback), CB_TYPE_TMP_DEV_AUTH);
+    ret = AddIpcCallBackByReqId(reqId, CB_TYPE_TMP_DEV_AUTH);
     if (ret != HC_SUCCESS) {
         return ret;
     }
@@ -1254,7 +1214,6 @@ int32_t IpcServiceDaProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, 
 {
     int32_t callRet;
     int32_t ret;
-    const DeviceAuthCallback *callback = NULL;
     int64_t authReqId = 0;
     const char *authParams = NULL;
     int32_t inOutLen;
@@ -1269,13 +1228,7 @@ int32_t IpcServiceDaProcessData(const IpcDataInfo *ipcParams, int32_t paramNum, 
     if (ret != HC_SUCCESS) {
         return ret;
     }
-    inOutLen = sizeof(DeviceAuthCallback);
-    ret = GetAndValSizeCbParam(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&callback, &inOutLen);
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
-    ret = AddIpcCallBackByReqId(
-        authReqId, (const uint8_t *)callback, sizeof(DeviceAuthCallback), CB_TYPE_TMP_DEV_AUTH);
+    ret = AddIpcCallBackByReqId(authReqId, CB_TYPE_TMP_DEV_AUTH);
     if (ret != HC_SUCCESS) {
         return ret;
     }
@@ -1301,7 +1254,6 @@ int32_t IpcServiceDaAuthDevice(const IpcDataInfo *ipcParams, int32_t paramNum, u
 {
     int32_t callRet;
     int32_t ret;
-    DeviceAuthCallback *callback = NULL;
     int64_t authReqId = 0;
     const char *authParams = NULL;
     int32_t inOutLen;
@@ -1317,13 +1269,7 @@ int32_t IpcServiceDaAuthDevice(const IpcDataInfo *ipcParams, int32_t paramNum, u
         LOGE("IpcServiceDaAuthDevice failed, get auth params error.");
         return ret;
     }
-    inOutLen = sizeof(DeviceAuthCallback);
-    ret = GetAndValSizeCbParam(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&callback, &inOutLen);
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
-    ret = AddIpcCallBackByReqId(
-        authReqId, (const uint8_t *)callback, sizeof(DeviceAuthCallback), CB_TYPE_TMP_DEV_AUTH);
+    ret = AddIpcCallBackByReqId(authReqId, CB_TYPE_TMP_DEV_AUTH);
     if (ret != HC_SUCCESS) {
         LOGE("add ipc callback failed");
         return ret;
@@ -1407,7 +1353,6 @@ int32_t IpcServiceCmRegCredChangeListener(const IpcDataInfo *ipcParams, int32_t 
     int32_t callRet;
     int32_t ret;
     const char *appId = NULL;
-    const CredChangeListener *listener = NULL;
     static int32_t registered = 0;
     int32_t cbObjIdx = -1;
     int32_t inOutLen = sizeof(int32_t);
@@ -1416,13 +1361,7 @@ int32_t IpcServiceCmRegCredChangeListener(const IpcDataInfo *ipcParams, int32_t 
         LOGE("IpcServiceCmRegCredChangeListener failed, get app id error.");
         return HC_ERR_IPC_BAD_PARAM;
     }
-    inOutLen = sizeof(CredChangeListener);
-    ret = GetIpcRequestParamByType(ipcParams, paramNum, PARAM_TYPE_LISTENER, (uint8_t *)&listener, &inOutLen);
-    if ((ret != HC_SUCCESS) || (inOutLen != sizeof(CredChangeListener))) {
-        LOGE("IpcServiceCmRegCredChangeListener failed, get listener error.");
-        return HC_ERR_IPC_BAD_PARAM;
-    }
-    ret = AddIpcCallBackByAppId(appId, (const uint8_t *)listener, sizeof(CredChangeListener), CB_TYPE_CRED_LISTENER);
+    ret = AddIpcCallBackByAppId(appId, CB_TYPE_CRED_LISTENER);
     if (ret != HC_SUCCESS) {
         LOGE("add ipc listener failed");
         return HC_ERROR;
@@ -1728,7 +1667,6 @@ int32_t IpcServiceCmBatchUpdateCredentials(const IpcDataInfo *ipcParams, int32_t
 int32_t IpcServiceCaAuthCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
 {
     int32_t ret;
-    DeviceAuthCallback *caCallback = NULL;
     int32_t osAccountId;
     int64_t reqId = 0;
     const char *authParams = NULL;
@@ -1750,13 +1688,8 @@ int32_t IpcServiceCaAuthCredential(const IpcDataInfo *ipcParams, int32_t paramNu
     if (ret != HC_SUCCESS) {
         return ret;
     }
-    inOutLen = sizeof(DeviceAuthCallback);
-    ret = GetAndValSizeCbParam(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&caCallback, &inOutLen);
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
     /* add call back */
-    ret = AddIpcCallBackByReqId(reqId, (const uint8_t *)caCallback, sizeof(DeviceAuthCallback), CB_TYPE_CRED_DEV_AUTH);
+    ret = AddIpcCallBackByReqId(reqId, CB_TYPE_CRED_DEV_AUTH);
     if (ret != HC_SUCCESS) {
         return ret;
     }
@@ -1781,7 +1714,6 @@ int32_t IpcServiceCaProcessCredData(const IpcDataInfo *ipcParams, int32_t paramN
 {
     int32_t callRet;
     int32_t ret;
-    const DeviceAuthCallback *caCallback = NULL;
     int64_t reqId = 0;
     uint8_t *data = NULL;
     uint32_t dataLen = 0;
@@ -1797,13 +1729,8 @@ int32_t IpcServiceCaProcessCredData(const IpcDataInfo *ipcParams, int32_t paramN
         LOGE("IpcServiceCaProcessCredData failed, get comm data error.");
         return HC_ERR_IPC_BAD_PARAM;
     }
-    inOutLen = sizeof(DeviceAuthCallback);
-    ret = GetAndValSizeCbParam(ipcParams, paramNum, PARAM_TYPE_DEV_AUTH_CB, (uint8_t *)&caCallback, &inOutLen);
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
     /* add call back */
-    ret = AddIpcCallBackByReqId(reqId, (const uint8_t *)caCallback, sizeof(DeviceAuthCallback), CB_TYPE_CRED_DEV_AUTH);
+    ret = AddIpcCallBackByReqId(reqId, CB_TYPE_CRED_DEV_AUTH);
     if (ret != HC_SUCCESS) {
         LOGE("add ipc callback failed");
         return ret;

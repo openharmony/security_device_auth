@@ -25,127 +25,6 @@
 #include "base/security/device_auth/frameworks/sdk/sa_load_on_demand/src/sa_load_on_demand.cpp"
 
 namespace OHOS {
-#define TEST_APP_ID "TestUserId"
-#define TEST_APP_ID_1 "TestUserId1"
-
-static void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn)
-{
-    (void)requestId;
-    (void)operationCode;
-    (void)errorCode;
-    (void)errorReturn;
-}
-
-static void OnFinish(int64_t requestId, int operationCode, const char *authReturn)
-{
-    (void)requestId;
-    (void)operationCode;
-    (void)authReturn;
-}
-
-static void OnSessionKeyReturned(int64_t requestId, const uint8_t *sessionKey, uint32_t sessionKeyLen)
-{
-    (void)requestId;
-    (void)sessionKey;
-    (void)sessionKeyLen;
-}
-
-static bool OnTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
-{
-    (void)requestId;
-    (void)data;
-    (void)dataLen;
-    return true;
-}
-
-static char *OnRequest(int64_t requestId, int operationCode, const char *reqParam)
-{
-    (void)requestId;
-    (void)operationCode;
-    (void)reqParam;
-    return nullptr;
-}
-
-
-static void OnGroupCreated(const char *groupInfo)
-{
-    (void)groupInfo;
-}
-
-static void OnGroupDeleted(const char *groupInfo)
-{
-    (void)groupInfo;
-}
-
-static void OnDeviceBound(const char *peerUdid, const char *groupInfo)
-{
-    (void)peerUdid;
-    (void)groupInfo;
-}
-
-static void OnDeviceUnBound(const char *peerUdid, const char *groupInfo)
-{
-    (void)peerUdid;
-    (void)groupInfo;
-}
-
-static void OnDeviceNotTrusted(const char *peerUdid)
-{
-    (void)peerUdid;
-}
-
-static void OnLastGroupDeleted(const char *peerUdid, int groupType)
-{
-    (void)peerUdid;
-    (void)groupType;
-}
-
-static void OnTrustedDeviceNumChanged(int curTrustedDeviceNum)
-{
-    (void)curTrustedDeviceNum;
-}
-
-static void TestOnCredAdd(const char *credId, const char *credInfo)
-{
-    (void)credId;
-    (void)credInfo;
-}
-
-static void TestOnCredUpdate(const char *credId, const char *credInfo)
-{
-    (void)credId;
-    (void)credInfo;
-}
-
-static void TestOnCredDelete(const char *credId, const char *credInfo)
-{
-    (void)credId;
-    (void)credInfo;
-}
-
-static DeviceAuthCallback g_gmCallback = {
-    .onTransmit = OnTransmit,
-    .onSessionKeyReturned = OnSessionKeyReturned,
-    .onFinish = OnFinish,
-    .onError = OnError,
-    .onRequest = OnRequest,
-};
-
-static DataChangeListener g_listener = {
-    .onGroupCreated = OnGroupCreated,
-    .onGroupDeleted = OnGroupDeleted,
-    .onDeviceBound = OnDeviceBound,
-    .onDeviceUnBound = OnDeviceUnBound,
-    .onDeviceNotTrusted = OnDeviceNotTrusted,
-    .onLastGroupDeleted = OnLastGroupDeleted,
-    .onTrustedDeviceNumChanged = OnTrustedDeviceNumChanged,
-};
-
-static CredChangeListener g_credChangeListener = {
-    .onCredAdd = TestOnCredAdd,
-    .onCredDelete = TestOnCredDelete,
-    .onCredUpdate = TestOnCredUpdate,
-};
 
 static int32_t regCallbackMock(const char *appId, const DeviceAuthCallback *callback, bool needCache)
 {
@@ -179,69 +58,17 @@ static void SaLoadOnDemandFuzz001(void)
     RegisterDevAuthCallbackIfNeed();
 }
 
-static void SaLoadOnDemandFuzz002(void)
-{
-    SetRegCallbackFunc(regCallbackMock);
-    SetRegDataChangeListenerFunc(regDataChangeListenerMock);
-    SetRegCredChangeListenerFunc(regCredChangeListenerMock);
-    (void)AddCallbackInfoToList(TEST_APP_ID, &g_gmCallback, &g_listener, &g_credChangeListener, DEVAUTH_CALLBACK);
-    (void)AddCallbackInfoToList(TEST_APP_ID, &g_gmCallback, &g_listener, &g_credChangeListener, GROUP_CHANGE_LISTENER);
-    (void)AddCallbackInfoToList(TEST_APP_ID, &g_gmCallback, &g_listener, &g_credChangeListener, CRED_CHANGE_LISTENER);
-    (void)RemoveCallbackInfoFromList(TEST_APP_ID, DEVAUTH_CALLBACK);
-    (void)RemoveCallbackInfoFromList(TEST_APP_ID, GROUP_CHANGE_LISTENER);
-    (void)RemoveCallbackInfoFromList(TEST_APP_ID, CRED_CHANGE_LISTENER);
-}
-
-static void SaLoadOnDemandFuzz003(void)
-{
-    SetRegCallbackFunc(regCallbackMock);
-    SetRegDataChangeListenerFunc(regDataChangeListenerMock);
-    SetRegCredChangeListenerFunc(regCredChangeListenerMock);
-    (void)AddCallbackInfoToList(TEST_APP_ID, &g_gmCallback, &g_listener, &g_credChangeListener, DEVAUTH_CALLBACK);
-    (void)AddCallbackInfoToList(TEST_APP_ID, &g_gmCallback, &g_listener, &g_credChangeListener, DEVAUTH_CALLBACK);
-    (void)AddCallbackInfoToList(TEST_APP_ID, &g_gmCallback, &g_listener, &g_credChangeListener, GROUP_CHANGE_LISTENER);
-    (void)AddCallbackInfoToList(TEST_APP_ID, &g_gmCallback, &g_listener, &g_credChangeListener, GROUP_CHANGE_LISTENER);
-    (void)AddCallbackInfoToList(TEST_APP_ID, &g_gmCallback, &g_listener, &g_credChangeListener, CRED_CHANGE_LISTENER);
-    (void)AddCallbackInfoToList(TEST_APP_ID, &g_gmCallback, &g_listener, &g_credChangeListener, CRED_CHANGE_LISTENER);
-    (void)RemoveCallbackInfoFromList(TEST_APP_ID, DEVAUTH_CALLBACK);
-    (void)RemoveCallbackInfoFromList(TEST_APP_ID, GROUP_CHANGE_LISTENER);
-    (void)RemoveCallbackInfoFromList(TEST_APP_ID, CRED_CHANGE_LISTENER);
-}
-
-static void SaLoadOnDemandFuzz004(void)
-{
-    SetRegCallbackFunc(regCallbackMock);
-    SetRegDataChangeListenerFunc(regDataChangeListenerMock);
-    SetRegCredChangeListenerFunc(regCredChangeListenerMock);
-    (void)AddCallbackInfoToList(TEST_APP_ID, &g_gmCallback, &g_listener, &g_credChangeListener, DEVAUTH_CALLBACK);
-    (void)AddCallbackInfoToList(TEST_APP_ID, &g_gmCallback, &g_listener, &g_credChangeListener, GROUP_CHANGE_LISTENER);
-    (void)AddCallbackInfoToList(TEST_APP_ID, &g_gmCallback, &g_listener, &g_credChangeListener, CRED_CHANGE_LISTENER);
-    (void)AddCallbackInfoToList(TEST_APP_ID_1, &g_gmCallback, &g_listener, &g_credChangeListener, DEVAUTH_CALLBACK);
-    (void)AddCallbackInfoToList(TEST_APP_ID_1, &g_gmCallback, &g_listener, &g_credChangeListener,
-        GROUP_CHANGE_LISTENER);
-    (void)AddCallbackInfoToList(TEST_APP_ID_1, &g_gmCallback, &g_listener, &g_credChangeListener,
-        CRED_CHANGE_LISTENER);
-    RegisterDevAuthCallback();
-    (void)RemoveCallbackInfoFromList(TEST_APP_ID, DEVAUTH_CALLBACK);
-    (void)RemoveCallbackInfoFromList(TEST_APP_ID, GROUP_CHANGE_LISTENER);
-    (void)RemoveCallbackInfoFromList(TEST_APP_ID, CRED_CHANGE_LISTENER);
-    (void)RemoveCallbackInfoFromList(TEST_APP_ID_1, DEVAUTH_CALLBACK);
-    (void)RemoveCallbackInfoFromList(TEST_APP_ID_1, GROUP_CHANGE_LISTENER);
-    (void)RemoveCallbackInfoFromList(TEST_APP_ID_1, CRED_CHANGE_LISTENER);
-}
-
 bool FuzzDoSaLoadOnDemandFuzz(const uint8_t* data, size_t size)
 {
     (void)data;
     (void)size;
     (void)InitLoadOnDemand();
+    (void)InitSdkIpcCallBackList();
     SubscribeDeviceAuthSa();
     SaLoadOnDemandFuzz001();
-    SaLoadOnDemandFuzz002();
-    SaLoadOnDemandFuzz003();
-    SaLoadOnDemandFuzz004();
     UnSubscribeDeviceAuthSa();
     DeInitLoadOnDemand();
+    DeInitSdkIpcCallBackList();
     return true;
 }
 }

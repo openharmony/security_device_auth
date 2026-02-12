@@ -31,8 +31,8 @@ public:
 class ICommIpcCallback : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"deviceauth.ICommIpcCallback");
-    virtual void DoCallBack(int32_t callbackId, uintptr_t cbHook,
-        MessageParcel &dataParcel, MessageParcel &reply, MessageOption &option) = 0;
+    virtual void DoCallBack(int32_t callbackId, MessageParcel &dataParcel, MessageParcel &reply,
+        MessageOption &option) = 0;
 };
 
 const int32_t DEV_AUTH_CALL_WAIT_TIME = 30; /* second */

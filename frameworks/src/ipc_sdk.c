@@ -135,6 +135,27 @@ static void GetIpcReplyByType(const IpcDataInfo *ipcData,
     return;
 }
 
+static int32_t BindRequestIdWithAppId(const uint8_t *data, uint32_t dataLen)
+{
+    CJson *dataJson = NULL;
+    int32_t ret = CreateJsonFromData(data, dataLen, &dataJson);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to create json from data!");
+        return ret;
+    }
+    const char *appId = GetStringFromJson(dataJson, FIELD_APP_ID);
+    if (appId == NULL) {
+        LOGE("failed to get appId from json object!");
+        FreeJson(dataJson);
+        return HC_ERR_JSON_GET;
+    }
+    int64_t requestId = -1;
+    (void)GetInt64FromJson(dataJson, FIELD_REQUEST_ID, &requestId);
+    ret = AddRequestIdByAppId(appId, requestId);
+    FreeJson(dataJson);
+    return ret;
+}
+
 static int32_t IpcGmRegCallbackInner(const char *appId, const DeviceAuthCallback *callback, bool needCache)
 {
     uintptr_t callCtx = 0x0;
@@ -146,14 +167,13 @@ static int32_t IpcGmRegCallbackInner(const char *appId, const DeviceAuthCallback
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_BIND_ID);
         BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_REG_CB, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
         AddIpcCliCallbackCtx(appId, 0, &g_ipcProxyCbList);
         if (needCache) {
-            ret = AddCallbackInfoToList(appId, callback, NULL, NULL, DEVAUTH_CALLBACK);
+            ret = AddSdkCallBackByAppId(appId, CB_TYPE_DEV_AUTH, (uint8_t *)callback, sizeof(DeviceAuthCallback));
         }
     } while (0);
     DESTROY_IPC_CTX(callCtx);
@@ -184,7 +204,7 @@ static int32_t IpcGmUnRegCallback(const char *appId)
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
         DelIpcCliCallbackCtx(appId, &g_ipcProxyCbList);
-        ret = RemoveCallbackInfoFromList(appId, DEVAUTH_CALLBACK);
+        RemoveSdkCallBackByAppId(appId, CB_TYPE_DEV_AUTH);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -203,14 +223,13 @@ static int32_t IpcGmRegDataChangeListenerInner(const char *appId, const DataChan
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
-        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_LISTENER, listener, sizeof(*listener));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_BIND_ID);
         BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_REG_LISTENER, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
         AddIpcCliCallbackCtx(appId, 0, &g_ipcListenerCbList);
         if (needCache) {
-            ret = AddCallbackInfoToList(appId, NULL, listener, NULL, GROUP_CHANGE_LISTENER);
+            ret = AddSdkCallBackByAppId(appId, CB_TYPE_LISTENER, (uint8_t *)listener, sizeof(DataChangeListener));
         }
     } while (0);
     DESTROY_IPC_CTX(callCtx);
@@ -241,7 +260,7 @@ static int32_t IpcGmUnRegDataChangeListener(const char *appId)
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
         DelIpcCliCallbackCtx(appId, &g_ipcListenerCbList);
-        ret = RemoveCallbackInfoFromList(appId, GROUP_CHANGE_LISTENER);
+        RemoveSdkCallBackByAppId(appId, CB_TYPE_LISTENER);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
 
@@ -261,6 +280,7 @@ static int32_t IpcGmCreateGroup(int32_t osAccountId, int64_t requestId, const ch
     RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(createParams)));
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
+        ret = AddRequestIdByAppId(appId, requestId);
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
@@ -287,6 +307,7 @@ static int32_t IpcGmDeleteGroup(int32_t osAccountId, int64_t requestId, const ch
     RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(delParams)));
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
+        ret = AddRequestIdByAppId(appId, requestId);
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
@@ -313,6 +334,7 @@ static int32_t IpcGmAddMemberToGroup(int32_t osAccountId, int64_t requestId, con
     RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(addParams)));
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
+        ret = AddRequestIdByAppId(appId, requestId);
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
@@ -339,6 +361,7 @@ static int32_t IpcGmDelMemberFromGroup(int32_t osAccountId, int64_t requestId, c
     RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(appId) || IsStrInvalid(delParams)));
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
+        ret = AddRequestIdByAppId(appId, requestId);
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_APPID, appId, HcStrlen(appId) + 1);
@@ -415,6 +438,7 @@ static int32_t IpcGmProcessData(int64_t requestId, const uint8_t *data, uint32_t
     RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((!IS_COMM_DATA_VALID(data, dataLen)));
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
+        ret = BindRequestIdWithAppId(data, dataLen);
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_COMM_DATA, data, dataLen);
         BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_GM_PROC_DATA, true);
@@ -803,16 +827,19 @@ static int32_t IpcGaProcessData(int64_t authReqId,
     RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((!IS_COMM_DATA_VALID(data, dataLen) || (callback == NULL)));
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
+        ret = AddSdkCallBackByRequestId(authReqId, CB_TYPE_TMP_DEV_AUTH, (uint8_t *)callback,
+            sizeof(DeviceAuthCallback));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &authReqId, sizeof(authReqId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_COMM_DATA, data, dataLen);
-        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
         SetCbCtxToDataCtx(callCtx, 0x0);
         BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_GA_PROC_DATA, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
-
+    if (ret != HC_SUCCESS) {
+        RemoveSdkCallBackByRequestId(authReqId, CB_TYPE_TMP_DEV_AUTH);
+    }
     LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
@@ -830,17 +857,20 @@ static int32_t IpcGaAuthDevice(int32_t osAccountId, int64_t authReqId, const cha
     RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(authParams) || (callback == NULL)));
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
+        ret = AddSdkCallBackByRequestId(authReqId, CB_TYPE_TMP_DEV_AUTH, (uint8_t *)callback,
+            sizeof(DeviceAuthCallback));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &authReqId, sizeof(authReqId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_AUTH_PARAMS, authParams, HcStrlen(authParams) + 1);
-        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_AUTH_ID);
         BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_AUTH_DEVICE, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
-
+    if (ret != HC_SUCCESS) {
+        RemoveSdkCallBackByRequestId(authReqId, CB_TYPE_TMP_DEV_AUTH);
+    }
     LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
@@ -1161,17 +1191,20 @@ static int32_t IpcLaStartLightAccountAuth(int32_t osAccountId, int64_t requestId
     RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(serviceId) || laCallBack == NULL));
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
+        ret = AddSdkCallBackByRequestId(requestId, CB_TYPE_TMP_DEV_AUTH, (uint8_t *)laCallBack,
+            sizeof(DeviceAuthCallback));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_SERVICE_ID, serviceId, HcStrlen(serviceId) + 1);
-        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, laCallBack, sizeof(*laCallBack));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_LIGHT_AUTH_ID);
         BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_LA_START_LIGHT_ACCOUNT_AUTH, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
-
+    if (ret != HC_SUCCESS) {
+        RemoveSdkCallBackByRequestId(requestId, CB_TYPE_TMP_DEV_AUTH);
+    }
     LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
@@ -1188,17 +1221,20 @@ static int32_t IpcLaProcessLightAccountAuth(int32_t osAccountId, int64_t request
     RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((!IS_COMM_DATA_VALID(inMsg->data, inMsg->length) || (laCallBack == NULL)));
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
+        ret = AddSdkCallBackByRequestId(requestId, CB_TYPE_TMP_DEV_AUTH, (uint8_t *)laCallBack,
+            sizeof(DeviceAuthCallback));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_OS_ACCOUNT_ID, &osAccountId, sizeof(osAccountId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_COMM_DATA, inMsg->data, inMsg->length);
-        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, laCallBack, sizeof(*laCallBack));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_LIGHT_AUTH_ID);
         BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_LA_PROCESS_LIGHT_ACCOUNT_AUTH, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
-
+    if (ret != HC_SUCCESS) {
+        RemoveSdkCallBackByRequestId(requestId, CB_TYPE_TMP_DEV_AUTH);
+    }
     LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
@@ -1250,16 +1286,19 @@ DEVICE_AUTH_API_PUBLIC int32_t ProcessAuthDevice(
     RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(authParams) || (callback == NULL)));
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
+        ret = AddSdkCallBackByRequestId(requestId, CB_TYPE_TMP_DEV_AUTH, (uint8_t *)callback,
+            sizeof(DeviceAuthCallback));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &requestId, sizeof(requestId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_AUTH_PARAMS, authParams, HcStrlen(authParams) + 1);
-        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_DIRECT_AUTH_ID);
         BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_DA_PROC_DATA, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
-
+    if (ret != HC_SUCCESS) {
+        RemoveSdkCallBackByRequestId(requestId, CB_TYPE_TMP_DEV_AUTH);
+    }
     LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
@@ -1276,16 +1315,19 @@ DEVICE_AUTH_API_PUBLIC int32_t StartAuthDevice(
     RETURN_INT_IF_CHECK_IPC_PARAMS_FAILED((IsStrInvalid(authParams) || (callback == NULL)));
     RETURN_INT_IF_CREATE_IPC_CTX_FAILED(callCtx);
     do {
+        ret = AddSdkCallBackByRequestId(authReqId, CB_TYPE_TMP_DEV_AUTH, (uint8_t *)callback,
+            sizeof(DeviceAuthCallback));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_REQID, &authReqId, sizeof(authReqId));
         BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_AUTH_PARAMS, authParams, HcStrlen(authParams) + 1);
-        BREAK_IF_SET_IPC_PARAM_FAILED(callCtx, PARAM_TYPE_DEV_AUTH_CB, callback, sizeof(*callback));
         SetCbCtxToDataCtx(callCtx, IPC_CALL_BACK_STUB_DIRECT_AUTH_ID);
         BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_DA_AUTH_DEVICE, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
-
+    if (ret != HC_SUCCESS) {
+        RemoveSdkCallBackByRequestId(authReqId, CB_TYPE_TMP_DEV_AUTH);
+    }
     LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
@@ -1306,9 +1348,9 @@ DEVICE_AUTH_API_PUBLIC int32_t CancelAuthRequest(int64_t requestId, const char *
         BREAK_IF_DO_IPC_CALL_FAILED(callCtx, IPC_CALL_ID_DA_CANCEL_REQUEST, true);
         DecodeCallReply(callCtx, replyCache, REPLAY_CACHE_NUM(replyCache));
         BREAK_IF_CHECK_IPC_RESULT_FAILED(replyCache, ret);
+        RemoveSdkCallBackByRequestId(requestId, CB_TYPE_TMP_DEV_AUTH);
     } while (0);
     DESTROY_IPC_CTX(callCtx);
-
     LOGI("process done, ret: %" LOG_PUB "d", ret);
     return ret;
 }
@@ -1340,6 +1382,7 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
         DestroyHcMutex(&g_ipcMutex);
         return ret;
     }
+    (void)InitSdkIpcCallBackList();
     g_devAuthServiceStatus = true;
     SetRegCallbackFunc(IpcGmRegCallbackInner);
     SetRegDataChangeListenerFunc(IpcGmRegDataChangeListenerInner);
@@ -1350,6 +1393,7 @@ DEVICE_AUTH_API_PUBLIC int InitDeviceAuthService(void)
 DEVICE_AUTH_API_PUBLIC void DestroyDeviceAuthService(void)
 {
     UnSubscribeDeviceAuthSa();
+    DeInitSdkIpcCallBackList();
     UnInitProxyAdapt();
     DeInitISIpc();
     DeInitLoadOnDemand();

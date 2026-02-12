@@ -21,6 +21,10 @@
 using namespace testing::ext;
 
 namespace {
+#define TEST_APP_ID "TestUserId"
+#define TEST_APP_ID_1 "TestUserId1"
+#define TEST_REQUEST_ID 121231231
+
 class IpcAdaptParamTest : public testing::Test {
 public:
     IpcAdaptParamTest() = default;  // 显式声明默认构造函数
@@ -291,21 +295,8 @@ void IpcDevAuthCredListenerTest::TearDown()
 // 添加凭据监听器回调
 static void AddCredListenerCallback()
 {
-    CredChangeListener credListener = {
-        .onCredAdd = nullptr,
-        .onCredDelete = nullptr,
-        .onCredUpdate = nullptr
-    };
-
-    IpcDataInfo testParams[1];
-    testParams[0].type = CB_TYPE_CRED_LISTENER;
-    testParams[0].val = reinterpret_cast<uint8_t *>(&credListener);
-    testParams[0].valSz = sizeof(credListener);
-    testParams[0].idx = 0;
-
     // 添加凭据监听器
-    ASSERT_EQ(HC_SUCCESS, AddIpcCallBackByAppId("test.app.id", reinterpret_cast<const uint8_t *>(&credListener),
-        sizeof(credListener), CB_TYPE_CRED_LISTENER));
+    ASSERT_EQ(HC_SUCCESS, AddIpcCallBackByAppId("test.app.id", CB_TYPE_CRED_LISTENER));
 }
 
 // 测试 InitDevAuthCredListenerCbCtx 函数
@@ -335,8 +326,7 @@ HWTEST_F(IpcDevAuthCredListenerTest, CredListenerOnCredAdd_Valid, TestSize.Level
     InitDevAuthCredListenerCbCtx(&credListener);
 
     // 更新回调
-    ASSERT_EQ(HC_SUCCESS, AddIpcCallBackByAppId("test.app.id", reinterpret_cast<const uint8_t *>(&credListener),
-        sizeof(credListener), CB_TYPE_CRED_LISTENER));
+    ASSERT_EQ(HC_SUCCESS, AddIpcCallBackByAppId("test.app.id", CB_TYPE_CRED_LISTENER));
 
     // 添加回调对象
     AddIpcCbObjByAppId("test.app.id", 0, CB_TYPE_CRED_LISTENER);
@@ -359,8 +349,7 @@ HWTEST_F(IpcDevAuthCredListenerTest, CredListenerOnCredAdd_NullCredId, TestSize.
     InitDevAuthCredListenerCbCtx(&credListener);
 
     // 更新回调
-    ASSERT_EQ(HC_SUCCESS, AddIpcCallBackByAppId("test.app.id", reinterpret_cast<const uint8_t *>(&credListener),
-        sizeof(credListener), CB_TYPE_CRED_LISTENER));
+    ASSERT_EQ(HC_SUCCESS, AddIpcCallBackByAppId("test.app.id", CB_TYPE_CRED_LISTENER));
 
     // 添加回调对象
     AddIpcCbObjByAppId("test.app.id", 0, CB_TYPE_CRED_LISTENER);
@@ -382,8 +371,7 @@ HWTEST_F(IpcDevAuthCredListenerTest, CredListenerOnCredDelete_Valid, TestSize.Le
     InitDevAuthCredListenerCbCtx(&credListener);
 
     // 更新回调
-    ASSERT_EQ(HC_SUCCESS, AddIpcCallBackByAppId("test.app.id", reinterpret_cast<const uint8_t *>(&credListener),
-        sizeof(credListener), CB_TYPE_CRED_LISTENER));
+    ASSERT_EQ(HC_SUCCESS, AddIpcCallBackByAppId("test.app.id", CB_TYPE_CRED_LISTENER));
 
     // 添加回调对象
     AddIpcCbObjByAppId("test.app.id", 0, CB_TYPE_CRED_LISTENER);
@@ -406,8 +394,7 @@ HWTEST_F(IpcDevAuthCredListenerTest, CredListenerOnCredDelete_NullCredId, TestSi
     InitDevAuthCredListenerCbCtx(&credListener);
 
     // 更新回调
-    ASSERT_EQ(HC_SUCCESS, AddIpcCallBackByAppId("test.app.id", reinterpret_cast<const uint8_t *>(&credListener),
-        sizeof(credListener), CB_TYPE_CRED_LISTENER));
+    ASSERT_EQ(HC_SUCCESS, AddIpcCallBackByAppId("test.app.id", CB_TYPE_CRED_LISTENER));
 
     // 添加回调对象
     AddIpcCbObjByAppId("test.app.id", 0, CB_TYPE_CRED_LISTENER);
@@ -429,8 +416,7 @@ HWTEST_F(IpcDevAuthCredListenerTest, CredListenerOnCredUpdate_Valid, TestSize.Le
     InitDevAuthCredListenerCbCtx(&credListener);
 
     // 更新回调
-    ASSERT_EQ(HC_SUCCESS, AddIpcCallBackByAppId("test.app.id", reinterpret_cast<const uint8_t *>(&credListener),
-        sizeof(credListener), CB_TYPE_CRED_LISTENER));
+    ASSERT_EQ(HC_SUCCESS, AddIpcCallBackByAppId("test.app.id", CB_TYPE_CRED_LISTENER));
 
     // 添加回调对象
     AddIpcCbObjByAppId("test.app.id", 0, CB_TYPE_CRED_LISTENER);
@@ -453,8 +439,7 @@ HWTEST_F(IpcDevAuthCredListenerTest, CredListenerOnCredUpdate_NullCredId, TestSi
     InitDevAuthCredListenerCbCtx(&credListener);
 
     // 更新回调
-    ASSERT_EQ(HC_SUCCESS, AddIpcCallBackByAppId("test.app.id", reinterpret_cast<const uint8_t *>(&credListener),
-        sizeof(credListener), CB_TYPE_CRED_LISTENER));
+    ASSERT_EQ(HC_SUCCESS, AddIpcCallBackByAppId("test.app.id", CB_TYPE_CRED_LISTENER));
 
     // 添加回调对象
     AddIpcCbObjByAppId("test.app.id", 0, CB_TYPE_CRED_LISTENER);
@@ -463,5 +448,100 @@ HWTEST_F(IpcDevAuthCredListenerTest, CredListenerOnCredUpdate_NullCredId, TestSi
     if (credListener.onCredUpdate != nullptr) {
         credListener.onCredUpdate(nullptr, "test_cred_info");
     }
+}
+
+
+static void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn)
+{
+    (void)requestId;
+    (void)operationCode;
+    (void)errorCode;
+    (void)errorReturn;
+}
+
+static void OnFinish(int64_t requestId, int operationCode, const char *authReturn)
+{
+    (void)requestId;
+    (void)operationCode;
+    (void)authReturn;
+}
+
+static void OnSessionKeyReturned(int64_t requestId, const uint8_t *sessionKey, uint32_t sessionKeyLen)
+{
+    (void)requestId;
+    (void)sessionKey;
+    (void)sessionKeyLen;
+}
+
+static bool OnTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
+{
+    (void)requestId;
+    (void)data;
+    (void)dataLen;
+    return true;
+}
+
+static char *OnRequest(int64_t requestId, int operationCode, const char *reqParam)
+{
+    (void)requestId;
+    (void)operationCode;
+    (void)reqParam;
+    return nullptr;
+}
+
+static DeviceAuthCallback g_gmCallback = {
+    .onTransmit = OnTransmit,
+    .onSessionKeyReturned = OnSessionKeyReturned,
+    .onFinish = OnFinish,
+    .onError = OnError,
+    .onRequest = OnRequest,
+};
+
+class SdkIpcDevAuthCredListenerTest : public testing::Test {
+public:
+    SdkIpcDevAuthCredListenerTest() = default;  // 显式声明默认构造函数
+    ~SdkIpcDevAuthCredListenerTest() = default; // 显式声明默认析构函数
+    void SetUp();
+    void TearDown();
+};
+
+void SdkIpcDevAuthCredListenerTest::SetUp()
+{
+    // 初始化回调列表
+    ASSERT_EQ(HC_SUCCESS, InitSdkIpcCallBackList());
+}
+
+void SdkIpcDevAuthCredListenerTest::TearDown()
+{
+    // 清理回调列表
+    DeInitSdkIpcCallBackList();
+}
+
+// 测试 InitDevAuthCredListenerCbCtx 函数
+HWTEST_F(SdkIpcDevAuthCredListenerTest, InitDevAuthCredListenerCbCtx_Valid, TestSize.Level0)
+{
+    int32_t ret = AddSdkCallBackByAppId(TEST_APP_ID, CB_TYPE_DEV_AUTH, reinterpret_cast<uint8_t *>(&g_gmCallback),
+        sizeof(DeviceAuthCallback));
+    EXPECT_EQ(ret, HC_SUCCESS);
+    ret = AddSdkCallBackByAppId(TEST_APP_ID, CB_TYPE_DEV_AUTH, reinterpret_cast<uint8_t *>(&g_gmCallback),
+        sizeof(DeviceAuthCallback));
+    EXPECT_EQ(ret, HC_SUCCESS);
+    ret = AddSdkCallBackByRequestId(TEST_REQUEST_ID, CB_TYPE_DEV_AUTH, reinterpret_cast<uint8_t *>(&g_gmCallback),
+        sizeof(DeviceAuthCallback));
+    EXPECT_EQ(ret, HC_SUCCESS);
+    ret = AddSdkCallBackByRequestId(TEST_REQUEST_ID, CB_TYPE_DEV_AUTH, reinterpret_cast<uint8_t *>(&g_gmCallback),
+        sizeof(DeviceAuthCallback));
+    EXPECT_EQ(ret, HC_SUCCESS);
+    (void)RemoveSdkCallBackByAppId(TEST_APP_ID, CB_TYPE_DEV_AUTH);
+
+    ret = AddSdkCallBackByAppId(TEST_APP_ID_1, CB_TYPE_DEV_AUTH, reinterpret_cast<uint8_t *>(&g_gmCallback),
+        sizeof(DeviceAuthCallback));
+    EXPECT_EQ(ret, HC_SUCCESS);
+    ret = AddRequestIdByAppId(TEST_APP_ID, TEST_REQUEST_ID);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = AddRequestIdByAppId(TEST_APP_ID_1, TEST_REQUEST_ID);
+    EXPECT_EQ(ret, HC_SUCCESS);
+    (void)RemoveSdkCallBackByAppId(TEST_APP_ID_1, CB_TYPE_DEV_AUTH);
+    (void)RemoveSdkCallBackByRequestId(TEST_REQUEST_ID, CB_TYPE_DEV_AUTH);
 }
 }

@@ -16,24 +16,6 @@
 #include "sa_load_on_demand.h"
 #include "common_defs.h"
 
-int32_t AddCallbackInfoToList(const char *appId, const DeviceAuthCallback *callback,
-    const DataChangeListener *dataChangeListener, CredChangeListener *credChangeListener, int32_t callbackType)
-{
-    (void)appId;
-    (void)callback;
-    (void)dataChangeListener;
-    (void)credChangeListener;
-    (void)callbackType;
-    return HC_SUCCESS;
-}
-
-int32_t RemoveCallbackInfoFromList(const char *appId, int32_t callbackType)
-{
-    (void)appId;
-    (void)callbackType;
-    return HC_SUCCESS;
-}
-
 void SetRegCallbackFunc(RegCallbackFunc regCallbackFunc)
 {
     (void)regCallbackFunc;

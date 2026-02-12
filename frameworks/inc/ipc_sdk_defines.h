@@ -38,6 +38,10 @@ typedef struct {
     SaStatusChangeCallbackFunc onReceivedSaRemoved;
 } SaStatusChangeCallback;
 
+typedef int32_t (*RegCallbackFunc)(const char *appId, const DeviceAuthCallback *callback, bool needCache);
+typedef int32_t (*RegDataChangeListenerFunc)(const char *appId, const DataChangeListener *listener, bool needCache);
+typedef int32_t (*RegCredChangeListenerFunc)(const char *appId, CredChangeListener *listener, bool needCache);
+
 #define IPC_CALL_BACK_STUB_AUTH_ID 0
 #define IPC_CALL_BACK_STUB_BIND_ID 1
 #define IPC_CALL_BACK_STUB_DIRECT_AUTH_ID 2
@@ -46,10 +50,6 @@ typedef struct {
 #define DEVICE_AUTH_SA_LOAD_TIME (4 * 1000)
 
 #define IPC_CALL_CONTEXT_INIT 0x0
-
-#define DEVAUTH_CALLBACK 1
-#define GROUP_CHANGE_LISTENER 2
-#define CRED_CHANGE_LISTENER 3
 
 /* params type for ipc call */
 #define PARAM_TYPE_APPID 1

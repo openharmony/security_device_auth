@@ -25,14 +25,6 @@
 extern "C" {
 #endif
 
-typedef int32_t (*RegCallbackFunc)(const char *appId, const DeviceAuthCallback *callback, bool needCache);
-typedef int32_t (*RegDataChangeListenerFunc)(const char *appId, const DataChangeListener *listener, bool needCache);
-typedef int32_t (*RegCredChangeListenerFunc)(const char *appId, CredChangeListener *listener, bool needCache);
-
-int32_t AddCallbackInfoToList(const char *appId, const DeviceAuthCallback *callback,
-    const DataChangeListener *dataChangeListener, CredChangeListener *listener, int32_t callbackType);
-int32_t RemoveCallbackInfoFromList(const char *appId, int32_t callbackType);
-
 void SetRegCallbackFunc(RegCallbackFunc regCallbackFunc);
 void SetRegDataChangeListenerFunc(RegDataChangeListenerFunc regDataChangeListenerFunc);
 void SetRegCredChangeListenerFunc(RegCredChangeListenerFunc regCredChangeListenerFunc);

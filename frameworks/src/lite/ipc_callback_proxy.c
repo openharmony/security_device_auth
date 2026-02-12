@@ -46,7 +46,7 @@ static void CbProxyFormReplyData(int32_t reqRetVal, IpcIo *replyDst, const IpcIo
     return;
 }
 
-void CbProxySendRequest(SvcIdentity sid, int32_t callbackId, uintptr_t cbHook, IpcIo *data, IpcIo *reply)
+void CbProxySendRequest(SvcIdentity sid, int32_t callbackId, IpcIo *data, IpcIo *reply)
 {
     int32_t ret;
     IpcIo *reqData = NULL;
@@ -60,7 +60,6 @@ void CbProxySendRequest(SvcIdentity sid, int32_t callbackId, uintptr_t cbHook, I
         return;
     }
     WriteInt32(reqData, callbackId);
-    WritePointer(reqData, cbHook);
     dataSz = GetIpcIoDataLength((const IpcIo *)data);
     LOGI("to form callback params data length(%" LOG_PUB "d)", dataSz);
     if (dataSz > 0) {
