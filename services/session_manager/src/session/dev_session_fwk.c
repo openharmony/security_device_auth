@@ -313,18 +313,9 @@ static void ReportBindAndAuthCallEvent(const SessionImpl *impl, int32_t callResu
     return;
 }
 
-static void ReportBindAndAuthFaultEvent(const SessionImpl *impl, int32_t errorCode, bool isV1Session)
+static void ReportBindAndAuthFaultEvent(const SessionImpl *impl, int32_t errorCode, bool isV1Session,
+    const char *operationRecord, const char *commonEventRecord)
 {
-    char operationRecord[DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE] = {0};
-    char commonEventRecord[DEFAULT_COMMON_EVENT_CNT * DEFAULT_RECORD_OPERATION_SIZE] = {0};
-    int32_t osAccountId = ANY_OS_ACCOUNT;
-    (void)GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId);
-    uint32_t type = (impl->isCredAuth ? OPERATION_IDENTITY_SERVICE : OPERATION_GROUP);
-    (void)GetOperationDataRecently(osAccountId, type, operationRecord,
-        DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE, DEFAULT_RECENT_OPERATION_CNT);
-    (void)GetOperationDataRecently(osAccountId, OPERATION_COMMON_EVENT, commonEventRecord,
-        DEFAULT_COMMON_EVENT_CNT * DEFAULT_RECORD_OPERATION_SIZE, DEFAULT_COMMON_EVENT_CNT);
-    LOGI("Recent operation : %" LOG_PUB "s\n, Recent event : %" LOG_PUB "s", operationRecord, commonEventRecord);
 #ifdef DEV_AUTH_HIVIEW_ENABLE
     CJson *extJson = CreateJson();
     if (extJson == NULL) {
@@ -359,9 +350,28 @@ static void ReportBindAndAuthFaultEvent(const SessionImpl *impl, int32_t errorCo
     DEV_AUTH_REPORT_FAULT_EVENT(eventData);
     FreeJsonString(extJsonString);
     FreeJson(extJson);
-#endif
+#else
+    (void)impl;
     (void)errorCode;
     (void)isV1Session;
+    (void)operationRecord;
+    (void)commonEventRecord;
+#endif
+}
+
+static void LogAndReportBindAuthFaultEvent(const SessionImpl *impl, int32_t errorCode, bool isV1Session)
+{
+    int32_t osAccountId = ANY_OS_ACCOUNT;
+    (void)GetIntFromJson(impl->context, FIELD_OS_ACCOUNT_ID, &osAccountId);
+    char operationRecord[DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE + 1] = { 0 };
+    uint32_t type = (impl->isCredAuth ? OPERATION_IDENTITY_SERVICE : OPERATION_GROUP);
+    (void)GetOperationDataRecently(osAccountId, type, operationRecord,
+        DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE, DEFAULT_RECENT_OPERATION_CNT);
+    char commonEventRecord[DEFAULT_COMMON_EVENT_CNT * DEFAULT_RECORD_OPERATION_SIZE + 1] = { 0 };
+    (void)GetOperationDataRecently(osAccountId, OPERATION_COMMON_EVENT, commonEventRecord,
+        DEFAULT_COMMON_EVENT_CNT * DEFAULT_RECORD_OPERATION_SIZE, DEFAULT_COMMON_EVENT_CNT);
+    LOGI("Recent operation : %" LOG_PUB "s\n, Recent event : %" LOG_PUB "s", operationRecord, commonEventRecord);
+    ReportBindAndAuthFaultEvent(impl, errorCode, isV1Session, operationRecord, commonEventRecord);
 }
 
 static void OnDevSessionError(const SessionImpl *impl, int32_t errorCode, const char *errorReturn, bool isV1Session)
@@ -369,7 +379,7 @@ static void OnDevSessionError(const SessionImpl *impl, int32_t errorCode, const 
     ReportBehaviorEvent(impl, false, true, errorCode);
     ProcessErrorCallback(impl->base.id, impl->base.opCode, errorCode, errorReturn, &impl->base.callback);
     CloseChannel(impl->channelType, impl->channelId);
-    ReportBindAndAuthFaultEvent(impl, errorCode, isV1Session);
+    LogAndReportBindAuthFaultEvent(impl, errorCode, isV1Session);
     ReportBindAndAuthCallEvent(impl, errorCode, isV1Session);
 }
 

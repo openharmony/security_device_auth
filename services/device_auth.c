@@ -543,8 +543,8 @@ static int32_t OpenServerCredSession(int64_t requestId, const CJson *receivedMsg
 
 static void ISPrintOperation(int32_t osAccountId)
 {
-    char operationRecord[DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE] = {0};
-    char commonEventRecord[DEFAULT_COMMON_EVENT_CNT * DEFAULT_RECORD_OPERATION_SIZE] = {0};
+    char operationRecord[DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE + 1] = { 0 };
+    char commonEventRecord[DEFAULT_COMMON_EVENT_CNT * DEFAULT_RECORD_OPERATION_SIZE + 1] = { 0 };
     (void)GetOperationDataRecently(osAccountId, OPERATION_IDENTITY_SERVICE, operationRecord,
         DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE, DEFAULT_RECENT_OPERATION_CNT);
     (void)GetOperationDataRecently(osAccountId, OPERATION_COMMON_EVENT, commonEventRecord,

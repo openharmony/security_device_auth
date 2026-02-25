@@ -508,7 +508,7 @@ static const char *ConvertProcessCodeToFuncName(int32_t processCode)
 static void ReportGroupFaultEvent(CJson *operationInfo, const GroupManagerTask *task, const char *appId,
     int32_t processCode, int32_t errorCode)
 {
-    char operationRecord[DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE] = {0};
+    char operationRecord[DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE + 1] = { 0 };
     (void)GetOperationDataRecently(task->osAccountId, OPERATION_GROUP,
         operationRecord, DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE, DEFAULT_RECENT_OPERATION_CNT);
     LOGI("Recent operation : %" LOG_PUB "s", operationRecord);
@@ -526,12 +526,13 @@ static void ReportGroupFaultEvent(CJson *operationInfo, const GroupManagerTask *
     DEV_AUTH_REPORT_FAULT_EVENT(eventData);
     FreeJsonString(extJsonString);
     eventData.faultInfo = NULL;
-#endif
+#else
     (void)operationInfo;
     (void)task;
     (void)appId;
     (void)processCode;
     (void)errorCode;
+#endif
 }
 
 static void RecordOrReportFaultEvent(const GroupManagerTask *task, const char *returnJsonStr,

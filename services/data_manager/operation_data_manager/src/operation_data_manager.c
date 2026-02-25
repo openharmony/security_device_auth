@@ -598,11 +598,10 @@ int32_t GetOperationDataRecently(int32_t osAccountId, uint32_t types, char *reco
         LOGW("[Operation]: Operation data manager not init.");
         return -1;
     }
-    (void)LockHcMutex(g_operationMutex);
-    if (record == NULL) {
-        UnlockHcMutex(g_operationMutex);
+    if (record == NULL || recordSize == 0) {
         return -1;
     }
+    (void)LockHcMutex(g_operationMutex);
     OsAccountOperationInfo *info = GetOperationInfoByOsAccountId(osAccountId);
     if (info == NULL) {
         UnlockHcMutex(g_operationMutex);

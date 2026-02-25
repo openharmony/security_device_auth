@@ -255,7 +255,7 @@ static int32_t DfxTestCase011(void)
     res = ReadInfoFromParcel(NULL, NULL);
 
     TLV_DEINIT(dbv1)
-    DestroyOperationVec(&info.operations);
+    ClearOperationVec(&info.operations);
     return res;
 }
 
@@ -322,7 +322,7 @@ static int32_t DfxTestCase013(void)
 
 static int32_t DfxTestCase014(void)
 {
-    char record[DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE] = { 0 };
+    char record[DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE + 1] = { 0 };
     int32_t res = GetOperationDataRecently(TEST_OS_ACCOUNT_ID, OPERATION_ANY, NULL, TEST_NUM_ZERO, TEST_NUM_ONE);
     res = GetOperationDataRecently(TEST_OS_ACCOUNT_ID, OPERATION_ANY, record,
         DEFAULT_RECENT_OPERATION_CNT * DEFAULT_RECORD_OPERATION_SIZE, TEST_NUM_ONE);
@@ -339,7 +339,7 @@ static int32_t DfxTestCase015(void)
     ret = IsOsAccountOperationInfoLoaded(INVALID_OS_ACCOUNT);
     OperationRecord *operation1 = CreateOperationRecord();
     int32_t res = RecordOperationData(TEST_OS_ACCOUNT_ID, operation1);
-    char record[TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE] = { 0 };
+    char record[TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE + 1] = { 0 };
     res = GetOperationDataRecently(TEST_OS_ACCOUNT_ID, OPERATION_ANY, record,
         TEST_NUM_ONE * DEFAULT_RECORD_OPERATION_SIZE, TEST_NUM_ONE);
 #ifdef DEV_AUTH_HIVIEW_ENABLE
