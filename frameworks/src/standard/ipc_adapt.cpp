@@ -888,6 +888,29 @@ __attribute__((no_sanitize("cfi"))) static void OnErrorStub(CallbackParams param
     return;
 }
 
+static int32_t GetSdkCallBackByReqParams(int64_t callbackId, char *reqParams, int64_t requestId,
+    DeviceAuthCallback *callback)
+{
+    CJson *reqParamsJson = CreateJsonFromString(reqParams);
+    if (reqParamsJson == nullptr) {
+        LOGE("Create json from string occur error!");
+        return HC_ERR_JSON_FAIL;
+    }
+    const char *callerAppId = GetStringFromJson(reqParamsJson, FIELD_APP_ID);
+    if (callerAppId == nullptr) {
+        LOGE("failed to get appId from json object!");
+        FreeJson(reqParamsJson);
+        return HC_ERR_JSON_GET;
+    }
+    int32_t ret = AddRequestIdByAppId(callerAppId, requestId);
+    FreeJson(reqParamsJson);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    return GetSdkCallBackByRequestId(callbackId, requestId, reinterpret_cast<uint8_t *>(callback),
+        sizeof(DeviceAuthCallback));
+}
+
 __attribute__((no_sanitize("cfi"))) static void OnRequestStub(CallbackParams params)
 {
     int64_t requestId = 0;
@@ -904,12 +927,14 @@ __attribute__((no_sanitize("cfi"))) static void OnRequestStub(CallbackParams par
     (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQ_INFO,
         reinterpret_cast<uint8_t *>(&reqParams), nullptr);
 
-    int32_t ret = GetSdkCallBackByRequestId(params.callbackId, requestId, reinterpret_cast<uint8_t *>(&callback),
-        sizeof(DeviceAuthCallback));
-    if (ret != HC_SUCCESS) {
-        LOGE("GetSdkCallBackByRequestId failed, ret: %" LOG_PUB "d", ret);
-        params.reply.WriteInt32(ret);
-        return;
+    if (GetSdkCallBackByRequestId(params.callbackId, requestId, reinterpret_cast<uint8_t *>(&callback),
+        sizeof(DeviceAuthCallback)) != HC_SUCCESS) {
+        int32_t ret = GetSdkCallBackByReqParams(params.callbackId, reqParams, requestId, &callback);
+        if (ret != HC_SUCCESS) {
+            LOGE("GetSdkCallBackByRequestId failed, ret: %" LOG_PUB "d", ret);
+            params.reply.WriteInt32(ret);
+            return;
+        }
     }
     if (callback.onRequest != nullptr) {
         char *reqResult = callback.onRequest(requestId, opCode, reqParams);
@@ -1504,7 +1529,6 @@ namespace {
 void IpcOnGroupCreated(const char *groupInfo)
 {
     if (groupInfo == nullptr) {
-        LOGE("IpcOnGroupCreated, params error");
         return;
     }
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
@@ -1537,7 +1561,6 @@ void IpcOnGroupCreated(const char *groupInfo)
 void IpcOnGroupDeleted(const char *groupInfo)
 {
     if (groupInfo == nullptr) {
-        LOGE("IpcOnGroupDeleted, params error");
         return;
     }
 
@@ -1570,7 +1593,6 @@ void IpcOnGroupDeleted(const char *groupInfo)
 void IpcOnDeviceBound(const char *peerUdid, const char *groupInfo)
 {
     if ((peerUdid == nullptr) || (groupInfo == nullptr)) {
-        LOGE("Error occurs, param is nullptr.");
         return;
     }
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
@@ -1604,7 +1626,6 @@ void IpcOnDeviceBound(const char *peerUdid, const char *groupInfo)
 void IpcOnDeviceUnBound(const char *peerUdid, const char *groupInfo)
 {
     if ((peerUdid == nullptr) || (groupInfo == nullptr)) {
-        LOGE("peerUdid is nullptr or groupInfo is nullptr.");
         return;
     }
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
@@ -1638,7 +1659,6 @@ void IpcOnDeviceUnBound(const char *peerUdid, const char *groupInfo)
 void IpcOnDeviceNotTrusted(const char *peerUdid)
 {
     if (peerUdid == nullptr) {
-        LOGE("Error occurs, peerUdid is nullptr.");
         return;
     }
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
@@ -1670,7 +1690,6 @@ void IpcOnDeviceNotTrusted(const char *peerUdid)
 void IpcOnLastGroupDeleted(const char *peerUdid, int32_t groupType)
 {
     if (peerUdid == nullptr) {
-        LOGE("Error occurs, param is nullptr.");
         return;
     }
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
@@ -1705,7 +1724,6 @@ void IpcOnTrustedDeviceNumChanged(int32_t curTrustedDeviceNum)
 {
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
     if (g_ipcCallBackList.ctx == nullptr) {
-        LOGE("IpcCallBackList un-initialized");
         return;
     }
     for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
@@ -1732,7 +1750,6 @@ void IpcOnTrustedDeviceNumChanged(int32_t curTrustedDeviceNum)
 void IpcOnCredAdd(const char *credId, const char *credInfo)
 {
     if (credId == nullptr) {
-        LOGE("IpcOnCredAdd failed, params error.");
         return;
     }
 
@@ -1767,7 +1784,6 @@ void IpcOnCredAdd(const char *credId, const char *credInfo)
 void IpcOnCredDelete(const char *credId, const char *credInfo)
 {
     if (credId == nullptr) {
-        LOGE("IpcOnCredDelete failed, credId is nullptr.");
         return;
     }
 
@@ -1802,7 +1818,6 @@ void IpcOnCredDelete(const char *credId, const char *credInfo)
 void IpcOnCredUpdate(const char *credId, const char *credInfo)
 {
     if (credId == nullptr) {
-        LOGE("IpcOnCredUpdate failed, params error");
         return;
     }
 
