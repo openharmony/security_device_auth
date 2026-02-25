@@ -835,6 +835,29 @@ static void OnErrorStub(CallbackParams params)
     return;
 }
 
+static int32_t GetSdkCallBackByReqParams(int64_t callbackId, char *reqParams, int64_t requestId,
+    DeviceAuthCallback *callback)
+{
+    CJson *reqParamsJson = CreateJsonFromString(reqParams);
+    if (reqParamsJson == NULL) {
+        LOGE("Create json from string occur error!");
+        return HC_ERR_JSON_FAIL;
+    }
+    const char *callerAppId = GetStringFromJson(reqParamsJson, FIELD_APP_ID);
+    if (callerAppId == NULL) {
+        LOGE("failed to get appId from json object!");
+        FreeJson(reqParamsJson);
+        return HC_ERR_JSON_GET;
+    }
+    int32_t ret = AddRequestIdByAppId(callerAppId, requestId);
+    FreeJson(reqParamsJson);
+    if (ret != HC_SUCCESS) {
+        return ret;
+    }
+    return GetSdkCallBackByRequestId(callbackId, requestId, (uint8_t *)(callback),
+        sizeof(DeviceAuthCallback));
+}
+
 static void OnRequestStub(CallbackParams params)
 {
     int64_t requestId = 0;
@@ -842,7 +865,6 @@ static void OnRequestStub(CallbackParams params)
     int32_t inOutLen;
     char *reqParams = NULL;
     char *reqResult = NULL;
-    int32_t ret;
     DeviceAuthCallback callback;
 
     inOutLen = sizeof(requestId);
@@ -854,12 +876,14 @@ static void OnRequestStub(CallbackParams params)
     (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQ_INFO,
         (uint8_t *)(&reqParams), NULL);
 
-    ret = GetSdkCallBackByRequestId(params.callbackId, requestId, (uint8_t *)(&callback),
-        sizeof(DeviceAuthCallback));
-    if (ret != HC_SUCCESS) {
-        LOGE("GetSdkCallBackByRequestId failed, ret: %" LOG_PUB "d", ret);
-        WriteInt32(params.reply, ret);
-        return;
+    if (GetSdkCallBackByRequestId(params.callbackId, requestId, (uint8_t *)(&callback),
+        sizeof(DeviceAuthCallback)) != HC_SUCCESS) {
+        int32_t ret = GetSdkCallBackByReqParams(params.callbackId, reqParams, requestId, &callback);
+        if (ret != HC_SUCCESS) {
+            LOGE("GetSdkCallBackByRequestId failed, ret: %" LOG_PUB "d", ret);
+            WriteInt32(params.reply, ret);
+            return;
+        }
     }
     if (callback.onRequest != NULL) {
         reqResult = callback.onRequest(requestId, opCode, reqParams);
