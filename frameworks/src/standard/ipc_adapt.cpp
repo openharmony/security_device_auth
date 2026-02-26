@@ -86,6 +86,9 @@ static std::recursive_mutex g_cbSdkListLock;
 
 static void FreeSdkIpcCallBackList(SdkIpcCallBackList *ipcCallBackList)
 {
+    if (ipcCallBackList == nullptr) {
+        return;
+    }
     uint32_t index;
     SdkIpcCallBackNode *node = nullptr;
     FOR_EACH_HC_VECTOR(*ipcCallBackList, index, node) {
