@@ -86,6 +86,7 @@ group("deviceauth_test_build") {
       "unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session/expand_process_lib:auth_code_import_test",
       "unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session/expand_process_lib:pub_key_exchange_test",
       "unittest/tdd_framework/unit_test/services/session_manager/session/v2/expand_sub_session/expand_process_lib:save_trusted_info_test",
+      "unittest/common_lib_test:AiCommonLibTest",
     ]
   }
 }
