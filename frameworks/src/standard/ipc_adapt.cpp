@@ -107,7 +107,6 @@ int32_t InitSdkIpcCallBackList(void)
 
 void DeInitSdkIpcCallBackList(void)
 {
-    FreeSdkIpcCallBackList(&g_sdkIpcCallBackList);
     DESTROY_HC_VECTOR(SdkIpcCallBackList, &g_sdkIpcCallBackList);
     return;
 }
