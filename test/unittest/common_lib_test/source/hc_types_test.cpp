@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,31 +25,19 @@ static const uint32_t TEST_MALLOC_SIZE_LARGE = 1024;
 static const uint32_t TEST_MALLOC_SIZE_ZERO = 0;
 static const char TEST_MALLOC_VAL = 0xAA;
 static const char TEST_MALLOC_VAL_ZERO = 0x00;
-}
 
 class HcTypesTest : public testing::Test {
 public:
-    static void SetUpTestCase();
-    static void TearDownTestCase();
-    void SetUp();
-    void TearDown();
 };
-
-void HcTypesTest::SetUpTestCase() {}
-void HcTypesTest::TearDownTestCase() {}
-void HcTypesTest::SetUp() {}
-void HcTypesTest::TearDown() {}
 
 HWTEST_F(HcTypesTest, HcMallocTest001, TestSize.Level0)
 {
     void *ptr = HcMalloc(TEST_MALLOC_SIZE, TEST_MALLOC_VAL);
     ASSERT_NE(ptr, nullptr);
-    
     uint8_t *bytePtr = static_cast<uint8_t *>(ptr);
     for (uint32_t i = 0; i < TEST_MALLOC_SIZE; i++) {
         EXPECT_EQ(bytePtr[i], TEST_MALLOC_VAL);
     }
-    
     HcFree(ptr);
 }
 
@@ -57,12 +45,10 @@ HWTEST_F(HcTypesTest, HcMallocTest002, TestSize.Level0)
 {
     void *ptr = HcMalloc(TEST_MALLOC_SIZE_LARGE, TEST_MALLOC_VAL_ZERO);
     ASSERT_NE(ptr, nullptr);
-    
     uint8_t *bytePtr = static_cast<uint8_t *>(ptr);
     for (uint32_t i = 0; i < TEST_MALLOC_SIZE_LARGE; i++) {
         EXPECT_EQ(bytePtr[i], TEST_MALLOC_VAL_ZERO);
     }
-    
     HcFree(ptr);
 }
 
@@ -142,4 +128,5 @@ HWTEST_F(HcTypesTest, HcStrlenTest008, TestSize.Level0)
     const char *strWithSpecialChars = "test\nstring\twith\rchars";
     uint32_t len = HcStrlen(strWithSpecialChars);
     EXPECT_EQ(len, 22);
+}
 }
