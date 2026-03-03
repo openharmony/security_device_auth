@@ -242,7 +242,9 @@ HWTEST_F(HcParcelTest, DataRevertTest003, TestSize.Level0)
 
 HWTEST_F(HcParcelTest, DataRevertTest004, TestSize.Level0)
 {
-    DataRevert(nullptr, 0);
+    void *data = nullptr;
+    DataRevert(data, 0);
+    EXPECT_EQ(data, nullptr);
 }
 
 HWTEST_F(HcParcelTest, ParcelEraseBlockTest001, TestSize.Level0)
@@ -533,7 +535,9 @@ HWTEST_F(HcParcelTest, ClearParcelTest001, TestSize.Level0)
 
 HWTEST_F(HcParcelTest, ClearParcelTest002, TestSize.Level0)
 {
-    ClearParcel(nullptr);
+    HcParcel *parcel = nullptr;
+    ClearParcel(parcel);
+    EXPECT_EQ(parcel, nullptr);
 }
 
 HWTEST_F(HcParcelTest, ResetParcelTest001, TestSize.Level0)
@@ -553,6 +557,8 @@ HWTEST_F(HcParcelTest, ResetParcelTest001, TestSize.Level0)
 
 HWTEST_F(HcParcelTest, ResetParcelTest002, TestSize.Level0)
 {
-    ResetParcel(nullptr, TEST_BUFFER_SIZE, TEST_BUFFER_SIZE);
+    HcParcel *parcel = nullptr;
+    ResetParcel(parcel, TEST_BUFFER_SIZE, TEST_BUFFER_SIZE);
+    EXPECT_EQ(parcel, nullptr);
 }
 }

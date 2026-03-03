@@ -162,7 +162,9 @@ HWTEST_F(JsonUtilsTest, DeleteAllItemTest001, TestSize.Level0)
 
 HWTEST_F(JsonUtilsTest, DeleteAllItemTest002, TestSize.Level0)
 {
-    DeleteAllItem(nullptr);
+    CJson *json = nullptr;
+    DeleteAllItem(json);
+    EXPECT_EQ(json, nullptr);
 }
 
 HWTEST_F(JsonUtilsTest, DetachItemFromJsonTest001, TestSize.Level0)
@@ -447,6 +449,8 @@ HWTEST_F(JsonUtilsTest, ClearAndFreeJsonStringTest001, TestSize.Level0)
 
 HWTEST_F(JsonUtilsTest, ClearAndFreeJsonStringTest002, TestSize.Level0)
 {
-    ClearAndFreeJsonString(nullptr);
+    char *str = nullptr;
+    ClearAndFreeJsonString(str);
+    EXPECT_EQ(str, nullptr);
 }
 }

@@ -46,8 +46,8 @@ HWTEST_F(HcStringVectorTest, DestroyStrVectorTest001, TestSize.Level0)
     HcString str1 = CreateString();
     HcString str2 = CreateString();
 
-    StringSetPointer(&str1, "hello");
-    StringSetPointer(&str2, "world");
+    EXPECT_EQ(StringSetPointer(&str1, "hello"), HC_TRUE);
+    EXPECT_EQ(StringSetPointer(&str2, "world"), HC_TRUE);
 
     vec.pushBack(&vec, &str1);
     vec.pushBack(&vec, &str2);
@@ -57,13 +57,17 @@ HWTEST_F(HcStringVectorTest, DestroyStrVectorTest001, TestSize.Level0)
 
 HWTEST_F(HcStringVectorTest, DestroyStrVectorTest002, TestSize.Level0)
 {
-    DestroyStrVector(nullptr);
+    StringVector *vec = nullptr;
+    DestroyStrVector(vec);
+    EXPECT_EQ(vec, nullptr);
 }
 
 HWTEST_F(HcStringVectorTest, DestroyStrVectorTest003, TestSize.Level0)
 {
     StringVector vec = CreateStrVector();
+    StringVector *vecPtr = &vec;
     DestroyStrVector(&vec);
+    EXPECT_EQ(vecPtr, nullptr);
 }
 
 HWTEST_F(HcStringVectorTest, StringVectorPushBackTest001, TestSize.Level0)

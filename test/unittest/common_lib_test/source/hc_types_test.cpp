@@ -60,7 +60,9 @@ HWTEST_F(HcTypesTest, HcMallocTest003, TestSize.Level0)
 
 HWTEST_F(HcTypesTest, HcFreeTest001, TestSize.Level0)
 {
-    HcFree(nullptr);
+    void *ptr = nullptr;
+    HcFree(ptr);
+    EXPECT_EQ(ptr, nullptr);
 }
 
 HWTEST_F(HcTypesTest, HcFreeTest002, TestSize.Level0)

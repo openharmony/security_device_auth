@@ -76,7 +76,9 @@ HWTEST_F(HcTlvParserTest, GetlenTlvNodeTest002, TestSize.Level0)
 
 HWTEST_F(HcTlvParserTest, DeinitTltvNodeTest001, TestSize.Level0)
 {
-    DeinitTlvNode(nullptr);
+    TlvBase *tlvBase = nullptr;
+    DeinitTlvNode(tlvBase);
+    EXPECT_EQ(tlvBase, nullptr);
 }
 
 HWTEST_F(HcTlvParserTest, GetTagTest001, TestSize.Level0)

@@ -240,6 +240,8 @@ HWTEST_F(HcStringTest, DeleteStringTest001, TestSize.Level0)
 
 HWTEST_F(HcStringTest, DeleteStringTest002, TestSize.Level0)
 {
-    DeleteString(nullptr);
+    HcString *str = nullptr;
+    DeleteString(str);
+    EXPECT_EQ(str, nullptr);
 }
 }

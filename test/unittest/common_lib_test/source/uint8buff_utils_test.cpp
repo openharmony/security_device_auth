@@ -108,13 +108,16 @@ HWTEST_F(Uint8BuffUtilsTest, FreeUint8BuffTest001, TestSize.Level0)
 
 HWTEST_F(Uint8BuffUtilsTest, FreeUint8BuffTest002, TestSize.Level0)
 {
-    FreeUint8Buff(nullptr);
+    Uint8Buff *buff = nullptr;
+    FreeUint8Buff(buff);
+    EXPECT_EQ(buff, nullptr);
 }
 
 HWTEST_F(Uint8BuffUtilsTest, FreeUint8BuffTest003, TestSize.Level0)
 {
     Uint8Buff buff = { nullptr, 0 };
     FreeUint8Buff(&buff);
+    EXPECT_EQ(buff.val, nullptr);
 }
 
 HWTEST_F(Uint8BuffUtilsTest, ClearFreeUint8BuffTest001, TestSize.Level0)
@@ -131,13 +134,16 @@ HWTEST_F(Uint8BuffUtilsTest, ClearFreeUint8BuffTest001, TestSize.Level0)
 
 HWTEST_F(Uint8BuffUtilsTest, ClearFreeUint8BuffTest002, TestSize.Level0)
 {
-    ClearFreeUint8Buff(nullptr);
+    Uint8Buff *buff = nullptr;
+    ClearFreeUint8Buff(buff);
+    EXPECT_EQ(buff, nullptr);
 }
 
 HWTEST_F(Uint8BuffUtilsTest, ClearFreeUint8BuffTest003, TestSize.Level0)
 {
     Uint8Buff buff = { nullptr, 0 };
     ClearFreeUint8Buff(&buff);
+    EXPECT_EQ(buff.val, nullptr);
 }
 
 HWTEST_F(Uint8BuffUtilsTest, IsUint8BuffValidTest001, TestSize.Level0)
