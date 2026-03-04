@@ -109,7 +109,7 @@ int32_t ToUpperCase(const char *oriStr, char **desStr)
         return CLIB_ERR_BAD_ALLOC;
     }
     for (uint32_t i = 0; i < len; i++) {
-        if ((oriStr[i] >= 'a') && (oriStr[i] <= 'f')) {
+        if ((oriStr[i] >= 'a') && (oriStr[i] <= 'z')) {
             (*desStr)[i] = oriStr[i] - ASCII_CASE_DIFFERENCE_VALUE;
         } else {
             (*desStr)[i] = oriStr[i];

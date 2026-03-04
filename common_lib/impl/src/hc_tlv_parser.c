@@ -68,6 +68,9 @@ int32_t ParseTlvNode(TlvBase *tlv, HcParcel *parcel, HcBool strict)
 
 int32_t GetlenTlvNode(TlvBase *tlv)
 {
+    if (tlv == NULL || tlv->getlen == NULL) {
+        return TLV_FAIL;
+    }
     int32_t bodyLen = tlv->getlen(tlv);
     if (bodyLen < 0 || bodyLen > MAX_TLV_LENGTH) {
         return TLV_FAIL;
