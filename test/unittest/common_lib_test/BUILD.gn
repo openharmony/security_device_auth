@@ -36,12 +36,14 @@ ohos_unittest("AiCommonLibTest") {
     "${common_lib_path}/impl/src/hc_string_vector.c",
     "${common_lib_path}/impl/src/hc_time.c",
     "${common_lib_path}/impl/src/hc_tlv_parser.c",
+    "${common_lib_path}/impl/src/hc_mutex.c",
     "${common_lib_path}/impl/src/json_utils.c",
     "${common_lib_path}/impl/src/string_util.c",
     "${common_lib_path}/impl/src/uint8buff_utils.c",
     "${os_adapter_path}/impl/src/hc_log.c",
     "${os_adapter_path}/impl/src/linux/hc_file.c",
     "${os_adapter_path}/impl/src/hc_err_trace.c",
+    "source/hc_mutex_mock.c",
   ]
 
   sources += [
@@ -50,6 +52,7 @@ ohos_unittest("AiCommonLibTest") {
     "source/hc_parcel_test.cpp",
     "source/hc_string_test.cpp",
     "source/hc_string_vector_test.cpp",
+    "source/hc_mutex_test.cpp",
     "source/uint8buff_utils_test.cpp",
     "source/string_util_test.cpp",
     "source/json_utils_test.cpp",
@@ -58,6 +61,13 @@ ohos_unittest("AiCommonLibTest") {
 
   defines = [
     "HILOG_ENABLE",
+  ]
+
+  ldflags = [
+    "-Wl,--wrap=pthread_mutex_init",
+    "-Wl,--wrap=pthread_mutex_lock",
+    "-Wl,--wrap=pthread_mutex_unlock",
+    "-Wl,--wrap=pthread_mutex_destroy",
   ]
 
   external_deps = [
