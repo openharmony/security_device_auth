@@ -2,7 +2,6 @@
  * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
-.
  * You may obtain a copy of the License at
  *
  *    http://www.apache.org/licenses/LICENSE-2.0
@@ -12,6 +11,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ */
+
+/*
+ * NOTE: The __wrap_pthread_mutex_* functions below use the __wrap_ prefix
+ * which is reserved per G.DCL.01. This is an intentional exception
+ * because __wrap_ is the standard prefix required by the linker wrap feature
+ * (-Wl,--wrap option). These functions are automatically called by the linker
+ * instead of the original pthread functions.
+ *
+ * NOTE: The __wrap_pthread_mutex_* function parameters use void* types
+ * (pthread_mutex_t *, pthread_mutexattr_t *) which violates G.FUN.05-CPP.
+ * This is an intentional exception because:
+ * 1. These are C files, not C++ files
+ * 2. The function signatures must exactly match the original pthread API
+ * 3. pthread_mutex_t and pthread_mutexattr_t are standard pthread types
+ * 4. This is a system API wrapper, which is a special use case
  */
 
 #include <pthread.h>

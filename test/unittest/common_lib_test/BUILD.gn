@@ -27,6 +27,7 @@ ohos_unittest("AiCommonLibTest") {
   include_dirs += [
     "${common_lib_path}/interfaces",
     "${os_adapter_path}/impl/src",
+    "include",
   ]
 
   sources = [

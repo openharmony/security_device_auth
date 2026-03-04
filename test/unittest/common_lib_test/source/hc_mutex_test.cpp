@@ -56,20 +56,7 @@ void *ThreadReentrantLockRoutine(void *arg)
 }
 
 class HcMutexTest : public testing::Test {
-public:
-    static void SetUpTestCase();
-    static void TearDownTestCase();
-    void SetUp();
-    void TearDown();
 };
-
-void HcMutexTest::SetUpTestCase() {}
-
-void HcMutexTest::TearDownTestCase() {}
-
-void HcMutexTest::SetUp() {}
-
-void HcMutexTest::TearDown() {}
 
 HWTEST_F(HcMutexTest, InitHcMutexTest001, TestSize.Level0)
 {
