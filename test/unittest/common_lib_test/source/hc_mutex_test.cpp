@@ -96,7 +96,9 @@ HWTEST_F(HcMutexTest, DestroyHcMutexTest001, TestSize.Level0)
 
 HWTEST_F(HcMutexTest, DestroyHcMutexTest002, TestSize.Level0)
 {
-    DestroyHcMutex(nullptr);
+    HcMutex *mutex = nullptr;
+    DestroyHcMutex(mutex);
+    EXPECT_EQ(mutex, nullptr);
 }
 
 HWTEST_F(HcMutexTest, LockHcMutexTest001, TestSize.Level0)
@@ -122,11 +124,14 @@ HWTEST_F(HcMutexTest, UnlockHcMutexTest001, TestSize.Level0)
     LockHcMutex(&mutex);
     UnlockHcMutex(&mutex);
     DestroyHcMutex(&mutex);
+    EXPECT_EQ(mutex.count, 0);
 }
 
 HWTEST_F(HcMutexTest, UnlockHcMutexTest002, TestSize.Level0)
 {
-    UnlockHcMutex(nullptr);
+    HcMutex *mutex = nullptr;
+    UnlockHcMutex(mutex);
+    EXPECT_EQ(mutex, nullptr);
 }
 
 HWTEST_F(HcMutexTest, ReentrantLockTest001, TestSize.Level0)
@@ -180,6 +185,7 @@ HWTEST_F(HcMutexTest, NonReentrantLockTest001, TestSize.Level0)
     UnlockHcMutex(&mutex);
     
     DestroyHcMutex(&mutex);
+    EXPECT_EQ(mutex.count, 0);
 }
 
 HWTEST_F(HcMutexTest, MultiThreadTest001, TestSize.Level0)
@@ -301,6 +307,7 @@ HWTEST_F(HcMutexTest, InitDestroyCycleTest001, TestSize.Level0)
         LockHcMutex(&mutex);
         UnlockHcMutex(&mutex);
         DestroyHcMutex(&mutex);
+        EXPECT_EQ(mutex.count, 0);
     }
 }
 
@@ -315,6 +322,7 @@ HWTEST_F(HcMutexTest, InitDestroyCycleTest002, TestSize.Level0)
         UnlockHcMutex(&mutex);
         UnlockHcMutex(&mutex);
         DestroyHcMutex(&mutex);
+        EXPECT_EQ(mutex.count, 0);
     }
 }
 
@@ -331,6 +339,7 @@ HWTEST_F(HcMutexTest, UnlockHcMutexTest003, TestSize.Level0)
     HcMutex mutex;
     mutex.unlock = nullptr;
     UnlockHcMutex(&mutex);
+    EXPECT_EQ(mutex.unlock, nullptr);
 }
 
 HWTEST_F(HcMutexTest, PthreadMutexInitFailTest001, TestSize.Level0)
