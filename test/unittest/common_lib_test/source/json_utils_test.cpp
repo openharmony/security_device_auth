@@ -442,7 +442,7 @@ HWTEST_F(JsonUtilsTest, ClearSensitiveStringInJsonTest001, TestSize.Level0)
     CJson *json = CreateJsonFromString(TEST_JSON_STR);
     EXPECT_NE(json, nullptr);
     const char *name = GetStringFromJson(json, "name");
-    EXPECT_EQ(name, nullptr); 
+    EXPECT_EQ(name, nullptr);
     ClearSensitiveStringInJson(json, "name");
     FreeJson(json);
 }
