@@ -365,6 +365,10 @@ HWTEST_F(JsonUtilsTest, AddIntToJsonTest001, TestSize.Level0)
     EXPECT_NE(json, nullptr);
     int32_t ret = AddIntToJson(json, "value", 123);
     EXPECT_EQ(ret, CLIB_SUCCESS);
+    int32_t value = 0;
+    ret = GetIntFromJson(json, "value", &value);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(value, 123);
     FreeJson(json);
 }
 
@@ -385,6 +389,10 @@ HWTEST_F(JsonUtilsTest, AddBoolToJsonTest001, TestSize.Level0)
     EXPECT_NE(json, nullptr);
     int32_t ret = AddBoolToJson(json, "flag", true);
     EXPECT_EQ(ret, CLIB_SUCCESS);
+    bool flag = false;
+    ret = GetBoolFromJson(json, "flag", &flag);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(flag, true);
     FreeJson(json);
 }
 
@@ -406,6 +414,12 @@ HWTEST_F(JsonUtilsTest, AddByteToJsonTest001, TestSize.Level0)
     uint8_t data[] = {0x01, 0x02, 0x03};
     int32_t ret = AddByteToJson(json, "data", data, sizeof(data));
     EXPECT_EQ(ret, CLIB_SUCCESS);
+    uint8_t outData[sizeof(data)] = {0};
+    uint32_t outLen = sizeof(outData);
+    ret = GetByteFromJson(json, "data", outData, outLen);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(outLen, sizeof(data));
+    EXPECT_EQ(memcmp(data, outData, sizeof(data)), 0);
     FreeJson(json);
 }
 
@@ -427,6 +441,8 @@ HWTEST_F(JsonUtilsTest, ClearSensitiveStringInJsonTest001, TestSize.Level0)
 {
     CJson *json = CreateJsonFromString(TEST_JSON_STR);
     EXPECT_NE(json, nullptr);
+    const char *name = GetStringFromJson(json, "name");
+    EXPECT_EQ(name, nullptr); 
     ClearSensitiveStringInJson(json, "name");
     FreeJson(json);
 }

@@ -67,7 +67,7 @@ HWTEST_F(HcStringVectorTest, DestroyStrVectorTest003, TestSize.Level0)
     StringVector vec = CreateStrVector();
     StringVector *vecPtr = &vec;
     DestroyStrVector(&vec);
-    EXPECT_EQ(vecPtr, nullptr);
+    EXPECT_EQ(vecPtr->size(vecPtr), 0);
 }
 
 HWTEST_F(HcStringVectorTest, StringVectorPushBackTest001, TestSize.Level0)

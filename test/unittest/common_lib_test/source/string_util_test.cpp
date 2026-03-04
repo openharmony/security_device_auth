@@ -51,7 +51,7 @@ HWTEST_F(StringUtilTest, ToUpperCaseTest002, TestSize.Level0)
     int32_t ret = ToUpperCase(mixedStr, &upperStr);
     EXPECT_EQ(ret, CLIB_SUCCESS);
     EXPECT_NE(upperStr, nullptr);
-    const char *expected = "HELLO WORL";
+    const char *expected = "HELLO WORLD";
     for (uint32_t i = 0; i < HcStrlen(expected); i++) {
         EXPECT_EQ(upperStr[i], expected[i]);
     }

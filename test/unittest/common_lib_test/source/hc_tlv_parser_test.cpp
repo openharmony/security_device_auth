@@ -74,7 +74,7 @@ HWTEST_F(HcTlvParserTest, GetlenTlvNodeTest002, TestSize.Level0)
     EXPECT_EQ(ret, TLV_FAIL);
 }
 
-HWTEST_F(HcTlvParserTest, DeinitTltvNodeTest001, TestSize.Level0)
+HWTEST_F(HcTlvParserTest, DeinitTlvNodeTest001, TestSize.Level0)
 {
     TlvBase *tlvBase = nullptr;
     DeinitTlvNode(tlvBase);
