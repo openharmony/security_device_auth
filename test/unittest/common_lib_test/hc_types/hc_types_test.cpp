@@ -131,4 +131,10 @@ HWTEST_F(HcTypesTest, HcStrlenTest008, TestSize.Level0)
     uint32_t len = HcStrlen(strWithSpecialChars);
     EXPECT_EQ(len, 22);
 }
+
+HWTEST_F(HcTypesTest, HcMallocTest004, TestSize.Level0)
+{
+    void *ptr = HcMalloc(UINT32_MAX, TEST_MALLOC_VAL);
+    EXPECT_EQ(ptr, nullptr);
+}
 }
