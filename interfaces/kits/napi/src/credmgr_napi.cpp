@@ -407,7 +407,7 @@ extern "C" __attribute__((constructor)) void RegisterModule(void)
         .nm_flags = 0,
         .nm_filename = nullptr,
         .nm_register_func = ModuleExport,
-        .nm_modname = "security.deviceauth",
+        .nm_modname = "security.deviceAuthentication",
         .nm_priv = nullptr,
         .reserved = { nullptr },
     };

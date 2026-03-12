@@ -34,6 +34,6 @@ group("deviceauth_build") {
 
 group("deviceauth_napi_build") {
   if (os_level == "standard") {
-    deps = [ "interfaces/kits/napi:deviceauth_napi" ]
+    deps = [ "interfaces/kits/napi:deviceauthentication" ]
   }
 }
