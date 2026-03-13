@@ -18,6 +18,7 @@
 #include "hichain.h"
 #include "distribution.h"
 #include "securec.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 
 namespace OHOS {
@@ -83,6 +84,7 @@ bool AuthenticatePeerFuzz(const uint8_t* data, size_t size)
     if ((data == nullptr) || (size < sizeof(int32_t))) {
         return false;
     }
+    FuzzedDataProvider provider(data, size);
     int ret;
     hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
 
@@ -94,11 +96,15 @@ bool AuthenticatePeerFuzz(const uint8_t* data, size_t size)
     if (memset_s(&peerId, sizeof(struct hc_auth_id), 0, sizeof(struct hc_auth_id)) != EOK) {
         return false;
     }
-    selfId.length = size > HC_AUTH_ID_BUFF_LEN ? HC_AUTH_ID_BUFF_LEN : size;
+    selfId.length = provider.ConsumeIntegral<int32_t>() > HC_AUTH_ID_BUFF_LEN
+        ? HC_AUTH_ID_BUFF_LEN
+        : provider.ConsumeIntegral<int32_t>();
     if (memcpy_s(selfId.auth_id, HC_AUTH_ID_BUFF_LEN, data, selfId.length) != EOK) {
         return false;
     }
-    peerId.length = size > HC_AUTH_ID_BUFF_LEN ? HC_AUTH_ID_BUFF_LEN : size;
+    peerId.length = provider.ConsumeIntegral<int32_t>() > HC_AUTH_ID_BUFF_LEN
+        ? HC_AUTH_ID_BUFF_LEN
+        : provider.ConsumeIntegral<int32_t>();
     if (memcpy_s(peerId.auth_id, HC_AUTH_ID_BUFF_LEN, data, peerId.length) != EOK) {
         return false;
     }
