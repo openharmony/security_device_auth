@@ -18,6 +18,7 @@
 #include "hichain.h"
 #include "distribution.h"
 #include "securec.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 namespace OHOS {
     const unsigned int MAX_LIST_NUM = 20;
@@ -81,6 +82,7 @@ namespace OHOS {
         if ((data == nullptr) || (size < sizeof(uint8_t))) {
             return false;
         }
+        FuzzedDataProvider provider(data, size);
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
         struct hc_auth_id *peerAuthidList = new hc_auth_id[MAX_LIST_NUM];
         if (peerAuthidList == nullptr) {
@@ -96,7 +98,9 @@ namespace OHOS {
         if (memset_s(&authId, sizeof(authId), 0, sizeof(authId)) != EOK) {
             return false;
         }
-        authId.length = size > HC_AUTH_ID_BUFF_LEN ? HC_AUTH_ID_BUFF_LEN : size;
+        authId.length = provider.ConsumeIntegral<int32_t>() > HC_AUTH_ID_BUFF_LEN
+            ? HC_AUTH_ID_BUFF_LEN
+            : provider.ConsumeIntegral<int32_t>();
         if (memcpy_s(authId.auth_id, HC_AUTH_ID_BUFF_LEN, data, authId.length) != EOK) {
             return false;
         }
