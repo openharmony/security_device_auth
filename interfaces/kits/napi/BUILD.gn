@@ -15,7 +15,7 @@ import("//base/security/device_auth/deps_adapter/deviceauth_hals.gni")
 import("//base/security/device_auth/services/deviceauth.gni")
 import("//build/ohos.gni")
 
-ohos_shared_library("deviceauth_napi") {
+ohos_shared_library("deviceauthentication") {
   branch_protector_ret = "pac_ret"
 
   sanitize = {
@@ -46,7 +46,7 @@ ohos_shared_library("deviceauth_napi") {
     "napi:ace_napi",
   ]
 
-  relative_install_dir = "module/security"
+  relative_install_dir = "module/hms/security"
   subsystem_name = "security"
   part_name = "device_auth"
 }
