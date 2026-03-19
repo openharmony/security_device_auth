@@ -772,7 +772,7 @@ void DelIpcCallBackByReqId(int64_t reqId, int32_t type, bool withLock)
     return;
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnTransmitStub(CallbackParams params)
+static void OnTransmitStub(CallbackParams params)
 {
     int64_t requestId = 0;
     uint8_t *data = nullptr;
@@ -800,7 +800,7 @@ __attribute__((no_sanitize("cfi"))) static void OnTransmitStub(CallbackParams pa
     return;
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnSessKeyStub(CallbackParams params)
+static void OnSessKeyStub(CallbackParams params)
 {
     int64_t requestId = 0;
     uint8_t *keyData = nullptr;
@@ -826,7 +826,7 @@ __attribute__((no_sanitize("cfi"))) static void OnSessKeyStub(CallbackParams par
     return;
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnFinishStub(CallbackParams params)
+static void OnFinishStub(CallbackParams params)
 {
     int64_t requestId = 0;
     int32_t opCode = 0;
@@ -857,7 +857,7 @@ __attribute__((no_sanitize("cfi"))) static void OnFinishStub(CallbackParams para
     return;
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnErrorStub(CallbackParams params)
+static void OnErrorStub(CallbackParams params)
 {
     int64_t requestId = 0;
     int32_t opCode = 0;
@@ -913,7 +913,7 @@ static int32_t GetSdkCallBackByReqParams(int64_t callbackId, char *reqParams, in
         sizeof(DeviceAuthCallback));
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnRequestStub(CallbackParams params)
+static void OnRequestStub(CallbackParams params)
 {
     int64_t requestId = 0;
     int32_t opCode = 0;
@@ -953,7 +953,7 @@ __attribute__((no_sanitize("cfi"))) static void OnRequestStub(CallbackParams par
     return;
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnGroupCreatedStub(CallbackParams params)
+static void OnGroupCreatedStub(CallbackParams params)
 {
     const char *groupInfo = nullptr;
     const char *appId = nullptr;
@@ -976,7 +976,7 @@ __attribute__((no_sanitize("cfi"))) static void OnGroupCreatedStub(CallbackParam
     return;
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnGroupDeletedStub(CallbackParams params)
+static void OnGroupDeletedStub(CallbackParams params)
 {
     const char *groupInfo = nullptr;
     const char *appId = nullptr;
@@ -998,7 +998,7 @@ __attribute__((no_sanitize("cfi"))) static void OnGroupDeletedStub(CallbackParam
     return;
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnDevBoundStub(CallbackParams params)
+static void OnDevBoundStub(CallbackParams params)
 {
     const char *groupInfo = nullptr;
     const char *appId = nullptr;
@@ -1023,7 +1023,7 @@ __attribute__((no_sanitize("cfi"))) static void OnDevBoundStub(CallbackParams pa
     return;
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnDevUnboundStub(CallbackParams params)
+static void OnDevUnboundStub(CallbackParams params)
 {
     const char *groupInfo = nullptr;
     const char *appId = nullptr;
@@ -1048,7 +1048,7 @@ __attribute__((no_sanitize("cfi"))) static void OnDevUnboundStub(CallbackParams 
     return;
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnDevUnTrustStub(CallbackParams params)
+static void OnDevUnTrustStub(CallbackParams params)
 {
     const char *appId = nullptr;
     DataChangeListener callback;
@@ -1070,7 +1070,7 @@ __attribute__((no_sanitize("cfi"))) static void OnDevUnTrustStub(CallbackParams 
     return;
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnDelLastGroupStub(CallbackParams params)
+static void OnDelLastGroupStub(CallbackParams params)
 {
     const char *appId = nullptr;
     DataChangeListener callback;
@@ -1096,7 +1096,7 @@ __attribute__((no_sanitize("cfi"))) static void OnDelLastGroupStub(CallbackParam
     return;
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnTrustDevNumChangedStub(CallbackParams params)
+static void OnTrustDevNumChangedStub(CallbackParams params)
 {
     const char *appId = nullptr;
     DataChangeListener callback;
@@ -1119,7 +1119,7 @@ __attribute__((no_sanitize("cfi"))) static void OnTrustDevNumChangedStub(Callbac
     return;
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnCredAddStub(CallbackParams params)
+static void OnCredAddStub(CallbackParams params)
 {
     char *credId = nullptr;
     const char *appId = nullptr;
@@ -1144,7 +1144,7 @@ __attribute__((no_sanitize("cfi"))) static void OnCredAddStub(CallbackParams par
     return;
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnCredDeleteStub(CallbackParams params)
+static void OnCredDeleteStub(CallbackParams params)
 {
     char *credId = nullptr;
     const char *appId = nullptr;
@@ -1169,7 +1169,7 @@ __attribute__((no_sanitize("cfi"))) static void OnCredDeleteStub(CallbackParams 
     return;
 }
 
-__attribute__((no_sanitize("cfi"))) static void OnCredUpdateStub(CallbackParams params)
+static void OnCredUpdateStub(CallbackParams params)
 {
     char *credId = nullptr;
     const char *appId = nullptr;

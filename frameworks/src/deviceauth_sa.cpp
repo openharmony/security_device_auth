@@ -114,7 +114,7 @@ DeviceAuthAbility::~DeviceAuthAbility()
     LOGI("~DeviceAuthAbility");
 }
 
-__attribute__((no_sanitize("cfi"))) static uint32_t SaSetIpcCallMap(
+static uint32_t SaSetIpcCallMap(
     uintptr_t ipcInstance, IpcServiceCall method, int32_t methodId)
 {
     if ((method == nullptr) || (methodId <= 0)) {
