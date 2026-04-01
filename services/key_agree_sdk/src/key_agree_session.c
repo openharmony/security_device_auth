@@ -769,7 +769,7 @@ static int32_t InitSpekeSession(SpekeSession *spekeSession, KeyAgreeProtocol pro
 
 static KeyAgreeProtocol GetKegAgreeProtocolType(VersionStruct *curVersion)
 {
-    for (uint32_t i = 0; i < sizeof(g_protocolAlgorithm); i++) {
+    for (uint32_t i = 0; i < sizeof(g_protocolAlgorithm) / sizeof(g_protocolAlgorithm[0]); i++) {
         if ((curVersion->second & g_protocolAlgorithm[i]) == g_protocolAlgorithm[i]) {
             curVersion->second = g_protocolAlgorithm[i];
             return g_keyAgreeProtocol[i];
