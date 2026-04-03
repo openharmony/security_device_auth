@@ -377,6 +377,11 @@ int32_t ExtractAndVerifyPayload(IsoAuthParams *params, const CJson *in)
         HcFree(combineString);
         return HC_ERR_MEMORY_COPY;
     }
+    if (params->isoBaseParams.authIdPeer.length < len) {
+        LOGE("Invalid length!");
+        HcFree(combineString);
+        return HC_ERR_INVALID_LEN;
+    }
     if (memcmp(combineString, params->isoBaseParams.authIdPeer.val, len) != 0) {
         LOGE("Payload is not equal.");
         HcFree(combineString);
