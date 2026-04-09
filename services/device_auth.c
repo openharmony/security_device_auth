@@ -105,26 +105,21 @@ static int32_t AddOriginDataForPlugin(CJson *receivedMsg, const uint8_t *data, u
 static int32_t BuildClientAuthContext(int32_t osAccountId, int64_t requestId, const char *appId, CJson *context,
     char **returnPeerUdid)
 {
-    const char *peerUdid = GetPeerUdidFromJson(osAccountId, context);
+    char *peerUdid = GetPeerUdidFromJson(osAccountId, context);
     if (peerUdid != NULL) {
         (void)DeepCopyString(peerUdid, returnPeerUdid);
-        char *deviceId = NULL;
-        if (DeepCopyString(peerUdid, &deviceId) != HC_SUCCESS) {
-            LOGE("Failed to copy peerUdid!");
-            return HC_ERR_ALLOC_MEMORY;
-        }
-        if (AddStringToJson(context, FIELD_PEER_UDID, deviceId) != HC_SUCCESS) {
+        if (AddStringToJson(context, FIELD_PEER_UDID, peerUdid) != HC_SUCCESS) {
             LOGE("add peerUdid to client auth context fail.");
-            HcFree(deviceId);
+            HcFree(peerUdid);
             return HC_ERR_JSON_ADD;
         }
-        if (AddStringToJson(context, FIELD_PEER_CONN_DEVICE_ID, deviceId) != HC_SUCCESS) {
+        if (AddStringToJson(context, FIELD_PEER_CONN_DEVICE_ID, peerUdid) != HC_SUCCESS) {
             LOGE("add peerConnDeviceId to client auth context fail.");
-            HcFree(deviceId);
+            HcFree(peerUdid);
             return HC_ERR_JSON_ADD;
         }
-        PRINT_SENSITIVE_DATA("PeerUdid", deviceId);
-        HcFree(deviceId);
+        PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
+        HcFree(peerUdid);
     }
     if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
         LOGE("add isBind to context fail.");
@@ -273,16 +268,19 @@ static int32_t BuildServerAuthContext(int64_t requestId, int32_t opCode, const c
     }
     int32_t osAccountId = ANY_OS_ACCOUNT;
     (void)GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId);
-    const char *peerUdid = GetPeerUdidFromJson(osAccountId, context);
+    char *peerUdid = GetPeerUdidFromJson(osAccountId, context);
     if (peerUdid == NULL) {
+        LOGE("Failed to get peer udid from json!");
         return HC_ERR_JSON_GET;
     }
     (void)DeepCopyString(peerUdid, returnPeerUdid);
     PRINT_SENSITIVE_DATA("PeerUdid", peerUdid);
     if (AddDeviceIdToJson(context, peerUdid) != HC_SUCCESS) {
         LOGE("add deviceId to server auth context failed.");
+        HcFree(peerUdid);
         return HC_ERR_JSON_ADD;
     }
+    HcFree(peerUdid);
     if (AddBoolToJson(context, FIELD_IS_BIND, false) != HC_SUCCESS) {
         LOGE("add isBind to server auth context failed.");
         return HC_ERR_JSON_ADD;

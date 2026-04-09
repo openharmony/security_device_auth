@@ -110,7 +110,7 @@ int32_t AddDevInfoToContextByDb(const char *groupId, CJson *context);
 
 int32_t AddGroupInfoToContextByInput(const CJson *receivedMsg, CJson *context);
 int32_t AddDevInfoToContextByInput(CJson *context);
-const char *GetPeerUdidFromJson(int32_t osAccountId, const CJson *in);
+char *GetPeerUdidFromJson(int32_t osAccountId, const CJson *in);
 
 #ifdef __cplusplus
 }

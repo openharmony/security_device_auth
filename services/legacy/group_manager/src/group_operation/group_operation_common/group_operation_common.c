@@ -1292,7 +1292,7 @@ static int32_t IsDeviceIdHashMatch(const char *udid, const char *subUdidHash)
     return HC_ERROR;
 }
 
-static const char *GetUdidByGroup(int32_t osAccountId, const char *groupId, const char *deviceIdHash)
+static char *GetUdidByGroup(int32_t osAccountId, const char *groupId, const char *deviceIdHash)
 {
     uint32_t index;
     TrustedDeviceEntry **deviceEntry = NULL;
@@ -1307,8 +1307,12 @@ static const char *GetUdidByGroup(int32_t osAccountId, const char *groupId, cons
     FOR_EACH_HC_VECTOR(deviceEntryVec, index, deviceEntry) {
         const char *udid = StringGet(&(*deviceEntry)->udid);
         if (IsDeviceIdHashMatch(udid, deviceIdHash) == HC_SUCCESS) {
+            char *retUdid = NULL;
+            if (DeepCopyString(udid, &retUdid) != HC_SUCCESS) {
+                LOGE("Failed to copy udid!");
+            }
             ClearDeviceEntryVec(&deviceEntryVec);
-            return udid;
+            return retUdid;
         }
         continue;
     }
@@ -1316,7 +1320,7 @@ static const char *GetUdidByGroup(int32_t osAccountId, const char *groupId, cons
     return NULL;
 }
 
-static const char *GetDeviceIdByUdidHash(int32_t osAccountId, const char *deviceIdHash)
+static char *GetDeviceIdByUdidHash(int32_t osAccountId, const char *deviceIdHash)
 {
     if (deviceIdHash == NULL) {
         LOGE("deviceIdHash is null");
@@ -1338,7 +1342,7 @@ static const char *GetDeviceIdByUdidHash(int32_t osAccountId, const char *device
         if (groupId == NULL) {
             continue;
         }
-        const char *udid = GetUdidByGroup(osAccountId, groupId, deviceIdHash);
+        char *udid = GetUdidByGroup(osAccountId, groupId, deviceIdHash);
         if (udid != NULL) {
             ClearGroupEntryVec(&groupEntryVec);
             return udid;
@@ -1348,7 +1352,7 @@ static const char *GetDeviceIdByUdidHash(int32_t osAccountId, const char *device
     return NULL;
 }
 
-const char *GetPeerUdidFromJson(int32_t osAccountId, const CJson *in)
+char *GetPeerUdidFromJson(int32_t osAccountId, const CJson *in)
 {
     const char *peerConnDeviceId = GetStringFromJson(in, FIELD_PEER_CONN_DEVICE_ID);
     if (peerConnDeviceId == NULL) {
@@ -1358,8 +1362,11 @@ const char *GetPeerUdidFromJson(int32_t osAccountId, const CJson *in)
     bool isUdidHash = false;
     (void)GetBoolFromJson(in, FIELD_IS_UDID_HASH, &isUdidHash);
     if (isUdidHash) {
-        const char *deviceId = GetDeviceIdByUdidHash(osAccountId, peerConnDeviceId);
-        return (deviceId == NULL ? peerConnDeviceId : deviceId);
+        return GetDeviceIdByUdidHash(osAccountId, peerConnDeviceId);
     }
-    return peerConnDeviceId;
+    char *retUdid = NULL;
+    if (DeepCopyString(peerConnDeviceId, &retUdid) != HC_SUCCESS) {
+        LOGE("Failed to copy udid!");
+    }
+    return retUdid;
 }
