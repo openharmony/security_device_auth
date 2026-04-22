@@ -120,7 +120,10 @@ ohos_unittest("DeviceAuthTest") {
     "huks:libhukssdk",
   ]
   if (has_os_account_part) {
-    external_deps += [ "os_account:os_account_innerkits" ]
+    external_deps += [
+      "ipc:ipc_single",
+      "os_account:os_account_innerkits",
+    ]
   }
 }
 
@@ -150,7 +153,10 @@ ohos_unittest("HuksAdapterTest") {
     "huks:libhukssdk",
   ]
   if (has_os_account_part) {
-    external_deps += [ "os_account:os_account_innerkits" ]
+    external_deps += [
+      "ipc:ipc_single",
+      "os_account:os_account_innerkits",
+    ]
   }
 }
 
@@ -185,6 +191,9 @@ ohos_unittest("PakeTest") {
   ]
 
   if (has_os_account_part) {
-    external_deps += [ "os_account:os_account_innerkits" ]
+    external_deps += [
+      "ipc:ipc_single",
+      "os_account:os_account_innerkits",
+    ]
   }
 }
