@@ -884,32 +884,6 @@ int32_t CheckGenerateKeyPairParams(const KeyParams *keyParams, const ExtraInfo *
     return HAL_SUCCESS;
 }
 
-int32_t ConstructGenerateKeyPairParams(struct HksParamSet **paramSet, Algorithm algo, uint32_t keyLen)
-{
-    struct HksParam keyParam[] = {
-        {
-            .tag = HKS_TAG_KEY_STORAGE_FLAG,
-            .uint32Param = HKS_STORAGE_TEMP
-        }, {
-            .tag = HKS_TAG_ALGORITHM,
-            .uint32Param = g_algToHksAlgorithm[algo]
-        }, {
-            .tag = HKS_TAG_KEY_SIZE,
-            .uint32Param = keyLen * BITS_PER_BYTE
-        }, {
-            .tag = HKS_TAG_IS_KEY_ALIAS,
-            .uint32Param = false
-        }
-    };
-
-    int32_t res = ConstructParamSet(paramSet, keyParam, CAL_ARRAY_SIZE(keyParam));
-    if (res != HAL_SUCCESS) {
-        LOGE("Construct param set failed, res = %" LOG_PUB "d", res);
-        return res;
-    }
-    return res;
-}
-
 int32_t ConstructExportParams(bool isDeStorage, int32_t osAccountId, struct HksParamSet **paramSet)
 {
     uint32_t len = GetParamLen(isDeStorage, 0);

@@ -1137,21 +1137,6 @@ static void DevAuthInterfaceTestCase027()
     Uint8Buff bBuff = { 0 };
     (void)loader->bigNumCompare(&aBuff, &bBuff);
     (void)loader->sign(nullptr, nullptr, ED25519, nullptr);
-    (void)loader->generateKeyPair(ED25519, nullptr, nullptr);
-    Uint8Buff outPrivKey = { 0 };
-    (void)loader->generateKeyPair(ED25519, &outPrivKey, nullptr);
-    uint8_t outPrivKeyVal[TEST_KEY_LEN_3] = { 0 };
-    outPrivKey.val = outPrivKeyVal;
-    (void)loader->generateKeyPair(ED25519, &outPrivKey, nullptr);
-    outPrivKey.length = TEST_KEY_LEN_3;
-    (void)loader->generateKeyPair(ED25519, &outPrivKey, nullptr);
-    Uint8Buff outPubKey = { 0 };
-    (void)loader->generateKeyPair(ED25519, &outPrivKey, &outPubKey);
-    uint8_t outPubKeyVal[TEST_KEY_LEN_3] = { 0 };
-    outPubKey.val = outPubKeyVal;
-    (void)loader->generateKeyPair(ED25519, &outPrivKey, &outPubKey);
-    outPubKey.length = TEST_KEY_LEN_4;
-    (void)loader->generateKeyPair(ED25519, &outPrivKey, &outPubKey);
 }
 
 static void DevAuthInterfaceTestCase028()

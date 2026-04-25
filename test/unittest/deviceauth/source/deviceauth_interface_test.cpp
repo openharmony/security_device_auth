@@ -1428,28 +1428,6 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest027, TestSize.Level0)
     ASSERT_EQ(res, HC_SUCCESS);
     res = loader->sign(nullptr, nullptr, ED25519, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
-    res = loader->generateKeyPair(ED25519, nullptr, nullptr);
-    ASSERT_NE(res, HC_SUCCESS);
-    Uint8Buff outPrivKey = { 0 };
-    res = loader->generateKeyPair(ED25519, &outPrivKey, nullptr);
-    ASSERT_NE(res, HC_SUCCESS);
-    uint8_t outPrivKeyVal[256] = { 0 };
-    outPrivKey.val = outPrivKeyVal;
-    res = loader->generateKeyPair(ED25519, &outPrivKey, nullptr);
-    ASSERT_NE(res, HC_SUCCESS);
-    outPrivKey.length = 256;
-    res = loader->generateKeyPair(ED25519, &outPrivKey, nullptr);
-    ASSERT_NE(res, HC_SUCCESS);
-    Uint8Buff outPubKey = { 0 };
-    res = loader->generateKeyPair(ED25519, &outPrivKey, &outPubKey);
-    ASSERT_NE(res, HC_SUCCESS);
-    uint8_t outPubKeyVal[256] = { 0 };
-    outPubKey.val = outPubKeyVal;
-    res = loader->generateKeyPair(ED25519, &outPrivKey, &outPubKey);
-    ASSERT_NE(res, HC_SUCCESS);
-    outPubKey.length = 128;
-    res = loader->generateKeyPair(ED25519, &outPrivKey, &outPubKey);
-    ASSERT_NE(res, HC_SUCCESS);
 }
 
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest028, TestSize.Level0)
