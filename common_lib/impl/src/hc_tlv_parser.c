@@ -56,7 +56,9 @@ int32_t ParseTlvNode(TlvBase *tlv, HcParcel *parcel, HcBool strict)
         if (GetParcelDataSize(parcel) < tlv->length) {
             return TLV_FAIL;
         }
-
+        if (tlv->parse == NULL) {
+            return TLV_FAIL;
+        }
         int ret = tlv->parse(tlv, parcel, strict);
         if (ret < 0 || ret > MAX_TLV_LENGTH) {
             return TLV_FAIL;
