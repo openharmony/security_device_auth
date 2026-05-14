@@ -433,7 +433,7 @@ int32_t GetAndValNullParam(const IpcDataInfo *ipcParams,
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
-    char *str = (*(char **)param);
+    char *str = *(reinterpret_cast<char **>(param));
     if ((str == nullptr) || (str[size - 1] != '\0')) {
         LOGE("The input parameter is not a valid string type.");
         return HC_ERR_IPC_BAD_PARAM;
