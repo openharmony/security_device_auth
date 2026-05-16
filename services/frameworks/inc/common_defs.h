@@ -144,6 +144,7 @@
 #define FIELD_LIGHT_ACCOUNT_MSG "lightAccountMsg"
 #define FIELD_PEER_ACCOUNT_RANDOM_LEN "peerRandomLen"
 #define FIELD_PEER_ACCOUNT_RANDOM_VAL "peerRandomVal"
+#define FIELD_OPEN_ID "openId"
 
 #define INVALID_MODULE_TYPE (-1)
 #define GROUP_ERR_MSG 0x8080

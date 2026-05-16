@@ -46,7 +46,7 @@ static int32_t CreateUrlStr(uint8_t credType, int32_t keyType, char **urlStr)
     return HC_SUCCESS;
 }
 
-static int32_t ConvertISProofTypeToCertType(uint32_t protocolType, IdentityProofType *returnType)
+static int32_t ConvertProofType(uint32_t protocolType, IdentityProofType *returnType)
 {
     if (protocolType == PROOF_TYPE_PSK) {
         *returnType = PRE_SHARED;
@@ -83,7 +83,30 @@ static int32_t GetProofTypeFromContext(const CJson *context, uint32_t *returnPro
     return HC_SUCCESS;
 }
 
-static int32_t ISSetISOEntity(IdentityInfo *info)
+static int32_t ISSetISOEntityForAccountUnrelated(IdentityInfo *info)
+{
+#ifdef ENABLE_P2P_AUTH_ISO
+    ProtocolEntity *entity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
+    if (entity == NULL) {
+        LOGE("Failed to alloc memory for ISO protocol entity!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    entity->protocolType = ALG_ISO;
+    entity->expandProcessCmds = 0;
+    if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity) == NULL) {
+        HcFree(entity);
+        LOGE("Failed to push protocol entity!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    return HC_SUCCESS;
+#else
+    (void)info;
+    LOGE("P2p iso not support!");
+    return HC_ERR_NOT_SUPPORT;
+#endif
+}
+
+static int32_t ISSetISOEntityForAccountRelated(IdentityInfo *info)
 {
 #ifdef ENABLE_ACCOUNT_AUTH_ISO
     ProtocolEntity *entity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
@@ -101,12 +124,43 @@ static int32_t ISSetISOEntity(IdentityInfo *info)
     return HC_SUCCESS;
 #else
     (void)info;
-    LOGE("ISO not support!");
+    LOGE("Account iso not support!");
     return HC_ERR_NOT_SUPPORT;
 #endif
 }
 
-static int32_t ISSetEcSpekeEntity(IdentityInfo *info, bool isNeedRefreshPseudonymId)
+static int32_t ISSetISOEntity(IdentityInfo *info, uint8_t credType)
+{
+    if (credType == ACCOUNT_UNRELATED) {
+        return ISSetISOEntityForAccountUnrelated(info);
+    } else {
+        return ISSetISOEntityForAccountRelated(info);
+    }
+}
+
+static int32_t ISSetEcSpekeEntityForAccountUnrelated(IdentityInfo *info)
+{
+#ifdef ENABLE_P2P_AUTH_EC_SPEKE
+    ProtocolEntity *entity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
+    if (entity == NULL) {
+        LOGE("Failed to alloc memory for ec-speke protocol entity!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    entity->protocolType = ALG_EC_SPEKE;
+    if (info->protocolVec.pushBack(&info->protocolVec, (const ProtocolEntity **)&entity) == NULL) {
+        HcFree(entity);
+        LOGE("Failed to push protocol entity!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    return HC_SUCCESS;
+#else
+    (void)info;
+    LOGE("P2p ec speke not support!");
+    return HC_ERR_NOT_SUPPORT;
+#endif
+}
+
+static int32_t ISSetEcSpekeEntityForAccountRelated(IdentityInfo *info, bool isNeedRefreshPseudonymId)
 {
 #ifdef ENABLE_ACCOUNT_AUTH_EC_SPEKE
     ProtocolEntity *entity = (ProtocolEntity *)HcMalloc(sizeof(ProtocolEntity), 0);
@@ -115,7 +169,6 @@ static int32_t ISSetEcSpekeEntity(IdentityInfo *info, bool isNeedRefreshPseudony
         return HC_ERR_ALLOC_MEMORY;
     }
     entity->protocolType = ALG_EC_SPEKE;
-    entity->expandProcessCmds = 0;
 #ifdef ENABLE_PSEUDONYM
     if (isNeedRefreshPseudonymId) {
         entity->expandProcessCmds |= CMD_MK_AGREE;
@@ -132,29 +185,18 @@ static int32_t ISSetEcSpekeEntity(IdentityInfo *info, bool isNeedRefreshPseudony
 #else
     (void)info;
     (void)isNeedRefreshPseudonymId;
-    LOGE("ec speke not support!");
+    LOGE("Account ec speke not support!");
     return HC_ERR_NOT_SUPPORT;
 #endif
 }
 
-static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *context, const CJson *credAuthInfo,
-    bool isPseudonym, IdentityInfo *info)
+static int32_t GenerateCertInfoFromToken(int32_t osAccountId, const char *userId, const char *authId,
+    CertInfo *certInfo)
 {
-    const char *authId = GetStringFromJson(credAuthInfo, FIELD_DEVICE_ID);
-    if (authId == NULL) {
-        LOGE("Failed to get auth ID!");
-        return HC_ERR_JSON_GET;
-    }
     AccountToken *token = CreateAccountToken();
     if (token == NULL) {
         LOGE("Failed to create account token!");
         return HC_ERR_ALLOC_MEMORY;
-    }
-    const char *userId = GetStringFromJson(context, FIELD_USER_ID);
-    if (userId == NULL) {
-        LOGE("Failed to get user ID!");
-        DestroyAccountToken(token);
-        return HC_ERR_JSON_GET;
     }
     int32_t res = GetAccountAuthTokenManager()->getToken(osAccountId, token, userId, authId);
     if (res != HC_SUCCESS) {
@@ -162,8 +204,56 @@ static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *context,
         DestroyAccountToken(token);
         return res;
     }
-    res = GenerateCertInfo(&token->pkInfoStr, &token->pkInfoSignature, &info->proof.certInfo);
+    res = GenerateCertInfo(&token->pkInfoStr, &token->pkInfoSignature, certInfo);
     DestroyAccountToken(token);
+    return res;
+}
+
+static int32_t GenerateCertInfoFromOpenToken(int32_t osAccountId, const char *authId, CertInfo *certInfo)
+{
+    OpenAccountToken *token = CreateOpenAccountToken();
+    if (token == NULL) {
+        LOGE("Failed to create open account token!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    int32_t res = GetAccountAuthTokenManager()->getOpenToken(osAccountId, token, authId);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get open account token!");
+        DestroyOpenAccountToken(token);
+        return res;
+    }
+    res = GenerateCertInfo(&token->pkInfoStr, &token->pkInfoSignature, certInfo);
+    DestroyOpenAccountToken(token);
+    return res;
+}
+
+static int32_t ISSetCertInfoAndEntity(const CJson *context, const CJson *credAuthInfo, IdentityInfo *info)
+{
+    int32_t osAccountId = 0;
+    if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
+    const char *authId = GetStringFromJson(credAuthInfo, FIELD_DEVICE_ID);
+    if (authId == NULL) {
+        LOGE("Failed to get auth ID!");
+        return HC_ERR_JSON_GET;
+    }
+    bool isOpenCredAuth = false;
+    if (GetBoolFromJson(context, FIELD_IS_OPEN_CRED_AUTH, &isOpenCredAuth) != HC_SUCCESS) {
+        LOGW("Failed to get isOpenCredAuth!");
+    }
+    const char *userId = GetStringFromJson(context, FIELD_USER_ID);
+    if (userId == NULL && !isOpenCredAuth) {
+        LOGE("Failed to get user ID!");
+        return HC_ERR_JSON_GET;
+    }
+    int32_t res = HC_ERROR;
+    if (isOpenCredAuth) {
+        res = GenerateCertInfoFromOpenToken(osAccountId, authId, &info->proof.certInfo);
+    } else {
+        res = GenerateCertInfoFromToken(osAccountId, userId, authId, &info->proof.certInfo);
+    }
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate cert info!");
         return res;
@@ -178,14 +268,13 @@ static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *context,
         LOGE("unsupport algorithm type!");
         return res;
     }
-    info->proof.certInfo.isPseudonym = isPseudonym;
     const char *pdidIndex = GetStringFromJson(context, FIELD_CRED_ID);
     if (pdidIndex == NULL) {
         LOGE("Failed to get cred ID!");
         return HC_ERR_JSON_GET;
     }
     bool isNeedRefreshPseudonymId = GetPseudonymInstance()->isNeedRefreshPseudonymId(osAccountId, pdidIndex);
-    return ISSetEcSpekeEntity(info, isNeedRefreshPseudonymId);
+    return ISSetEcSpekeEntityForAccountRelated(info, isNeedRefreshPseudonymId);
 }
 
 static int32_t ISSetPreShareUrlAndEntity(const CJson *credAuthInfo, IdentityInfo *info)
@@ -203,10 +292,10 @@ static int32_t ISSetPreShareUrlAndEntity(const CJson *credAuthInfo, IdentityInfo
     int32_t res = HC_ERROR;
     KeyType keyType;
     if (keyFormat == SYMMETRIC_KEY) {
-        res = ISSetISOEntity(info);
+        res = ISSetISOEntity(info, credType);
         keyType = KEY_TYPE_SYM;
     } else if (keyFormat == ASYMMETRIC_KEY || keyFormat == ASYMMETRIC_PUB_KEY) {
-        res = ISSetEcSpekeEntity(info, false);
+        res = ISSetEcSpekeEntityForAccountUnrelated(info);
         keyType = KEY_TYPE_ASYM;
     }
     if (res != HC_SUCCESS) {
@@ -228,7 +317,7 @@ static int32_t ISSetPreShareUrlAndEntity(const CJson *credAuthInfo, IdentityInfo
     return HC_SUCCESS;
 }
 
-static int32_t ISSetCertProofAndEntity(const CJson *context, bool isPseudonym, IdentityInfo *info)
+static int32_t ISSetProofAndEntity(const CJson *context, IdentityInfo *info)
 {
     CJson *credAuthInfo = GetObjFromJson(context, FIELD_CREDENTIAL_OBJ);
     if (credAuthInfo == NULL) {
@@ -242,12 +331,7 @@ static int32_t ISSetCertProofAndEntity(const CJson *context, bool isPseudonym, I
             LOGE("Failed to set preshared url");
         }
     } else if (info->proofType == CERTIFICATED) {
-        int32_t osAccountId = 0;
-        if (GetIntFromJson(context, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-            LOGE("Failed to get osAccountId!");
-            return HC_ERR_JSON_GET;
-        }
-        res = ISSetCertInfoAndEntity(osAccountId, context, credAuthInfo, isPseudonym, info);
+        res = ISSetCertInfoAndEntity(context, credAuthInfo, info);
         if (res != HC_SUCCESS) {
             LOGE("Failed to get cert info!");
         }
@@ -258,29 +342,26 @@ static int32_t ISSetCertProofAndEntity(const CJson *context, bool isPseudonym, I
     return res;
 }
 
-static int32_t ISGetIdentityInfo(const CJson *context, bool isPseudonym, IdentityInfo **returnInfo)
+static int32_t ISGetIdentityInfo(const CJson *context, IdentityInfo **returnInfo)
 {
     uint32_t proofType = 0;
     int32_t res = GetProofTypeFromContext(context, &proofType);
     if (res != HC_SUCCESS) {
         return res;
     }
-    if (isPseudonym && proofType != PROOF_TYPE_PKI) {
-        return HC_SUCCESS;
-    }
     IdentityInfo *info = CreateIdentityInfo();
     if (info == NULL) {
         LOGE("Failed to alloc memory for IdentityInfo!");
-        return HC_ERR_JSON_GET;
+        return HC_ERR_ALLOC_MEMORY;
     }
     info->IdInfoType = DEFAULT_ID_TYPE;
     do {
-        res = ConvertISProofTypeToCertType(proofType, &info->proofType);
+        res = ConvertProofType(proofType, &info->proofType);
         if (res != HC_SUCCESS) {
             LOGE("unsupport proof type!");
             break;
         }
-        res = ISSetCertProofAndEntity(context, isPseudonym, info);
+        res = ISSetProofAndEntity(context, info);
         if (res != HC_SUCCESS) {
             LOGE("Failed to set cert proof and protocol entity!");
             break;
@@ -294,24 +375,24 @@ static int32_t ISGetIdentityInfo(const CJson *context, bool isPseudonym, Identit
     return HC_SUCCESS;
 }
 
-static int32_t AddIdentityInfoToVec(const CJson *in, bool isPseudonym, IdentityInfoVec *vec)
+#ifdef ENABLE_PSEUDONYM
+static int32_t ISAddNoPseudonymInfo(const CJson *in, IdentityInfoVec *vec)
 {
     IdentityInfo *info = NULL;
-    int32_t res = ISGetIdentityInfo(in, isPseudonym, &info);
+    int32_t res = ISGetIdentityInfo(in, &info);
     if (res != HC_SUCCESS) {
-        LOGE("Get Identity by credAuthInfo fail.");
+        LOGE("Get Identity info fail.");
         return res;
     }
-    if (info == NULL) {
-        return HC_SUCCESS;
-    }
+    info->proof.certInfo.isPseudonym = false;
     if (vec->pushBack(vec, (const IdentityInfo **)&info) == NULL) {
         DestroyIdentityInfo(info);
-        LOGE("Failed to push protocol entity!");
+        LOGE("Failed to push identity info!");
         return HC_ERR_ALLOC_MEMORY;
     }
     return HC_SUCCESS;
 }
+#endif
 
 static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
 {
@@ -319,21 +400,30 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
-    int32_t res = HC_ERROR;
-#ifdef ENABLE_PSEUDONYM
-    //try enable pseudonym
-    res = AddIdentityInfoToVec(in, true, vec);
+    IdentityInfo *info = NULL;
+    int32_t res = ISGetIdentityInfo(in, &info);
     if (res != HC_SUCCESS) {
-        LOGE("add identity info to vec failed.");
+        LOGE("Get identity info fail.");
         return res;
+    }
+    if (info->proofType == CERTIFICATED) {
+    #ifdef ENABLE_PSEUDONYM
+        info->proof.certInfo.isPseudonym = true;
+    #else
+        info->proof.certInfo.isPseudonym = false;
+    #endif
+    }
+    if (vec->pushBack(vec, (const IdentityInfo **)&info) == NULL) {
+        DestroyIdentityInfo(info);
+        LOGE("Failed to push identity info!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+#ifdef ENABLE_PSEUDONYM
+    if (info->proofType == CERTIFICATED) {
+        res = ISAddNoPseudonymInfo(in, vec);
     }
 #endif
-    res = AddIdentityInfoToVec(in, false, vec);
-    if (res != HC_SUCCESS) {
-        LOGE("add identity info to vec failed.");
-        return res;
-    }
-    return HC_SUCCESS;
+    return res;
 }
 
 static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedUrl, IdentityInfo **returnInfo)
@@ -352,7 +442,7 @@ static int32_t GetCredInfoByPeerUrl(const CJson *in, const Uint8Buff *presharedU
         return IS_AUTH_ERR_PROOF_NOT_MATCH;
     }
     IdentityInfo *info = NULL;
-    res = ISGetIdentityInfo(in, false, &info);
+    res = ISGetIdentityInfo(in, &info);
     if (res != HC_SUCCESS) {
         LOGE("Get Identity by credAuthInfo fail.");
         return res;
@@ -713,11 +803,12 @@ static int32_t GetCredInfoByPeerCert(const CJson *in, const CertInfo *certInfo, 
         return IS_AUTH_ERR_PROOF_NOT_MATCH;
     }
     IdentityInfo *info = NULL;
-    res = ISGetIdentityInfo(in, certInfo->isPseudonym, &info);
+    res = ISGetIdentityInfo(in, &info);
     if (res != HC_SUCCESS) {
         LOGE("Get Identity by credAuthInfo fail.");
         return res;
     }
+    info->proof.certInfo.isPseudonym = certInfo->isPseudonym;
     *returnInfo = info;
     return HC_SUCCESS;
 }
@@ -733,16 +824,11 @@ static int32_t GetSharedSecretByPeerCert(
         LOGE("protocol type is not ec speke, not support!");
         return HC_ERR_INVALID_PARAMS;
     }
-    int32_t osAccountId = INVALID_OS_ACCOUNT;
-    if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Get os account id failed!");
-        return HC_ERR_JSON_GET;
-    }
     const char *credId = GetStringFromJson(in, FIELD_ACROSS_ACCOUNT_CRED_ID);
     if (credId != NULL) {
         LOGI("across account credential Id exists.");
     }
-    return GetAccountAsymSharedSecret(osAccountId, credId, FIELD_ACROSS_ACCOUNT_CRED_ID, peerCertInfo, sharedSecret);
+    return GetAccountAsymSharedSecret(in, credId, FIELD_ACROSS_ACCOUNT_CRED_ID, peerCertInfo, sharedSecret);
 }
 
 static const AuthIdentity g_authIdentity = {

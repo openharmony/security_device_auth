@@ -1329,13 +1329,15 @@ static int32_t SetPeerUserIdToContext(CJson *context, const CJson *inputData, co
         LOGE("Failed to create pkInfo json!");
         return HC_ERR_JSON_CREATE;
     }
+    bool isOpenCredAuth = false;
+    (void)GetBoolFromJson(context, FIELD_IS_OPEN_CRED_AUTH, &isOpenCredAuth);
     const char *userId = GetStringFromJson(pkInfoJson, FIELD_USER_ID);
-    if (userId == NULL) {
+    if (userId == NULL && !isOpenCredAuth) {
         LOGE("Failed to get userId!");
         FreeJson(pkInfoJson);
         return HC_ERR_JSON_GET;
     }
-    if (AddStringToJson(context, FIELD_USER_ID, userId) != HC_SUCCESS) {
+    if ((userId != NULL) && (AddStringToJson(context, FIELD_USER_ID, userId) != HC_SUCCESS)) {
         LOGE("Failed to add userId!");
         FreeJson(pkInfoJson);
         return HC_ERR_JSON_ADD;

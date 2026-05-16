@@ -690,9 +690,18 @@ static int32_t SetSharedKyFromPluginOutput(const CJson *output, Uint8Buff *share
     return HC_SUCCESS;
 }
 
-static int32_t GetSharedSecretByPeerCertFromPlugin(int32_t osAccountId, const char *id, const char *idField,
+static int32_t GetSharedSecretByPeerCertFromPlugin(const CJson *in, const char *id, const char *idField,
     const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
 {
+    int32_t osAccountId = INVALID_OS_ACCOUNT;
+    if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
+    bool isOpenCredAuth = false;
+    if (GetBoolFromJson(in, FIELD_IS_OPEN_CRED_AUTH, &isOpenCredAuth) != HC_SUCCESS) {
+        LOGW("Failed to get open cred auth flag!");
+    }
     CJson *input = CreateJson();
     if (input == NULL) {
         LOGE("Create input params json failed!");
@@ -709,6 +718,10 @@ static int32_t GetSharedSecretByPeerCertFromPlugin(int32_t osAccountId, const ch
         LOGE("Across-account cred eixsts, but add cred id to json failed!");
         goto ERR;
     }
+    if (AddBoolToJson(input, FIELD_IS_OPEN_CRED_AUTH, isOpenCredAuth) != HC_SUCCESS) {
+        LOGE("Add open cred auth flag to json failed!");
+        goto ERR;
+    }
     GOTO_ERR_AND_SET_RET(AddCertInfoToJson(peerCertInfo, input), res);
     GOTO_ERR_AND_SET_RET(ExecuteAccountAuthCmd(osAccountId, GET_SHARED_SECRET_BY_PEER_CERT, input, output), res);
     GOTO_ERR_AND_SET_RET(SetSharedKyFromPluginOutput(output, sharedSecret), res);
@@ -718,15 +731,20 @@ ERR:
     return res;
 }
 
-int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *id, const char *idField,
+int32_t GetAccountAsymSharedSecret(const CJson *in, const char *id, const char *idField,
     const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
 {
-    if ((peerCertInfo == NULL) || (sharedSecret == NULL)) {
+    if ((in == NULL) || (peerCertInfo == NULL) || (sharedSecret == NULL)) {
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
     if (HasAccountPlugin()) {
-        return GetSharedSecretByPeerCertFromPlugin(osAccountId, id, idField, peerCertInfo, sharedSecret);
+        return GetSharedSecretByPeerCertFromPlugin(in, id, idField, peerCertInfo, sharedSecret);
+    }
+    int32_t osAccountId = INVALID_OS_ACCOUNT;
+    if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
     }
     TrustedDeviceEntry *deviceEntry = CreateDeviceEntry();
     if (deviceEntry == NULL) {
