@@ -106,9 +106,11 @@ ohos_fuzztest("IsoAuthTaskFuzzTest") {
 group("fuzztest") {
   testonly = true
   deps = []
-  deps += [
-    # deps file
-    ":IsoAuthTaskFuzzTest",
-  ]
+  if (support_jsapi) {
+    deps += [
+      # deps file
+      ":IsoAuthTaskFuzzTest",
+    ]
+  }
 }
 ###############################################################################
