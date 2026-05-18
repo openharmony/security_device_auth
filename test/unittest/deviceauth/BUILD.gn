@@ -524,10 +524,11 @@ ohos_unittest("device_auth_interface_test") {
   ]
   sources += identity_manager_files
   include_dirs += identity_manager_inc
-  sources += [
-    "source/deviceauth_interface_test.cpp",
-    "source/ipc_adapt_test.cpp",
-  ]
+  sources += [ "source/ipc_adapt_test.cpp" ]
+
+  if (support_jsapi) {
+    sources += [ "source/deviceauth_interface_test.cpp" ]
+  }
 
   cflags = [ "-DHILOG_ENABLE" ]
   cflags += [
@@ -553,11 +554,13 @@ ohos_unittest("device_auth_interface_test") {
     "mbedtls:mbedtls_shared",
     "openssl:libcrypto_static",
     "samgr:samgr_proxy",
-    "common_event_service:cesfwk_innerkits",
     "safwk:system_ability_fwk",
   ]
   if (device_auth_enable_soft_bus_channel) {
     external_deps += [ "dsoftbus:softbus_client" ]
+  }
+  if (support_jsapi) {
+    external_deps += [ "common_event_service:cesfwk_innerkits" ]
   }
 }
 
@@ -789,8 +792,13 @@ ohos_unittest("light_auth_test") {
     "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin/account_auth_plugin_proxy.c",
     "source/device_auth_ext_mock.c",
     "source/os_account_adapter_mock.c",
-    "${services_path}/sa/src/cache_common_event_handler/cache_common_event_handler.cpp",
   ]
+
+  if (support_jsapi) {
+    sources += [ "${services_path}/sa/src/cache_common_event_handler/cache_common_event_handler.cpp" ]
+  } else {
+    sources += [ "${services_path}/sa/src/cache_common_event_handler/mock/cache_common_event_handler_mock.cpp" ]
+  }
 
   sources -= ["${services_path}/device_auth.c",]
 
@@ -856,7 +864,6 @@ ohos_unittest("light_auth_test") {
     "mbedtls:mbedtls_shared",
     "openssl:libcrypto_static",
     "samgr:samgr_proxy",
-    "common_event_service:cesfwk_innerkits",
     "safwk:system_ability_fwk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
@@ -867,6 +874,9 @@ ohos_unittest("light_auth_test") {
   ]
   if (device_auth_enable_soft_bus_channel) {
     external_deps += [ "dsoftbus:softbus_client" ]
+  }
+  if (support_jsapi) {
+    external_deps += [ "common_event_service:cesfwk_innerkits" ]
   }
 }
 
