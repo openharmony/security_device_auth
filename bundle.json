@@ -48,7 +48,6 @@
         "components": [
           "ability_base",
           "access_token",
-          "selinux_adapter",
           "bounds_checking_function",
           "cJSON",
           "common_event_service",
@@ -59,7 +58,6 @@
           "hitrace",
           "huks",
           "init",
-          "json",
           "mbedtls",
           "napi",
           "openssl",
@@ -69,7 +67,9 @@
           "ipc",
           "netmanager_base",
           "memmgr",
-          "eventhandler"
+          "eventhandler",
+          "json",
+          "selinux_adapter"
         ],
         "third_party": [],
         "hisysevent_config": [
