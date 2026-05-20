@@ -91,6 +91,47 @@ static int32_t GeneratePkInfoFromJson(PkInfo *info, const CJson *pkInfoJson)
     return HC_SUCCESS;
 }
 
+static int32_t GenerateOpenPkInfoFromJson(OpenPkInfo *info, const CJson *pkInfoJson)
+{
+    if (GetByteFromJson(pkInfoJson, FIELD_DEVICE_PK, info->devicePk.val, info->devicePk.length) != HC_SUCCESS) {
+        LOGE("get devicePk failed");
+        return HC_ERR_JSON_GET;
+    }
+    const char *devicePk = GetStringFromJson(pkInfoJson, FIELD_DEVICE_PK);
+    info->devicePk.length = HcStrlen(devicePk) / BYTE_TO_HEX_OPER_LENGTH;
+
+    const char *version = GetStringFromJson(pkInfoJson, FIELD_VERSION);
+    if (version == NULL) {
+        LOGE("get version failed");
+        return HC_ERR_JSON_GET;
+    }
+    if (memcpy_s(info->version.val, info->version.length, version, HcStrlen(version) + 1) != EOK) {
+        LOGE("memcpy_s version failed");
+        return HC_ERR_MEMORY_COPY;
+    }
+    info->version.length = HcStrlen(version) + 1;
+
+    const char *deviceId = GetStringFromJson(pkInfoJson, FIELD_DEVICE_ID);
+    if (deviceId == NULL) {
+        LOGE("get deviceId failed");
+        return HC_ERR_JSON_GET;
+    }
+    if (memcpy_s(info->deviceId.val, info->deviceId.length, deviceId, HcStrlen(deviceId) + 1) != EOK) {
+        LOGE("memcpy_s deviceId failed");
+        return HC_ERR_MEMORY_COPY;
+    }
+    info->deviceId.length = HcStrlen(deviceId) + 1;
+
+    if (GetByteFromJson(pkInfoJson, FIELD_OPEN_ID, info->openId.val, info->openId.length) != HC_SUCCESS) {
+        LOGE("get openId failed");
+        return HC_ERR_JSON_GET;
+    }
+    const char *openIdStr = GetStringFromJson(pkInfoJson, FIELD_OPEN_ID);
+    info->openId.length = HcStrlen(openIdStr) / BYTE_TO_HEX_OPER_LENGTH;
+
+    return HC_SUCCESS;
+}
+
 static bool GetTokenPathCe(int32_t osAccountId, char *tokenPath, uint32_t pathBufferLen)
 {
     const char *beginPath = GetStorageDirPathCe();
@@ -171,6 +212,50 @@ static int32_t GenerateTokenFromJson(const CJson *tokenJson, AccountToken *token
     int32_t ret = GeneratePkInfoFromJson(&token->pkInfo, pkInfoJson);
     if (ret != HC_SUCCESS) {
         LOGE("Generate pkInfo failed");
+        return ret;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t GenerateOpenTokenFromJson(const CJson *tokenJson, OpenAccountToken *token)
+{
+    CJson *pkInfoJson = GetObjFromJson(tokenJson, FIELD_PK_INFO);
+    if (pkInfoJson == NULL) {
+        LOGE("Failed to get pkInfoJson");
+        return HC_ERR_JSON_GET;
+    }
+    char *pkInfoStr = PackJsonToString(pkInfoJson);
+    if (pkInfoStr == NULL) {
+        LOGE("Pack pkInfoStr failed");
+        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+    if (memcpy_s(token->pkInfoStr.val, token->pkInfoStr.length, pkInfoStr, HcStrlen(pkInfoStr) + 1) != EOK) {
+        LOGE("Memcpy failed for pkInfoStr");
+        FreeJsonString(pkInfoStr);
+        return HC_ERR_MEMORY_COPY;
+    }
+    token->pkInfoStr.length = HcStrlen(pkInfoStr) + 1;
+    FreeJsonString(pkInfoStr);
+
+    if (GetByteFromJson(tokenJson, FIELD_PK_INFO_SIGNATURE, token->pkInfoSignature.val,
+        token->pkInfoSignature.length) != HC_SUCCESS) {
+        LOGE("Get pkInfoSignature failed");
+        return HC_ERR_JSON_GET;
+    }
+    const char *signatureStr = GetStringFromJson(tokenJson, FIELD_PK_INFO_SIGNATURE);
+    token->pkInfoSignature.length = HcStrlen(signatureStr) / BYTE_TO_HEX_OPER_LENGTH;
+
+    if (GetByteFromJson(tokenJson, FIELD_SERVER_PK, token->serverPk.val,
+        token->serverPk.length) != HC_SUCCESS) {
+        LOGE("Get serverPk failed");
+        return HC_ERR_JSON_GET;
+    }
+    const char *serverPkStr = GetStringFromJson(tokenJson, FIELD_SERVER_PK);
+    token->serverPk.length = HcStrlen(serverPkStr) / BYTE_TO_HEX_OPER_LENGTH;
+
+    int32_t ret = GenerateOpenPkInfoFromJson(&token->openPkInfo, pkInfoJson);
+    if (ret != HC_SUCCESS) {
+        LOGE("Generate openPkInfo failed");
         return ret;
     }
     return HC_SUCCESS;
@@ -653,6 +738,34 @@ ERR:
     return res;
 }
 
+static int32_t GetOpenTokenFromPlugin(int32_t osAccountId, OpenAccountToken *token, const char *deviceId)
+{
+    CJson *input = CreateJson();
+    if (input == NULL) {
+        LOGE("Create input params json failed!");
+        return HC_ERR_JSON_CREATE;
+    }
+    CJson *output = CreateJson();
+    if (output == NULL) {
+        LOGE("Create output results json failed!");
+        FreeJson(input);
+        return HC_ERR_JSON_CREATE;
+    }
+    int32_t res = HC_ERR_JSON_ADD;
+    if (AddStringToJson(input, FIELD_DEVICE_ID, deviceId) != HC_SUCCESS) {
+        goto ERR;
+    }
+    if (AddBoolToJson(input, FIELD_IS_QUERY_OPEN_CRED, true) != HAL_SUCCESS) {
+        goto ERR;
+    }
+    GOTO_ERR_AND_SET_RET(ExecuteAccountAuthCmd(osAccountId, QUERY_SELF_CREDENTIAL_INFO, input, output), res);
+    GOTO_ERR_AND_SET_RET(GenerateOpenTokenFromJson(output, token), res);
+ERR:
+    FreeJson(input);
+    FreeJson(output);
+    return res;
+}
+
 static int32_t DoExportPkAndCompare(int32_t osAccountId, const char *userId, const char *deviceId,
     const char *devicePk, Uint8Buff *keyAlias)
 {
@@ -1127,6 +1240,18 @@ ERR:
     return ret;
 }
 
+static int32_t GetOpenToken(int32_t osAccountId, OpenAccountToken *token, const char *deviceId)
+{
+    if ((token == NULL) || (deviceId == NULL)) {
+        LOGE("Invalid input params!");
+        return HC_ERR_NULL_PTR;
+    }
+    if (HasAccountPlugin()) {
+        return GetOpenTokenFromPlugin(osAccountId, token, deviceId);
+    }
+    return HC_ERR_NOT_SUPPORT;
+}
+
 static int32_t DeleteTokenInner(int32_t osAccountId, const char *userId, const char *deviceId,
     AccountTokenVec *deleteTokens)
 {
@@ -1309,6 +1434,7 @@ void InitTokenManager(void)
     (void)memset_s(&g_asyTokenManager, sizeof(AccountAuthTokenManager), 0, sizeof(AccountAuthTokenManager));
     g_asyTokenManager.addToken = AddToken;
     g_asyTokenManager.getToken = GetToken;
+    g_asyTokenManager.getOpenToken = GetOpenToken;
     g_asyTokenManager.deleteToken = DeleteToken;
     g_asyTokenManager.getRegisterProof = GetRegisterProof;
     g_asyTokenManager.generateKeyAlias = GenerateKeyAlias;
@@ -1353,6 +1479,17 @@ static void InitTokenData(AccountToken *token)
     token->pkInfo.devicePk.val = NULL;
 }
 
+static void InitOpenTokenData(OpenAccountToken *token)
+{
+    token->pkInfoStr.val = NULL;
+    token->pkInfoSignature.val = NULL;
+    token->serverPk.val = NULL;
+    token->openPkInfo.deviceId.val = NULL;
+    token->openPkInfo.openId.val = NULL;
+    token->openPkInfo.version.val = NULL;
+    token->openPkInfo.devicePk.val = NULL;
+}
+
 AccountToken *CreateAccountToken(void)
 {
     AccountToken *token = (AccountToken *)HcMalloc(sizeof(AccountToken), 0);
@@ -1388,6 +1525,41 @@ ERR:
     return NULL;
 }
 
+OpenAccountToken *CreateOpenAccountToken(void)
+{
+    OpenAccountToken *token = (OpenAccountToken *)HcMalloc(sizeof(OpenAccountToken), 0);
+    if (token == NULL) {
+        LOGE("Failed to allocate OpenAccountToken memory!");
+        return NULL;
+    }
+    InitOpenTokenData(token);
+    token->pkInfoStr.val = (uint8_t *)HcMalloc(PUBLIC_KEY_INFO_SIZE, 0);
+    GOTO_IF_CHECK_NULL(token->pkInfoStr.val, "pkInfoStr");
+    token->pkInfoStr.length = PUBLIC_KEY_INFO_SIZE;
+    token->pkInfoSignature.val = (uint8_t *)HcMalloc(SIGNATURE_SIZE, 0);
+    GOTO_IF_CHECK_NULL(token->pkInfoSignature.val, "pkInfoSignature");
+    token->pkInfoSignature.length = SIGNATURE_SIZE;
+    token->serverPk.val = (uint8_t *)HcMalloc(SERVER_PK_SIZE, 0);
+    GOTO_IF_CHECK_NULL(token->serverPk.val, "serverPk");
+    token->serverPk.length = SERVER_PK_SIZE;
+    token->openPkInfo.deviceId.val = (uint8_t *)HcMalloc(DEV_AUTH_DEVICE_ID_SIZE, 0);
+    GOTO_IF_CHECK_NULL(token->openPkInfo.deviceId.val, "deviceId");
+    token->openPkInfo.deviceId.length = DEV_AUTH_DEVICE_ID_SIZE;
+    token->openPkInfo.openId.val = (uint8_t *)HcMalloc(DEV_AUTH_OPEN_ID_SIZE, 0);
+    GOTO_IF_CHECK_NULL(token->openPkInfo.openId.val, "openId");
+    token->openPkInfo.openId.length = DEV_AUTH_OPEN_ID_SIZE;
+    token->openPkInfo.version.val = (uint8_t *)HcMalloc(PK_VERSION_SIZE, 0);
+    GOTO_IF_CHECK_NULL(token->openPkInfo.version.val, "version");
+    token->openPkInfo.version.length = PK_VERSION_SIZE;
+    token->openPkInfo.devicePk.val = (uint8_t *)HcMalloc(PK_SIZE, 0);
+    GOTO_IF_CHECK_NULL(token->openPkInfo.devicePk.val, "devicePk");
+    token->openPkInfo.devicePk.length = PK_SIZE;
+    return token;
+ERR:
+    DestroyOpenAccountToken(token);
+    return NULL;
+}
+
 void DestroyAccountToken(AccountToken *token)
 {
     if (token == NULL) {
@@ -1408,6 +1580,29 @@ void DestroyAccountToken(AccountToken *token)
     token->pkInfo.version.length = 0;
     HcFree(token->pkInfo.devicePk.val);
     token->pkInfo.devicePk.length = 0;
+    HcFree(token);
+}
+
+void DestroyOpenAccountToken(OpenAccountToken *token)
+{
+    if (token == NULL) {
+        LOGE("Input token is null");
+        return;
+    }
+    HcFree(token->pkInfoStr.val);
+    token->pkInfoStr.length = 0;
+    HcFree(token->pkInfoSignature.val);
+    token->pkInfoSignature.length = 0;
+    HcFree(token->serverPk.val);
+    token->serverPk.length = 0;
+    HcFree(token->openPkInfo.deviceId.val);
+    token->openPkInfo.deviceId.length = 0;
+    HcFree(token->openPkInfo.openId.val);
+    token->openPkInfo.openId.length = 0;
+    HcFree(token->openPkInfo.version.val);
+    token->openPkInfo.version.length = 0;
+    HcFree(token->openPkInfo.devicePk.val);
+    token->openPkInfo.devicePk.length = 0;
     HcFree(token);
 }
 

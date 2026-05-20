@@ -658,7 +658,7 @@ static int32_t GetPseudonymId(int32_t osAccountId, const char *indexKey, char **
         }
     }
     UnlockHcMutex(g_mutex);
-    return HC_SUCCESS;
+    return HC_ERROR;
 }
 
 static int32_t AddPseudonymIdInfoToMemory(int32_t osAccountId, PseudonymInfo *pseudonymInfo)

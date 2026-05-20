@@ -127,19 +127,20 @@ HWTEST_F(IdentityManagerTest, IdentityManagerTest003, TestSize.Level0)
     EXPECT_NE(ret, HC_SUCCESS);
     ret = GetAccountRelatedCredInfo(TEST_OS_ACCOUNT_ID, TEST_GROUP_ID, TEST_DEVICE_ID, true, nullptr);
     EXPECT_NE(ret, HC_SUCCESS);
-    ret = GetAccountAsymSharedSecret(TEST_OS_ACCOUNT_ID, nullptr, FIELD_PEER_USER_ID, nullptr, nullptr);
+    CJson *in = CreateJson();
+    (void)AddIntToJson(in, FIELD_OS_ACCOUNT_ID, TEST_OS_ACCOUNT_ID);
+    ret = GetAccountAsymSharedSecret(in, nullptr, FIELD_PEER_USER_ID, nullptr, nullptr);
     EXPECT_NE(ret, HC_SUCCESS);
     CertInfo peerCertInfo = { { nullptr, 0 }, { nullptr, 0 }, P256 };
-    ret = GetAccountAsymSharedSecret(TEST_OS_ACCOUNT_ID, nullptr, FIELD_PEER_USER_ID, &peerCertInfo, nullptr);
+    ret = GetAccountAsymSharedSecret(in, nullptr, FIELD_PEER_USER_ID, &peerCertInfo, nullptr);
+    FreeJson(in);
     EXPECT_NE(ret, HC_SUCCESS);
     ret = GetAccountSymSharedSecret(nullptr, nullptr, nullptr);
     EXPECT_NE(ret, HC_SUCCESS);
-    CJson *in = CreateJson();
-    ASSERT_NE(in, nullptr);
+    in = CreateJson();
     ret = GetAccountSymSharedSecret(in, nullptr, nullptr);
     EXPECT_NE(ret, HC_SUCCESS);
     CJson *urlJson = CreateJson();
-    ASSERT_NE(urlJson, nullptr);
     ret = GetAccountSymSharedSecret(in, urlJson, nullptr);
     EXPECT_NE(ret, HC_SUCCESS);
     FreeJson(in);
@@ -152,11 +153,9 @@ HWTEST_F(IdentityManagerTest, IdentityManagerTest003, TestSize.Level0)
     ret = GetAccountSymCredInfoByPeerUrl(nullptr, nullptr, nullptr);
     EXPECT_NE(ret, HC_SUCCESS);
     in = CreateJson();
-    ASSERT_NE(in, nullptr);
     ret = GetAccountSymCredInfoByPeerUrl(in, nullptr, nullptr);
     EXPECT_NE(ret, HC_SUCCESS);
     urlJson = CreateJson();
-    ASSERT_NE(urlJson, nullptr);
     ret = GetAccountSymCredInfoByPeerUrl(in, urlJson, nullptr);
     EXPECT_NE(ret, HC_SUCCESS);
     FreeJson(in);
@@ -330,11 +329,11 @@ HWTEST_F(IdentityCredTest, IdentityCredTest001, TestSize.Level0)
 HWTEST_F(IdentityCredTest, IdentityCredTest002, TestSize.Level0)
 {
     IdentityProofType tmpType;
-    int32_t ret = ConvertISProofTypeToCertType(PROOF_TYPE_PSK, &tmpType);
+    int32_t ret = ConvertProofType(PROOF_TYPE_PSK, &tmpType);
     EXPECT_EQ(ret, HC_SUCCESS);
-    ret = ConvertISProofTypeToCertType(PROOF_TYPE_PKI, &tmpType);
+    ret = ConvertProofType(PROOF_TYPE_PKI, &tmpType);
     EXPECT_EQ(ret, HC_SUCCESS);
-    ret = ConvertISProofTypeToCertType(UNSUPPORTED_TYPE, &tmpType);
+    ret = ConvertProofType(UNSUPPORTED_TYPE, &tmpType);
     EXPECT_EQ(ret, HC_ERR_NOT_SUPPORT);
 }
 
@@ -350,7 +349,11 @@ HWTEST_F(IdentityCredTest, IdentityCredTest003, TestSize.Level0)
 HWTEST_F(IdentityCredTest, IdentityCredTest004, TestSize.Level0)
 {
     IdentityInfo *info = CreateIdentityInfo();
-    int32_t ret = ISSetISOEntity(info);
+    int32_t ret = ISSetISOEntity(info, ACCOUNT_UNRELATED);
+    EXPECT_EQ(ret, HC_SUCCESS);
+    DestroyIdentityInfo(info);
+    info = CreateIdentityInfo();
+    ret = ISSetISOEntity(info, ACCOUNT_RELATED);
     EXPECT_EQ(ret, HC_SUCCESS);
     DestroyIdentityInfo(info);
 }
@@ -358,12 +361,17 @@ HWTEST_F(IdentityCredTest, IdentityCredTest004, TestSize.Level0)
 HWTEST_F(IdentityCredTest, IdentityCredTest005, TestSize.Level0)
 {
     IdentityInfo *info = CreateIdentityInfo();
-    int32_t ret = ISSetEcSpekeEntity(info, false);
+    int32_t ret = ISSetEcSpekeEntityForAccountRelated(info, false);
     EXPECT_EQ(ret, HC_SUCCESS);
     DestroyIdentityInfo(info);
 
     info = CreateIdentityInfo();
-    ret = ISSetEcSpekeEntity(info, true);
+    ret = ISSetEcSpekeEntityForAccountRelated(info, true);
+    EXPECT_EQ(ret, HC_SUCCESS);
+    DestroyIdentityInfo(info);
+
+    info = CreateIdentityInfo();
+    ret = ISSetEcSpekeEntityForAccountUnrelated(info);
     EXPECT_EQ(ret, HC_SUCCESS);
     DestroyIdentityInfo(info);
 }
@@ -373,13 +381,14 @@ HWTEST_F(IdentityCredTest, IdentityCredTest006, TestSize.Level0)
     IdentityInfo *info = CreateIdentityInfo();
     CJson *credAuthInfo = CreateJson();
     CJson *context = CreateJson();
-    int32_t ret = ISSetCertInfoAndEntity(TEST_OS_ACCOUNT_ID, context, credAuthInfo, true, info);
+    (void)AddIntToJson(context, FIELD_OS_ACCOUNT_ID, TEST_OS_ACCOUNT_ID);
+    int32_t ret = ISSetCertInfoAndEntity(context, credAuthInfo, info);
     EXPECT_NE(ret, HC_SUCCESS);
     (void)AddStringToJson(credAuthInfo, FIELD_DEVICE_ID, TEST_DEVICE_ID);
-    ret = ISSetCertInfoAndEntity(TEST_OS_ACCOUNT_ID, context, credAuthInfo, true, info);
+    ret = ISSetCertInfoAndEntity(context, credAuthInfo, info);
     EXPECT_NE(ret, HC_SUCCESS);
     (void)AddStringToJson(credAuthInfo, FIELD_USER_ID, TEST_USER_ID);
-    ret = ISSetCertInfoAndEntity(TEST_OS_ACCOUNT_ID, context, credAuthInfo, true, info);
+    ret = ISSetCertInfoAndEntity(context, credAuthInfo, info);
     EXPECT_NE(ret, HC_SUCCESS);
     FreeJson(context);
     FreeJson(credAuthInfo);
@@ -415,16 +424,16 @@ HWTEST_F(IdentityCredTest, IdentityCredTest008, TestSize.Level0)
     CJson *context = CreateJson();
     AddObjToJson(context, FIELD_CREDENTIAL_OBJ, credAuthInfo);
     info->proofType = (IdentityProofType)UNSUPPORTED_PROOF_TYPE;
-    int32_t ret = ISSetCertProofAndEntity(context, true, info);
+    int32_t ret = ISSetProofAndEntity(context, info);
     EXPECT_NE(ret, HC_SUCCESS);
     info->proofType = PRE_SHARED;
-    ret = ISSetCertProofAndEntity(context, true, info);
+    ret = ISSetProofAndEntity(context, info);
     EXPECT_NE(ret, HC_SUCCESS);
     info->proofType = CERTIFICATED;
-    ret = ISSetCertProofAndEntity(context, true, info);
+    ret = ISSetProofAndEntity(context, info);
     EXPECT_NE(ret, HC_SUCCESS);
     (void)AddIntToJson(context, FIELD_OS_ACCOUNT_ID, TEST_OS_ACCOUNT_ID);
-    ret = ISSetCertProofAndEntity(context, true, info);
+    ret = ISSetProofAndEntity(context, info);
     EXPECT_NE(ret, HC_SUCCESS);
     FreeJson(context);
     FreeJson(credAuthInfo);
@@ -436,20 +445,20 @@ HWTEST_F(IdentityCredTest, IdentityCredTest009, TestSize.Level0)
     IdentityInfo *info = CreateIdentityInfo();
     CJson *credAuthInfo = CreateJson();
     CJson *context = CreateJson();
-    int32_t ret = ISGetIdentityInfo(context, true, &info);
+    int32_t ret = ISGetIdentityInfo(context, &info);
     EXPECT_NE(ret, HC_SUCCESS);
     (void)AddObjToJson(context, FIELD_CREDENTIAL_OBJ, credAuthInfo);
-    ret = ISGetIdentityInfo(context, true, &info);
+    ret = ISGetIdentityInfo(context, &info);
     EXPECT_NE(ret, HC_SUCCESS);
     (void)AddIntToJson(credAuthInfo, FIELD_PROOF_TYPE, PROOF_TYPE_PSK);
     (void)AddObjToJson(context, FIELD_CREDENTIAL_OBJ, credAuthInfo);
-    ret = ISGetIdentityInfo(context, true, &info);
-    EXPECT_EQ(ret, HC_SUCCESS);
-    ret = ISGetIdentityInfo(context, false, &info);
+    ret = ISGetIdentityInfo(context, &info);
+    EXPECT_NE(ret, HC_SUCCESS);
+    ret = ISGetIdentityInfo(context, &info);
     EXPECT_NE(ret, HC_SUCCESS);
     (void)AddIntToJson(credAuthInfo, FIELD_PROOF_TYPE, PROOF_TYPE_PKI);
     (void)AddObjToJson(context, FIELD_CREDENTIAL_OBJ, credAuthInfo);
-    ret = ISGetIdentityInfo(context, false, &info);
+    ret = ISGetIdentityInfo(context, &info);
     EXPECT_NE(ret, HC_SUCCESS);
     FreeJson(context);
     FreeJson(credAuthInfo);
@@ -461,12 +470,12 @@ HWTEST_F(IdentityCredTest, IdentityCredTest010, TestSize.Level0)
     IdentityInfoVec vec = CreateIdentityInfoVec();
     CJson *context = CreateJson();
     CJson *credAuthInfo = CreateJson();
-    int32_t ret = AddIdentityInfoToVec(context, false, &vec);
+    int32_t ret = GetCredInfosByPeerIdentity(context, &vec);
     EXPECT_NE(ret, HC_SUCCESS);
     (void)AddIntToJson(credAuthInfo, FIELD_PROOF_TYPE, PROOF_TYPE_PSK);
     (void)AddObjToJson(context, FIELD_CREDENTIAL_OBJ, credAuthInfo);
-    ret = AddIdentityInfoToVec(context, true, &vec);
-    EXPECT_EQ(ret, HC_SUCCESS);
+    ret = GetCredInfosByPeerIdentity(context, &vec);
+    EXPECT_NE(ret, HC_SUCCESS);
     FreeJson(credAuthInfo);
     FreeJson(context);
     ClearIdentityInfoVec(&vec);

@@ -136,7 +136,7 @@ HWTEST_F(PrivacyEnhancementTest, GetPseudonymIdTest001, TestSize.Level0)
 
     char *pseudonymId3 = nullptr;
     ret = manager->getPseudonymId(DEFAULT_OS_ACCOUNT, TEST_INDEX_KEY2, &pseudonymId3);
-    EXPECT_EQ(ret, HC_SUCCESS);
+    EXPECT_NE(ret, HC_SUCCESS);
     HcFree(pseudonymId3);
 
     ret = manager->deletePseudonymId(DEFAULT_OS_ACCOUNT, TEST_INDEX_KEY);

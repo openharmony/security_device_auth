@@ -37,8 +37,23 @@ typedef struct {
 DECLARE_HC_VECTOR(AccountTokenVec, AccountToken*)
 
 typedef struct {
+    Uint8Buff version;
+    Uint8Buff openId;
+    Uint8Buff deviceId;
+    Uint8Buff devicePk;
+} OpenPkInfo;
+
+typedef struct {
+    Uint8Buff pkInfoStr;
+    OpenPkInfo openPkInfo;
+    Uint8Buff pkInfoSignature;
+    Uint8Buff serverPk;
+} OpenAccountToken;
+
+typedef struct {
     int32_t (*addToken)(int32_t osAccountId, int32_t opCode, const CJson *in);
     int32_t (*getToken)(int32_t osAccountId, AccountToken *token, const char *userId, const char *deviceId);
+    int32_t (*getOpenToken)(int32_t osAccountId, OpenAccountToken *token, const char *deviceId);
     int32_t (*deleteToken)(int32_t osAccountId, const char *userId, const char *deviceId);
     int32_t (*getRegisterProof)(int32_t osAccountId, const CJson *in, CJson *out);
     int32_t (*generateKeyAlias)(const char *userId, const char *deviceId,
@@ -56,6 +71,9 @@ void DestroyTokenManager(void);
 
 AccountToken *CreateAccountToken(void);
 void DestroyAccountToken(AccountToken *token);
+
+OpenAccountToken *CreateOpenAccountToken(void);
+void DestroyOpenAccountToken(OpenAccountToken *token);
 
 AccountTokenVec CreateAccountTokenVec(void);
 void ClearAccountTokenVec(AccountTokenVec *vec);

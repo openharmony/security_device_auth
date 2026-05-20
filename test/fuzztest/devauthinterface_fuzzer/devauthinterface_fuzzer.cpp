@@ -1241,10 +1241,10 @@ static void DevAuthInterfaceTestCase0287()
 {
     // dev_session_util.c static interface test
     (void)IsPeerSameUserId(TEST_OS_ACCOUNT_ID, nullptr);
-    (void)GeneratePeerInfoJson(nullptr, nullptr);
+    (void)GeneratePeerInfoJson(false, nullptr, nullptr);
     CJson *in = CreateJson();
     (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID);
-    (void)GeneratePeerInfoJson(in, nullptr);
+    (void)GeneratePeerInfoJson(false, in, nullptr);
     (void)SetPeerAuthIdByCredAuthInfo(nullptr);
     CJson *credDataJson = CreateJsonFromString(CRED_DATA);
     (void)AddObjToJson(in, FIELD_CREDENTIAL_OBJ, credDataJson);

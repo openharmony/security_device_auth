@@ -1559,11 +1559,11 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0287, TestSize.Level0)
     int32_t res = IsPeerSameUserId(TEST_OS_ACCOUNT_ID, nullptr);
     EXPECT_NE(res, true);
     
-    res = GeneratePeerInfoJson(nullptr, nullptr);
+    res = GeneratePeerInfoJson(false, nullptr, nullptr);
     EXPECT_NE(res, HC_SUCCESS);
     CJson *in = CreateJson();
     (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID);
-    res = GeneratePeerInfoJson(in, nullptr);
+    res = GeneratePeerInfoJson(false, in, nullptr);
     EXPECT_NE(res, HC_SUCCESS);
 
     res = SetPeerAuthIdByCredAuthInfo(nullptr);

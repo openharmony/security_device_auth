@@ -99,6 +99,8 @@
 #define FIELD_BASE_INFO "baseInfo"
 #define FIELD_UPDATE_LISTS "updateLists"
 #define FIELD_PEER_OS_ACCOUNT_ID "peerOsAccountId"
+#define FIELD_IS_QUERY_OPEN_CRED "isQueryOpenCred"
+#define FIELD_IS_OPEN_CRED_AUTH "isOpenCredAuth"
 
 /**
  * @brief protocol expand value for bind
