@@ -47,58 +47,80 @@ IMPLEMENT_HC_VECTOR(LightSessionInfoVec, LightSessionInfo, 1)
 static LightSessionInfoVec g_lightSessionInfoList;
 static HcMutex g_lightSessionMutex;
 
-static LightSession *CreateSession(int64_t requestId, int32_t osAccountId, const char *serviceId,
-    DataBuff randomBuff, int32_t opCode, const DeviceAuthCallback *callback)
+static void DestroyLightSessionInner(LightSession *session)
 {
-    if (callback == NULL) {
-        LOGE("callback is NULL");
-        return NULL;
+    if (session->serviceId != NULL) {
+        HcFree(session->serviceId);
     }
-    LightSession *newSession = (LightSession *)HcMalloc(sizeof(LightSession), 0);
-    if (newSession == NULL) {
-        LOGE("Failed to alloc newSession");
-        return NULL;
+    if (session->randomVal != NULL) {
+        HcFree(session->randomVal);
     }
-    newSession->osAccountId = osAccountId;
-    newSession->opCode = opCode;
-    uint32_t randomLen = randomBuff.length;
-    newSession->randomLen = randomLen;
-    newSession->randomVal = (uint8_t *)HcMalloc(randomLen, 0);
-    if (newSession->randomVal == NULL) {
+    HcFree(session);
+}
+
+static int32_t CopySessionRandom(LightSession *session, const DataBuff *randomBuff)
+{
+    session->randomLen = randomBuff->length;
+    session->randomVal = (uint8_t *)HcMalloc(randomBuff->length, 0);
+    if (session->randomVal == NULL) {
         LOGE("HcMalloc randomVal failed");
-        HcFree(newSession);
-        return NULL;
+        return HC_ERR_ALLOC_MEMORY;
     }
-    if (memcpy_s(newSession->randomVal, randomLen, randomBuff.data, randomLen) != EOK) {
+    if (memcpy_s(session->randomVal, randomBuff->length, randomBuff->data, randomBuff->length) != EOK) {
         LOGE("Copy randomVal failed.");
-        HcFree(newSession->randomVal);
-        HcFree(newSession);
-        return NULL;
+        HcFree(session->randomVal);
+        session->randomVal = NULL;
+        return HC_ERR_MEMORY_COPY;
     }
-    newSession->requestId = requestId;
+    return HC_SUCCESS;
+}
+
+static int32_t CopySessionServiceId(LightSession *session, const char *serviceId)
+{
     uint32_t serviceIdLen = HcStrlen(serviceId) + 1;
-    newSession->serviceId = (char *)HcMalloc(serviceIdLen, 0);
-    if (newSession->serviceId == NULL) {
+    session->serviceId = (char *)HcMalloc(serviceIdLen, 0);
+    if (session->serviceId == NULL) {
+        LOGE("HcMalloc serviceId failed");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (memcpy_s(session->serviceId, serviceIdLen, serviceId, serviceIdLen) != EOK) {
         LOGE("Copy serviceId failed.");
-        HcFree(newSession->randomVal);
-        HcFree(newSession);
+        HcFree(session->serviceId);
+        session->serviceId = NULL;
+        return HC_ERR_MEMORY_COPY;
+    }
+    return HC_SUCCESS;
+}
+
+static LightSession *CreateSession(const LightSessionInitParams *params)
+{
+    if (params == NULL || params->callback == NULL) {
+        LOGE("invalid params");
         return NULL;
     }
-    if (memcpy_s(newSession->serviceId, serviceIdLen, serviceId, serviceIdLen) != EOK) {
-        LOGE("Copy serviceId failed.");
-        HcFree(newSession->serviceId);
-        HcFree(newSession->randomVal);
-        HcFree(newSession);
+    LightSession *session = (LightSession *)HcMalloc(sizeof(LightSession), 0);
+    if (session == NULL) {
+        LOGE("Failed to alloc session");
         return NULL;
     }
-    if (memcpy_s(&newSession->callback, sizeof(DeviceAuthCallback), callback, sizeof(DeviceAuthCallback)) != EOK) {
+    session->requestId = params->requestId;
+    session->osAccountId = params->osAccountId;
+    session->opCode = params->opCode;
+    if (CopySessionRandom(session, &params->randomBuff) != HC_SUCCESS) {
+        DestroyLightSessionInner(session);
+        return NULL;
+    }
+    if (CopySessionServiceId(session, params->serviceId) != HC_SUCCESS) {
+        DestroyLightSessionInner(session);
+        return NULL;
+    }
+    if (memcpy_s(&session->callback, sizeof(DeviceAuthCallback), params->callback,
+        sizeof(DeviceAuthCallback)) != EOK) {
         LOGE("Copy callback failed.");
-        HcFree(newSession->serviceId);
-        HcFree(newSession->randomVal);
-        HcFree(newSession);
+        DestroyLightSessionInner(session);
         return NULL;
     }
-    return newSession;
+    return session;
 }
 
 static void DestroyLightSession(LightSession *lightSessionEntry)
@@ -106,14 +128,7 @@ static void DestroyLightSession(LightSession *lightSessionEntry)
     if (lightSessionEntry == NULL) {
         return;
     }
-    if (lightSessionEntry->serviceId != NULL) {
-        HcFree(lightSessionEntry->serviceId);
-    }
-    if (lightSessionEntry->randomVal != NULL) {
-        HcFree(lightSessionEntry->randomVal);
-    }
-    HcFree(lightSessionEntry);
-    return;
+    DestroyLightSessionInner(lightSessionEntry);
 }
 
 static void RemoveTimeOutSession(void)
@@ -203,11 +218,10 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
     return HC_ERR_SESSION_NOT_EXIST;
 }
 
-int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serviceId,
-    DataBuff randomBuff, int32_t opCode, const DeviceAuthCallback *callback)
+int32_t AddLightSession(const LightSessionInitParams *params)
 {
-    if (callback == NULL) {
-        LOGE("callback is NULL");
+    if (params == NULL || params->callback == NULL) {
+        LOGE("invalid params");
         return HC_ERR_INVALID_PARAMS;
     }
     (void)LockHcMutex(&g_lightSessionMutex);
@@ -218,7 +232,7 @@ int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serv
         return HC_ERR_OUT_OF_LIMIT;
     }
     LightSessionInfo newLightSessionInfo;
-    LightSession *newSession = CreateSession(requestId, osAccountId, serviceId, randomBuff, opCode, callback);
+    LightSession *newSession = CreateSession(params);
     if (newSession == NULL) {
         LOGE("create session fail.");
         UnlockHcMutex(&g_lightSessionMutex);

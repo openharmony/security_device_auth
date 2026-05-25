@@ -40,6 +40,15 @@ typedef struct {
     uint32_t randomLen;
 } LightSessionReturnData;
 
+typedef struct {
+    int64_t requestId;
+    int32_t osAccountId;
+    const char *serviceId;
+    DataBuff randomBuff;
+    int32_t opCode;
+    const DeviceAuthCallback *callback;
+} LightSessionInitParams;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -51,8 +60,7 @@ void DestroyLightSessionManager(void);
 int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **randomVal,
     uint32_t *randomLen, char **serviceId);
 
-int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serviceId,
-    DataBuff randomBuff, int32_t opCode, const DeviceAuthCallback *callback);
+int32_t AddLightSession(const LightSessionInitParams *params);
 
 int32_t DeleteLightSession(int64_t requestId, int32_t osAccountId);
 
