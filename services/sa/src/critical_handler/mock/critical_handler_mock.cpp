@@ -19,7 +19,7 @@ void NotifyProcessIsActive(void) {}
 
 void NotifyProcessIsStop(void) {}
 
-void IncreaseCriticalCnt(int addCnt)
+void IncreaseCriticalCnt(uint32_t addCnt)
 {
     (void)addCnt;
 }

@@ -36,6 +36,7 @@ using namespace OHOS::Security::AccessToken;
 #define PROC_NAME_DEVICE_SECURITY_LEVEL "dslm_service"
 #define PROC_NAME_ISHARE "CollaborationFwk"
 #define PROC_NAME_REMOTE_COMM "remote_communication"
+#define UID_MIGRATE_SERVER 7002
 
 static unordered_map<int32_t, vector<string>> g_apiAccessWhitelist = {
     { IPC_CALL_ID_PROCESS_CREDENTIAL, { PROC_NAME_DEVICE_MANAGER } },
@@ -213,4 +214,28 @@ int32_t CheckPermission(int32_t methodId)
 int32_t GetCallingUid(void)
 {
     return IPCSkeleton::GetCallingUid();
+}
+
+int32_t CheckRestoreCallPermission(void)
+{
+    AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
+    ATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenType != TOKEN_NATIVE) {
+        LOGE("Caller token type is not native!");
+        return HC_ERR_IPC_PERMISSION_DENIED;
+    }
+    NativeTokenInfo tokenInfo;
+    if (AccessTokenKit::GetNativeTokenInfo(tokenId, tokenInfo) != 0) {
+        LOGE("Failed to get native token info!");
+        return HC_ERR_IPC_PERMISSION_DENIED;
+    }
+    if ((tokenInfo.apl != APL_SYSTEM_CORE) && (tokenInfo.apl != APL_SYSTEM_BASIC)) {
+        LOGE("Invalid token apl: %" LOG_PUB "d", tokenInfo.apl);
+        return HC_ERR_IPC_PERMISSION_DENIED;
+    }
+    if (IPCSkeleton::GetCallingUid() != UID_MIGRATE_SERVER) {
+        LOGE("Caller is not migrate server!");
+        return HC_ERR_IPC_PERMISSION_DENIED;
+    }
+    return HC_SUCCESS;
 }

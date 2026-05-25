@@ -26,7 +26,7 @@ extern "C" {
 
 void NotifyProcessIsActive(void);
 void NotifyProcessIsStop(void);
-void IncreaseCriticalCnt(int addCnt);
+void IncreaseCriticalCnt(uint32_t addCnt);
 void DecreaseCriticalCnt(void);
 int32_t GetCriticalCnt(void);
 void SetStatusIsStopping(bool isStopping);

@@ -225,23 +225,29 @@ static void InitCbStubTable()
 
 int32_t ServiceDevAuth::HandleRestoreCall(MessageParcel &data, MessageParcel &reply)
 {
-    IncreaseCriticalCnt(ADD_ONE);
 #ifdef DEV_AUTH_SERVICE_BUILD
+    int32_t res = CheckRestoreCallPermission();
+    if (res != HC_SUCCESS) {
+        LOGE("Caller has no permission to do restore operation!");
+        reply.WriteInt32(res);
+        return 0;
+    }
+    IncreaseCriticalCnt(ADD_ONE);
     int32_t osAccountId = DEFAULT_UPGRADE_OS_ACCOUNT_ID;
     data.ReadInt32(osAccountId);
     LOGI("Begin to upgrade data for osAccountId: %" LOG_PUB "d.", osAccountId);
-    int32_t res = ExecuteAccountAuthCmd(osAccountId, UPGRADE_DATA, nullptr, nullptr);
+    res = ExecuteAccountAuthCmd(osAccountId, UPGRADE_DATA, nullptr, nullptr);
     ReloadOsAccountDb(osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to upgrade data!");
         DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(UPGRADE_DATA_EVENT, PROCESS_UPDATE, res);
     }
     reply.WriteInt32(res);
+    DecreaseCriticalCnt();
 #else
     (void)data;
     (void)reply;
 #endif
-    DecreaseCriticalCnt();
     return 0;
 }
 
