@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 #include "mini_session_manager.h"
+#include "account_task_manager.h"
+#include "callback_manager.h"
 #include "common_defs.h"
 #include "device_auth.h"
 #include "device_auth_defines.h"
@@ -20,15 +22,14 @@
 #include "hc_log.h"
 #include "hc_mutex.h"
 #include "hc_string_vector.h"
+#include "hc_time.h"
 #include "hc_types.h"
-#include "key_manager.h"
-#include "securec.h"
 #include "hidump_adapter.h"
+#include "key_manager.h"
 #include "os_account_adapter.h"
 #include "pseudonym_manager.h"
 #include "security_label_adapter.h"
-#include "account_task_manager.h"
-#include "hc_time.h"
+#include "securec.h"
 #include "string_util.h"
 #include "uint8buff_utils.h"
 
@@ -46,14 +47,20 @@ IMPLEMENT_HC_VECTOR(LightSessionInfoVec, LightSessionInfo, 1)
 static LightSessionInfoVec g_lightSessionInfoList;
 static HcMutex g_lightSessionMutex;
 
-static LightSession *CreateSession(int64_t requestId, int32_t osAccountId, const char *serviceId, DataBuff randomBuff)
+static LightSession *CreateSession(int64_t requestId, int32_t osAccountId, const char *serviceId,
+    DataBuff randomBuff, int32_t opCode, const DeviceAuthCallback *callback)
 {
+    if (callback == NULL) {
+        LOGE("callback is NULL");
+        return NULL;
+    }
     LightSession *newSession = (LightSession *)HcMalloc(sizeof(LightSession), 0);
     if (newSession == NULL) {
         LOGE("Failed to alloc newSession");
         return NULL;
     }
     newSession->osAccountId = osAccountId;
+    newSession->opCode = opCode;
     uint32_t randomLen = randomBuff.length;
     newSession->randomLen = randomLen;
     newSession->randomVal = (uint8_t *)HcMalloc(randomLen, 0);
@@ -79,6 +86,13 @@ static LightSession *CreateSession(int64_t requestId, int32_t osAccountId, const
     }
     if (memcpy_s(newSession->serviceId, serviceIdLen, serviceId, serviceIdLen) != EOK) {
         LOGE("Copy serviceId failed.");
+        HcFree(newSession->serviceId);
+        HcFree(newSession->randomVal);
+        HcFree(newSession);
+        return NULL;
+    }
+    if (memcpy_s(&newSession->callback, sizeof(DeviceAuthCallback), callback, sizeof(DeviceAuthCallback)) != EOK) {
+        LOGE("Copy callback failed.");
         HcFree(newSession->serviceId);
         HcFree(newSession->randomVal);
         HcFree(newSession);
@@ -116,6 +130,7 @@ static void RemoveTimeOutSession(void)
         LOGI("session timeout. [Id]: %" LOG_PUB PRId64, session->requestId);
         LOGI("session timeout. [TimeLimit(/s)]: %" LOG_PUB "d, [RunningTime(/s)]: %" LOG_PUB PRId64,
             TIME_OUT_VALUE_LIGHT_AUTH, runningTime);
+        ProcessErrorCallback(session->requestId, session->opCode, HC_ERR_TIME_OUT, NULL, &session->callback);
         DestroyLightSession(session);
         HC_VECTOR_POPELEMENT(&g_lightSessionInfoList, lightSessionInfo, index);
     }
@@ -188,8 +203,13 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
     return HC_ERR_SESSION_NOT_EXIST;
 }
 
-int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serviceId, DataBuff randomBuff)
+int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serviceId,
+    DataBuff randomBuff, int32_t opCode, const DeviceAuthCallback *callback)
 {
+    if (callback == NULL) {
+        LOGE("callback is NULL");
+        return HC_ERR_INVALID_PARAMS;
+    }
     (void)LockHcMutex(&g_lightSessionMutex);
     RemoveTimeOutSession();
     if (g_lightSessionInfoList.size(&g_lightSessionInfoList) >= MAX_SESSION_NUM_LIGHT_AUTH) {
@@ -198,7 +218,7 @@ int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serv
         return HC_ERR_OUT_OF_LIMIT;
     }
     LightSessionInfo newLightSessionInfo;
-    LightSession *newSession = CreateSession(requestId, osAccountId, serviceId, randomBuff);
+    LightSession *newSession = CreateSession(requestId, osAccountId, serviceId, randomBuff, opCode, callback);
     if (newSession == NULL) {
         LOGE("create session fail.");
         UnlockHcMutex(&g_lightSessionMutex);

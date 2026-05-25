@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
+#include "device_auth.h"
+#include "device_auth_defines.h"
 #include "hc_log.h"
 #include "hc_vector.h"
-#include "device_auth_defines.h"
 
 typedef struct {
     int64_t requestId;
@@ -46,12 +47,15 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
     return HC_SUCCESS;
 }
 
-int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serviceId, uint8_t *randomVal)
+int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serviceId,
+    uint8_t *randomVal, int32_t opCode, const DeviceAuthCallback *callback)
 {
     (void)requestId;
     (void)osAccountId;
     (void)serviceId;
     (void)randomVal;
+    (void)opCode;
+    (void)callback;
     return HC_SUCCESS;
 }
 
