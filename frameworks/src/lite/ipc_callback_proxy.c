@@ -54,7 +54,6 @@ void CbProxySendRequest(SvcIdentity sid, int32_t callbackId, uintptr_t cbHook, I
     uintptr_t outMsg = 0x0;
     IpcIo replyTmp;
 
-    ShowIpcSvcInfo(&(sid));
     reqData = (IpcIo *)InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
     if (reqData == NULL) {
         return;

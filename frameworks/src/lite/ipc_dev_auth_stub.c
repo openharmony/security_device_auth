@@ -129,7 +129,6 @@ static void WithObject(int32_t methodId, IpcIo *data, IpcDataInfo *ipcData, int3
         LOGE("should with remote object, but failed, param type %" LOG_PUB "d", ipcData->type);
         return;
     }
-    ShowIpcSvcInfo(&tmp);
     ipcData->idx = SetRemoteObject(&tmp);
     if (ipcData->idx >= 0) {
         ipcData->val = (uint8_t *)(&(ipcData->idx));
@@ -293,7 +292,6 @@ int32_t SetRemoteObject(const SvcIdentity *object)
     g_cbStub[idx].cbDieId = 0;
     g_cbStub[idx].inUse = true;
     UnLockCbStubTable();
-    ShowIpcSvcInfo(&(g_cbStub[idx].cbStub));
     return idx;
 }
 
@@ -352,7 +350,6 @@ void ActCallback(int32_t objIdx, int32_t callbackId, uintptr_t cbHook, IpcIo *da
         return;
     }
 
-    ShowIpcSvcInfo(&g_cbStub[objIdx].cbStub);
     LockCbStubTable();
     CbProxySendRequest(g_cbStub[objIdx].cbStub, callbackId, cbHook, dataParcel, reply);
     UnLockCbStubTable();

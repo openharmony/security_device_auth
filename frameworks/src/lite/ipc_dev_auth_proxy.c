@@ -84,7 +84,6 @@ int32_t FinalCallRequest(ProxyDevAuthData *dataCtx, int32_t methodId)
     }
     if (dataCtx->withCallback) {
         SvcIdentity badSvc = { 0 };
-        ShowIpcSvcInfo(&(dataCtx->cbSvc));
         if ((sizeof(dataCtx->cbSvc) != sizeof(badSvc)) ||
             !memcmp(&(dataCtx->cbSvc), &badSvc, sizeof(badSvc))) {
             LOGE("ipc call with callback, but stub object invalid");

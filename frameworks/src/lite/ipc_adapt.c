@@ -1455,7 +1455,6 @@ void SetCbCtxToDataCtx(uintptr_t callCtx, int32_t cbIdx)
         LOGW("SDK callback stub un-registered");
         return;
     }
-    ShowIpcSvcInfo(stubInfo);
     dataCache = (ProxyDevAuthData *)(callCtx);
     SetCallbackStub(dataCache, stubInfo);
     return;
@@ -1689,12 +1688,6 @@ int32_t GetIpcIoDataLength(const IpcIo *io)
     return (endPos <= beginPos) ? 0 : (int32_t)(endPos - beginPos);
 }
 
-void ShowIpcSvcInfo(const SvcIdentity *svc)
-{
-    LOGI("svc information - handle(%" LOG_PUB "u), token(%" LOG_PUB "u), cookie(%" LOG_PUB "u)", svc->handle,
-        svc->token, svc->cookie);
-}
-
 int32_t InitProxyAdapt(void)
 {
     if (g_proxyInstance == NULL) {
@@ -1714,7 +1707,6 @@ int32_t InitProxyAdapt(void)
         g_sdkCbStub.stubIdentity.handle = IPC_INVALID_HANDLE;
         g_sdkCbStub.stubIdentity.cookie = (uintptr_t)&g_objectStub;
 
-        ShowIpcSvcInfo(&(g_sdkCbStub.stubIdentity));
         g_sdkCbStub.registered = true;
     }
     return HC_SUCCESS;
