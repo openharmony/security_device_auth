@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include "device_auth.h"
 #include "device_auth_defines.h"
 #include "hc_log.h"
 #include "hc_vector.h"
