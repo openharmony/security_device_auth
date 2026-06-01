@@ -1423,7 +1423,15 @@ static int32_t StartLightAccountAuthInner(int32_t osAccountId, int64_t requestId
         LOGE("Failed to get random!");
         return res;
     }
-    res = AddLightSession(requestId, osAccountId, serviceId, clientRandom);
+    LightSessionInitParams params = {
+        .requestId = requestId,
+        .osAccountId = osAccountId,
+        .serviceId = serviceId,
+        .randomBuff = clientRandom,
+        .opCode = AUTH_FORM_LIGHT_AUTH,
+        .callback = laCallBack
+    };
+    res = AddLightSession(&params);
     if (res != HC_SUCCESS) {
         LOGE("Failed to AddLightSession!");
         DestroyDataBuff(&clientRandom);

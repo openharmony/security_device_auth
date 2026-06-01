@@ -13,17 +13,10 @@
  * limitations under the License.
  */
 
+#include "device_auth_defines.h"
 #include "hc_log.h"
 #include "hc_vector.h"
-#include "device_auth_defines.h"
-
-typedef struct {
-    int64_t requestId;
-    int32_t osAccountId;
-    char *serviceId;
-    uint8_t *randomVal;
-    uint32_t randomLen;
-} LightSession;
+#include "mini_session_manager.h"
 
 int32_t InitLightSessionManager(void)
 {
@@ -46,12 +39,9 @@ int32_t QueryLightSession(int64_t requestId, int32_t osAccountId, uint8_t **rand
     return HC_SUCCESS;
 }
 
-int32_t AddLightSession(int64_t requestId, int32_t osAccountId, const char *serviceId, uint8_t *randomVal)
+int32_t AddLightSession(const LightSessionInitParams *params)
 {
-    (void)requestId;
-    (void)osAccountId;
-    (void)serviceId;
-    (void)randomVal;
+    (void)params;
     return HC_SUCCESS;
 }
 
