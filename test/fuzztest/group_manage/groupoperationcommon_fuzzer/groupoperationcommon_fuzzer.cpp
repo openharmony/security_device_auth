@@ -417,7 +417,7 @@ static void GroupOperationTest62(void)
 }
 
 using TestFunc = void(*)(void);
-static TestFunc testFuncs[] = {
+static TestFunc g_testFuncs[] = {
     GroupOperationTest01, GroupOperationTest02, GroupOperationTest03, GroupOperationTest04, GroupOperationTest05,
     GroupOperationTest06, GroupOperationTest07, GroupOperationTest08, GroupOperationTest09, GroupOperationTest10,
     GroupOperationTest11, GroupOperationTest12, GroupOperationTest13, GroupOperationTest14, GroupOperationTest15,
@@ -432,7 +432,7 @@ static TestFunc testFuncs[] = {
     GroupOperationTest56, GroupOperationTest57, GroupOperationTest58, GroupOperationTest59, GroupOperationTest60,
     GroupOperationTest61, GroupOperationTest62
 };
-constexpr size_t TEST_FUNC_COUNT = sizeof(testFuncs) / sizeof(testFuncs[0]);
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
 
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
@@ -444,7 +444,7 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     FuzzedDataProvider fdp(data, size);
     int32_t testId = fdp.ConsumeIntegral<int32_t>();
     
-    testFuncs[testId % TEST_FUNC_COUNT]();
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
     
     DestroyDeviceAuthService();
     return true;

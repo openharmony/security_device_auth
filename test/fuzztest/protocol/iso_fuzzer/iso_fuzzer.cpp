@@ -386,7 +386,7 @@ static void IsoTest29(void)
 }
 
 using TestFunc = void(*)(void);
-static TestFunc testFuncs[] = {
+static TestFunc g_testFuncs[] = {
     IsoTest01, IsoTest02, IsoTest03, IsoTest04, IsoTest05,
     IsoTest06, IsoTest07, IsoTest08, IsoTest09, IsoTest10,
     IsoTest11, IsoTest12, IsoTest13, IsoTest14, IsoTest15,
@@ -394,7 +394,7 @@ static TestFunc testFuncs[] = {
     IsoTest21, IsoTest22, IsoTest23, IsoTest24, IsoTest25,
     IsoTest26, IsoTest27, IsoTest28, IsoTest29
 };
-constexpr size_t TEST_FUNC_COUNT = sizeof(testFuncs) / sizeof(testFuncs[0]);
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
 
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
@@ -405,7 +405,7 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     FuzzedDataProvider fdp(data, size);
     int32_t testId = fdp.ConsumeIntegral<int32_t>();
     
-    testFuncs[testId % TEST_FUNC_COUNT]();
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
     
     return true;
 }

@@ -277,14 +277,15 @@ static void ExpandSubSessionTest21(void)
 }
 
 using TestFunc = void(*)(void);
-static TestFunc testFuncs[] = {
-    ExpandSubSessionTest01, ExpandSubSessionTest02, ExpandSubSessionTest03, ExpandSubSessionTest04, ExpandSubSessionTest05,
-    ExpandSubSessionTest06, ExpandSubSessionTest07, ExpandSubSessionTest08, ExpandSubSessionTest09, ExpandSubSessionTest10,
-    ExpandSubSessionTest11, ExpandSubSessionTest12, ExpandSubSessionTest13, ExpandSubSessionTest14, ExpandSubSessionTest15,
-    ExpandSubSessionTest16, ExpandSubSessionTest17, ExpandSubSessionTest18, ExpandSubSessionTest19, ExpandSubSessionTest20,
+static TestFunc g_testFuncs[] = {
+    ExpandSubSessionTest01, ExpandSubSessionTest02, ExpandSubSessionTest03, ExpandSubSessionTest04,
+    ExpandSubSessionTest05, ExpandSubSessionTest06, ExpandSubSessionTest07, ExpandSubSessionTest08,
+    ExpandSubSessionTest09, ExpandSubSessionTest10, ExpandSubSessionTest11, ExpandSubSessionTest12,
+    ExpandSubSessionTest13, ExpandSubSessionTest14, ExpandSubSessionTest15, ExpandSubSessionTest16,
+    ExpandSubSessionTest17, ExpandSubSessionTest18, ExpandSubSessionTest19, ExpandSubSessionTest20,
     ExpandSubSessionTest21
 };
-constexpr size_t TEST_FUNC_COUNT = sizeof(testFuncs) / sizeof(testFuncs[0]);
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
 
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
@@ -295,7 +296,7 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     FuzzedDataProvider fdp(data, size);
     int32_t testId = fdp.ConsumeIntegral<int32_t>();
     
-    testFuncs[testId % TEST_FUNC_COUNT]();
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
     
     return true;
 }

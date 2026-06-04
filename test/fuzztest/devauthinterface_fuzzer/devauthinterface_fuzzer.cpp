@@ -1503,23 +1503,28 @@ static void DevAuthInterfaceTestCase036()
 }
 
 using TestFunc = void(*)(void);
-static TestFunc testFuncs[] = {
-    DevAuthInterfaceTestCase001, DevAuthInterfaceTestCase002, DevAuthInterfaceTestCase003, DevAuthInterfaceTestCase004,
-    DevAuthInterfaceTestCase0041, DevAuthInterfaceTestCase0042, DevAuthInterfaceTestCase0043, DevAuthInterfaceTestCase0044,
-    DevAuthInterfaceTestCase0045, DevAuthInterfaceTestCase005, DevAuthInterfaceTestCase006, DevAuthInterfaceTestCase007,
-    DevAuthInterfaceTestCase008, DevAuthInterfaceTestCase009, DevAuthInterfaceTestCase010, DevAuthInterfaceTestCase011,
-    DevAuthInterfaceTestCase012, DevAuthInterfaceTestCase013, DevAuthInterfaceTestCase014, DevAuthInterfaceTestCase0141,
-    DevAuthInterfaceTestCase0142, DevAuthInterfaceTestCase0143, DevAuthInterfaceTestCase0144, DevAuthInterfaceTestCase015,
-    DevAuthInterfaceTestCase016, DevAuthInterfaceTestCase0161, DevAuthInterfaceTestCase017, DevAuthInterfaceTestCase018,
-    DevAuthInterfaceTestCase019, DevAuthInterfaceTestCase020, DevAuthInterfaceTestCase021, DevAuthInterfaceTestCase022,
-    DevAuthInterfaceTestCase023, DevAuthInterfaceTestCase024, DevAuthInterfaceTestCase025, DevAuthInterfaceTestCase026,
-    DevAuthInterfaceTestCase027, DevAuthInterfaceTestCase028, DevAuthInterfaceTestCase0281, DevAuthInterfaceTestCase0282,
-    DevAuthInterfaceTestCase0283, DevAuthInterfaceTestCase0284, DevAuthInterfaceTestCase0285, DevAuthInterfaceTestCase0286,
-    DevAuthInterfaceTestCase0287, DevAuthInterfaceTestCase0288, DevAuthInterfaceTestCase0289, DevAuthInterfaceTestCase029,
-    DevAuthInterfaceTestCase030, DevAuthInterfaceTestCase031, DevAuthInterfaceTestCase032, DevAuthInterfaceTestCase0321,
-    DevAuthInterfaceTestCase033, DevAuthInterfaceTestCase034, DevAuthInterfaceTestCase035, DevAuthInterfaceTestCase036
+static TestFunc g_testFuncs[] = {
+    DevAuthInterfaceTestCase001, DevAuthInterfaceTestCase002, DevAuthInterfaceTestCase003,
+    DevAuthInterfaceTestCase004, DevAuthInterfaceTestCase0041, DevAuthInterfaceTestCase0042,
+    DevAuthInterfaceTestCase0043, DevAuthInterfaceTestCase0044, DevAuthInterfaceTestCase0045,
+    DevAuthInterfaceTestCase005, DevAuthInterfaceTestCase006, DevAuthInterfaceTestCase007,
+    DevAuthInterfaceTestCase008, DevAuthInterfaceTestCase009, DevAuthInterfaceTestCase010,
+    DevAuthInterfaceTestCase011, DevAuthInterfaceTestCase012, DevAuthInterfaceTestCase013,
+    DevAuthInterfaceTestCase014, DevAuthInterfaceTestCase0141, DevAuthInterfaceTestCase0142,
+    DevAuthInterfaceTestCase0143, DevAuthInterfaceTestCase0144, DevAuthInterfaceTestCase015,
+    DevAuthInterfaceTestCase016, DevAuthInterfaceTestCase0161, DevAuthInterfaceTestCase017,
+    DevAuthInterfaceTestCase018, DevAuthInterfaceTestCase019, DevAuthInterfaceTestCase020,
+    DevAuthInterfaceTestCase021, DevAuthInterfaceTestCase022, DevAuthInterfaceTestCase023,
+    DevAuthInterfaceTestCase024, DevAuthInterfaceTestCase025, DevAuthInterfaceTestCase026,
+    DevAuthInterfaceTestCase027, DevAuthInterfaceTestCase028, DevAuthInterfaceTestCase0281,
+    DevAuthInterfaceTestCase0282, DevAuthInterfaceTestCase0283, DevAuthInterfaceTestCase0284,
+    DevAuthInterfaceTestCase0285, DevAuthInterfaceTestCase0286, DevAuthInterfaceTestCase0287,
+    DevAuthInterfaceTestCase0288, DevAuthInterfaceTestCase0289, DevAuthInterfaceTestCase029,
+    DevAuthInterfaceTestCase030, DevAuthInterfaceTestCase031, DevAuthInterfaceTestCase032,
+    DevAuthInterfaceTestCase0321, DevAuthInterfaceTestCase033, DevAuthInterfaceTestCase034,
+    DevAuthInterfaceTestCase035, DevAuthInterfaceTestCase036
 };
-constexpr size_t TEST_FUNC_COUNT = sizeof(testFuncs) / sizeof(testFuncs[0]);
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
 
 bool FuzzDoDevAuthInterfaceFuzz(const uint8_t* data, size_t size)
 {
@@ -1530,7 +1535,7 @@ bool FuzzDoDevAuthInterfaceFuzz(const uint8_t* data, size_t size)
     FuzzedDataProvider fdp(data, size);
     int32_t testId = fdp.ConsumeIntegral<int32_t>();
     
-    testFuncs[testId % TEST_FUNC_COUNT]();
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
     
     return true;
 }

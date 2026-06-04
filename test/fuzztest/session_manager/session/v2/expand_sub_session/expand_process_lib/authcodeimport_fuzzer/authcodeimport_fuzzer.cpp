@@ -419,14 +419,14 @@ void AuthCodeImportTest120()
 }
 
 using TestFunc = void(*)(void);
-static TestFunc testFuncs[] = {
+static TestFunc g_testFuncs[] = {
     AuthCodeImportTest001, AuthCodeImportTest002, AuthCodeImportTest101, AuthCodeImportTest102, AuthCodeImportTest103,
     AuthCodeImportTest104, AuthCodeImportTest105, AuthCodeImportTest106, AuthCodeImportTest107, AuthCodeImportTest108,
     AuthCodeImportTest109, AuthCodeImportTest110, AuthCodeImportTest111, AuthCodeImportTest112, AuthCodeImportTest113,
     AuthCodeImportTest114, AuthCodeImportTest115, AuthCodeImportTest116, AuthCodeImportTest117, AuthCodeImportTest118,
     AuthCodeImportTest119, AuthCodeImportTest120
 };
-constexpr size_t TEST_FUNC_COUNT = sizeof(testFuncs) / sizeof(testFuncs[0]);
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
 
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
@@ -438,7 +438,7 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     FuzzedDataProvider fdp(data, size);
     int32_t testId = fdp.ConsumeIntegral<int32_t>();
     
-    testFuncs[testId % TEST_FUNC_COUNT]();
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
     
     return true;
 }

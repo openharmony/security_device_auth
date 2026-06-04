@@ -150,10 +150,10 @@ static int32_t StandardExchangeTaskTest004()
 }
 
 using TestFunc = int32_t(*)(void);
-static TestFunc testFuncs[] = {
+static TestFunc g_testFuncs[] = {
     StandardExchangeTaskTest001, StandardExchangeTaskTest002, StandardExchangeTaskTest003, StandardExchangeTaskTest004
 };
-constexpr size_t TEST_FUNC_COUNT = sizeof(testFuncs) / sizeof(testFuncs[0]);
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
 
 bool FuzzDoRegCallback(const uint8_t* data, size_t size)
 {
@@ -164,7 +164,7 @@ bool FuzzDoRegCallback(const uint8_t* data, size_t size)
     FuzzedDataProvider fdp(data, size);
     int32_t testId = fdp.ConsumeIntegral<int32_t>();
     
-    testFuncs[testId % TEST_FUNC_COUNT]();
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
     
     return true;
 }

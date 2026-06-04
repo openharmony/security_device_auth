@@ -396,14 +396,14 @@ static void SaveTrustedInfoTest22(void)
 }
 
 using TestFunc = void(*)(void);
-static TestFunc testFuncs[] = {
+static TestFunc g_testFuncs[] = {
     SaveTrustedInfoTest00, SaveTrustedInfoTest03, SaveTrustedInfoTest04, SaveTrustedInfoTest05, SaveTrustedInfoTest06,
     SaveTrustedInfoTest07, SaveTrustedInfoTest08, SaveTrustedInfoTest09, SaveTrustedInfoTest10, SaveTrustedInfoTest11,
     SaveTrustedInfoTest12, SaveTrustedInfoTest13, SaveTrustedInfoTest14, SaveTrustedInfoTest15, SaveTrustedInfoTest16,
     SaveTrustedInfoTest17, SaveTrustedInfoTest18, SaveTrustedInfoTest19, SaveTrustedInfoTest20, SaveTrustedInfoTest21,
     SaveTrustedInfoTest22
 };
-constexpr size_t TEST_FUNC_COUNT = sizeof(testFuncs) / sizeof(testFuncs[0]);
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
 
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
@@ -414,7 +414,7 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     FuzzedDataProvider fdp(data, size);
     int32_t testId = fdp.ConsumeIntegral<int32_t>();
     
-    testFuncs[testId % TEST_FUNC_COUNT]();
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
     
     return true;
 }

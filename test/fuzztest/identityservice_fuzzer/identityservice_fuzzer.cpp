@@ -1469,7 +1469,7 @@ static void IdentiyServiceFuzzPart(void)
 }
 
 using TestFunc = void(*)(void);
-static TestFunc testFuncs[] = {
+static TestFunc g_testFuncs[] = {
     AddCredFuzzPart, ExportCredFuzzPart, QueryCredFuzzPart, DelCredFuzzPart, UpdateCredFuzzPart,
     CredListenerFuzzPart, CompareParamsFuzzTestCase, IdentiyServiceFuzzPart, IdentityServiceAuthPart,
     IdentityServiceTestCase049, IdentityServiceTestCase050, IdentityServiceTestCase051, IdentityServiceTestCase052,
@@ -1479,7 +1479,7 @@ static TestFunc testFuncs[] = {
     IdentityServiceTestCase065, IdentityServiceTestCase066, IdentityServiceTestCase067, IdentityServiceTestCase068,
     IdentityServiceTestCase069, IdentityServiceTestCase070
 };
-constexpr size_t TEST_FUNC_COUNT = sizeof(testFuncs) / sizeof(testFuncs[0]);
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
 
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
@@ -1490,7 +1490,7 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     FuzzedDataProvider fdp(data, size);
     int32_t testId = fdp.ConsumeIntegral<int32_t>();
     
-    testFuncs[testId % TEST_FUNC_COUNT]();
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
     
     return true;
 }
