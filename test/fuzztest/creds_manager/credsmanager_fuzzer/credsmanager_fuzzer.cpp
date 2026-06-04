@@ -17,6 +17,7 @@
 
 #include <ctime>
 #include <unistd.h>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "account_module_defines.h"
 #include "alg_loader.h"
 #include "asy_token_manager.h"
@@ -1828,88 +1829,40 @@ static void CredsManagerTest64(void)
     FreeJson(json);
 }
 
-static void FuzzInnerPart1(void)
-{
-    (void)CredsManagerTest01();
-    (void)CredsManagerTest02();
-    (void)CredsManagerTest03();
-    (void)CredsManagerTest04();
-    (void)CredsManagerTest05();
-    (void)CredsManagerTest06();
-    (void)CredsManagerTest07();
-    (void)CredsManagerTest08();
-    (void)CredsManagerTest09();
-    (void)CredsManagerTest10();
-    (void)CredsManagerTest11();
-    (void)CredsManagerTest12();
-    (void)CredsManagerTest13();
-    (void)CredsManagerTest14();
-    (void)CredsManagerTest15();
-    (void)CredsManagerTest16();
-    (void)CredsManagerTest17();
-    (void)CredsManagerTest18();
-    (void)CredsManagerTest19();
-    (void)CredsManagerTest20();
-    (void)CredsManagerTest21();
-    (void)CredsManagerTest22();
-    (void)CredsManagerTest23();
-    (void)CredsManagerTest24();
-    (void)CredsManagerTest25();
-    (void)CredsManagerTest26();
-    (void)CredsManagerTest27();
-    (void)CredsManagerTest28();
-    (void)CredsManagerTest29();
-    (void)CredsManagerTest30();
-    (void)CredsManagerTest31();
-}
-
-static void FuzzInnerPart2(void)
-{
-    (void)CredsManagerTest32();
-    (void)CredsManagerTest33();
-    (void)CredsManagerTest34();
-    (void)CredsManagerTest35();
-    (void)CredsManagerTest36();
-    (void)CredsManagerTest37();
-    (void)CredsManagerTest38();
-    (void)CredsManagerTest39();
-    (void)CredsManagerTest40();
-    (void)CredsManagerTest41();
-    (void)CredsManagerTest42();
-    (void)CredsManagerTest43();
-    (void)CredsManagerTest44();
-    (void)CredsManagerTest45();
-    (void)CredsManagerTest46();
-    (void)CredsManagerTest47();
-    (void)CredsManagerTest48();
-    (void)CredsManagerTest49();
-    (void)CredsManagerTest50();
-    (void)CredsManagerTest51();
-    (void)CredsManagerTest52();
-    (void)CredsManagerTest53();
-    (void)CredsManagerTest54();
-    (void)CredsManagerTest55();
-    (void)CredsManagerTest56();
-    (void)CredsManagerTest57();
-    (void)CredsManagerTest58();
-    (void)CredsManagerTest59();
-    (void)CredsManagerTest60();
-    (void)CredsManagerTest61();
-    (void)CredsManagerTest62();
-    (void)CredsManagerTest63();
-    (void)CredsManagerTest64();
-}
+using TestFunc = void(*)(void);
+static TestFunc testFuncs[] = {
+    CredsManagerTest01, CredsManagerTest02, CredsManagerTest03, CredsManagerTest04, CredsManagerTest05,
+    CredsManagerTest06, CredsManagerTest07, CredsManagerTest08, CredsManagerTest09, CredsManagerTest10,
+    CredsManagerTest11, CredsManagerTest12, CredsManagerTest13, CredsManagerTest14, CredsManagerTest15,
+    CredsManagerTest16, CredsManagerTest17, CredsManagerTest18, CredsManagerTest19, CredsManagerTest20,
+    CredsManagerTest21, CredsManagerTest22, CredsManagerTest23, CredsManagerTest24, CredsManagerTest25,
+    CredsManagerTest26, CredsManagerTest27, CredsManagerTest28, CredsManagerTest29, CredsManagerTest30,
+    CredsManagerTest31, CredsManagerTest32, CredsManagerTest33, CredsManagerTest34, CredsManagerTest35,
+    CredsManagerTest36, CredsManagerTest37, CredsManagerTest38, CredsManagerTest39, CredsManagerTest40,
+    CredsManagerTest41, CredsManagerTest42, CredsManagerTest43, CredsManagerTest44, CredsManagerTest45,
+    CredsManagerTest46, CredsManagerTest47, CredsManagerTest48, CredsManagerTest49, CredsManagerTest50,
+    CredsManagerTest51, CredsManagerTest52, CredsManagerTest53, CredsManagerTest54, CredsManagerTest55,
+    CredsManagerTest56, CredsManagerTest57, CredsManagerTest58, CredsManagerTest59, CredsManagerTest60,
+    CredsManagerTest61, CredsManagerTest62, CredsManagerTest63, CredsManagerTest64
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(testFuncs) / sizeof(testFuncs[0]);
 
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
     DeleteDatabase();
     InitDeviceAuthService();
     const DeviceGroupManager *gm = GetGmInstance();
     gm->regCallback(TEST_APP_ID.c_str(), &g_gmCallback);
-    (void)data;
-    (void)size;
-    (void)FuzzInnerPart1();
-    (void)FuzzInnerPart2();
+    
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    testFuncs[testId % TEST_FUNC_COUNT]();
+    
     DestroyDeviceAuthService();
     return true;
 }

@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "device_auth_defines.h"
 #include "hc_types.h"
@@ -474,40 +475,28 @@ static void ECSpekeTest30(void)
     FreeJson(json);
 }
 
+using TestFunc = void(*)(void);
+static TestFunc testFuncs[] = {
+    ECSpekeTest01, ECSpekeTest02, ECSpekeTest03, ECSpekeTest04, ECSpekeTest05,
+    ECSpekeTest06, ECSpekeTest07, ECSpekeTest08, ECSpekeTest09, ECSpekeTest10,
+    ECSpekeTest11, ECSpekeTest12, ECSpekeTest13, ECSpekeTest14, ECSpekeTest15,
+    ECSpekeTest16, ECSpekeTest17, ECSpekeTest18, ECSpekeTest19, ECSpekeTest20,
+    ECSpekeTest21, ECSpekeTest22, ECSpekeTest23, ECSpekeTest24, ECSpekeTest25,
+    ECSpekeTest26, ECSpekeTest27, ECSpekeTest28, ECSpekeTest29, ECSpekeTest30
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(testFuncs) / sizeof(testFuncs[0]);
+
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    (void)ECSpekeTest01();
-    (void)ECSpekeTest02();
-    (void)ECSpekeTest03();
-    (void)ECSpekeTest04();
-    (void)ECSpekeTest05();
-    (void)ECSpekeTest06();
-    (void)ECSpekeTest07();
-    (void)ECSpekeTest08();
-    (void)ECSpekeTest09();
-    (void)ECSpekeTest10();
-    (void)ECSpekeTest11();
-    (void)ECSpekeTest12();
-    (void)ECSpekeTest13();
-    (void)ECSpekeTest14();
-    (void)ECSpekeTest15();
-    (void)ECSpekeTest16();
-    (void)ECSpekeTest17();
-    (void)ECSpekeTest18();
-    (void)ECSpekeTest19();
-    (void)ECSpekeTest20();
-    (void)ECSpekeTest21();
-    (void)ECSpekeTest22();
-    (void)ECSpekeTest23();
-    (void)ECSpekeTest24();
-    (void)ECSpekeTest25();
-    (void)ECSpekeTest26();
-    (void)ECSpekeTest27();
-    (void)ECSpekeTest28();
-    (void)ECSpekeTest29();
-    (void)ECSpekeTest30();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    testFuncs[testId % TEST_FUNC_COUNT]();
+    
     return true;
 }
 }

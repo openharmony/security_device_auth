@@ -12,8 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "standardexchangetask_fuzzer.h"
+
+#include <fuzzer/FuzzedDataProvider.h>
 #include "alg_loader.h"
 #include "device_auth_defines.h"
 #include "securec.h"
@@ -148,14 +149,23 @@ static int32_t StandardExchangeTaskTest004()
     return HC_TRUE;
 }
 
+using TestFunc = int32_t(*)(void);
+static TestFunc testFuncs[] = {
+    StandardExchangeTaskTest001, StandardExchangeTaskTest002, StandardExchangeTaskTest003, StandardExchangeTaskTest004
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(testFuncs) / sizeof(testFuncs[0]);
+
 bool FuzzDoRegCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    (void)StandardExchangeTaskTest001();
-    (void)StandardExchangeTaskTest002();
-    (void)StandardExchangeTaskTest003();
-    (void)StandardExchangeTaskTest004();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    testFuncs[testId % TEST_FUNC_COUNT]();
+    
     return true;
 }
 }

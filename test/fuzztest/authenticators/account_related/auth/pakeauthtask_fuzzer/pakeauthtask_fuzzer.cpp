@@ -15,10 +15,7 @@
 
 #include "pakeauthtask_fuzzer.h"
 
-#include "account_module_defines.h"
-#include "alg_loader.h"
-#include "common_defs.h"
-#include "device_auth.h"
+#include <fuzzer/FuzzedDataProvider.h>
 #include "device_auth_defines.h"
 #include "hc_dev_info_mock.h"
 #include "json_utils.h"
@@ -374,44 +371,31 @@ static void PakeV2AuthTaskCommonTest026(void)
     DestroyTokenManager();
 }
 
+using TestFunc = void(*)(void);
+static TestFunc testFuncs[] = {
+    PakeV2AuthClientTaskTest001, PakeV2AuthClientTaskTest002, PakeV2AuthClientTaskTest003, PakeV2AuthClientTaskTest004,
+    PakeV2AuthServerTaskTest001, PakeV2AuthServerTaskTest002, PakeV2AuthServerTaskTest003, PakeV2AuthServerTaskTest004,
+    PakeV2AuthTaskCommonTest001, PakeV2AuthTaskCommonTest002, PakeV2AuthTaskCommonTest003, PakeV2AuthTaskCommonTest004,
+    PakeV2AuthTaskCommonTest005, PakeV2AuthTaskCommonTest006, PakeV2AuthTaskCommonTest007, PakeV2AuthTaskCommonTest008,
+    PakeV2AuthTaskCommonTest009, PakeV2AuthTaskCommonTest010, PakeV2AuthTaskCommonTest011, PakeV2AuthTaskCommonTest012,
+    PakeV2AuthTaskCommonTest013, PakeV2AuthTaskCommonTest014, PakeV2AuthTaskCommonTest015, PakeV2AuthTaskCommonTest016,
+    PakeV2AuthTaskCommonTest017, PakeV2AuthTaskCommonTest018, PakeV2AuthTaskCommonTest019, PakeV2AuthTaskCommonTest020,
+    PakeV2AuthTaskCommonTest021, PakeV2AuthTaskCommonTest022, PakeV2AuthTaskCommonTest023, PakeV2AuthTaskCommonTest024,
+    PakeV2AuthTaskCommonTest025, PakeV2AuthTaskCommonTest026
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(testFuncs) / sizeof(testFuncs[0]);
+
 bool FuzzDoRegCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    (void)PakeV2AuthClientTaskTest001();
-    (void)PakeV2AuthClientTaskTest002();
-    (void)PakeV2AuthClientTaskTest003();
-    (void)PakeV2AuthClientTaskTest004();
-    (void)PakeV2AuthServerTaskTest001();
-    (void)PakeV2AuthServerTaskTest002();
-    (void)PakeV2AuthServerTaskTest003();
-    (void)PakeV2AuthServerTaskTest004();
-    (void)PakeV2AuthTaskCommonTest001();
-    (void)PakeV2AuthTaskCommonTest002();
-    (void)PakeV2AuthTaskCommonTest003();
-    (void)PakeV2AuthTaskCommonTest004();
-    (void)PakeV2AuthTaskCommonTest005();
-    (void)PakeV2AuthTaskCommonTest006();
-    (void)PakeV2AuthTaskCommonTest007();
-    (void)PakeV2AuthTaskCommonTest008();
-    (void)PakeV2AuthTaskCommonTest009();
-    (void)PakeV2AuthTaskCommonTest010();
-    (void)PakeV2AuthTaskCommonTest011();
-    (void)PakeV2AuthTaskCommonTest012();
-    (void)PakeV2AuthTaskCommonTest013();
-    (void)PakeV2AuthTaskCommonTest014();
-    (void)PakeV2AuthTaskCommonTest015();
-    (void)PakeV2AuthTaskCommonTest016();
-    (void)PakeV2AuthTaskCommonTest017();
-    (void)PakeV2AuthTaskCommonTest018();
-    (void)PakeV2AuthTaskCommonTest019();
-    (void)PakeV2AuthTaskCommonTest020();
-    (void)PakeV2AuthTaskCommonTest021();
-    (void)PakeV2AuthTaskCommonTest022();
-    (void)PakeV2AuthTaskCommonTest023();
-    (void)PakeV2AuthTaskCommonTest024();
-    (void)PakeV2AuthTaskCommonTest025();
-    (void)PakeV2AuthTaskCommonTest026();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    testFuncs[testId % TEST_FUNC_COUNT]();
+    
     return true;
 }
 

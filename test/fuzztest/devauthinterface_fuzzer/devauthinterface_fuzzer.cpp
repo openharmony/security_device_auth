@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 #include <string>
 
 #include "device_auth.h"
@@ -1501,76 +1502,36 @@ static void DevAuthInterfaceTestCase036()
     DestroyDeviceAuthService();
 }
 
-static void DevAuthInterfaceTestCasePart1()
-{
-    (void)DevAuthInterfaceTestCase001();
-    (void)DevAuthInterfaceTestCase002();
-    (void)DevAuthInterfaceTestCase003();
-    (void)DevAuthInterfaceTestCase004();
-    (void)DevAuthInterfaceTestCase0041();
-    (void)DevAuthInterfaceTestCase0042();
-    (void)DevAuthInterfaceTestCase0043();
-    (void)DevAuthInterfaceTestCase0044();
-    (void)DevAuthInterfaceTestCase0045();
-    (void)DevAuthInterfaceTestCase005();
-    (void)DevAuthInterfaceTestCase006();
-    (void)DevAuthInterfaceTestCase007();
-    (void)DevAuthInterfaceTestCase008();
-    (void)DevAuthInterfaceTestCase009();
-    (void)DevAuthInterfaceTestCase010();
-    (void)DevAuthInterfaceTestCase011();
-    (void)DevAuthInterfaceTestCase012();
-    (void)DevAuthInterfaceTestCase013();
-    (void)DevAuthInterfaceTestCase014();
-    (void)DevAuthInterfaceTestCase0141();
-    (void)DevAuthInterfaceTestCase0142();
-    (void)DevAuthInterfaceTestCase0143();
-    (void)DevAuthInterfaceTestCase0144();
-    (void)DevAuthInterfaceTestCase015();
-    (void)DevAuthInterfaceTestCase016();
-    (void)DevAuthInterfaceTestCase0161();
-    (void)DevAuthInterfaceTestCase017();
-}
-
-static void DevAuthInterfaceTestCasePart2()
-{
-    (void)DevAuthInterfaceTestCase018();
-    (void)DevAuthInterfaceTestCase019();
-    (void)DevAuthInterfaceTestCase020();
-    (void)DevAuthInterfaceTestCase021();
-    (void)DevAuthInterfaceTestCase022();
-    (void)DevAuthInterfaceTestCase023();
-    (void)DevAuthInterfaceTestCase024();
-    (void)DevAuthInterfaceTestCase025();
-    (void)DevAuthInterfaceTestCase026();
-    (void)DevAuthInterfaceTestCase027();
-    (void)DevAuthInterfaceTestCase028();
-    (void)DevAuthInterfaceTestCase0281();
-    (void)DevAuthInterfaceTestCase0282();
-    (void)DevAuthInterfaceTestCase0283();
-    (void)DevAuthInterfaceTestCase0284();
-    (void)DevAuthInterfaceTestCase0285();
-    (void)DevAuthInterfaceTestCase0286();
-    (void)DevAuthInterfaceTestCase0287();
-    (void)DevAuthInterfaceTestCase0288();
-    (void)DevAuthInterfaceTestCase0289();
-    (void)DevAuthInterfaceTestCase029();
-    (void)DevAuthInterfaceTestCase030();
-    (void)DevAuthInterfaceTestCase031();
-    (void)DevAuthInterfaceTestCase032();
-    (void)DevAuthInterfaceTestCase0321();
-    (void)DevAuthInterfaceTestCase033();
-    (void)DevAuthInterfaceTestCase034();
-    (void)DevAuthInterfaceTestCase035();
-    (void)DevAuthInterfaceTestCase036();
-}
+using TestFunc = void(*)(void);
+static TestFunc testFuncs[] = {
+    DevAuthInterfaceTestCase001, DevAuthInterfaceTestCase002, DevAuthInterfaceTestCase003, DevAuthInterfaceTestCase004,
+    DevAuthInterfaceTestCase0041, DevAuthInterfaceTestCase0042, DevAuthInterfaceTestCase0043, DevAuthInterfaceTestCase0044,
+    DevAuthInterfaceTestCase0045, DevAuthInterfaceTestCase005, DevAuthInterfaceTestCase006, DevAuthInterfaceTestCase007,
+    DevAuthInterfaceTestCase008, DevAuthInterfaceTestCase009, DevAuthInterfaceTestCase010, DevAuthInterfaceTestCase011,
+    DevAuthInterfaceTestCase012, DevAuthInterfaceTestCase013, DevAuthInterfaceTestCase014, DevAuthInterfaceTestCase0141,
+    DevAuthInterfaceTestCase0142, DevAuthInterfaceTestCase0143, DevAuthInterfaceTestCase0144, DevAuthInterfaceTestCase015,
+    DevAuthInterfaceTestCase016, DevAuthInterfaceTestCase0161, DevAuthInterfaceTestCase017, DevAuthInterfaceTestCase018,
+    DevAuthInterfaceTestCase019, DevAuthInterfaceTestCase020, DevAuthInterfaceTestCase021, DevAuthInterfaceTestCase022,
+    DevAuthInterfaceTestCase023, DevAuthInterfaceTestCase024, DevAuthInterfaceTestCase025, DevAuthInterfaceTestCase026,
+    DevAuthInterfaceTestCase027, DevAuthInterfaceTestCase028, DevAuthInterfaceTestCase0281, DevAuthInterfaceTestCase0282,
+    DevAuthInterfaceTestCase0283, DevAuthInterfaceTestCase0284, DevAuthInterfaceTestCase0285, DevAuthInterfaceTestCase0286,
+    DevAuthInterfaceTestCase0287, DevAuthInterfaceTestCase0288, DevAuthInterfaceTestCase0289, DevAuthInterfaceTestCase029,
+    DevAuthInterfaceTestCase030, DevAuthInterfaceTestCase031, DevAuthInterfaceTestCase032, DevAuthInterfaceTestCase0321,
+    DevAuthInterfaceTestCase033, DevAuthInterfaceTestCase034, DevAuthInterfaceTestCase035, DevAuthInterfaceTestCase036
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(testFuncs) / sizeof(testFuncs[0]);
 
 bool FuzzDoDevAuthInterfaceFuzz(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    DevAuthInterfaceTestCasePart1();
-    DevAuthInterfaceTestCasePart2();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    testFuncs[testId % TEST_FUNC_COUNT]();
+    
     return true;
 }
 }

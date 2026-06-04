@@ -14,8 +14,8 @@
  */
 
 #include "isoauthtask_fuzzer.h"
-#include "iso_auth_task_common.h"
-#include "json_utils.h"
+
+#include <fuzzer/FuzzedDataProvider.h>
 #include "alg_loader.h"
 #include "common_defs.h"
 #include "device_auth.h"
@@ -693,49 +693,31 @@ static void IsoAuthTaskTest38(void)
     task->destroyTask(task);
 }
 
+using TestFunc = void(*)(void);
+static TestFunc testFuncs[] = {
+    IsoAuthTaskTest01, IsoAuthTaskTest02, IsoAuthTaskTest03, IsoAuthTaskTest04, IsoAuthTaskTest05,
+    IsoAuthTaskTest06, IsoAuthTaskTest07, IsoAuthTaskTest08, IsoAuthTaskTest09, IsoAuthTaskTest10,
+    IsoAuthTaskTest11, IsoAuthTaskTest12, IsoAuthTaskTest13, IsoAuthTaskTest14, IsoAuthTaskTest15,
+    IsoAuthTaskTest16, IsoAuthTaskTest17, IsoAuthTaskTest18, IsoAuthTaskTest19, IsoAuthTaskTest20,
+    IsoAuthTaskTest21, IsoAuthTaskTest22, IsoAuthTaskTest23, IsoAuthTaskTest24, IsoAuthTaskTest25,
+    IsoAuthTaskTest26, IsoAuthTaskTest27, IsoAuthTaskTest28, IsoAuthTaskTest29, IsoAuthTaskTest30,
+    IsoAuthTaskTest31, IsoAuthTaskTest32, IsoAuthTaskTest33, IsoAuthTaskTest34, IsoAuthTaskTest35,
+    IsoAuthTaskTest36, IsoAuthTaskTest37, IsoAuthTaskTest38
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(testFuncs) / sizeof(testFuncs[0]);
+
 bool FuzzDoRegCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
     InitDeviceAuthService();
-    (void)IsoAuthTaskTest01();
-    (void)IsoAuthTaskTest02();
-    (void)IsoAuthTaskTest03();
-    (void)IsoAuthTaskTest04();
-    (void)IsoAuthTaskTest05();
-    (void)IsoAuthTaskTest06();
-    (void)IsoAuthTaskTest07();
-    (void)IsoAuthTaskTest08();
-    (void)IsoAuthTaskTest09();
-    (void)IsoAuthTaskTest10();
-    (void)IsoAuthTaskTest11();
-    (void)IsoAuthTaskTest12();
-    (void)IsoAuthTaskTest13();
-    (void)IsoAuthTaskTest14();
-    (void)IsoAuthTaskTest15();
-    (void)IsoAuthTaskTest16();
-    (void)IsoAuthTaskTest17();
-    (void)IsoAuthTaskTest18();
-    (void)IsoAuthTaskTest19();
-    (void)IsoAuthTaskTest20();
-    (void)IsoAuthTaskTest21();
-    (void)IsoAuthTaskTest22();
-    (void)IsoAuthTaskTest23();
-    (void)IsoAuthTaskTest24();
-    (void)IsoAuthTaskTest25();
-    (void)IsoAuthTaskTest26();
-    (void)IsoAuthTaskTest27();
-    (void)IsoAuthTaskTest28();
-    (void)IsoAuthTaskTest29();
-    (void)IsoAuthTaskTest30();
-    (void)IsoAuthTaskTest31();
-    (void)IsoAuthTaskTest32();
-    (void)IsoAuthTaskTest33();
-    (void)IsoAuthTaskTest34();
-    (void)IsoAuthTaskTest35();
-    (void)IsoAuthTaskTest36();
-    (void)IsoAuthTaskTest37();
-    (void)IsoAuthTaskTest38();
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    testFuncs[testId % TEST_FUNC_COUNT]();
+    
     DestroyDeviceAuthService();
     return true;
 }
