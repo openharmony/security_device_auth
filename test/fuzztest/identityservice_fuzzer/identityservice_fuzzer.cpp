@@ -17,6 +17,7 @@
 
 #include <cinttypes>
 #include <unistd.h>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "alg_loader.h"
 #include "common_defs.h"
 #include "device_auth.h"
@@ -1467,19 +1468,30 @@ static void IdentiyServiceFuzzPart(void)
     (void)IdentityServiceTestCase070();
 }
 
+using TestFunc = void(*)(void);
+static TestFunc g_testFuncs[] = {
+    AddCredFuzzPart, ExportCredFuzzPart, QueryCredFuzzPart, DelCredFuzzPart, UpdateCredFuzzPart,
+    CredListenerFuzzPart, CompareParamsFuzzTestCase, IdentiyServiceFuzzPart, IdentityServiceAuthPart,
+    IdentityServiceTestCase049, IdentityServiceTestCase050, IdentityServiceTestCase051, IdentityServiceTestCase052,
+    IdentityServiceTestCase053, IdentityServiceTestCase054, IdentityServiceTestCase055, IdentityServiceTestCase056,
+    IdentityServiceTestCase057, IdentityServiceTestCase058, IdentityServiceTestCase059, IdentityServiceTestCase060,
+    IdentityServiceTestCase061, IdentityServiceTestCase062, IdentityServiceTestCase063, IdentityServiceTestCase064,
+    IdentityServiceTestCase065, IdentityServiceTestCase066, IdentityServiceTestCase067, IdentityServiceTestCase068,
+    IdentityServiceTestCase069, IdentityServiceTestCase070
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
+
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    (void)AddCredFuzzPart();
-    (void)ExportCredFuzzPart();
-    (void)QueryCredFuzzPart();
-    (void)DelCredFuzzPart();
-    (void)UpdateCredFuzzPart();
-    (void)CredListenerFuzzPart();
-    IdentiyServiceFuzzPart();
-    CompareParamsFuzzTestCase();
-    IdentityServiceAuthPart();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
+    
     return true;
 }
 }

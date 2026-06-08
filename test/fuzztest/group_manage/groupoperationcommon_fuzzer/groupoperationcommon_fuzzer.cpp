@@ -15,6 +15,7 @@
 
 #include "groupoperationcommon_fuzzer.h"
 
+#include <fuzzer/FuzzedDataProvider.h>
 #include "alg_defs.h"
 #include "common_defs.h"
 #include "device_auth.h"
@@ -415,83 +416,36 @@ static void GroupOperationTest62(void)
     (void)GetHashResult(info, SHA256_LEN, nullptr, SHA256_LEN);
 }
 
-static void FuzzInnerPart1(void)
-{
-    (void)GroupOperationTest01();
-    (void)GroupOperationTest02();
-    (void)GroupOperationTest03();
-    (void)GroupOperationTest04();
-    (void)GroupOperationTest05();
-    (void)GroupOperationTest06();
-    (void)GroupOperationTest07();
-    (void)GroupOperationTest08();
-    (void)GroupOperationTest09();
-    (void)GroupOperationTest10();
-    (void)GroupOperationTest11();
-    (void)GroupOperationTest12();
-    (void)GroupOperationTest13();
-    (void)GroupOperationTest14();
-    (void)GroupOperationTest15();
-    (void)GroupOperationTest16();
-    (void)GroupOperationTest17();
-    (void)GroupOperationTest18();
-    (void)GroupOperationTest19();
-    (void)GroupOperationTest20();
-    (void)GroupOperationTest21();
-    (void)GroupOperationTest22();
-    (void)GroupOperationTest23();
-    (void)GroupOperationTest24();
-    (void)GroupOperationTest25();
-    (void)GroupOperationTest26();
-    (void)GroupOperationTest27();
-    (void)GroupOperationTest28();
-    (void)GroupOperationTest29();
-    (void)GroupOperationTest30();
-    (void)GroupOperationTest31();
-}
-
-static void FuzzInnerPart2(void)
-{
-    (void)GroupOperationTest32();
-    (void)GroupOperationTest33();
-    (void)GroupOperationTest34();
-    (void)GroupOperationTest35();
-    (void)GroupOperationTest36();
-    (void)GroupOperationTest37();
-    (void)GroupOperationTest38();
-    (void)GroupOperationTest39();
-    (void)GroupOperationTest40();
-    (void)GroupOperationTest41();
-    (void)GroupOperationTest42();
-    (void)GroupOperationTest43();
-    (void)GroupOperationTest44();
-    (void)GroupOperationTest45();
-    (void)GroupOperationTest46();
-    (void)GroupOperationTest47();
-    (void)GroupOperationTest48();
-    (void)GroupOperationTest49();
-    (void)GroupOperationTest50();
-    (void)GroupOperationTest51();
-    (void)GroupOperationTest52();
-    (void)GroupOperationTest53();
-    (void)GroupOperationTest54();
-    (void)GroupOperationTest55();
-    (void)GroupOperationTest56();
-    (void)GroupOperationTest57();
-    (void)GroupOperationTest58();
-    (void)GroupOperationTest59();
-    (void)GroupOperationTest60();
-    (void)GroupOperationTest61();
-    (void)GroupOperationTest62();
-}
+using TestFunc = void(*)(void);
+static TestFunc g_testFuncs[] = {
+    GroupOperationTest01, GroupOperationTest02, GroupOperationTest03, GroupOperationTest04, GroupOperationTest05,
+    GroupOperationTest06, GroupOperationTest07, GroupOperationTest08, GroupOperationTest09, GroupOperationTest10,
+    GroupOperationTest11, GroupOperationTest12, GroupOperationTest13, GroupOperationTest14, GroupOperationTest15,
+    GroupOperationTest16, GroupOperationTest17, GroupOperationTest18, GroupOperationTest19, GroupOperationTest20,
+    GroupOperationTest21, GroupOperationTest22, GroupOperationTest23, GroupOperationTest24, GroupOperationTest25,
+    GroupOperationTest26, GroupOperationTest27, GroupOperationTest28, GroupOperationTest29, GroupOperationTest30,
+    GroupOperationTest31, GroupOperationTest32, GroupOperationTest33, GroupOperationTest34, GroupOperationTest35,
+    GroupOperationTest36, GroupOperationTest37, GroupOperationTest38, GroupOperationTest39, GroupOperationTest40,
+    GroupOperationTest41, GroupOperationTest42, GroupOperationTest43, GroupOperationTest44, GroupOperationTest45,
+    GroupOperationTest46, GroupOperationTest47, GroupOperationTest48, GroupOperationTest49, GroupOperationTest50,
+    GroupOperationTest51, GroupOperationTest52, GroupOperationTest53, GroupOperationTest54, GroupOperationTest55,
+    GroupOperationTest56, GroupOperationTest57, GroupOperationTest58, GroupOperationTest59, GroupOperationTest60,
+    GroupOperationTest61, GroupOperationTest62
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
 
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
     InitDeviceAuthService();
-    (void)data;
-    (void)size;
-    (void)FuzzInnerPart1();
-    (void)FuzzInnerPart2();
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
+    
     DestroyDeviceAuthService();
     return true;
 }

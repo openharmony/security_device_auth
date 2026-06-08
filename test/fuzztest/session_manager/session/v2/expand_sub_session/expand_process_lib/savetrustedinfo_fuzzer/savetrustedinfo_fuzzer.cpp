@@ -15,6 +15,7 @@
 
 #include "savetrustedinfo_fuzzer.h"
 
+#include <fuzzer/FuzzedDataProvider.h>
 #include "device_auth_defines.h"
 #include "common_defs.h"
 #include "group_data_manager.h"
@@ -394,31 +395,27 @@ static void SaveTrustedInfoTest22(void)
     FreeJson(json);
 }
 
+using TestFunc = void(*)(void);
+static TestFunc g_testFuncs[] = {
+    SaveTrustedInfoTest00, SaveTrustedInfoTest03, SaveTrustedInfoTest04, SaveTrustedInfoTest05, SaveTrustedInfoTest06,
+    SaveTrustedInfoTest07, SaveTrustedInfoTest08, SaveTrustedInfoTest09, SaveTrustedInfoTest10, SaveTrustedInfoTest11,
+    SaveTrustedInfoTest12, SaveTrustedInfoTest13, SaveTrustedInfoTest14, SaveTrustedInfoTest15, SaveTrustedInfoTest16,
+    SaveTrustedInfoTest17, SaveTrustedInfoTest18, SaveTrustedInfoTest19, SaveTrustedInfoTest20, SaveTrustedInfoTest21,
+    SaveTrustedInfoTest22
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
+
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    (void)SaveTrustedInfoTest00();
-    (void)SaveTrustedInfoTest03();
-    (void)SaveTrustedInfoTest04();
-    (void)SaveTrustedInfoTest05();
-    (void)SaveTrustedInfoTest06();
-    (void)SaveTrustedInfoTest07();
-    (void)SaveTrustedInfoTest08();
-    (void)SaveTrustedInfoTest09();
-    (void)SaveTrustedInfoTest10();
-    (void)SaveTrustedInfoTest11();
-    (void)SaveTrustedInfoTest12();
-    (void)SaveTrustedInfoTest13();
-    (void)SaveTrustedInfoTest14();
-    (void)SaveTrustedInfoTest15();
-    (void)SaveTrustedInfoTest16();
-    (void)SaveTrustedInfoTest17();
-    (void)SaveTrustedInfoTest18();
-    (void)SaveTrustedInfoTest19();
-    (void)SaveTrustedInfoTest20();
-    (void)SaveTrustedInfoTest21();
-    (void)SaveTrustedInfoTest22();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
+    
     return true;
 }
 }

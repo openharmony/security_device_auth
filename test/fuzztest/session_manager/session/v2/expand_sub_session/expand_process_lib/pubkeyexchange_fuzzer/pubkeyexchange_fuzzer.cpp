@@ -15,6 +15,7 @@
 
 #include "pubkeyexchange_fuzzer.h"
 
+#include <fuzzer/FuzzedDataProvider.h>
 #include "auth_code_import.h"
 #include "device_auth_defines.h"
 #include "pub_key_exchange.h"
@@ -291,32 +292,27 @@ static void PubkeyExchangeTest22(void)
     self->destroy(self);
 }
 
+using TestFunc = void(*)(void);
+static TestFunc g_testFuncs[] = {
+    PubkeyExchangeTest01, PubkeyExchangeTest02, PubkeyExchangeTest03, PubkeyExchangeTest04, PubkeyExchangeTest05,
+    PubkeyExchangeTest06, PubkeyExchangeTest07, PubkeyExchangeTest08, PubkeyExchangeTest09, PubkeyExchangeTest10,
+    PubkeyExchangeTest11, PubkeyExchangeTest12, PubkeyExchangeTest13, PubkeyExchangeTest14, PubkeyExchangeTest15,
+    PubkeyExchangeTest16, PubkeyExchangeTest17, PubkeyExchangeTest18, PubkeyExchangeTest19, PubkeyExchangeTest20,
+    PubkeyExchangeTest21, PubkeyExchangeTest22
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
+
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    (void)PubkeyExchangeTest01();
-    (void)PubkeyExchangeTest02();
-    (void)PubkeyExchangeTest03();
-    (void)PubkeyExchangeTest04();
-    (void)PubkeyExchangeTest05();
-    (void)PubkeyExchangeTest06();
-    (void)PubkeyExchangeTest07();
-    (void)PubkeyExchangeTest08();
-    (void)PubkeyExchangeTest09();
-    (void)PubkeyExchangeTest10();
-    (void)PubkeyExchangeTest11();
-    (void)PubkeyExchangeTest12();
-    (void)PubkeyExchangeTest13();
-    (void)PubkeyExchangeTest14();
-    (void)PubkeyExchangeTest15();
-    (void)PubkeyExchangeTest16();
-    (void)PubkeyExchangeTest17();
-    (void)PubkeyExchangeTest18();
-    (void)PubkeyExchangeTest19();
-    (void)PubkeyExchangeTest20();
-    (void)PubkeyExchangeTest21();
-    (void)PubkeyExchangeTest22();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
+    
     return true;
 }
 }

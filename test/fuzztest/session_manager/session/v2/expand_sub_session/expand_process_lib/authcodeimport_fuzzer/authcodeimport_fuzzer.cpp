@@ -15,6 +15,7 @@
 
 #include "authcodeimport_fuzzer.h"
 
+#include <fuzzer/FuzzedDataProvider.h>
 #include "auth_code_import.h"
 #include "device_auth_defines.h"
 #include "hc_types.h"
@@ -417,33 +418,28 @@ void AuthCodeImportTest120()
     self->destroy(self);
 }
 
+using TestFunc = void(*)(void);
+static TestFunc g_testFuncs[] = {
+    AuthCodeImportTest001, AuthCodeImportTest002, AuthCodeImportTest101, AuthCodeImportTest102, AuthCodeImportTest103,
+    AuthCodeImportTest104, AuthCodeImportTest105, AuthCodeImportTest106, AuthCodeImportTest107, AuthCodeImportTest108,
+    AuthCodeImportTest109, AuthCodeImportTest110, AuthCodeImportTest111, AuthCodeImportTest112, AuthCodeImportTest113,
+    AuthCodeImportTest114, AuthCodeImportTest115, AuthCodeImportTest116, AuthCodeImportTest117, AuthCodeImportTest118,
+    AuthCodeImportTest119, AuthCodeImportTest120
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
+
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
     SetUpTestCase();
-    (void)AuthCodeImportTest001();
-    (void)AuthCodeImportTest002();
-    (void)AuthCodeImportTest101();
-    (void)AuthCodeImportTest102();
-    (void)AuthCodeImportTest103();
-    (void)AuthCodeImportTest104();
-    (void)AuthCodeImportTest105();
-    (void)AuthCodeImportTest106();
-    (void)AuthCodeImportTest107();
-    (void)AuthCodeImportTest108();
-    (void)AuthCodeImportTest109();
-    (void)AuthCodeImportTest110();
-    (void)AuthCodeImportTest111();
-    (void)AuthCodeImportTest112();
-    (void)AuthCodeImportTest113();
-    (void)AuthCodeImportTest114();
-    (void)AuthCodeImportTest115();
-    (void)AuthCodeImportTest116();
-    (void)AuthCodeImportTest117();
-    (void)AuthCodeImportTest118();
-    (void)AuthCodeImportTest119();
-    (void)AuthCodeImportTest120();
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
+    
     return true;
 }
 }

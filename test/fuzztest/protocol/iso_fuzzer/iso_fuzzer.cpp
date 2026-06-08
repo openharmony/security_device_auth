@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "device_auth_defines.h"
 #include "hc_types.h"
@@ -384,39 +385,28 @@ static void IsoTest29(void)
     FreeJson(json);
 }
 
+using TestFunc = void(*)(void);
+static TestFunc g_testFuncs[] = {
+    IsoTest01, IsoTest02, IsoTest03, IsoTest04, IsoTest05,
+    IsoTest06, IsoTest07, IsoTest08, IsoTest09, IsoTest10,
+    IsoTest11, IsoTest12, IsoTest13, IsoTest14, IsoTest15,
+    IsoTest16, IsoTest17, IsoTest18, IsoTest19, IsoTest20,
+    IsoTest21, IsoTest22, IsoTest23, IsoTest24, IsoTest25,
+    IsoTest26, IsoTest27, IsoTest28, IsoTest29
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
+
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    (void)IsoTest01();
-    (void)IsoTest02();
-    (void)IsoTest03();
-    (void)IsoTest04();
-    (void)IsoTest05();
-    (void)IsoTest06();
-    (void)IsoTest07();
-    (void)IsoTest08();
-    (void)IsoTest09();
-    (void)IsoTest10();
-    (void)IsoTest11();
-    (void)IsoTest12();
-    (void)IsoTest13();
-    (void)IsoTest14();
-    (void)IsoTest15();
-    (void)IsoTest16();
-    (void)IsoTest17();
-    (void)IsoTest18();
-    (void)IsoTest19();
-    (void)IsoTest20();
-    (void)IsoTest21();
-    (void)IsoTest22();
-    (void)IsoTest23();
-    (void)IsoTest24();
-    (void)IsoTest25();
-    (void)IsoTest26();
-    (void)IsoTest27();
-    (void)IsoTest28();
-    (void)IsoTest29();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
+    
     return true;
 }
 }

@@ -15,6 +15,7 @@
 
 #include "authsubsession_fuzzer.h"
 
+#include <fuzzer/FuzzedDataProvider.h>
 #include "auth_sub_session.h"
 #include "device_auth_defines.h"
 #include "ec_speke_protocol.h"
@@ -548,43 +549,29 @@ static void AuthSubSessionTest33(void)
     self->destroy(self);
 }
 
+using TestFunc = void(*)(void);
+static TestFunc g_testFuncs[] = {
+    AuthSubSessionTest01, AuthSubSessionTest02, AuthSubSessionTest03, AuthSubSessionTest04, AuthSubSessionTest05,
+    AuthSubSessionTest06, AuthSubSessionTest07, AuthSubSessionTest08, AuthSubSessionTest09, AuthSubSessionTest10,
+    AuthSubSessionTest11, AuthSubSessionTest12, AuthSubSessionTest13, AuthSubSessionTest14, AuthSubSessionTest15,
+    AuthSubSessionTest16, AuthSubSessionTest17, AuthSubSessionTest18, AuthSubSessionTest19, AuthSubSessionTest20,
+    AuthSubSessionTest21, AuthSubSessionTest22, AuthSubSessionTest23, AuthSubSessionTest24, AuthSubSessionTest25,
+    AuthSubSessionTest26, AuthSubSessionTest27, AuthSubSessionTest28, AuthSubSessionTest29, AuthSubSessionTest30,
+    AuthSubSessionTest31, AuthSubSessionTest32, AuthSubSessionTest33
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
+
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    (void)AuthSubSessionTest01();
-    (void)AuthSubSessionTest02();
-    (void)AuthSubSessionTest03();
-    (void)AuthSubSessionTest04();
-    (void)AuthSubSessionTest05();
-    (void)AuthSubSessionTest06();
-    (void)AuthSubSessionTest07();
-    (void)AuthSubSessionTest08();
-    (void)AuthSubSessionTest09();
-    (void)AuthSubSessionTest10();
-    (void)AuthSubSessionTest11();
-    (void)AuthSubSessionTest12();
-    (void)AuthSubSessionTest13();
-    (void)AuthSubSessionTest14();
-    (void)AuthSubSessionTest15();
-    (void)AuthSubSessionTest16();
-    (void)AuthSubSessionTest17();
-    (void)AuthSubSessionTest18();
-    (void)AuthSubSessionTest19();
-    (void)AuthSubSessionTest20();
-    (void)AuthSubSessionTest21();
-    (void)AuthSubSessionTest22();
-    (void)AuthSubSessionTest23();
-    (void)AuthSubSessionTest24();
-    (void)AuthSubSessionTest25();
-    (void)AuthSubSessionTest26();
-    (void)AuthSubSessionTest27();
-    (void)AuthSubSessionTest28();
-    (void)AuthSubSessionTest29();
-    (void)AuthSubSessionTest30();
-    (void)AuthSubSessionTest31();
-    (void)AuthSubSessionTest32();
-    (void)AuthSubSessionTest33();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
+    
     return true;
 }
 }

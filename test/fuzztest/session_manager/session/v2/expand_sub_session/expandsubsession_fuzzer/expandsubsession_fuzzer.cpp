@@ -15,6 +15,7 @@
 
 #include "expandsubsession_fuzzer.h"
 
+#include <fuzzer/FuzzedDataProvider.h>
 #include "expand_sub_session.h"
 #include "device_auth_defines.h"
 #include "auth_code_import.h"
@@ -275,31 +276,28 @@ static void ExpandSubSessionTest21(void)
     isSupport = IsCmdSupport(INVALID_CMD_TYPE);
 }
 
+using TestFunc = void(*)(void);
+static TestFunc g_testFuncs[] = {
+    ExpandSubSessionTest01, ExpandSubSessionTest02, ExpandSubSessionTest03, ExpandSubSessionTest04,
+    ExpandSubSessionTest05, ExpandSubSessionTest06, ExpandSubSessionTest07, ExpandSubSessionTest08,
+    ExpandSubSessionTest09, ExpandSubSessionTest10, ExpandSubSessionTest11, ExpandSubSessionTest12,
+    ExpandSubSessionTest13, ExpandSubSessionTest14, ExpandSubSessionTest15, ExpandSubSessionTest16,
+    ExpandSubSessionTest17, ExpandSubSessionTest18, ExpandSubSessionTest19, ExpandSubSessionTest20,
+    ExpandSubSessionTest21
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
+
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    (void)ExpandSubSessionTest01();
-    (void)ExpandSubSessionTest02();
-    (void)ExpandSubSessionTest03();
-    (void)ExpandSubSessionTest04();
-    (void)ExpandSubSessionTest05();
-    (void)ExpandSubSessionTest06();
-    (void)ExpandSubSessionTest07();
-    (void)ExpandSubSessionTest08();
-    (void)ExpandSubSessionTest09();
-    (void)ExpandSubSessionTest10();
-    (void)ExpandSubSessionTest11();
-    (void)ExpandSubSessionTest12();
-    (void)ExpandSubSessionTest13();
-    (void)ExpandSubSessionTest14();
-    (void)ExpandSubSessionTest15();
-    (void)ExpandSubSessionTest16();
-    (void)ExpandSubSessionTest17();
-    (void)ExpandSubSessionTest18();
-    (void)ExpandSubSessionTest19();
-    (void)ExpandSubSessionTest20();
-    (void)ExpandSubSessionTest21();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
+    
     return true;
 }
 }

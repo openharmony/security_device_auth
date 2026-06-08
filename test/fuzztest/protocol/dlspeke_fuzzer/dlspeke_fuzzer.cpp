@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "device_auth_defines.h"
 #include "hc_types.h"
@@ -469,39 +470,28 @@ static void DlSpekeTest29(void)
     FreeJson(json);
 }
 
+using TestFunc = void(*)(void);
+static TestFunc g_testFuncs[] = {
+    DlSpekeTest01, DlSpekeTest02, DlSpekeTest03, DlSpekeTest04, DlSpekeTest05,
+    DlSpekeTest06, DlSpekeTest07, DlSpekeTest08, DlSpekeTest09, DlSpekeTest10,
+    DlSpekeTest11, DlSpekeTest12, DlSpekeTest13, DlSpekeTest14, DlSpekeTest15,
+    DlSpekeTest16, DlSpekeTest17, DlSpekeTest18, DlSpekeTest19, DlSpekeTest20,
+    DlSpekeTest21, DlSpekeTest22, DlSpekeTest23, DlSpekeTest24, DlSpekeTest25,
+    DlSpekeTest26, DlSpekeTest27, DlSpekeTest28, DlSpekeTest29
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
+
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    (void)DlSpekeTest01();
-    (void)DlSpekeTest02();
-    (void)DlSpekeTest03();
-    (void)DlSpekeTest04();
-    (void)DlSpekeTest05();
-    (void)DlSpekeTest06();
-    (void)DlSpekeTest07();
-    (void)DlSpekeTest08();
-    (void)DlSpekeTest09();
-    (void)DlSpekeTest10();
-    (void)DlSpekeTest11();
-    (void)DlSpekeTest12();
-    (void)DlSpekeTest13();
-    (void)DlSpekeTest14();
-    (void)DlSpekeTest15();
-    (void)DlSpekeTest16();
-    (void)DlSpekeTest17();
-    (void)DlSpekeTest18();
-    (void)DlSpekeTest19();
-    (void)DlSpekeTest20();
-    (void)DlSpekeTest21();
-    (void)DlSpekeTest22();
-    (void)DlSpekeTest23();
-    (void)DlSpekeTest24();
-    (void)DlSpekeTest25();
-    (void)DlSpekeTest26();
-    (void)DlSpekeTest27();
-    (void)DlSpekeTest28();
-    (void)DlSpekeTest29();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
+    
     return true;
 }
 }
