@@ -309,7 +309,7 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     }
     
     FuzzedDataProvider fdp(data, size);
-    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    uint32_t testId = fdp.ConsumeIntegral<uint32_t>();
     
     g_testFuncs[testId % TEST_FUNC_COUNT]();
     
