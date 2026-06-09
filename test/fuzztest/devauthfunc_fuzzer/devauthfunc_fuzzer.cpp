@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include <cinttypes>
 #include <unistd.h>
@@ -1398,44 +1399,28 @@ static int32_t DevAuthTestCase054(void)
     return HC_SUCCESS;
 }
 
+using TestFunc = int32_t(*)(void);
+static TestFunc g_testFuncs[] = {
+    DevAuthTestCase004, DevAuthTestCase005, DevAuthTestCase006, DevAuthTestCase007,
+    DevAuthTestCase008, DevAuthTestCase009, DevAuthTestCase010, DevAuthTestCase011,
+    DevAuthTestCase012, DevAuthTestCase013, DevAuthTestCase014, DevAuthTestCase015,
+    DevAuthTestCase016, DevAuthTestCase018, DevAuthTestCase019, DevAuthTestCase020,
+    DevAuthTestCase021, DevAuthTestCase022, DevAuthTestCase023, DevAuthTestCase024,
+    DevAuthTestCase025, DevAuthTestCase026, DevAuthTestCase027, DevAuthTestCase028,
+    DevAuthTestCase029, DevAuthTestCase030, DevAuthTestCase031, DevAuthTestCase032,
+    DevAuthTestCase033, DevAuthTestCase034, DevAuthTestCase051, DevAuthTestCase052,
+    DevAuthTestCase053, DevAuthTestCase054
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
+
 bool FuzzDoDevAuthFuncFuzz(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    (void)DevAuthTestCase004();
-    (void)DevAuthTestCase005();
-    (void)DevAuthTestCase006();
-    (void)DevAuthTestCase007();
-    (void)DevAuthTestCase008();
-    (void)DevAuthTestCase009();
-    (void)DevAuthTestCase010();
-    (void)DevAuthTestCase011();
-    (void)DevAuthTestCase012();
-    (void)DevAuthTestCase013();
-    (void)DevAuthTestCase014();
-    (void)DevAuthTestCase015();
-    (void)DevAuthTestCase016();
-    (void)DevAuthTestCase018();
-    (void)DevAuthTestCase019();
-    (void)DevAuthTestCase020();
-    (void)DevAuthTestCase021();
-    (void)DevAuthTestCase022();
-    (void)DevAuthTestCase023();
-    (void)DevAuthTestCase024();
-    (void)DevAuthTestCase025();
-    (void)DevAuthTestCase026();
-    (void)DevAuthTestCase027();
-    (void)DevAuthTestCase028();
-    (void)DevAuthTestCase029();
-    (void)DevAuthTestCase030();
-    (void)DevAuthTestCase031();
-    (void)DevAuthTestCase032();
-    (void)DevAuthTestCase033();
-    (void)DevAuthTestCase034();
-    (void)DevAuthTestCase051();
-    (void)DevAuthTestCase052();
-    (void)DevAuthTestCase053();
-    (void)DevAuthTestCase054();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
     return true;
 }
 }

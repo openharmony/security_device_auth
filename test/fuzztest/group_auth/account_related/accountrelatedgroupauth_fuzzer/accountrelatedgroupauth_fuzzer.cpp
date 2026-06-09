@@ -26,6 +26,7 @@
 #include "group_auth_data_operation.h"
 #include "account_related_group_auth.h"
 #include "group_data_manager.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 namespace OHOS {
 #define NUM_TWO 2
@@ -212,7 +213,6 @@ void AccountRelatedGroupAuthTest0022()
     FreeJson(authParam);
 }
 
-// OnAccountFinish -> AddTrustedDeviceForAccount success failed.
 void AccountRelatedGroupAuthTest0023()
 {
     CJson *authParam = CreateJson();
@@ -220,38 +220,38 @@ void AccountRelatedGroupAuthTest0023()
     CJson *sendToPeer = CreateJson();
 
     (void)AddObjToJson(out, FIELD_SEND_TO_PEER, sendToPeer);
-    (void)AddStringToJson(sendToPeer, "test_key", "test_value"); // For unit test.
+    (void)AddStringToJson(sendToPeer, "test_key", "test_value");
     (void)AddObjToJson(out, FIELD_SEND_TO_PEER, sendToPeer);
 
-    (void)AddIntToJson(authParam, FIELD_KEY_LENGTH, NUM_TWO); // For unit test.
-    uint8_t sessionKeyTest[2] = { 0x31, 0x32 }; // For unit test.
+    (void)AddIntToJson(authParam, FIELD_KEY_LENGTH, NUM_TWO);
+    uint8_t sessionKeyTest[2] = { 0x31, 0x32 };
     (void)AddByteToJson(out, FIELD_SESSION_KEY, sessionKeyTest, sizeof(sessionKeyTest));
 
     (void)AddIntToJson(authParam, FIELD_OS_ACCOUNT_ID, 0);
-    (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack); // For unit test.
+    (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack);
 
-    (void)AddStringToJson(authParam, FIELD_PEER_CONN_DEVICE_ID, "CONN_DEVICE_ID"); // For unit test.
-    (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack); // For unit test.
+    (void)AddStringToJson(authParam, FIELD_PEER_CONN_DEVICE_ID, "CONN_DEVICE_ID");
+    (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack);
 
-    (void)AddStringToJson(authParam, FIELD_GROUP_ID, "GROUP_ID"); // For unit test.
-    (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack); // For unit test.
+    (void)AddStringToJson(authParam, FIELD_GROUP_ID, "GROUP_ID");
+    (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack);
 
     CJson *sendToSelf = CreateJson();
 
     (void)AddObjToJson(out, FIELD_SEND_TO_SELF, sendToSelf);
-    (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack); // For unit test.
+    (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack);
 
     (void)AddIntToJson(sendToSelf, FIELD_CREDENTIAL_TYPE, NUM_TWO);
     (void)AddObjToJson(out, FIELD_SEND_TO_SELF, sendToSelf);
-    (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack); // For unit test.
+    (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack);
     
-    (void)AddStringToJson(sendToSelf, FIELD_DEV_ID, "DEV_ID"); // For unit test.
+    (void)AddStringToJson(sendToSelf, FIELD_DEV_ID, "DEV_ID");
     (void)AddObjToJson(out, FIELD_SEND_TO_SELF, sendToSelf);
-    (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack); // For unit test.
+    (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack);
 
-    (void)AddStringToJson(sendToSelf, FIELD_USER_ID, "USER_ID"); // For unit test.
+    (void)AddStringToJson(sendToSelf, FIELD_USER_ID, "USER_ID");
     (void)AddObjToJson(out, FIELD_SEND_TO_SELF, sendToSelf);
-    (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack); // For unit test.
+    (void)GetAccountRelatedGroupAuth()->onFinish(0, authParam, out, &g_deviceAuthCallBack);
 
     FreeJson(sendToSelf);
     FreeJson(out);
@@ -469,32 +469,31 @@ void AccountRelatedGroupAuthTest0071()
         return;
     }
 
-    (void)AddStringToJson(confirmationJson, FIELD_PEER_CONN_DEVICE_ID, "CONN_DEVICE_ID"); // For unit test.
+    (void)AddStringToJson(confirmationJson, FIELD_PEER_CONN_DEVICE_ID, "CONN_DEVICE_ID");
     (void)GetAccountRelatedGroupAuth()->combineServerConfirmParams(confirmationJson, dataFromClient);
     FreeJson(confirmationJson);
     FreeJson(dataFromClient);
 }
-// Ending for account_related_group_auth.c test.
+
+using TestFunc = void(*)(void);
+static TestFunc g_testFuncs[] = {
+    AccountRelatedGroupAuthTest001, AccountRelatedGroupAuthTest002, AccountRelatedGroupAuthTest0021,
+    AccountRelatedGroupAuthTest0022, AccountRelatedGroupAuthTest0023, AccountRelatedGroupAuthTest004,
+    AccountRelatedGroupAuthTest0041, AccountRelatedGroupAuthTest0042, AccountRelatedGroupAuthTest0043,
+    AccountRelatedGroupAuthTest00431, AccountRelatedGroupAuthTest0044, AccountRelatedGroupAuthTest007,
+    AccountRelatedGroupAuthTest0071
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
 
 bool FuzzDoRegCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
     SetUp();
-    AccountRelatedGroupAuthTest001();
-    AccountRelatedGroupAuthTest002();
-    AccountRelatedGroupAuthTest0021();
-    AccountRelatedGroupAuthTest0022();
-    AccountRelatedGroupAuthTest0023();
-    AccountRelatedGroupAuthTest004();
-    AccountRelatedGroupAuthTest0041();
-    AccountRelatedGroupAuthTest0042();
-    AccountRelatedGroupAuthTest0043();
-    AccountRelatedGroupAuthTest00431();
-    AccountRelatedGroupAuthTest0044();
-    AccountRelatedGroupAuthTest007();
-    AccountRelatedGroupAuthTest0071();
-
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
     TearDown();
     return true;
 }

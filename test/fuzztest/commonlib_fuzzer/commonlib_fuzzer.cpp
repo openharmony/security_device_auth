@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstddef>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "securec.h"
 #include "base/security/device_auth/common_lib/impl/src/hc_parcel.c"
 
@@ -609,43 +610,30 @@ static void ParseTlvNodeTest001()
     DeleteParcel(&parcelWithData);
 }
 
+using TestFunc = void(*)(void);
+static TestFunc g_testFuncs[] = {
+    HcParcelNullPtrTest001, HcParcelNullPtrTest002,
+    HcParcelInValidDataSizeTest001, HcParcelInValidDataSizeTest002,
+    HcParcelReadRevertTest001, HcParcelCreateTest001, HcParcelReadTest001,
+    HcParcelEraseBlockTest001, HcParcelRevertTest001, HcParcelReadWrite001,
+    HcParcelRealloc001, HcParcelCopy001, HcParcelReadWriteRevert001, HcParcelPop001,
+    HcStringTest001, HcCreateJsonTest001, HcDeleteJsonTest001,
+    HcJsonGetTest001, HcJsonGetTest002, HcJsonGetTest003, HcJsonGetTest004,
+    HcJsonAddTest001, HcJsonAddTest002, HcJsonAddTest003,
+    HcClearJsonTest001, HcClearJsonTest002, HcClearJsonTest003,
+    HcStringUtilTest001, HcStringUtilTest002, HcStringUtilTest003, HcStringUtilTest004,
+    ParseTlvHeadTest001, ParseTlvNodeTest001
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
+
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    HcParcelNullPtrTest001();
-    HcParcelNullPtrTest002();
-    HcParcelInValidDataSizeTest001();
-    HcParcelInValidDataSizeTest002();
-    HcParcelReadRevertTest001();
-    HcParcelCreateTest001();
-    HcParcelReadTest001();
-    HcParcelEraseBlockTest001();
-    HcParcelRevertTest001();
-    HcParcelReadWrite001();
-    HcParcelRealloc001();
-    HcParcelCopy001();
-    HcParcelReadWriteRevert001();
-    HcParcelPop001();
-    HcStringTest001();
-    HcCreateJsonTest001();
-    HcDeleteJsonTest001();
-    HcJsonGetTest001();
-    HcJsonGetTest002();
-    HcJsonGetTest003();
-    HcJsonGetTest004();
-    HcJsonAddTest001();
-    HcJsonAddTest002();
-    HcJsonAddTest003();
-    HcClearJsonTest001();
-    HcClearJsonTest002();
-    HcClearJsonTest003();
-    HcStringUtilTest001();
-    HcStringUtilTest002();
-    HcStringUtilTest003();
-    HcStringUtilTest004();
-    ParseTlvHeadTest001();
-    ParseTlvNodeTest001();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    FuzzedDataProvider fdp(data, size);
+    int32_t testId = fdp.ConsumeIntegral<int32_t>();
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
     return true;
 }
 }
