@@ -71,7 +71,7 @@ int32_t ParseNonceAndCipherFromJson(Uint8Buff *nonce, Uint8Buff *cipher, const C
         LOGE("Convert exAuthInfo from hex string to byte failed.");
         goto ERR;
     }
-    if (exAuthInfoLen < nonce->length + cipher->length) {
+    if (exAuthInfoLen <= nonce->length) {
         LOGE("exAuthInfoLen is too short.");
         res = HC_ERR_INVALID_PARAMS;
         goto ERR;
