@@ -21,7 +21,7 @@
     "component": {
       "name": "device_auth",
       "subsystem": "security",
-      "syscap": [],
+      "syscap": ["SystemCapability.Security.DeviceAuthentication"],
       "features": [
         "device_auth_session_v1_enabled",
         "device_auth_session_v2_enabled",
