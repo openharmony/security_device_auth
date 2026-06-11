@@ -59,7 +59,7 @@ int32_t ParseNonceAndCipherFromJson(Uint8Buff *nonce, Uint8Buff *cipher, const C
         res = HC_ERR_JSON_GET;
         goto ERR;
     }
-    int32_t exAuthInfoLen = (int32_t)HcStrlen(exAuthInfoStr) / BYTE_TO_HEX_OPER_LENGTH;
+    uint32_t exAuthInfoLen = (int32_t)HcStrlen(exAuthInfoStr) / BYTE_TO_HEX_OPER_LENGTH;
     exAuthInfoVal = (uint8_t *)HcMalloc(exAuthInfoLen, 0);
     if (exAuthInfoVal == NULL) {
         LOGE("Malloc exAuthInfoVal failed.");
@@ -69,6 +69,11 @@ int32_t ParseNonceAndCipherFromJson(Uint8Buff *nonce, Uint8Buff *cipher, const C
     res = HexStringToByte(exAuthInfoStr, exAuthInfoVal, exAuthInfoLen);
     if (res != HC_SUCCESS) {
         LOGE("Convert exAuthInfo from hex string to byte failed.");
+        goto ERR;
+    }
+    if (exAuthInfoLen <= nonce->length) {
+        LOGE("exAuthInfoLen is too short.");
+        res = HC_ERR_INVALID_PARAMS;
         goto ERR;
     }
     if (memcpy_s(nonce->val, nonce->length, exAuthInfoVal, nonce->length) != EOK) {
