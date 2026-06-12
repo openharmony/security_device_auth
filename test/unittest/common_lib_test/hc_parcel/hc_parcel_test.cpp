@@ -581,8 +581,8 @@ HWTEST_F(HcParcelTest, ParcelWriteWithAutoExpandTest001, TestSize.Level0)
     HcParcel parcel = CreateParcel(0, 16);
 
     uint8_t data[100] = {0};
-    for (int i = 0; i < 100; i++) {
-        data[i] = (uint8_t)i;
+    for (uint8_t i = 0; i < 100; i++) {
+        data[i] = i;
     }
 
     HcBool ret = ParcelWrite(&parcel, data, sizeof(data));
@@ -661,8 +661,8 @@ HWTEST_F(HcParcelTest, ParcelWriteWithMemmoveFailTest001, TestSize.Level0)
     HcParcel parcel = CreateParcel(TEST_BUFFER_SIZE, TEST_BUFFER_SIZE);
 
     uint8_t data[100] = {0};
-    for (int i = 0; i < 100; i++) {
-        data[i] = (uint8_t)i;
+    for (uint8_t i = 0; i < 100; i++) {
+        data[i] = i;
     }
 
     HcBool ret = ParcelWrite(&parcel, data, sizeof(data));
@@ -676,8 +676,8 @@ HWTEST_F(HcParcelTest, ParcelRecycleTest001, TestSize.Level0)
     HcParcel parcel = CreateParcel(0, 16);
 
     uint8_t data[100] = {0};
-    for (int i = 0; i < 100; i++) {
-        data[i] = (uint8_t)i;
+    for (uint8_t i = 0; i < 100; i++) {
+        data[i] = i;
     }
 
     ParcelWrite(&parcel, data, 50);
