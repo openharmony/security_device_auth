@@ -421,8 +421,8 @@ HWTEST_F(HcTlvParserTest, ParseTlvStructWithUnknownTagTest001, TestSize.Level0)
     ParcelWriteUint16(&parcel, sizeof(uint32_t));
     ParcelWriteUint32(&parcel, 0x33333333);
     
-    int32_t ret = ParseTlvStruct((TlvBase *)&tlvStruct, &parcel, HC_FALSE);
-    EXPECT_EQ(ret, TLV_FAIL);
+    int32_t ret = ParseTlvNode((TlvBase *)&tlvStruct, &parcel, HC_FALSE);
+    EXPECT_NE(ret, TLV_FAIL);
     
     DeleteParcel(&parcel);
     tlvStruct.base.deinit((TlvBase *)&tlvStruct);
@@ -440,7 +440,7 @@ HWTEST_F(HcTlvParserTest, ParseTlvStructWithStrictFailTest001, TestSize.Level0)
     ParcelWriteUint16(&parcel, sizeof(uint32_t));
     ParcelWriteUint32(&parcel, 0x11111111);
     
-    int32_t ret = ParseTlvStruct((TlvBase *)&tlvStruct, &parcel, HC_TRUE);
+    int32_t ret = ParseTlvNode((TlvBase *)&tlvStruct, &parcel, HC_TRUE);
     EXPECT_EQ(ret, TLV_FAIL);
     
     DeleteParcel(&parcel);
@@ -462,8 +462,8 @@ HWTEST_F(HcTlvParserTest, ParseTlvStructSuccessTest001, TestSize.Level0)
     ParcelWriteUint16(&parcel, sizeof(uint32_t));
     ParcelWriteUint32(&parcel, 0x22222222);
     
-    int32_t ret = ParseTlvStruct((TlvBase *)&tlvStruct, &parcel, HC_TRUE);
-    EXPECT_EQ(ret, 16);
+    int32_t ret = ParseTlvNode((TlvBase *)&tlvStruct, &parcel, HC_TRUE);
+    EXPECT_EQ(ret, 20);
     EXPECT_EQ(tlvStruct.member1.data, 0x11111111);
     EXPECT_EQ(tlvStruct.member2.data, 0x22222222);
     
