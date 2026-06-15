@@ -962,8 +962,8 @@ HWTEST_F(HcParcelTest, ParcelRecycleTriggerTest001, TestSize.Level0)
     HcParcel parcel = CreateParcel(0, 16);
 
     uint8_t data1[100] = {0};
-    for (int i = 0; i < 100; i++) {
-        data1[i] = (uint8_t)i;
+    for (uint8_t i = 0; i < 100; i++) {
+        data1[i] = i;
     }
     ParcelWrite(&parcel, data1, sizeof(data1));
 
@@ -971,8 +971,8 @@ HWTEST_F(HcParcelTest, ParcelRecycleTriggerTest001, TestSize.Level0)
     ParcelRead(&parcel, readData, sizeof(readData));
 
     uint8_t data2[100] = {0};
-    for (int i = 0; i < 100; i++) {
-        data2[i] = (uint8_t)(i + 100);
+    for (uint8_t i = 0; i < 100; i++) {
+        data2[i] = i + 100;
     }
     ParcelWrite(&parcel, data2, sizeof(data2));
 
