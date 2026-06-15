@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include "hc_string.h"
 #include "hc_types.h"
+#include "hc_string_mock.h"
 
 using namespace testing::ext;
 
@@ -60,6 +61,22 @@ HWTEST_F(HcStringTest, StringAppendTest003, TestSize.Level0)
     EXPECT_EQ(ret, HC_TRUE);
     DeleteString(&str);
     DeleteString(&appendStr);
+}
+
+HWTEST_F(HcStringTest, StringAppendWithEmptyParcelTest001, TestSize.Level0)
+{
+    HcString str = CreateString();
+    HcString emptyStr = CreateString();
+    
+    SetGetParcelDataSizeMock(0);
+    
+    HcBool ret = StringAppend(&str, emptyStr);
+    EXPECT_EQ(ret, HC_FALSE);
+    
+    ResetGetParcelDataSizeMock();
+    
+    DeleteString(&str);
+    DeleteString(&emptyStr);
 }
 
 HWTEST_F(HcStringTest, StringAppendPointerTest001, TestSize.Level0)
@@ -243,5 +260,15 @@ HWTEST_F(HcStringTest, DeleteStringTest002, TestSize.Level0)
     HcString *str = nullptr;
     DeleteString(str);
     EXPECT_EQ(str, nullptr);
+}
+
+HWTEST_F(HcStringTest, StringAppendCharWithParcelWriteFail001, TestSize.Level0)
+{
+    HcString str = CreateString();
+    SetParcelWriteInt8Mock(true);
+    HcBool ret = StringAppendChar(&str, 'A');
+    EXPECT_EQ(ret, HC_FALSE);
+    SetParcelWriteInt8Mock(false);
+    DeleteString(&str);
 }
 }

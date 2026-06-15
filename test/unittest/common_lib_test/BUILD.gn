@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Huawei Device Co., Ltd.
+# Copyright (C) 2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -13,69 +13,33 @@
 
 import("//build/ohos.gni")
 import("//build/test.gni")
-import("//base/security/device_auth/deps_adapter/deviceauth_hals.gni")
-import("//base/security/device_auth/services/deviceauth.gni")
 
-module_output_path = "device_auth/device_auth"
-
-ohos_unittest("AiCommonLibTest") {
-  module_out_path = module_output_path
-
-  include_dirs = inc_path
-  include_dirs += hals_inc_path
-
-  include_dirs += [
-    "${common_lib_path}/interfaces",
-    "${os_adapter_path}/impl/src",
-    "include",
+group("common_lib_tests") {
+  testonly = true
+  deps = [
+    "hc_types:hc_types_test",
+    "hc_string:hc_string_test",
+    "hc_parcel:hc_parcel_test",
+    "hc_string_vector:hc_string_vector_test",
+    "hc_time:hc_time_test",
+    "hc_tlv_parser:hc_tlv_parser_test",
+    "hc_mutex:hc_mutex_test",
+    "uint8buff_utils:uint8buff_utils_test",
+    "string_util:string_util_test",
+    "json_utils:json_utils_test",
   ]
+}
 
-  sources = [
-    "${common_lib_path}/impl/src/hc_types.c",
-    "${common_lib_path}/impl/src/hc_parcel.c",
-    "${common_lib_path}/impl/src/hc_string.c",
-    "${common_lib_path}/impl/src/hc_string_vector.c",
-    "${common_lib_path}/impl/src/hc_time.c",
-    "${common_lib_path}/impl/src/hc_tlv_parser.c",
-    "${common_lib_path}/impl/src/hc_mutex.c",
-    "${common_lib_path}/impl/src/json_utils.c",
-    "${common_lib_path}/impl/src/string_util.c",
-    "${common_lib_path}/impl/src/uint8buff_utils.c",
-    "${os_adapter_path}/impl/src/hc_log.c",
-    "${os_adapter_path}/impl/src/linux/hc_file.c",
-    "${os_adapter_path}/impl/src/hc_err_trace.c",
-    "source/hc_mutex_mock.c",
+group("common_lib_tests_fast") {
+  testonly = true
+  deps = [
+    "hc_types:hc_types_test",
+    "hc_string:hc_string_test",
+    "hc_mutex:hc_mutex_test",
   ]
+}
 
-  sources += [
-    "source/hc_types_test.cpp",
-    "source/hc_time_test.cpp",
-    "source/hc_parcel_test.cpp",
-    "source/hc_string_test.cpp",
-    "source/hc_string_vector_test.cpp",
-    "source/hc_mutex_test.cpp",
-    "source/uint8buff_utils_test.cpp",
-    "source/string_util_test.cpp",
-    "source/json_utils_test.cpp",
-    "source/hc_tlv_parser_test.cpp",
-  ]
-
-  defines = [
-    "HILOG_ENABLE",
-  ]
-
-  ldflags = [
-    "-Wl,--wrap=pthread_mutex_init",
-    "-Wl,--wrap=pthread_mutex_lock",
-    "-Wl,--wrap=pthread_mutex_unlock",
-    "-Wl,--wrap=pthread_mutex_destroy",
-  ]
-
-  external_deps = [
-    "cJSON:cjson",
-    "c_utils:utils",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-  ]
+group("AiCommonLibTest") {
+  testonly = true
+  deps = [ ":common_lib_tests" ]
 }

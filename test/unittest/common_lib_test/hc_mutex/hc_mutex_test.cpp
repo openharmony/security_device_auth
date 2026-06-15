@@ -16,7 +16,7 @@
 #include <gtest/gtest.h>
 #include <pthread.h>
 #include "hc_mutex.h"
-#include "hc_mutex_mock.h"
+#include "mock/hc_mutex_mock.h"
 #include "securec.h"
 
 using namespace testing::ext;
@@ -415,6 +415,66 @@ HWTEST_F(HcMutexTest, ReentrantUnlockFailTest001, TestSize.Level0)
     UnlockHcMutex(&mutex);
     
     SetPthreadMockFlags(false, false, false, false);
+    DestroyHcMutex(&mutex);
+}
+
+HWTEST_F(HcMutexTest, InternalLockWithNullTest001, TestSize.Level0)
+{
+    HcMutex mutex;
+    InitHcMutex(&mutex, true);
+    
+    HcMutex *nullMutex = nullptr;
+    int32_t ret = mutex.lock(nullMutex);
+    EXPECT_EQ(ret, -1);
+    
+    DestroyHcMutex(&mutex);
+}
+
+HWTEST_F(HcMutexTest, InternalUnlockWithNullTest001, TestSize.Level0)
+{
+    HcMutex mutex;
+    InitHcMutex(&mutex, true);
+    
+    HcMutex *nullMutex = nullptr;
+    mutex.unlock(nullMutex);
+    
+    DestroyHcMutex(&mutex);
+    SUCCEED();
+}
+
+struct CrossThreadUnlockData {
+    HcMutex *mutex;
+    bool *unlockAttempted;
+    bool *unlockCompleted;
+};
+
+void *CrossThreadUnlockRoutine(void *arg)
+{
+    CrossThreadUnlockData *data = static_cast<CrossThreadUnlockData *>(arg);
+    *data->unlockAttempted = true;
+    UnlockHcMutex(data->mutex);
+    *data->unlockCompleted = true;
+    return nullptr;
+}
+
+HWTEST_F(HcMutexTest, CrossThreadUnlockTest001, TestSize.Level0)
+{
+    HcMutex mutex;
+    bool unlockAttempted = false;
+    bool unlockCompleted = false;
+    CrossThreadUnlockData data = { &mutex, &unlockAttempted, &unlockCompleted };
+    
+    InitHcMutex(&mutex, true);
+    LockHcMutex(&mutex);
+    
+    pthread_t thread;
+    pthread_create(&thread, nullptr, CrossThreadUnlockRoutine, &data);
+    pthread_join(thread, nullptr);
+    
+    EXPECT_TRUE(unlockAttempted);
+    EXPECT_TRUE(unlockCompleted);
+    
+    UnlockHcMutex(&mutex);
     DestroyHcMutex(&mutex);
 }
 }

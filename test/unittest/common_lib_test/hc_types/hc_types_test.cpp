@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -130,5 +130,11 @@ HWTEST_F(HcTypesTest, HcStrlenTest008, TestSize.Level0)
     const char *strWithSpecialChars = "test\nstring\twith\rchars";
     uint32_t len = HcStrlen(strWithSpecialChars);
     EXPECT_EQ(len, 22);
+}
+
+HWTEST_F(HcTypesTest, HcMallocTest004, TestSize.Level0)
+{
+    void *ptr = HcMalloc(UINT32_MAX, TEST_MALLOC_VAL);
+    EXPECT_EQ(ptr, nullptr);
 }
 }

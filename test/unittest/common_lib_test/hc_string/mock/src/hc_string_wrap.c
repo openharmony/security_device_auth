@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,19 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef HC_MUTEX_MOCK_H
-#define HC_MUTEX_MOCK_H
+#include <stdint.h>
+#include "hc_string_mock.h"
 
-#include <stdbool.h>
+int __real_ParcelWriteInt8(void *parcel, char value);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void SetPthreadMockFlags(bool initFail, bool lockFail, bool unlockFail, bool destroyFail);
-
-#ifdef __cplusplus
+int __wrap_ParcelWriteInt8(void *parcel, char value)
+{
+    if (GetParcelWriteInt8Mock()) {
+        return 0;
+    }
+    return __real_ParcelWriteInt8(parcel, value);
 }
-#endif
 
-#endif
+uint32_t __real_GetParcelDataSize(void *parcel);
+
+uint32_t __wrap_GetParcelDataSize(void *parcel)
+{
+    if (IsGetParcelDataSizeMockEnabled()) {
+        return GetGetParcelDataSizeMock();
+    }
+    return __real_GetParcelDataSize(parcel);
+}
