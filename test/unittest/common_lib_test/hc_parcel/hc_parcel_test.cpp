@@ -1010,6 +1010,7 @@ HWTEST_F(HcParcelTest, DeleteParcelWithNullDataTest001, TestSize.Level0)
     parcel.data = nullptr;
 
     DeleteParcel(&parcel);
+    SUCCEED();
 }
 
 HWTEST_F(HcParcelTest, GetParcelDataSizeWithEndPosLessThanBeginPosTest001, TestSize.Level0)
@@ -1463,6 +1464,7 @@ HWTEST_F(HcParcelTest, CreateParcelWithZeroAllocUnitTest001, TestSize.Level0)
 HWTEST_F(HcParcelTest, DeleteParcelWithNullTest001, TestSize.Level0)
 {
     DeleteParcel(nullptr);
+    SUCCEED();
 }
 
 HWTEST_F(HcParcelTest, ParcelReadWithMemmoveFailTest001, TestSize.Level0)
@@ -1519,7 +1521,7 @@ HWTEST_F(HcParcelTest, ParcelRecycleWithMemmoveFailTest002, TestSize.Level0)
 
     SetMemmoveFail(true);
     uint8_t data2[10] = {0};
-    ParcelWrite(&parcel, data2, sizeof(data2));
+    EXPECT_FALSE(ParcelWrite(&parcel, data2, sizeof(data2)));
     ResetMemmoveFail();
 
     DeleteParcel(&parcel);
