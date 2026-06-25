@@ -29,6 +29,7 @@
 #include "os_account_manager.h"
 #include "sa_subscriber.h"
 #include "system_ability_definition.h"
+#include "hc_mutex.h"
 
 typedef struct {
     EventCallbackId callbackId;
@@ -51,10 +52,13 @@ static const int32_t SYSTEM_DEFAULT_USER = 100;
 static OHOS::DevAuth::OsAccountEventNotifier g_accountEventNotifier;
 static OHOS::DevAuth::SaEventNotifier g_saEventNotifier;
 static OHOS::sptr<NetObserver> g_observer = nullptr;
+static HcMutex g_osAccountMutex = { 0 };
 
 void NotifyOsAccountUnlocked(int32_t osAccountId)
 {
+    (void)LockHcMutex(&g_osAccountMutex);
     if (!g_isInitialized) {
+        UnlockHcMutex(&g_osAccountMutex);
         return;
     }
     uint32_t index;
@@ -62,11 +66,14 @@ void NotifyOsAccountUnlocked(int32_t osAccountId)
     FOR_EACH_HC_VECTOR(g_callbackVec, index, callback) {
         callback->onOsAccountUnlocked(osAccountId);
     }
+    UnlockHcMutex(&g_osAccountMutex);
 }
 
 void NotifyOsAccountRemoved(int32_t osAccountId)
 {
+    (void)LockHcMutex(&g_osAccountMutex);
     if (!g_isInitialized) {
+        UnlockHcMutex(&g_osAccountMutex);
         return;
     }
     uint32_t index;
@@ -74,6 +81,7 @@ void NotifyOsAccountRemoved(int32_t osAccountId)
     FOR_EACH_HC_VECTOR(g_callbackVec, index, callback) {
         callback->onOsAccountRemoved(osAccountId);
     }
+    UnlockHcMutex(&g_osAccountMutex);
 }
 
 static void SubscribeCommonEvent(void)
@@ -242,24 +250,38 @@ int32_t GetCurrentActiveOsAccountId(void)
 
 void InitOsAccountAdapter(void)
 {
+    if (!g_osAccountMutex.isInitialized) {
+        int32_t res = InitHcMutex(&g_osAccountMutex, true);
+        if (res != HC_SUCCESS) {
+            LOGE("[OsAccountAdapter]: init os account mutex failed, res: %" LOG_PUB "d", res);
+            return;
+        }
+    }
+    (void)LockHcMutex(&g_osAccountMutex);
     if (g_isInitialized) {
+        UnlockHcMutex(&g_osAccountMutex);
         return;
     }
     g_callbackVec = CREATE_HC_VECTOR(EventCallbackVec);
-    SubscribeSystemAbility();
     g_isInitialized = true;
+    UnlockHcMutex(&g_osAccountMutex);
+    SubscribeSystemAbility();
 }
 
 void DestroyOsAccountAdapter(void)
 {
+    (void)LockHcMutex(&g_osAccountMutex);
     if (!g_isInitialized) {
+        UnlockHcMutex(&g_osAccountMutex);
         return;
     }
     g_isInitialized = false;
+    DESTROY_HC_VECTOR(EventCallbackVec, &g_callbackVec);
+    UnlockHcMutex(&g_osAccountMutex);
     UnSubscribeSystemAbility();
     UnSubscribeCommonEvent();
     StopNetObserver();
-    DESTROY_HC_VECTOR(EventCallbackVec, &g_callbackVec);
+    DestroyHcMutex(&g_osAccountMutex);
 }
 
 bool IsOsAccountUnlocked(int32_t osAccountId)
@@ -329,16 +351,20 @@ bool CheckIsForegroundOsAccountId(int32_t osAccountId)
 void AddOsAccountEventCallback(EventCallbackId callbackId, OsAccountCallbackFunc unlockFunc,
     OsAccountCallbackFunc removeFunc)
 {
+    (void)LockHcMutex(&g_osAccountMutex);
     if (!g_isInitialized) {
         LOGE("[OsAccountAdapter]: Not initialized!");
+        UnlockHcMutex(&g_osAccountMutex);
         return;
     }
     if (unlockFunc == nullptr || removeFunc == nullptr) {
         LOGE("[OsAccountAdapter]: Invalid input param!");
+        UnlockHcMutex(&g_osAccountMutex);
         return;
     }
     if (IsCallbackExist(callbackId)) {
         LOGE("[OsAccountAdapter]: Callback already exist!");
+        UnlockHcMutex(&g_osAccountMutex);
         return;
     }
     OsAccountEventCallback eventCallback;
@@ -348,11 +374,14 @@ void AddOsAccountEventCallback(EventCallbackId callbackId, OsAccountCallbackFunc
     if (g_callbackVec.pushBackT(&g_callbackVec, eventCallback) == nullptr) {
         LOGE("[OsAccountAdapter]: Failed to add event callback!");
     }
+    UnlockHcMutex(&g_osAccountMutex);
 }
 
 void RemoveOsAccountEventCallback(EventCallbackId callbackId)
 {
+    (void)LockHcMutex(&g_osAccountMutex);
     if (!g_isInitialized) {
+        UnlockHcMutex(&g_osAccountMutex);
         return;
     }
     uint32_t index;
@@ -361,9 +390,11 @@ void RemoveOsAccountEventCallback(EventCallbackId callbackId)
         if (callback->callbackId == callbackId) {
             OsAccountEventCallback deleteCallback;
             HC_VECTOR_POPELEMENT(&g_callbackVec, &deleteCallback, index);
+            UnlockHcMutex(&g_osAccountMutex);
             return;
         }
     }
+    UnlockHcMutex(&g_osAccountMutex);
 }
 
 bool IsOsAccountSupported(void)

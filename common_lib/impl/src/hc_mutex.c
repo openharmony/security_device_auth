@@ -85,6 +85,7 @@ int32_t InitHcMutex(struct HcMutexT *mutex, bool isReentrant)
     mutex->owner = 0;
     mutex->count = 0;
     mutex->isReentrant = isReentrant;
+    mutex->isInitialized = true;
     return 0;
 }
 
@@ -93,6 +94,8 @@ void DestroyHcMutex(struct HcMutexT *mutex)
     if (mutex == NULL) {
         return;
     }
+    mutex->lock = NULL;
+    mutex->unlock = NULL;
     mutex->owner = 0;
     mutex->count = 0;
     mutex->isReentrant = false;
@@ -100,6 +103,7 @@ void DestroyHcMutex(struct HcMutexT *mutex)
     if (res != 0) {
         LOGW("[OS]: pthread_mutex_destroy fail. [Res]: %" LOG_PUB "d", res);
     }
+    mutex->isInitialized = false;
 }
 
 int LockHcMutex(HcMutex* mutex)

@@ -31,6 +31,7 @@ typedef struct HcMutexT {
     pthread_t owner;
     int count;
     bool isReentrant;
+    bool isInitialized;
 } HcMutex;
 
 int32_t InitHcMutex(HcMutex* mutex, bool isReentrant);
