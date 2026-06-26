@@ -1756,6 +1756,7 @@ static int32_t LightAuthOnFinish(int64_t requestId, CJson *out, const DeviceAuth
     int32_t opCode = AUTH_FORM_LIGHT_AUTH;
     ProcessFinishCallback(requestId, opCode, returnFinishData, laCallBack);
     FreeJsonString(returnFinishData);
+    FreeJson(outData);
     return HC_SUCCESS;
 }
 
