@@ -68,7 +68,6 @@
           "netmanager_base",
           "memmgr",
           "eventhandler",
-          "json",
           "selinux_adapter"
         ],
         "third_party": [],
