@@ -23,6 +23,8 @@
 #define EXT_PLUGIN_ACCT_AUTH 1000
 /** The Type of account lifecycle plugin. */
 #define EXT_PLUGIN_ACCT_LIFECYCLE 1001
+/** The type of trust relation database plugin. */
+#define EXT_PLUGIN_TRUST_RELATION_DATABASE 1002
 
 /**
  * @brief This structure describes the ext plugin context.
@@ -88,6 +90,61 @@ typedef struct {
     /** This function is used to destroy authentication dat. */
     int32_t (*destroySession)(int32_t sessionId);
 } AccountAuthExtPlug;
+
+/**
+ * @brief Broadcast type for account switch event callback.
+ */
+typedef enum {
+    ACCOUNT_SWITCH_BROADCAST_DEVICE_INACTIVE = 0,
+    ACCOUNT_SWITCH_BROADCAST_DEVICE_ACTIVE,
+    ACCOUNT_SWITCH_BROADCAST_GROUP_INACTIVE,
+    ACCOUNT_SWITCH_BROADCAST_GROUP_ACTIVE,
+    ACCOUNT_SWITCH_BROADCAST_CREDENTIAL_INACTIVE,
+    ACCOUNT_SWITCH_BROADCAST_CREDENTIAL_ACTIVE
+} AccountSwitchBroadcastType;
+
+/** Callback for account switch group related broadcast. */
+typedef void (*AccountSwitchGroupCallback)(AccountSwitchBroadcastType type, int32_t osAccountId, const char *userId,
+    const char *groupId, const char *udid);
+
+/** Callback for account switch credential related broadcast. */
+typedef void (*AccountSwitchCredCallback)(AccountSwitchBroadcastType type, int32_t osAccountId, const char *userId,
+    const char *credId);
+
+/**
+ * @brief This structure describes trust database plugin.
+ */
+typedef struct {
+    /** The base object contains init func and destroy func. */
+    ExtPlugin base;
+    /** Insert group related trust relation. */
+    int32_t (*insertGroupTrustRelation)(int32_t osAccountId, const char *userId, const char *groupId,
+        const char *udid);
+    /** Delete group related trust relation. */
+    int32_t (*deleteGroupTrustRelation)(int32_t osAccountId, const char *userId, const char *groupId,
+        const char *udid);
+    /** Check whether the group related trust relation is referenced by the corresponding user. */
+    int32_t (*isGroupRelationReferencedByUser)(int32_t osAccountId, const char *userId, const char *groupId,
+        const char *udid, bool *isReferenced);
+    /** Check whether the group related trust relation is referenced. */
+    int32_t (*isGroupRelationReferenced)(int32_t osAccountId, const char *groupId, const char *udid,
+        bool *isReferenced);
+    /** Insert credential trust relation. */
+    int32_t (*insertCredTrustRelation)(int32_t osAccountId, const char *userId, const char *credId);
+    /** Delete credential trust relation. */
+    int32_t (*deleteCredTrustRelation)(int32_t osAccountId, const char *userId, const char *credId);
+    /** Check whether the credential trust relation is referenced by the corresponding user. */
+    int32_t (*isCredRelationReferencedByUser)(int32_t osAccountId, const char *userId, const char *credId,
+        bool *isReferenced);
+    /** Check whether the credential trust relation is referenced. */
+    int32_t (*isCredRelationReferenced)(int32_t osAccountId, const char *credId, bool *isReferenced);
+    /** Check whether the device trust relation is referenced by the corresponding user. */
+    int32_t (*isDeviceRelationReferencedByUser)(int32_t osAccountId, const char *userId, const char *udid,
+        bool *isReferenced);
+    /** Handle account switch event. */
+    int32_t (*onAccountSwitched)(int32_t osAccountId, const char *fromUserId, const char *toUserId,
+        AccountSwitchGroupCallback groupCallback, AccountSwitchCredCallback credCallback);
+} TrustDatabaseExtPlug;
 
 /**
  * @brief This structure describes the account auth plugin context.
