@@ -1,0 +1,14 @@
+import("//build/ohos.gni")
+import("//build/test.gni")
+
+group("deps_adapter_tests") {
+  testonly = true
+  deps = [
+    "os_adapter:os_adapter_tests",
+  ]
+}
+
+group("DepsAdapterTest") {
+  testonly = true
+  deps = [ ":deps_adapter_tests" ]
+}

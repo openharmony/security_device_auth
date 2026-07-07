@@ -1,0 +1,18 @@
+import("//build/ohos.gni")
+import("//build/test.gni")
+
+group("os_adapter_tests") {
+  testonly = true
+  deps = [
+    "dev_auth_dynamic_load:dev_auth_dynamic_load_test",
+    "hc_init_protection:hc_init_protection_test",
+    "hc_err_trace:hc_err_trace_test",
+    "hc_log:hc_log_test",
+    "hc_types:hc_types_hal_test",
+    "hc_file:hc_file_test",
+    "hc_condition:hc_condition_test",
+    "hc_dev_info:hc_dev_info_test",
+    "hc_thread:hc_thread_test",
+    "hc_task_thread:hc_task_thread_test",
+  ]
+}

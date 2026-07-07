@@ -98,4 +98,16 @@ HWTEST_F(HcTimeTest, HcGetRealTimeTest002, TestSize.Level0)
     EXPECT_GE(time2, time1);
     EXPECT_LE(time2 - time1, 1);
 }
+
+HWTEST_F(HcTimeTest, HcGetCurTimeInMillisIntervalTest001, TestSize.Level0)
+{
+    int64_t time1 = HcGetCurTimeInMillis();
+    EXPECT_GT(time1, 0);
+
+    usleep(TEST_SLEEP_TIME_MS * 1000);
+
+    int64_t time2 = HcGetCurTimeInMillis();
+    EXPECT_GT(time2, time1);
+    EXPECT_GE(time2 - time1, TEST_SLEEP_TIME_MS);
+}
 }

@@ -1,0 +1,48 @@
+import("//build/ohos.gni")
+import("//build/test.gni")
+import("//base/security/device_auth/deps_adapter/deviceauth_hals.gni")
+import("//base/security/device_auth/services/deviceauth.gni")
+
+module_output_path = "device_auth/device_auth"
+
+hc_thread_test_includes = []
+hc_thread_test_includes += hals_inc_path
+hc_thread_test_includes += [
+  "${os_adapter_path}/interfaces",
+  "${os_adapter_path}/interfaces/linux",
+  "${os_adapter_path}/impl/src",
+  "${os_adapter_path}/impl/src/linux",
+  "${common_lib_path}/interfaces",
+]
+
+ohos_unittest("hc_thread_test") {
+  module_out_path = module_output_path
+  sources = [
+    "hc_thread_test.cpp",
+    "${os_adapter_path}/impl/src/linux/hc_thread.c",
+    "${os_adapter_path}/impl/src/linux/hc_condition.c",
+    "${os_adapter_path}/impl/src/linux/hc_dev_info.c",
+    "${common_lib_path}/impl/src/hc_mutex.c",
+    "${os_adapter_path}/impl/src/hc_log.c",
+    "${os_adapter_path}/impl/src/hc_err_trace.c",
+    "${os_adapter_path}/impl/src/linux/hc_file.c",
+    "${common_lib_path}/impl/src/hc_parcel.c",
+    "${common_lib_path}/impl/src/hc_types.c",
+    "${common_lib_path}/impl/src/hc_string.c",
+    "${common_lib_path}/impl/src/hc_string_vector.c",
+  ]
+  include_dirs = hc_thread_test_includes
+  external_deps = [
+    "cJSON:cjson",
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "init:libbegetutil",
+  ]
+  defines = [
+    "HILOG_ENABLE",
+  ]
+  subsystem_name = "security"
+  part_name = "device_auth"
+}

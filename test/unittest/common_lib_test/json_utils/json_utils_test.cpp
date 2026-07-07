@@ -469,4 +469,373 @@ HWTEST_F(JsonUtilsTest, ClearAndFreeJsonStringTest002, TestSize.Level0)
     ClearAndFreeJsonString(str);
     EXPECT_EQ(str, nullptr);
 }
+
+HWTEST_F(JsonUtilsTest, AddObjToArrayTest001, TestSize.Level0)
+{
+    CJson *jsonArr = CreateJsonArray();
+    CJson *item = CreateJson();
+    AddStringToJson(item, "key", "value");
+    int32_t ret = AddObjToArray(jsonArr, item);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(GetItemNum(jsonArr), 1);
+    FreeJson(jsonArr);
+}
+
+HWTEST_F(JsonUtilsTest, AddObjToArrayNullTest001, TestSize.Level0)
+{
+    CJson *item = CreateJson();
+    int32_t ret = AddObjToArray(NULL, item);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    FreeJson(item);
+}
+
+HWTEST_F(JsonUtilsTest, AddObjToArrayNullTest002, TestSize.Level0)
+{
+    CJson *jsonArr = CreateJsonArray();
+    int32_t ret = AddObjToArray(jsonArr, NULL);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    FreeJson(jsonArr);
+}
+
+HWTEST_F(JsonUtilsTest, AddObjToArrayNonArrayTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    AddStringToJson(jsonObj, "key", "value");
+    CJson *item = CreateJson();
+    int32_t ret = AddObjToArray(jsonObj, item);
+    EXPECT_EQ(ret, CLIB_ERR_INVALID_PARAM);
+    FreeJson(jsonObj);
+    FreeJson(item);
+}
+
+HWTEST_F(JsonUtilsTest, AddStringToArrayTest001, TestSize.Level0)
+{
+    CJson *jsonArr = CreateJsonArray();
+    int32_t ret = AddStringToArray(jsonArr, "hello");
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(GetItemNum(jsonArr), 1);
+    FreeJson(jsonArr);
+}
+
+HWTEST_F(JsonUtilsTest, AddStringToArrayNullTest001, TestSize.Level0)
+{
+    int32_t ret = AddStringToArray(NULL, "hello");
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+}
+
+HWTEST_F(JsonUtilsTest, AddStringToArrayNullTest002, TestSize.Level0)
+{
+    CJson *jsonArr = CreateJsonArray();
+    int32_t ret = AddStringToArray(jsonArr, NULL);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+    FreeJson(jsonArr);
+}
+
+HWTEST_F(JsonUtilsTest, AddStringToArrayNonArrayTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    int32_t ret = AddStringToArray(jsonObj, "hello");
+    EXPECT_EQ(ret, CLIB_ERR_INVALID_PARAM);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, AddInt64StringToJsonTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    int32_t ret = AddInt64StringToJson(jsonObj, "int64key", 123456789012LL);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    const char *str = GetStringFromJson(jsonObj, "int64key");
+    EXPECT_NE(str, nullptr);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, AddInt64StringToJsonTest002, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    int32_t ret = AddInt64StringToJson(jsonObj, "negkey", -12345LL);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, AddStringArrayToJsonTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    const char *strs[] = {"hello", "world"};
+    int32_t ret = AddStringArrayToJson(jsonObj, "arrkey", strs, 2);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, AddStringArrayToJsonNullTest001, TestSize.Level0)
+{
+    int32_t ret = AddStringArrayToJson(NULL, "key", nullptr, 0);
+    EXPECT_EQ(ret, CLIB_ERR_NULL_PTR);
+}
+
+HWTEST_F(JsonUtilsTest, GetUnsignedIntFromJsonTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    AddIntToJson(jsonObj, "uintkey", 123);
+    uint32_t val = 0;
+    int32_t ret = GetUnsignedIntFromJson(jsonObj, "uintkey", &val);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(val, 123u);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetUnsignedIntFromJsonTest002, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    AddIntToJson(jsonObj, "negkey", -5);
+    uint32_t val = 0;
+    int32_t ret = GetUnsignedIntFromJson(jsonObj, "negkey", &val);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetUnsignedIntFromJsonRecurseTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJsonFromString("{\"outer\":{\"inner\":{\"uintkey\":42}}}");
+    EXPECT_NE(jsonObj, nullptr);
+    uint32_t val = 0;
+    int32_t ret = GetUnsignedIntFromJson(jsonObj, "uintkey", &val);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(val, 42u);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetUint8FromJsonTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    AddIntToJson(jsonObj, "u8key", 200);
+    uint8_t val = 0;
+    int32_t ret = GetUint8FromJson(jsonObj, "u8key", &val);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(val, 200);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetUint8FromJsonTest002, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    AddIntToJson(jsonObj, "negkey", -1);
+    uint8_t val = 0;
+    int32_t ret = GetUint8FromJson(jsonObj, "negkey", &val);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetByteLenFromJsonTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    AddStringToJson(jsonObj, "hexkey", "0102ff");
+    uint32_t len = 0;
+    int32_t ret = GetByteLenFromJson(jsonObj, "hexkey", &len);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(len, 3u);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetStringValueTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    AddStringToJson(jsonObj, "strkey", "hello");
+    CJson *item = GetObjFromJson(jsonObj, "strkey");
+    const char *val = GetStringValue(item);
+    EXPECT_NE(val, nullptr);
+    EXPECT_STREQ(val, "hello");
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetStringValueNullTest001, TestSize.Level0)
+{
+    const char *val = GetStringValue(NULL);
+    EXPECT_EQ(val, nullptr);
+}
+
+HWTEST_F(JsonUtilsTest, ReplaceStringInJsonTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    AddStringToJson(jsonObj, "key", "first");
+    EXPECT_STREQ(GetStringFromJson(jsonObj, "key"), "first");
+    int32_t ret = AddStringToJson(jsonObj, "key", "second");
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_STREQ(GetStringFromJson(jsonObj, "key"), "second");
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, ReplaceBoolInJsonTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    AddBoolToJson(jsonObj, "flag", false);
+    bool val = true;
+    GetBoolFromJson(jsonObj, "flag", &val);
+    EXPECT_EQ(val, false);
+    int32_t ret = AddBoolToJson(jsonObj, "flag", true);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    GetBoolFromJson(jsonObj, "flag", &val);
+    EXPECT_EQ(val, true);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, ReplaceIntInJsonTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    AddIntToJson(jsonObj, "num", 10);
+    int32_t val = 0;
+    GetIntFromJson(jsonObj, "num", &val);
+    EXPECT_EQ(val, 10);
+    int32_t ret = AddIntToJson(jsonObj, "num", 20);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    GetIntFromJson(jsonObj, "num", &val);
+    EXPECT_EQ(val, 20);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, ReplaceObjInJsonTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    CJson *obj1 = CreateJson();
+    AddStringToJson(obj1, "inner", "v1");
+    AddObjToJson(jsonObj, "obj", obj1);
+    FreeJson(obj1);
+    CJson *obj2 = CreateJson();
+    AddStringToJson(obj2, "inner", "v2");
+    int32_t ret = AddObjToJson(jsonObj, "obj", obj2);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    FreeJson(obj2);
+    CJson *found = GetObjFromJson(jsonObj, "obj");
+    EXPECT_NE(found, nullptr);
+    EXPECT_STREQ(GetStringFromJson(found, "inner"), "v2");
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetStringFromJsonRecurseTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJsonFromString("{\"outer\":{\"inner\":{\"name\":\"deepval\"}}}");
+    EXPECT_NE(jsonObj, nullptr);
+    const char *str = GetStringFromJson(jsonObj, "name");
+    EXPECT_NE(str, nullptr);
+    EXPECT_STREQ(str, "deepval");
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetIntFromJsonRecurseTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJsonFromString("{\"outer\":{\"inner\":{\"value\":456}}}");
+    EXPECT_NE(jsonObj, nullptr);
+    int32_t val = 0;
+    int32_t ret = GetIntFromJson(jsonObj, "value", &val);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(val, 456);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetBoolFromJsonRecurseTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJsonFromString("{\"outer\":{\"inner\":{\"flag\":true}}}");
+    EXPECT_NE(jsonObj, nullptr);
+    bool val = false;
+    int32_t ret = GetBoolFromJson(jsonObj, "flag", &val);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(val, true);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetObjFromJsonRecurseTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJsonFromString("{\"outer\":{\"inner\":{\"target\":{\"key\":\"val\"}}}}");
+    EXPECT_NE(jsonObj, nullptr);
+    CJson *obj = GetObjFromJson(jsonObj, "target");
+    EXPECT_NE(obj, nullptr);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetInt64FromJsonTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    AddInt64StringToJson(jsonObj, "bigval", 123456789012LL);
+    int64_t val = 0;
+    int32_t ret = GetInt64FromJson(jsonObj, "bigval", &val);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(val, 123456789012LL);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetInt64FromJsonNullKeyTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    int64_t val = 0;
+    int32_t ret = GetInt64FromJson(jsonObj, NULL, &val);
+    EXPECT_NE(ret, CLIB_SUCCESS);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetInt64FromJsonNullValueTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    AddInt64StringToJson(jsonObj, "bigval", 123456789012LL);
+    int64_t val = 0;
+    int32_t ret = GetInt64FromJson(jsonObj, "bigval", &val);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(val, 123456789012LL);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetInt64FromJsonNotFoundTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    int64_t val = 0;
+    int32_t ret = GetInt64FromJson(jsonObj, "nonexistent", &val);
+    EXPECT_NE(ret, CLIB_SUCCESS);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetBoolFromJsonTrueTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJsonFromString("{\"flag\":true}");
+    EXPECT_NE(jsonObj, nullptr);
+    bool val = false;
+    int32_t ret = GetBoolFromJson(jsonObj, "flag", &val);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(val, true);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetBoolFromJsonFalseTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJsonFromString("{\"flag\":false}");
+    EXPECT_NE(jsonObj, nullptr);
+    bool val = true;
+    int32_t ret = GetBoolFromJson(jsonObj, "flag", &val);
+    EXPECT_EQ(ret, CLIB_SUCCESS);
+    EXPECT_EQ(val, false);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetBoolFromJsonNullKeyTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJson();
+    bool val = false;
+    int32_t ret = GetBoolFromJson(jsonObj, NULL, &val);
+    EXPECT_NE(ret, CLIB_SUCCESS);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, GetBoolFromJsonNullValueTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJsonFromString("{\"flag\":true}");
+    EXPECT_NE(jsonObj, nullptr);
+    int32_t ret = GetBoolFromJson(jsonObj, "flag", NULL);
+    EXPECT_NE(ret, CLIB_SUCCESS);
+    FreeJson(jsonObj);
+}
+
+HWTEST_F(JsonUtilsTest, ClearSensitiveStringInJsonNullStrTest001, TestSize.Level0)
+{
+    CJson *jsonObj = CreateJsonFromString("{\"secret\":\"sensitive\"}");
+    EXPECT_NE(jsonObj, nullptr);
+    ClearSensitiveStringInJson(jsonObj, "nonexistent");
+    FreeJson(jsonObj);
+}
 }
