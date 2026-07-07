@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ using namespace std;
 using namespace testing::ext;
 namespace {
 static int g_threadRunCount = 0;
+static const int32_t TEST_WAIT_TIME_US = 50000;
 
 static int TestThreadFunc(void *args)
 {
@@ -31,8 +32,8 @@ static int TestThreadFunc(void *args)
 
 static int TestThreadFuncForNotify(void *args)
 {
-    HcThread *thread = (HcThread *)args;
-    usleep(50000);
+    HcThread *thread = static_cast<HcThread *>(args);
+    usleep(TEST_WAIT_TIME_US);
     thread->notify(thread);
     return 0;
 }

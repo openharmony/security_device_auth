@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ using namespace std;
 using namespace testing::ext;
 namespace {
 static volatile int g_taskActionCount = 0;
+static const int32_t TEST_TASK_WAIT_TIME_US = 100000;
 
 static void TestTaskDoAction(HcTaskBase *task)
 {
@@ -34,7 +35,7 @@ static void TestTaskDestroy(HcTaskBase *task)
 
 static HcTaskBase *CreateTestTask()
 {
-    HcTaskBase *task = (HcTaskBase *)HcMalloc(sizeof(HcTaskBase), 0);
+    HcTaskBase *task = static_cast<HcTaskBase *>(HcMalloc(sizeof(HcTaskBase), 0));
     if (task != NULL) {
         task->doAction = TestTaskDoAction;
         task->destroy = TestTaskDestroy;
@@ -77,7 +78,7 @@ HWTEST_F(HcTaskThreadTest, PushAndExecuteTaskTest001, TestSize.Level0)
     EXPECT_NE(task, nullptr);
     thread.pushTask(&thread, task);
 
-    usleep(100000);
+    usleep(TEST_TASK_WAIT_TIME_US);
     EXPECT_EQ(g_taskActionCount, 1);
 
     thread.stopAndClear(&thread);
