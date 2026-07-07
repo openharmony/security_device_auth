@@ -35,7 +35,8 @@
         "device_auth_storage_path",
         "device_auth_hichain_thread_stack_size",
         "device_auth_enable_posix_interface",
-        "device_auth_enable_soft_bus_channel"
+        "device_auth_enable_soft_bus_channel",
+        "device_auth_enable_os_account_multi_profile"
       ],
       "adapted_system_type": [
           "standard",

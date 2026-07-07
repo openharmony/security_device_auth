@@ -24,6 +24,8 @@ namespace DevAuth {
 typedef struct {
     std::function<void(int32_t osAccountId)> notifyOsAccountUnlocked;
     std::function<void(int32_t osAccountId)> notifyOsAccountRemoved;
+    std::function<void(int32_t osAccountId, int32_t fromSubId, int32_t toSubId)> notifySubProfileSwitched;
+    std::function<void(int32_t osAccountId, int32_t subProfileId)> notifySubProfileDeleted;
 } OsAccountEventNotifier;
 
 class AccountSubscriber : public EventFwk::CommonEventSubscriber {

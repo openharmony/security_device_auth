@@ -207,6 +207,9 @@ account_related_cred_plugin_mock_files = [ "${ext_plugin_manager_path}/src/accou
 account_auth_plugin_files = [ "${dev_frameworks_path}/src/plugin_adapter/ext_part/account_auth_plugin/account_auth_plugin_proxy.c" ]
 account_auth_plugin_mock_files = [ "${dev_frameworks_path}/src/plugin_adapter_mock/account_auth_plugin_proxy_mock.c" ]
 
+trust_datdabase_plugin_files = [ "${dev_frameworks_path}/src/plugin_adapter/ext_part/trust_relation_database_plugin/trust_database_plugin_proxy.c" ]
+trust_datdabase_plugin_mock_files = [ "${dev_frameworks_path}/src/plugin_adapter_mock/trust_database_plugin_proxy_mock.c" ]
+
 account_task_manager_files =
     [ "${dev_frameworks_path}/src/account_task_manager/account_task_manager.c" ]
 account_task_manager_mock_files = [ "${dev_frameworks_path}/src/account_task_manager_mock/account_task_manager_mock.c" ]
@@ -476,11 +479,17 @@ if (device_auth_enable_run_on_demand_qos == true) {
   deviceauth_defines += [ "DEVAUTH_ENABLE_RUN_ON_DEMAND_QOS" ]
 }
 
+if (device_auth_enable_os_account_multi_profile == true) {
+  deviceauth_defines += [ "DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE" ]
+}
+
 if (enable_extend_plugin) {
   deviceauth_files += account_auth_plugin_files
+  deviceauth_files += trust_datdabase_plugin_files
   deviceauth_files += account_task_manager_files
 } else {
   deviceauth_files += account_auth_plugin_mock_files
+  deviceauth_files += trust_datdabase_plugin_mock_files
   deviceauth_files += account_task_manager_mock_files
 }
 

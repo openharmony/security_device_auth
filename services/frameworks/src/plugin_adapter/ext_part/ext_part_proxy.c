@@ -18,6 +18,7 @@
 #include <stddef.h>
 #include "account_auth_plugin_proxy.h"
 #include "account_lifecycle_plugin_proxy.h"
+#include "trust_database_plugin_proxy.h"
 #include "device_auth_defines.h"
 #include "hc_log.h"
 #include "hc_types.h"
@@ -39,6 +40,9 @@ static int32_t ParsePlugins(const ExtPartProxy *pluginProxy)
                 break;
             case EXT_PLUGIN_ACCT_AUTH:
                 SetAccountAuthPlugin(NULL, (AccountAuthExtPlug *)(current->plugin));
+                break;
+            case EXT_PLUGIN_TRUST_RELATION_DATABASE:
+                SetTrustDatabasePlugin(NULL, (TrustDatabaseExtPlug *)(current->plugin));
                 break;
             default:
                 LOGW("Invalid plugin type %" LOG_PUB "d", current->plugin->pluginType);

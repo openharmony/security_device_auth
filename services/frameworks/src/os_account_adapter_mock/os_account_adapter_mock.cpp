@@ -68,3 +68,43 @@ int32_t GetCurrentActiveOsAccountId(void)
 {
     return DEFAULT_OS_ACCOUNT;
 }
+
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+int32_t GetForegroundSubProfileIdStr(int32_t osAccountId, char *subProfileIdStr, uint32_t subProfileIdStrLen)
+{
+    (void)osAccountId;
+    (void)subProfileIdStr;
+    (void)subProfileIdStrLen;
+    return HC_ERR_NOT_SUPPORT;
+}
+
+void SetProfileDeleteCallbackForGroup(ProfileDeleteCallback callback)
+{
+    (void)callback;
+}
+
+void SetProfileDeleteCallbackForCred(ProfileDeleteCallback callback)
+{
+    (void)callback;
+}
+
+void SetProfileSwitchStartCallbackForGroup(ProfileSwitchStartCallback callback)
+{
+    (void)callback;
+}
+
+void SetProfileSwitchedCallbackForGroup(ProfileSwitchedCallback callback)
+{
+    (void)callback;
+}
+
+void SetGroupRelationChangeCallback(GroupRelationChangeCallback callback)
+{
+    (void)callback;
+}
+
+void SetCredRelationChangeCallback(CredRelationChangeCallback callback)
+{
+    (void)callback;
+}
+#endif
