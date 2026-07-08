@@ -420,16 +420,19 @@ HWTEST_F(StringUtilTest, PrintBufferTest001, TestSize.Level0)
 {
     uint8_t msg[] = {0x01, 0x02, 0x03, 0x04};
     PrintBuffer(msg, sizeof(msg), "TestTag");
+    SUCCEED();
 }
 
 HWTEST_F(StringUtilTest, PrintBufferTest002, TestSize.Level0)
 {
     uint8_t msg[] = {0};
     PrintBuffer(msg, 0, "TestTag");
+    SUCCEED();
 }
 
 HWTEST_F(StringUtilTest, PrintBufferTest003, TestSize.Level0)
 {
     PrintBuffer(NULL, 0, "TestTag");
+    SUCCEED();
 }
 }

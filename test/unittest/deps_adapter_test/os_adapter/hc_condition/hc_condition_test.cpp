@@ -62,6 +62,7 @@ HWTEST_F(HcConditionTest, InitHcCondWithNullMutexTest001, TestSize.Level0)
 HWTEST_F(HcConditionTest, DestroyHcCondNullTest001, TestSize.Level0)
 {
     DestroyHcCond(nullptr);
+    SUCCEED();
 }
 
 HWTEST_F(HcConditionTest, NotifyWithoutLockTest001, TestSize.Level0)

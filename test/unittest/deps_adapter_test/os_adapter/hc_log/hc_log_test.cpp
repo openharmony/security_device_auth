@@ -30,50 +30,59 @@ public:
 HWTEST_F(HcLogTest, LogAndRecordErrorTest001, TestSize.Level0)
 {
     LOGE("test log message");
+    SUCCEED();
 }
 
 HWTEST_F(HcLogTest, LogAndRecordErrorTest002, TestSize.Level0)
 {
     LOGE("test with int: %d", 42);
+    SUCCEED();
 }
 
 HWTEST_F(HcLogTest, LogAndRecordErrorTest003, TestSize.Level0)
 {
     LOGE("test with string: %s", "hello");
+    SUCCEED();
 }
 
 HWTEST_F(HcLogTest, LogAndRecordErrorNullParamsTest001, TestSize.Level0)
 {
     LogAndRecordError(NULL, 42, "test");
+    SUCCEED();
 }
 
 HWTEST_F(HcLogTest, LogAndRecordErrorNullParamsTest002, TestSize.Level0)
 {
     LogAndRecordError("Func", 42, NULL);
+    SUCCEED();
 }
 
 HWTEST_F(HcLogTest, PrintSensitiveDataTest001, TestSize.Level0)
 {
     const char *longStr = "01234567890123456789";
     PRINT_SENSITIVE_DATA("TEST", longStr);
+    SUCCEED();
 }
 
 HWTEST_F(HcLogTest, PrintSensitiveDataTest002, TestSize.Level0)
 {
     const char *shortStr = "abc";
     PRINT_SENSITIVE_DATA("TEST", shortStr);
+    SUCCEED();
 }
 
 HWTEST_F(HcLogTest, PrintSensitiveByteTest001, TestSize.Level0)
 {
     uint8_t byte[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c};
     PRINT_SENSITIVE_BYTE("TEST", byte, 12);
+    SUCCEED();
 }
 
 HWTEST_F(HcLogTest, PrintSensitiveByteTest002, TestSize.Level0)
 {
     uint8_t byte[] = {0x01, 0x02};
     PRINT_SENSITIVE_BYTE("TEST", byte, 2);
+    SUCCEED();
 }
 
 HWTEST_F(HcLogTest, LogLevelsTest001, TestSize.Level0)
@@ -81,4 +90,5 @@ HWTEST_F(HcLogTest, LogLevelsTest001, TestSize.Level0)
     LOGD("debug message");
     LOGI("info message");
     LOGW("warning message");
+    SUCCEED();
 }

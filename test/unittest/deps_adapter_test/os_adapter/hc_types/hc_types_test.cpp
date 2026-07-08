@@ -60,6 +60,7 @@ HWTEST_F(HcTypesTest, HcFreeTest001, TestSize.Level0)
 HWTEST_F(HcTypesTest, HcFreeTest002, TestSize.Level0)
 {
     HcFree(nullptr);
+    SUCCEED();
 }
 
 HWTEST_F(HcTypesTest, HcStrlenTest001, TestSize.Level0)

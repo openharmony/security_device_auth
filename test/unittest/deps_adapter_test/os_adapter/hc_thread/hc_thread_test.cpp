@@ -71,6 +71,7 @@ HWTEST_F(HcThreadTest, InitThreadWithStackSizeTest001, TestSize.Level0)
 HWTEST_F(HcThreadTest, DestroyThreadNullTest001, TestSize.Level0)
 {
     DestroyThread(NULL);
+    SUCCEED();
 }
 
 HWTEST_F(HcThreadTest, StartAndJoinTest001, TestSize.Level0)

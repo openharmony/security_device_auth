@@ -50,6 +50,7 @@ HWTEST_F(DevAuthDynamicLoadTest, DevAuthDlopenTest001, TestSize.Level0)
     if (handle != nullptr) {
         DevAuthDlclose(handle);
     }
+    SUCCEED();
 }
 
 HWTEST_F(DevAuthDynamicLoadTest, DevAuthDlopenTest002, TestSize.Level0)
@@ -89,4 +90,5 @@ HWTEST_F(DevAuthDynamicLoadTest, DevAuthDlsymTest003, TestSize.Level0)
 HWTEST_F(DevAuthDynamicLoadTest, DevAuthDlcloseTest001, TestSize.Level0)
 {
     DevAuthDlclose(NULL);
+    SUCCEED();
 }

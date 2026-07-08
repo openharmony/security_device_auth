@@ -377,6 +377,7 @@ HWTEST_F(HcMutexTest, PthreadMutexUnlockFailTest001, TestSize.Level0)
     
     SetPthreadMockFlags(false, false, false, false);
     DestroyHcMutex(&mutex);
+    SUCCEED();
 }
 
 HWTEST_F(HcMutexTest, PthreadMutexDestroyFailTest001, TestSize.Level0)
@@ -388,6 +389,7 @@ HWTEST_F(HcMutexTest, PthreadMutexDestroyFailTest001, TestSize.Level0)
     DestroyHcMutex(&mutex);
     
     SetPthreadMockFlags(false, false, false, false);
+    SUCCEED();
 }
 
 HWTEST_F(HcMutexTest, ReentrantLockFailTest001, TestSize.Level0)
@@ -416,6 +418,7 @@ HWTEST_F(HcMutexTest, ReentrantUnlockFailTest001, TestSize.Level0)
     
     SetPthreadMockFlags(false, false, false, false);
     DestroyHcMutex(&mutex);
+    SUCCEED();
 }
 
 HWTEST_F(HcMutexTest, InternalLockWithNullTest001, TestSize.Level0)

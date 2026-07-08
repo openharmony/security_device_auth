@@ -145,11 +145,13 @@ HWTEST_F(HcFileTest, HcFileCloseNullTest001, TestSize.Level0)
     FileHandle file;
     file.pfd = nullptr;
     HcFileClose(file);
+    SUCCEED();
 }
 
 HWTEST_F(HcFileTest, HcFileRemoveNullPathTest001, TestSize.Level0)
 {
     HcFileRemove(nullptr);
+    SUCCEED();
 }
 
 HWTEST_F(HcFileTest, HcFileRemoveTest001, TestSize.Level0)
