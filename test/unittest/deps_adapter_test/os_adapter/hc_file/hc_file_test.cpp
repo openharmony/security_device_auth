@@ -28,7 +28,7 @@ public:
     void TearDown() {}
 };
 
-static const char *TEST_FILE_PATH = "/tmp/hc_file_test.dat";
+static const char *TEST_FILE_PATH = "/data/local/tmp/hc_file_test.dat";
 
 HWTEST_F(HcFileTest, HcFileOpenReadTest001, TestSize.Level0)
 {
