@@ -62,7 +62,7 @@ HWTEST_F(HcFileTest, HcFileWriteAndReadTest001, TestSize.Level0)
 
     const char *data = "hello world test data";
     int writeSize = HcFileWrite(writeFile, data, strlen(data));
-    EXPECT_EQ(writeSize, (int)strlen(data));
+    EXPECT_EQ(writeSize, static_cast<int>(strlen(data)));
 
     HcFileClose(writeFile);
 
@@ -73,7 +73,7 @@ HWTEST_F(HcFileTest, HcFileWriteAndReadTest001, TestSize.Level0)
     EXPECT_NE(readFile.pfd, nullptr);
 
     int fileSize = HcFileSize(readFile);
-    EXPECT_EQ(fileSize, (int)strlen(data));
+    EXPECT_EQ(fileSize, static_cast<int>(strlen(data)));
 
     char readBuf[64] = {0};
     int readSize = HcFileRead(readFile, readBuf, fileSize);
