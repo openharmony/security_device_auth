@@ -16,22 +16,15 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
-typedef void (*log_f)(const char *tag, const char *func_name, const char *format, ...);
-
-struct log_f_group {
-    log_f log_d;
-    log_f log_i;
-    log_f log_w;
-    log_f log_e;
-};
+#include "hichain.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-log_f get_logd(void);
-log_f get_logi(void);
-log_f get_logw(void);
-log_f get_loge(void);
+log_func get_logd(void);
+log_func get_logi(void);
+log_func get_logw(void);
+log_func get_loge(void);
 #ifdef __cplusplus
 }
 #endif
