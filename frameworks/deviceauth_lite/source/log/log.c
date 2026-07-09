@@ -19,16 +19,6 @@
 #include "securec.h"
 #include "base.h"
 
-#if defined(_WINDOWS)
-#ifdef DLL_EXPORT
-#define DLL_API_PUBLIC __declspec(dllexport)
-#else
-#define DLL_API_PUBLIC __declspec(dllimport)
-#endif
-#else
-#define DLL_API_PUBLIC __attribute__ ((visibility("default")))
-#endif
-
 static void hc_logd(const char *tag, const char *func, const char *format, ...);
 static void hc_logi(const char *tag, const char *func, const char *format, ...);
 static void hc_logw(const char *tag, const char *func, const char *format, ...);
