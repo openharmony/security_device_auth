@@ -1787,6 +1787,7 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0331, TestSize.Level0)
     (void)GetSelfUserId(DEFAULT_OS_ACCOUNT, nullptr, TEST_LEN);
     char userId[TEST_LEN];
     (void)GetSelfUserId(DEFAULT_OS_ACCOUNT, userId, TEST_LEN);
+    SUCCEED();
 }
 
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest034, TestSize.Level0)

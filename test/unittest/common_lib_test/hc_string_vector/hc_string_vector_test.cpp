@@ -215,4 +215,112 @@ HWTEST_F(HcStringVectorTest, StringVectorSizeTest001, TestSize.Level0)
 
     DestroyStrVector(&vec);
 }
+
+HWTEST_F(HcStringVectorTest, PopFrontEmptyTest001, TestSize.Level0)
+{
+    StringVector vec = CreateStrVector();
+    HcBool ret = vec.popFront(&vec, NULL);
+    EXPECT_EQ(ret, HC_FALSE);
+    DestroyStrVector(&vec);
+}
+
+HWTEST_F(HcStringVectorTest, PopFrontNullVecTest001, TestSize.Level0)
+{
+    StringVector vec = CreateStrVector();
+    HcBool ret = vec.popFront(NULL, NULL);
+    EXPECT_EQ(ret, HC_FALSE);
+    DestroyStrVector(&vec);
+}
+
+HWTEST_F(HcStringVectorTest, GetByValueTest001, TestSize.Level0)
+{
+    StringVector vec = CreateStrVector();
+    HcString str = CreateString();
+    StringSetPointer(&str, "hello");
+    vec.pushBack(&vec, &str);
+
+    HcString *resultPtr = vec.getp(&vec, 0);
+    EXPECT_NE(resultPtr, nullptr);
+    EXPECT_STREQ(StringGet(resultPtr), "hello");
+    DestroyStrVector(&vec);
+}
+
+HWTEST_F(HcStringVectorTest, GetByValueOutOfRangeTest001, TestSize.Level0)
+{
+    StringVector vec = CreateStrVector();
+    HcString *resultPtr = vec.getp(&vec, 5);
+    EXPECT_EQ(resultPtr, nullptr);
+    DestroyStrVector(&vec);
+}
+
+HWTEST_F(HcStringVectorTest, ClearEmptyVecTest001, TestSize.Level0)
+{
+    StringVector vec = CreateStrVector();
+    vec.clear(&vec);
+    EXPECT_EQ(vec.size(&vec), 0u);
+    DestroyStrVector(&vec);
+}
+
+HWTEST_F(HcStringVectorTest, PushAfterClearTest001, TestSize.Level0)
+{
+    StringVector vec = CreateStrVector();
+    HcString str1 = CreateString();
+    StringSetPointer(&str1, "a");
+    vec.pushBack(&vec, &str1);
+
+    vec.clear(&vec);
+    EXPECT_EQ(vec.size(&vec), 0u);
+
+    HcString str2 = CreateString();
+    StringSetPointer(&str2, "b");
+    vec.pushBack(&vec, &str2);
+    EXPECT_EQ(vec.size(&vec), 1u);
+
+    HcString *resultPtr = vec.getp(&vec, 0);
+    EXPECT_NE(resultPtr, nullptr);
+    EXPECT_STREQ(StringGet(resultPtr), "b");
+
+    DestroyStrVector(&vec);
+}
+
+HWTEST_F(HcStringVectorTest, PushBackTTest001, TestSize.Level0)
+{
+    StringVector vec = CreateStrVector();
+
+    HcString str = CreateString();
+    StringSetPointer(&str, "hello");
+    HcString *result = vec.pushBackT(&vec, str);
+    EXPECT_NE(result, nullptr);
+
+    uint32_t size = vec.size(&vec);
+    EXPECT_EQ(size, 1);
+
+    HcString *strPtr = vec.getp(&vec, 0);
+    EXPECT_NE(strPtr, nullptr);
+    EXPECT_STREQ(StringGet(strPtr), "hello");
+
+    DestroyStrVector(&vec);
+}
+
+HWTEST_F(HcStringVectorTest, GetByValueTest002, TestSize.Level0)
+{
+    StringVector vec = CreateStrVector();
+    HcString str = CreateString();
+    StringSetPointer(&str, "hello");
+    vec.pushBack(&vec, &str);
+
+    HcString val = vec.get(&vec, 0);
+    EXPECT_STREQ(StringGet(&val), "hello");
+
+    DestroyStrVector(&vec);
+}
+
+HWTEST_F(HcStringVectorTest, GetByValueOutOfRangeTest002, TestSize.Level0)
+{
+    StringVector vec = CreateStrVector();
+    HcString val = vec.get(&vec, 5);
+    const char *content = StringGet(&val);
+    EXPECT_EQ(content, nullptr);
+    DestroyStrVector(&vec);
+}
 }

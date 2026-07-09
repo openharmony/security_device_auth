@@ -10,7 +10,7 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under theater License.
+ * limitations under the License.
  */
 
 #include <gtest/gtest.h>
@@ -22,6 +22,7 @@ using namespace testing::ext;
 namespace {
 static const int64_t TEST_SLEEP_TIME_MS = 100;
 static const int64_t TEST_SLEEP_TIME_SEC = 1;
+static const int64_t MS_TO_US = 1000;
 
 class HcTimeTest : public testing::Test {
 };
@@ -32,7 +33,7 @@ HWTEST_F(HcTimeTest, HcGetCurTimeTest001, TestSize.Level0)
     int64_t time1 = HcGetCurTime();
     EXPECT_GT(time1, 0);
 
-    usleep(TEST_SLEEP_TIME_MS * 1000);
+    usleep(TEST_SLEEP_TIME_MS * MS_TO_US);
 
     int64_t time2 = HcGetCurTime();
     EXPECT_GT(time2, 0);
@@ -44,7 +45,7 @@ HWTEST_F(HcTimeTest, HcGetCurTimeInMillisTest001, TestSize.Level0)
     int64_t time1 = HcGetCurTimeInMillis();
     EXPECT_GT(time1, 0);
 
-    usleep(TEST_SLEEP_TIME_MS * 1000);
+    usleep(TEST_SLEEP_TIME_MS * MS_TO_US);
 
     int64_t time2 = HcGetCurTimeInMillis();
     EXPECT_GT(time2, 0);
@@ -97,5 +98,17 @@ HWTEST_F(HcTimeTest, HcGetRealTimeTest002, TestSize.Level0)
 
     EXPECT_GE(time2, time1);
     EXPECT_LE(time2 - time1, 1);
+}
+
+HWTEST_F(HcTimeTest, HcGetCurTimeInMillisIntervalTest001, TestSize.Level0)
+{
+    int64_t time1 = HcGetCurTimeInMillis();
+    EXPECT_GT(time1, 0);
+
+    usleep(TEST_SLEEP_TIME_MS * MS_TO_US);
+
+    int64_t time2 = HcGetCurTimeInMillis();
+    EXPECT_GT(time2, time1);
+    EXPECT_GE(time2 - time1, TEST_SLEEP_TIME_MS);
 }
 }
