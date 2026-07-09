@@ -179,6 +179,7 @@ static void DevAuthInterfaceTestCase001()
     (void)ProcessAuthSession(0, nullptr, nullptr, nullptr);
     plugin.destroySession = DestroySessionTest;
     plugin.base.init = InitTest;
+    plugin.base.destroy = Destroy;
     (void)SetAccountAuthPlugin(nullptr, &plugin);
     (void)DestroyAuthSession(0);
     DestoryAccountAuthPlugin();
