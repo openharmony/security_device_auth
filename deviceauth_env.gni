@@ -26,6 +26,7 @@ declare_args() {
   deviceauth_feature_config = "//base/security/device_auth/default_config"
   device_auth_enable_soft_bus_channel = true
   device_auth_use_customized_key_adapter = false
+  device_auth_enable_os_account_multi_profile = false
 }
 
 build_flags = [

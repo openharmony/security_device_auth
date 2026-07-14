@@ -1119,6 +1119,125 @@ static void OnTrustDevNumChangedStub(CallbackParams params)
     return;
 }
 
+static void OnGroupActiveInUserStub(CallbackParams params)
+{
+    const char *returnInfo = nullptr;
+    const char *appId = nullptr;
+    DataChangeListener callback;
+
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_RETURN_INFO,
+        reinterpret_cast<uint8_t *>(&returnInfo), nullptr);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
+        reinterpret_cast<uint8_t *>(&appId), nullptr);
+    if (GetSdkCallBackByAppId(appId, CB_TYPE_LISTENER, reinterpret_cast<uint8_t *>(&callback),
+        sizeof(DataChangeListener)) != HC_SUCCESS) {
+        LOGE("GetSdkCallBackByAppId failed.");
+        return;
+    }
+    if (callback.onGroupActiveInUser != nullptr) {
+        callback.onGroupActiveInUser(returnInfo);
+        LOGI("onGroupActiveInUser successfully.");
+    }
+    return;
+}
+
+static void OnGroupInactiveInUserStub(CallbackParams params)
+{
+    const char *returnInfo = nullptr;
+    const char *appId = nullptr;
+    DataChangeListener callback;
+
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_RETURN_INFO,
+        reinterpret_cast<uint8_t *>(&returnInfo), nullptr);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
+        reinterpret_cast<uint8_t *>(&appId), nullptr);
+    if (GetSdkCallBackByAppId(appId, CB_TYPE_LISTENER, reinterpret_cast<uint8_t *>(&callback),
+        sizeof(DataChangeListener)) != HC_SUCCESS) {
+        LOGE("GetSdkCallBackByAppId failed.");
+        return;
+    }
+    if (callback.onGroupInactiveInUser != nullptr) {
+        callback.onGroupInactiveInUser(returnInfo);
+        LOGI("onGroupInactiveInUser successfully.");
+    }
+    return;
+}
+
+static void OnDeviceActiveInUserStub(CallbackParams params)
+{
+    const char *udid = nullptr;
+    const char *returnInfo = nullptr;
+    const char *appId = nullptr;
+    DataChangeListener callback;
+
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID,
+        reinterpret_cast<uint8_t *>(&udid), nullptr);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_RETURN_INFO,
+        reinterpret_cast<uint8_t *>(&returnInfo), nullptr);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
+        reinterpret_cast<uint8_t *>(&appId), nullptr);
+    if (GetSdkCallBackByAppId(appId, CB_TYPE_LISTENER, reinterpret_cast<uint8_t *>(&callback),
+        sizeof(DataChangeListener)) != HC_SUCCESS) {
+        LOGE("GetSdkCallBackByAppId failed.");
+        return;
+    }
+    if (callback.onDeviceActiveInUser != nullptr) {
+        callback.onDeviceActiveInUser(udid, returnInfo);
+        LOGI("onDeviceActiveInUser successfully.");
+    }
+    return;
+}
+
+static void OnDeviceInactiveInUserStub(CallbackParams params)
+{
+    const char *udid = nullptr;
+    const char *returnInfo = nullptr;
+    const char *appId = nullptr;
+    DataChangeListener callback;
+
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID,
+        reinterpret_cast<uint8_t *>(&udid), nullptr);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_RETURN_INFO,
+        reinterpret_cast<uint8_t *>(&returnInfo), nullptr);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
+        reinterpret_cast<uint8_t *>(&appId), nullptr);
+    if (GetSdkCallBackByAppId(appId, CB_TYPE_LISTENER, reinterpret_cast<uint8_t *>(&callback),
+        sizeof(DataChangeListener)) != HC_SUCCESS) {
+        LOGE("GetSdkCallBackByAppId failed.");
+        return;
+    }
+    if (callback.onDeviceInactiveInUser != nullptr) {
+        callback.onDeviceInactiveInUser(udid, returnInfo);
+        LOGI("onDeviceInactiveInUser successfully.");
+    }
+    return;
+}
+
+static void OnDeviceNotTrustedInUserStub(CallbackParams params)
+{
+    const char *udid = nullptr;
+    const char *returnInfo = nullptr;
+    const char *appId = nullptr;
+    DataChangeListener callback;
+
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID,
+        reinterpret_cast<uint8_t *>(&udid), nullptr);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_RETURN_INFO,
+        reinterpret_cast<uint8_t *>(&returnInfo), nullptr);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
+        reinterpret_cast<uint8_t *>(&appId), nullptr);
+    if (GetSdkCallBackByAppId(appId, CB_TYPE_LISTENER, reinterpret_cast<uint8_t *>(&callback),
+        sizeof(DataChangeListener)) != HC_SUCCESS) {
+        LOGE("GetSdkCallBackByAppId failed.");
+        return;
+    }
+    if (callback.onDeviceNotTrustedInUser != nullptr) {
+        callback.onDeviceNotTrustedInUser(udid, returnInfo);
+        LOGI("onDeviceNotTrustedInUser successfully.");
+    }
+    return;
+}
+
 static void OnCredAddStub(CallbackParams params)
 {
     char *credId = nullptr;
@@ -1194,6 +1313,56 @@ static void OnCredUpdateStub(CallbackParams params)
     return;
 }
 
+static void OnCredActiveInUserStub(CallbackParams params)
+{
+    const char *credId = nullptr;
+    const char *returnInfo = nullptr;
+    const char *appId = nullptr;
+    CredChangeListener callback;
+
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_CRED_ID,
+        reinterpret_cast<uint8_t *>(&credId), nullptr);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_RETURN_INFO,
+        reinterpret_cast<uint8_t *>(&returnInfo), nullptr);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
+        reinterpret_cast<uint8_t *>(&appId), nullptr);
+    if (GetSdkCallBackByAppId(appId, CB_TYPE_CRED_LISTENER, reinterpret_cast<uint8_t *>(&callback),
+        sizeof(CredChangeListener)) != HC_SUCCESS) {
+        LOGE("GetSdkCallBackByAppId failed.");
+        return;
+    }
+    if (callback.onCredActiveInUser != nullptr) {
+        callback.onCredActiveInUser(credId, returnInfo);
+        LOGI("onCredActiveInUser successfully.");
+    }
+    return;
+}
+
+static void OnCredInactiveInUserStub(CallbackParams params)
+{
+    const char *credId = nullptr;
+    const char *returnInfo = nullptr;
+    const char *appId = nullptr;
+    CredChangeListener callback;
+
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_CRED_ID,
+        reinterpret_cast<uint8_t *>(&credId), nullptr);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_RETURN_INFO,
+        reinterpret_cast<uint8_t *>(&returnInfo), nullptr);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
+        reinterpret_cast<uint8_t *>(&appId), nullptr);
+    if (GetSdkCallBackByAppId(appId, CB_TYPE_CRED_LISTENER, reinterpret_cast<uint8_t *>(&callback),
+        sizeof(CredChangeListener)) != HC_SUCCESS) {
+        LOGE("GetSdkCallBackByAppId failed.");
+        return;
+    }
+    if (callback.onCredInactiveInUser != nullptr) {
+        callback.onCredInactiveInUser(credId, returnInfo);
+        LOGI("onCredInactiveInUser successfully.");
+    }
+    return;
+}
+
 void ProcCbHook(int32_t callbackId, const IpcDataInfo *cbDataCache, int32_t cacheNum, uintptr_t replyCtx)
 {
     CallbackStub stubTable[] = {
@@ -1202,10 +1371,12 @@ void ProcCbHook(int32_t callbackId, const IpcDataInfo *cbDataCache, int32_t cach
         OnDevUnboundStub, OnDevUnTrustStub, OnDelLastGroupStub, OnTrustDevNumChangedStub,
         OnCredAddStub, OnCredDeleteStub, OnCredUpdateStub, OnTransmitStub, OnSessKeyStub,
         OnFinishStub, OnErrorStub, OnRequestStub, OnTransmitStub, OnSessKeyStub,
-        OnFinishStub, OnErrorStub, OnRequestStub,
+        OnFinishStub, OnErrorStub, OnRequestStub, OnGroupActiveInUserStub, OnGroupInactiveInUserStub,
+        OnDeviceActiveInUserStub, OnDeviceInactiveInUserStub, OnDeviceNotTrustedInUserStub,
+        OnCredActiveInUserStub, OnCredInactiveInUserStub,
     };
     MessageParcel *reply = reinterpret_cast<MessageParcel *>(replyCtx);
-    if ((callbackId < CB_ID_ON_TRANS) || (callbackId > CB_ID_ON_REQUEST_CRED)) {
+    if ((callbackId < CB_ID_ON_TRANS) || (callbackId > CB_ID_ON_CRED_INACTIVE_IN_USER)) {
         LOGE("Invalid call back id");
         return;
     }
@@ -1749,6 +1920,162 @@ void IpcOnTrustedDeviceNumChanged(int32_t curTrustedDeviceNum)
     return;
 }
 
+void IpcOnGroupActiveInUser(const char *returnInfo)
+{
+    if (returnInfo == nullptr) {
+        return;
+    }
+    std::lock_guard<std::mutex> autoLock(g_cbListLock);
+    if (g_ipcCallBackList.ctx == nullptr) {
+        return;
+    }
+    for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
+        if (g_ipcCallBackList.ctx[i].cbType != CB_TYPE_LISTENER) {
+            continue;
+        }
+        MessageParcel dataParcel;
+        MessageParcel reply;
+        uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_RETURN_INFO,
+            reinterpret_cast<const uint8_t *>(returnInfo), HcStrlen(returnInfo) + 1);
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID,
+            reinterpret_cast<const uint8_t *>(g_ipcCallBackList.ctx[i].appId),
+            HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
+        if (ret != HC_SUCCESS) {
+            LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
+            continue;
+        }
+        ServiceDevAuth::ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_GROUP_ACTIVE_IN_USER, false,
+            dataParcel, reply);
+    }
+    return;
+}
+
+void IpcOnGroupInactiveInUser(const char *returnInfo)
+{
+    if (returnInfo == nullptr) {
+        return;
+    }
+    std::lock_guard<std::mutex> autoLock(g_cbListLock);
+    if (g_ipcCallBackList.ctx == nullptr) {
+        return;
+    }
+    for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
+        if (g_ipcCallBackList.ctx[i].cbType != CB_TYPE_LISTENER) {
+            continue;
+        }
+        MessageParcel dataParcel;
+        MessageParcel reply;
+        uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_RETURN_INFO,
+            reinterpret_cast<const uint8_t *>(returnInfo), HcStrlen(returnInfo) + 1);
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID,
+            reinterpret_cast<const uint8_t *>(g_ipcCallBackList.ctx[i].appId),
+            HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
+        if (ret != HC_SUCCESS) {
+            LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
+            continue;
+        }
+        ServiceDevAuth::ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_GROUP_INACTIVE_IN_USER, false,
+            dataParcel, reply);
+    }
+    return;
+}
+
+void IpcOnDeviceActiveInUser(const char *udid, const char *returnInfo)
+{
+    if (udid == nullptr || returnInfo == nullptr) {
+        return;
+    }
+    std::lock_guard<std::mutex> autoLock(g_cbListLock);
+    if (g_ipcCallBackList.ctx == nullptr) {
+        return;
+    }
+    for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
+        if (g_ipcCallBackList.ctx[i].cbType != CB_TYPE_LISTENER) {
+            continue;
+        }
+        MessageParcel dataParcel;
+        MessageParcel reply;
+        uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, reinterpret_cast<const uint8_t *>(udid),
+            HcStrlen(udid) + 1);
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_RETURN_INFO, reinterpret_cast<const uint8_t *>(returnInfo),
+            HcStrlen(returnInfo) + 1);
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID,
+            reinterpret_cast<const uint8_t *>(g_ipcCallBackList.ctx[i].appId),
+            HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
+        if (ret != HC_SUCCESS) {
+            LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
+            continue;
+        }
+        ServiceDevAuth::ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_DEVICE_ACTIVE_IN_USER, false,
+            dataParcel, reply);
+    }
+    return;
+}
+
+void IpcOnDeviceInactiveInUser(const char *udid, const char *returnInfo)
+{
+    if (udid == nullptr || returnInfo == nullptr) {
+        return;
+    }
+    std::lock_guard<std::mutex> autoLock(g_cbListLock);
+    if (g_ipcCallBackList.ctx == nullptr) {
+        return;
+    }
+    for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
+        if (g_ipcCallBackList.ctx[i].cbType != CB_TYPE_LISTENER) {
+            continue;
+        }
+        MessageParcel dataParcel;
+        MessageParcel reply;
+        uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, reinterpret_cast<const uint8_t *>(udid),
+            HcStrlen(udid) + 1);
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_RETURN_INFO, reinterpret_cast<const uint8_t *>(returnInfo),
+            HcStrlen(returnInfo) + 1);
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID,
+            reinterpret_cast<const uint8_t *>(g_ipcCallBackList.ctx[i].appId),
+            HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
+        if (ret != HC_SUCCESS) {
+            LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
+            continue;
+        }
+        ServiceDevAuth::ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_DEVICE_INACTIVE_IN_USER, false,
+            dataParcel, reply);
+    }
+    return;
+}
+
+void IpcOnDeviceNotTrustedInUser(const char *udid, const char *returnInfo)
+{
+    if (udid == nullptr || returnInfo == nullptr) {
+        return;
+    }
+    std::lock_guard<std::mutex> autoLock(g_cbListLock);
+    if (g_ipcCallBackList.ctx == nullptr) {
+        return;
+    }
+    for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
+        if (g_ipcCallBackList.ctx[i].cbType != CB_TYPE_LISTENER) {
+            continue;
+        }
+        MessageParcel dataParcel;
+        MessageParcel reply;
+        uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, reinterpret_cast<const uint8_t *>(udid),
+            HcStrlen(udid) + 1);
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_RETURN_INFO, reinterpret_cast<const uint8_t *>(returnInfo),
+            HcStrlen(returnInfo) + 1);
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID,
+            reinterpret_cast<const uint8_t *>(g_ipcCallBackList.ctx[i].appId),
+            HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
+        if (ret != HC_SUCCESS) {
+            LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
+            continue;
+        }
+        ServiceDevAuth::ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_DEVICE_NOT_TRUSTED_IN_USER, false,
+            dataParcel, reply);
+    }
+    return;
+}
+
 void IpcOnCredAdd(const char *credId, const char *credInfo)
 {
     if (credId == nullptr) {
@@ -1850,6 +2177,74 @@ void IpcOnCredUpdate(const char *credId, const char *credInfo)
     }
     return;
 }
+
+void IpcOnCredActiveInUser(const char *credId, const char *returnInfo)
+{
+    if (credId == nullptr || returnInfo == nullptr) {
+        return;
+    }
+
+    std::lock_guard<std::mutex> autoLock(g_cbListLock);
+    if (g_ipcCallBackList.ctx == nullptr) {
+        LOGE("IpcOnCredActiveInUser failed, IpcCallBackList un-initialized");
+        return;
+    }
+    for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
+        if (g_ipcCallBackList.ctx[i].cbType != CB_TYPE_CRED_LISTENER) {
+            continue;
+        }
+        MessageParcel dataParcel;
+        MessageParcel reply;
+        uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_CRED_ID,
+            reinterpret_cast<const uint8_t *>(credId), HcStrlen(credId) + 1);
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_RETURN_INFO,
+            reinterpret_cast<const uint8_t *>(returnInfo), HcStrlen(returnInfo) + 1);
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID,
+            reinterpret_cast<const uint8_t *>(g_ipcCallBackList.ctx[i].appId),
+            HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
+        if (ret != HC_SUCCESS) {
+            LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
+            continue;
+        }
+        ServiceDevAuth::ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_CRED_ACTIVE_IN_USER, false,
+            dataParcel, reply);
+    }
+    return;
+}
+
+void IpcOnCredInactiveInUser(const char *credId, const char *returnInfo)
+{
+    if (credId == nullptr || returnInfo == nullptr) {
+        return;
+    }
+
+    std::lock_guard<std::mutex> autoLock(g_cbListLock);
+    if (g_ipcCallBackList.ctx == nullptr) {
+        LOGE("IpcOnCredInactiveInUser failed, IpcCallBackList un-initialized");
+        return;
+    }
+    for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
+        if (g_ipcCallBackList.ctx[i].cbType != CB_TYPE_CRED_LISTENER) {
+            continue;
+        }
+        MessageParcel dataParcel;
+        MessageParcel reply;
+        uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_CRED_ID,
+            reinterpret_cast<const uint8_t *>(credId), HcStrlen(credId) + 1);
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_RETURN_INFO,
+            reinterpret_cast<const uint8_t *>(returnInfo), HcStrlen(returnInfo) + 1);
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID,
+            reinterpret_cast<const uint8_t *>(g_ipcCallBackList.ctx[i].appId),
+            HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
+        if (ret != HC_SUCCESS) {
+            LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
+            continue;
+        }
+        ServiceDevAuth::ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_CRED_INACTIVE_IN_USER, false,
+            dataParcel, reply);
+    }
+    return;
+}
 };
 
 void InitDeviceAuthCbCtx(DeviceAuthCallback *ctx, int32_t type)
@@ -1893,6 +2288,11 @@ void InitDevAuthListenerCbCtx(DataChangeListener *ctx)
     ctx->onDeviceNotTrusted = IpcOnDeviceNotTrusted;
     ctx->onLastGroupDeleted = IpcOnLastGroupDeleted;
     ctx->onTrustedDeviceNumChanged = IpcOnTrustedDeviceNumChanged;
+    ctx->onGroupActiveInUser = IpcOnGroupActiveInUser;
+    ctx->onGroupInactiveInUser = IpcOnGroupInactiveInUser;
+    ctx->onDeviceActiveInUser = IpcOnDeviceActiveInUser;
+    ctx->onDeviceInactiveInUser = IpcOnDeviceInactiveInUser;
+    ctx->onDeviceNotTrustedInUser = IpcOnDeviceNotTrustedInUser;
     return;
 }
 
@@ -1904,6 +2304,8 @@ void InitDevAuthCredListenerCbCtx(CredChangeListener *ctx)
     ctx->onCredAdd = IpcOnCredAdd;
     ctx->onCredDelete = IpcOnCredDelete;
     ctx->onCredUpdate = IpcOnCredUpdate;
+    ctx->onCredActiveInUser = IpcOnCredActiveInUser;
+    ctx->onCredInactiveInUser = IpcOnCredInactiveInUser;
     return;
 }
 
@@ -2094,7 +2496,8 @@ static bool IsTypeForSettingPtr(int32_t type)
         PARAM_TYPE_QUERY_PARAMS, PARAM_TYPE_COMM_DATA, PARAM_TYPE_SESS_KEY,
         PARAM_TYPE_REQ_INFO, PARAM_TYPE_GROUP_INFO, PARAM_TYPE_AUTH_PARAMS, PARAM_TYPE_REQ_JSON,
         PARAM_TYPE_PSEUDONYM_ID, PARAM_TYPE_INDEX_KEY, PARAM_TYPE_ERR_INFO, PARAM_TYPE_REQUEST_PARAMS,
-        PARAM_TYPE_CRED_ID, PARAM_TYPE_PK_WITH_SIG, PARAM_TYPE_SERVICE_ID, PARAM_TYPE_RANDOM, PARAM_TYPE_CRED_INFO,
+        PARAM_TYPE_CRED_ID, PARAM_TYPE_PK_WITH_SIG, PARAM_TYPE_SERVICE_ID, PARAM_TYPE_RANDOM,
+        PARAM_TYPE_CRED_INFO, PARAM_TYPE_RETURN_INFO
     };
     int32_t n = sizeof(typeList) / sizeof(typeList[0]);
     for (int32_t i = 0; i < n; i++) {

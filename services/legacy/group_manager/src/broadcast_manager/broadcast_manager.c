@@ -156,6 +156,96 @@ static void PostOnTrustedDeviceNumChanged(int curTrustedDeviceNum)
     UnlockHcMutex(g_broadcastMutex);
 }
 
+static void PostOnGroupActiveInUser(const char *returnInfo)
+{
+    if (returnInfo == NULL) {
+        LOGE("returnInfo is null!");
+        return;
+    }
+    uint32_t index;
+    ListenerEntry *entry = NULL;
+    (void)LockHcMutex(g_broadcastMutex);
+    FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
+        if (entry->listener->onGroupActiveInUser != NULL) {
+            LOGI("[Broadcaster]: PostOnGroupActiveInUser! [AppId]: %" LOG_PUB "s", entry->appId);
+            entry->listener->onGroupActiveInUser(returnInfo);
+        }
+    }
+    UnlockHcMutex(g_broadcastMutex);
+}
+
+static void PostOnGroupInactiveInUser(const char *returnInfo)
+{
+    if (returnInfo == NULL) {
+        LOGE("returnInfo is null!");
+        return;
+    }
+    uint32_t index;
+    ListenerEntry *entry = NULL;
+    (void)LockHcMutex(g_broadcastMutex);
+    FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
+        if (entry->listener->onGroupInactiveInUser != NULL) {
+            LOGI("[Broadcaster]: PostOnGroupInactiveInUser! [AppId]: %" LOG_PUB "s", entry->appId);
+            entry->listener->onGroupInactiveInUser(returnInfo);
+        }
+    }
+    UnlockHcMutex(g_broadcastMutex);
+}
+
+static void PostOnDeviceActiveInUser(const char *udid, const char *returnInfo)
+{
+    if (udid == NULL || returnInfo == NULL) {
+        LOGE("udid or returnInfo is null!");
+        return;
+    }
+    uint32_t index;
+    ListenerEntry *entry = NULL;
+    (void)LockHcMutex(g_broadcastMutex);
+    FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
+        if (entry->listener->onDeviceActiveInUser != NULL) {
+            LOGI("[Broadcaster]: PostOnDeviceActiveInUser! [AppId]: %" LOG_PUB "s", entry->appId);
+            entry->listener->onDeviceActiveInUser(udid, returnInfo);
+        }
+    }
+    UnlockHcMutex(g_broadcastMutex);
+}
+
+static void PostOnDeviceInactiveInUser(const char *udid, const char *returnInfo)
+{
+    if (udid == NULL || returnInfo == NULL) {
+        LOGE("udid or returnInfo is null!");
+        return;
+    }
+    uint32_t index;
+    ListenerEntry *entry = NULL;
+    (void)LockHcMutex(g_broadcastMutex);
+    FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
+        if (entry->listener->onDeviceInactiveInUser != NULL) {
+            LOGI("[Broadcaster]: PostOnDeviceInactiveInUser! [AppId]: %" LOG_PUB "s", entry->appId);
+            entry->listener->onDeviceInactiveInUser(udid, returnInfo);
+        }
+    }
+    UnlockHcMutex(g_broadcastMutex);
+}
+
+static void PostDeviceNotTrustedInUser(const char *udid, const char *returnInfo)
+{
+    if (udid == NULL || returnInfo == NULL) {
+        LOGE("udid or returnInfo is null!");
+        return;
+    }
+    uint32_t index;
+    ListenerEntry *entry = NULL;
+    (void)LockHcMutex(g_broadcastMutex);
+    FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
+        if (entry->listener->onDeviceNotTrustedInUser != NULL) {
+            LOGI("[Broadcaster]: PostDeviceNotTrustedInUser! [AppId]: %" LOG_PUB "s", entry->appId);
+            entry->listener->onDeviceNotTrustedInUser(udid, returnInfo);
+        }
+    }
+    UnlockHcMutex(g_broadcastMutex);
+}
+
 static int32_t UpdateListenerIfExist(const char *appId, const DataChangeListener *listener)
 {
     uint32_t index;
@@ -227,7 +317,12 @@ static Broadcaster g_broadcaster = {
     .postOnDeviceUnBound = PostOnDeviceUnBound,
     .postOnDeviceNotTrusted = PostOnDeviceNotTrusted,
     .postOnLastGroupDeleted = PostOnLastGroupDeleted,
-    .postOnTrustedDeviceNumChanged = PostOnTrustedDeviceNumChanged
+    .postOnTrustedDeviceNumChanged = PostOnTrustedDeviceNumChanged,
+    .postOnGroupActiveInUser = PostOnGroupActiveInUser,
+    .postOnGroupInactiveInUser = PostOnGroupInactiveInUser,
+    .postOnDeviceActiveInUser = PostOnDeviceActiveInUser,
+    .postOnDeviceInactiveInUser = PostOnDeviceInactiveInUser,
+    .postOnDeviceNotTrustedInUser = PostDeviceNotTrustedInUser
 };
 
 bool IsBroadcastSupported(void)

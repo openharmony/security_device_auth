@@ -94,6 +94,7 @@ typedef int32_t (*RegCredChangeListenerFunc)(const char *appId, CredChangeListen
 #define PARAM_TYPE_RANDOM 46
 #define PARAM_TYPE_RANDOM_VAL 47
 #define PARAM_TYPE_RANDOM_LEN 48
+#define PARAM_TYPE_RETURN_INFO 49
 
 enum {
     IPC_CALL_ID_REG_CB = 1,
