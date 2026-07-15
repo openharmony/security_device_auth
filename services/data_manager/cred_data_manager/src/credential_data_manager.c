@@ -1315,7 +1315,8 @@ static int32_t QueryCredentialsInner(int32_t osAccountId, bool isProfileDelete, 
             continue;
         }
     #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
-        if (isProfileDelete && !IsCredReferencedByUser(osAccountId, subProfileIdStr, StringGet(&(*entry)->credId))) {
+        if ((isProfileDelete || ((*entry)->credType != ACCOUNT_UNRELATED)) &&
+            !IsCredReferencedByUser(osAccountId, subProfileIdStr, StringGet(&(*entry)->credId))) {
             continue;
         }
     #endif
