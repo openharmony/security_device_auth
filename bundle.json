@@ -69,7 +69,8 @@
           "netmanager_base",
           "memmgr",
           "eventhandler",
-          "selinux_adapter"
+          "selinux_adapter",
+          "node"
         ],
         "third_party": [],
         "hisysevent_config": [
