@@ -27,11 +27,16 @@ extern "C" {
 #endif
 
 #define MAX_STR_LEN (512 * 1024)
+#define MAX_MALLOC_SIZE (1024 * 1024 * 100)
 
 void *HcMalloc(uint32_t size, char val)
 {
     if (size == 0) {
         LOGE("Malloc size is invalid.");
+        return NULL;
+    }
+    if (size > MAX_MALLOC_SIZE) {
+        LOGE("Malloc size is too large.");
         return NULL;
     }
 #if defined(OHOS_MEM)

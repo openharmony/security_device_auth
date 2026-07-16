@@ -202,10 +202,10 @@ static int32_t GetRealPkInfoJson(int32_t osAccountId, CJson *pkInfoJson, CJson *
     return res;
 }
 
-static int32_t GeneratePeerInfoJson(const CJson *pkInfoJson, CJson **peerInfoJson)
+static int32_t GeneratePeerInfoJson(bool isOpenCredAuth, const CJson *pkInfoJson, CJson **peerInfoJson)
 {
     const char *userId = GetStringFromJson(pkInfoJson, FIELD_USER_ID);
-    if (userId == NULL) {
+    if (userId == NULL && !isOpenCredAuth) {
         LOGE("Failed to get userId!");
         return HC_ERR_JSON_GET;
     }
@@ -219,7 +219,7 @@ static int32_t GeneratePeerInfoJson(const CJson *pkInfoJson, CJson **peerInfoJso
         LOGE("Failed to create peerInfo json!");
         return HC_ERR_JSON_CREATE;
     }
-    if (AddStringToJson(*peerInfoJson, FIELD_USER_ID, userId) != HC_SUCCESS) {
+    if (userId != NULL && AddStringToJson(*peerInfoJson, FIELD_USER_ID, userId) != HC_SUCCESS) {
         LOGE("Failed to add userId!");
         FreeJson(*peerInfoJson);
         *peerInfoJson = NULL;
@@ -407,7 +407,9 @@ int32_t SetPeerInfoToContext(CJson *context, bool isCredAuth, const CJson *input
         return HC_ERR_JSON_ADD;
     }
     CJson *peerInfoJson = NULL;
-    int32_t res = GeneratePeerInfoJson(pkInfoJson, &peerInfoJson);
+    bool isOpenCredAuth = false;
+    (void)GetBoolFromJson(context, FIELD_IS_OPEN_CRED_AUTH, &isOpenCredAuth);
+    int32_t res = GeneratePeerInfoJson(isOpenCredAuth, pkInfoJson, &peerInfoJson);
     FreeJson(pkInfoJson);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate peerInfo json!");

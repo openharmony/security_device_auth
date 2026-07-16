@@ -705,16 +705,7 @@ static Credential **QueryCredentialPtrIfMatch(const CredentialVec *vec, const Qu
 
 QueryCredentialParams InitQueryCredentialParams(void)
 {
-    QueryCredentialParams params = {
-        .credId = NULL,
-        .deviceId = NULL,
-        .subject = DEFAULT_CRED_PARAM_VAL,
-        .userId = NULL,
-        .issuer = DEFAULT_CRED_PARAM_VAL,
-        .credType = DEFAULT_CRED_PARAM_VAL,
-        .credOwner = NULL,
-        .ownerUid = DEFAULT_CRED_PARAM_VAL,
-    };
+    QueryCredentialParams params = { 0 };
     return params;
 }
 
@@ -986,7 +977,23 @@ int32_t GenerateReturnCredInfo(const Credential *credential, CJson *returnJson)
     return IS_SUCCESS;
 }
 
-static int32_t GenerateCredInfoFromCredential(const Credential *entry, CJson *credInfo)
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+static int32_t AddMultiProfileExtraInfo(int32_t osAccountId, const char *subProfileIdStr, CJson *credInfo)
+{
+    if (AddIntToJson(credInfo, FIELD_OS_ACCOUNT_ID, osAccountId) != IS_SUCCESS) {
+        LOGE("Failed to add osAccountId!");
+        return IS_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(credInfo, FIELD_SUB_PROFILE_ID, subProfileIdStr) != IS_SUCCESS) {
+        LOGE("Failed to add foreground uid!");
+        return IS_ERR_JSON_ADD;
+    }
+    return IS_SUCCESS;
+}
+#endif
+
+static int32_t GenerateCredInfoFromCredential(int32_t osAccountId, const char *subProfileIdStr,
+    const Credential *entry, CJson *credInfo)
 {
     if (AddCredTypeToReturn(entry, credInfo) != IS_SUCCESS) {
         LOGE("add cretype to json failed.");
@@ -1004,17 +1011,24 @@ static int32_t GenerateCredInfoFromCredential(const Credential *entry, CJson *cr
         LOGE("add userId to json failed.");
         return IS_ERR_JSON_ADD;
     }
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    return AddMultiProfileExtraInfo(osAccountId, subProfileIdStr, credInfo);
+#else
+    (void)osAccountId;
+    (void)subProfileIdStr;
     return IS_SUCCESS;
+#endif
 }
 
-static int32_t GenerateCredChangedInfo(const Credential *entry, char **returnCredInfo)
+static int32_t GenerateCredChangedInfo(int32_t osAccountId, const char *subProfileIdStr, const Credential *entry,
+    char **returnCredInfo)
 {
     CJson *credInfo = CreateJson();
     if (credInfo == NULL) {
         LOGE("create json failed.");
         return IS_ERR_ALLOC_MEMORY;
     }
-    if (GenerateCredInfoFromCredential(entry, credInfo) != IS_SUCCESS) {
+    if (GenerateCredInfoFromCredential(osAccountId, subProfileIdStr, entry, credInfo) != IS_SUCCESS) {
         FreeJson(credInfo);
         return IS_ERR_JSON_ADD;
     }
@@ -1028,14 +1042,15 @@ static int32_t GenerateCredChangedInfo(const Credential *entry, char **returnCre
     return IS_SUCCESS;
 }
 
-static int32_t GenerateDeleteCredInfo(const Credential *entry, int32_t osAccountId, char **returnCredInfo)
+static int32_t GenerateDeleteCredInfo(const Credential *entry, int32_t osAccountId, const char *subProfileIdStr,
+    char **returnCredInfo)
 {
     CJson *credInfo = CreateJson();
     if (credInfo == NULL) {
         LOGE("create json failed.");
         return IS_ERR_ALLOC_MEMORY;
     }
-    int32_t ret = GenerateCredInfoFromCredential(entry, credInfo);
+    int32_t ret = GenerateCredInfoFromCredential(osAccountId, subProfileIdStr, entry, credInfo);
     if (ret != IS_SUCCESS) {
         FreeJson(credInfo);
         return ret;
@@ -1054,52 +1069,114 @@ static int32_t GenerateDeleteCredInfo(const Credential *entry, int32_t osAccount
     return IS_SUCCESS;
 }
 
-static void PostCredAddMsg(const Credential *entry)
+static void PostCredAddMsg(int32_t osAccountId, const char *subProfileIdStr, const Credential *entry)
 {
     if (!IsCredListenerSupported()) {
         return;
     }
     char *returnCredInfo = NULL;
-    if (GenerateCredChangedInfo(entry, &returnCredInfo) != IS_SUCCESS) {
+    if (GenerateCredChangedInfo(osAccountId, subProfileIdStr, entry, &returnCredInfo) != IS_SUCCESS) {
         return;
     }
     OnCredAdd(StringGet(&entry->credId), returnCredInfo);
     FreeJsonString(returnCredInfo);
 }
 
-static void PostCredUpdateMsg(const Credential *entry)
+static void PostCredUpdateMsg(int32_t osAccountId, const char *subProfileIdStr, const Credential *entry)
 {
     if (!IsCredListenerSupported()) {
         return;
     }
     char *returnCredInfo = NULL;
-    if (GenerateCredChangedInfo(entry, &returnCredInfo) != IS_SUCCESS) {
+    if (GenerateCredChangedInfo(osAccountId, subProfileIdStr, entry, &returnCredInfo) != IS_SUCCESS) {
         return;
     }
     OnCredUpdate(StringGet(&entry->credId), returnCredInfo);
     FreeJsonString(returnCredInfo);
 }
 
-static void PostCredDeleteMsg(const Credential *entry, int32_t osAccountId)
+static void PostCredDeleteMsg(const Credential *entry, int32_t osAccountId, const char *subProfileIdStr)
 {
     if (!IsCredListenerSupported()) {
         return;
     }
     char *returnCredInfo = NULL;
-    if (GenerateDeleteCredInfo(entry, osAccountId, &returnCredInfo) != IS_SUCCESS) {
+    if (GenerateDeleteCredInfo(entry, osAccountId, subProfileIdStr, &returnCredInfo) != IS_SUCCESS) {
         return;
     }
     OnCredDelete(StringGet(&entry->credId), returnCredInfo);
     FreeJsonString(returnCredInfo);
 }
 
-int32_t AddCredToDb(int32_t osAccountId, const Credential *entry)
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+static int32_t GenerateCredChangedInfoForSubProfile(int32_t osAccountId, const char *subProfileIdStr,
+    const char *credId, char **returnCredInfo)
 {
-    LOGI("[CRED#DB]: Start to add a cred to database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
-    if (entry == NULL) {
-        LOGE("[CRED#DB]: The input entry is NULL!");
+    OsAccountCredInfo *info = GetCredInfoByOsAccountId(osAccountId);
+    if (info == NULL) {
         return IS_ERR_NULL_PTR;
     }
+    QueryCredentialParams params = InitQueryCredentialParams();
+    params.credId = credId;
+    Credential **credential = QueryCredentialPtrIfMatch(&info->credentials, &params);
+    if (credential == NULL) {
+        return IS_ERR_NULL_PTR;
+    }
+    return GenerateCredChangedInfo(osAccountId, subProfileIdStr, *credential, returnCredInfo);
+}
+
+static void PostCredActive(int32_t osAccountId, const char *subProfileIdStr, const char *credId)
+{
+    if (!IsCredListenerSupported()) {
+        return;
+    }
+    char *returnCredInfo = NULL;
+    if (GenerateCredChangedInfoForSubProfile(osAccountId, subProfileIdStr, credId, &returnCredInfo) != IS_SUCCESS) {
+        return;
+    }
+    OnCredActiveInUser(credId, returnCredInfo);
+    FreeJsonString(returnCredInfo);
+}
+
+static void PostCredInactive(int32_t osAccountId, const char *subProfileIdStr, const char *credId)
+{
+    if (!IsCredListenerSupported()) {
+        return;
+    }
+    char *returnCredInfo = NULL;
+    if (GenerateCredChangedInfoForSubProfile(osAccountId, subProfileIdStr, credId, &returnCredInfo) != IS_SUCCESS) {
+        return;
+    }
+    OnCredInactiveInUser(credId, returnCredInfo);
+    FreeJsonString(returnCredInfo);
+}
+
+static void AddCredRelation(int32_t osAccountId, const char *subProfileIdStr, const char *credId)
+{
+    int32_t res = AddCredTrustRelation(osAccountId, subProfileIdStr, credId);
+    if (res != IS_SUCCESS) {
+        LOGE("Failed to add cred trust relation!");
+        return;
+    }
+    PostCredActive(osAccountId, subProfileIdStr, credId);
+}
+
+static void DeleteCredRelation(int32_t osAccountId, const char *subProfileIdStr, bool shouldPostInactive,
+    const char *credId)
+{
+    int32_t res = DelCredTrustRelation(osAccountId, subProfileIdStr, credId);
+    if (res != IS_SUCCESS) {
+        LOGE("Failed to delete cred relation!");
+        return;
+    }
+    if (shouldPostInactive) {
+        PostCredInactive(osAccountId, subProfileIdStr, credId);
+    }
+}
+#endif
+
+static int32_t AddCredToDbInner(int32_t osAccountId, const char *subProfileIdStr, const Credential *entry)
+{
     (void)LockHcMutex(g_credMutex);
     OsAccountCredInfo *info = GetCredInfoByOsAccountId(osAccountId);
     if (info == NULL) {
@@ -1117,7 +1194,10 @@ int32_t AddCredToDb(int32_t osAccountId, const Credential *entry)
     if (oldEntryPtr != NULL) {
         DestroyCredential(*oldEntryPtr);
         *oldEntryPtr = newEntry;
-        PostCredUpdateMsg(newEntry);
+        PostCredUpdateMsg(osAccountId, subProfileIdStr, newEntry);
+    #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+        AddCredRelation(osAccountId, subProfileIdStr, StringGet(&newEntry->credId));
+    #endif
         UnlockHcMutex(g_credMutex);
         LOGI("[CRED#DB]: Update an old credential successfully! [credType]: %" LOG_PUB "u", entry->credType);
         return IS_SUCCESS;
@@ -1128,19 +1208,39 @@ int32_t AddCredToDb(int32_t osAccountId, const Credential *entry)
         LOGE("[CRED#DB]: Failed to push credential to vec!");
         return IS_ERR_MEMORY_COPY;
     }
-    PostCredAddMsg(newEntry);
+    PostCredAddMsg(osAccountId, subProfileIdStr, newEntry);
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    AddCredRelation(osAccountId, subProfileIdStr, StringGet(&newEntry->credId));
+#endif
     UnlockHcMutex(g_credMutex);
     LOGI("[CRED#DB]: Add a credential to database successfully! [credType]: %" LOG_PUB "u", entry->credType);
     return IS_SUCCESS;
 }
 
-int32_t DelCredential(int32_t osAccountId, const QueryCredentialParams *params)
+int32_t AddCredToDb(int32_t osAccountId, const Credential *entry)
 {
-    LOGI("[CRED#DB]: Start to delete credential from database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
-    if (params == NULL) {
-        LOGE("[CRED#DB]: The input params is NULL!");
+    LOGI("[CRED#DB]: Start to add a cred to database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
+    if (entry == NULL) {
+        LOGE("[CRED#DB]: The input entry is NULL!");
         return IS_ERR_NULL_PTR;
     }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1] = { 0 };
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    int32_t res = GetForegroundSubProfileIdStr(osAccountId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN);
+    if (res != IS_SUCCESS) {
+        LOGE("[CRED#DB]: failed to get foreground subProfileId string!");
+        return res;
+    }
+#endif
+    return AddCredToDbInner(osAccountId, subProfileIdStr, entry);
+}
+
+static int32_t DelCredentialInner(int32_t osAccountId, const char *subProfileIdStr, bool shouldPostInactive,
+    const QueryCredentialParams *params)
+{
+#ifndef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    (void)shouldPostInactive;
+#endif
     (void)LockHcMutex(g_credMutex);
     OsAccountCredInfo *info = GetCredInfoByOsAccountId(osAccountId);
     if (info == NULL) {
@@ -1156,9 +1256,17 @@ int32_t DelCredential(int32_t osAccountId, const QueryCredentialParams *params)
             index++;
             continue;
         }
+    #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+        DeleteCredRelation(osAccountId, subProfileIdStr, shouldPostInactive, StringGet(&(*entry)->credId));
+        if (IsCredReferenced(osAccountId, StringGet(&(*entry)->credId))) {
+            LOGI("Cred still referenced by other users, do not delete it.");
+            index++;
+            continue;
+        }
+    #endif
         Credential *popEntry;
         HC_VECTOR_POPELEMENT(&info->credentials, &popEntry, index);
-        PostCredDeleteMsg(popEntry, osAccountId);
+        PostCredDeleteMsg(popEntry, osAccountId, subProfileIdStr);
         LOGI("[CRED#DB]: Delete a credential from database successfully! [credType]: %" LOG_PUB "u",
             popEntry->credType);
         DestroyCredential(popEntry);
@@ -1169,12 +1277,31 @@ int32_t DelCredential(int32_t osAccountId, const QueryCredentialParams *params)
     return IS_SUCCESS;
 }
 
-int32_t QueryCredentials(int32_t osAccountId, const QueryCredentialParams *params, CredentialVec *vec)
+int32_t DelCredential(int32_t osAccountId, const QueryCredentialParams *params)
 {
-    if ((params == NULL) || (vec == NULL)) {
-        LOGE("[CRED#DB]: The input params or vec is NULL!");
+    LOGI("[CRED#DB]: Start to delete credential from database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
+    if (params == NULL) {
+        LOGE("[CRED#DB]: The input params is NULL!");
         return IS_ERR_NULL_PTR;
     }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1] = { 0 };
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    int32_t res = GetForegroundSubProfileIdStr(osAccountId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN);
+    if (res != IS_SUCCESS) {
+        LOGE("[CRED#DB]: Failed to get foreground subProfileId string!");
+        return res;
+    }
+#endif
+    return DelCredentialInner(osAccountId, subProfileIdStr, true, params);
+}
+
+static int32_t QueryCredentialsInner(int32_t osAccountId, bool isProfileDelete, const char *subProfileIdStr,
+    const QueryCredentialParams *params, CredentialVec *vec)
+{
+#ifndef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    (void)subProfileIdStr;
+    (void)isProfileDelete;
+#endif
     (void)LockHcMutex(g_credMutex);
     OsAccountCredInfo *info = GetCredInfoByOsAccountId(osAccountId);
     if (info == NULL) {
@@ -1187,6 +1314,11 @@ int32_t QueryCredentials(int32_t osAccountId, const QueryCredentialParams *param
         if (entry == NULL || *entry == NULL || !CompareQueryCredentialParams(params, *entry)) {
             continue;
         }
+    #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+        if (isProfileDelete && !IsCredReferencedByUser(osAccountId, subProfileIdStr, StringGet(&(*entry)->credId))) {
+            continue;
+        }
+    #endif
         Credential *newEntry = DeepCopyCredential(*entry);
         if (newEntry == NULL) {
             continue;
@@ -1198,6 +1330,23 @@ int32_t QueryCredentials(int32_t osAccountId, const QueryCredentialParams *param
     }
     UnlockHcMutex(g_credMutex);
     return IS_SUCCESS;
+}
+
+int32_t QueryCredentials(int32_t osAccountId, const QueryCredentialParams *params, CredentialVec *vec)
+{
+    if ((params == NULL) || (vec == NULL)) {
+        LOGE("[CRED#DB]: The input params or vec is NULL!");
+        return IS_ERR_NULL_PTR;
+    }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1] = { 0 };
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    int32_t res = GetForegroundSubProfileIdStr(osAccountId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN);
+    if (res != IS_SUCCESS) {
+        LOGE("[CRED#DB]: Failed to get foreground subProfileId string!");
+        return res;
+    }
+#endif
+    return QueryCredentialsInner(osAccountId, false, subProfileIdStr, params, vec);
 }
 
 int32_t SaveOsAccountCredDb(int32_t osAccountId)
@@ -1314,6 +1463,43 @@ static void DevAuthDataBaseDump(int fd)
 }
 #endif
 
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+static void OnCredRelationChange(CredRelationChangeType type, int32_t osAccountId,
+    const char *subProfileIdStr, const char *credId)
+{
+    switch (type) {
+        case CRED_RELATION_ACTIVE:
+            PostCredActive(osAccountId, subProfileIdStr, credId);
+            break;
+        case CRED_RELATION_INACTIVE:
+            PostCredInactive(osAccountId, subProfileIdStr, credId);
+            break;
+        default:
+            LOGW("[CRED#DB]: invalid type!");
+            break;
+    }
+}
+
+static void OnSubProfileDeleted(int32_t osAccountId, const char *subProfileIdStr)
+{
+    uint32_t index;
+    CredentialVec credentialVec = CreateCredentialVec();
+    QueryCredentialParams params = InitQueryCredentialParams();
+    if (QueryCredentialsInner(osAccountId, true, subProfileIdStr, &params, &credentialVec) != IS_SUCCESS) {
+        LOGE("Failed to query credentials for subProfile!");
+        ClearCredentialVec(&credentialVec);
+        return;
+    }
+    Credential **credential = NULL;
+    FOR_EACH_HC_VECTOR(credentialVec, index, credential) {
+        QueryCredentialParams delParams = InitQueryCredentialParams();
+        delParams.credId = StringGet(&(*credential)->credId);
+        (void)DelCredentialInner(osAccountId, subProfileIdStr, false, &delParams);
+    }
+    ClearCredentialVec(&credentialVec);
+}
+#endif
+
 int32_t InitCredDatabase(void)
 {
     if (g_credMutex == NULL) {
@@ -1331,6 +1517,10 @@ int32_t InitCredDatabase(void)
     }
     g_devauthCredDb = CREATE_HC_VECTOR(DevAuthCredDb);
     AddOsAccountEventCallback(CRED_DATA_CALLBACK, OnOsAccountUnlocked, OnOsAccountRemoved);
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    SetCredRelationChangeCallback(OnCredRelationChange);
+    SetProfileDeleteCallbackForCred(OnSubProfileDeleted);
+#endif
     LoadDevAuthCredDb();
     DEV_AUTH_REG_CRED_DUMP_FUNC(DevAuthDataBaseDump);
     return IS_SUCCESS;
@@ -1339,6 +1529,10 @@ int32_t InitCredDatabase(void)
 void DestroyCredDatabase(void)
 {
     RemoveOsAccountEventCallback(CRED_DATA_CALLBACK);
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    SetCredRelationChangeCallback(NULL);
+    SetProfileDeleteCallbackForCred(NULL);
+#endif
     (void)LockHcMutex(g_credMutex);
     uint32_t index;
     OsAccountCredInfo *info;

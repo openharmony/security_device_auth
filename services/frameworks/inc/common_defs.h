@@ -144,6 +144,7 @@
 #define FIELD_LIGHT_ACCOUNT_MSG "lightAccountMsg"
 #define FIELD_PEER_ACCOUNT_RANDOM_LEN "peerRandomLen"
 #define FIELD_PEER_ACCOUNT_RANDOM_VAL "peerRandomVal"
+#define FIELD_OPEN_ID "openId"
 
 #define INVALID_MODULE_TYPE (-1)
 #define GROUP_ERR_MSG 0x8080
@@ -171,6 +172,8 @@
 #define MAX_DATA_BUFFER_SIZE 4096
 #define MAX_AUTH_ID_LEN 256
 #define MAX_REQUEST_ID_LEN 128
+#define DEFAULT_SUB_PROFILE_ID 0
+#define SUB_PROFILE_ID_CHAR_MAX_LEN 20
 
 #define IS_UPGRADE 1
 #define IS_NOT_UPGRADE 0

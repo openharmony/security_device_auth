@@ -118,7 +118,14 @@ int32_t main(int32_t argc, char const *argv[])
     }
     LOGI("device authentication service register to IPC manager done, service running...");
     (void)memset_s(&cond, sizeof(cond), 0, sizeof(cond));
-    InitHcCond(&cond, NULL);
+    ret = InitHcCond(&cond, NULL);
+    if (ret != HC_SUCCESS) {
+        LOGE("device auth service main, init condition failed, ret %" LOG_PUB "d", ret);
+        DestroyServiceInstance(serviceInstance);
+        DeMainRescInit();
+        DestroyDeviceAuthService();
+        return 1;
+    }
     cond.wait(&cond);
     DestroyHcCond(&cond);
     return 0;

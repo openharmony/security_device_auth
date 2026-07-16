@@ -17,6 +17,7 @@
 
 #include <cinttypes>
 #include <unistd.h>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "alg_loader.h"
 #include "common_defs.h"
 #include "device_auth.h"
@@ -433,297 +434,226 @@ static const char *GenerateAuthParams()
 static int32_t IdentityServiceTestCase001(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         char *returnData = nullptr;
         const CredManager *cm = GetCredMgrInstance();
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase002(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         char *returnData = nullptr;
         const CredManager *cm = GetCredMgrInstance();
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, nullptr, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase003(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, nullptr);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase004(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS1, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase005(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS2, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase006(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS3, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase007(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS4, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase008(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS5, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase009(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS6, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase010(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS7, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase011(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS8, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase012(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS9, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase013(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS10, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase014(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS11, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase015(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS12, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase016(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS13, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase048(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS15, &returnData);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase017(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
@@ -733,17 +663,13 @@ static int32_t IdentityServiceTestCase017(void)
         HcFree(credId);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase018(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
@@ -753,17 +679,13 @@ static int32_t IdentityServiceTestCase018(void)
         HcFree(credId);
         HcFree(returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase019(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
@@ -771,17 +693,13 @@ static int32_t IdentityServiceTestCase019(void)
         ret = cm->exportCredential(DEFAULT_OS_ACCOUNT, credId, nullptr);
         HcFree(credId);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase020(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
@@ -790,17 +708,13 @@ static int32_t IdentityServiceTestCase020(void)
         char *returnData = nullptr;
         ret = cm->exportCredential(DEFAULT_OS_ACCOUNT, nullptr, &returnData);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase021(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
@@ -813,48 +727,36 @@ static int32_t IdentityServiceTestCase021(void)
         HcFree(credIdList);
         FreeJson(jsonArr);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase022(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *credIdList = nullptr;
         ret = cm->queryCredentialByParams(DEFAULT_OS_ACCOUNT, nullptr, &credIdList);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase023(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         ret = cm->queryCredentialByParams(DEFAULT_OS_ACCOUNT, QUERY_PARAMS, nullptr);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase024(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnData = nullptr;
@@ -866,17 +768,13 @@ static int32_t IdentityServiceTestCase024(void)
         HcFree(credIdList);
         FreeJson(jsonArr);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase025(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
@@ -888,49 +786,37 @@ static int32_t IdentityServiceTestCase025(void)
         HcFree(returnCredInfo);
         FreeJson(credInfoJson);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase026(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnCredInfo = nullptr;
         ret = cm->queryCredInfoByCredId(DEFAULT_OS_ACCOUNT, nullptr, &returnCredInfo);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase027(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *returnCredInfo = nullptr;
         ret = cm->queryCredInfoByCredId(DEFAULT_OS_ACCOUNT, nullptr, &returnCredInfo);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase028(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
@@ -938,17 +824,13 @@ static int32_t IdentityServiceTestCase028(void)
         ret = cm->queryCredInfoByCredId(DEFAULT_OS_ACCOUNT, credId, nullptr);
         HcFree(credId);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase029(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
@@ -956,32 +838,24 @@ static int32_t IdentityServiceTestCase029(void)
         ret = cm->deleteCredential(DEFAULT_OS_ACCOUNT, credId);
         HcFree(credId);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase031(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         ret = cm->deleteCredential(DEFAULT_OS_ACCOUNT, nullptr);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase033(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
@@ -989,17 +863,13 @@ static int32_t IdentityServiceTestCase033(void)
         ret = cm->updateCredInfo(DEFAULT_OS_ACCOUNT, credId, REQUEST_PARAMS);
         HcFree(credId);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase034(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
@@ -1007,17 +877,13 @@ static int32_t IdentityServiceTestCase034(void)
         ret = cm->updateCredInfo(DEFAULT_OS_ACCOUNT, credId, "");
         HcFree(credId);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase036(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         char *credId = nullptr;
@@ -1025,81 +891,61 @@ static int32_t IdentityServiceTestCase036(void)
         ret = cm->updateCredInfo(DEFAULT_OS_ACCOUNT, nullptr, REQUEST_PARAMS);
         HcFree(credId);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase038(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         CredChangeListener listener;
         ret = cm->registerChangeListener(TEST_APP_ID, &listener);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase039(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         CredChangeListener listener;
         ret = cm->registerChangeListener(TEST_APP_ID, &listener);
         ret = cm->registerChangeListener(TEST_APP_ID, &listener);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase040(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         CredChangeListener listener;
         ret = cm->registerChangeListener(nullptr, &listener);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase041(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         ret = cm->registerChangeListener(TEST_APP_ID, nullptr);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase042(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         g_credListenerStatus = CRED_LISTENER_INIT;
         const CredManager *cm = GetCredMgrInstance();
@@ -1108,17 +954,13 @@ static int32_t IdentityServiceTestCase042(void)
         ret = cm->addCredential(DEFAULT_OS_ACCOUNT, ADD_PARAMS, &credId);
         HcFree(credId);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase043(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         g_credListenerStatus = CRED_LISTENER_INIT;
         const CredManager *cm = GetCredMgrInstance();
@@ -1128,17 +970,13 @@ static int32_t IdentityServiceTestCase043(void)
         ret = cm->updateCredInfo(DEFAULT_OS_ACCOUNT, credId, REQUEST_PARAMS);
         HcFree(credId);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase044(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         g_credListenerStatus = CRED_LISTENER_INIT;
         const CredManager *cm = GetCredMgrInstance();
@@ -1148,54 +986,41 @@ static int32_t IdentityServiceTestCase044(void)
         ret = cm->deleteCredential(DEFAULT_OS_ACCOUNT, credId);
         HcFree(credId);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase045(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         CredChangeListener listener;
         ret = cm->registerChangeListener(TEST_APP_ID, &listener);
         ret = cm->unregisterChangeListener(TEST_APP_ID);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase046(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         ret = cm->unregisterChangeListener(TEST_APP_ID);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
 static int32_t IdentityServiceTestCase047(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return ret;
-    }
+    int32_t ret = HC_SUCCESS;
     do {
         const CredManager *cm = GetCredMgrInstance();
         ret = cm->unregisterChangeListener(nullptr);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -1612,19 +1437,13 @@ static void IdentityServiceAuth002(void)
 static void IdentityServiceAuthPart(void)
 {
     DeleteDatabase();
-    (void)InitDeviceAuthService();
     IdentityServiceAuth001();
     IdentityServiceAuth002();
-    DestroyDeviceAuthService();
 }
 
 static void IdentiyServiceFuzzPart(void)
 {
     DeleteDatabase();
-    int32_t ret = InitDeviceAuthService();
-    if (ret != HC_SUCCESS) {
-        return;
-    }
     (void)IdentityServiceTestCase049();
     (void)IdentityServiceTestCase050();
     (void)IdentityServiceTestCase051();
@@ -1647,25 +1466,43 @@ static void IdentiyServiceFuzzPart(void)
     (void)IdentityServiceTestCase068();
     (void)IdentityServiceTestCase069();
     (void)IdentityServiceTestCase070();
-    DestroyDeviceAuthService();
 }
+
+using TestFunc = void(*)(void);
+static TestFunc g_testFuncs[] = {
+    AddCredFuzzPart, ExportCredFuzzPart, QueryCredFuzzPart, DelCredFuzzPart, UpdateCredFuzzPart,
+    CredListenerFuzzPart, CompareParamsFuzzTestCase, IdentiyServiceFuzzPart, IdentityServiceAuthPart,
+    IdentityServiceTestCase049, IdentityServiceTestCase050, IdentityServiceTestCase051, IdentityServiceTestCase052,
+    IdentityServiceTestCase053, IdentityServiceTestCase054, IdentityServiceTestCase055, IdentityServiceTestCase056,
+    IdentityServiceTestCase057, IdentityServiceTestCase058, IdentityServiceTestCase059, IdentityServiceTestCase060,
+    IdentityServiceTestCase061, IdentityServiceTestCase062, IdentityServiceTestCase063, IdentityServiceTestCase064,
+    IdentityServiceTestCase065, IdentityServiceTestCase066, IdentityServiceTestCase067, IdentityServiceTestCase068,
+    IdentityServiceTestCase069, IdentityServiceTestCase070
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
 
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    (void)AddCredFuzzPart();
-    (void)ExportCredFuzzPart();
-    (void)QueryCredFuzzPart();
-    (void)DelCredFuzzPart();
-    (void)UpdateCredFuzzPart();
-    (void)CredListenerFuzzPart();
-    IdentiyServiceFuzzPart();
-    CompareParamsFuzzTestCase();
-    IdentityServiceAuthPart();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    
+    FuzzedDataProvider fdp(data, size);
+    uint32_t testId = fdp.ConsumeIntegral<uint32_t>();
+    
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
+    
     return true;
 }
 }
+
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+    // 打印启动信息
+    int32_t res = InitDeviceAuthService();
+    return res;
+}
+
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {

@@ -37,6 +37,18 @@ void OnCredUpdate(const char *credId, const char *credInfo)
     (void)credInfo;
 }
 
+void OnCredActiveInUser(const char *credId, const char *userId)
+{
+    (void)credId;
+    (void)userId;
+}
+
+void OnCredInactiveInUser(const char *credId, const char *userId)
+{
+    (void)credId;
+    (void)userId;
+}
+
 bool IsCredListenerSupported(void)
 {
     return false;

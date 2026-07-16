@@ -31,6 +31,10 @@
 #include "permission_adapter.h"
 #include "hisysevent_adapter.h"
 
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+#include "account_task_manager.h"
+#endif
+
 static void ISRecordAndReport(int32_t osAccountId, const Credential *credential,
     const char *funcName, int32_t processCode, int32_t ret)
 {
@@ -307,6 +311,37 @@ int32_t QueryCredInfoByCredIdImpl(int32_t osAccountId, int32_t uid, const char *
     return IS_SUCCESS;
 }
 
+static int32_t DeleteKeyByCredId(int32_t osAccountId, const char *credId)
+{
+    if (GetCallingUid() == DEV_AUTH_UID) {
+        return IS_SUCCESS;
+    }
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    if (IsCredReferenced(osAccountId, credId)) {
+        LOGI("Credential still referenced by other users, do not delete key.");
+        return IS_SUCCESS;
+    }
+#endif
+    uint32_t credIdByteLen = HcStrlen(credId) / BYTE_TO_HEX_OPER_LENGTH;
+    Uint8Buff credIdByte = { NULL, credIdByteLen };
+    credIdByte.val = (uint8_t *)HcMalloc(credIdByteLen, 0);
+    if (credIdByte.val == NULL) {
+        LOGE("Failed to malloc credIdByte!");
+        return IS_ERR_ALLOC_MEMORY;
+    }
+
+    if (HexStringToByte(credId, credIdByte.val, credIdByte.length) != IS_SUCCESS) {
+        LOGE("Failed to convert credId to byte!");
+        HcFree(credIdByte.val);
+        return IS_ERR_INVALID_HEX_STRING;
+    }
+    if (GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId) != HAL_SUCCESS) {
+        LOGW("Failed to delete key!");
+    }
+    HcFree(credIdByte.val);
+    return IS_SUCCESS;
+}
+
 int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
 {
     Credential *credential = NULL;
@@ -315,46 +350,27 @@ int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId)
         LOGE("Failed to get credential by credId, ret = %" LOG_PUB "d", ret);
         return ret;
     }
-    ret = CheckDeletePermission(credential);
-    int32_t currentUid = GetCallingUid();
     do {
+        ret = CheckDeletePermission(credential);
         if (ret != IS_SUCCESS) {
-            LOGE("Check Uid failed when delete credential.");
+            LOGE("Failed to check delete permission!");
             break;
-        }
-
-        uint32_t credIdByteLen = HcStrlen(credId) / BYTE_TO_HEX_OPER_LENGTH;
-        Uint8Buff credIdByte = { NULL, credIdByteLen };
-        credIdByte.val = (uint8_t *)HcMalloc(credIdByteLen, 0);
-        if (credIdByte.val == NULL) {
-            LOGE("Failed to malloc credIdByte");
-            ret = IS_ERR_ALLOC_MEMORY;
-            break;
-        }
-
-        ret = HexStringToByte(credId, credIdByte.val, credIdByte.length);
-        if (ret != IS_SUCCESS) {
-            LOGE("Failed to convert credId to byte, invalid credId, ret: %" LOG_PUB "d", ret);
-            HcFree(credIdByte.val);
-            ret = IS_ERR_INVALID_HEX_STRING;
-            break;
-        }
-
-        if (currentUid != DEV_AUTH_UID) {
-            ret = GetLoaderInstance()->deleteKey(&credIdByte, false, osAccountId);
-        }
-        HcFree(credIdByte.val);
-        if (ret == HAL_ERR_HUKS) {
-            LOGW("Huks delete key failed, error: %" LOG_PUB "d," \
-                "continue to delete local cred", IS_ERR_HUKS_DELETE_FAILED);
         }
 
         ret = DelCredById(osAccountId, credId);
+        if (ret != IS_SUCCESS) {
+            LOGE("Failed to delete credential!");
+            break;
+        }
+
+        ret = DeleteKeyByCredId(osAccountId, credId);
+        if (ret != IS_SUCCESS) {
+            LOGE("Failed to delete key!");
+        }
     } while (0);
     ISRecordAndReport(osAccountId, credential, DELETE_CREDENTIAL_EVENT, PROCESS_DELETE_CREDENTIAL, ret);
     DestroyCredential(credential);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to delete local credential");
         return ret;
     }
     LOGI("Delete credential success");

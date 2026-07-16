@@ -16,6 +16,7 @@
 #include "dfx_fuzzer.h"
 
 #include <cinttypes>
+#include <fuzzer/FuzzedDataProvider.h>
 #include <unistd.h>
 #include "common_defs.h"
 #include "device_auth.h"
@@ -349,32 +350,24 @@ static int32_t DfxTestCase015(void)
     return res;
 }
 
-static void DfxFuzzPart(void)
-{
-    InitOperationDataManager();
-    (void)DfxTestCase001();
-    (void)DfxTestCase002();
-    (void)DfxTestCase003();
-    (void)DfxTestCase004();
-    (void)DfxTestCase005();
-    (void)DfxTestCase006();
-    (void)DfxTestCase007();
-    (void)DfxTestCase008();
-    (void)DfxTestCase009();
-    (void)DfxTestCase010();
-    (void)DfxTestCase011();
-    (void)DfxTestCase012();
-    (void)DfxTestCase013();
-    (void)DfxTestCase014();
-    (void)DfxTestCase015();
-    DestroyOperationDataManager();
-}
+using TestFunc = int32_t(*)(void);
+static TestFunc g_testFuncs[] = {
+    DfxTestCase001, DfxTestCase002, DfxTestCase003, DfxTestCase004, DfxTestCase005,
+    DfxTestCase006, DfxTestCase007, DfxTestCase008, DfxTestCase009, DfxTestCase010,
+    DfxTestCase011, DfxTestCase012, DfxTestCase013, DfxTestCase014, DfxTestCase015
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
 
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    (void)DfxFuzzPart();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    InitOperationDataManager();
+    FuzzedDataProvider fdp(data, size);
+    uint32_t testId = fdp.ConsumeIntegral<uint32_t>();
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
+    DestroyOperationDataManager();
     return true;
 }
 }

@@ -114,6 +114,17 @@ static void OnLightError(int64_t requestId, int operationCode, int errorCode, co
     (void)errorReturn;
 }
 
+static DeviceAuthCallback GetTestLightAuthCallback(void)
+{
+    DeviceAuthCallback callback;
+    callback.onTransmit = OnLightTransmit;
+    callback.onSessionKeyReturned = OnLightSessionKeyReturned;
+    callback.onFinish = OnLightFinish;
+    callback.onError = OnLightError;
+    callback.onRequest = OnLightAuthRequest;
+    return callback;
+}
+
 class LaInterfaceTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -328,7 +339,11 @@ HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest001, TestSize.Level0)
 {
     int32_t ret = HC_SUCCESS;
     DataBuff testBuff = { (uint8_t *)TEST_LIGHT_MSG, strlen(TEST_LIGHT_MSG) + 1 };
-    ret = AddLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, SERVICE_ID, testBuff);
+    DeviceAuthCallback callback = GetTestLightAuthCallback();
+    LightSessionInitParams params = {
+        TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, SERVICE_ID, testBuff, AUTH_FORM_LIGHT_AUTH, &callback
+    };
+    ret = AddLightSession(&params);
     char *serviceId = nullptr;
     uint8_t *randomVal = nullptr;
     uint32_t randomLen = 0;
@@ -340,7 +355,11 @@ HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest002, TestSize.Level0)
 {
     int32_t ret = HC_SUCCESS;
     DataBuff testBuff = { (uint8_t *)TEST_LIGHT_MSG, strlen(TEST_LIGHT_MSG) + 1 };
-    ret = AddLightSession(TEST_REQ_ID2, TEST_OS_ACCOUNT_ID, SERVICE_ID, testBuff);
+    DeviceAuthCallback callback = GetTestLightAuthCallback();
+    LightSessionInitParams params = {
+        TEST_REQ_ID2, TEST_OS_ACCOUNT_ID, SERVICE_ID, testBuff, AUTH_FORM_LIGHT_AUTH, &callback
+    };
+    ret = AddLightSession(&params);
     char *serviceId = nullptr;
     uint8_t *randomVal = nullptr;
     uint32_t randomLen = 0;
@@ -352,7 +371,11 @@ HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest003, TestSize.Level0)
 {
     int32_t ret = HC_SUCCESS;
     DataBuff testBuff = { (uint8_t *)TEST_LIGHT_MSG, strlen(TEST_LIGHT_MSG) + 1 };
-    ret = AddLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, ERROR_SERVICE_ID, testBuff);
+    DeviceAuthCallback callback = GetTestLightAuthCallback();
+    LightSessionInitParams params = {
+        TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, ERROR_SERVICE_ID, testBuff, AUTH_FORM_LIGHT_AUTH, &callback
+    };
+    ret = AddLightSession(&params);
     char *serviceId = nullptr;
     uint8_t *randomVal = nullptr;
     uint32_t randomLen = 0;
@@ -364,7 +387,11 @@ HWTEST_F(MiniSessionManagerTest, MiniSessionManagerTest004, TestSize.Level0)
 {
     int32_t ret = HC_SUCCESS;
     DataBuff testBuff = { (uint8_t *)ERROR_MESSAGE, strlen(ERROR_MESSAGE) + 1 };
-    ret = AddLightSession(TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, SERVICE_ID, testBuff);
+    DeviceAuthCallback callback = GetTestLightAuthCallback();
+    LightSessionInitParams params = {
+        TEST_REQ_ID1, TEST_OS_ACCOUNT_ID, SERVICE_ID, testBuff, AUTH_FORM_LIGHT_AUTH, &callback
+    };
+    ret = AddLightSession(&params);
     char *serviceId = nullptr;
     uint8_t *randomVal = nullptr;
     uint32_t randomLen = 0;

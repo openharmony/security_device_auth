@@ -21,6 +21,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "base/security/device_auth/frameworks/sdk/sa_load_on_demand/src/sa_load_on_demand.cpp"
 
@@ -58,14 +59,23 @@ static void SaLoadOnDemandFuzz001(void)
     RegisterDevAuthCallbackIfNeed();
 }
 
+using TestFunc = void(*)(void);
+static TestFunc g_testFuncs[] = {
+    SaLoadOnDemandFuzz001
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
+
 bool FuzzDoSaLoadOnDemandFuzz(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
     (void)InitLoadOnDemand();
     (void)InitSdkIpcCallBackList();
     SubscribeDeviceAuthSa();
-    SaLoadOnDemandFuzz001();
+    FuzzedDataProvider fdp(data, size);
+    uint32_t testId = fdp.ConsumeIntegral<uint32_t>();
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
     UnSubscribeDeviceAuthSa();
     DeInitLoadOnDemand();
     DeInitSdkIpcCallBackList();

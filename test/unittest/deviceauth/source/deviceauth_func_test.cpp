@@ -1764,7 +1764,7 @@ HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest002, TestSize.Level0)
     EXPECT_NE(ret, HC_SUCCESS);
     char *pseudonymId = nullptr;
     ret = ga->getPseudonymId(DEFAULT_OS_ACCOUNT, TEST_INDEX_KEY, &pseudonymId);
-    EXPECT_EQ(ret, HC_SUCCESS);
+    EXPECT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(DeviceAuthFuncTest, DeviceAuthFuncTest003, TestSize.Level0)

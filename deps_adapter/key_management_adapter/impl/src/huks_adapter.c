@@ -766,96 +766,6 @@ static int32_t GenerateKeyPairWithStorage(const KeyParams *keyParams, uint32_t k
     return HAL_SUCCESS;
 }
 
-static int32_t GetKeyPair(struct HksParamSet *outParamSet, Uint8Buff *outPriKey, Uint8Buff *outPubKey)
-{
-    int32_t res = HksFreshParamSet(outParamSet, false); /* false means fresh by local, not through IPC */
-    if (res != HKS_SUCCESS) {
-        LOGE("fresh param set failed, res:%" LOG_PUB "d", res);
-        return HAL_ERR_FRESH_PARAM_SET_FAILED;
-    }
-
-    struct HksParam *pubKeyParam = NULL;
-    res = HksGetParam(outParamSet, HKS_TAG_ASYMMETRIC_PUBLIC_KEY_DATA, &pubKeyParam);
-    if (res != HKS_SUCCESS) {
-        LOGE("get pub key from param set failed, res:%" LOG_PUB "d", res);
-        return HAL_ERR_GET_PARAM_FAILED;
-    }
-
-    struct HksParam *priKeyParam = NULL;
-    res = HksGetParam(outParamSet, HKS_TAG_ASYMMETRIC_PRIVATE_KEY_DATA, &priKeyParam);
-    if (res != HKS_SUCCESS) {
-        LOGE("get priv key from param set failed, res:%" LOG_PUB "d", res);
-        return HAL_ERR_GET_PARAM_FAILED;
-    }
-
-    if (memcpy_s(outPubKey->val, outPubKey->length, pubKeyParam->blob.data, pubKeyParam->blob.size) != EOK) {
-        LOGE("parse x25519 output param set memcpy public key failed!");
-        return HAL_ERR_MEMORY_COPY;
-    }
-    outPubKey->length = pubKeyParam->blob.size;
-
-    if (memcpy_s(outPriKey->val, outPriKey->length, priKeyParam->blob.data, priKeyParam->blob.size) != EOK) {
-        LOGE("parse x25519 output param set memcpy private key failed!");
-        return HAL_ERR_MEMORY_COPY;
-    }
-    outPriKey->length = priKeyParam->blob.size;
-
-    return HAL_SUCCESS;
-}
-
-static int32_t GenerateKeyPair(Algorithm algo, Uint8Buff *outPriKey, Uint8Buff *outPubKey)
-{
-    CHECK_PTR_RETURN_HAL_ERROR_CODE(outPriKey, "outPriKey");
-    CHECK_PTR_RETURN_HAL_ERROR_CODE(outPriKey->val, "outPriKey->key");
-    CHECK_LEN_ZERO_RETURN_ERROR_CODE(outPriKey->length, "outPriKey->keyLen");
-    CHECK_PTR_RETURN_HAL_ERROR_CODE(outPubKey, "outPubKey");
-    CHECK_PTR_RETURN_HAL_ERROR_CODE(outPubKey->val, "outPubKey->key");
-    CHECK_LEN_ZERO_RETURN_ERROR_CODE(outPubKey->length, "outPubKey->keyLen");
-
-    if (outPriKey->length != outPubKey->length) {
-        LOGE("key len not equal.");
-        return HAL_ERR_INVALID_LEN;
-    }
-    uint32_t keyLen = outPriKey->length;
-
-    struct HksParamSet *paramSet = NULL;
-    struct HksParamSet *outParamSet = NULL;
-    int32_t res = ConstructGenerateKeyPairParams(&paramSet, algo, keyLen);
-    if (res != HAL_SUCCESS) {
-        return res;
-    }
-
-    /* need 2 HksParam struct for outPriKey and outPubKey */
-    uint32_t outParamSetSize = sizeof(struct HksParamSet) +
-        2 * (sizeof(struct HksParam)) + outPriKey->length + outPubKey->length;
-    outParamSet = (struct HksParamSet *)HcMalloc(outParamSetSize, 0);
-    if (outParamSet == NULL) {
-        LOGE("allocate buffer for output param set failed");
-        res = HAL_ERR_BAD_ALLOC;
-        goto ERR;
-    }
-    outParamSet->paramSetSize = outParamSetSize;
-
-    LOGI("[HUKS]: HksGenerateKey enter.");
-    res = HksGenerateKey(NULL, paramSet, outParamSet);
-    LOGI("[HUKS]: HksGenerateKey quit. [Res]: %" LOG_PUB "d", res);
-    if (res != HKS_SUCCESS) {
-        LOGI("[HUKS]: HksGenerateKey quit. [Res]: %" LOG_PUB "d", res);
-        res = HAL_ERR_HUKS;
-        goto ERR;
-    }
-
-    res = GetKeyPair(outParamSet, outPriKey, outPubKey);
-    if (res != HAL_SUCCESS) {
-        LOGE("parse x25519 output param set failed, res:%" LOG_PUB "d", res);
-        goto ERR;
-    }
-ERR:
-    FreeParamSet(paramSet);
-    HcFree(outParamSet);
-    return res;
-}
-
 static int32_t ExportPublicKey(const KeyParams *keyParams, Uint8Buff *outPubKey)
 {
     int32_t res = CheckExportParams(keyParams, outPubKey);
@@ -1178,7 +1088,6 @@ static const AlgLoader g_huksLoader = {
     .agreeSharedSecret = AgreeSharedSecret,
     .bigNumExpMod = BigNumExpMod,
     .generateKeyPairWithStorage = GenerateKeyPairWithStorage,
-    .generateKeyPair = GenerateKeyPair,
     .exportPublicKey = ExportPublicKey,
     .sign = Sign,
     .verify = Verify,

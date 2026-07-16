@@ -18,6 +18,7 @@
 #include "hichain.h"
 #include "distribution.h"
 #include "securec.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 namespace OHOS {
     static void TransmitCb(const struct session_identity *identity, const void *data, uint32_t length)
@@ -80,12 +81,15 @@ namespace OHOS {
         if ((data == nullptr) || (size < sizeof(uint8_t))) {
             return false;
         }
+        FuzzedDataProvider provider(data, size);
         hc_handle handle = get_instance(&identity, HC_CENTRE, &callback);
         hc_auth_id authId;
         if (memset_s(&authId, sizeof(authId), 0, sizeof(authId)) != EOK) {
             return false;
         }
-        authId.length = size > HC_AUTH_ID_BUFF_LEN ? HC_AUTH_ID_BUFF_LEN : size;
+        authId.length = provider.ConsumeIntegral<int32_t>() > HC_AUTH_ID_BUFF_LEN
+            ? HC_AUTH_ID_BUFF_LEN
+            : provider.ConsumeIntegral<int32_t>();
         if (memcpy_s(authId.auth_id, HC_AUTH_ID_BUFF_LEN, data, authId.length) != EOK) {
             return false;
         }

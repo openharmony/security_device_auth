@@ -395,8 +395,13 @@ static int32_t generate_sign_src_data(const struct hichain *hichain, struct uint
         LOGE("Copy failed");
         return HC_MEMCPY_ERROR;
     }
-    (void)memcpy_s(sign_src_data->val + sign_src_data->length, sign_src_data->size - sign_src_data->length,
-                   auth_info->val, auth_info->length);
+    if (memcpy_s(sign_src_data->val + sign_src_data->length, sign_src_data->size - sign_src_data->length,
+                 auth_info->val, auth_info->length) != EOK) {
+        FREE(sign_src_data->val);
+        sign_src_data->size = 0;
+        LOGE("Memcpy auth info failed");
+        return HC_MEMCPY_ERROR;
+    }
     sign_src_data->length += auth_info->length;
     DBG_OUT("Generate peer sign src data success");
     return HC_OK;

@@ -29,6 +29,7 @@ extern "C" {
 int32_t CheckInterfacePermission(const char *permission);
 int32_t CheckPermission(int32_t methodId);
 int32_t GetCallingUid(void);
+int32_t CheckRestoreCallPermission(void);
 
 #ifdef __cplusplus
 }

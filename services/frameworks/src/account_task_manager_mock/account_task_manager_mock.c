@@ -61,6 +61,101 @@ int32_t DestroyAccountAuthSession(int32_t sessionId)
     return HC_ERR_NOT_SUPPORT;
 }
 
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+int32_t AddDeviceTrustRelation(int32_t osAccountId, const char *userId, const char *groupId,
+    const char *udid)
+{
+    (void)osAccountId;
+    (void)userId;
+    (void)groupId;
+    (void)udid;
+    return HC_ERR_NOT_SUPPORT;
+}
+
+int32_t DelDeviceTrustRelation(int32_t osAccountId, const char *userId, const char *groupId,
+    const char *udid)
+{
+    (void)osAccountId;
+    (void)userId;
+    (void)groupId;
+    (void)udid;
+    return HC_ERR_NOT_SUPPORT;
+}
+
+bool IsDeviceExistInGroupForUser(int32_t osAccountId, const char *userId, const char *groupId,
+    const char *udid)
+{
+    (void)osAccountId;
+    (void)userId;
+    (void)groupId;
+    (void)udid;
+    return false;
+}
+
+bool IsDeviceExistInGroup(int32_t osAccountId, const char *groupId, const char *udid)
+{
+    (void)osAccountId;
+    (void)groupId;
+    (void)udid;
+    return false;
+}
+
+bool IsDeviceExistInUser(int32_t osAccountId, const char *userId, const char *udid)
+{
+    (void)osAccountId;
+    (void)userId;
+    (void)udid;
+    return false;
+}
+
+int32_t AddCredTrustRelation(int32_t osAccountId, const char *userId, const char *credId)
+{
+    (void)osAccountId;
+    (void)userId;
+    (void)credId;
+    return HC_ERR_NOT_SUPPORT;
+}
+
+int32_t DelCredTrustRelation(int32_t osAccountId, const char *userId, const char *credId)
+{
+    (void)osAccountId;
+    (void)userId;
+    (void)credId;
+    return HC_ERR_NOT_SUPPORT;
+}
+
+bool IsCredReferencedByUser(int32_t osAccountId, const char *userId, const char *credId)
+{
+    (void)osAccountId;
+    (void)userId;
+    (void)credId;
+    return false;
+}
+
+bool IsCredReferenced(int32_t osAccountId, const char *credId)
+{
+    (void)osAccountId;
+    (void)credId;
+    return false;
+}
+
+int32_t NotifyAccountSwitch(int32_t osAccountId, const char *fromUserId, const char *toUserId,
+    AccountSwitchGroupCallback groupCallback, AccountSwitchCredCallback credCallback)
+{
+    (void)osAccountId;
+    (void)fromUserId;
+    (void)toUserId;
+    (void)groupCallback;
+    (void)credCallback;
+    return HC_ERR_NOT_SUPPORT;
+}
+
+bool HasTrustRelationDbPlugin(void)
+{
+    return false;
+}
+#endif
+
 void IncreaseLoadCount(void) {}
 
 void DecreaseLoadCount(void) {}

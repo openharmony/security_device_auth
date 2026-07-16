@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "device_auth_defines.h"
 #include "hc_time.h"
@@ -195,13 +196,20 @@ static void HiviewAdapterTest03(void)
     DESTROY_PERFORMANCE_DUMPER();
 }
 
+using TestFunc = void(*)(void);
+static TestFunc g_testFuncs[] = {
+    HiviewAdapterTest01, HiviewAdapterTest02, HiviewAdapterTest03
+};
+constexpr size_t TEST_FUNC_COUNT = sizeof(g_testFuncs) / sizeof(g_testFuncs[0]);
+
 bool FuzzDoCallback(const uint8_t* data, size_t size)
 {
-    (void)data;
-    (void)size;
-    (void)HiviewAdapterTest01();
-    (void)HiviewAdapterTest02();
-    (void)HiviewAdapterTest03();
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
+    }
+    FuzzedDataProvider fdp(data, size);
+    uint32_t testId = fdp.ConsumeIntegral<uint32_t>();
+    g_testFuncs[testId % TEST_FUNC_COUNT]();
     DestroyPerformanceDumper();
     return true;
 }

@@ -18,7 +18,9 @@
                     { "name": "common.event.DISTRIBUTED_ACCOUNT_LOGOUT" },
                     { "name": "usual.event.bluetooth.host.STATE_UPDATE" },
                     { "name": "usual.event.USER_SWITCHED" },
-                    { "name": "usual.event.CONNECTIVITY_CHANGE" }
+                    { "name": "usual.event.CONNECTIVITY_CHANGE" },
+                    { "name": "usual.event.OS_ACCOUNT_SUB_PROFILE_SWITCHED" },
+                    { "name": "usual.event.OS_ACCOUNT_SUB_PROFILE_DELETED" }
                 ]
             }
         }

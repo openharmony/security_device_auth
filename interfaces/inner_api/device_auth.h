@@ -99,6 +99,9 @@
 #define FIELD_BASE_INFO "baseInfo"
 #define FIELD_UPDATE_LISTS "updateLists"
 #define FIELD_PEER_OS_ACCOUNT_ID "peerOsAccountId"
+#define FIELD_IS_QUERY_OPEN_CRED "isQueryOpenCred"
+#define FIELD_IS_OPEN_CRED_AUTH "isOpenCredAuth"
+#define FIELD_SUB_PROFILE_ID "subProfileId"
 
 /**
  * @brief protocol expand value for bind
@@ -226,6 +229,11 @@ typedef struct {
     /** Call it when a device has no trust relationship in all groups of a certain type. */
     void (*onLastGroupDeleted)(const char *peerUdid, int groupType);
     void (*onTrustedDeviceNumChanged)(int curTrustedDeviceNum);
+    void (*onGroupActiveInUser)(const char *returnInfo);
+    void (*onGroupInactiveInUser)(const char *returnInfo);
+    void (*onDeviceActiveInUser)(const char *udid, const char *returnInfo);
+    void (*onDeviceInactiveInUser)(const char *udid, const char *returnInfo);
+    void (*onDeviceNotTrustedInUser)(const char *udid, const char *returnInfo);
 } DataChangeListener;
 
 /**
@@ -238,6 +246,8 @@ typedef struct {
     void (*onCredDelete)(const char *credId, const char *credInfo);
     /** Call it when a cred update. */
     void (*onCredUpdate)(const char *credId, const char *credInfo);
+    void (*onCredActiveInUser)(const char *credId, const char *returnInfo);
+    void (*onCredInactiveInUser)(const char *credId, const char *returnInfo);
 } CredChangeListener;
 
 /**

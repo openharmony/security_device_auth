@@ -20,7 +20,7 @@
 #include "hc_log.h"
 #include <system_ability_definition.h>
 
-static int32_t g_count = 0;
+static uint32_t g_count = 0;
 static bool g_saIsStopping = false;
 static std::mutex g_criticalLock;
 
@@ -36,7 +36,7 @@ void NotifyProcessIsStop(void)
     OHOS::Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(), 1, 0, OHOS::DEVICE_AUTH_SERVICE_ID);
 }
 
-void IncreaseCriticalCnt(int addCnt)
+void IncreaseCriticalCnt(uint32_t addCnt)
 {
     std::lock_guard<std::mutex> autoLock(g_criticalLock);
     if (g_count == 0) {
@@ -49,6 +49,10 @@ void IncreaseCriticalCnt(int addCnt)
 void DecreaseCriticalCnt(void)
 {
     std::lock_guard<std::mutex> autoLock(g_criticalLock);
+    if (g_count == 0) {
+        LOGW("critical count is already set to 0!");
+        return;
+    }
     g_count = g_count - 1;
     if (g_count == 0) {
         LOGI("Try to set critical to false.");

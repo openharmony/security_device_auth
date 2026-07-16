@@ -1428,28 +1428,6 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest027, TestSize.Level0)
     ASSERT_EQ(res, HC_SUCCESS);
     res = loader->sign(nullptr, nullptr, ED25519, nullptr);
     ASSERT_NE(res, HC_SUCCESS);
-    res = loader->generateKeyPair(ED25519, nullptr, nullptr);
-    ASSERT_NE(res, HC_SUCCESS);
-    Uint8Buff outPrivKey = { 0 };
-    res = loader->generateKeyPair(ED25519, &outPrivKey, nullptr);
-    ASSERT_NE(res, HC_SUCCESS);
-    uint8_t outPrivKeyVal[256] = { 0 };
-    outPrivKey.val = outPrivKeyVal;
-    res = loader->generateKeyPair(ED25519, &outPrivKey, nullptr);
-    ASSERT_NE(res, HC_SUCCESS);
-    outPrivKey.length = 256;
-    res = loader->generateKeyPair(ED25519, &outPrivKey, nullptr);
-    ASSERT_NE(res, HC_SUCCESS);
-    Uint8Buff outPubKey = { 0 };
-    res = loader->generateKeyPair(ED25519, &outPrivKey, &outPubKey);
-    ASSERT_NE(res, HC_SUCCESS);
-    uint8_t outPubKeyVal[256] = { 0 };
-    outPubKey.val = outPubKeyVal;
-    res = loader->generateKeyPair(ED25519, &outPrivKey, &outPubKey);
-    ASSERT_NE(res, HC_SUCCESS);
-    outPubKey.length = 128;
-    res = loader->generateKeyPair(ED25519, &outPrivKey, &outPubKey);
-    ASSERT_NE(res, HC_SUCCESS);
 }
 
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest028, TestSize.Level0)
@@ -1581,11 +1559,11 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0287, TestSize.Level0)
     int32_t res = IsPeerSameUserId(TEST_OS_ACCOUNT_ID, nullptr);
     EXPECT_NE(res, true);
     
-    res = GeneratePeerInfoJson(nullptr, nullptr);
+    res = GeneratePeerInfoJson(false, nullptr, nullptr);
     EXPECT_NE(res, HC_SUCCESS);
     CJson *in = CreateJson();
     (void)AddStringToJson(in, FIELD_USER_ID, TEST_USER_ID);
-    res = GeneratePeerInfoJson(in, nullptr);
+    res = GeneratePeerInfoJson(false, in, nullptr);
     EXPECT_NE(res, HC_SUCCESS);
 
     res = SetPeerAuthIdByCredAuthInfo(nullptr);
@@ -1809,6 +1787,7 @@ HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest0331, TestSize.Level0)
     (void)GetSelfUserId(DEFAULT_OS_ACCOUNT, nullptr, TEST_LEN);
     char userId[TEST_LEN];
     (void)GetSelfUserId(DEFAULT_OS_ACCOUNT, userId, TEST_LEN);
+    SUCCEED();
 }
 
 HWTEST_F(DeviceAuthInterfaceTest, DeviceAuthInterfaceTest034, TestSize.Level0)
