@@ -1,0 +1,14 @@
+import("//build/ohos.gni")
+import("//build/test.gni")
+
+group("session_manager_tests") {
+  testonly = true
+  deps = [
+    "mini_session_manager:mini_session_manager_test",
+  ]
+}
+
+group("SessionManagerTest") {
+  testonly = true
+  deps = [ ":session_manager_tests" ]
+}

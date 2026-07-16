@@ -1,0 +1,5 @@
+import("//build/ohos.gni")
+
+group("mock_ext_tests") {
+  testonly = true
+}

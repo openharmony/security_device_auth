@@ -48,7 +48,6 @@ HWTEST_F(DevAuthDynamicLoadTest, DevAuthDlopenTest001, TestSize.Level0)
 {
     void *handle = DevAuthDlopen("/system/lib/platformsdk/libdeviceauth_sdk.z.so");
     if (handle != nullptr) {
-        DevAuthDlclose(handle);
     }
     SUCCEED();
 }
@@ -73,7 +72,6 @@ HWTEST_F(DevAuthDynamicLoadTest, DevAuthDlsymTest002, TestSize.Level0)
         if (sym != nullptr) {
             EXPECT_NE(sym, nullptr);
         }
-        DevAuthDlclose(handle);
     }
 }
 
@@ -83,7 +81,6 @@ HWTEST_F(DevAuthDynamicLoadTest, DevAuthDlsymTest003, TestSize.Level0)
     if (handle != nullptr) {
         void *sym = DevAuthDlsym(handle, "InvalidSymbol");
         EXPECT_EQ(sym, nullptr);
-        DevAuthDlclose(handle);
     }
 }
 

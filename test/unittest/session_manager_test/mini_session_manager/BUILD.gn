@@ -1,0 +1,56 @@
+import("//build/ohos.gni")
+import("//build/test.gni")
+import("//base/security/device_auth/deps_adapter/deviceauth_hals.gni")
+import("//base/security/device_auth/services/deviceauth.gni")
+
+module_output_path = "device_auth/device_auth"
+
+mock_inner_path = "//base/security/device_auth/test/mock_inner"
+
+mini_session_manager_test_includes = []
+mini_session_manager_test_includes += inc_path
+mini_session_manager_test_includes += hals_inc_path
+mini_session_manager_test_includes += [
+  "${session_manager_path}/inc",
+  "${session_manager_path}/inc/session",
+  "${session_manager_path}/inc/session/mini_session",
+  "${dev_frameworks_path}/inc/hiview_adapter",
+  "${os_adapter_path}/impl/src",
+  "${os_adapter_path}/impl/src/linux",
+  "${mock_inner_path}",
+]
+
+ohos_unittest("mini_session_manager_test") {
+  module_out_path = module_output_path
+  sources = [
+    "mini_session_manager_test.cpp",
+    "${mock_inner_path}/hc_types_mock.cpp",
+    "${mock_inner_path}/hc_mutex_mock.cpp",
+    "${mock_inner_path}/string_util_mock.cpp",
+    "${session_manager_path}/src/session/mini_session/mini_session_manager.c",
+    "${common_lib_path}/impl/src/hc_string.c",
+    "${common_lib_path}/impl/src/hc_string_vector.c",
+    "${common_lib_path}/impl/src/hc_parcel.c",
+    "${common_lib_path}/impl/src/uint8buff_utils.c",
+    "${os_adapter_path}/impl/src/hc_log.c",
+    "${os_adapter_path}/impl/src/hc_err_trace.c",
+    "${os_adapter_path}/impl/src/linux/hc_file.c",
+    "${os_adapter_path}/impl/src/linux/hc_condition.c",
+    "${os_adapter_path}/impl/src/linux/hc_thread.c",
+    "${os_adapter_path}/impl/src/hc_task_thread.c",
+    "${mock_inner_path}/hc_time_mock.c",
+  ]
+  include_dirs = mini_session_manager_test_includes
+  external_deps = [
+    "cJSON:cjson",
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+  ]
+  defines = [
+    "HILOG_ENABLE",
+  ]
+  subsystem_name = "security"
+  part_name = "device_auth"
+}

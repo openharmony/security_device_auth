@@ -26,6 +26,7 @@ static const int32_t TEST_WAIT_TIME_US = 50000;
 
 static int TestThreadFunc(void *args)
 {
+    usleep(100000);
     g_threadRunCount++;
     return 0;
 }
