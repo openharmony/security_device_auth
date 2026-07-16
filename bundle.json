@@ -69,7 +69,8 @@
           "ipc",
           "netmanager_base",
           "memmgr",
-          "eventhandler"
+          "eventhandler",
+          "node"
         ],
         "third_party": [],
         "hisysevent_config": [
