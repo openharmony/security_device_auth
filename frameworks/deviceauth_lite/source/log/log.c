@@ -19,45 +19,35 @@
 #include "securec.h"
 #include "base.h"
 
-#if defined(_WINDOWS)
-#ifdef DLL_EXPORT
-#define DLL_API_PUBLIC __declspec(dllexport)
-#else
-#define DLL_API_PUBLIC __declspec(dllimport)
-#endif
-#else
-#define DLL_API_PUBLIC __attribute__ ((visibility("default")))
-#endif
-
 static void hc_logd(const char *tag, const char *func, const char *format, ...);
 static void hc_logi(const char *tag, const char *func, const char *format, ...);
 static void hc_logw(const char *tag, const char *func, const char *format, ...);
 static void hc_loge(const char *tag, const char *func, const char *format, ...);
 
-static struct log_f_group g_log_func = { hc_logd, hc_logi, hc_logw, hc_loge };
+static struct log_func_group g_log_func = { hc_logd, hc_logi, hc_logw, hc_loge };
 
-log_f get_logd(void)
+log_func get_logd(void)
 {
     return g_log_func.log_d;
 }
 
-log_f get_logi(void)
+log_func get_logi(void)
 {
     return g_log_func.log_i;
 }
 
-log_f get_logw(void)
+log_func get_logw(void)
 {
     return g_log_func.log_w;
 }
 
-log_f get_loge(void)
+log_func get_loge(void)
 {
     return g_log_func.log_e;
 }
 
 /* no log without register */
-DLL_API_PUBLIC void registe_log(struct log_f_group *log)
+DLL_API_PUBLIC void registe_log(struct log_func_group *log)
 {
     check_ptr_return(log);
 
