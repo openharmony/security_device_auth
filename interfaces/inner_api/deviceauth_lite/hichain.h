@@ -24,8 +24,10 @@
 #else
 #define DLL_API_PUBLIC __declspec(dllimport)
 #endif
-#else
+#elif defined(__GNUC__) || defined(__clang__)
 #define DLL_API_PUBLIC __attribute__ ((visibility("default")))
+#else
+#define DLL_API_PUBLIC
 #endif
 
 #ifdef HILINK_E2E_SECURITY_CONFIG

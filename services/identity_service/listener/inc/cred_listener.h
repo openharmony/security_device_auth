@@ -28,6 +28,8 @@ void DestroyCredListener(void);
 void OnCredAdd(const char *credId, const char *credInfo);
 void OnCredDelete(const char *credId, const char *credInfo);
 void OnCredUpdate(const char *credId, const char *credInfo);
+void OnCredActiveInUser(const char *credId, const char *userId);
+void OnCredInactiveInUser(const char *credId, const char *userId);
 bool IsCredListenerSupported(void);
 
 int32_t AddCredListener(const char *appId, const CredChangeListener *listener);

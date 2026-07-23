@@ -92,12 +92,40 @@ static void RecordAndReportCommonEvent(const CJson *cmdParamJson, const std::str
     DestroyOperationRecord(operation);
 }
 
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+static void HandleSubProfileEvent(const OsAccountEventNotifier &notifier, const std::string &action,
+    const OHOS::AAFwk::Want& want)
+{
+    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_OS_ACCOUNT_SUB_PROFILE_SWITCHED) {
+        int32_t osAccountId = want.GetParams().GetIntParam("userId", DEFAULT_OS_ACCOUNT);
+        int32_t fromSubProfileId = want.GetParams().GetIntParam("fromSubProfileId", DEFAULT_SUB_PROFILE_ID);
+        int32_t toSubProfileId = want.GetParams().GetIntParam("toSubProfileId", DEFAULT_SUB_PROFILE_ID);
+        LOGI("[AccountSubscriber]: osAccountId: %" LOG_PUB "d, fromSubProfileId: %" LOG_PUB "d, "
+            "toSubProfileId: %" LOG_PUB "d.", osAccountId, fromSubProfileId, toSubProfileId);
+        notifier.notifySubProfileSwitched(osAccountId, fromSubProfileId, toSubProfileId);
+    } else {
+        int32_t osAccountId = want.GetParams().GetIntParam("userId", DEFAULT_OS_ACCOUNT);
+        int32_t subProfileId = want.GetParams().GetIntParam("subProfileId", DEFAULT_SUB_PROFILE_ID);
+        LOGI("[AccountSubscriber]: osAccountId: %" LOG_PUB "d, fromSubProfileId: %" LOG_PUB "d.",
+            osAccountId, subProfileId);
+        notifier.notifySubProfileDeleted(osAccountId, subProfileId);
+    }
+}
+#endif
+
 void AccountSubscriber::ResponseCommonEvent(const EventFwk::CommonEventData &eventData)
 {
     DelayUnload();
     const OHOS::AAFwk::Want& want = eventData.GetWant();
     std::string action = want.GetAction();
     LOGI("[AccountSubscriber]: OnReceiveEvent action: %" LOG_PUB "s.", action.c_str());
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_OS_ACCOUNT_SUB_PROFILE_SWITCHED ||
+        action == EventFwk::CommonEventSupport::COMMON_EVENT_OS_ACCOUNT_SUB_PROFILE_DELETED) {
+        HandleSubProfileEvent(notifier_, action, want);
+        return;
+    }
+#endif
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
         LOGI("[AccountSubscriber]: user unlocked, userId: %" LOG_PUB "d.", eventData.GetCode());
         notifier_.notifyOsAccountUnlocked(eventData.GetCode());

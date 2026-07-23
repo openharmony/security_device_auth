@@ -95,6 +95,51 @@ void OnCredUpdate(const char *credId, const char *credInfo)
     }
     UnlockHcMutex(g_credListenerMutex);
 }
+
+void OnCredActiveInUser(const char *credId, const char *returnInfo)
+{
+    if (credId == NULL) {
+        LOGE("[CredListener-OnCredActiveInUser]: The credId is NULL!");
+        return;
+    }
+    if (returnInfo == NULL) {
+        LOGE("[CredListener-OnCredActiveInUser]: The returnInfo is NULL!");
+        return;
+    }
+    uint32_t index;
+    CredListenerEntry *entry = NULL;
+    (void)LockHcMutex(g_credListenerMutex);
+    FOR_EACH_HC_VECTOR(g_credListenerVec, index, entry) {
+        if (entry != NULL && entry->listener != NULL && entry->listener->onCredActiveInUser != NULL) {
+            LOGI("[CredListener]: OnCredActiveInUser! [AppId]: %" LOG_PUB "s", entry->appId);
+            entry->listener->onCredActiveInUser(credId, returnInfo);
+        }
+    }
+    UnlockHcMutex(g_credListenerMutex);
+}
+
+void OnCredInactiveInUser(const char *credId, const char *returnInfo)
+{
+    if (credId == NULL) {
+        LOGE("[CredListener-OnCredInactiveInUser]: The credId is NULL!");
+        return;
+    }
+    if (returnInfo == NULL) {
+        LOGE("[CredListener-OnCredInactiveInUser]: The returnInfo is NULL!");
+        return;
+    }
+    uint32_t index;
+    CredListenerEntry *entry = NULL;
+    (void)LockHcMutex(g_credListenerMutex);
+    FOR_EACH_HC_VECTOR(g_credListenerVec, index, entry) {
+        if (entry != NULL && entry->listener != NULL && entry->listener->onCredInactiveInUser != NULL) {
+            LOGI("[CredListener]: OnCredInactiveInUser! [AppId]: %" LOG_PUB "s", entry->appId);
+            entry->listener->onCredInactiveInUser(credId, returnInfo);
+        }
+    }
+    UnlockHcMutex(g_credListenerMutex);
+}
+
 static int32_t UpdateListenerIfExist(const char *appId, const CredChangeListener *listener)
 {
     uint32_t index;

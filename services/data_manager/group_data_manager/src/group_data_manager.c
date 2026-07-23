@@ -136,6 +136,10 @@ static HcMutex *g_databaseMutex = NULL;
 static DeviceAuthDb g_deviceauthDb;
 static const int UPGRADE_OS_ACCOUNT_ID = 100;
 
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+static StringVector g_inactiveDeviceVec = { 0 };
+#endif
+
 static bool EndWithZero(HcParcel *parcel)
 {
     const char *p = GetParcelLastChar(parcel);
@@ -1113,7 +1117,39 @@ static int32_t AddUserTypeToReturn(const TrustedDeviceEntry *deviceInfo, CJson *
     return HC_SUCCESS;
 }
 
-static int32_t GenerateMessage(const TrustedGroupEntry *groupEntry, char **returnGroupInfo)
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+static int32_t AddMultiProfileExtraInfo(int32_t osAccountId, const char *subProfileIdStr, CJson *returnJson)
+{
+    if (AddIntToJson(returnJson, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to add osAccountId!");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddStringToJson(returnJson, FIELD_SUB_PROFILE_ID, subProfileIdStr) != HC_SUCCESS) {
+        LOGE("Failed to add foreground uid!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+#endif
+
+static int32_t GenerateReturnGroupInfoInner(int32_t osAccountId, const char *subProfileIdStr,
+    const TrustedGroupEntry *groupEntry, CJson *returnJson)
+{
+    int32_t res = GenerateReturnGroupInfo(groupEntry, returnJson);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    return AddMultiProfileExtraInfo(osAccountId, subProfileIdStr, returnJson);
+#else
+    (void)osAccountId;
+    (void)subProfileIdStr;
+    return HC_SUCCESS;
+#endif
+}
+
+static int32_t GenerateMessage(int32_t osAccountId, const char *subProfileIdStr, const TrustedGroupEntry *groupEntry,
+    char **returnGroupInfo)
 {
     if (groupEntry == NULL) {
         LOGE("Input param groupEntry is null!");
@@ -1124,7 +1160,7 @@ static int32_t GenerateMessage(const TrustedGroupEntry *groupEntry, char **retur
         LOGE("Failed to allocate message memory!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t result = GenerateReturnGroupInfo(groupEntry, message);
+    int32_t result = GenerateReturnGroupInfoInner(osAccountId, subProfileIdStr, groupEntry, message);
     if (result != HC_SUCCESS) {
         FreeJson(message);
         return result;
@@ -1139,33 +1175,34 @@ static int32_t GenerateMessage(const TrustedGroupEntry *groupEntry, char **retur
     return HC_SUCCESS;
 }
 
-static void PostGroupCreatedMsg(const TrustedGroupEntry *groupEntry)
+static void PostGroupCreatedMsg(int32_t osAccountId, const char *subProfileIdStr, const TrustedGroupEntry *groupEntry)
 {
     if (!IsBroadcastSupported()) {
         return;
     }
     char *messageStr = NULL;
-    if (GenerateMessage(groupEntry, &messageStr) != HC_SUCCESS) {
+    if (GenerateMessage(osAccountId, subProfileIdStr, groupEntry, &messageStr) != HC_SUCCESS) {
         return;
     }
     GetBroadcaster()->postOnGroupCreated(messageStr);
     FreeJsonString(messageStr);
 }
 
-static void PostGroupDeletedMsg(const TrustedGroupEntry *groupEntry)
+static void PostGroupDeletedMsg(int32_t osAccountId, const char *subProfileIdStr, const TrustedGroupEntry *groupEntry)
 {
     if (!IsBroadcastSupported()) {
         return;
     }
     char *messageStr = NULL;
-    if (GenerateMessage(groupEntry, &messageStr) != HC_SUCCESS) {
+    if (GenerateMessage(osAccountId, subProfileIdStr, groupEntry, &messageStr) != HC_SUCCESS) {
         return;
     }
     GetBroadcaster()->postOnGroupDeleted(messageStr);
     FreeJsonString(messageStr);
 }
 
-static void PostDeviceBoundMsg(OsAccountTrustedInfo *info, const TrustedDeviceEntry *deviceEntry)
+static void PostDeviceBoundMsg(OsAccountTrustedInfo *info, const char *subProfileIdStr,
+    const TrustedDeviceEntry *deviceEntry)
 {
     if (!IsBroadcastSupported()) {
         return;
@@ -1175,7 +1212,7 @@ static void PostDeviceBoundMsg(OsAccountTrustedInfo *info, const TrustedDeviceEn
     TrustedGroupEntry **groupEntryPtr = QueryGroupEntryPtrIfMatch(&info->groups, &groupParams);
     if (groupEntryPtr != NULL) {
         char *messageStr = NULL;
-        if (GenerateMessage(*groupEntryPtr, &messageStr) != HC_SUCCESS) {
+        if (GenerateMessage(info->osAccountId, subProfileIdStr, *groupEntryPtr, &messageStr) != HC_SUCCESS) {
             return;
         }
         GetBroadcaster()->postOnDeviceBound(StringGet(&deviceEntry->udid), messageStr);
@@ -1200,7 +1237,7 @@ static bool IsSelfDeviceEntry(const TrustedDeviceEntry *deviceEntry)
 }
 
 static int32_t GenerateMessageWithOsAccount(const TrustedGroupEntry *groupEntry, int32_t osAccountId,
-    char **returnMessageStr)
+    const char *subProfileIdStr, char **returnMessageStr)
 {
     if (groupEntry == NULL) {
         LOGE("groupEntry is null!");
@@ -1211,7 +1248,7 @@ static int32_t GenerateMessageWithOsAccount(const TrustedGroupEntry *groupEntry,
         LOGE("Failed to create message json!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t result = GenerateReturnGroupInfo(groupEntry, message);
+    int32_t result = GenerateReturnGroupInfoInner(osAccountId, subProfileIdStr, groupEntry, message);
     if (result != HC_SUCCESS) {
         FreeJson(message);
         return result;
@@ -1230,7 +1267,8 @@ static int32_t GenerateMessageWithOsAccount(const TrustedGroupEntry *groupEntry,
     return HC_SUCCESS;
 }
 
-static void PostDeviceUnBoundMsg(OsAccountTrustedInfo *info, const TrustedDeviceEntry *deviceEntry)
+static void PostDeviceUnBoundMsg(OsAccountTrustedInfo *info, const char *subProfileIdStr,
+    const TrustedDeviceEntry *deviceEntry)
 {
     if (!IsBroadcastSupported()) {
         return;
@@ -1242,7 +1280,8 @@ static void PostDeviceUnBoundMsg(OsAccountTrustedInfo *info, const TrustedDevice
     TrustedGroupEntry **groupEntryPtr = QueryGroupEntryPtrIfMatch(&info->groups, &groupParams);
     if (groupEntryPtr != NULL) {
         char *messageStr = NULL;
-        if (GenerateMessageWithOsAccount(*groupEntryPtr, info->osAccountId, &messageStr) != HC_SUCCESS) {
+        if (GenerateMessageWithOsAccount(*groupEntryPtr, info->osAccountId, subProfileIdStr,
+            &messageStr) != HC_SUCCESS) {
             return;
         }
         GetBroadcaster()->postOnDeviceUnBound(udid, messageStr);
@@ -1258,6 +1297,78 @@ static void PostDeviceUnBoundMsg(OsAccountTrustedInfo *info, const TrustedDevice
         }
     }
 }
+
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+static int32_t GenerateMessageForSubProfile(int32_t osAccountId, const char *subProfileIdStr,
+    const char *groupId, char **messageStr)
+{
+    OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
+    if (info == NULL) {
+        return HC_ERR_NULL_PTR;
+    }
+    QueryGroupParams groupParams = InitQueryGroupParams();
+    groupParams.groupId = groupId;
+    TrustedGroupEntry **groupEntry = QueryGroupEntryPtrIfMatch(&info->groups, &groupParams);
+    if (groupEntry == NULL) {
+        return HC_ERR_NULL_PTR;
+    }
+    return GenerateMessage(osAccountId, subProfileIdStr, *groupEntry, messageStr);
+}
+
+static void PostGroupActive(int32_t osAccountId, const char *subProfileIdStr, const char *groupId)
+{
+    if (!IsBroadcastSupported()) {
+        return;
+    }
+    char *messageStr = NULL;
+    if (GenerateMessageForSubProfile(osAccountId, subProfileIdStr, groupId, &messageStr) != HC_SUCCESS) {
+        return;
+    }
+    GetBroadcaster()->postOnGroupActiveInUser(messageStr);
+    FreeJsonString(messageStr);
+}
+
+static void PostGroupInactive(int32_t osAccountId, const char *subProfileIdStr, const char *groupId)
+{
+    if (!IsBroadcastSupported()) {
+        return;
+    }
+    char *messageStr = NULL;
+    if (GenerateMessageForSubProfile(osAccountId, subProfileIdStr, groupId, &messageStr) != HC_SUCCESS) {
+        return;
+    }
+    GetBroadcaster()->postOnGroupInactiveInUser(messageStr);
+    FreeJsonString(messageStr);
+}
+
+static void PostDeviceActive(int32_t osAccountId, const char *subProfileIdStr, const char *groupId,
+    const char *udid)
+{
+    if (!IsBroadcastSupported()) {
+        return;
+    }
+    char *messageStr = NULL;
+    if (GenerateMessageForSubProfile(osAccountId, subProfileIdStr, groupId, &messageStr) != HC_SUCCESS) {
+        return;
+    }
+    GetBroadcaster()->postOnDeviceActiveInUser(udid, messageStr);
+    FreeJsonString(messageStr);
+}
+
+static void PostDeviceInactive(int32_t osAccountId, const char *subProfileIdStr, const char *groupId,
+    const char *udid)
+{
+    if (!IsBroadcastSupported()) {
+        return;
+    }
+    char *messageStr = NULL;
+    if (GenerateMessageForSubProfile(osAccountId, subProfileIdStr, groupId, &messageStr) != HC_SUCCESS) {
+        return;
+    }
+    GetBroadcaster()->postOnDeviceInactiveInUser(udid, messageStr);
+    FreeJsonString(messageStr);
+}
+#endif
 
 static void DeletePdidByDeviceEntry(int32_t osAccountId, const TrustedDeviceEntry *deviceEntry)
 {
@@ -1445,13 +1556,8 @@ int32_t GenerateReturnDevInfo(const TrustedDeviceEntry *deviceEntry, CJson *retu
     return HC_SUCCESS;
 }
 
-int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
+static int32_t AddGroupInner(int32_t osAccountId, const char *subProfileIdStr, const TrustedGroupEntry *groupEntry)
 {
-    LOGI("[DB]: Start to add a group to database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
-    if (groupEntry == NULL) {
-        LOGE("[DB]: The input groupEntry is NULL!");
-        return HC_ERR_NULL_PTR;
-    }
     (void)LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
@@ -1469,7 +1575,10 @@ int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
     if (oldEntryPtr != NULL) {
         DestroyGroupEntry(*oldEntryPtr);
         *oldEntryPtr = newEntry;
-        PostGroupCreatedMsg(newEntry);
+        PostGroupCreatedMsg(osAccountId, subProfileIdStr, newEntry);
+    #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+        PostGroupActive(osAccountId, subProfileIdStr, StringGet(&newEntry->id));
+    #endif
         UnlockHcMutex(g_databaseMutex);
         LOGI("[DB]: Replace an old group successfully! [GroupType]: %" LOG_PUB "u", groupEntry->type);
         return HC_SUCCESS;
@@ -1480,10 +1589,31 @@ int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
         LOGE("[DB]: Failed to push groupEntry to vec!");
         return HC_ERR_MEMORY_COPY;
     }
-    PostGroupCreatedMsg(newEntry);
+    PostGroupCreatedMsg(osAccountId, subProfileIdStr, newEntry);
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    PostGroupActive(osAccountId, subProfileIdStr, StringGet(&newEntry->id));
+#endif
     UnlockHcMutex(g_databaseMutex);
     LOGI("[DB]: Add a group to database successfully! [GroupType]: %" LOG_PUB "u", groupEntry->type);
     return HC_SUCCESS;
+}
+
+int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
+{
+    LOGI("[DB]: Start to add a group to database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
+    if (groupEntry == NULL) {
+        LOGE("[DB]: The input groupEntry is NULL!");
+        return HC_ERR_NULL_PTR;
+    }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1] = { 0 };
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    int32_t res = GetForegroundSubProfileIdStr(osAccountId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("[DB]: failed to get foreground subProfileId string!");
+        return res;
+    }
+#endif
+    return AddGroupInner(osAccountId, subProfileIdStr, groupEntry);
 }
 
 static void RecordAddTrustDeviceEvent(int32_t osAccountId, const TrustedDeviceEntry *deviceEntry)
@@ -1515,13 +1645,85 @@ static void RecordAddTrustDeviceEvent(int32_t osAccountId, const TrustedDeviceEn
     FreeJson(operationInfo);
 }
 
-int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEntry)
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+static void AddDeviceRelation(int32_t osAccountId, const char *subProfileIdStr,
+    const TrustedDeviceEntry *deviceEntry)
 {
-    LOGI("[DB]: Start to add a trusted device to database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
-    if (deviceEntry == NULL) {
-        LOGE("[DB]: The input deviceEntry is NULL!");
-        return HC_ERR_NULL_PTR;
+    int32_t res = AddDeviceTrustRelation(osAccountId, subProfileIdStr, StringGet(&deviceEntry->groupId),
+        StringGet(&deviceEntry->udid));
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to add device trust relation!");
+        return;
     }
+    PostDeviceActive(osAccountId, subProfileIdStr, StringGet(&deviceEntry->groupId), StringGet(&deviceEntry->udid));
+}
+
+static void PostDeviceNotTrusted(int32_t osAccountId, const char *udid)
+{
+    if (!IsBroadcastSupported()) {
+        return;
+    }
+    CJson *returnInfoJson = CreateJson();
+    if (returnInfoJson == NULL) {
+        return;
+    }
+    if (AddIntToJson(returnInfoJson, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
+        FreeJson(returnInfoJson);
+        return;
+    }
+    char *returnInfo = PackJsonToString(returnInfoJson);
+    FreeJson(returnInfoJson);
+    if (returnInfo == NULL) {
+        return;
+    }
+    GetBroadcaster()->postOnDeviceNotTrustedInUser(udid, returnInfo);
+    FreeJsonString(returnInfo);
+}
+
+static void DeleteDeviceRelation(int32_t osAccountId, const char *subProfileIdStr,
+    bool shouldPostInactive, const TrustedDeviceEntry *deviceEntry)
+{
+    int32_t res = DelDeviceTrustRelation(osAccountId, subProfileIdStr, StringGet(&deviceEntry->groupId),
+        StringGet(&deviceEntry->udid));
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to delete device trust relation!");
+        return;
+    }
+    if (shouldPostInactive) {
+        PostDeviceInactive(osAccountId, subProfileIdStr, StringGet(&deviceEntry->groupId),
+            StringGet(&deviceEntry->udid));
+        if (!IsDeviceExistInUser(osAccountId, subProfileIdStr, StringGet(&deviceEntry->udid))) {
+            PostDeviceNotTrusted(osAccountId, StringGet(&deviceEntry->udid));
+        }
+    }
+}
+
+static bool IsSelfDeviceExistInGroup(int32_t osAccountId, const char *groupId)
+{
+    char selfUdid[INPUT_UDID_LEN] = { 0 };
+    int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
+        return false;
+    }
+    return IsDeviceExistInGroup(osAccountId, groupId, selfUdid);
+}
+
+static bool IsSelfDeviceExistInGroupForUser(int32_t osAccountId, const char *subProfileIdStr, const char *groupId)
+{
+    char selfUdid[INPUT_UDID_LEN] = { 0 };
+    int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
+        return false;
+    }
+    return IsDeviceExistInGroupForUser(osAccountId, subProfileIdStr, groupId, selfUdid);
+}
+#endif
+
+static int32_t AddTrustedDeviceInner(int32_t osAccountId, const char *subProfileIdStr,
+    const TrustedDeviceEntry *deviceEntry)
+{
     (void)LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
@@ -1540,7 +1742,10 @@ int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEn
     if (oldEntryPtr != NULL) {
         DestroyDeviceEntry(*oldEntryPtr);
         *oldEntryPtr = newEntry;
-        PostDeviceBoundMsg(info, newEntry);
+        PostDeviceBoundMsg(info, subProfileIdStr, newEntry);
+    #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+        AddDeviceRelation(osAccountId, subProfileIdStr, newEntry);
+    #endif
         UnlockHcMutex(g_databaseMutex);
         LOGI("[DB]: Replace an old trusted device successfully!");
         return HC_SUCCESS;
@@ -1552,19 +1757,39 @@ int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEn
         return HC_ERR_MEMORY_COPY;
     }
     RecordAddTrustDeviceEvent(osAccountId, deviceEntry);
-    PostDeviceBoundMsg(info, newEntry);
+    PostDeviceBoundMsg(info, subProfileIdStr, newEntry);
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    AddDeviceRelation(osAccountId, subProfileIdStr, newEntry);
+#endif
     UnlockHcMutex(g_databaseMutex);
     LOGI("[DB]: Add a trusted device to database successfully!");
     return HC_SUCCESS;
 }
 
-int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params)
+int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEntry)
 {
-    LOGI("[DB]: Start to delete groups from database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
-    if (params == NULL) {
-        LOGE("[DB]: The input params is NULL!");
+    LOGI("[DB]: Start to add a trusted device to database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
+    if (deviceEntry == NULL) {
+        LOGE("[DB]: The input deviceEntry is NULL!");
         return HC_ERR_NULL_PTR;
     }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1] = { 0 };
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    int32_t res = GetForegroundSubProfileIdStr(osAccountId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("[DB]: Failed to get foreground subProfileId string!");
+        return res;
+    }
+#endif
+    return AddTrustedDeviceInner(osAccountId, subProfileIdStr, deviceEntry);
+}
+
+static int32_t DelGroupInner(int32_t osAccountId, const char *subProfileIdStr, bool shouldPostInactive,
+    const QueryGroupParams *params)
+{
+#ifndef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    (void)shouldPostInactive;
+#endif
     (void)LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
@@ -1581,9 +1806,19 @@ int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params)
             index++;
             continue;
         }
+    #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+        if (shouldPostInactive) {
+            PostGroupInactive(osAccountId, subProfileIdStr, StringGet(&(*entry)->id));
+        }
+        if (IsSelfDeviceExistInGroup(osAccountId, StringGet(&(*entry)->id))) {
+            LOGI("Group still referenced by other users, do not delete it.");
+            index++;
+            continue;
+        }
+    #endif
         TrustedGroupEntry *popEntry;
         HC_VECTOR_POPELEMENT(&info->groups, &popEntry, index);
-        PostGroupDeletedMsg(popEntry);
+        PostGroupDeletedMsg(osAccountId, subProfileIdStr, popEntry);
         LOGI("[DB]: Delete a group from database successfully! [GroupType]: %" LOG_PUB "u", popEntry->type);
         DestroyGroupEntry(popEntry);
         count++;
@@ -1593,13 +1828,30 @@ int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params)
     return HC_SUCCESS;
 }
 
-int32_t DelTrustedDevice(int32_t osAccountId, const QueryDeviceParams *params)
+int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params)
 {
-    LOGI("[DB]: Start to delete devices from database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
+    LOGI("[DB]: Start to delete groups from database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
     if (params == NULL) {
         LOGE("[DB]: The input params is NULL!");
         return HC_ERR_NULL_PTR;
     }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1] = { 0 };
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    int32_t res = GetForegroundSubProfileIdStr(osAccountId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("[DB]: Failed to get foreground subProfileId string!");
+        return res;
+    }
+#endif
+    return DelGroupInner(osAccountId, subProfileIdStr, true, params);
+}
+
+static int32_t DelTrustedDeviceInner(int32_t osAccountId, const char *subProfileIdStr, bool shouldPostInactive,
+    const QueryDeviceParams *params)
+{
+#ifndef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    (void)shouldPostInactive;
+#endif
     (void)LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
@@ -1615,9 +1867,17 @@ int32_t DelTrustedDevice(int32_t osAccountId, const QueryDeviceParams *params)
             index++;
             continue;
         }
+    #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+        DeleteDeviceRelation(osAccountId, subProfileIdStr, shouldPostInactive, *entry);
+        if (IsDeviceExistInGroup(osAccountId, StringGet(&(*entry)->groupId), StringGet(&(*entry)->udid))) {
+            LOGI("Device still referenced by other users, do not delete it.");
+            index++;
+            continue;
+        }
+    #endif
         TrustedDeviceEntry *popEntry;
         HC_VECTOR_POPELEMENT(&info->devices, &popEntry, index);
-        PostDeviceUnBoundMsg(info, popEntry);
+        PostDeviceUnBoundMsg(info, subProfileIdStr, popEntry);
         DeletePdidByDeviceEntry(osAccountId, popEntry);
         LOGI("[DB]: Delete a trusted device from database successfully!");
         DestroyDeviceEntry(popEntry);
@@ -1628,12 +1888,30 @@ int32_t DelTrustedDevice(int32_t osAccountId, const QueryDeviceParams *params)
     return HC_SUCCESS;
 }
 
-int32_t QueryGroups(int32_t osAccountId, const QueryGroupParams *params, GroupEntryVec *vec)
+int32_t DelTrustedDevice(int32_t osAccountId, const QueryDeviceParams *params)
 {
-    if ((params == NULL) || (vec == NULL)) {
-        LOGE("[DB]: Error occurs, the input params or vec is NULL!");
+    LOGI("[DB]: Start to delete devices from database! [OsAccountId]: %" LOG_PUB "d", osAccountId);
+    if (params == NULL) {
+        LOGE("[DB]: The input params is NULL!");
         return HC_ERR_NULL_PTR;
     }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1] = { 0 };
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    int32_t res = GetForegroundSubProfileIdStr(osAccountId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("[DB]: Failed to get foreground subProfileId string!");
+        return res;
+    }
+#endif
+    return DelTrustedDeviceInner(osAccountId, subProfileIdStr, true, params);
+}
+
+static int32_t QueryGroupsInner(int32_t osAccountId, const char *subProfileIdStr, const QueryGroupParams *params,
+    GroupEntryVec *vec)
+{
+#ifndef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    (void)subProfileIdStr;
+#endif
     (void)LockHcMutex(g_databaseMutex);
     OsAccountTrustedInfo *info = GetTrustedInfoByOsAccountId(osAccountId);
     if (info == NULL) {
@@ -1646,6 +1924,11 @@ int32_t QueryGroups(int32_t osAccountId, const QueryGroupParams *params, GroupEn
         if (!CompareQueryGroupParams(params, *entry)) {
             continue;
         }
+    #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+        if (!IsSelfDeviceExistInGroupForUser(osAccountId, subProfileIdStr, StringGet(&(*entry)->id))) {
+            continue;
+        }
+    #endif
         TrustedGroupEntry *newEntry = DeepCopyGroupEntry(*entry);
         if (newEntry == NULL) {
             continue;
@@ -1657,6 +1940,23 @@ int32_t QueryGroups(int32_t osAccountId, const QueryGroupParams *params, GroupEn
     }
     UnlockHcMutex(g_databaseMutex);
     return HC_SUCCESS;
+}
+
+int32_t QueryGroups(int32_t osAccountId, const QueryGroupParams *params, GroupEntryVec *vec)
+{
+    if ((params == NULL) || (vec == NULL)) {
+        LOGE("[DB]: Error occurs, the input params or vec is NULL!");
+        return HC_ERR_NULL_PTR;
+    }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1] = { 0 };
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    int32_t res = GetForegroundSubProfileIdStr(osAccountId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("[DB]: Failed to get foreground subProfileId string!");
+        return res;
+    }
+#endif
+    return QueryGroupsInner(osAccountId, subProfileIdStr, params, vec);
 }
 
 int32_t QueryDevices(int32_t osAccountId, const QueryDeviceParams *params, DeviceEntryVec *vec)
@@ -1671,12 +1971,27 @@ int32_t QueryDevices(int32_t osAccountId, const QueryDeviceParams *params, Devic
         UnlockHcMutex(g_databaseMutex);
         return HC_ERR_INVALID_PARAMS;
     }
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1] = { 0 };
+    int32_t res = GetForegroundSubProfileIdStr(osAccountId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("[DB]: Failed to get foreground subProfileId string!");
+        UnlockHcMutex(g_databaseMutex);
+        return res;
+    }
+#endif
     uint32_t index;
     TrustedDeviceEntry **entry;
     FOR_EACH_HC_VECTOR(info->devices, index, entry) {
         if (!CompareQueryDeviceParams(params, *entry)) {
             continue;
         }
+    #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+        if (!IsDeviceExistInGroupForUser(osAccountId, subProfileIdStr, StringGet(&(*entry)->groupId),
+            StringGet(&(*entry)->udid))) {
+            continue;
+        }
+    #endif
         TrustedDeviceEntry *newEntry = DeepCopyDeviceEntry(*entry);
         if (newEntry == NULL) {
             continue;
@@ -1819,6 +2134,97 @@ static void DevAuthDataBaseDump(int fd)
 }
 #endif
 
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+static void AddDeviceToInactiveDeviceVec(const char *udid)
+{
+    HcString *deviceId;
+    uint32_t index;
+    FOR_EACH_HC_VECTOR(g_inactiveDeviceVec, index, deviceId) {
+        const char *deviceIdStr = StringGet(deviceId);
+        if (deviceIdStr == NULL) {
+            continue;
+        }
+        if (IsStrEqual(deviceIdStr, udid)) {
+            return;
+        }
+    }
+    HcString newDeviceId = CreateString();
+    if (!StringSetPointer(&newDeviceId, udid)) {
+        DeleteString(&newDeviceId);
+        return;
+    }
+    if (g_inactiveDeviceVec.pushBackT(&g_inactiveDeviceVec, newDeviceId) == NULL) {
+        DeleteString(&newDeviceId);
+    }
+}
+
+static void OnGroupRelationChange(GroupRelationChangeType type, int32_t osAccountId,
+    const char *subProfileIdStr, const char *groupId, const char *udid)
+{
+    switch (type) {
+        case GROUP_RELATION_ACTIVE:
+            PostGroupActive(osAccountId, subProfileIdStr, groupId);
+            break;
+        case GROUP_RELATION_INACTIVE:
+            PostGroupInactive(osAccountId, subProfileIdStr, groupId);
+            break;
+        case DEVICE_RELATION_ACTIVE:
+            PostDeviceActive(osAccountId, subProfileIdStr, groupId, udid);
+            break;
+        case DEVICE_RELATION_INACTIVE:
+            PostDeviceInactive(osAccountId, subProfileIdStr, groupId, udid);
+            AddDeviceToInactiveDeviceVec(udid);
+            break;
+        default:
+            LOGW("[DB]: invalid type!");
+            break;
+    }
+}
+
+static void OnSubProfileSwitchStart(void)
+{
+    g_inactiveDeviceVec = CreateStrVector();
+}
+
+static void OnSubProfileSwitched(int32_t osAccountId, const char *subProfileIdStr)
+{
+    HcString *deviceId;
+    uint32_t index;
+    FOR_EACH_HC_VECTOR(g_inactiveDeviceVec, index, deviceId) {
+        const char *deviceIdStr = StringGet(deviceId);
+        if (deviceIdStr == NULL) {
+            continue;
+        }
+        if (!IsDeviceExistInUser(osAccountId, subProfileIdStr, deviceIdStr)) {
+            PostDeviceNotTrusted(osAccountId, deviceIdStr);
+        }
+    }
+    DestroyStrVector(&g_inactiveDeviceVec);
+}
+
+static void OnSubProfileDeleted(int32_t osAccountId, const char *subProfileIdStr)
+{
+    uint32_t index;
+    TrustedGroupEntry **entry = NULL;
+    GroupEntryVec groupEntryVec = CreateGroupEntryVec();
+    QueryGroupParams groupParams = InitQueryGroupParams();
+    if (QueryGroupsInner(osAccountId, subProfileIdStr, &groupParams, &groupEntryVec) != HC_SUCCESS) {
+        LOGE("query groups for subProfile failed!");
+        ClearGroupEntryVec(&groupEntryVec);
+        return;
+    }
+    FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
+        QueryGroupParams delGroupParams = InitQueryGroupParams();
+        delGroupParams.groupId = StringGet(&(*entry)->id);
+        QueryDeviceParams delDeviceParams = InitQueryDeviceParams();
+        delDeviceParams.groupId = StringGet(&(*entry)->id);
+        (void)DelTrustedDeviceInner(osAccountId, subProfileIdStr, false, &delDeviceParams);
+        (void)DelGroupInner(osAccountId, subProfileIdStr, false, &delGroupParams);
+    }
+    ClearGroupEntryVec(&groupEntryVec);
+}
+#endif
+
 int32_t InitDatabase(void)
 {
     if (g_databaseMutex == NULL) {
@@ -1836,6 +2242,12 @@ int32_t InitDatabase(void)
     }
     g_deviceauthDb = CREATE_HC_VECTOR(DeviceAuthDb);
     AddOsAccountEventCallback(GROUP_DATA_CALLBACK, OnOsAccountUnlocked, OnOsAccountRemoved);
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    SetGroupRelationChangeCallback(OnGroupRelationChange);
+    SetProfileSwitchStartCallbackForGroup(OnSubProfileSwitchStart);
+    SetProfileSwitchedCallbackForGroup(OnSubProfileSwitched);
+    SetProfileDeleteCallbackForGroup(OnSubProfileDeleted);
+#endif
     LoadDeviceAuthDb();
     DEV_AUTH_REG_DUMP_FUNC(DevAuthDataBaseDump);
     return HC_SUCCESS;
@@ -1844,6 +2256,12 @@ int32_t InitDatabase(void)
 void DestroyDatabase(void)
 {
     RemoveOsAccountEventCallback(GROUP_DATA_CALLBACK);
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    SetGroupRelationChangeCallback(NULL);
+    SetProfileSwitchStartCallbackForGroup(NULL);
+    SetProfileSwitchedCallbackForGroup(NULL);
+    SetProfileDeleteCallbackForGroup(NULL);
+#endif
     (void)LockHcMutex(g_databaseMutex);
     uint32_t index;
     OsAccountTrustedInfo *info;

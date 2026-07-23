@@ -22,6 +22,10 @@
 #include "plugin_adapter.h"
 #include "account_auth_plugin_proxy.h"
 
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+#include "trust_database_plugin_proxy.h"
+#endif
+
 #define UNLOAD_DELAY_TIME 3
 
 typedef struct {
@@ -38,6 +42,9 @@ static HcMutex g_taskMutex = { 0 };
 static bool g_isInit = false;
 static bool g_isInUnloadStatus = false;
 static uint32_t g_loadCount = 0;
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+static bool g_hasTrustDatabasePlugin = false;
+#endif
 
 static void LoadAccountAuthPlugin(void)
 {
@@ -141,6 +148,9 @@ int32_t InitAccountTaskManager(void)
     (void)LockHcMutex(&g_taskMutex);
     DEV_AUTH_LOAD_PLUGIN();
     g_hasAccountAuthPlugin = HasAccountAuthPlugin();
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    g_hasTrustDatabasePlugin = HasTrustDatabasePlugin();
+#endif
     g_sessionList = CREATE_HC_VECTOR(AuthSessionRecordList);
     g_isPluginLoaded = true;
     g_isInUnloadStatus = false;
@@ -159,6 +169,9 @@ void DestroyAccountTaskManager(void)
     g_isInit = false;
     (void)LockHcMutex(&g_taskMutex);
     g_hasAccountAuthPlugin = false;
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    g_hasTrustDatabasePlugin = false;
+#endif
     DESTROY_HC_VECTOR(AuthSessionRecordList, &g_sessionList);
     g_isPluginLoaded = false;
     g_isInUnloadStatus = false;
@@ -232,6 +245,137 @@ int32_t DestroyAccountAuthSession(int32_t sessionId)
     UnloadAccountAuthPlugin();
     return res;
 }
+
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+bool HasTrustRelationDbPlugin(void)
+{
+    return g_hasTrustDatabasePlugin;
+}
+
+int32_t AddDeviceTrustRelation(int32_t osAccountId, const char *userId, const char *groupId,
+    const char *udid)
+{
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return HC_ERROR;
+    }
+    LoadAccountAuthPlugin();
+    int32_t res = InsertDeviceTrustRelation(osAccountId, userId, groupId, udid);
+    UnloadAccountAuthPlugin();
+    return res;
+}
+
+int32_t DelDeviceTrustRelation(int32_t osAccountId, const char *userId, const char *groupId,
+    const char *udid)
+{
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return HC_ERROR;
+    }
+    LoadAccountAuthPlugin();
+    int32_t res = DeleteDeviceTrustRelation(osAccountId, userId, groupId, udid);
+    UnloadAccountAuthPlugin();
+    return res;
+}
+
+bool IsDeviceExistInGroupForUser(int32_t osAccountId, const char *userId, const char *groupId,
+    const char *udid)
+{
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return false;
+    }
+    LoadAccountAuthPlugin();
+    bool res = IsDeviceReferencedByGroupAndUser(osAccountId, userId, groupId, udid);
+    UnloadAccountAuthPlugin();
+    return res;
+}
+
+bool IsDeviceExistInGroup(int32_t osAccountId, const char *groupId, const char *udid)
+{
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return false;
+    }
+    LoadAccountAuthPlugin();
+    bool res = IsDeviceReferencedByGroup(osAccountId, groupId, udid);
+    UnloadAccountAuthPlugin();
+    return res;
+}
+
+bool IsDeviceExistInUser(int32_t osAccountId, const char *userId, const char *udid)
+{
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return false;
+    }
+    LoadAccountAuthPlugin();
+    bool res = IsDeviceReferencedByUser(osAccountId, userId, udid);
+    UnloadAccountAuthPlugin();
+    return res;
+}
+
+int32_t AddCredTrustRelation(int32_t osAccountId, const char *userId, const char *credId)
+{
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return HC_ERROR;
+    }
+    LoadAccountAuthPlugin();
+    int32_t res = InsertCredTrustRelation(osAccountId, userId, credId);
+    UnloadAccountAuthPlugin();
+    return res;
+}
+
+int32_t DelCredTrustRelation(int32_t osAccountId, const char *userId, const char *credId)
+{
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return HC_ERROR;
+    }
+    LoadAccountAuthPlugin();
+    int32_t res = DeleteCredTrustRelation(osAccountId, userId, credId);
+    UnloadAccountAuthPlugin();
+    return res;
+}
+
+bool IsCredReferencedByUser(int32_t osAccountId, const char *userId, const char *credId)
+{
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return false;
+    }
+    LoadAccountAuthPlugin();
+    bool res = IsCredRelationReferencedByUser(osAccountId, userId, credId);
+    UnloadAccountAuthPlugin();
+    return res;
+}
+
+bool IsCredReferenced(int32_t osAccountId, const char *credId)
+{
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return false;
+    }
+    LoadAccountAuthPlugin();
+    bool res = IsCredRelationReferenced(osAccountId, credId);
+    UnloadAccountAuthPlugin();
+    return res;
+}
+
+int32_t NotifyAccountSwitch(int32_t osAccountId, const char *fromUserId, const char *toUserId,
+    AccountSwitchGroupCallback groupCallback, AccountSwitchCredCallback credCallback)
+{
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return HC_ERROR;
+    }
+    LoadAccountAuthPlugin();
+    int32_t res = OnAccountSwitch(osAccountId, fromUserId, toUserId, groupCallback, credCallback);
+    UnloadAccountAuthPlugin();
+    return res;
+}
+#endif
 
 void IncreaseLoadCount(void)
 {

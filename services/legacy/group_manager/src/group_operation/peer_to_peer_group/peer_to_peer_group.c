@@ -27,6 +27,10 @@
 #include "hitrace_adapter.h"
 #include "string_util.h"
 
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+#include "account_task_manager.h"
+#endif
+
 static bool IsSameNameGroupExist(int32_t osAccountId, const char *ownerName, const char *groupName)
 {
     QueryGroupParams queryParams = InitQueryGroupParams();
@@ -202,6 +206,30 @@ static int32_t GetPeerDevUserTypeFromDb(int32_t osAccountId, const char *groupId
     return peerUserType;
 }
 
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+static int32_t GetPeerUdidFromDb(int32_t osAccountId, const char *groupId, const char *peerAuthId, char **peerUdid)
+{
+    TrustedDeviceEntry *deviceEntry = CreateDeviceEntry();
+    if (deviceEntry == NULL) {
+        LOGE("Failed to allocate devEntry memory!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    int32_t ret = GetTrustedDevInfoById(osAccountId, peerAuthId, false, groupId, deviceEntry);
+    if (ret != HC_SUCCESS) {
+        LOGE("Failed to obtain the device information from the database!");
+        DestroyDeviceEntry(deviceEntry);
+        return ret;
+    }
+    if (DeepCopyString(StringGet(&deviceEntry->udid), peerUdid) != HC_SUCCESS) {
+        LOGE("Failed to copy udid!");
+        DestroyDeviceEntry(deviceEntry);
+        return HC_ERR_MEMORY_COPY;
+    }
+    DestroyDeviceEntry(deviceEntry);
+    return HC_SUCCESS;
+}
+#endif
+
 static int32_t DelPeerDevAndKeyInfo(int32_t osAccountId, const char *groupId, const char *peerAuthId)
 {
     int32_t peerUserType = GetPeerDevUserTypeFromDb(osAccountId, groupId, peerAuthId);
@@ -213,6 +241,19 @@ static int32_t DelPeerDevAndKeyInfo(int32_t osAccountId, const char *groupId, co
         LOGE("Failed to delete peer device from database!");
         return result;
     }
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    char *peerUdid = NULL;
+    result = GetPeerUdidFromDb(osAccountId, groupId, peerAuthId, &peerUdid);
+    if (result != HC_SUCCESS) {
+        return result;
+    }
+    bool isReferenced = IsDeviceExistInGroup(osAccountId, groupId, peerUdid);
+    HcFree(peerUdid);
+    if (isReferenced) {
+        LOGI("Peer device still referenced by other users, do not delete key info.");
+        return HC_SUCCESS;
+    }
+#endif
     /* Use the DeviceGroupManager package name. */
     const char *appId = GROUP_MANAGER_PACKAGE_NAME;
     Uint8Buff peerAuthIdBuff = {
@@ -308,6 +349,18 @@ static int32_t DelGroupAndSelfKeyInfo(int32_t osAccountId, const char *groupId, 
     if (result != HC_SUCCESS) {
         return result;
     }
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    char selfUdid[INPUT_UDID_LEN] = { 0 };
+    int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
+        return HC_ERR_DB;
+    }
+    if (IsDeviceExistInGroup(osAccountId, groupId, selfUdid)) {
+        LOGI("Group still referenced by other users, do not delete self key info.");
+        return HC_SUCCESS;
+    }
+#endif
     /*
      * If the group has been disbanded from the database but the key pair fails to be deleted,
      * we still believe we succeeded in disbanding the group. Only logs need to be printed.

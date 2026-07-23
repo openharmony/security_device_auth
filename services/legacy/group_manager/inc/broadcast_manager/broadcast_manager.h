@@ -30,6 +30,11 @@ typedef struct {
     void (*postOnDeviceNotTrusted)(const char *peerUdid);
     void (*postOnLastGroupDeleted)(const char *peerUdid, int groupType);
     void (*postOnTrustedDeviceNumChanged)(int curTrustedDeviceNum);
+    void (*postOnGroupActiveInUser)(const char *returnInfo);
+    void (*postOnGroupInactiveInUser)(const char *returnInfo);
+    void (*postOnDeviceActiveInUser)(const char *udid, const char *returnInfo);
+    void (*postOnDeviceInactiveInUser)(const char *udid, const char *returnInfo);
+    void (*postOnDeviceNotTrustedInUser)(const char *udid, const char *returnInfo);
 } Broadcaster;
 
 bool IsBroadcastSupported(void);

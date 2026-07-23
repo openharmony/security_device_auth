@@ -33,6 +33,32 @@ typedef enum {
 
 typedef void (*OsAccountCallbackFunc)(int32_t osAccountId);
 
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+typedef enum {
+    GROUP_RELATION_ACTIVE = 0,
+    GROUP_RELATION_INACTIVE,
+    DEVICE_RELATION_ACTIVE,
+    DEVICE_RELATION_INACTIVE
+} GroupRelationChangeType;
+
+typedef enum {
+    CRED_RELATION_ACTIVE = 0,
+    CRED_RELATION_INACTIVE
+} CredRelationChangeType;
+
+typedef void (*GroupRelationChangeCallback)(GroupRelationChangeType type, int32_t osAccountId,
+    const char *subProfileIdStr, const char *groupId, const char *udid);
+
+typedef void (*CredRelationChangeCallback)(CredRelationChangeType type, int32_t osAccountId,
+    const char *subProfileIdStr, const char *credId);
+
+typedef void (*ProfileDeleteCallback)(int32_t osAccountId, const char *subProfileIdStr);
+
+typedef void (*ProfileSwitchStartCallback)(void);
+
+typedef void (*ProfileSwitchedCallback)(int32_t osAccountId, const char *subProfileIdStr);
+#endif
+
 void NotifyOsAccountUnlocked(int32_t osAccountId);
 void NotifyOsAccountRemoved(int32_t osAccountId);
 void AddOsAccountEventCallback(EventCallbackId callbackId, OsAccountCallbackFunc unlockFunc,
@@ -46,6 +72,16 @@ void DestroyOsAccountAdapter(void);
 int32_t GetAllOsAccountIds(int32_t **osAccountIds, uint32_t *size);
 bool IsOsAccountSupported(void);
 int32_t GetCurrentActiveOsAccountId(void);
+
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+int32_t GetForegroundSubProfileIdStr(int32_t osAccountId, char *subProfileIdStr, uint32_t subProfileIdStrLen);
+void SetProfileDeleteCallbackForGroup(ProfileDeleteCallback callback);
+void SetProfileDeleteCallbackForCred(ProfileDeleteCallback callback);
+void SetProfileSwitchStartCallbackForGroup(ProfileSwitchStartCallback callback);
+void SetProfileSwitchedCallbackForGroup(ProfileSwitchedCallback callback);
+void SetGroupRelationChangeCallback(GroupRelationChangeCallback callback);
+void SetCredRelationChangeCallback(CredRelationChangeCallback callback);
+#endif
 
 #ifdef __cplusplus
 }
