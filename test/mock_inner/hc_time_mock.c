@@ -17,6 +17,10 @@
 #include <time.h>
 #include <stdint.h>
 
+#define SEC_TO_MILLI 1000
+#define NANO_TO_MILLI 1000000
+#define FORCE_TIMEOUT_INTERVAL 301
+
 static int32_t g_forceTimeout = 0;
 
 void SetForceTimeout(int32_t force)
@@ -41,7 +45,7 @@ int64_t HcGetCurTimeInMillis(void)
     if (res != 0) {
         return -1;
     }
-    return start.tv_sec * 1000 + start.tv_nsec / 1000000;
+    return start.tv_sec * SEC_TO_MILLI + start.tv_nsec / NANO_TO_MILLI;
 }
 
 int64_t HcGetIntervalTime(int64_t startTime)
@@ -50,7 +54,7 @@ int64_t HcGetIntervalTime(int64_t startTime)
         return -1;
     }
     if (g_forceTimeout) {
-        return 301;
+        return FORCE_TIMEOUT_INTERVAL;
     }
     struct timespec end;
     int res = clock_gettime(CLOCK_MONOTONIC, &end);

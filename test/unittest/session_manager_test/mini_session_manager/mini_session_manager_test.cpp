@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <unistd.h>
+#include "securec.h"
 #include "mini_session_manager.h"
 #include "hc_log.h"
 #include "hc_types.h"
@@ -42,13 +43,15 @@ static const int32_t TEST_OS_ACCOUNT_ID = 100;
 static const char *TEST_SERVICE_ID = "testServiceId";
 static const int32_t TEST_OP_CODE = 1;
 static const int32_t MAX_SESSION_NUM = 30;
+static const uint32_t TEST_RANDOM_BUFF_LEN = 32;
+static const uint32_t UINT8_MOD_VALUE = 256;
 
 static void FillRandomBuff(DataBuff *buff, uint32_t len)
 {
     buff->length = len;
     buff->data = (uint8_t *)HcMalloc(len, 0);
     for (uint32_t i = 0; i < len; i++) {
-        buff->data[i] = (uint8_t)(i % 256);
+        buff->data[i] = (uint8_t)(i % UINT8_MOD_VALUE);
     }
 }
 
@@ -76,7 +79,7 @@ static int32_t CreateValidInitParams(LightSessionInitParams *params)
     params->osAccountId = TEST_OS_ACCOUNT_ID;
     params->serviceId = TEST_SERVICE_ID;
     params->opCode = TEST_OP_CODE;
-    FillRandomBuff(&params->randomBuff, 32);
+    FillRandomBuff(&params->randomBuff, TEST_RANDOM_BUFF_LEN);
     DeviceAuthCallback *cb = (DeviceAuthCallback *)HcMalloc(sizeof(DeviceAuthCallback), 0);
     if (cb == nullptr) {
         FreeRandomBuff(&params->randomBuff);
@@ -336,8 +339,8 @@ HWTEST_F(MiniSessionManagerTest, CreateSessionMallocFailTest001, TestSize.Level0
             mallocCallCount++;
             if (mallocCallCount == mallocFailAt) return (void*)nullptr;
             void *p = malloc(size);
-            if (p) memset(p, 0, size);
-            if (p && val) memset(p, val, size);
+            if (p) (void)memset_s(p, size, 0, size);
+            if (p && val) (void)memset_s(p, size, val, size);
             return p;
         }));
     EXPECT_CALL(mockHcTypes, Free(_)).Times(AnyNumber())
@@ -374,8 +377,8 @@ HWTEST_F(MiniSessionManagerTest, CopyRandomMallocFailTest001, TestSize.Level0)
             mallocCallCount++;
             if (mallocCallCount == mallocFailAt) return (void*)nullptr;
             void *p = malloc(size);
-            if (p) memset(p, 0, size);
-            if (p && val) memset(p, val, size);
+            if (p) (void)memset_s(p, size, 0, size);
+            if (p && val) (void)memset_s(p, size, val, size);
             return p;
         }));
     EXPECT_CALL(mockHcTypes, Free(_)).Times(AnyNumber())
@@ -412,8 +415,8 @@ HWTEST_F(MiniSessionManagerTest, CopyServiceIdMallocFailTest001, TestSize.Level0
             mallocCallCount++;
             if (mallocCallCount == mallocFailAt) return (void*)nullptr;
             void *p = malloc(size);
-            if (p) memset(p, 0, size);
-            if (p && val) memset(p, val, size);
+            if (p) (void)memset_s(p, size, 0, size);
+            if (p && val) (void)memset_s(p, size, val, size);
             return p;
         }));
     EXPECT_CALL(mockHcTypes, Free(_)).Times(AnyNumber())
@@ -566,8 +569,8 @@ HWTEST_F(MiniSessionManagerTest, PushBackMallocFailTest001, TestSize.Level0)
             mallocCallCount++;
             if (mallocCallCount == mallocFailAt) return (void*)nullptr;
             void *p = malloc(size);
-            if (p) memset(p, 0, size);
-            if (p && val) memset(p, val, size);
+            if (p) (void)memset_s(p, size, 0, size);
+            if (p && val) (void)memset_s(p, size, val, size);
             return p;
         }));
     EXPECT_CALL(mockHcTypes, Free(_)).Times(AnyNumber())

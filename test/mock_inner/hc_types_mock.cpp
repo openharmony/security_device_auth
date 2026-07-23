@@ -1,8 +1,11 @@
 #include "hc_types_mock.h"
 #include <cstdlib>
 #include <cstring>
+#include "securec.h"
 #include "hc_types.h"
 #include "hc_log.h"
+
+#define MAX_MALLOC_SIZE (1024 * 1024 * 100)
 
 static MockHcTypes *g_mockHcTypes = nullptr;
 
@@ -13,7 +16,7 @@ void SetMockHcTypes(MockHcTypes *mock)
 
 static void *RealHcMalloc(uint32_t size, char val)
 {
-    if (size == 0) {
+    if (size == 0 || size > MAX_MALLOC_SIZE) {
         return nullptr;
     }
     void *addr = malloc(size);
@@ -21,7 +24,7 @@ static void *RealHcMalloc(uint32_t size, char val)
         return nullptr;
     }
     if (val != 0) {
-        (void)memset(addr, val, size);
+        (void)memset_s(addr, size, val, size);
     }
     return addr;
 }
@@ -55,5 +58,5 @@ extern "C" uint32_t HcStrlen(const char *str)
     if (str == nullptr) {
         return 0;
     }
-    return (uint32_t)strlen(str);
+    return static_cast<uint32_t>(strlen(str));
 }

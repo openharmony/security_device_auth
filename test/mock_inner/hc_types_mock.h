@@ -3,7 +3,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <stdint.h>
+#include <cstdint>
 
 class MockHcTypes {
 public:
