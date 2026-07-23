@@ -113,7 +113,8 @@ public:
 
 HWTEST_F(MiniSessionManagerTest, InitAndDestroyTest001, TestSize.Level0)
 {
-    SUCCEED();
+    DestroyLightSessionManager();
+    EXPECT_EQ(InitLightSessionManager(), HC_SUCCESS);
 }
 
 HWTEST_F(MiniSessionManagerTest, AddLightSessionNullParamsTest001, TestSize.Level0)
