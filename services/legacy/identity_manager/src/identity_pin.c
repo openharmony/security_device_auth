@@ -352,6 +352,7 @@ static int32_t GetSharedSecretForPinInPake(const CJson *in, Uint8Buff *sharedSec
         return HC_ERR_MEMORY_COPY;
     }
     sharedSecret->length = pinLen;
+    (void)memset_s((void *)pinCode, pinLen, 0, pinLen);
     return HC_SUCCESS;
 }
 

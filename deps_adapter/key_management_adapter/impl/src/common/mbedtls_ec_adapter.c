@@ -104,7 +104,12 @@ static uint8_t g_hash2pointParas[HASH_TO_POINT_PARA_NUMS][BYTE_LENGTH_CURVE_2551
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 },
 };
 
-static const uint8_t RANDOM_SEED_CUSTOM[] = { 0x4C, 0x54, 0x4B, 0x53 }; // LTKS means LiteKeystore
+static const uint8_t RANDOM_SEED_CUSTOM[] = {
+    0x4F, 0x48, 0x4F, 0x53, 0x5F, 0x44, 0x65, 0x76,
+    0x69, 0x63, 0x65, 0x41, 0x75, 0x74, 0x68, 0x5F,
+    0x4C, 0x54, 0x4B, 0x53, 0x5F, 0x44, 0x52, 0x42,
+    0x47, 0x5F, 0x50, 0x53, 0x5F, 0x76, 0x31, 0x30
+};
 
 static bool IsValidBlob(const Blob *blob)
 {
@@ -713,9 +718,12 @@ bool MbedtlsIsX25519PublicKeyValid(const Uint8Buff *pubKey)
         LOGE("Invaild X25519 pubKey input.");
         return false;
     }
+    mbedtls_entropy_context *entropy = HcMalloc(sizeof(mbedtls_entropy_context), 0);
     mbedtls_ctr_drbg_context *ctrDrbg = HcMalloc(sizeof(mbedtls_ctr_drbg_context), 0);
-    if (ctrDrbg == NULL) {
-        LOGE("Malloc for ctrDrbg failed.");
+    if ((entropy == NULL) || (ctrDrbg == NULL)) {
+        LOGE("Malloc for entropy or ctrDrbg failed.");
+        HcFree(entropy);
+        HcFree(ctrDrbg);
         return false;
     }
     mbedtls_ecp_group grp;
@@ -723,11 +731,15 @@ bool MbedtlsIsX25519PublicKeyValid(const Uint8Buff *pubKey)
     mbedtls_ecp_point returnPoint;
     mbedtls_mpi scalar;
     mbedtls_ecp_group_init(&grp);
+    mbedtls_entropy_init(entropy);
     mbedtls_ctr_drbg_init(ctrDrbg);
     mbedtls_ecp_point_init(&publicKeyPoint);
     mbedtls_ecp_point_init(&returnPoint);
     mbedtls_mpi_init(&scalar);
-    int32_t ret = mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_CURVE25519);
+    int32_t ret = mbedtls_ctr_drbg_seed(ctrDrbg, mbedtls_entropy_func, entropy,
+        RANDOM_SEED_CUSTOM, sizeof(RANDOM_SEED_CUSTOM));
+    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Seed ctrDrbg failed.");
+    ret = mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_CURVE25519);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Load X25519 group failed.");
     ret = mbedtls_ecp_point_read_binary(&grp, &publicKeyPoint, pubKey->val, pubKey->length);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Read X25519 public key failed.");
@@ -742,10 +754,12 @@ bool MbedtlsIsX25519PublicKeyValid(const Uint8Buff *pubKey)
 CLEAN_UP:
     mbedtls_ecp_group_free(&grp);
     mbedtls_ctr_drbg_free(ctrDrbg);
+    mbedtls_entropy_free(entropy);
     mbedtls_ecp_point_free(&publicKeyPoint);
     mbedtls_ecp_point_free(&returnPoint);
     mbedtls_mpi_free(&scalar);
     HcFree(ctrDrbg);
+    HcFree(entropy);
     if (ret != HAL_SUCCESS) {
         LOGE("X25519 pubKey is invaild!");
         return false;

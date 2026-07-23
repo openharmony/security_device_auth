@@ -134,6 +134,7 @@ static int32_t FillPskWithPin(PakeParams *params, const CJson *in)
         return HC_ERR_MEMORY_COPY;
     }
 
+    (void)memset_s((void *)pinString, HcStrlen(pinString), 0, HcStrlen(pinString));
     return HC_SUCCESS;
 }
 
