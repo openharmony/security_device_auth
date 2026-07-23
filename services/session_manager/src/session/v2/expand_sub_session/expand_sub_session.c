@@ -118,6 +118,10 @@ static int32_t EncryptMsg(ExpandSubSessionImpl *impl, Uint8Buff *rawData, Uint8B
 
 static int32_t DecryptMsg(ExpandSubSessionImpl *impl, Uint8Buff *encData, Uint8Buff *returnRawData)
 {
+    if (encData->length <= TAG_LEN) {
+        LOGE("encData length is invalid.");
+        return HC_ERR_INVALID_PARAMS;
+    }
     uint32_t rawDataLen = encData->length - TAG_LEN;
     uint8_t *rawDataVal = (uint8_t *)HcMalloc(rawDataLen, 0);
     if (rawDataVal == NULL) {
