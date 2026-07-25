@@ -406,12 +406,21 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
         LOGE("Get identity info fail.");
         return res;
     }
+    bool isOpenCredAuth = false;
+    if (GetBoolFromJson(in, FIELD_IS_OPEN_CRED_AUTH, &isOpenCredAuth) != HC_SUCCESS) {
+        LOGW("Get open cred auth flag failed!");
+    }
     if (info->proofType == CERTIFICATED) {
-    #ifdef ENABLE_PSEUDONYM
-        info->proof.certInfo.isPseudonym = true;
-    #else
-        info->proof.certInfo.isPseudonym = false;
-    #endif
+        if (isOpenCredAuth) {
+            LOGI("Open cred auth, not support pseudonym.");
+            info->proof.certInfo.isPseudonym = false;
+        } else {
+        #ifdef ENABLE_PSEUDONYM
+            info->proof.certInfo.isPseudonym = true;
+        #else
+            info->proof.certInfo.isPseudonym = false;
+        #endif
+        }
     }
     if (vec->pushBack(vec, (const IdentityInfo **)&info) == NULL) {
         DestroyIdentityInfo(info);
@@ -419,7 +428,7 @@ static int32_t GetCredInfosByPeerIdentity(const CJson *in, IdentityInfoVec *vec)
         return HC_ERR_ALLOC_MEMORY;
     }
 #ifdef ENABLE_PSEUDONYM
-    if (info->proofType == CERTIFICATED) {
+    if (info->proofType == CERTIFICATED && !isOpenCredAuth) {
         res = ISAddNoPseudonymInfo(in, vec);
     }
 #endif

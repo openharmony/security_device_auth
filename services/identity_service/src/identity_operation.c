@@ -28,6 +28,8 @@
 #include "identity_service_defines.h"
 #include "permission_adapter.h"
 #include "string_util.h"
+#include "account_task_manager.h"
+#include "common_defs.h"
 
 int32_t GetCredentialById(int32_t osAccountId, const char *credId, Credential **returnEntry)
 {
@@ -982,6 +984,45 @@ static int32_t CheckCredKeyExist(int32_t osAccountId, const Credential *credenti
     return ret;
 }
 
+static void ReloadCredIfNeeded(int32_t osAccountId, const CJson *reqJson, const Credential *credential)
+{
+    if (credential->credType != ACCOUNT_RELATED) {
+        return;
+    }
+    bool isQueryOpenCred = false;
+    if (GetBoolFromJson(reqJson, FIELD_IS_QUERY_OPEN_CRED, &isQueryOpenCred) != HC_SUCCESS) {
+        LOGW("Open query flag not exists!");
+    }
+    if (!isQueryOpenCred) {
+        return;
+    }
+    const char *extendInfoJsonStr = StringGet(&credential->extendInfo);
+    if (extendInfoJsonStr == NULL) {
+        LOGE("extendInfo is null!");
+        return;
+    }
+    CJson *extendInfoJson = CreateJsonFromString(extendInfoJsonStr);
+    if (extendInfoJson == NULL) {
+        LOGE("Failed to create extendInfoJson!");
+        return;
+    }
+    bool isOpenCredRegistered = false;
+    if (GetBoolFromJson(extendInfoJson, FIELD_IS_OPEN_CRED_REGISTERED, &isOpenCredRegistered) != HC_SUCCESS) {
+        LOGE("Failed to get isOpenCredRegistered!");
+        FreeJson(extendInfoJson);
+        return;
+    }
+    FreeJson(extendInfoJson);
+    if (isOpenCredRegistered) {
+        LOGI("Open cred is already registered.");
+        return;
+    }
+    if (HasAccountPlugin()) {
+        LOGI("Try to reload account related cred.");
+        (void)ExecuteAccountAuthCmd(osAccountId, FORCE_RELOAD_CRED_MGR, NULL, NULL);
+    }
+}
+
 int32_t GetCredIdsFromCredVec(int32_t osAccountId, CJson *reqJson, CredentialVec *credentialVec, CJson *credIdJson)
 {
     uint32_t index;
@@ -1000,6 +1041,7 @@ int32_t GetCredIdsFromCredVec(int32_t osAccountId, CJson *reqJson, CredentialVec
         if (!IsCredHashMatch(credential, reqJson)) {
             continue;
         }
+        ReloadCredIfNeeded(osAccountId, reqJson, credential);
 
         ret = AddStringToArray(credIdJson, credId);
         if (ret != IS_SUCCESS) {
