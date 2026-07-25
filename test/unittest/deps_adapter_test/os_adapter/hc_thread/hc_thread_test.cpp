@@ -23,9 +23,11 @@ using namespace testing::ext;
 namespace {
 static int g_threadRunCount = 0;
 static const int32_t TEST_WAIT_TIME_US = 50000;
+static const int32_t TEST_THREAD_SLEEP_US = 100000;
 
 static int TestThreadFunc(void *args)
 {
+    usleep(TEST_THREAD_SLEEP_US);
     g_threadRunCount++;
     return 0;
 }
