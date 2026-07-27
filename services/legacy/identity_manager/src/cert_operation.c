@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -130,7 +130,7 @@ int32_t AddCertInfoToJson(const CertInfo *certInfo, CJson *out)
     return HC_SUCCESS;
 }
 
-static int32_t GetSelfUserId(int32_t osAccountId, char *userId, uint32_t userIdLen)
+static int32_t QuerySelfUserId(int32_t osAccountId, char *userId, uint32_t userIdLen)
 {
     GroupEntryVec accountVec = CreateGroupEntryVec();
     QueryGroupParams queryParams = InitQueryGroupParams();
@@ -164,7 +164,7 @@ static void GetLocalIdenticalGroup(int32_t osAccountId, CJson *param, QueryGroup
     GroupEntryVec *groupEntryVec)
 {
     char selfUserId[USER_ID_LEN] = { 0 };
-    int32_t ret = GetSelfUserId(osAccountId, selfUserId, USER_ID_LEN);
+    int32_t ret = QuerySelfUserId(osAccountId, selfUserId, USER_ID_LEN);
     if (ret != HC_SUCCESS) {
         LOGE("Get user id fail");
         return;
