@@ -681,6 +681,32 @@ CLEAN_UP:
     return true;
 }
 
+static int32_t InitRngContext(mbedtls_entropy_context **entropy, mbedtls_ctr_drbg_context **ctrDrbg)
+{
+    *entropy = HcMalloc(sizeof(mbedtls_entropy_context), 0);
+    *ctrDrbg = HcMalloc(sizeof(mbedtls_ctr_drbg_context), 0);
+    if ((*entropy == NULL) || (*ctrDrbg == NULL)) {
+        LOGE("Malloc for entropy or ctrDrbg failed.");
+        HcFree(*entropy);
+        HcFree(*ctrDrbg);
+        *entropy = NULL;
+        *ctrDrbg = NULL;
+        return HAL_ERR_BAD_ALLOC;
+    }
+    mbedtls_entropy_init(*entropy);
+    mbedtls_ctr_drbg_init(*ctrDrbg);
+    return mbedtls_ctr_drbg_seed(*ctrDrbg, mbedtls_entropy_func, *entropy,
+        RANDOM_SEED_CUSTOM, sizeof(RANDOM_SEED_CUSTOM));
+}
+
+static void DeinitRngContext(mbedtls_entropy_context *entropy, mbedtls_ctr_drbg_context *ctrDrbg)
+{
+    mbedtls_ctr_drbg_free(ctrDrbg);
+    mbedtls_entropy_free(entropy);
+    HcFree(ctrDrbg);
+    HcFree(entropy);
+}
+
 static int32_t SetX25519CheckScalar(mbedtls_mpi *scalar)
 {
     const int32_t VAILD_SCALAR_VALUE_ZERO_POS0 = 0;
@@ -718,12 +744,11 @@ bool MbedtlsIsX25519PublicKeyValid(const Uint8Buff *pubKey)
         LOGE("Invaild X25519 pubKey input.");
         return false;
     }
-    mbedtls_entropy_context *entropy = HcMalloc(sizeof(mbedtls_entropy_context), 0);
-    mbedtls_ctr_drbg_context *ctrDrbg = HcMalloc(sizeof(mbedtls_ctr_drbg_context), 0);
-    if ((entropy == NULL) || (ctrDrbg == NULL)) {
-        LOGE("Malloc for entropy or ctrDrbg failed.");
-        HcFree(entropy);
-        HcFree(ctrDrbg);
+    mbedtls_entropy_context *entropy = NULL;
+    mbedtls_ctr_drbg_context *ctrDrbg = NULL;
+    int32_t ret = InitRngContext(&entropy, &ctrDrbg);
+    if (ret != 0) {
+        LOGE("Init RNG context failed.");
         return false;
     }
     mbedtls_ecp_group grp;
@@ -731,14 +756,9 @@ bool MbedtlsIsX25519PublicKeyValid(const Uint8Buff *pubKey)
     mbedtls_ecp_point returnPoint;
     mbedtls_mpi scalar;
     mbedtls_ecp_group_init(&grp);
-    mbedtls_entropy_init(entropy);
-    mbedtls_ctr_drbg_init(ctrDrbg);
     mbedtls_ecp_point_init(&publicKeyPoint);
     mbedtls_ecp_point_init(&returnPoint);
     mbedtls_mpi_init(&scalar);
-    int32_t ret = mbedtls_ctr_drbg_seed(ctrDrbg, mbedtls_entropy_func, entropy,
-        RANDOM_SEED_CUSTOM, sizeof(RANDOM_SEED_CUSTOM));
-    LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Seed ctrDrbg failed.");
     ret = mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_CURVE25519);
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "Load X25519 group failed.");
     ret = mbedtls_ecp_point_read_binary(&grp, &publicKeyPoint, pubKey->val, pubKey->length);
@@ -753,13 +773,10 @@ bool MbedtlsIsX25519PublicKeyValid(const Uint8Buff *pubKey)
     LOG_AND_GOTO_CLEANUP_IF_FAIL(ret, "(2^254 + 8 * 1)PK is the point at infinity.");
 CLEAN_UP:
     mbedtls_ecp_group_free(&grp);
-    mbedtls_ctr_drbg_free(ctrDrbg);
-    mbedtls_entropy_free(entropy);
     mbedtls_ecp_point_free(&publicKeyPoint);
     mbedtls_ecp_point_free(&returnPoint);
     mbedtls_mpi_free(&scalar);
-    HcFree(ctrDrbg);
-    HcFree(entropy);
+    DeinitRngContext(entropy, ctrDrbg);
     if (ret != HAL_SUCCESS) {
         LOGE("X25519 pubKey is invaild!");
         return false;
