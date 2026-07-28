@@ -681,6 +681,14 @@ CLEAN_UP:
     return true;
 }
 
+static void DeinitRngContext(mbedtls_entropy_context *entropy, mbedtls_ctr_drbg_context *ctrDrbg)
+{
+    mbedtls_ctr_drbg_free(ctrDrbg);
+    mbedtls_entropy_free(entropy);
+    HcFree(ctrDrbg);
+    HcFree(entropy);
+}
+
 static int32_t InitRngContext(mbedtls_entropy_context **entropy, mbedtls_ctr_drbg_context **ctrDrbg)
 {
     *entropy = HcMalloc(sizeof(mbedtls_entropy_context), 0);
@@ -695,16 +703,15 @@ static int32_t InitRngContext(mbedtls_entropy_context **entropy, mbedtls_ctr_drb
     }
     mbedtls_entropy_init(*entropy);
     mbedtls_ctr_drbg_init(*ctrDrbg);
-    return mbedtls_ctr_drbg_seed(*ctrDrbg, mbedtls_entropy_func, *entropy,
+    int32_t ret = mbedtls_ctr_drbg_seed(*ctrDrbg, mbedtls_entropy_func, *entropy,
         RANDOM_SEED_CUSTOM, sizeof(RANDOM_SEED_CUSTOM));
-}
-
-static void DeinitRngContext(mbedtls_entropy_context *entropy, mbedtls_ctr_drbg_context *ctrDrbg)
-{
-    mbedtls_ctr_drbg_free(ctrDrbg);
-    mbedtls_entropy_free(entropy);
-    HcFree(ctrDrbg);
-    HcFree(entropy);
+    if (ret != HAL_SUCCESS) {
+        LOGE("mbedtls_ctr_drbg_seed failed, ret: %d.", ret);
+        DeinitRngContext(*entropy, *ctrDrbg);
+        *entropy = NULL;
+        *ctrDrbg = NULL;
+    }
+    return ret;
 }
 
 static int32_t SetX25519CheckScalar(mbedtls_mpi *scalar)
