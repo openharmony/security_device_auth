@@ -88,11 +88,6 @@ void SetProfileDeleteCallbackForCred(ProfileDeleteCallback callback)
     (void)callback;
 }
 
-void SetProfileSwitchStartCallbackForGroup(ProfileSwitchStartCallback callback)
-{
-    (void)callback;
-}
-
 void SetProfileSwitchedCallbackForGroup(ProfileSwitchedCallback callback)
 {
     (void)callback;

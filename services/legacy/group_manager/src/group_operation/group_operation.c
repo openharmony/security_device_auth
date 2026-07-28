@@ -41,6 +41,7 @@
 #include "critical_handler.h"
 #include "string_util.h"
 #include "operation_data_manager.h"
+#include "group_data_manager_util.h"
 
 #define EXT_PART_APP_ID "ext_part"
 

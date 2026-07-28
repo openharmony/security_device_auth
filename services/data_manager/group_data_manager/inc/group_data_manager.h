@@ -99,9 +99,6 @@ TrustedDeviceEntry *DeepCopyDeviceEntry(const TrustedDeviceEntry *entry);
 QueryGroupParams InitQueryGroupParams(void);
 QueryDeviceParams InitQueryDeviceParams(void);
 
-int32_t GenerateReturnGroupInfo(const TrustedGroupEntry *groupEntry, CJson *returnJson);
-int32_t GenerateReturnDevInfo(const TrustedDeviceEntry *deviceEntry, CJson *returnJson);
-
 TrustedGroupEntry *CreateGroupEntry(void);
 TrustedDeviceEntry *CreateDeviceEntry(void);
 void DestroyGroupEntry(TrustedGroupEntry *groupEntry);
