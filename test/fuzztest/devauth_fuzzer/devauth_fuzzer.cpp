@@ -63,7 +63,6 @@ static void NativeTokenSet(const char *procName)
 bool FuzzDoRegCallback(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider provider(data, size);
-    (void)InitDeviceAuthService();
     (void)MainRescInit();
     ServiceDevAuth *serviceObj = new(std::nothrow) ServiceDevAuth();
     if (serviceObj == nullptr) {
@@ -90,9 +89,15 @@ bool FuzzDoRegCallback(const uint8_t* data, size_t size)
     MessageParcel reply;
     MessageOption option;
     (void)serviceObj->OnRemoteRequest(1, datas, reply, option);
-    DestroyDeviceAuthService();
     return true;
 }
+}
+
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+    // 打印启动信息
+    int32_t res = InitDeviceAuthService();
+    return res;
 }
 
 /* Fuzzer entry point */

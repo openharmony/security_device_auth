@@ -145,6 +145,9 @@
 #define FIELD_PEER_ACCOUNT_RANDOM_LEN "peerRandomLen"
 #define FIELD_PEER_ACCOUNT_RANDOM_VAL "peerRandomVal"
 #define FIELD_OPEN_ID "openId"
+#define FIELD_IS_OPEN_CRED_REGISTERED "isOpenCredRegistered"
+#define FIELD_AUTH_SOURCE "authSource"
+#define FIELD_AUTH_TYPE "authType"
 
 #define INVALID_MODULE_TYPE (-1)
 #define GROUP_ERR_MSG 0x8080
@@ -282,6 +285,17 @@ typedef enum {
 } OperationCode;
 
 typedef enum {
+    DEV_AUTH = 0,
+} AuthSource;
+
+typedef enum {
+    P2P_AUTH = 0,
+    IDENTICAL_ACCOUNT_AUTH = 1,
+    ACROSS_ACCOUNT_AUTH = 2,
+    OPEN_CRED_AUTH = 3,
+} AuthType;
+
+typedef enum {
     IMPORT_SELF_CREDENTIAL = 0,
     DELETE_SELF_CREDENTIAL = 1,
     QUERY_SELF_CREDENTIAL_INFO = 2,
@@ -303,6 +317,7 @@ typedef enum {
     LIGHT_ACCOUNT_AUTH_PROCESS_SERVER = 20,
     LIGHT_ACCOUNT_AUTH_VERIFY_SIGN = 21,
     CHECK_CE_DATA = 22,
+    FORCE_RELOAD_CRED_MGR = 23,
 } CredentialCode;
 
 #endif

@@ -791,7 +791,7 @@ static int32_t AddTrustedDeviceForAccount(const CJson *authParam, const CJson *o
     return res;
 }
 
-static int32_t PrepareAccountDataToSelf(const CJson *sendToSelf, CJson *returnToSelf)
+static int32_t PrepareAccountDataToSelf(const CJson *sendToSelf, int32_t authForm, CJson *returnToSelf)
 {
     int32_t res = GetSessionKeyForAccount(sendToSelf, returnToSelf);
     if (res != HC_SUCCESS) {
@@ -801,8 +801,23 @@ static int32_t PrepareAccountDataToSelf(const CJson *sendToSelf, CJson *returnTo
     res = GetUserIdForAccount(sendToSelf, returnToSelf);
     if (res != HC_SUCCESS) {
         LOGE("Failed to get user id for account auth!");
+        return res;
     }
-    return res;
+    int32_t authSource = DEV_AUTH;
+    (void)GetIntFromJson(sendToSelf, FIELD_AUTH_SOURCE, &authSource);
+    if (AddIntToJson(returnToSelf, FIELD_AUTH_SOURCE, authSource) != HC_SUCCESS) {
+        LOGE("Failed to add auth source!");
+        return HC_ERR_JSON_ADD;
+    }
+    int32_t authType = IDENTICAL_ACCOUNT_AUTH;
+    if (authForm == AUTH_FORM_ACROSS_ACCOUNT) {
+        authType = ACROSS_ACCOUNT_AUTH;
+    }
+    if (AddIntToJson(returnToSelf, FIELD_AUTH_TYPE, authType) != HC_SUCCESS) {
+        LOGE("Failed to add auth type!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
 }
 
 static void ReportV1RelatedAuthCallEvent(int64_t requestId, const CJson *authParam)
@@ -836,12 +851,18 @@ static int32_t AccountOnFinishToSelf(int64_t requestId, const CJson *authParam, 
         return HC_ERR_LOST_DATA;
     }
 
+    int32_t authForm = AUTH_FORM_INVALID_TYPE;
+    if (GetIntFromJson(authParam, FIELD_AUTH_FORM, &authForm) != HC_SUCCESS) {
+        LOGE("Failed to get auth form!");
+        return HC_ERR_JSON_GET;
+    }
+
     CJson *returnToSelf = CreateJson();
     if (returnToSelf == NULL) {
         LOGE("Failed to create json for account-related auth in onFinish!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t res = PrepareAccountDataToSelf(sendToSelf, returnToSelf);
+    int32_t res = PrepareAccountDataToSelf(sendToSelf, authForm, returnToSelf);
     if (res != HC_SUCCESS) {
         LOGE("Failed to add account-related returnToSelf data!");
         ClearSensitiveStringInJson(returnToSelf, FIELD_SESSION_KEY);
@@ -855,22 +876,14 @@ static int32_t AccountOnFinishToSelf(int64_t requestId, const CJson *authParam, 
         LOGE("Failed to pack return data to string!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    do {
-        int32_t authForm = AUTH_FORM_INVALID_TYPE;
-        if (GetIntFromJson(authParam, FIELD_AUTH_FORM, &authForm) != HC_SUCCESS) {
-            LOGE("Failed to get auth type!");
-            res = HC_ERR_JSON_GET;
-            break;
-        }
-        if ((callback != NULL) && (callback->onFinish != NULL)) {
-            LOGD("Group auth call onFinish for account related auth.");
-            UPDATE_PERFORM_DATA_BY_INPUT_INDEX(requestId, ON_FINISH_TIME, HcGetCurTimeInMillis());
-            callback->onFinish(requestId, authForm, returnStr);
-        }
-    } while (0);
+    if ((callback != NULL) && (callback->onFinish != NULL)) {
+        LOGD("Group auth call onFinish for account related auth.");
+        UPDATE_PERFORM_DATA_BY_INPUT_INDEX(requestId, ON_FINISH_TIME, HcGetCurTimeInMillis());
+        callback->onFinish(requestId, authForm, returnStr);
+    }
     ClearAndFreeJsonString(returnStr);
     ReportV1RelatedAuthCallEvent(requestId, authParam);
-    return res;
+    return HC_SUCCESS;
 }
 
 static void OnAccountFinish(int64_t requestId, const CJson *authParam, const CJson *out,

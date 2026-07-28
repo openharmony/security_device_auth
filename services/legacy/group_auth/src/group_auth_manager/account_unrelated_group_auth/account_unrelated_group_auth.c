@@ -178,6 +178,19 @@ static int32_t AddSessionKeyToSelfData(const CJson *authParam, const CJson *send
     return res;
 }
 
+static int32_t AddAuthSourceAndTypeToSelfData(CJson *returnToSelf)
+{
+    if (AddIntToJson(returnToSelf, FIELD_AUTH_SOURCE, DEV_AUTH) != HC_SUCCESS) {
+        LOGE("Failed to add auth source!");
+        return HC_ERR_JSON_ADD;
+    }
+    if (AddIntToJson(returnToSelf, FIELD_AUTH_TYPE, P2P_AUTH) != HC_SUCCESS) {
+        LOGE("Failed to add auth type!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+
 static int32_t PrepareDasReturnToSelfData(const CJson *authParam, const CJson *sendToSelf, CJson *returnToSelf)
 {
     int32_t res = AddGroupIdToSelfData(authParam, returnToSelf);
@@ -204,7 +217,7 @@ static int32_t PrepareDasReturnToSelfData(const CJson *authParam, const CJson *s
     if (res != HC_SUCCESS) {
         return res;
     }
-    return HC_SUCCESS;
+    return AddAuthSourceAndTypeToSelfData(returnToSelf);
 }
 
 static int32_t DasOnFinishToPeer(int64_t requestId, const CJson *out, const DeviceAuthCallback *callback)
