@@ -355,11 +355,11 @@ int32_t PushProcSessionTask(int64_t sessionId, CJson *receivedMsg)
     }
     InitProcSessionTask(task, sessionId, receivedMsg);
     if (PushTask((HcTaskBase*)task) != HC_SUCCESS) {
-        LOGE("push start session task fail.");
+        LOGE("push process session task fail.");
         HcFree(task);
         return HC_ERR_INIT_TASK_FAIL;
     }
     IncreaseCriticalCnt(ADD_TWO);
-    LOGI("push start session task success.");
+    LOGI("push process session task success.");
     return HC_SUCCESS;
 }
