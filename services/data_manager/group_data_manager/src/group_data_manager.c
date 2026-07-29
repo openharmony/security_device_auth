@@ -32,9 +32,8 @@
 #include "pseudonym_manager.h"
 #include "security_label_adapter.h"
 #include "account_task_manager.h"
-#include "operation_data_manager.h"
-#include "hisysevent_adapter.h"
 #include "string_util.h"
+#include "group_data_manager_util.h"
 
 typedef struct {
     DECLARE_TLV_STRUCT(10)
@@ -986,195 +985,6 @@ static TrustedDeviceEntry **QueryDeviceEntryPtrIfMatch(const DeviceEntryVec *vec
     return NULL;
 }
 
-static int32_t AddGroupNameToReturn(const TrustedGroupEntry *groupInfo, CJson *json)
-{
-    const char *groupName = StringGet(&groupInfo->name);
-    if (groupName == NULL) {
-        LOGE("Failed to get groupName from groupInfo!");
-        return HC_ERR_NULL_PTR;
-    }
-    if (AddStringToJson(json, FIELD_GROUP_NAME, groupName) != HC_SUCCESS) {
-        LOGE("Failed to add groupName to json!");
-        return HC_ERR_JSON_FAIL;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t AddGroupIdToReturn(const TrustedGroupEntry *groupInfo, CJson *json)
-{
-    const char *groupId = StringGet(&groupInfo->id);
-    if (groupId == NULL) {
-        LOGE("Failed to get groupId from groupInfo!");
-        return HC_ERR_NULL_PTR;
-    }
-    if (AddStringToJson(json, FIELD_GROUP_ID, groupId) != HC_SUCCESS) {
-        LOGE("Failed to add groupId to json!");
-        return HC_ERR_JSON_FAIL;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t AddGroupOwnerToReturn(const TrustedGroupEntry *groupInfo, CJson *json)
-{
-    HcString entryManager = HC_VECTOR_GET(&groupInfo->managers, 0);
-    const char *groupOwner = StringGet(&entryManager);
-    if (groupOwner == NULL) {
-        LOGE("Failed to get groupOwner from groupInfo!");
-        return HC_ERR_NULL_PTR;
-    }
-    if (AddStringToJson(json, FIELD_GROUP_OWNER, groupOwner) != HC_SUCCESS) {
-        LOGE("Failed to add groupOwner to json!");
-        return HC_ERR_JSON_FAIL;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t AddGroupTypeToReturn(const TrustedGroupEntry *groupInfo, CJson *json)
-{
-    int32_t groupType = groupInfo->type;
-    if (AddIntToJson(json, FIELD_GROUP_TYPE, groupType) != HC_SUCCESS) {
-        LOGE("Failed to add groupType to json!");
-        return HC_ERR_JSON_FAIL;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t AddGroupVisibilityToReturn(const TrustedGroupEntry *groupInfo, CJson *json)
-{
-    int groupVisibility = groupInfo->visibility;
-    if (AddIntToJson(json, FIELD_GROUP_VISIBILITY, groupVisibility) != HC_SUCCESS) {
-        LOGE("Failed to add groupType to json!");
-        return HC_ERR_JSON_FAIL;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t AddUserIdToReturnIfAccountGroup(const TrustedGroupEntry *groupInfo, CJson *json)
-{
-    if ((groupInfo->type != ACROSS_ACCOUNT_AUTHORIZE_GROUP) && (groupInfo->type != IDENTICAL_ACCOUNT_GROUP)) {
-        return HC_SUCCESS;
-    }
-    const char *userId = StringGet(&groupInfo->userId);
-    if (userId == NULL) {
-        LOGE("Failed to get userId from groupInfo!");
-        return HC_ERR_NULL_PTR;
-    }
-    if (AddStringToJson(json, FIELD_USER_ID, userId) != HC_SUCCESS) {
-        LOGE("Failed to add userId to json!");
-        return HC_ERR_JSON_FAIL;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t AddSharedUserIdToReturnIfAcrossAccountGroup(const TrustedGroupEntry *groupInfo, CJson *json)
-{
-    if (groupInfo->type != ACROSS_ACCOUNT_AUTHORIZE_GROUP) {
-        return HC_SUCCESS;
-    }
-    const char *sharedUserId = StringGet(&groupInfo->sharedUserId);
-    if (sharedUserId == NULL) {
-        LOGE("Failed to get sharedUserId from groupInfo!");
-        return HC_ERR_NULL_PTR;
-    }
-    if (AddStringToJson(json, FIELD_SHARED_USER_ID, sharedUserId) != HC_SUCCESS) {
-        LOGE("Failed to add sharedUserId to json!");
-        return HC_ERR_JSON_FAIL;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t AddAuthIdToReturn(const TrustedDeviceEntry *deviceInfo, CJson *json)
-{
-    const char *authId = StringGet(&deviceInfo->authId);
-    if (authId == NULL) {
-        LOGE("Failed to get authId from deviceInfo!");
-        return HC_ERR_NULL_PTR;
-    }
-    if (AddStringToJson(json, FIELD_AUTH_ID, authId) != HC_SUCCESS) {
-        LOGE("Failed to add authId to json!");
-        return HC_ERR_JSON_FAIL;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t AddCredentialTypeToReturn(const TrustedDeviceEntry *deviceInfo, CJson *json)
-{
-    int credentialType = deviceInfo->credential;
-    if (AddIntToJson(json, FIELD_CREDENTIAL_TYPE, credentialType) != HC_SUCCESS) {
-        LOGE("Failed to add credentialType to json!");
-        return HC_ERR_JSON_FAIL;
-    }
-    return HC_SUCCESS;
-}
-
-static int32_t AddUserTypeToReturn(const TrustedDeviceEntry *deviceInfo, CJson *json)
-{
-    int userType = deviceInfo->devType;
-    if (AddIntToJson(json, FIELD_USER_TYPE, userType) != HC_SUCCESS) {
-        LOGE("Failed to add userType to json!");
-        return HC_ERR_JSON_FAIL;
-    }
-    return HC_SUCCESS;
-}
-
-#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
-static int32_t AddMultiProfileExtraInfo(int32_t osAccountId, const char *subProfileIdStr, CJson *returnJson)
-{
-    if (AddIntToJson(returnJson, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to add osAccountId!");
-        return HC_ERR_JSON_ADD;
-    }
-    if (AddStringToJson(returnJson, FIELD_SUB_PROFILE_ID, subProfileIdStr) != HC_SUCCESS) {
-        LOGE("Failed to add foreground uid!");
-        return HC_ERR_JSON_ADD;
-    }
-    return HC_SUCCESS;
-}
-#endif
-
-static int32_t GenerateReturnGroupInfoInner(int32_t osAccountId, const char *subProfileIdStr,
-    const TrustedGroupEntry *groupEntry, CJson *returnJson)
-{
-    int32_t res = GenerateReturnGroupInfo(groupEntry, returnJson);
-    if (res != HC_SUCCESS) {
-        return res;
-    }
-#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
-    return AddMultiProfileExtraInfo(osAccountId, subProfileIdStr, returnJson);
-#else
-    (void)osAccountId;
-    (void)subProfileIdStr;
-    return HC_SUCCESS;
-#endif
-}
-
-static int32_t GenerateMessage(int32_t osAccountId, const char *subProfileIdStr, const TrustedGroupEntry *groupEntry,
-    char **returnGroupInfo)
-{
-    if (groupEntry == NULL) {
-        LOGE("Input param groupEntry is null!");
-        return HC_ERR_NULL_PTR;
-    }
-    CJson *message = CreateJson();
-    if (message == NULL) {
-        LOGE("Failed to allocate message memory!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    int32_t result = GenerateReturnGroupInfoInner(osAccountId, subProfileIdStr, groupEntry, message);
-    if (result != HC_SUCCESS) {
-        FreeJson(message);
-        return result;
-    }
-    char *messageStr = PackJsonToString(message);
-    FreeJson(message);
-    if (messageStr == NULL) {
-        LOGE("Failed to convert json to string!");
-        return HC_ERR_JSON_FAIL;
-    }
-    *returnGroupInfo = messageStr;
-    return HC_SUCCESS;
-}
-
 static void PostGroupCreatedMsg(int32_t osAccountId, const char *subProfileIdStr, const TrustedGroupEntry *groupEntry)
 {
     if (!IsBroadcastSupported()) {
@@ -1220,53 +1030,6 @@ static void PostDeviceBoundMsg(OsAccountTrustedInfo *info, const char *subProfil
     }
 }
 
-static bool IsSelfDeviceEntry(const TrustedDeviceEntry *deviceEntry)
-{
-    char selfUdid[INPUT_UDID_LEN] = { 0 };
-    int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
-        return false;
-    }
-    const char *entryUdid = StringGet(&deviceEntry->udid);
-    if (entryUdid == NULL) {
-        LOGE("The entryUdid is NULL!");
-        return false;
-    }
-    return IsStrEqual(selfUdid, entryUdid);
-}
-
-static int32_t GenerateMessageWithOsAccount(const TrustedGroupEntry *groupEntry, int32_t osAccountId,
-    const char *subProfileIdStr, char **returnMessageStr)
-{
-    if (groupEntry == NULL) {
-        LOGE("groupEntry is null!");
-        return HC_ERR_NULL_PTR;
-    }
-    CJson *message = CreateJson();
-    if (message == NULL) {
-        LOGE("Failed to create message json!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
-    int32_t result = GenerateReturnGroupInfoInner(osAccountId, subProfileIdStr, groupEntry, message);
-    if (result != HC_SUCCESS) {
-        FreeJson(message);
-        return result;
-    }
-    if (AddIntToJson(message, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
-        FreeJson(message);
-        return HC_ERR_JSON_ADD;
-    }
-    char *messageStr = PackJsonToString(message);
-    FreeJson(message);
-    if (messageStr == NULL) {
-        LOGE("Failed to convert json to string!");
-        return HC_ERR_PACKAGE_JSON_TO_STRING_FAIL;
-    }
-    *returnMessageStr = messageStr;
-    return HC_SUCCESS;
-}
-
 static void PostDeviceUnBoundMsg(OsAccountTrustedInfo *info, const char *subProfileIdStr,
     const TrustedDeviceEntry *deviceEntry)
 {
@@ -1280,7 +1043,7 @@ static void PostDeviceUnBoundMsg(OsAccountTrustedInfo *info, const char *subProf
     TrustedGroupEntry **groupEntryPtr = QueryGroupEntryPtrIfMatch(&info->groups, &groupParams);
     if (groupEntryPtr != NULL) {
         char *messageStr = NULL;
-        if (GenerateMessageWithOsAccount(*groupEntryPtr, info->osAccountId, subProfileIdStr,
+        if (GenerateMessage(info->osAccountId, subProfileIdStr, *groupEntryPtr,
             &messageStr) != HC_SUCCESS) {
             return;
         }
@@ -1367,6 +1130,28 @@ static void PostDeviceInactive(int32_t osAccountId, const char *subProfileIdStr,
     }
     GetBroadcaster()->postOnDeviceInactiveInUser(udid, messageStr);
     FreeJsonString(messageStr);
+}
+
+static void PostDeviceNotTrusted(int32_t osAccountId, const char *udid)
+{
+    if (!IsBroadcastSupported()) {
+        return;
+    }
+    CJson *returnInfoJson = CreateJson();
+    if (returnInfoJson == NULL) {
+        return;
+    }
+    if (AddIntToJson(returnInfoJson, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
+        FreeJson(returnInfoJson);
+        return;
+    }
+    char *returnInfo = PackJsonToString(returnInfoJson);
+    FreeJson(returnInfoJson);
+    if (returnInfo == NULL) {
+        return;
+    }
+    GetBroadcaster()->postOnDeviceNotTrustedInUser(udid, returnInfo);
+    FreeJsonString(returnInfo);
 }
 #endif
 
@@ -1530,32 +1315,6 @@ void ClearDeviceEntryVec(DeviceEntryVec *vec)
     DESTROY_HC_VECTOR(DeviceEntryVec, vec);
 }
 
-int32_t GenerateReturnGroupInfo(const TrustedGroupEntry *groupEntry, CJson *returnJson)
-{
-    int32_t result;
-    if (((result = AddGroupNameToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddGroupIdToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddGroupOwnerToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddGroupTypeToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddGroupVisibilityToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddUserIdToReturnIfAccountGroup(groupEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddSharedUserIdToReturnIfAcrossAccountGroup(groupEntry, returnJson)) != HC_SUCCESS)) {
-        return result;
-    }
-    return HC_SUCCESS;
-}
-
-int32_t GenerateReturnDevInfo(const TrustedDeviceEntry *deviceEntry, CJson *returnJson)
-{
-    int32_t result;
-    if (((result = AddAuthIdToReturn(deviceEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddCredentialTypeToReturn(deviceEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddUserTypeToReturn(deviceEntry, returnJson)) != HC_SUCCESS)) {
-        return result;
-    }
-    return HC_SUCCESS;
-}
-
 static int32_t AddGroupInner(int32_t osAccountId, const char *subProfileIdStr, const TrustedGroupEntry *groupEntry)
 {
     (void)LockHcMutex(g_databaseMutex);
@@ -1616,35 +1375,6 @@ int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry)
     return AddGroupInner(osAccountId, subProfileIdStr, groupEntry);
 }
 
-static void RecordAddTrustDeviceEvent(int32_t osAccountId, const TrustedDeviceEntry *deviceEntry)
-{
-    CJson *operationInfo = CreateJson();
-    if (operationInfo == NULL) {
-        return;
-    }
-    SetAnonymousField(StringGet(&(deviceEntry->groupId)), FIELD_GROUP_ID, operationInfo);
-    SetAnonymousField(StringGet(&(deviceEntry->udid)), FIELD_UDID, operationInfo);
-    if (deviceEntry->groupEntry != NULL) {
-        (void)AddStringToJson(operationInfo, FIELD_GROUP_NAME, StringGet(&(deviceEntry->groupEntry->name)));
-    }
-    OperationRecord *operation = CreateOperationRecord();
-    if (operation == NULL) {
-        FreeJson(operationInfo);
-        return;
-    }
-    char *operationInfoString = PackJsonToString(operationInfo);
-    if (operationInfoString != NULL) {
-        CopyHcStringForcibly(&operation->operationInfo, operationInfoString);
-        FreeJsonString(operationInfoString);
-    }
-    CopyHcStringForcibly(&operation->function, ADD_MEMBER_EVENT);
-    CopyHcStringForcibly(&operation->caller, DEFAULT_APPID);
-    operation->operationType = OPERATION_GROUP;
-    RecordOperationData(osAccountId, operation);
-    DestroyOperationRecord(operation);
-    FreeJson(operationInfo);
-}
-
 #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
 static void AddDeviceRelation(int32_t osAccountId, const char *subProfileIdStr,
     const TrustedDeviceEntry *deviceEntry)
@@ -1656,28 +1386,6 @@ static void AddDeviceRelation(int32_t osAccountId, const char *subProfileIdStr,
         return;
     }
     PostDeviceActive(osAccountId, subProfileIdStr, StringGet(&deviceEntry->groupId), StringGet(&deviceEntry->udid));
-}
-
-static void PostDeviceNotTrusted(int32_t osAccountId, const char *udid)
-{
-    if (!IsBroadcastSupported()) {
-        return;
-    }
-    CJson *returnInfoJson = CreateJson();
-    if (returnInfoJson == NULL) {
-        return;
-    }
-    if (AddIntToJson(returnInfoJson, FIELD_OS_ACCOUNT_ID, osAccountId) != HC_SUCCESS) {
-        FreeJson(returnInfoJson);
-        return;
-    }
-    char *returnInfo = PackJsonToString(returnInfoJson);
-    FreeJson(returnInfoJson);
-    if (returnInfo == NULL) {
-        return;
-    }
-    GetBroadcaster()->postOnDeviceNotTrustedInUser(udid, returnInfo);
-    FreeJsonString(returnInfo);
 }
 
 static void DeleteDeviceRelation(int32_t osAccountId, const char *subProfileIdStr,
@@ -1696,28 +1404,6 @@ static void DeleteDeviceRelation(int32_t osAccountId, const char *subProfileIdSt
             PostDeviceNotTrusted(osAccountId, StringGet(&deviceEntry->udid));
         }
     }
-}
-
-static bool IsSelfDeviceExistInGroup(int32_t osAccountId, const char *groupId)
-{
-    char selfUdid[INPUT_UDID_LEN] = { 0 };
-    int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
-        return false;
-    }
-    return IsDeviceExistInGroup(osAccountId, groupId, selfUdid);
-}
-
-static bool IsSelfDeviceExistInGroupForUser(int32_t osAccountId, const char *subProfileIdStr, const char *groupId)
-{
-    char selfUdid[INPUT_UDID_LEN] = { 0 };
-    int32_t res = HcGetUdid((uint8_t *)selfUdid, INPUT_UDID_LEN);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
-        return false;
-    }
-    return IsDeviceExistInGroupForUser(osAccountId, subProfileIdStr, groupId, selfUdid);
 }
 #endif
 
@@ -2048,58 +1734,6 @@ void ReloadOsAccountDb(int32_t osAccountId)
 }
 
 #ifdef DEV_AUTH_HIVIEW_ENABLE
-static void DumpGroup(int fd, const TrustedGroupEntry *group)
-{
-    dprintf(fd, "||----------------------------Group----------------------------|                   |\n");
-    dprintf(fd, "||%-12s = %-46.8s|                   |\n", "name", StringGet(&group->name));
-    dprintf(fd, "||%-12s = %-46.8s|                   |\n", "id", StringGet(&group->id));
-    dprintf(fd, "||%-12s = %-46d|                   |\n", "type", group->type);
-    dprintf(fd, "||%-12s = %-46d|                   |\n", "visibility", group->visibility);
-    dprintf(fd, "||%-12s = %-46d|                   |\n", "upgradeFlag", group->upgradeFlag);
-    dprintf(fd, "||%-12s = %-46d|                   |\n", "expireTime", group->expireTime);
-    HcString entryOwner = HC_VECTOR_GET(&group->managers, 0);
-    dprintf(fd, "||%-12s = %-46.8s|                   |\n", "ownerName", StringGet(&entryOwner));
-    dprintf(fd, "||%-12s = %-46.8s|                   |\n", "userId", StringGet(&group->userId));
-    dprintf(fd, "||%-12s = %-46.8s|                   |\n", "sharedUserId", StringGet(&group->sharedUserId));
-    dprintf(fd, "||----------------------------Group----------------------------|                   |\n");
-}
-
-static void DumpDevice(int fd, const TrustedDeviceEntry *device)
-{
-    dprintf(fd, "|||--------------------DEV--------------------|                                    |\n");
-    dprintf(fd, "|||%-12s = %-28.8s|                                    |\n", "groupId", StringGet(&device->groupId));
-    dprintf(fd, "|||%-12s = %-28.8s|                                    |\n", "udid", StringGet(&device->udid));
-    dprintf(fd, "|||%-12s = %-28.8s|                                    |\n", "authId", StringGet(&device->authId));
-    dprintf(fd, "|||%-12s = %-28.8s|                                    |\n", "userId", StringGet(&device->userId));
-    dprintf(fd, "|||%-12s = %-28.8s|                                    |\n", "serviceType",
-        StringGet(&device->serviceType));
-    dprintf(fd, "|||%-12s = %-28d|                                    |\n", "credential", device->credential);
-    dprintf(fd, "|||%-12s = %-28d|                                    |\n", "devType", device->devType);
-    dprintf(fd, "|||%-12s = %-28d|                                    |\n", "upgradeFlag", device->upgradeFlag);
-    dprintf(fd, "|||%-12s = %-28d|                                    |\n", "credSource", device->source);
-    dprintf(fd, "|||--------------------DEV--------------------|                                    |\n");
-}
-
-static void DumpDb(int fd, const OsAccountTrustedInfo *db)
-{
-    const GroupEntryVec *groups = &db->groups;
-    const DeviceEntryVec *devices = &db->devices;
-    dprintf(fd, "|-------------------------------------DataBase-------------------------------------|\n");
-    dprintf(fd, "|%-12s = %-67d|\n", "osAccountId", db->osAccountId);
-    dprintf(fd, "|%-12s = %-67d|\n", "groupNum", groups->size(groups));
-    dprintf(fd, "|%-12s = %-67d|\n", "deviceNum", devices->size(devices));
-    uint32_t index;
-    TrustedGroupEntry **groupEntry;
-    FOR_EACH_HC_VECTOR(*groups, index, groupEntry) {
-        DumpGroup(fd, *groupEntry);
-    }
-    TrustedDeviceEntry **deviceEntry;
-    FOR_EACH_HC_VECTOR(*devices, index, deviceEntry) {
-        DumpDevice(fd, *deviceEntry);
-    }
-    dprintf(fd, "|-------------------------------------DataBase-------------------------------------|\n");
-}
-
 static void LoadAllAccountsData(void)
 {
     int32_t *accountIds = NULL;
@@ -2128,7 +1762,7 @@ static void DevAuthDataBaseDump(int fd)
     uint32_t index;
     OsAccountTrustedInfo *info;
     FOR_EACH_HC_VECTOR(g_deviceauthDb, index, info) {
-        DumpDb(fd, info);
+        DumpGroupsAndDevices(fd, info->osAccountId, &info->groups, &info->devices);
     }
     UnlockHcMutex(g_databaseMutex);
 }
@@ -2181,11 +1815,6 @@ static void OnGroupRelationChange(GroupRelationChangeType type, int32_t osAccoun
     }
 }
 
-static void OnSubProfileSwitchStart(void)
-{
-    g_inactiveDeviceVec = CreateStrVector();
-}
-
 static void OnSubProfileSwitched(int32_t osAccountId, const char *subProfileIdStr)
 {
     HcString *deviceId;
@@ -2200,6 +1829,9 @@ static void OnSubProfileSwitched(int32_t osAccountId, const char *subProfileIdSt
         }
     }
     DestroyStrVector(&g_inactiveDeviceVec);
+
+    // Recreate inactive device vector for next sub profile switch event callback.
+    g_inactiveDeviceVec = CreateStrVector();
 }
 
 static void OnSubProfileDeleted(int32_t osAccountId, const char *subProfileIdStr)
@@ -2243,8 +1875,8 @@ int32_t InitDatabase(void)
     g_deviceauthDb = CREATE_HC_VECTOR(DeviceAuthDb);
     AddOsAccountEventCallback(GROUP_DATA_CALLBACK, OnOsAccountUnlocked, OnOsAccountRemoved);
 #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    g_inactiveDeviceVec = CreateStrVector();
     SetGroupRelationChangeCallback(OnGroupRelationChange);
-    SetProfileSwitchStartCallbackForGroup(OnSubProfileSwitchStart);
     SetProfileSwitchedCallbackForGroup(OnSubProfileSwitched);
     SetProfileDeleteCallbackForGroup(OnSubProfileDeleted);
 #endif
@@ -2258,9 +1890,9 @@ void DestroyDatabase(void)
     RemoveOsAccountEventCallback(GROUP_DATA_CALLBACK);
 #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
     SetGroupRelationChangeCallback(NULL);
-    SetProfileSwitchStartCallbackForGroup(NULL);
     SetProfileSwitchedCallbackForGroup(NULL);
     SetProfileDeleteCallbackForGroup(NULL);
+    DestroyStrVector(&g_inactiveDeviceVec);
 #endif
     (void)LockHcMutex(g_databaseMutex);
     uint32_t index;

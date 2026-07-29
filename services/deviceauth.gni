@@ -217,8 +217,10 @@ account_task_manager_mock_files = [ "${dev_frameworks_path}/src/account_task_man
 ext_plugin_manager_files =
     [ "${ext_plugin_manager_path}/src/ext_plugin_manager.c" ]
 
-group_database_manager_files =
-    [ "${group_data_manager_path}/src/group_data_manager.c" ]
+group_database_manager_files = [
+  "${group_data_manager_path}/src/group_data_manager.c",
+  "${group_data_manager_path}/src/group_data_manager_util.c",
+]
 
 operation_database_manager_files = 
     [ "${operation_data_manager_path}/src/operation_data_manager.c" ]

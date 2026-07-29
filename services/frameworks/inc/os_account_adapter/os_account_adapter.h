@@ -54,8 +54,6 @@ typedef void (*CredRelationChangeCallback)(CredRelationChangeType type, int32_t 
 
 typedef void (*ProfileDeleteCallback)(int32_t osAccountId, const char *subProfileIdStr);
 
-typedef void (*ProfileSwitchStartCallback)(void);
-
 typedef void (*ProfileSwitchedCallback)(int32_t osAccountId, const char *subProfileIdStr);
 #endif
 
@@ -77,7 +75,6 @@ int32_t GetCurrentActiveOsAccountId(void);
 int32_t GetForegroundSubProfileIdStr(int32_t osAccountId, char *subProfileIdStr, uint32_t subProfileIdStrLen);
 void SetProfileDeleteCallbackForGroup(ProfileDeleteCallback callback);
 void SetProfileDeleteCallbackForCred(ProfileDeleteCallback callback);
-void SetProfileSwitchStartCallbackForGroup(ProfileSwitchStartCallback callback);
 void SetProfileSwitchedCallbackForGroup(ProfileSwitchedCallback callback);
 void SetGroupRelationChangeCallback(GroupRelationChangeCallback callback);
 void SetCredRelationChangeCallback(CredRelationChangeCallback callback);

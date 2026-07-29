@@ -64,7 +64,6 @@ static GroupRelationChangeCallback g_groupCallback = nullptr;
 static CredRelationChangeCallback g_credCallback = nullptr;
 static ProfileDeleteCallback g_deleteGroupCallback = nullptr;
 static ProfileDeleteCallback g_deleteCredCallback = nullptr;
-static ProfileSwitchStartCallback g_groupSwitchStartCallback = nullptr;
 static ProfileSwitchedCallback g_groupSwitchedCallback = nullptr;
 #endif
 
@@ -175,11 +174,6 @@ void NotifySubProfileSwitched(int32_t osAccountId, int32_t fromSubProfileId, int
         LOGE("[OsAccountAdapter]: failed to get toSubProfileIdStr!");
         return;
     }
-    (void)LockHcMutex(&g_osAccountMutex);
-    if (g_groupSwitchStartCallback != nullptr) {
-        g_groupSwitchStartCallback();
-    }
-    UnlockHcMutex(&g_osAccountMutex);
     NotifyAccountSwitch(osAccountId, fromSubProfileIdStr, toSubProfileIdStr,
         NotifyGroupRelationChange, NotifyCredRelationChange);
     (void)LockHcMutex(&g_osAccountMutex);
@@ -567,13 +561,6 @@ void SetProfileDeleteCallbackForCred(ProfileDeleteCallback callback)
 {
     (void)LockHcMutex(&g_osAccountMutex);
     g_deleteCredCallback = callback;
-    UnlockHcMutex(&g_osAccountMutex);
-}
-
-void SetProfileSwitchStartCallbackForGroup(ProfileSwitchStartCallback callback)
-{
-    (void)LockHcMutex(&g_osAccountMutex);
-    g_groupSwitchStartCallback = callback;
     UnlockHcMutex(&g_osAccountMutex);
 }
 
