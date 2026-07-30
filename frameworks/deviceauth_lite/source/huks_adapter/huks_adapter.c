@@ -1596,7 +1596,7 @@ int32_t verify(struct hc_key_alias *key_alias, const int32_t user_type,
 
     struct sha256_value sha256_value = sha256(message);
     if (sha256_value.length == 0) {
-        LOGE("Get sha256 hash failed. message val:%s, message length:%d", message->val, message->length);
+        LOGE("Get sha256 hash failed.");
         return error_code;
     }
 
