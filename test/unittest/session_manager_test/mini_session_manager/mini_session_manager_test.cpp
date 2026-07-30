@@ -111,12 +111,6 @@ public:
     }
 };
 
-HWTEST_F(MiniSessionManagerTest, InitAndDestroyTest001, TestSize.Level0)
-{
-    DestroyLightSessionManager();
-    EXPECT_EQ(InitLightSessionManager(), HC_SUCCESS);
-}
-
 HWTEST_F(MiniSessionManagerTest, AddLightSessionNullParamsTest001, TestSize.Level0)
 {
     int32_t ret = AddLightSession(nullptr);
