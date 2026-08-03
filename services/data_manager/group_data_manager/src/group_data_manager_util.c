@@ -82,7 +82,7 @@ static int32_t AddGroupVisibilityToReturn(const TrustedGroupEntry *groupInfo, CJ
 {
     int groupVisibility = groupInfo->visibility;
     if (AddIntToJson(json, FIELD_GROUP_VISIBILITY, groupVisibility) != HC_SUCCESS) {
-        LOGE("Failed to add groupType to json!");
+        LOGE("Failed to add groupVisibility to json!");
         return HC_ERR_JSON_FAIL;
     }
     return HC_SUCCESS;
@@ -156,24 +156,33 @@ static int32_t AddUserTypeToReturn(const TrustedDeviceEntry *deviceInfo, CJson *
     return HC_SUCCESS;
 }
 
+typedef int32_t (*GroupInfoAddFunc)(const TrustedGroupEntry *, CJson *);
+
 int32_t GenerateReturnGroupInfo(const TrustedGroupEntry *groupEntry, CJson *returnJson)
 {
     if (groupEntry == NULL || returnJson == NULL) {
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
-    int32_t result;
-    if (((result = AddGroupNameToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddGroupIdToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddGroupOwnerToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddGroupTypeToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddGroupVisibilityToReturn(groupEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddUserIdToReturnIfAccountGroup(groupEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddSharedUserIdToReturnIfAcrossAccountGroup(groupEntry, returnJson)) != HC_SUCCESS)) {
-        return result;
+    static GroupInfoAddFunc addGroupInfoFuncs[] = {
+        AddGroupNameToReturn,
+        AddGroupIdToReturn,
+        AddGroupOwnerToReturn,
+        AddGroupTypeToReturn,
+        AddGroupVisibilityToReturn,
+        AddUserIdToReturnIfAccountGroup,
+        AddSharedUserIdToReturnIfAcrossAccountGroup
+    };
+    for (int32_t i = 0; i < (int32_t)(sizeof(addGroupInfoFuncs) / sizeof(addGroupInfoFuncs[0])); i++) {
+        int32_t result = addGroupInfoFuncs[i](groupEntry, returnJson);
+        if (result != HC_SUCCESS) {
+            return result;
+        }
     }
     return HC_SUCCESS;
 }
+
+typedef int32_t (*DevInfoAddFunc)(const TrustedDeviceEntry *, CJson *);
 
 int32_t GenerateReturnDevInfo(const TrustedDeviceEntry *deviceEntry, CJson *returnJson)
 {
@@ -181,11 +190,16 @@ int32_t GenerateReturnDevInfo(const TrustedDeviceEntry *deviceEntry, CJson *retu
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
-    int32_t result;
-    if (((result = AddAuthIdToReturn(deviceEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddCredentialTypeToReturn(deviceEntry, returnJson)) != HC_SUCCESS) ||
-        ((result = AddUserTypeToReturn(deviceEntry, returnJson)) != HC_SUCCESS)) {
-        return result;
+    static DevInfoAddFunc addDevInfoFuncs[] = {
+        AddAuthIdToReturn,
+        AddCredentialTypeToReturn,
+        AddUserTypeToReturn
+    };
+    for (int32_t i = 0; i < (int32_t)(sizeof(addDevInfoFuncs) / sizeof(addDevInfoFuncs[0])); i++) {
+        int32_t result = addDevInfoFuncs[i](deviceEntry, returnJson);
+        if (result != HC_SUCCESS) {
+            return result;
+        }
     }
     return HC_SUCCESS;
 }
