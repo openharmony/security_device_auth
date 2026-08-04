@@ -30,55 +30,8 @@ public:
     IpcAdaptParamTest() = default;  // 显式声明默认构造函数
     ~IpcAdaptParamTest() = default; // 显式声明默认析构函数
 };
-// 测试 GetAndValSize32Param 函数
-HWTEST_F(IpcAdaptParamTest, GetAndValSize32Param_ValidParam, TestSize.Level0)
-{
-    int32_t testValue = 12345;
-    IpcDataInfo testParams[1];
-    testParams[0].type = PARAM_TYPE_REQID;
-    testParams[0].val = reinterpret_cast<uint8_t *>(&testValue);
-    testParams[0].valSz = sizeof(testValue);
-    testParams[0].idx = 0;
 
-    int32_t result;
-    int32_t size = sizeof(result);
-    EXPECT_EQ(HC_SUCCESS,
-        GetAndValSize32Param(testParams, 1, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&result), &size));
-    EXPECT_EQ(testValue, result);
-}
-
-HWTEST_F(IpcAdaptParamTest, GetAndValSize32Param_InvalidSize, TestSize.Level0)
-{
-    int64_t testValue = 12345;
-    IpcDataInfo testParams[1];
-    testParams[0].type = PARAM_TYPE_REQID;
-    testParams[0].val = reinterpret_cast<uint8_t *>(&testValue);
-    testParams[0].valSz = sizeof(testValue);
-    testParams[0].idx = 0;
-
-    int32_t result;
-    int32_t size = sizeof(result);
-    EXPECT_EQ(HC_ERR_IPC_BAD_PARAM,
-        GetAndValSize32Param(testParams, 1, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&result), &size));
-}
-
-HWTEST_F(IpcAdaptParamTest, GetAndValSize32Param_NotFound, TestSize.Level0)
-{
-    int32_t testValue = 12345;
-    IpcDataInfo testParams[1];
-    testParams[0].type = PARAM_TYPE_REQID;
-    testParams[0].val = reinterpret_cast<uint8_t *>(&testValue);
-    testParams[0].valSz = sizeof(testValue);
-    testParams[0].idx = 0;
-
-    int32_t result;
-    int32_t size = sizeof(result);
-    EXPECT_EQ(HC_ERR_IPC_BAD_PARAM,
-        GetAndValSize32Param(testParams, 1, PARAM_TYPE_OPCODE, reinterpret_cast<uint8_t *>(&result), &size));
-}
-
-// 测试 GetAndValSize64Param 函数
-HWTEST_F(IpcAdaptParamTest, GetAndValSize64Param_ValidParam, TestSize.Level0)
+HWTEST_F(IpcAdaptParamTest, GetAndValSizeParam_ReqId_Valid, TestSize.Level0)
 {
     int64_t testValue = 1234567890LL;
     IpcDataInfo testParams[1];
@@ -90,11 +43,11 @@ HWTEST_F(IpcAdaptParamTest, GetAndValSize64Param_ValidParam, TestSize.Level0)
     int64_t result;
     int32_t size = sizeof(result);
     EXPECT_EQ(HC_SUCCESS,
-        GetAndValSize64Param(testParams, 1, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&result), &size));
+        GetAndValSizeParam(testParams, 1, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&result), &size));
     EXPECT_EQ(testValue, result);
 }
 
-HWTEST_F(IpcAdaptParamTest, GetAndValSize64Param_InvalidSize, TestSize.Level0)
+HWTEST_F(IpcAdaptParamTest, GetAndValSizeParam_ReqId_InvalidSize, TestSize.Level0)
 {
     int32_t testValue = 12345;
     IpcDataInfo testParams[1];
@@ -106,10 +59,10 @@ HWTEST_F(IpcAdaptParamTest, GetAndValSize64Param_InvalidSize, TestSize.Level0)
     int64_t result;
     int32_t size = sizeof(result);
     EXPECT_EQ(HC_ERR_IPC_BAD_PARAM,
-        GetAndValSize64Param(testParams, 1, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&result), &size));
+        GetAndValSizeParam(testParams, 1, PARAM_TYPE_REQID, reinterpret_cast<uint8_t *>(&result), &size));
 }
 
-HWTEST_F(IpcAdaptParamTest, GetAndValSize64Param_NotFound, TestSize.Level0)
+HWTEST_F(IpcAdaptParamTest, GetAndValSizeParam_ReqId_NotFound, TestSize.Level0)
 {
     int64_t testValue = 1234567890LL;
     IpcDataInfo testParams[1];
@@ -121,11 +74,10 @@ HWTEST_F(IpcAdaptParamTest, GetAndValSize64Param_NotFound, TestSize.Level0)
     int64_t result;
     int32_t size = sizeof(result);
     EXPECT_EQ(HC_ERR_IPC_BAD_PARAM,
-        GetAndValSize64Param(testParams, 1, PARAM_TYPE_OPCODE, reinterpret_cast<uint8_t *>(&result), &size));
+        GetAndValSizeParam(testParams, 1, PARAM_TYPE_OPCODE, reinterpret_cast<uint8_t *>(&result), &size));
 }
 
-// 测试 GetAndValSizeCbParam 函数
-HWTEST_F(IpcAdaptParamTest, GetAndValSizeCbParam_ValidParam, TestSize.Level0)
+HWTEST_F(IpcAdaptParamTest, GetAndValSizeParam_DevAuthCb_Valid, TestSize.Level0)
 {
     DeviceAuthCallback testCallback = {
         .onTransmit = nullptr,
@@ -143,10 +95,10 @@ HWTEST_F(IpcAdaptParamTest, GetAndValSizeCbParam_ValidParam, TestSize.Level0)
     DeviceAuthCallback result;
     int32_t size = sizeof(result);
     EXPECT_EQ(HC_SUCCESS,
-        GetAndValSizeCbParam(testParams, 1, PARAM_TYPE_DEV_AUTH_CB, reinterpret_cast<uint8_t *>(&result), &size));
+        GetAndValSizeParam(testParams, 1, PARAM_TYPE_DEV_AUTH_CB, reinterpret_cast<uint8_t *>(&result), &size));
 }
 
-HWTEST_F(IpcAdaptParamTest, GetAndValSizeCbParam_InvalidSize, TestSize.Level0)
+HWTEST_F(IpcAdaptParamTest, GetAndValSizeParam_DevAuthCb_InvalidSize, TestSize.Level0)
 {
     int32_t testValue = 12345;
     IpcDataInfo testParams[1];
@@ -158,10 +110,10 @@ HWTEST_F(IpcAdaptParamTest, GetAndValSizeCbParam_InvalidSize, TestSize.Level0)
     DeviceAuthCallback result;
     int32_t size = sizeof(result);
     EXPECT_EQ(HC_ERR_IPC_BAD_PARAM,
-        GetAndValSizeCbParam(testParams, 1, PARAM_TYPE_DEV_AUTH_CB, reinterpret_cast<uint8_t *>(&result), &size));
+        GetAndValSizeParam(testParams, 1, PARAM_TYPE_DEV_AUTH_CB, reinterpret_cast<uint8_t *>(&result), &size));
 }
 
-HWTEST_F(IpcAdaptParamTest, GetAndValSizeCbParam_NotFound, TestSize.Level0)
+HWTEST_F(IpcAdaptParamTest, GetAndValSizeParam_DevAuthCb_NotFound, TestSize.Level0)
 {
     DeviceAuthCallback testCallback = {
         .onTransmit = nullptr,
@@ -179,7 +131,7 @@ HWTEST_F(IpcAdaptParamTest, GetAndValSizeCbParam_NotFound, TestSize.Level0)
     DeviceAuthCallback result;
     int32_t size = sizeof(result);
     EXPECT_EQ(HC_ERR_IPC_BAD_PARAM,
-        GetAndValSizeCbParam(testParams, 1, PARAM_TYPE_OPCODE, reinterpret_cast<uint8_t *>(&result), &size));
+        GetAndValSizeParam(testParams, 1, PARAM_TYPE_OPCODE, reinterpret_cast<uint8_t *>(&result), &size));
 }
 
 // 测试 GetAndValNullParam 函数

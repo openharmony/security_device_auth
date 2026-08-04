@@ -387,33 +387,50 @@ void RegisterSdkCallBack(RegCallbackFunc regCallbackFunc, RegDataChangeListenerF
     DESTROY_HC_VECTOR(SdkIpcCallBackList, &tmpIpcCallBackList);
 }
 
-static int32_t GetAndValSizeParam(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize, int32_t expectedSize)
+static ParamCategory GetParamCategory(int32_t type)
 {
+    if (type == PARAM_TYPE_CB_OBJECT) {
+        return PARAM_CAT_CB_OBJECT;
+    }
+    for (int32_t i = 0; i < (int32_t)(sizeof(g_cpyTypes) / sizeof(g_cpyTypes[0])); i++) {
+        if (g_cpyTypes[i] == type) {
+            return PARAM_CAT_CPY;
+        }
+    }
+    if (type >= 1 && type <= PARAM_TYPE_RETURN_INFO) {
+        return PARAM_CAT_PTR;
+    }
+    return PARAM_CAT_NONE;
+}
+
+static int32_t GetTypeExpectSize(int32_t paramType)
+{
+    if (paramType == PARAM_TYPE_DEV_AUTH_CB) {
+        return (int32_t)sizeof(DeviceAuthCallback);
+    }
+    if (paramType == PARAM_TYPE_REQID) {
+        return (int32_t)sizeof(int64_t);
+    }
+    if (GetParamCategory(paramType) == PARAM_CAT_CPY) {
+        return (int32_t)sizeof(int32_t);
+    }
+    return 0;
+}
+
+int32_t GetAndValSizeParam(const IpcDataInfo *ipcParams,
+    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
+{
+    int32_t expectedSize = GetTypeExpectSize(paramType);
+    if (expectedSize == 0) {
+        LOGE("unsupported param type %" LOG_PUB "d", paramType);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, paramSize);
     if ((*paramSize) != expectedSize || ret != HC_SUCCESS) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
     return HC_SUCCESS;
-}
-
-int32_t GetAndValSize32Param(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
-{
-    return GetAndValSizeParam(ipcParams, paramNum, paramType, param, paramSize, sizeof(int32_t));
-}
-
-int32_t GetAndValSize64Param(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
-{
-    return GetAndValSizeParam(ipcParams, paramNum, paramType, param, paramSize, sizeof(int64_t));
-}
-
-int32_t GetAndValSizeCbParam(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
-{
-    return GetAndValSizeParam(ipcParams, paramNum, paramType, param, paramSize, sizeof(DeviceAuthCallback));
 }
 
 int32_t GetAndValNullParam(const IpcDataInfo *ipcParams,
@@ -1436,7 +1453,7 @@ static void BroadcastStrCb(int32_t cbType, int32_t cbId, int32_t paramType, cons
         return;
     }
     IpcEncodeParam params[] = { MakeStrParam(paramType, strParam) };
-    BroadcastToCallbacks(cbType, cbId, params, 1);
+    BroadcastToCallbacks(cbType, cbId, params, sizeof(params) / sizeof(params[0]));
 }
 
 static void BroadcastStrStrCb(int32_t cbType, int32_t cbId, int32_t paramType1, int32_t paramType2,
@@ -1449,7 +1466,7 @@ static void BroadcastStrStrCb(int32_t cbType, int32_t cbId, int32_t paramType1, 
         MakeStrParam(paramType1, str1),
         MakeStrParam(paramType2, str2)
     };
-    BroadcastToCallbacks(cbType, cbId, params, 2);
+    BroadcastToCallbacks(cbType, cbId, params, sizeof(params) / sizeof(params[0]));
 }
 
 void IpcOnGroupCreated(const char *groupInfo)
@@ -1488,7 +1505,7 @@ void IpcOnLastGroupDeleted(const char *peerUdid, int32_t groupType)
         MakeStrParam(PARAM_TYPE_UDID, peerUdid),
         MakeBinParam(PARAM_TYPE_GROUP_TYPE, reinterpret_cast<const uint8_t *>(&groupType), sizeof(groupType))
     };
-    BroadcastToCallbacks(CB_TYPE_LISTENER, CB_ID_ON_LAST_GROUP_DELETED, params, 2);
+    BroadcastToCallbacks(CB_TYPE_LISTENER, CB_ID_ON_LAST_GROUP_DELETED, params, sizeof(params) / sizeof(params[0]));
 }
 
 void IpcOnTrustedDeviceNumChanged(int32_t curTrustedDeviceNum)
@@ -1497,7 +1514,7 @@ void IpcOnTrustedDeviceNumChanged(int32_t curTrustedDeviceNum)
         MakeBinParam(PARAM_TYPE_DATA_NUM, reinterpret_cast<const uint8_t *>(&curTrustedDeviceNum),
             sizeof(curTrustedDeviceNum))
     };
-    BroadcastToCallbacks(CB_TYPE_LISTENER, CB_ID_ON_TRUST_DEV_NUM_CHANGED, params, 1);
+    BroadcastToCallbacks(CB_TYPE_LISTENER, CB_ID_ON_TRUST_DEV_NUM_CHANGED, params, sizeof(params) / sizeof(params[0]));
 }
 
 void IpcOnGroupActiveInUser(const char *returnInfo)
@@ -1537,7 +1554,7 @@ void IpcOnCredAdd(const char *credId, const char *credInfo)
         MakeStrParam(PARAM_TYPE_CRED_ID, credId),
         MakeStrParam(PARAM_TYPE_CRED_INFO, credInfo)
     };
-    BroadcastToCallbacks(CB_TYPE_CRED_LISTENER, CB_ID_ON_CRED_ADD, params, 2);
+    BroadcastToCallbacks(CB_TYPE_CRED_LISTENER, CB_ID_ON_CRED_ADD, params, sizeof(params) / sizeof(params[0]));
 }
 
 void IpcOnCredDelete(const char *credId, const char *credInfo)
@@ -1549,7 +1566,7 @@ void IpcOnCredDelete(const char *credId, const char *credInfo)
         MakeStrParam(PARAM_TYPE_CRED_ID, credId),
         MakeStrParam(PARAM_TYPE_CRED_INFO, credInfo)
     };
-    BroadcastToCallbacks(CB_TYPE_CRED_LISTENER, CB_ID_ON_CRED_DELETE, params, 2);
+    BroadcastToCallbacks(CB_TYPE_CRED_LISTENER, CB_ID_ON_CRED_DELETE, params, sizeof(params) / sizeof(params[0]));
 }
 
 void IpcOnCredUpdate(const char *credId, const char *credInfo)
@@ -1561,7 +1578,7 @@ void IpcOnCredUpdate(const char *credId, const char *credInfo)
         MakeStrParam(PARAM_TYPE_CRED_ID, credId),
         MakeStrParam(PARAM_TYPE_CRED_INFO, credInfo)
     };
-    BroadcastToCallbacks(CB_TYPE_CRED_LISTENER, CB_ID_ON_CRED_UPDATE, params, 2);
+    BroadcastToCallbacks(CB_TYPE_CRED_LISTENER, CB_ID_ON_CRED_UPDATE, params, sizeof(params) / sizeof(params[0]));
 }
 
 void IpcOnCredActiveInUser(const char *credId, const char *returnInfo)
@@ -1573,7 +1590,7 @@ void IpcOnCredActiveInUser(const char *credId, const char *returnInfo)
         MakeStrParam(PARAM_TYPE_CRED_ID, credId),
         MakeStrParam(PARAM_TYPE_RETURN_INFO, returnInfo)
     };
-    BroadcastToCallbacks(CB_TYPE_CRED_LISTENER, CB_ID_ON_CRED_ACTIVE_IN_USER, params, 2);
+    BroadcastToCallbacks(CB_TYPE_CRED_LISTENER, CB_ID_ON_CRED_ACTIVE_IN_USER, params, sizeof(params) / sizeof(params[0]));
 }
 
 void IpcOnCredInactiveInUser(const char *credId, const char *returnInfo)
@@ -1585,7 +1602,7 @@ void IpcOnCredInactiveInUser(const char *credId, const char *returnInfo)
         MakeStrParam(PARAM_TYPE_CRED_ID, credId),
         MakeStrParam(PARAM_TYPE_RETURN_INFO, returnInfo)
     };
-    BroadcastToCallbacks(CB_TYPE_CRED_LISTENER, CB_ID_ON_CRED_INACTIVE_IN_USER, params, 2);
+    BroadcastToCallbacks(CB_TYPE_CRED_LISTENER, CB_ID_ON_CRED_INACTIVE_IN_USER, params, sizeof(params) / sizeof(params[0]));
 }
 };
 
@@ -1829,44 +1846,6 @@ void DecodeCallReply(uintptr_t callCtx, IpcDataInfo *replyCache, int32_t cacheNu
     }
 }
 
-static bool IsTypeForSettingPtr(int32_t type)
-{
-    static const int32_t typeList[] = {
-        PARAM_TYPE_APPID, PARAM_TYPE_DEV_AUTH_CB, PARAM_TYPE_LISTENER, PARAM_TYPE_CREATE_PARAMS,
-        PARAM_TYPE_GROUPID, PARAM_TYPE_UDID, PARAM_TYPE_ADD_PARAMS, PARAM_TYPE_DEL_PARAMS,
-        PARAM_TYPE_QUERY_PARAMS, PARAM_TYPE_COMM_DATA, PARAM_TYPE_SESS_KEY,
-        PARAM_TYPE_REQ_INFO, PARAM_TYPE_GROUP_INFO, PARAM_TYPE_AUTH_PARAMS, PARAM_TYPE_REQ_JSON,
-        PARAM_TYPE_PSEUDONYM_ID, PARAM_TYPE_INDEX_KEY, PARAM_TYPE_ERR_INFO, PARAM_TYPE_REQUEST_PARAMS,
-        PARAM_TYPE_CRED_ID, PARAM_TYPE_PK_WITH_SIG, PARAM_TYPE_SERVICE_ID, PARAM_TYPE_RANDOM,
-        PARAM_TYPE_CRED_INFO, PARAM_TYPE_RETURN_INFO
-    };
-    for (int32_t i = 0; i < static_cast<int32_t>(sizeof(typeList) / sizeof(typeList[0])); i++) {
-        if (typeList[i] == type) {
-            return true;
-        }
-    }
-    return false;
-}
-
-static bool IsTypeForCpyData(int32_t type)
-{
-    static const int32_t typeList[] = {
-        PARAM_TYPE_REQID, PARAM_TYPE_GROUP_TYPE, PARAM_TYPE_OPCODE, PARAM_TYPE_ERRCODE, PARAM_TYPE_OS_ACCOUNT_ID
-    };
-    for (int32_t i = 0; i < static_cast<int32_t>(sizeof(typeList) / sizeof(typeList[0])); i++) {
-        if (typeList[i] == type) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void DevAuthDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remoteObject)
-{
-    LOGI("remote is not actively, to reset local resource");
-    ResetIpcCallBackNodeByNodeId(callbackIdx);
-}
-
 int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
     int32_t type, uint8_t *paramCache, int32_t *cacheLen)
 {
@@ -1878,14 +1857,15 @@ int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
             continue;
         }
         ret = HC_SUCCESS;
-        if (IsTypeForSettingPtr(type)) {
+        ParamCategory cat = GetParamCategory(type);
+        if (cat == PARAM_CAT_PTR) {
             *(reinterpret_cast<uint8_t **>(paramCache)) = ipcParams[i].val;
             if (cacheLen != nullptr) {
                 *cacheLen = ipcParams[i].valSz;
             }
             break;
         }
-        if (IsTypeForCpyData(type)) {
+        if (cat == PARAM_CAT_CPY) {
             if ((ipcParams[i].val == nullptr) || (ipcParams[i].valSz <= 0) || (cacheLen == nullptr)) {
                 ret = HC_ERR_INVALID_PARAMS;
                 break;
@@ -1897,7 +1877,7 @@ int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
             *cacheLen = ipcParams[i].valSz;
             break;
         }
-        if ((type == PARAM_TYPE_CB_OBJECT) && (cacheLen != nullptr) &&
+        if ((cat == PARAM_CAT_CB_OBJECT) && (cacheLen != nullptr) &&
             (static_cast<uint32_t>(*cacheLen) >= sizeof(ipcParams[i].idx))) {
             *(reinterpret_cast<int32_t *>(paramCache)) = ipcParams[i].idx;
         }

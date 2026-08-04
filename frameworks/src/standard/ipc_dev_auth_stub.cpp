@@ -449,4 +449,11 @@ DevAuthDeathRecipient::DevAuthDeathRecipient(int32_t cbIdx)
 {
     callbackIdx = cbIdx;
 }
+
+void DevAuthDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remoteObject)
+{
+    (void)remoteObject;
+    LOGI("OnRemoteDied, callbackIdx: %" LOG_PUB "d", callbackIdx);
+    ResetIpcCallBackNodeByNodeId(callbackIdx);
+}
 }

@@ -96,6 +96,20 @@ typedef int32_t (*RegCredChangeListenerFunc)(const char *appId, CredChangeListen
 #define PARAM_TYPE_RANDOM_LEN 48
 #define PARAM_TYPE_RETURN_INFO 49
 
+typedef enum {
+    PARAM_CAT_PTR = 0,
+    PARAM_CAT_CPY,
+    PARAM_CAT_CB_OBJECT,
+    PARAM_CAT_NONE,
+} ParamCategory;
+
+static const int32_t g_cpyTypes[] = {
+    PARAM_TYPE_REQID, PARAM_TYPE_GROUP_TYPE, PARAM_TYPE_DATA_NUM,
+    PARAM_TYPE_OPCODE, PARAM_TYPE_IPC_RESULT, PARAM_TYPE_IPC_RESULT_NUM,
+    PARAM_TYPE_ERRCODE, PARAM_TYPE_OS_ACCOUNT_ID, PARAM_TYPE_SHARED_KEY_LEN,
+    PARAM_TYPE_RANDOM_LEN
+};
+
 enum {
     IPC_CALL_ID_REG_CB = 1,
     IPC_CALL_ID_UNREG_CB,
