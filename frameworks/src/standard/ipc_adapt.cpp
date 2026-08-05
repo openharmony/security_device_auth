@@ -333,7 +333,9 @@ static void CopySdkCallBackFromCache(SdkIpcCallBackList *tmpIpcCallBackList)
             continue;
         }
         SdkIpcCallBackNode node;
-        if (memcpy_s(&node, sizeof(SdkIpcCallBackNode), entry, sizeof(SdkIpcCallBackNode)) != HC_SUCCESS) {
+
+
+        if (memcpy_s(&node, sizeof(SdkIpcCallBackNode), entry, sizeof(SdkIpcCallBackNode)) != EOK) {
             continue;
         }
         if (tmpIpcCallBackList->pushBack(tmpIpcCallBackList, &node) == nullptr) {

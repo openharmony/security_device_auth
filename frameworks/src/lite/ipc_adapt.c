@@ -1367,9 +1367,8 @@ static void BroadcastToCallbacks(int32_t cbType, int32_t cbId,
         }
         IpcIo *dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
         if (dataParcel == NULL) {
-            UnLockCallbackList();
             LOGE("Failed to InitIpcDataCache.");
-            continue;
+            break;
         }
         uint32_t ret = HC_SUCCESS;
         for (int32_t j = 0; j < paramCount; j++) {
@@ -1379,10 +1378,9 @@ static void BroadcastToCallbacks(int32_t cbType, int32_t cbId,
             (const uint8_t *)(g_ipcCallBackList.ctx[i].appId),
             HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
         if (ret != HC_SUCCESS) {
-            UnLockCallbackList();
             HcFree((void *)dataParcel);
             LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
-            continue;
+            break;
         }
         ActCallback(g_ipcCallBackList.ctx[i].proxyId, cbId, dataParcel, NULL);
         HcFree((void *)dataParcel);
