@@ -238,4 +238,303 @@ HWTEST_F(PerformDumperTest, PerformDumperTest003, TestSize.Level0)
     DESTROY_PERFORMANCE_DUMPER();
     FreeJson(in);
 }
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_GetTotalConsumeTime_NotInit, TestSize.Level0)
+{
+    int64_t ret = GetTotalConsumeTimeByReqId(TEST_REQ_ID);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_GetTotalConsumeTime_NotEnabled, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    int64_t ret = GetTotalConsumeTimeByReqId(TEST_REQ_ID);
+    EXPECT_EQ(ret, 0);
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_GetTotalConsumeTime_NotFound, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    int64_t ret = GetTotalConsumeTimeByReqId(99999);
+    EXPECT_EQ(ret, 0);
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_GetTotalConsumeTime_Found, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    int64_t curTime = HcGetCurTimeInMillis();
+    ADD_PERFORM_DATA(TEST_REQ_ID, true, true, curTime);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_SESSION_KEY_RETURN_TIME, curTime + 100);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_FINISH_TIME, curTime + 200);
+    int64_t ret = GetTotalConsumeTimeByReqId(TEST_REQ_ID);
+    EXPECT_EQ(ret, 200);
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_UpdateDataByInputIndex_InvalidTimeIndex, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    int64_t curTime = HcGetCurTimeInMillis();
+    ADD_PERFORM_DATA(TEST_REQ_ID, true, true, curTime);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, FIRST_START_TIME, curTime + 10);
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_UpdateDataBySelfIndex_BeyondFourth, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    int64_t curTime = HcGetCurTimeInMillis();
+    ADD_PERFORM_DATA(TEST_REQ_ID, true, true, curTime);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 1);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 2);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 3);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 4);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 5);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 6);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 7);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 8);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_SESSION_KEY_RETURN_TIME, curTime + 100);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_FINISH_TIME, curTime + 200);
+    int64_t ret = GetTotalConsumeTimeByReqId(TEST_REQ_ID);
+    EXPECT_EQ(ret, 200);
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_GetConsumeTime_NoTransmitTime, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    int64_t curTime = HcGetCurTimeInMillis();
+    ADD_PERFORM_DATA(TEST_REQ_ID, true, true, curTime);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 1);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_SESSION_KEY_RETURN_TIME, curTime + 50);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_FINISH_TIME, curTime + 100);
+    DumpPerformData();
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_AddPerformData_NotInit, TestSize.Level0)
+{
+    int64_t curTime = HcGetCurTimeInMillis();
+    ADD_PERFORM_DATA(TEST_REQ_ID, true, true, curTime);
+    int64_t ret = GetTotalConsumeTimeByReqId(TEST_REQ_ID);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_AddPerformData_NotEnabled, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    int64_t curTime = HcGetCurTimeInMillis();
+    ADD_PERFORM_DATA(TEST_REQ_ID, true, true, curTime);
+    int64_t ret = GetTotalConsumeTimeByReqId(TEST_REQ_ID);
+    EXPECT_EQ(ret, 0);
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_ResetPerformData_NotInit, TestSize.Level0)
+{
+    RESET_PERFORM_DATA(TEST_REQ_ID);
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_ResetPerformData_NotEnabled, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    RESET_PERFORM_DATA(TEST_REQ_ID);
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_ResetPerformData_NotFound, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    RESET_PERFORM_DATA(99999);
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_UpdateBySelfIndex_NotInit, TestSize.Level0)
+{
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, 100);
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_UpdateBySelfIndex_NotEnabled, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, 100);
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_UpdateBySelfIndex_NotFound, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(99999, 100);
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_UpdateByInputIndex_NotInit, TestSize.Level0)
+{
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_SESSION_KEY_RETURN_TIME, 100);
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_UpdateByInputIndex_NotEnabled, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_SESSION_KEY_RETURN_TIME, 100);
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_UpdateByInputIndex_NotFound, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(99999, ON_SESSION_KEY_RETURN_TIME, 100);
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_IsSessionNumExceeded_BindClient, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    int64_t curTime = HcGetCurTimeInMillis();
+    for (int32_t i = 0; i < MAX_SESSION_NUM; i++) {
+        ADD_PERFORM_DATA(i + 1000, true, true, curTime + i);
+    }
+    ADD_PERFORM_DATA(9999, true, true, curTime + 100);
+    int64_t ret = GetTotalConsumeTimeByReqId(9999);
+    EXPECT_EQ(ret, 0);
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_IsSessionNumExceeded_BindServer, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    int64_t curTime = HcGetCurTimeInMillis();
+    for (int32_t i = 0; i < MAX_SESSION_NUM; i++) {
+        ADD_PERFORM_DATA(i + 2000, true, false, curTime + i);
+    }
+    ADD_PERFORM_DATA(9998, true, false, curTime + 100);
+    int64_t ret = GetTotalConsumeTimeByReqId(9998);
+    EXPECT_EQ(ret, 0);
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_IsSessionNumExceeded_AuthClient, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    int64_t curTime = HcGetCurTimeInMillis();
+    for (int32_t i = 0; i < MAX_SESSION_NUM; i++) {
+        ADD_PERFORM_DATA(i + 3000, false, true, curTime + i);
+    }
+    ADD_PERFORM_DATA(9997, false, true, curTime + 100);
+    int64_t ret = GetTotalConsumeTimeByReqId(9997);
+    EXPECT_EQ(ret, 0);
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_IsSessionNumExceeded_AuthServer, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    int64_t curTime = HcGetCurTimeInMillis();
+    for (int32_t i = 0; i < MAX_SESSION_NUM; i++) {
+        ADD_PERFORM_DATA(i + 4000, false, false, curTime + i);
+    }
+    ADD_PERFORM_DATA(9996, false, false, curTime + 100);
+    int64_t ret = GetTotalConsumeTimeByReqId(9996);
+    EXPECT_EQ(ret, 0);
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_RemovePerformDataIfExist, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    int64_t curTime = HcGetCurTimeInMillis();
+    ADD_PERFORM_DATA(TEST_REQ_ID, true, true, curTime);
+    ADD_PERFORM_DATA(TEST_REQ_ID, true, true, curTime + 100);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_SESSION_KEY_RETURN_TIME, curTime + 150);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_FINISH_TIME, curTime + 200);
+    int64_t ret = GetTotalConsumeTimeByReqId(TEST_REQ_ID);
+    EXPECT_EQ(ret, 100);
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_DumpPerformData_WithPartialTimes, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    int64_t curTime = HcGetCurTimeInMillis();
+    ADD_PERFORM_DATA(TEST_REQ_ID, true, true, curTime);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 1);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 2);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_SESSION_KEY_RETURN_TIME, curTime + 50);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_FINISH_TIME, curTime + 100);
+    DumpPerformData();
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_DumpPerformData_WithAllTimes, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    EnablePerformDumper();
+    int64_t curTime = HcGetCurTimeInMillis();
+    ADD_PERFORM_DATA(TEST_REQ_ID, true, true, curTime);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 1);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 2);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 3);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 4);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 5);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 6);
+    UPDATE_PERFORM_DATA_BY_SELF_INDEX(TEST_REQ_ID, curTime + 7);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_SESSION_KEY_RETURN_TIME, curTime + 50);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_FINISH_TIME, curTime + 100);
+    DumpPerformData();
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_PerformanceDump_NotInit, TestSize.Level0)
+{
+    StringVector strArgVec = CreateStrVector();
+    HcString strArg = CreateString();
+    (void)StringSetPointer(&strArg, PERFORM_DUMP_ARG);
+    (void)strArgVec.pushBackT(&strArgVec, strArg);
+    DEV_AUTH_DUMP(0, &strArgVec);
+    DestroyStrVector(&strArgVec);
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_PerformanceDump_DisabledState, TestSize.Level0)
+{
+    INIT_PERFORMANCE_DUMPER();
+    DumpPerformData();
+    DisablePerformDumper();
+    DESTROY_PERFORMANCE_DUMPER();
+}
+
+HWTEST_F(PerformDumperTest, PerformDumperTest_Destroy_NotInit, TestSize.Level0)
+{
+    DESTROY_PERFORMANCE_DUMPER();
+}
 }
