@@ -472,8 +472,10 @@ HWTEST_F(PerformDumperTest, PerformDumperTest_RemovePerformDataIfExist, TestSize
     int64_t curTime = HcGetCurTimeInMillis();
     ADD_PERFORM_DATA(TEST_REQ_ID, true, true, curTime);
     ADD_PERFORM_DATA(TEST_REQ_ID, true, true, curTime + 100);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_SESSION_KEY_RETURN_TIME, curTime + 150);
+    UPDATE_PERFORM_DATA_BY_INPUT_INDEX(TEST_REQ_ID, ON_FINISH_TIME, curTime + 200);
     int64_t ret = GetTotalConsumeTimeByReqId(TEST_REQ_ID);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, 100);
     DisablePerformDumper();
     DESTROY_PERFORMANCE_DUMPER();
 }
