@@ -1691,6 +1691,9 @@ void DecodeCallReply(uintptr_t callCtx, IpcDataInfo *replyCache, int32_t cacheNu
 int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
     int32_t type, uint8_t *paramCache, int32_t *cacheLen)
 {
+    if (paramCache == NULL) {
+        return HC_ERR_INVALID_PARAMS;
+    }
     int32_t i;
     errno_t eno;
 
