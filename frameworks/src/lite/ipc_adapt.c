@@ -1688,48 +1688,50 @@ void DecodeCallReply(uintptr_t callCtx, IpcDataInfo *replyCache, int32_t cacheNu
     return;
 }
 
+static int32_t ExtractParamByCategory(const IpcDataInfo *ipcParam, ParamCategory cat,
+    uint8_t *paramCache, int32_t *cacheLen)
+{
+    if (cat == PARAM_CAT_PTR) {
+        if (ipcParam->valSz <= 0) {
+            return HC_ERR_INVALID_PARAMS;
+        }
+        *(uint8_t **)paramCache = ipcParam->val;
+        if (cacheLen != NULL) {
+            *cacheLen = ipcParam->valSz;
+        }
+        return HC_SUCCESS;
+    }
+    if (cat == PARAM_CAT_CPY) {
+        if ((ipcParam->val == NULL) || (ipcParam->valSz <= 0) || (cacheLen == NULL) || (*cacheLen <= 0)) {
+            return HC_ERR_INVALID_PARAMS;
+        }
+        errno_t eno = memcpy_s(paramCache, *cacheLen, ipcParam->val, ipcParam->valSz);
+        if (eno != EOK) {
+            return HC_ERR_MEMORY_COPY;
+        }
+        *cacheLen = ipcParam->valSz;
+        return HC_SUCCESS;
+    }
+    if ((cat == PARAM_CAT_CB_OBJECT) && (cacheLen != NULL) &&
+        ((uint32_t)(*cacheLen) >= sizeof(ipcParam->idx))) {
+        *(int32_t *)paramCache = ipcParam->idx;
+    }
+    return HC_SUCCESS;
+}
+
 int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
     int32_t type, uint8_t *paramCache, int32_t *cacheLen)
 {
     if (paramCache == NULL) {
         return HC_ERR_INVALID_PARAMS;
     }
-    int32_t i;
-    errno_t eno;
-
-    int32_t ret = HC_ERR_IPC_BAD_MSG_TYPE;
-    for (i = 0; i < paramNum; i++) {
+    for (int32_t i = 0; i < paramNum; i++) {
         if (ipcParams[i].type != type) {
             continue;
         }
-        ret = HC_SUCCESS;
-        ParamCategory cat = GetParamCategory(type);
-        if (cat == PARAM_CAT_PTR) {
-            *(uint8_t **)paramCache = ipcParams[i].val;
-            if (cacheLen != NULL) {
-                *cacheLen = ipcParams[i].valSz;
-            }
-            break;
-        }
-        if (cat == PARAM_CAT_CPY) {
-            if ((ipcParams[i].val == NULL) || (ipcParams[i].valSz <= 0) || (cacheLen == NULL)) {
-                ret = HC_ERR_INVALID_PARAMS;
-                break;
-            }
-            eno = memcpy_s(paramCache, *cacheLen, ipcParams[i].val, ipcParams[i].valSz);
-            if (eno != EOK) {
-                ret = HC_ERR_MEMORY_COPY;
-            }
-            *cacheLen = ipcParams[i].valSz;
-            break;
-        }
-        if ((cat == PARAM_CAT_CB_OBJECT) && (cacheLen != NULL) &&
-            ((uint32_t)(*cacheLen) >= sizeof(ipcParams[i].idx))) {
-            *(int32_t *)paramCache = ipcParams[i].idx;
-        }
-        break;
+        return ExtractParamByCategory(&ipcParams[i], GetParamCategory(type), paramCache, cacheLen);
     }
-    return ret;
+    return HC_ERR_IPC_BAD_MSG_TYPE;
 }
 
 bool IsCallbackMethod(int32_t methodId)
