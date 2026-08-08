@@ -331,8 +331,8 @@ static ParamCategory GetParamCategory(int32_t type)
     if (type == PARAM_TYPE_CB_OBJECT) {
         return PARAM_CAT_CB_OBJECT;
     }
-    for (int32_t i = 0; i < (int32_t)(sizeof(g_cpyTypes) / sizeof(g_cpyTypes[0])); i++) {
-        if (g_cpyTypes[i] == type) {
+    for (int32_t i = 0; i < (int32_t)(sizeof(CPY_TYPES) / sizeof(CPY_TYPES[0])); i++) {
+        if (CPY_TYPES[i] == type) {
             return PARAM_CAT_CPY;
         }
     }
@@ -1409,15 +1409,20 @@ static void BroadcastStrCb(int32_t cbType, int32_t cbId, int32_t paramType, cons
     BroadcastToCallbacks(cbType, cbId, params, sizeof(params) / sizeof(params[0]));
 }
 
-static void BroadcastStrStrCb(int32_t cbType, int32_t cbId, int32_t paramType1, int32_t paramType2,
-    const char *str1, const char *str2)
+typedef struct {
+    int32_t paramType;
+    const char *str;
+} StrParamPair;
+
+static void BroadcastStrStrCb(int32_t cbType, int32_t cbId, const StrParamPair *param1,
+    const StrParamPair *param2)
 {
-    if (str1 == NULL || str2 == NULL) {
+    if (param1 == NULL || param1->str == NULL || param2 == NULL || param2->str == NULL) {
         return;
     }
     IpcEncodeParam params[] = {
-        MakeStrParam(paramType1, str1),
-        MakeStrParam(paramType2, str2)
+        MakeStrParam(param1->paramType, param1->str),
+        MakeStrParam(param2->paramType, param2->str)
     };
     BroadcastToCallbacks(cbType, cbId, params, sizeof(params) / sizeof(params[0]));
 }
@@ -1434,14 +1439,16 @@ void IpcOnGroupDeleted(const char *groupInfo)
 
 void IpcOnDeviceBound(const char *peerUdid, const char *groupInfo)
 {
-    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEV_BOUND, PARAM_TYPE_UDID, PARAM_TYPE_GROUP_INFO,
-        peerUdid, groupInfo);
+    StrParamPair param1 = { PARAM_TYPE_UDID, peerUdid };
+    StrParamPair param2 = { PARAM_TYPE_GROUP_INFO, groupInfo };
+    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEV_BOUND, &param1, &param2);
 }
 
 void IpcOnDeviceUnBound(const char *peerUdid, const char *groupInfo)
 {
-    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEV_UNBOUND, PARAM_TYPE_UDID, PARAM_TYPE_GROUP_INFO,
-        peerUdid, groupInfo);
+    StrParamPair param1 = { PARAM_TYPE_UDID, peerUdid };
+    StrParamPair param2 = { PARAM_TYPE_GROUP_INFO, groupInfo };
+    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEV_UNBOUND, &param1, &param2);
 }
 
 void IpcOnDeviceNotTrusted(const char *peerUdid)

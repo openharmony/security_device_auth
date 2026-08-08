@@ -334,7 +334,6 @@ static void CopySdkCallBackFromCache(SdkIpcCallBackList *tmpIpcCallBackList)
         }
         SdkIpcCallBackNode node;
 
-
         if (memcpy_s(&node, sizeof(SdkIpcCallBackNode), entry, sizeof(SdkIpcCallBackNode)) != EOK) {
             continue;
         }
@@ -394,8 +393,8 @@ static ParamCategory GetParamCategory(int32_t type)
     if (type == PARAM_TYPE_CB_OBJECT) {
         return PARAM_CAT_CB_OBJECT;
     }
-    for (int32_t i = 0; i < (int32_t)(sizeof(g_cpyTypes) / sizeof(g_cpyTypes[0])); i++) {
-        if (g_cpyTypes[i] == type) {
+    for (int32_t i = 0; i < (int32_t)(sizeof(CPY_TYPES) / sizeof(CPY_TYPES[0])); i++) {
+        if (CPY_TYPES[i] == type) {
             return PARAM_CAT_CPY;
         }
     }
@@ -566,7 +565,7 @@ static void SetCbDeathRecipient(int32_t type, int32_t objIdx, int32_t cbDataIdx)
     }
 }
 
-static bool CheckCbListReady(std::lock_guard<std::mutex> &autoLock)
+static bool g_checkCbListReady(std::lock_guard<std::mutex> &autoLock)
 {
     (void)autoLock;
     if (g_ipcCallBackList.ctx == nullptr) {
@@ -591,7 +590,7 @@ static void ResetExistingCbNodeProxy(IpcCallBackNode *node)
 void AddIpcCbObjByAppId(const char *appId, int32_t objIdx, int32_t type)
 {
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
-    if (!CheckCbListReady(autoLock)) {
+    if (!g_checkCbListReady(autoLock)) {
         return;
     }
     IpcCallBackNode *node = GetIpcCallBackByAppId(appId, type);
@@ -605,7 +604,7 @@ void AddIpcCbObjByAppId(const char *appId, int32_t objIdx, int32_t type)
 int32_t AddIpcCallBackByAppId(const char *appId, int32_t type)
 {
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
-    if (!CheckCbListReady(autoLock)) {
+    if (!g_checkCbListReady(autoLock)) {
         return HC_ERROR;
     }
     IpcCallBackNode *node = GetIpcCallBackByAppId(appId, type);
@@ -682,7 +681,7 @@ int32_t AddReqIdByAppId(const char *appId, int64_t reqId)
 void AddIpcCbObjByReqId(int64_t reqId, int32_t objIdx, int32_t type)
 {
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
-    if (!CheckCbListReady(autoLock)) {
+    if (!g_checkCbListReady(autoLock)) {
         return;
     }
     IpcCallBackNode *node = GetIpcCallBackByReqId(reqId, type);
@@ -696,7 +695,7 @@ void AddIpcCbObjByReqId(int64_t reqId, int32_t objIdx, int32_t type)
 int32_t AddIpcCallBackByReqId(int64_t reqId, int32_t type)
 {
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
-    if (!CheckCbListReady(autoLock)) {
+    if (!g_checkCbListReady(autoLock)) {
         return HC_ERROR;
     }
     IpcCallBackNode *node = GetIpcCallBackByReqId(reqId, type);
@@ -1458,15 +1457,20 @@ static void BroadcastStrCb(int32_t cbType, int32_t cbId, int32_t paramType, cons
     BroadcastToCallbacks(cbType, cbId, params, sizeof(params) / sizeof(params[0]));
 }
 
-static void BroadcastStrStrCb(int32_t cbType, int32_t cbId, int32_t paramType1, int32_t paramType2,
-    const char *str1, const char *str2)
+struct StrParamPair {
+    int32_t paramType;
+    const char *str;
+};
+
+static void BroadcastStrStrCb(int32_t cbType, int32_t cbId, const StrParamPair *param1,
+    const StrParamPair *param2)
 {
-    if (str1 == nullptr || str2 == nullptr) {
+    if (param1 == nullptr || param1->str == nullptr || param2 == nullptr || param2->str == nullptr) {
         return;
     }
     IpcEncodeParam params[] = {
-        MakeStrParam(paramType1, str1),
-        MakeStrParam(paramType2, str2)
+        MakeStrParam(param1->paramType, param1->str),
+        MakeStrParam(param2->paramType, param2->str)
     };
     BroadcastToCallbacks(cbType, cbId, params, sizeof(params) / sizeof(params[0]));
 }
@@ -1483,14 +1487,16 @@ void IpcOnGroupDeleted(const char *groupInfo)
 
 void IpcOnDeviceBound(const char *peerUdid, const char *groupInfo)
 {
-    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEV_BOUND, PARAM_TYPE_UDID, PARAM_TYPE_GROUP_INFO,
-        peerUdid, groupInfo);
+    StrParamPair param1 = { PARAM_TYPE_UDID, peerUdid };
+    StrParamPair param2 = { PARAM_TYPE_GROUP_INFO, groupInfo };
+    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEV_BOUND, &param1, &param2);
 }
 
 void IpcOnDeviceUnBound(const char *peerUdid, const char *groupInfo)
 {
-    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEV_UNBOUND, PARAM_TYPE_UDID, PARAM_TYPE_GROUP_INFO,
-        peerUdid, groupInfo);
+    StrParamPair param1 = { PARAM_TYPE_UDID, peerUdid };
+    StrParamPair param2 = { PARAM_TYPE_GROUP_INFO, groupInfo };
+    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEV_UNBOUND, &param1, &param2);
 }
 
 void IpcOnDeviceNotTrusted(const char *peerUdid)
@@ -1531,20 +1537,23 @@ void IpcOnGroupInactiveInUser(const char *returnInfo)
 
 void IpcOnDeviceActiveInUser(const char *udid, const char *returnInfo)
 {
-    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEVICE_ACTIVE_IN_USER, PARAM_TYPE_UDID, PARAM_TYPE_RETURN_INFO,
-        udid, returnInfo);
+    StrParamPair param1 = { PARAM_TYPE_UDID, udid };
+    StrParamPair param2 = { PARAM_TYPE_RETURN_INFO, returnInfo };
+    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEVICE_ACTIVE_IN_USER, &param1, &param2);
 }
 
 void IpcOnDeviceInactiveInUser(const char *udid, const char *returnInfo)
 {
-    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEVICE_INACTIVE_IN_USER, PARAM_TYPE_UDID, PARAM_TYPE_RETURN_INFO,
-        udid, returnInfo);
+    StrParamPair param1 = { PARAM_TYPE_UDID, udid };
+    StrParamPair param2 = { PARAM_TYPE_RETURN_INFO, returnInfo };
+    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEVICE_INACTIVE_IN_USER, &param1, &param2);
 }
 
 void IpcOnDeviceNotTrustedInUser(const char *udid, const char *returnInfo)
 {
-    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEVICE_NOT_TRUSTED_IN_USER, PARAM_TYPE_UDID, PARAM_TYPE_RETURN_INFO,
-        udid, returnInfo);
+    StrParamPair param1 = { PARAM_TYPE_UDID, udid };
+    StrParamPair param2 = { PARAM_TYPE_RETURN_INFO, returnInfo };
+    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEVICE_NOT_TRUSTED_IN_USER, &param1, &param2);
 }
 
 void IpcOnCredAdd(const char *credId, const char *credInfo)
@@ -1592,7 +1601,8 @@ void IpcOnCredActiveInUser(const char *credId, const char *returnInfo)
         MakeStrParam(PARAM_TYPE_CRED_ID, credId),
         MakeStrParam(PARAM_TYPE_RETURN_INFO, returnInfo)
     };
-    BroadcastToCallbacks(CB_TYPE_CRED_LISTENER, CB_ID_ON_CRED_ACTIVE_IN_USER, params, sizeof(params) / sizeof(params[0]));
+    BroadcastToCallbacks(CB_TYPE_CRED_LISTENER, CB_ID_ON_CRED_ACTIVE_IN_USER,
+        params, sizeof(params) / sizeof(params[0]));
 }
 
 void IpcOnCredInactiveInUser(const char *credId, const char *returnInfo)
@@ -1604,7 +1614,8 @@ void IpcOnCredInactiveInUser(const char *credId, const char *returnInfo)
         MakeStrParam(PARAM_TYPE_CRED_ID, credId),
         MakeStrParam(PARAM_TYPE_RETURN_INFO, returnInfo)
     };
-    BroadcastToCallbacks(CB_TYPE_CRED_LISTENER, CB_ID_ON_CRED_INACTIVE_IN_USER, params, sizeof(params) / sizeof(params[0]));
+    BroadcastToCallbacks(CB_TYPE_CRED_LISTENER, CB_ID_ON_CRED_INACTIVE_IN_USER,
+        params, sizeof(params) / sizeof(params[0]));
 }
 };
 
