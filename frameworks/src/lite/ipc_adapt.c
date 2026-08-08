@@ -1368,7 +1368,7 @@ static void BroadcastToCallbacks(int32_t cbType, int32_t cbId,
         IpcIo *dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
         if (dataParcel == NULL) {
             LOGE("Failed to InitIpcDataCache.");
-            break;
+            continue;
         }
         uint32_t ret = HC_SUCCESS;
         for (int32_t j = 0; j < paramCount; j++) {
