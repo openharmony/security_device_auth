@@ -540,6 +540,7 @@ void AddIpcCbObjByAppId(const char *appId, int32_t objIdx, int32_t type)
     }
     IpcCallBackNode *node = GetIpcCallBackByAppId(appId, type);
     if (node != NULL) {
+        ResetExistingCbNodeProxy(node);
         node->proxyId = objIdx;
         SetCbDeathRecipient(type, objIdx, node->nodeIdx);
         LOGI("ipc object add success, appid: %" LOG_PUB "s, proxyId %" LOG_PUB "d", appId, node->proxyId);
@@ -642,6 +643,7 @@ void AddIpcCbObjByReqId(int64_t reqId, int32_t objIdx, int32_t type)
     }
     IpcCallBackNode *node = GetIpcCallBackByReqId(reqId, type);
     if (node != NULL) {
+        ResetExistingCbNodeProxy(node);
         node->proxyId = objIdx;
         LOGI("ipc object add success, request id %" LOG_PUB PRId64 ", type %" LOG_PUB "d, proxy id %" LOG_PUB "d",
             reqId, type, node->proxyId);
@@ -909,36 +911,26 @@ static bool GetListenerCbFromParams(CallbackParams params, DataChangeListener *c
     return true;
 }
 
-static void ListenerStrCbStub(CallbackParams params, int32_t paramType, size_t cbOffset)
+static void CallListenerStrCb(CallbackParams params, int32_t paramType, ListenerStrCbFunc cb)
 {
     const char *strParam = NULL;
-    DataChangeListener callback;
     (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType,
         (uint8_t *)(&strParam), NULL);
-    if (!GetListenerCbFromParams(params, &callback)) {
-        return;
-    }
-    ListenerStrCbFunc cb = *(ListenerStrCbFunc *)((uint8_t *)&callback + cbOffset);
     if (cb != NULL) {
         cb(strParam);
         WriteInt32(params.reply, HC_SUCCESS);
     }
 }
 
-static void ListenerStrStrCbStub(CallbackParams params, int32_t paramType1, int32_t paramType2,
-    size_t cbOffset)
+static void CallListenerStrStrCb(CallbackParams params, int32_t paramType1, int32_t paramType2,
+    ListenerStrStrCbFunc cb)
 {
     const char *param1 = NULL;
     const char *param2 = NULL;
-    DataChangeListener callback;
     (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType1,
         (uint8_t *)(&param1), NULL);
     (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType2,
         (uint8_t *)(&param2), NULL);
-    if (!GetListenerCbFromParams(params, &callback)) {
-        return;
-    }
-    ListenerStrStrCbFunc cb = *(ListenerStrStrCbFunc *)((uint8_t *)&callback + cbOffset);
     if (cb != NULL) {
         cb(param1, param2);
         WriteInt32(params.reply, HC_SUCCESS);
@@ -947,27 +939,47 @@ static void ListenerStrStrCbStub(CallbackParams params, int32_t paramType1, int3
 
 static void OnGroupCreatedStub(CallbackParams params)
 {
-    ListenerStrCbStub(params, PARAM_TYPE_GROUP_INFO, offsetof(DataChangeListener, onGroupCreated));
+    DataChangeListener callback;
+    if (!GetListenerCbFromParams(params, &callback)) {
+        return;
+    }
+    CallListenerStrCb(params, PARAM_TYPE_GROUP_INFO, callback.onGroupCreated);
 }
 
 static void OnGroupDeletedStub(CallbackParams params)
 {
-    ListenerStrCbStub(params, PARAM_TYPE_GROUP_INFO, offsetof(DataChangeListener, onGroupDeleted));
+    DataChangeListener callback;
+    if (!GetListenerCbFromParams(params, &callback)) {
+        return;
+    }
+    CallListenerStrCb(params, PARAM_TYPE_GROUP_INFO, callback.onGroupDeleted);
 }
 
 static void OnDevBoundStub(CallbackParams params)
 {
-    ListenerStrStrCbStub(params, PARAM_TYPE_UDID, PARAM_TYPE_GROUP_INFO, offsetof(DataChangeListener, onDeviceBound));
+    DataChangeListener callback;
+    if (!GetListenerCbFromParams(params, &callback)) {
+        return;
+    }
+    CallListenerStrStrCb(params, PARAM_TYPE_UDID, PARAM_TYPE_GROUP_INFO, callback.onDeviceBound);
 }
 
 static void OnDevUnboundStub(CallbackParams params)
 {
-    ListenerStrStrCbStub(params, PARAM_TYPE_UDID, PARAM_TYPE_GROUP_INFO, offsetof(DataChangeListener, onDeviceUnBound));
+    DataChangeListener callback;
+    if (!GetListenerCbFromParams(params, &callback)) {
+        return;
+    }
+    CallListenerStrStrCb(params, PARAM_TYPE_UDID, PARAM_TYPE_GROUP_INFO, callback.onDeviceUnBound);
 }
 
 static void OnDevUnTrustStub(CallbackParams params)
 {
-    ListenerStrCbStub(params, PARAM_TYPE_UDID, offsetof(DataChangeListener, onDeviceNotTrusted));
+    DataChangeListener callback;
+    if (!GetListenerCbFromParams(params, &callback)) {
+        return;
+    }
+    CallListenerStrCb(params, PARAM_TYPE_UDID, callback.onDeviceNotTrusted);
 }
 
 static void OnDelLastGroupStub(CallbackParams params)

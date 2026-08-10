@@ -393,7 +393,7 @@ static ParamCategory GetParamCategory(int32_t type)
     if (type == PARAM_TYPE_CB_OBJECT) {
         return PARAM_CAT_CB_OBJECT;
     }
-    for (int32_t i = 0; i < (int32_t)(sizeof(CPY_TYPES) / sizeof(CPY_TYPES[0])); i++) {
+    for (int32_t i = 0; i < static_cast<int32_t>(sizeof(CPY_TYPES) / sizeof(CPY_TYPES[0])); i++) {
         if (CPY_TYPES[i] == type) {
             return PARAM_CAT_CPY;
         }
@@ -407,13 +407,13 @@ static ParamCategory GetParamCategory(int32_t type)
 static int32_t GetTypeExpectSize(int32_t paramType)
 {
     if (paramType == PARAM_TYPE_DEV_AUTH_CB) {
-        return (int32_t)sizeof(DeviceAuthCallback);
+        return static_cast<int32_t>(sizeof(DeviceAuthCallback));
     }
     if (paramType == PARAM_TYPE_REQID) {
-        return (int32_t)sizeof(int64_t);
+        return static_cast<int32_t>(sizeof(int64_t));
     }
     if (GetParamCategory(paramType) == PARAM_CAT_CPY) {
-        return (int32_t)sizeof(int32_t);
+        return static_cast<int32_t>(sizeof(int32_t));
     }
     return 0;
 }
@@ -595,6 +595,7 @@ void AddIpcCbObjByAppId(const char *appId, int32_t objIdx, int32_t type)
     }
     IpcCallBackNode *node = GetIpcCallBackByAppId(appId, type);
     if (node != nullptr) {
+        ResetExistingCbNodeProxy(node);
         node->proxyId = objIdx;
         SetCbDeathRecipient(type, objIdx, node->nodeIdx);
         LOGI("ipc object add success, appid: %" LOG_PUB "s, proxyId %" LOG_PUB "d", appId, node->proxyId);
@@ -686,6 +687,7 @@ void AddIpcCbObjByReqId(int64_t reqId, int32_t objIdx, int32_t type)
     }
     IpcCallBackNode *node = GetIpcCallBackByReqId(reqId, type);
     if (node != nullptr) {
+        ResetExistingCbNodeProxy(node);
         node->proxyId = objIdx;
         LOGI("ipc object add success, request id %" LOG_PUB "lld, type %" LOG_PUB "d, proxy id %" LOG_PUB "d",
             static_cast<long long>(reqId), type, node->proxyId);
