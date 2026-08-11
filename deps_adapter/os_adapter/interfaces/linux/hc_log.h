@@ -86,9 +86,6 @@ typedef enum {
 #define LOGW(fmt, ...) HILOG_WARN(LOG_CORE, "%" LOG_PUB "s: " fmt, __FUNCTION__, ##__VA_ARGS__)
 #define LOGE(fmt, ...) LogAndRecordError(__FUNCTION__, __LINE__, fmt, ##__VA_ARGS__)
 
-#define PRINT_ERR_TRACE() HILOG_ERROR(LOG_CORE, "%" LOG_PUB "s: <errtrace> %" LOG_PUB "s", \
-    GetTraceInfo(__FUNCTION__), GET_ERR_TRACE())
-
 #endif
 
 #ifdef __cplusplus

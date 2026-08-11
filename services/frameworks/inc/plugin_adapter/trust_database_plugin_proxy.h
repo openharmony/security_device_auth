@@ -36,8 +36,8 @@ bool IsDeviceReferencedByGroup(int32_t osAccountId, const char *groupId, const c
 bool IsDeviceReferencedByUser(int32_t osAccountId, const char *userId, const char *udid);
 int32_t InsertCredTrustRelation(int32_t osAccountId, const char *userId, const char *credId);
 int32_t DeleteCredTrustRelation(int32_t osAccountId, const char *userId, const char *credId);
-bool IsCredRelationReferencedByUser(int32_t osAccountId, const char *userId, const char *credId);
-bool IsCredRelationReferenced(int32_t osAccountId, const char *credId);
+int32_t IsCredRelationReferencedByUser(int32_t osAccountId, const char *userId, const char *credId, bool *isReferenced);
+int32_t IsCredRelationReferenced(int32_t osAccountId, const char *credId, bool *isReferenced);
 int32_t OnAccountSwitch(int32_t osAccountId, const char *fromUserId, const char *toUserId,
     AccountSwitchGroupCallback groupCallback, AccountSwitchCredCallback credCallback);
 void DestoryTrustDatabasePlugin(void);

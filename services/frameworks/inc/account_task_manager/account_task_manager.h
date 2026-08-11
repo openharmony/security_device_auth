@@ -47,8 +47,8 @@ bool IsDeviceExistInGroup(int32_t osAccountId, const char *groupId, const char *
 bool IsDeviceExistInUser(int32_t osAccountId, const char *userId, const char *udid);
 int32_t AddCredTrustRelation(int32_t osAccountId, const char *userId, const char *credId);
 int32_t DelCredTrustRelation(int32_t osAccountId, const char *userId, const char *credId);
-bool IsCredReferencedByUser(int32_t osAccountId, const char *userId, const char *credId);
-bool IsCredReferenced(int32_t osAccountId, const char *credId);
+int32_t IsCredReferencedByUser(int32_t osAccountId, const char *userId, const char *credId, bool *isReferenced);
+int32_t IsCredReferenced(int32_t osAccountId, const char *credId, bool *isReferenced);
 int32_t NotifyAccountSwitch(int32_t osAccountId, const char *fromUserId, const char *toUserId,
     AccountSwitchGroupCallback groupCallback, AccountSwitchCredCallback credCallback);
 bool HasTrustRelationDbPlugin(void);

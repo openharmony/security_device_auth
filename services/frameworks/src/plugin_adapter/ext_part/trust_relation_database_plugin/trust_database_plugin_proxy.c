@@ -114,33 +114,33 @@ int32_t DeleteCredTrustRelation(int32_t osAccountId, const char *userId, const c
     return g_trustDatabasePlugin->deleteCredTrustRelation(osAccountId, userId, credId);
 }
 
-bool IsCredRelationReferencedByUser(int32_t osAccountId, const char *userId, const char *credId)
+int32_t IsCredRelationReferencedByUser(int32_t osAccountId, const char *userId, const char *credId, bool *isReferenced)
 {
     if (g_trustDatabasePlugin == NULL) {
         LOGE("[TRUST_DATABASE_PLUGIN]: plugin is null!");
-        return false;
+        return HC_ERR_NULL_PTR;
     }
-    bool isReferenced = false;
-    if (g_trustDatabasePlugin->isCredRelationReferencedByUser(
-        osAccountId, userId, credId, &isReferenced) != HC_SUCCESS) {
+    int32_t ret = g_trustDatabasePlugin->isCredRelationReferencedByUser(
+        osAccountId, userId, credId, isReferenced);
+    if (ret != HC_SUCCESS) {
         LOGE("[TRUST_DATABASE_PLUGIN]: call failed!");
-        return false;
+        return ret;
     }
-    return isReferenced;
+    return HC_SUCCESS;
 }
 
-bool IsCredRelationReferenced(int32_t osAccountId, const char *credId)
+int32_t IsCredRelationReferenced(int32_t osAccountId, const char *credId, bool *isReferenced)
 {
     if (g_trustDatabasePlugin == NULL) {
         LOGE("[TRUST_DATABASE_PLUGIN]: plugin is null!");
-        return false;
+        return HC_ERR_NULL_PTR;
     }
-    bool isReferenced = false;
-    if (g_trustDatabasePlugin->isCredRelationReferenced(osAccountId, credId, &isReferenced) != HC_SUCCESS) {
+    int32_t ret = g_trustDatabasePlugin->isCredRelationReferenced(osAccountId, credId, isReferenced);
+    if (ret != HC_SUCCESS) {
         LOGE("[TRUST_DATABASE_PLUGIN]: call failed!");
-        return false;
+        return ret;
     }
-    return isReferenced;
+    return HC_SUCCESS;
 }
 
 bool IsDeviceReferencedByUser(int32_t osAccountId, const char *userId, const char *udid)

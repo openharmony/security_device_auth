@@ -377,7 +377,7 @@ static int32_t VerifyProof(PakeBaseParams *params)
     }
     PRINT_DEBUG_MSG(verifyProof.val, verifyProof.length, "verifyProof");
 
-    if (memcmp(verifyProof.val, params->kcfDataPeer.val, verifyProof.length) != 0) {
+    if (!IsUint8BuffEqual(&verifyProof, &params->kcfDataPeer)) {
         LOGE("Compare kcfDataPeer failed.");
         res = PROOF_MISMATCH;
         goto CLEAN_UP;

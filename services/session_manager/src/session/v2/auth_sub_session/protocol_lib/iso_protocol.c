@@ -471,8 +471,7 @@ static int32_t ClientGenTokenProcEvent(IsoProtocol *impl)
         LOGE("IsoCalServerToken failed, res: %" LOG_PUB "d", res);
         return res;
     }
-    if ((impl->params.tokenPeer.length != tokenS.length) ||
-        (memcmp(impl->params.tokenPeer.val, tokenS.val, tokenS.length) != 0)) {
+    if (!IsUint8BuffEqual(&impl->params.tokenPeer, &tokenS)) {
         LOGE("The server token is inconsistent!");
         return PROOF_MISMATCH;
     }
@@ -548,8 +547,7 @@ static int32_t ServerGenSessKeyProcEvent(IsoProtocol *impl)
         LOGE("IsoCalClientToken failed, res: %" LOG_PUB "d", res);
         return res;
     }
-    if ((impl->params.tokenPeer.length != tokenC.length) ||
-        (memcmp(impl->params.tokenPeer.val, tokenC.val, tokenC.length) != 0)) {
+    if (!IsUint8BuffEqual(&impl->params.tokenPeer, &tokenC)) {
         LOGE("The client token is inconsistent!");
         return PROOF_MISMATCH;
     }
@@ -630,7 +628,7 @@ static int32_t ClientGenSessKeyProcEvent(IsoProtocol *impl)
     if (res != HC_SUCCESS) {
         return res;
     }
-    if (memcmp(impl->params.authResultMac.val, authResultMac.val, SHA256_LEN) != 0) {
+    if (!IsUint8BuffEqual(&impl->params.authResultMac, &authResultMac)) {
         LOGE("The authResultMac is isconsistent!");
         return HC_ERR_PEER_ERROR;
     }

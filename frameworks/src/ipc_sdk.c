@@ -27,6 +27,7 @@
 #include "ipc_adapt.h"
 #include "securec.h"
 #include "sa_load_on_demand.h"
+#include "string_util.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,15 +78,12 @@ static void AddIpcCliCallbackCtx(const char *appId, uintptr_t cbInst, IpcProxyCb
 
 static void DelIpcCliCallbackCtx(const char *appId, IpcProxyCbInfo *cbCache)
 {
-    int32_t ret;
-
     (void)LockHcMutex(&g_ipcMutex);
     if (cbCache->appId[0] == 0) {
         UnlockHcMutex(&g_ipcMutex);
         return;
     }
-    ret = memcmp(appId, cbCache->appId, HcStrlen(cbCache->appId) + 1);
-    if (ret == 0) {
+    if (IsStrEqual(appId, cbCache->appId)) {
         cbCache->appId[0] = 0;
     }
     UnlockHcMutex(&g_ipcMutex);

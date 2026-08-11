@@ -33,6 +33,7 @@ int32_t DeepCopyUint8Buff(const Uint8Buff *buff, Uint8Buff *newBuff);
 void FreeUint8Buff(Uint8Buff *buff);
 void ClearFreeUint8Buff(Uint8Buff *buff);
 bool IsUint8BuffValid(const Uint8Buff *buff, uint32_t maxLen);
+bool IsUint8BuffEqual(const Uint8Buff *buff1, const Uint8Buff *buff2);
 int32_t ToLowerCase(Uint8Buff *buff);
 
 #ifdef __cplusplus

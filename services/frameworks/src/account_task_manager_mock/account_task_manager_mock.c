@@ -124,19 +124,21 @@ int32_t DelCredTrustRelation(int32_t osAccountId, const char *userId, const char
     return HC_ERR_NOT_SUPPORT;
 }
 
-bool IsCredReferencedByUser(int32_t osAccountId, const char *userId, const char *credId)
+int32_t IsCredReferencedByUser(int32_t osAccountId, const char *userId, const char *credId, bool *isReferenced)
 {
     (void)osAccountId;
     (void)userId;
     (void)credId;
-    return false;
+    (void)isReferenced;
+    return HC_ERROR;
 }
 
-bool IsCredReferenced(int32_t osAccountId, const char *credId)
+int32_t IsCredReferenced(int32_t osAccountId, const char *credId, bool *isReferenced)
 {
     (void)osAccountId;
     (void)credId;
-    return false;
+    (void)isReferenced;
+    return HC_ERROR;
 }
 
 int32_t NotifyAccountSwitch(int32_t osAccountId, const char *fromUserId, const char *toUserId,

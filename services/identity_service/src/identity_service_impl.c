@@ -338,7 +338,13 @@ static int32_t DeleteKeyByCredId(int32_t osAccountId, const char *credId)
         return IS_SUCCESS;
     }
 #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
-    if (IsCredReferenced(osAccountId, credId)) {
+    bool isReferenced = false;
+    int32_t res = IsCredReferenced(osAccountId, credId, &isReferenced);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to check cred reference, abort delete!");
+        return res;
+    }
+    if (isReferenced) {
         LOGI("Credential still referenced by other users, do not delete key.");
         return IS_SUCCESS;
     }

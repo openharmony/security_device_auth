@@ -148,22 +148,15 @@ static bool IsUserIdEqual(const char *userIdInDb, const char *peerUserIdInDb)
         LOGE("Failed to convert the input userId to upper case!");
         return false;
     }
-    uint32_t userIdInDbLen = HcStrlen(userIdInDb);
     uint32_t peerUserIdLen = HcStrlen(peerUserIdInDb);
-    if (!IsPeerUidLenValid(peerUserIdLen)) {
+    if (!IsPeerUidLenValid(peerUserIdLen) || !IsStrEqual(userIdInDb, peerUidToUpper)) {
         HcFree(peerUidToUpper);
         peerUidToUpper = NULL;
         return false;
     }
-    uint32_t cmpLen = (userIdInDbLen > peerUserIdLen) ? peerUserIdLen : userIdInDbLen;
-    if (memcmp(userIdInDb, peerUidToUpper, cmpLen) == EOK) {
-        HcFree(peerUidToUpper);
-        peerUidToUpper = NULL;
-        return true;
-    }
     HcFree(peerUidToUpper);
     peerUidToUpper = NULL;
-    return false;
+    return true;
 }
 
 static bool IsPeerInAccountRelatedGroup(const TrustedGroupEntry *groupEntry, const char *peerUserId, GroupType type)

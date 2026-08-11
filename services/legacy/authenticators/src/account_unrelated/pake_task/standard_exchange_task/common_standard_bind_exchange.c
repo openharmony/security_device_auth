@@ -277,6 +277,10 @@ ERR:
 static int32_t DecryptAuthAndSignInfo(const PakeParams *pakeParams, StandardBindExchangeParams *exchangeParams,
     Uint8Buff *signInfo, const char *aad)
 {
+    if (exchangeParams->exInfoCipher.length < AE_TAG_LEN + SIGNATURE_LEN) {
+        LOGE("exInfoCipher length check failed, received %" LOG_PUB PRIu32, exchangeParams->exInfoCipher.length);
+        return HC_ERR_INVALID_PARAMS;
+    }
     uint32_t exchangeInfoLen = exchangeParams->exInfoCipher.length - AE_TAG_LEN;
     uint8_t *exchangeInfoVal = (uint8_t *)HcMalloc(exchangeInfoLen, 0);
     if (exchangeInfoVal  == NULL) {

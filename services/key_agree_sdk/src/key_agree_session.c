@@ -19,6 +19,7 @@
 #include "key_agree_sdk.h"
 #include "pake_v2_protocol_common.h"
 #include "protocol_common.h"
+#include "uint8buff_utils.h"
 
 #define MAX_AUTH_ID_LEN 256
 #define MAJOR_VERSION_NO 1
@@ -66,8 +67,7 @@ static int32_t GetIdPeer(const CJson *in, const char *peerIdKey, const Uint8Buff
         LOGE("HexStringToByte for authIdPeer failed.");
         return HC_ERR_CONVERT_FAILED;
     }
-    if ((authIdSelf->length == authIdPeer->length) &&
-        memcmp(authIdSelf->val, authIdPeer->val, authIdSelf->length) == 0) {
+    if (IsUint8BuffEqual(authIdSelf, authIdPeer)) {
         LOGE("Peer id can not be equal to self id.");
         return HC_ERR_INVALID_PARAMS;
     }

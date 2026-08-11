@@ -131,6 +131,10 @@ static void RemoveTimeOutSession(void)
     uint32_t index = 0;
     while (index < g_lightSessionInfoList.size(&(g_lightSessionInfoList))) {
         LightSessionInfo *lightSessionInfo = g_lightSessionInfoList.getp(&(g_lightSessionInfoList), index);
+        if (lightSessionInfo == NULL || lightSessionInfo->session == NULL) {
+            index++;
+            continue;
+        }
         int64_t runningTime = HcGetIntervalTime(lightSessionInfo->createTime);
         if (runningTime < TIME_OUT_VALUE_LIGHT_AUTH) {
             index++;
