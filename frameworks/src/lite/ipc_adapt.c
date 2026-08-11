@@ -27,6 +27,7 @@
 #include "ipc_service_lite.h"
 #include "ipc_skeleton.h"
 #include "securec.h"
+#include "stddef.h"
 #include "string_util.h"
 
 #ifdef __cplusplus
@@ -325,33 +326,46 @@ void RemoveSdkCallBackByRequestId(int64_t requestId, uint8_t cbType)
     return;
 }
 
-int32_t GetAndValSize32Param(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
+static ParamCategory GetParamCategory(int32_t type)
 {
-    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, paramSize);
-    if ((*paramSize) != sizeof(int32_t) || ret != HC_SUCCESS) {
-        LOGE("get param error, type %" LOG_PUB "d", paramType);
-        return HC_ERR_IPC_BAD_PARAM;
+    if (type == PARAM_TYPE_CB_OBJECT) {
+        return PARAM_CAT_CB_OBJECT;
     }
-    return HC_SUCCESS;
+    for (int32_t i = 0; i < (int32_t)(sizeof(CPY_TYPES) / sizeof(CPY_TYPES[0])); i++) {
+        if (CPY_TYPES[i] == type) {
+            return PARAM_CAT_CPY;
+        }
+    }
+    if (type >= 1 && type <= PARAM_TYPE_RETURN_INFO) {
+        return PARAM_CAT_PTR;
+    }
+    return PARAM_CAT_NONE;
 }
 
-int32_t GetAndValSize64Param(const IpcDataInfo *ipcParams,
-    int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
+static int32_t GetTypeExpectSize(int32_t paramType)
 {
-    int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, paramSize);
-    if ((*paramSize) != sizeof(int64_t) || ret != HC_SUCCESS) {
-        LOGE("get param error, type %" LOG_PUB "d", paramType);
-        return HC_ERR_IPC_BAD_PARAM;
+    if (paramType == PARAM_TYPE_DEV_AUTH_CB) {
+        return (int32_t)sizeof(DeviceAuthCallback);
     }
-    return HC_SUCCESS;
+    if (paramType == PARAM_TYPE_REQID) {
+        return (int32_t)sizeof(int64_t);
+    }
+    if (GetParamCategory(paramType) == PARAM_CAT_CPY) {
+        return (int32_t)sizeof(int32_t);
+    }
+    return 0;
 }
 
-int32_t GetAndValSizeCbParam(const IpcDataInfo *ipcParams,
+int32_t GetAndValSizeParam(const IpcDataInfo *ipcParams,
     int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
 {
+    int32_t expectedSize = GetTypeExpectSize(paramType);
+    if (expectedSize == 0) {
+        LOGE("unsupported param type %" LOG_PUB "d", paramType);
+        return HC_ERR_IPC_BAD_PARAM;
+    }
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, paramSize);
-    if ((*paramSize) != sizeof(DeviceAuthCallback) || ret != HC_SUCCESS) {
+    if ((*paramSize) != expectedSize || ret != HC_SUCCESS) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
@@ -496,56 +510,57 @@ static void SetCbDeathRecipient(int32_t type, int32_t objIdx, int32_t cbDataIdx)
     return;
 }
 
-void AddIpcCbObjByAppId(const char *appId, int32_t objIdx, int32_t type)
+static bool CheckCbListReady(void)
 {
-    IpcCallBackNode *node = NULL;
-
     if (g_ipcCallBackList.ctx == NULL) {
         LOGE("list not inited");
-        return;
+        return false;
     }
-
-    LockCallbackList();
     if (g_ipcCallBackList.nodeCnt >= IPC_CALL_BACK_MAX_NODES) {
-        UnLockCallbackList();
         LOGE("list is full");
+        return false;
+    }
+    return true;
+}
+
+static void ResetExistingCbNodeProxy(IpcCallBackNode *node)
+{
+    if (node->proxyId >= 0) {
+        ResetRemoteObject(node->proxyId);
+        node->proxyId = -1;
+    }
+}
+
+void AddIpcCbObjByAppId(const char *appId, int32_t objIdx, int32_t type)
+{
+    LockCallbackList();
+    if (!CheckCbListReady()) {
+        UnLockCallbackList();
         return;
     }
-
-    node = GetIpcCallBackByAppId(appId, type);
+    IpcCallBackNode *node = GetIpcCallBackByAppId(appId, type);
     if (node != NULL) {
+        ResetExistingCbNodeProxy(node);
         node->proxyId = objIdx;
         SetCbDeathRecipient(type, objIdx, node->nodeIdx);
         LOGI("ipc object add success, appid: %" LOG_PUB "s, proxyId %" LOG_PUB "d", appId, node->proxyId);
     }
     UnLockCallbackList();
-    return;
 }
 
 int32_t AddIpcCallBackByAppId(const char *appId, int32_t type)
 {
-    if (g_ipcCallBackList.ctx == NULL) {
-        LOGE("list not inited");
-        return HC_ERROR;
-    }
-
     LockCallbackList();
-    if (g_ipcCallBackList.nodeCnt >= IPC_CALL_BACK_MAX_NODES) {
+    if (!CheckCbListReady()) {
         UnLockCallbackList();
-        LOGE("list is full");
         return HC_ERROR;
     }
-
     IpcCallBackNode *node = GetIpcCallBackByAppId(appId, type);
     if (node != NULL) {
-        if (node->proxyId >= 0) {
-            ResetRemoteObject(node->proxyId);
-            node->proxyId = -1;
-        }
+        ResetExistingCbNodeProxy(node);
         UnLockCallbackList();
         return HC_SUCCESS;
     }
-
     node = GetFreeIpcCallBackNode();
     if (node == NULL) {
         UnLockCallbackList();
@@ -621,54 +636,34 @@ int32_t AddReqIdByAppId(const char *appId, int64_t reqId)
 
 void AddIpcCbObjByReqId(int64_t reqId, int32_t objIdx, int32_t type)
 {
-    IpcCallBackNode *node = NULL;
-
-    if (g_ipcCallBackList.ctx == NULL) {
-        LOGE("list not inited");
-        return;
-    }
-
     LockCallbackList();
-    if (g_ipcCallBackList.nodeCnt >= IPC_CALL_BACK_MAX_NODES) {
+    if (!CheckCbListReady()) {
         UnLockCallbackList();
-        LOGE("list is full");
         return;
     }
-
-    node = GetIpcCallBackByReqId(reqId, type);
+    IpcCallBackNode *node = GetIpcCallBackByReqId(reqId, type);
     if (node != NULL) {
+        ResetExistingCbNodeProxy(node);
         node->proxyId = objIdx;
         LOGI("ipc object add success, request id %" LOG_PUB PRId64 ", type %" LOG_PUB "d, proxy id %" LOG_PUB "d",
             reqId, type, node->proxyId);
     }
     UnLockCallbackList();
-    return;
 }
 
 int32_t AddIpcCallBackByReqId(int64_t reqId, int32_t type)
 {
-    if (g_ipcCallBackList.ctx == NULL) {
-        LOGE("list is full");
-        return HC_ERROR;
-    }
-
     LockCallbackList();
-    if (g_ipcCallBackList.nodeCnt >= IPC_CALL_BACK_MAX_NODES) {
+    if (!CheckCbListReady()) {
         UnLockCallbackList();
-        LOGE("list is full");
         return HC_ERROR;
     }
-
     IpcCallBackNode *node = GetIpcCallBackByReqId(reqId, type);
     if (node != NULL) {
-        if (node->proxyId >= 0) {
-            ResetRemoteObject(node->proxyId);
-            node->proxyId = -1;
-        }
+        ResetExistingCbNodeProxy(node);
         UnLockCallbackList();
         return HC_SUCCESS;
     }
-
     node = GetFreeIpcCallBackNode();
     if (node == NULL) {
         UnLockCallbackList();
@@ -900,173 +895,126 @@ static void OnRequestStub(CallbackParams params)
     return;
 }
 
-static void OnGroupCreatedStub(CallbackParams params)
-{
-    const char *groupInfo = NULL;
-    const char *appId = NULL;
-    DataChangeListener callback;
+typedef void (*ListenerStrCbFunc)(const char *);
+typedef void (*ListenerStrStrCbFunc)(const char *, const char *);
 
-    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum,
-        PARAM_TYPE_GROUP_INFO, (uint8_t *)(&groupInfo), NULL);
+static bool GetListenerCbFromParams(CallbackParams params, DataChangeListener *callback)
+{
+    const char *appId = NULL;
     (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
         (uint8_t *)(&appId), NULL);
-
-    if (GetSdkCallBackByAppId(appId, CB_TYPE_LISTENER, (uint8_t *)(&callback),
+    if (GetSdkCallBackByAppId(appId, CB_TYPE_LISTENER, (uint8_t *)(callback),
         sizeof(DataChangeListener)) != HC_SUCCESS) {
         LOGE("GetSdkCallBackByAppId failed.");
-        return;
+        return false;
     }
-    if (callback.onGroupCreated != NULL) {
-        callback.onGroupCreated(groupInfo);
-        LOGI("onGroupCreated successfully.");
+    return true;
+}
+
+static void CallListenerStrCb(CallbackParams params, int32_t paramType, ListenerStrCbFunc cb)
+{
+    const char *strParam = NULL;
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType,
+        (uint8_t *)(&strParam), NULL);
+    if (cb != NULL) {
+        cb(strParam);
         WriteInt32(params.reply, HC_SUCCESS);
     }
-    return;
+}
+
+static void CallListenerStrStrCb(CallbackParams params, int32_t paramType1, int32_t paramType2,
+    ListenerStrStrCbFunc cb)
+{
+    const char *param1 = NULL;
+    const char *param2 = NULL;
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType1,
+        (uint8_t *)(&param1), NULL);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType2,
+        (uint8_t *)(&param2), NULL);
+    if (cb != NULL) {
+        cb(param1, param2);
+        WriteInt32(params.reply, HC_SUCCESS);
+    }
+}
+
+static void OnGroupCreatedStub(CallbackParams params)
+{
+    DataChangeListener callback;
+    if (!GetListenerCbFromParams(params, &callback)) {
+        return;
+    }
+    CallListenerStrCb(params, PARAM_TYPE_GROUP_INFO, callback.onGroupCreated);
 }
 
 static void OnGroupDeletedStub(CallbackParams params)
 {
-    const char *groupInfo = NULL;
-    const char *appId = NULL;
     DataChangeListener callback;
-
-    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum,
-        PARAM_TYPE_GROUP_INFO, (uint8_t *)(&groupInfo), NULL);
-    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
-        (uint8_t *)(&appId), NULL);
-    if (GetSdkCallBackByAppId(appId, CB_TYPE_LISTENER, (uint8_t *)(&callback),
-        sizeof(DataChangeListener)) != HC_SUCCESS) {
-        LOGE("GetSdkCallBackByAppId failed.");
+    if (!GetListenerCbFromParams(params, &callback)) {
         return;
     }
-    if (callback.onGroupDeleted != NULL) {
-        callback.onGroupDeleted(groupInfo);
-        LOGI("onGroupDeleted successfully.");
-        WriteInt32(params.reply, HC_SUCCESS);
-    }
-    return;
+    CallListenerStrCb(params, PARAM_TYPE_GROUP_INFO, callback.onGroupDeleted);
 }
 
 static void OnDevBoundStub(CallbackParams params)
 {
-    const char *groupInfo = NULL;
-    const char *appId = NULL;
     DataChangeListener callback;
-    const char *udid = NULL;
-
-    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID, (uint8_t *)(&udid), NULL);
-    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum,
-        PARAM_TYPE_GROUP_INFO, (uint8_t *)(&groupInfo), NULL);
-    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
-        (uint8_t *)(&appId), NULL);
-    if (GetSdkCallBackByAppId(appId, CB_TYPE_LISTENER, (uint8_t *)(&callback),
-        sizeof(DataChangeListener)) != HC_SUCCESS) {
-        LOGE("GetSdkCallBackByAppId failed.");
+    if (!GetListenerCbFromParams(params, &callback)) {
         return;
     }
-    if (callback.onDeviceBound != NULL) {
-        callback.onDeviceBound(udid, groupInfo);
-        LOGI("onDeviceBound successfully.");
-        WriteInt32(params.reply, HC_SUCCESS);
-    }
-    return;
+    CallListenerStrStrCb(params, PARAM_TYPE_UDID, PARAM_TYPE_GROUP_INFO, callback.onDeviceBound);
 }
 
 static void OnDevUnboundStub(CallbackParams params)
 {
-    const char *groupInfo = NULL;
-    const char *appId = NULL;
     DataChangeListener callback;
-    const char *udid = NULL;
-
-    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID, (uint8_t *)(&udid), NULL);
-    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum,
-        PARAM_TYPE_GROUP_INFO, (uint8_t *)(&groupInfo), NULL);
-    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
-        (uint8_t *)(&appId), NULL);
-    if (GetSdkCallBackByAppId(appId, CB_TYPE_LISTENER, (uint8_t *)(&callback),
-        sizeof(DataChangeListener)) != HC_SUCCESS) {
-        LOGE("GetSdkCallBackByAppId failed.");
+    if (!GetListenerCbFromParams(params, &callback)) {
         return;
     }
-    if (callback.onDeviceUnBound != NULL) {
-        callback.onDeviceUnBound(udid, groupInfo);
-        LOGI("onDeviceUnBound successfully.");
-        WriteInt32(params.reply, HC_SUCCESS);
-    }
-    return;
+    CallListenerStrStrCb(params, PARAM_TYPE_UDID, PARAM_TYPE_GROUP_INFO, callback.onDeviceUnBound);
 }
 
 static void OnDevUnTrustStub(CallbackParams params)
 {
-    const char *appId = NULL;
     DataChangeListener callback;
-    const char *udid = NULL;
-
-    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID, (uint8_t *)(&udid), NULL);
-    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
-        (uint8_t *)(&appId), NULL);
-    if (GetSdkCallBackByAppId(appId, CB_TYPE_LISTENER, (uint8_t *)(&callback),
-        sizeof(DataChangeListener)) != HC_SUCCESS) {
-        LOGE("GetSdkCallBackByAppId failed.");
+    if (!GetListenerCbFromParams(params, &callback)) {
         return;
     }
-    if (callback.onDeviceNotTrusted != NULL) {
-        callback.onDeviceNotTrusted(udid);
-        LOGI("onDeviceNotTrusted successfully.");
-        WriteInt32(params.reply, HC_SUCCESS);
-    }
-    return;
+    CallListenerStrCb(params, PARAM_TYPE_UDID, callback.onDeviceNotTrusted);
 }
 
 static void OnDelLastGroupStub(CallbackParams params)
 {
-    const char *appId = NULL;
-    DataChangeListener callback;
     const char *udid = NULL;
     int32_t groupType = 0;
-    int32_t inOutLen = 0;
-    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID, (uint8_t *)(&udid), NULL);
-    inOutLen = sizeof(groupType);
+    DataChangeListener callback;
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID,
+        (uint8_t *)(&udid), NULL);
+    int32_t inOutLen = sizeof(groupType);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum,
         PARAM_TYPE_GROUP_TYPE, (uint8_t *)(&groupType), &inOutLen);
-    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
-        (uint8_t *)(&appId), NULL);
-    if (GetSdkCallBackByAppId(appId, CB_TYPE_LISTENER, (uint8_t *)(&callback),
-        sizeof(DataChangeListener)) != HC_SUCCESS) {
-        LOGE("GetSdkCallBackByAppId failed.");
+    if (!GetListenerCbFromParams(params, &callback)) {
         return;
     }
     if (callback.onLastGroupDeleted != NULL) {
         callback.onLastGroupDeleted(udid, groupType);
-        LOGI("onLastGroupDeleted successfully.");
         WriteInt32(params.reply, HC_SUCCESS);
     }
-    return;
 }
 
 static void OnTrustDevNumChangedStub(CallbackParams params)
 {
-    const char *appId = NULL;
-    DataChangeListener callback;
     int32_t devNum = 0;
-    int32_t inOutLen = 0;
-
+    DataChangeListener callback;
+    int32_t inOutLen = sizeof(devNum);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum,
         PARAM_TYPE_DATA_NUM, (uint8_t *)(&devNum), &inOutLen);
-    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
-        (uint8_t *)(&appId), NULL);
-    if (GetSdkCallBackByAppId(appId, CB_TYPE_LISTENER, (uint8_t *)(&callback),
-        sizeof(DataChangeListener)) != HC_SUCCESS) {
-        LOGE("GetSdkCallBackByAppId failed.");
+    if (!GetListenerCbFromParams(params, &callback)) {
         return;
     }
     if (callback.onTrustedDeviceNumChanged != NULL) {
         callback.onTrustedDeviceNumChanged(devNum);
-        LOGI("onTrustedDeviceNumChanged successfully.");
         WriteInt32(params.reply, HC_SUCCESS);
     }
-    return;
 }
 
 void ProcCbHook(int32_t callbackId, const IpcDataInfo *cbDataCache, int32_t cacheNum, uintptr_t replyCtx)
@@ -1295,11 +1243,11 @@ static void GaCbOnErrorWithType(int64_t requestId, int32_t operationCode,
         LOGE("build trans data failed");
         return;
     }
-    if (type == CB_TYPE_DEV_AUTH) {
-        ActCallback(node->proxyId, CB_ID_ON_ERROR, dataParcel, NULL);
-    }
-    if (type == CB_TYPE_TMP_DEV_AUTH) {
-        ActCallback(node->proxyId, CB_ID_ON_ERROR_TMP, dataParcel, NULL);
+    static const int32_t ERROR_CB_IDS[] = {
+        0, CB_ID_ON_ERROR, CB_ID_ON_ERROR_TMP
+    };
+    if (type >= 1 && type <= CB_TYPE_TMP_DEV_AUTH) {
+        ActCallback(node->proxyId, ERROR_CB_IDS[type], dataParcel, NULL);
     }
     /* delete request id */
     DelIpcCallBackByReqId(requestId, type, false);
@@ -1378,23 +1326,28 @@ static bool CanFindCbByReqId(int64_t requestId)
     return (node != NULL) ? true : false;
 }
 
+static bool TryAddReqIdByAppId(int64_t requestId, const char *reqParams)
+{
+    CJson *reqParamsJson = CreateJsonFromString(reqParams);
+    if (reqParamsJson == NULL) {
+        LOGE("Failed to create json from string!");
+        return false;
+    }
+    const char *callerAppId = GetStringFromJson(reqParamsJson, FIELD_APP_ID);
+    if (callerAppId == NULL) {
+        LOGE("Failed to get appId from reqParams json!");
+        FreeJson(reqParamsJson);
+        return false;
+    }
+    int32_t ret = AddReqIdByAppId(callerAppId, requestId);
+    FreeJson(reqParamsJson);
+    return ret == HC_SUCCESS;
+}
+
 static char *IpcGaCbOnRequest(int64_t requestId, int32_t operationCode, const char *reqParams)
 {
     if (!CanFindCbByReqId(requestId)) {
-        CJson *reqParamsJson = CreateJsonFromString(reqParams);
-        if (reqParamsJson == NULL) {
-            LOGE("failed to create json from string!");
-            return NULL;
-        }
-        const char *callerAppId = GetStringFromJson(reqParamsJson, FIELD_APP_ID);
-        if (callerAppId == NULL) {
-            LOGE("failed to get appId from json object!");
-            FreeJson(reqParamsJson);
-            return NULL;
-        }
-        int32_t ret = AddReqIdByAppId(callerAppId, requestId);
-        FreeJson(reqParamsJson);
-        if (ret != HC_SUCCESS) {
+        if (!TryAddReqIdByAppId(requestId, reqParams)) {
             return NULL;
         }
     }
@@ -1406,292 +1359,133 @@ static char *TmpIpcGaCbOnRequest(int64_t requestId, int32_t operationCode, const
     return GaCbOnRequestWithType(requestId, operationCode, reqParams, CB_TYPE_TMP_DEV_AUTH, CB_ID_ON_REQUEST_TMP);
 }
 
-void IpcOnGroupCreated(const char *groupInfo)
-{
-    if (groupInfo == NULL) {
-        LOGE("IpcOnGroupCreated, params error");
-        return;
-    }
+typedef struct {
+    int32_t type;
+    const uint8_t *data;
+    int32_t size;
+} IpcEncodeParam;
 
+static void BroadcastToCallbacks(int32_t cbType, int32_t cbId,
+    const IpcEncodeParam *params, int32_t paramCount)
+{
     LockCallbackList();
     if (g_ipcCallBackList.ctx == NULL) {
         UnLockCallbackList();
-        LOGE("IpcCallBackList not initialized.");
         return;
     }
-
     for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
-        if (g_ipcCallBackList.ctx[i].cbType != CB_TYPE_LISTENER) {
+        if (g_ipcCallBackList.ctx[i].cbType != cbType) {
             continue;
         }
         IpcIo *dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
         if (dataParcel == NULL) {
-            UnLockCallbackList();
             LOGE("Failed to InitIpcDataCache.");
             continue;
         }
-        uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO,
-            (const uint8_t *)(groupInfo), HcStrlen(groupInfo) + 1);
-        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID, (const uint8_t *)(g_ipcCallBackList.ctx[i].appId),
+        uint32_t ret = HC_SUCCESS;
+        for (int32_t j = 0; j < paramCount; j++) {
+            ret |= EncodeCallData(dataParcel, params[j].type, params[j].data, params[j].size);
+        }
+        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID,
+            (const uint8_t *)(g_ipcCallBackList.ctx[i].appId),
             HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
         if (ret != HC_SUCCESS) {
-            UnLockCallbackList();
             HcFree((void *)dataParcel);
             LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
-            continue;
+            break;
         }
-        ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_GROUP_CREATED, dataParcel, NULL);
+        ActCallback(g_ipcCallBackList.ctx[i].proxyId, cbId, dataParcel, NULL);
         HcFree((void *)dataParcel);
     }
     UnLockCallbackList();
-    return;
+}
+
+static IpcEncodeParam MakeStrParam(int32_t type, const char *str)
+{
+    IpcEncodeParam p = { type, (const uint8_t *)(str), (int32_t)(HcStrlen(str) + 1) };
+    return p;
+}
+
+static IpcEncodeParam MakeBinParam(int32_t type, const uint8_t *data, int32_t size)
+{
+    IpcEncodeParam p = { type, data, size };
+    return p;
+}
+
+static void BroadcastStrCb(int32_t cbType, int32_t cbId, int32_t paramType, const char *strParam)
+{
+    if (strParam == NULL) {
+        return;
+    }
+    IpcEncodeParam params[] = { MakeStrParam(paramType, strParam) };
+    BroadcastToCallbacks(cbType, cbId, params, sizeof(params) / sizeof(params[0]));
+}
+
+typedef struct {
+    int32_t paramType;
+    const char *str;
+} StrParamPair;
+
+static void BroadcastStrStrCb(int32_t cbType, int32_t cbId, const StrParamPair *param1,
+    const StrParamPair *param2)
+{
+    if (param1 == NULL || param1->str == NULL || param2 == NULL || param2->str == NULL) {
+        return;
+    }
+    IpcEncodeParam params[] = {
+        MakeStrParam(param1->paramType, param1->str),
+        MakeStrParam(param2->paramType, param2->str)
+    };
+    BroadcastToCallbacks(cbType, cbId, params, sizeof(params) / sizeof(params[0]));
+}
+
+void IpcOnGroupCreated(const char *groupInfo)
+{
+    BroadcastStrCb(CB_TYPE_LISTENER, CB_ID_ON_GROUP_CREATED, PARAM_TYPE_GROUP_INFO, groupInfo);
 }
 
 void IpcOnGroupDeleted(const char *groupInfo)
 {
-    if (groupInfo == NULL) {
-        LOGE("GroupInfo is NULL, params error.");
-        return;
-    }
-
-    LockCallbackList();
-    if (g_ipcCallBackList.ctx == NULL) {
-        LOGE("IpcCallBackList is not initialized.");
-        UnLockCallbackList();
-        return;
-    }
-
-    for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
-        if (g_ipcCallBackList.ctx[i].cbType != CB_TYPE_LISTENER) {
-            continue;
-        }
-        IpcIo *dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
-        if (dataParcel == NULL) {
-            UnLockCallbackList();
-            LOGE("Failed to InitIpcDataCache.");
-            continue;
-        }
-        uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO,
-            (const uint8_t *)(groupInfo), HcStrlen(groupInfo) + 1);
-        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID, (const uint8_t *)(g_ipcCallBackList.ctx[i].appId),
-            HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
-        if (ret != HC_SUCCESS) {
-            UnLockCallbackList();
-            HcFree((void *)dataParcel);
-            LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
-            continue;
-        }
-        ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_GROUP_DELETED, dataParcel, NULL);
-        HcFree((void *)dataParcel);
-    }
-    UnLockCallbackList();
-    return;
+    BroadcastStrCb(CB_TYPE_LISTENER, CB_ID_ON_GROUP_DELETED, PARAM_TYPE_GROUP_INFO, groupInfo);
 }
 
 void IpcOnDeviceBound(const char *peerUdid, const char *groupInfo)
 {
-    if ((peerUdid == NULL) || (groupInfo == NULL)) {
-        LOGE("Param is NULL.");
-        return;
-    }
-
-    LockCallbackList();
-    if (g_ipcCallBackList.ctx == NULL) {
-        LOGE("Error occurs, callBackList is not initialized.");
-        UnLockCallbackList();
-        return;
-    }
-
-    for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
-        if (g_ipcCallBackList.ctx[i].cbType != CB_TYPE_LISTENER) {
-            continue;
-        }
-        IpcIo *dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
-        if (dataParcel == NULL) {
-            UnLockCallbackList();
-            LOGE("Failed to InitIpcDataCache.");
-            continue;
-        }
-        uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, (const uint8_t *)(peerUdid),
-            HcStrlen(peerUdid) + 1);
-        ret |= EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO,
-            (const uint8_t *)(groupInfo), HcStrlen(groupInfo) + 1);
-        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID, (const uint8_t *)(g_ipcCallBackList.ctx[i].appId),
-            HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
-        if (ret != HC_SUCCESS) {
-            UnLockCallbackList();
-            HcFree((void *)dataParcel);
-            LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
-            continue;
-        }
-        ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_DEV_BOUND, dataParcel, NULL);
-        HcFree((void *)dataParcel);
-    }
-    UnLockCallbackList();
-    return;
+    StrParamPair param1 = { PARAM_TYPE_UDID, peerUdid };
+    StrParamPair param2 = { PARAM_TYPE_GROUP_INFO, groupInfo };
+    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEV_BOUND, &param1, &param2);
 }
 
 void IpcOnDeviceUnBound(const char *peerUdid, const char *groupInfo)
 {
-    if ((peerUdid == NULL) || (groupInfo == NULL)) {
-        LOGE("Argument Error");
-        return;
-    }
-
-    LockCallbackList();
-    if (g_ipcCallBackList.ctx == NULL) {
-        UnLockCallbackList();
-        LOGE("CallBackList ctx is not initialized!");
-        return;
-    }
-
-    for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
-        if (g_ipcCallBackList.ctx[i].cbType != CB_TYPE_LISTENER) {
-            continue;
-        }
-        IpcIo *dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
-        if (dataParcel == NULL) {
-            UnLockCallbackList();
-            LOGE("Failed to InitIpcDataCache.");
-            continue;
-        }
-        uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, (const uint8_t *)(peerUdid),
-            HcStrlen(peerUdid) + 1);
-        ret |= EncodeCallData(dataParcel, PARAM_TYPE_GROUP_INFO,
-            (const uint8_t *)(groupInfo), HcStrlen(groupInfo) + 1);
-        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID, (const uint8_t *)(g_ipcCallBackList.ctx[i].appId),
-            HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
-        if (ret != HC_SUCCESS) {
-            UnLockCallbackList();
-            HcFree((void *)dataParcel);
-            LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
-            continue;
-        }
-        ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_DEV_UNBOUND, dataParcel, NULL);
-        HcFree((void *)dataParcel);
-    }
-    UnLockCallbackList();
-    return;
+    StrParamPair param1 = { PARAM_TYPE_UDID, peerUdid };
+    StrParamPair param2 = { PARAM_TYPE_GROUP_INFO, groupInfo };
+    BroadcastStrStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEV_UNBOUND, &param1, &param2);
 }
 
 void IpcOnDeviceNotTrusted(const char *peerUdid)
 {
-    if (peerUdid == NULL) {
-        LOGE("Invalid Params!");
-        return;
-    }
-
-    LockCallbackList();
-    if (g_ipcCallBackList.ctx == NULL) {
-        UnLockCallbackList();
-        LOGE("IpcCallBackList uninitialized!");
-        return;
-    }
-
-    for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
-        if (g_ipcCallBackList.ctx[i].cbType != CB_TYPE_LISTENER) {
-            continue;
-        }
-        IpcIo *dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
-        if (dataParcel == NULL) {
-            UnLockCallbackList();
-            LOGE("Failed to InitIpcDataCache.");
-            continue;
-        }
-        uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, (const uint8_t *)(peerUdid),
-            HcStrlen(peerUdid) + 1);
-        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID, (const uint8_t *)(g_ipcCallBackList.ctx[i].appId),
-            HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
-        if (ret != HC_SUCCESS) {
-            UnLockCallbackList();
-            HcFree((void *)dataParcel);
-            LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
-            continue;
-        }
-        ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_DEV_UNTRUSTED, dataParcel, NULL);
-        HcFree((void *)dataParcel);
-    }
-    UnLockCallbackList();
-    return;
+    BroadcastStrCb(CB_TYPE_LISTENER, CB_ID_ON_DEV_UNTRUSTED, PARAM_TYPE_UDID, peerUdid);
 }
 
 void IpcOnLastGroupDeleted(const char *peerUdid, int32_t groupType)
 {
     if (peerUdid == NULL) {
-        LOGE("Error occurs, peerUdid is NULL.");
         return;
     }
-
-    LockCallbackList();
-    if (g_ipcCallBackList.ctx == NULL) {
-        UnLockCallbackList();
-        LOGE("IpcCallBackList node is not initialized.");
-        return;
-    }
-
-    for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
-        if (g_ipcCallBackList.ctx[i].cbType != CB_TYPE_LISTENER) {
-            continue;
-        }
-        IpcIo *dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
-        if (dataParcel == NULL) {
-            UnLockCallbackList();
-            LOGE("Failed to InitIpcDataCache.");
-            continue;
-        }
-        uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_UDID, (const uint8_t *)(peerUdid),
-            HcStrlen(peerUdid) + 1);
-        ret |= EncodeCallData(dataParcel, PARAM_TYPE_GROUP_TYPE,
-            (const uint8_t *)(groupType), sizeof(groupType));
-        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID, (const uint8_t *)(g_ipcCallBackList.ctx[i].appId),
-            HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
-        if (ret != HC_SUCCESS) {
-            UnLockCallbackList();
-            HcFree((void *)dataParcel);
-            LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
-            continue;
-        }
-        ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_LAST_GROUP_DELETED, dataParcel, NULL);
-        HcFree((void *)dataParcel);
-    }
-    UnLockCallbackList();
-    return;
+    IpcEncodeParam params[] = {
+        MakeStrParam(PARAM_TYPE_UDID, peerUdid),
+        MakeBinParam(PARAM_TYPE_GROUP_TYPE, (const uint8_t *)(&groupType), sizeof(groupType))
+    };
+    BroadcastToCallbacks(CB_TYPE_LISTENER, CB_ID_ON_LAST_GROUP_DELETED, params, sizeof(params) / sizeof(params[0]));
 }
 
 void IpcOnTrustedDeviceNumChanged(int32_t curTrustedDeviceNum)
 {
-    LockCallbackList();
-    if (g_ipcCallBackList.ctx == NULL) {
-        LOGE("IpcCallBackList un-initialized");
-        UnLockCallbackList();
-        return;
-    }
-
-    for (int32_t i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
-        if (g_ipcCallBackList.ctx[i].cbType != CB_TYPE_LISTENER) {
-            continue;
-        }
-        IpcIo *dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
-        if (dataParcel == NULL) {
-            UnLockCallbackList();
-            LOGE("Failed to InitIpcDataCache.");
-            continue;
-        }
-        uint32_t ret = EncodeCallData(dataParcel, PARAM_TYPE_DATA_NUM, (const uint8_t *)(&curTrustedDeviceNum),
-            sizeof(curTrustedDeviceNum));
-        ret |= EncodeCallData(dataParcel, PARAM_TYPE_APPID, (const uint8_t *)(g_ipcCallBackList.ctx[i].appId),
-            HcStrlen(g_ipcCallBackList.ctx[i].appId) + 1);
-        if (ret != HC_SUCCESS) {
-            UnLockCallbackList();
-            HcFree((void *)dataParcel);
-            LOGE("Error occurs, encode trans data failed, appId: %" LOG_PUB "s", g_ipcCallBackList.ctx[i].appId);
-            continue;
-        }
-        ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_TRUST_DEV_NUM_CHANGED, dataParcel, NULL);
-        HcFree((void *)dataParcel);
-    }
-    UnLockCallbackList();
-    return;
+    IpcEncodeParam params[] = {
+        MakeBinParam(PARAM_TYPE_DATA_NUM, (const uint8_t *)(&curTrustedDeviceNum), sizeof(curTrustedDeviceNum))
+    };
+    BroadcastToCallbacks(CB_TYPE_LISTENER, CB_ID_ON_TRUST_DEV_NUM_CHANGED, params, sizeof(params) / sizeof(params[0]));
 }
 
 void InitDeviceAuthCbCtx(DeviceAuthCallback *ctx, int32_t type)
@@ -1906,77 +1700,50 @@ void DecodeCallReply(uintptr_t callCtx, IpcDataInfo *replyCache, int32_t cacheNu
     return;
 }
 
-static bool IsTypeForCpyData(int32_t type)
+static int32_t ExtractParamByCategory(const IpcDataInfo *ipcParam, ParamCategory cat,
+    uint8_t *paramCache, int32_t *cacheLen)
 {
-    int32_t typeList[] = {
-        PARAM_TYPE_REQID, PARAM_TYPE_GROUP_TYPE, PARAM_TYPE_OPCODE, PARAM_TYPE_ERRCODE, PARAM_TYPE_OS_ACCOUNT_ID
-    };
-    int32_t i;
-    int32_t n = sizeof(typeList) / sizeof(typeList[0]);
-    for (i = 0; i < n; i++) {
-        if (typeList[i] == type) {
-            return true;
+    if (cat == PARAM_CAT_PTR) {
+        if (ipcParam->valSz <= 0) {
+            return HC_ERR_INVALID_PARAMS;
         }
-    }
-    return false;
-}
-
-static bool IsTypeForSettingPtr(int32_t type)
-{
-    int32_t typeList[] = {
-        PARAM_TYPE_APPID, PARAM_TYPE_DEV_AUTH_CB, PARAM_TYPE_LISTENER, PARAM_TYPE_CREATE_PARAMS,
-        PARAM_TYPE_GROUPID, PARAM_TYPE_UDID, PARAM_TYPE_ADD_PARAMS, PARAM_TYPE_DEL_PARAMS,
-        PARAM_TYPE_QUERY_PARAMS, PARAM_TYPE_COMM_DATA, PARAM_TYPE_SESS_KEY,
-        PARAM_TYPE_REQ_INFO, PARAM_TYPE_GROUP_INFO, PARAM_TYPE_AUTH_PARAMS, PARAM_TYPE_REQ_JSON,
-        PARAM_TYPE_PSEUDONYM_ID, PARAM_TYPE_INDEX_KEY, PARAM_TYPE_ERR_INFO
-    };
-    int32_t i;
-    int32_t n = sizeof(typeList) / sizeof(typeList[0]);
-    for (i = 0; i < n; i++) {
-        if (typeList[i] == type) {
-            return true;
+        *(uint8_t **)paramCache = ipcParam->val;
+        if (cacheLen != NULL) {
+            *cacheLen = ipcParam->valSz;
         }
+        return HC_SUCCESS;
     }
-    return false;
+    if (cat == PARAM_CAT_CPY) {
+        if ((ipcParam->val == NULL) || (ipcParam->valSz <= 0) || (cacheLen == NULL) || (*cacheLen <= 0)) {
+            return HC_ERR_INVALID_PARAMS;
+        }
+        errno_t eno = memcpy_s(paramCache, *cacheLen, ipcParam->val, ipcParam->valSz);
+        if (eno != EOK) {
+            return HC_ERR_MEMORY_COPY;
+        }
+        *cacheLen = ipcParam->valSz;
+        return HC_SUCCESS;
+    }
+    if ((cat == PARAM_CAT_CB_OBJECT) && (cacheLen != NULL) &&
+        ((uint32_t)(*cacheLen) >= sizeof(ipcParam->idx))) {
+        *(int32_t *)paramCache = ipcParam->idx;
+    }
+    return HC_SUCCESS;
 }
 
 int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
     int32_t type, uint8_t *paramCache, int32_t *cacheLen)
 {
-    int32_t i;
-    errno_t eno;
-
-    int32_t ret = HC_ERR_IPC_BAD_MSG_TYPE;
-    for (i = 0; i < paramNum; i++) {
+    if (paramCache == NULL) {
+        return HC_ERR_INVALID_PARAMS;
+    }
+    for (int32_t i = 0; i < paramNum; i++) {
         if (ipcParams[i].type != type) {
             continue;
         }
-        ret = HC_SUCCESS;
-        if (IsTypeForSettingPtr(type)) {
-            *(uint8_t **)paramCache = ipcParams[i].val;
-            if (cacheLen != NULL) {
-                *cacheLen = ipcParams[i].valSz;
-            }
-            break;
-        }
-        if (IsTypeForCpyData(type)) {
-            if ((ipcParams[i].val == NULL) || (ipcParams[i].valSz <= 0)) {
-                ret = HC_ERR_INVALID_PARAMS;
-                break;
-            }
-            eno = memcpy_s(paramCache, *cacheLen, ipcParams[i].val, ipcParams[i].valSz);
-            if (eno != EOK) {
-                ret = HC_ERR_MEMORY_COPY;
-            }
-            *cacheLen = ipcParams[i].valSz;
-            break;
-        }
-        if ((type == PARAM_TYPE_CB_OBJECT) && (*(uint32_t *)cacheLen >= sizeof(ipcParams[i].idx))) {
-            *(int32_t *)paramCache = ipcParams[i].idx;
-        }
-        break;
+        return ExtractParamByCategory(&ipcParams[i], GetParamCategory(type), paramCache, cacheLen);
     }
-    return ret;
+    return HC_ERR_IPC_BAD_MSG_TYPE;
 }
 
 bool IsCallbackMethod(int32_t methodId)
