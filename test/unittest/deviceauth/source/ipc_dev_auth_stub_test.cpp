@@ -117,9 +117,7 @@ HWTEST_F(IpcDevAuthStubTest, SetCallMap_ExpandTable, TestSize.Level0)
 HWTEST_F(IpcDevAuthStubTest, SetRemoteObject_ResetRemoteObject, TestSize.Level0)
 {
     sptr<IRemoteObject> obj = CreateTestRemoteObject();
-    if (obj == nullptr) {
-        return;
-    }
+    ASSERT_NE(obj, nullptr);
     int32_t idx = ServiceDevAuth::SetRemoteObject(obj);
     EXPECT_GE(idx, 0);
     ServiceDevAuth::ResetRemoteObject(idx);
@@ -129,9 +127,8 @@ HWTEST_F(IpcDevAuthStubTest, SetRemoteObject_MultipleObjects, TestSize.Level0)
 {
     sptr<IRemoteObject> obj1 = CreateTestRemoteObject();
     sptr<IRemoteObject> obj2 = CreateTestRemoteObject();
-    if (obj1 == nullptr || obj2 == nullptr) {
-        return;
-    }
+    ASSERT_NE(obj1, nullptr);
+    ASSERT_NE(obj2, nullptr);
     int32_t idx1 = ServiceDevAuth::SetRemoteObject(obj1);
     int32_t idx2 = ServiceDevAuth::SetRemoteObject(obj2);
     EXPECT_GE(idx1, 0);
@@ -150,9 +147,7 @@ HWTEST_F(IpcDevAuthStubTest, ResetRemoteObject_InvalidIdx, TestSize.Level0)
 HWTEST_F(IpcDevAuthStubTest, ResetRemoteObject_ReuseSlot, TestSize.Level0)
 {
     sptr<IRemoteObject> obj = CreateTestRemoteObject();
-    if (obj == nullptr) {
-        return;
-    }
+    ASSERT_NE(obj, nullptr);
     int32_t idx1 = ServiceDevAuth::SetRemoteObject(obj);
     EXPECT_GE(idx1, 0);
     ServiceDevAuth::ResetRemoteObject(idx1);
@@ -176,9 +171,7 @@ HWTEST_F(IpcDevAuthStubTest, AddCbDeathRecipient_NotInUse, TestSize.Level0)
 HWTEST_F(IpcDevAuthStubTest, AddCbDeathRecipient_WithValidObject, TestSize.Level0)
 {
     sptr<IRemoteObject> obj = CreateTestRemoteObject();
-    if (obj == nullptr) {
-        return;
-    }
+    ASSERT_NE(obj, nullptr);
     int32_t idx = ServiceDevAuth::SetRemoteObject(obj);
     EXPECT_GE(idx, 0);
     ServiceDevAuth::AddCbDeathRecipient(idx, 0);
