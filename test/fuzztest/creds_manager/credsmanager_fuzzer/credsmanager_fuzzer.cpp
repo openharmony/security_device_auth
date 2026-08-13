@@ -1854,7 +1854,6 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     }
     
     DeleteDatabase();
-    InitDeviceAuthService();
     const DeviceGroupManager *gm = GetGmInstance();
     gm->regCallback(TEST_APP_ID.c_str(), &g_gmCallback);
     
@@ -1863,10 +1862,17 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
     
     g_testFuncs[testId % TEST_FUNC_COUNT]();
     
-    DestroyDeviceAuthService();
     return true;
 }
 }
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+    (void)argc;
+    (void)argv;
+    InitDeviceAuthService();
+    return 0;
+}
+
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {

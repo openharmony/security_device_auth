@@ -440,16 +440,22 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
         return false;
     }
     
-    InitDeviceAuthService();
     FuzzedDataProvider fdp(data, size);
     uint32_t testId = fdp.ConsumeIntegral<uint32_t>();
     
     g_testFuncs[testId % TEST_FUNC_COUNT]();
     
-    DestroyDeviceAuthService();
     return true;
 }
 }
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+    (void)argc;
+    (void)argv;
+    InitDeviceAuthService();
+    return 0;
+}
+
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {

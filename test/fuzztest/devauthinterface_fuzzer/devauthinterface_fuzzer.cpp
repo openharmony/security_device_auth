@@ -1479,7 +1479,6 @@ static void DevAuthInterfaceTestCase035()
 
 static void DevAuthInterfaceTestCase036()
 {
-    (void)InitDeviceAuthService();
     const AccountVerifier *verifier = GetAccountVerifierInstance();
     (void)verifier->getClientSharedKey(nullptr, nullptr, nullptr, nullptr);
     (void)verifier->getClientSharedKey(TEST_SERVER_PK, nullptr, nullptr, nullptr);
@@ -1500,7 +1499,6 @@ static void DevAuthInterfaceTestCase036()
     (void)verifier->getServerSharedKey(TEST_CLIENT_PK, TEST_APP_ID, &randomBuff, &sharedKeyBuff);
     verifier->destroyDataBuff(nullptr);
     verifier->destroyDataBuff(&sharedKeyBuff);
-    DestroyDeviceAuthService();
 }
 
 using TestFunc = void(*)(void);
@@ -1540,6 +1538,14 @@ bool FuzzDoDevAuthInterfaceFuzz(const uint8_t* data, size_t size)
     
     return true;
 }
+}
+
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+    (void)argc;
+    (void)argv;
+    InitDeviceAuthService();
+    return 0;
 }
 
 /* Fuzzer entry point */

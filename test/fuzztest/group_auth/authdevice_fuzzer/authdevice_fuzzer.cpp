@@ -57,7 +57,6 @@ namespace OHOS {
 
     bool FuzzDoAuthDevice(const uint8_t* data, size_t size)
     {
-        (void)InitDeviceAuthService();
         const GroupAuthManager *gaInstance = GetGaInstance();
         if (gaInstance == nullptr) {
             return false;
@@ -79,12 +78,13 @@ namespace OHOS {
         gaCallback.onTransmit = OnTransmit;
         gaCallback.onRequest = OnRequest;
         gaInstance->authDevice(osAccountId, authReqId, authParams.c_str(), &gaCallback);
-        DestroyDeviceAuthService();
         return true;
     }
 }
 
 /* Fuzzer entry point */
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) { (void)argc; (void)argv; InitDeviceAuthService(); return 0; }
+
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */

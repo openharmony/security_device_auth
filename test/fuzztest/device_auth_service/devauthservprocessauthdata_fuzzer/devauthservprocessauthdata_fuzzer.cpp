@@ -75,25 +75,29 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
-        InitDeviceAuthService();
         const GroupAuthManager *gaInstance = GetGaInstance();
         int64_t reqId = 123;
         uint8_t *authData = reinterpret_cast<uint8_t *>(HcMalloc(size + 1, 0));
         if (authData == nullptr) {
-            DestroyDeviceAuthService();
             return false;
         }
         if (memcpy_s(authData, size, data, size) != EOK) {
             HcFree(authData);
-            DestroyDeviceAuthService();
             return false;
         }
         gaInstance->processData(reqId, authData, size, &g_gaCallback);
         HcFree(authData);
         sleep(1);
-        DestroyDeviceAuthService();
         return true;
     }
+}
+
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+    (void)argc;
+    (void)argv;
+    InitDeviceAuthService();
+    return 0;
 }
 
 /* Fuzzer entry point */
