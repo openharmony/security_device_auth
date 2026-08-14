@@ -115,6 +115,7 @@ int32_t ToUpperCase(const char *oriStr, char **desStr)
             (*desStr)[i] = oriStr[i];
         }
     }
+    (*desStr)[len] = '\0';
     return CLIB_SUCCESS;
 }
 
@@ -131,7 +132,7 @@ int32_t DeepCopyString(const char *str, char **newStr)
     if (val == NULL) {
         return CLIB_ERR_BAD_ALLOC;
     }
-    (void)memcpy_s(val, len, str, len);
+    (void)memcpy_s(val, len + 1, str, len + 1);
     *newStr = val;
     return CLIB_SUCCESS;
 }
