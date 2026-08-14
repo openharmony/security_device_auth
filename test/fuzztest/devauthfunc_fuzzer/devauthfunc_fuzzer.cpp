@@ -569,7 +569,6 @@ static int32_t DevAuthTestCase004(void)
         }
         ret = gm->unRegCallback(TEST_APP_ID);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -588,7 +587,6 @@ static int32_t DevAuthTestCase005(void)
         }
         ret = CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -611,7 +609,6 @@ static int32_t DevAuthTestCase006(void)
         }
         ret = AddDemoMember();
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -638,7 +635,6 @@ static int32_t DevAuthTestCase007(void)
         }
         ret = AuthDemoMember();
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -665,7 +661,6 @@ static int32_t DevAuthTestCase008(void)
         }
         ret = DelDemoMember(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, DELETE_PARAMS);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -688,7 +683,6 @@ static int32_t DevAuthTestCase009(void)
         }
         ret = DeleteDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, DISBAND_PARAMS);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -709,7 +703,6 @@ static int32_t DevAuthTestCase010(void)
             ret = HC_ERROR;
         }
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -728,7 +721,6 @@ static int32_t DevAuthTestCase011(void)
         }
         ret = CreateDemoIdenticalAccountGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, TEST_USER_ID);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -751,7 +743,6 @@ static int32_t DevAuthTestCase012(void)
         }
         ret = gm->addMultiMembersToGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID, ADD_MULTI_PARAMS);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -763,13 +754,11 @@ static int32_t DevAuthTestCase013(void)
     if (ret != HC_SUCCESS) {
         return ret;
     }
-    DestroyDeviceAuthService();
     SetDeviceStatus(false);
     ret = InitDeviceAuthService();
     if (ret != HC_SUCCESS) {
         return ret;
     }
-    DestroyDeviceAuthService();
     SetDeviceStatus(true);
     ret = InitDeviceAuthService();
     if (ret != HC_SUCCESS) {
@@ -793,7 +782,6 @@ static int32_t DevAuthTestCase013(void)
         }
         ret = AuthDemoMember();
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -820,7 +808,6 @@ static int32_t DevAuthTestCase014(void)
         }
         ret = gm->delMultiMembersFromGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID, DEL_MULTI_PARAMS);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -847,7 +834,6 @@ static int32_t DevAuthTestCase015(void)
         }
         ret = DeleteDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, DISBAND_PARAMS2);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -870,7 +856,6 @@ static int32_t DevAuthTestCase016(void)
         }
         ret = CreateDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, CREATE_PARAMS2);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -897,7 +882,6 @@ static int32_t DevAuthTestCase018(void)
         }
         ret = DeleteDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, DISBAND_PARAMS3);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -912,7 +896,6 @@ static int32_t DevAuthTestCase019(void)
         const DeviceGroupManager *gm = GetGmInstance();
         ret = gm->regDataChangeListener(TEST_APP_ID, &g_listener);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -947,7 +930,6 @@ static int32_t DevAuthTestCase020(void)
         }
         ret = DeleteDemoGroup(DEFAULT_OS_ACCOUNT, TEST_REQ_ID, TEST_APP_ID, DISBAND_PARAMS2);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -966,7 +948,6 @@ static int32_t DevAuthTestCase021(void)
         }
         ret = gm->unRegDataChangeListener(TEST_APP_ID);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -989,7 +970,6 @@ static int32_t DevAuthTestCase022(void)
         }
         ret = gm->checkAccessToGroup(DEFAULT_OS_ACCOUNT, TEST_APP_ID, TEST_GROUP_ID);
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -1016,7 +996,6 @@ static int32_t DevAuthTestCase023(void)
             ret = HC_ERROR;
         }
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -1044,7 +1023,6 @@ static int32_t DevAuthTestCase024(void)
             ret = HC_ERROR;
         }
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -1072,7 +1050,6 @@ static int32_t DevAuthTestCase025(void)
             ret = HC_ERROR;
         }
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -1100,7 +1077,6 @@ static int32_t DevAuthTestCase026(void)
             ret = HC_ERROR;
         }
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -1127,7 +1103,6 @@ static int32_t DevAuthTestCase027(void)
             ret = HC_ERROR;
         }
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -1155,7 +1130,6 @@ static int32_t DevAuthTestCase028(void)
             ret = HC_ERROR;
         }
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -1180,7 +1154,6 @@ static int32_t DevAuthTestCase029(void)
             ret = HC_ERROR;
         }
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -1217,7 +1190,6 @@ static int32_t DevAuthTestCase030(void)
         g_asyncStatus = ASYNC_STATUS_WAITING;
         gm->cancelRequest(TEST_REQ_ID, TEST_APP_ID);
     } while (0);
-    DestroyDeviceAuthService();
     return HC_SUCCESS;
 }
 
@@ -1236,7 +1208,6 @@ static int32_t DevAuthTestCase031(void)
         }
         gm->cancelRequest(TEST_REQ_ID, TEST_APP_ID);
     } while (0);
-    DestroyDeviceAuthService();
     return HC_SUCCESS;
 }
 
@@ -1268,7 +1239,6 @@ static int32_t DevAuthTestCase032(void)
             ret = HC_ERROR;
         }
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -1300,7 +1270,6 @@ static int32_t DevAuthTestCase033(void)
             ret = HC_ERROR;
         }
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -1312,13 +1281,11 @@ static int32_t DevAuthTestCase034(void)
     if (ret != HC_SUCCESS) {
         return ret;
     }
-    DestroyDeviceAuthService();
     SetDeviceStatus(false);
     ret = InitDeviceAuthService();
     if (ret != HC_SUCCESS) {
         return ret;
     }
-    DestroyDeviceAuthService();
     SetDeviceStatus(true);
     ret = InitDeviceAuthService();
     if (ret != HC_SUCCESS) {
@@ -1342,7 +1309,6 @@ static int32_t DevAuthTestCase034(void)
         }
         ret = AuthDemoMember();
     } while (0);
-    DestroyDeviceAuthService();
     return ret;
 }
 
@@ -1395,7 +1361,6 @@ static int32_t DevAuthTestCase054(void)
         (void)RegGroupManagerCallback(nullptr, nullptr);
         (void)UnRegGroupManagerCallback(nullptr);
     } while (0);
-    DestroyDeviceAuthService();
     return HC_SUCCESS;
 }
 
@@ -1423,6 +1388,14 @@ bool FuzzDoDevAuthFuncFuzz(const uint8_t* data, size_t size)
     g_testFuncs[testId % TEST_FUNC_COUNT]();
     return true;
 }
+}
+
+extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
+{
+    (void)argc;
+    (void)argv;
+    InitDeviceAuthService();
+    return 0;
 }
 
 /* Fuzzer entry point */
