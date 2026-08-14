@@ -489,7 +489,13 @@ bool FuzzDoRegCallback(const uint8_t* data, size_t size)
 }
 
 /* Fuzzer entry point */
-extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) { (void)argc; (void)argv; InitDeviceAuthService(); return 0; }
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+    (void)argc;
+    (void)argv;
+    InitDeviceAuthService();
+    return 0;
+}
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
