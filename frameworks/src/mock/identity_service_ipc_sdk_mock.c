@@ -14,10 +14,9 @@
  */
 
 #include "identity_service_ipc_sdk.h"
+#include "device_auth.h"
 #include "device_auth_defines.h"
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "hc_types.h"
 
 int32_t InitISIpc(void)
 {
@@ -29,6 +28,12 @@ void DeInitISIpc(void)
     return;
 }
 
-#ifdef __cplusplus
+DEVICE_AUTH_API_PUBLIC const CredManager *GetCredMgrInstance(void)
+{
+    return NULL;
 }
-#endif
+
+DEVICE_AUTH_API_PUBLIC const CredAuthManager *GetCredAuthInstance(void)
+{
+    return NULL;
+}
