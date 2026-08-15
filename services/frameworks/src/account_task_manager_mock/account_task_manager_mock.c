@@ -159,3 +159,8 @@ bool HasTrustRelationDbPlugin(void)
 void IncreaseLoadCount(void) {}
 
 void DecreaseLoadCount(void) {}
+
+void TryRecoverAccountCred(int32_t osAccountId)
+{
+    (void)osAccountId;
+}

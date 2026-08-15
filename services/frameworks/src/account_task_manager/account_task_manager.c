@@ -15,6 +15,7 @@
 
 #include "account_task_manager.h"
 
+#include "common_defs.h"
 #include "device_auth_defines.h"
 #include "hc_log.h"
 #include "hc_mutex.h"
@@ -27,7 +28,6 @@
 #endif
 
 #define UNLOAD_DELAY_TIME 3
-
 typedef struct {
     int32_t sessionId;
 } AuthSessionRecord;
@@ -393,4 +393,18 @@ void DecreaseLoadCount(void)
         return;
     }
     UnloadAccountAuthPlugin();
+}
+
+void TryRecoverAccountCred(int32_t osAccountId)
+{
+    if (!g_isInit) {
+        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
+        return;
+    }
+    if (!g_hasAccountAuthPlugin) {
+        LOGI("[ACCOUNT_TASK_MGR]: no account auth plugin, skip recover.");
+        return;
+    }
+    LOGI("[ACCOUNT_TASK_MGR]: try to recover account cred, osAccountId: %" LOG_PUB "d.", osAccountId);
+    (void)ExecuteAccountAuthCmd(osAccountId, RELOAD_CRED_MGR, NULL, NULL);
 }

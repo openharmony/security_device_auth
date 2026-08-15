@@ -30,10 +30,7 @@
 #include "identity_service_defines.h"
 #include "permission_adapter.h"
 #include "hisysevent_adapter.h"
-
-#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
 #include "account_task_manager.h"
-#endif
 
 static void ISRecordAndReport(int32_t osAccountId, const Credential *credential,
     const char *funcName, int32_t processCode, int32_t ret)
@@ -217,6 +214,7 @@ int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestPara
     }
     if (credentialVec.size(&credentialVec) == 0) {
         LOGW("No credential found");
+        TryRecoverAccountCred(osAccountId);
         FreeJson(reqJson);
         ClearCredentialVec(&credentialVec);
         return GenerateReturnEmptyArrayStr(returnData);
@@ -455,7 +453,7 @@ int32_t UpdateCredInfoImpl(int32_t osAccountId, const char *credId, const char *
     Credential *credential = NULL;
     int32_t ret = GetCredentialById(osAccountId, credId, &credential);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to get credential by credId, ret: %" LOG_PUB "d", ret);
+        LOGE("Failed to get credential by credId, ret = %" LOG_PUB "d", ret);
         return ret;
     }
 
