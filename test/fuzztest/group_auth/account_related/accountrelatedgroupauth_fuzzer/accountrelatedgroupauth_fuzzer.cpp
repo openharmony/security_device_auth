@@ -31,16 +31,6 @@
 namespace OHOS {
 #define NUM_TWO 2
 
-void SetUp()
-{
-    (void)InitDeviceAuthService();
-}
-
-void TearDown()
-{
-    DestroyDeviceAuthService();
-}
-
 void AccountRelatedGroupAuthTest001()
 {
     AccountRelatedGroupAuth *groupAuth = (AccountRelatedGroupAuth *)GetAccountRelatedGroupAuth();
@@ -490,17 +480,23 @@ bool FuzzDoRegCallback(const uint8_t* data, size_t size)
     if (data == nullptr || size < sizeof(int32_t)) {
         return false;
     }
-    SetUp();
     FuzzedDataProvider fdp(data, size);
     uint32_t testId = fdp.ConsumeIntegral<uint32_t>();
     g_testFuncs[testId % TEST_FUNC_COUNT]();
-    TearDown();
     return true;
 }
 
 }
 
 /* Fuzzer entry point */
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+    (void)argc;
+    (void)argv;
+    InitDeviceAuthService();
+    return 0;
+}
+
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */

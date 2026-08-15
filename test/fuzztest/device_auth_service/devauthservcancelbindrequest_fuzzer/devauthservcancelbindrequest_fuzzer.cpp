@@ -30,19 +30,22 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
-        if (InitDeviceAuthService() != HC_SUCCESS) {
-            return false;
-        }
         const DeviceGroupManager *gmInstance = GetGmInstance();
         if (gmInstance == nullptr) {
-            DestroyDeviceAuthService();
             return false;
         }
         std::string appId(reinterpret_cast<const char *>(data), size);
         gmInstance->cancelRequest(TEST_REQ_ID, appId.c_str());
-        DestroyDeviceAuthService();
         return true;
     }
+}
+
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+    (void)argc;
+    (void)argv;
+    InitDeviceAuthService();
+    return 0;
 }
 
 /* Fuzzer entry point */

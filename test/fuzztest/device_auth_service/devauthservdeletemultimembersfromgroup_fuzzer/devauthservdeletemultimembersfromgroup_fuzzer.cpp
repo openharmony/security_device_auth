@@ -94,7 +94,6 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
-        InitDeviceAuthService();
         std::string appId(reinterpret_cast<const char *>(data), size);
         const DeviceGroupManager *gmInstance = GetGmInstance();
         gmInstance->regCallback(appId.c_str(), &g_gmCallback);
@@ -119,9 +118,16 @@ namespace OHOS {
         gmInstance->delMultiMembersFromGroup(0, appId.c_str(), deleteMultiMembersParams);
         sleep(1);
         ClearAndFreeJsonString(deleteMultiMembersParams);
-        DestroyDeviceAuthService();
         return true;
     }
+}
+
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+    (void)argc;
+    (void)argv;
+    InitDeviceAuthService();
+    return 0;
 }
 
 /* Fuzzer entry point */

@@ -34,7 +34,6 @@ namespace OHOS {
         if (data == nullptr) {
             return false;
         }
-        InitDeviceAuthService();
         CJson *reqJson = CreateJson();
         std::string deviceId(reinterpret_cast<const char *>(data), size);
         GenerateReqJson(reqJson, deviceId.c_str());
@@ -48,9 +47,16 @@ namespace OHOS {
             gmInstance->destroyInfo(&returnJsonStr);
         }
         ClearAndFreeJsonString(reqJsonStr);
-        DestroyDeviceAuthService();
         return true;
     }
+}
+
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+    (void)argc;
+    (void)argv;
+    InitDeviceAuthService();
+    return 0;
 }
 
 /* Fuzzer entry point */
