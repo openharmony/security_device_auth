@@ -406,7 +406,6 @@ void TryRecoverAccountCred(void)
         LOGI("[ACCOUNT_TASK_MGR]: no account auth plugin, skip recover.");
         return;
     }
-    int32_t osAccountId = GetCurrentActiveOsAccountId();
-    LOGI("[ACCOUNT_TASK_MGR]: try to recover account cred, osAccountId: %" LOG_PUB "d.", osAccountId);
-    (void)ExecuteAccountAuthCmd(osAccountId, RELOAD_CRED_MGR, NULL, NULL);
+    LOGI("[ACCOUNT_TASK_MGR]: try to recover account cred");
+    (void)ExecuteAccountAuthCmd(DEFAULT_OS_ACCOUNT, RELOAD_CRED_MGR, NULL, NULL);
 }
