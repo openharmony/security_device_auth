@@ -189,6 +189,18 @@ int32_t ExportCredentialImpl(int32_t osAccountId, const char *credId, char **ret
     return IS_SUCCESS;
 }
 
+static bool HasAccountRelatedCred(const CredentialVec *credentialVec)
+{
+    uint32_t index;
+    Credential **entry = NULL;
+    FOR_EACH_HC_VECTOR(*credentialVec, index, entry) {
+        if ((entry != NULL) && (*entry != NULL) && ((*entry)->credType == ACCOUNT_RELATED)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestParams, char **returnData)
 {
     CJson *reqJson = CreateJsonFromString(requestParams);
@@ -214,10 +226,15 @@ int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestPara
     }
     if (credentialVec.size(&credentialVec) == 0) {
         LOGW("No credential found");
-        TryRecoverAccountCred(osAccountId);
         FreeJson(reqJson);
         ClearCredentialVec(&credentialVec);
         return GenerateReturnEmptyArrayStr(returnData);
+    }
+
+    if ((queryParams.credType == DEFAULT_CRED_PARAM_VAL || queryParams.credType == ACCOUNT_RELATED) &&
+        !HasAccountRelatedCred(&credentialVec)) {
+        LOGI("No account related credential found, try to recover.");
+        TryRecoverAccountCred(osAccountId);
     }
 
     CJson *credIdJson = CreateJsonArray();
@@ -453,7 +470,7 @@ int32_t UpdateCredInfoImpl(int32_t osAccountId, const char *credId, const char *
     Credential *credential = NULL;
     int32_t ret = GetCredentialById(osAccountId, credId, &credential);
     if (ret != IS_SUCCESS) {
-        LOGE("Failed to get credential by credId, ret = %" LOG_PUB "d", ret);
+        LOGE("Failed to get credential by credId, ret: %" LOG_PUB "d", ret);
         return ret;
     }
 

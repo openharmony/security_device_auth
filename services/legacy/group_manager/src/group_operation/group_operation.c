@@ -61,21 +61,16 @@ static bool IsGroupTypeSupported(int groupType)
     return false;
 }
 
-static bool HasIdenticalAccountGroup(int32_t osAccountId)
+static bool HasAccountRelatedGroup(const GroupEntryVec *groupEntryVec)
 {
-    GroupEntryVec groupEntryVec = CreateGroupEntryVec();
-    int32_t result = GetJoinedGroups(osAccountId, IDENTICAL_ACCOUNT_GROUP, &groupEntryVec);
-    bool hasGroup = (result == HC_SUCCESS) && (groupEntryVec.size(&groupEntryVec) > 0);
-    ClearGroupEntryVec(&groupEntryVec);
-    return hasGroup;
-}
-
-static void TryRecoverAccountCredIfNoGroup(int32_t osAccountId)
-{
-    if (HasIdenticalAccountGroup(osAccountId)) {
-        return;
+    uint32_t index;
+    TrustedGroupEntry **entry = NULL;
+    FOR_EACH_HC_VECTOR(*groupEntryVec, index, entry) {
+        if ((entry != NULL) && (*entry != NULL) && IsAccountRelatedGroup((*entry)->type)) {
+            return true;
+        }
     }
-    TryRecoverAccountCred(osAccountId);
+    return false;
 }
 
 static void RemoveNoPermissionGroup(int32_t osAccountId, GroupEntryVec *groupEntryVec, const char *appId)
@@ -163,11 +158,13 @@ static int32_t GenerateReturnGroupVec(GroupEntryVec *groupInfoVec, char **return
     return HC_SUCCESS;
 }
 
-static int32_t ProcessAccessibleGroups(int32_t osAccountId, GroupEntryVec *groupEntryVec,
-    const char *appId, char **returnGroupVec, uint32_t *groupNum)
+static int32_t ProcessAccessibleGroups(int32_t osAccountId, int groupType,
+    GroupEntryVec *groupEntryVec, const char *appId, char **returnGroupVec, uint32_t *groupNum)
 {
-    if (groupEntryVec->size(groupEntryVec) == 0) {
-        TryRecoverAccountCredIfNoGroup(osAccountId);
+    if ((groupType == ALL_GROUP || IsAccountRelatedGroup(groupType)) &&
+        !HasAccountRelatedGroup(groupEntryVec)) {
+        LOGI("No account related group found, try to recover.");
+        TryRecoverAccountCred(osAccountId);
     }
     RemoveNoPermissionGroup(osAccountId, groupEntryVec, appId);
     int32_t result = GenerateReturnGroupVec(groupEntryVec, returnGroupVec, groupNum);
@@ -1683,7 +1680,7 @@ static int32_t GetAccessibleGroupInfo(int32_t osAccountId, const char *appId, co
         ClearGroupEntryVec(&groupEntryVec);
         return result;
     }
-    return ProcessAccessibleGroups(osAccountId, &groupEntryVec, appId, returnGroupVec, groupNum);
+    return ProcessAccessibleGroups(osAccountId, groupType, &groupEntryVec, appId, returnGroupVec, groupNum);
 }
 
 static int32_t GetAccessibleJoinedGroups(int32_t osAccountId, const char *appId, int groupType,
@@ -1708,7 +1705,7 @@ static int32_t GetAccessibleJoinedGroups(int32_t osAccountId, const char *appId,
         ClearGroupEntryVec(&groupEntryVec);
         return result;
     }
-    return ProcessAccessibleGroups(osAccountId, &groupEntryVec, appId, returnGroupVec, groupNum);
+    return ProcessAccessibleGroups(osAccountId, groupType, &groupEntryVec, appId, returnGroupVec, groupNum);
 }
 
 static int32_t GetAccessibleRelatedGroups(int32_t osAccountId, const char *appId, const char *peerDeviceId,
@@ -1741,7 +1738,7 @@ static int32_t GetAccessibleRelatedGroups(int32_t osAccountId, const char *appId
             return result;
         }
     }
-    return ProcessAccessibleGroups(osAccountId, &groupEntryVec, appId, returnGroupVec, groupNum);
+    return ProcessAccessibleGroups(osAccountId, ALL_GROUP, &groupEntryVec, appId, returnGroupVec, groupNum);
 }
 
 static int32_t CheckParams(int32_t osAccountId, const char *appId,
