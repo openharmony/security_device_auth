@@ -19,6 +19,7 @@
 #include "device_auth_defines.h"
 #include "hc_log.h"
 #include "hc_mutex.h"
+#include "os_account_adapter.h"
 #include "hc_vector.h"
 #include "plugin_adapter.h"
 #include "account_auth_plugin_proxy.h"
@@ -395,7 +396,7 @@ void DecreaseLoadCount(void)
     UnloadAccountAuthPlugin();
 }
 
-void TryRecoverAccountCred(int32_t osAccountId)
+void TryRecoverAccountCred(void)
 {
     if (!g_isInit) {
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
@@ -405,6 +406,7 @@ void TryRecoverAccountCred(int32_t osAccountId)
         LOGI("[ACCOUNT_TASK_MGR]: no account auth plugin, skip recover.");
         return;
     }
+    int32_t osAccountId = GetCurrentActiveOsAccountId();
     LOGI("[ACCOUNT_TASK_MGR]: try to recover account cred, osAccountId: %" LOG_PUB "d.", osAccountId);
     (void)ExecuteAccountAuthCmd(osAccountId, RELOAD_CRED_MGR, NULL, NULL);
 }

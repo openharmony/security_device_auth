@@ -201,6 +201,16 @@ static bool HasAccountRelatedCred(const CredentialVec *credentialVec)
     return false;
 }
 
+static void TryRecoverAccountCredIfNoRelatedCred(const QueryCredentialParams *queryParams,
+    const CredentialVec *credentialVec)
+{
+    if ((queryParams->credType != ACCOUNT_UNRELATED) &&
+        !HasAccountRelatedCred(credentialVec)) {
+        LOGI("No account related credential found, try to recover.");
+        TryRecoverAccountCred();
+    }
+}
+
 int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestParams, char **returnData)
 {
     CJson *reqJson = CreateJsonFromString(requestParams);
@@ -231,11 +241,7 @@ int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestPara
         return GenerateReturnEmptyArrayStr(returnData);
     }
 
-    if ((queryParams.credType == DEFAULT_CRED_PARAM_VAL || queryParams.credType == ACCOUNT_RELATED) &&
-        !HasAccountRelatedCred(&credentialVec)) {
-        LOGI("No account related credential found, try to recover.");
-        TryRecoverAccountCred(osAccountId);
-    }
+    TryRecoverAccountCredIfNoRelatedCred(&queryParams, &credentialVec);
 
     CJson *credIdJson = CreateJsonArray();
     if (credIdJson == NULL) {
