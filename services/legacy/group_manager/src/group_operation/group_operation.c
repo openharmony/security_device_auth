@@ -1677,8 +1677,8 @@ static int32_t GetAccessibleGroupInfo(int32_t osAccountId, const char *appId, co
     }
     TryRecoverAccountGroup(groupType, &groupEntryVec);
     RemoveNoPermissionGroup(osAccountId, &groupEntryVec, appId);	 
-    result = GenerateReturnGroupVec(&groupEntryVec, returnGroupVec, groupNum); 
-    ClearGroupEntryVec(&groupEntryVec); 
+    result = GenerateReturnGroupVec(&groupEntryVec, returnGroupVec, groupNum);
+    ClearGroupEntryVec(&groupEntryVec);
     return result;
 }
 
@@ -1706,8 +1706,8 @@ static int32_t GetAccessibleJoinedGroups(int32_t osAccountId, const char *appId,
     }
     TryRecoverAccountGroup(groupType, &groupEntryVec);
     RemoveNoPermissionGroup(osAccountId, &groupEntryVec, appId);	 
-    result = GenerateReturnGroupVec(&groupEntryVec, returnGroupVec, groupNum); 
-    ClearGroupEntryVec(&groupEntryVec); 
+    result = GenerateReturnGroupVec(&groupEntryVec, returnGroupVec, groupNum);
+    ClearGroupEntryVec(&groupEntryVec);
     return result;
 }
 
@@ -1743,8 +1743,8 @@ static int32_t GetAccessibleRelatedGroups(int32_t osAccountId, const char *appId
     }
     TryRecoverAccountGroup(ALL_GROUP, &groupEntryVec);
     RemoveNoPermissionGroup(osAccountId, &groupEntryVec, appId);	 
-    result = GenerateReturnGroupVec(&groupEntryVec, returnGroupVec, groupNum); 
-    ClearGroupEntryVec(&groupEntryVec); 
+    result = GenerateReturnGroupVec(&groupEntryVec, returnGroupVec, groupNum);
+    ClearGroupEntryVec(&groupEntryVec);
     return result;
 }
 
