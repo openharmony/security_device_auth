@@ -67,7 +67,7 @@ int Start(struct HcThreadT *thread)
 
     pthread_attr_t attr;
     pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
     if (thread->stackSize > 0 && thread->stackSize <= MAX_THREAD_STACK_SIZE) {
         pthread_attr_setstacksize(&attr, thread->stackSize);
@@ -91,10 +91,6 @@ void Join(struct HcThreadT *thread)
         return;
     }
     (void)LockHcMutex(&thread->threadLock);
-    int res = pthread_join(thread->thread, NULL);
-    if (res != 0) {
-        LOGW("[OS]: pthread_join fail. [Res]: %" LOG_PUB "d", res);
-    }
     if (thread->running) {
         thread->threadWaitObj.waitWithoutLock(&thread->threadWaitObj);
     }
