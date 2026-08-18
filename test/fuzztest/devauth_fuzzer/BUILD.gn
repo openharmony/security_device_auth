@@ -88,6 +88,7 @@ ohos_fuzztest("DevAuthFuzzTest") {
     "access_token:libtoken_setproc",
     "selinux_adapter:librestorecon",
     "cJSON:cjson",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "hisysevent:libhisysevent",

@@ -148,6 +148,7 @@ ohos_fuzztest("IdentityServiceFuzzTest") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "cJSON:cjson",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "hisysevent:libhisysevent",

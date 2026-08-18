@@ -136,6 +136,7 @@ ohos_unittest("deviceauth_llt") {
 
   external_deps = [
     "cJSON:cjson",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "googletest:gmock_main",
     "googletest:gtest_main",
@@ -269,6 +270,7 @@ ohos_unittest("device_auth_func_test") {
 
   external_deps = [
     "cJSON:cjson",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "googletest:gmock_main",
     "googletest:gtest_main",
@@ -405,6 +407,7 @@ ohos_unittest("device_auth_identity_service_test") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "cJSON:cjson",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "googletest:gmock_main",
     "googletest:gtest_main",
@@ -674,6 +677,7 @@ ohos_unittest("deviceauth_unit_test") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "cJSON:cjson",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "googletest:gmock_main",
     "googletest:gtest_main",
@@ -707,6 +711,7 @@ ohos_unittest("device_auth_ipc_test") {
     "access_token:libtoken_setproc",
     "selinux_adapter:librestorecon",
     "cJSON:cjson",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "googletest:gmock_main",
     "googletest:gtest_main",
@@ -903,6 +908,7 @@ ohos_unittest("identity_service_ipc_test") {
     "access_token:libtoken_setproc",
     "selinux_adapter:librestorecon",
     "cJSON:cjson",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "googletest:gmock_main",
     "googletest:gtest_main",
@@ -946,6 +952,7 @@ ohos_unittest("dfx_operation_common_test") {
   cflags = [ "-DHILOG_ENABLE" ]
   external_deps = [
     "cJSON:cjson",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",

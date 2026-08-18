@@ -98,6 +98,7 @@ if (support_os_account) {
       "access_token:libtoken_setproc",
       "selinux_adapter:librestorecon",
       "cJSON:cjson",
+    "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "common_event_service:cesfwk_innerkits",
       "googletest:gmock_main",
