@@ -30,10 +30,7 @@
 #include "identity_service_defines.h"
 #include "permission_adapter.h"
 #include "hisysevent_adapter.h"
-
-#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
 #include "account_task_manager.h"
-#endif
 
 static void ISRecordAndReport(int32_t osAccountId, const Credential *credential,
     const char *funcName, int32_t processCode, int32_t ret)
@@ -192,6 +189,28 @@ int32_t ExportCredentialImpl(int32_t osAccountId, const char *credId, char **ret
     return IS_SUCCESS;
 }
 
+static bool HasAccountRelatedCred(const CredentialVec *credentialVec)
+{
+    uint32_t index;
+    Credential **entry = NULL;
+    FOR_EACH_HC_VECTOR(*credentialVec, index, entry) {
+        if ((entry != NULL) && (*entry != NULL) && ((*entry)->credType == ACCOUNT_RELATED)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void TryRecoverAccountCredIfNoRelatedCred(const QueryCredentialParams *queryParams,
+    const CredentialVec *credentialVec)
+{
+    if ((queryParams->credType != ACCOUNT_UNRELATED) &&
+        !HasAccountRelatedCred(credentialVec)) {
+        LOGI("No account related credential found, try to recover.");
+        TryRecoverAccountCred();
+    }
+}
+
 int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestParams, char **returnData)
 {
     CJson *reqJson = CreateJsonFromString(requestParams);
@@ -221,6 +240,8 @@ int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestPara
         ClearCredentialVec(&credentialVec);
         return GenerateReturnEmptyArrayStr(returnData);
     }
+
+    TryRecoverAccountCredIfNoRelatedCred(&queryParams, &credentialVec);
 
     CJson *credIdJson = CreateJsonArray();
     if (credIdJson == NULL) {

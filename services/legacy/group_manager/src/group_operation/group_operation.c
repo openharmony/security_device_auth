@@ -61,6 +61,18 @@ static bool IsGroupTypeSupported(int groupType)
     return false;
 }
 
+static bool HasAccountRelatedGroup(const GroupEntryVec *groupEntryVec)
+{
+    uint32_t index;
+    TrustedGroupEntry **entry = NULL;
+    FOR_EACH_HC_VECTOR(*groupEntryVec, index, entry) {
+        if ((entry != NULL) && (*entry != NULL) && IsAccountRelatedGroup((*entry)->type)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void RemoveNoPermissionGroup(int32_t osAccountId, GroupEntryVec *groupEntryVec, const char *appId)
 {
     uint32_t index = 0;
@@ -144,6 +156,15 @@ static int32_t GenerateReturnGroupVec(GroupEntryVec *groupInfoVec, char **return
     }
     *groupNum = groupCount;
     return HC_SUCCESS;
+}
+
+static void TryRecoverAccountGroup(int groupType, GroupEntryVec *groupEntryVec)
+{
+    if ((groupType == ALL_GROUP || IsAccountRelatedGroup(groupType)) &&
+        !HasAccountRelatedGroup(groupEntryVec)) {
+        LOGI("No account related group found, try to recover.");
+        TryRecoverAccountCred();
+    }
 }
 
 static int32_t GenerateReturnDeviceVec(DeviceEntryVec *devInfoVec, char **returnDevInfoVec, uint32_t *deviceNum)
@@ -1682,6 +1703,7 @@ static int32_t GetAccessibleJoinedGroups(int32_t osAccountId, const char *appId,
         ClearGroupEntryVec(&groupEntryVec);
         return result;
     }
+    TryRecoverAccountGroup(groupType, &groupEntryVec);
     RemoveNoPermissionGroup(osAccountId, &groupEntryVec, appId);
     result = GenerateReturnGroupVec(&groupEntryVec, returnGroupVec, groupNum);
     ClearGroupEntryVec(&groupEntryVec);
