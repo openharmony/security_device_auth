@@ -54,7 +54,7 @@ int32_t EncodeCallRequest(ProxyDevAuthData *dataCtx, int32_t type, const uint8_t
     WriteUint32(ioPtr, paramSz);
     bool ret = WriteBuffer(ioPtr, param, paramSz);
     if (!ret) {
-        return HC_FALSE;
+        return HC_ERROR;
     }
     dataCtx->paramCnt++;
     return HC_SUCCESS;
@@ -80,20 +80,20 @@ int32_t FinalCallRequest(ProxyDevAuthData *dataCtx, int32_t methodId)
     WriteUint32(ioPtr, dataLen);
     bool ret = WriteBuffer(ioPtr, (const uint8_t *)(dataCtx->tmpData->bufferBase + dataCtx->ioBuffOffset), dataLen);
     if (!ret) {
-        return HC_FALSE;
+        return HC_ERROR;
     }
     if (dataCtx->withCallback) {
         SvcIdentity badSvc = { 0 };
         ShowIpcSvcInfo(&(dataCtx->cbSvc));
         if ((sizeof(dataCtx->cbSvc) != sizeof(badSvc)) ||
-            !memcmp(&(dataCtx->cbSvc), &badSvc, sizeof(badSvc))) {
+            memcmp(&(dataCtx->cbSvc), &badSvc, sizeof(badSvc)) == 0) {
             LOGE("ipc call with callback, but stub object invalid");
             dataCtx->withCallback = false;
             return HC_ERROR;
         }
         WriteInt32(ioPtr, PARAM_TYPE_CB_OBJECT);
         if (!WriteRemoteObject(ioPtr, &(dataCtx->cbSvc))) {
-            return HC_FALSE;
+            return HC_ERROR;
         }
         LOGI("ipc call with callback, data flag %" LOG_PUB "u", ioPtr->flag);
     }
