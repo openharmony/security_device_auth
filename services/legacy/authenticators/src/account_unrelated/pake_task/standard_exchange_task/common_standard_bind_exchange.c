@@ -331,7 +331,7 @@ static int32_t ParseAuthInfo(PakeParams *pakeParams, const StandardBindExchangeP
 {
     int32_t res;
     CJson *authInfoJson = NULL;
-    int32_t res = CreateJsonFromData(exchangeParams->authInfo.val, exchangeParams->authInfo.length, &authInfoJson);
+    res = CreateJsonFromData(exchangeParams->authInfo.val, exchangeParams->authInfo.length, &authInfoJson);
     if (res != HC_SUCCESS) {
         LOGE("Create authInfoJson failed.");
         return HC_ERR_JSON_CREATE;
