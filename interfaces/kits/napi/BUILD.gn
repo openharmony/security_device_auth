@@ -41,6 +41,7 @@ ohos_shared_library("deviceauthentication") {
   deps += [ "${deviceauth_path}/services:deviceauth_sdk" ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "napi:ace_napi",

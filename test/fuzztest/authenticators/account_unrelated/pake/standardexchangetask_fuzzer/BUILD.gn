@@ -75,6 +75,7 @@ ohos_fuzztest("StandardExchangeTaskFuzzTest") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "cJSON:cjson",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "hisysevent:libhisysevent",

@@ -58,6 +58,7 @@ ohos_fuzztest("DevAuthServCancelBindRequestFuzzTest") {
   deps = [ "${deps_adapter_path}:${hal_module_test_name}" ]
   external_deps = [
     "cJSON:cjson_static",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "hisysevent:libhisysevent",

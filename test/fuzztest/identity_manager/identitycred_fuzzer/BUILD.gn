@@ -95,6 +95,7 @@ ohos_fuzztest("IdentityCredFuzzTest") {
 
   external_deps = [
     "cJSON:cjson",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "hisysevent:libhisysevent",

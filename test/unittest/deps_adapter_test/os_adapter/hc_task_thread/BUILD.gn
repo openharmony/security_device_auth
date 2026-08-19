@@ -48,6 +48,7 @@ ohos_unittest("hc_task_thread_test") {
   include_dirs = hc_task_thread_test_includes
   external_deps = [
     "cJSON:cjson",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "googletest:gmock_main",
     "googletest:gtest_main",
