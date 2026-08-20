@@ -22,6 +22,8 @@
 #include "json_utils.h"
 #include "securec.h"
 #include <unistd.h>
+#include <thread>
+#include <chrono>
 
 namespace OHOS {
     static void OnError(int64_t requestId, int operationCode, int errorCode, const char *errorReturn)
@@ -98,8 +100,10 @@ extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
     (void)argc;
     (void)argv;
-    InitDeviceAuthService();
-    return 0;
+    // 打印启动信息
+    int32_t res = InitDeviceAuthService();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    return res;
 }
 
 /* Fuzzer entry point */

@@ -22,6 +22,8 @@
 
 #include <cinttypes>
 #include <unistd.h>
+#include <thread>
+#include <chrono>
 #include "account_module_defines.h"
 #include "alg_loader.h"
 #include "common_defs.h"
@@ -1394,8 +1396,10 @@ extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
 {
     (void)argc;
     (void)argv;
-    InitDeviceAuthService();
-    return 0;
+    // 打印启动信息
+    int32_t res = InitDeviceAuthService();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    return res;
 }
 
 /* Fuzzer entry point */

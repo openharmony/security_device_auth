@@ -15,6 +15,8 @@
 
 #include "addmember_fuzzer.h"
 #include <fuzzer/FuzzedDataProvider.h>
+#include <thread>
+#include <chrono>
 
 namespace OHOS {
     bool FuzzDoAddMemberToGroup(const uint8_t* data, size_t size)
@@ -46,8 +48,10 @@ extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
     (void)argc;
     (void)argv;
-    InitDeviceAuthService();
-    return 0;
+    // 打印启动信息
+    int32_t res = InitDeviceAuthService();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    return res;
 }
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)

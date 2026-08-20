@@ -16,6 +16,8 @@
 #include "identityservice_fuzzer.h"
 
 #include <cinttypes>
+#include <thread>
+#include <chrono>
 #include <unistd.h>
 #include <fuzzer/FuzzedDataProvider.h>
 #include "alg_loader.h"
@@ -1498,8 +1500,11 @@ bool FuzzDoCallback(const uint8_t* data, size_t size)
 
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
+    (void)argc;
+    (void)argv;
     // 打印启动信息
     int32_t res = InitDeviceAuthService();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     return res;
 }
 
