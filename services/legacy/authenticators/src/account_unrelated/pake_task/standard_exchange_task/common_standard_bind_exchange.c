@@ -330,8 +330,9 @@ ERR:
 static int32_t ParseAuthInfo(PakeParams *pakeParams, const StandardBindExchangeParams *exchangeParams)
 {
     int32_t res;
-    CJson *authInfoJson = CreateJsonFromString((char *)exchangeParams->authInfo.val);
-    if (authInfoJson == NULL) {
+    CJson *authInfoJson = NULL;
+    res = CreateJsonFromData(exchangeParams->authInfo.val, exchangeParams->authInfo.length, &authInfoJson);
+    if (res != HC_SUCCESS) {
         LOGE("Create authInfoJson failed.");
         return HC_ERR_JSON_CREATE;
     }
