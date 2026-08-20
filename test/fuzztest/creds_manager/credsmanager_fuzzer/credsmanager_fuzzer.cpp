@@ -29,6 +29,8 @@
 #include "hc_log.h"
 #include "json_utils.h"
 #include "securec.h"
+#include <thread>
+#include <chrono>
 
 namespace OHOS {
 static const std::string TEST_PIN_CODE = "123456";
@@ -1869,8 +1871,10 @@ extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
     (void)argc;
     (void)argv;
-    InitDeviceAuthService();
-    return 0;
+    // 打印启动信息
+    int32_t res = InitDeviceAuthService();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    return res;
 }
 
 /* Fuzzer entry point */

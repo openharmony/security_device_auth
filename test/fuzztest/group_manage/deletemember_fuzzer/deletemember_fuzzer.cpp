@@ -15,6 +15,8 @@
 
 #include "deletemember_fuzzer.h"
 #include <fuzzer/FuzzedDataProvider.h>
+#include <thread>
+#include <chrono>
 #include "device_auth.h"
 
 namespace OHOS {
@@ -46,8 +48,10 @@ extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
     (void)argc;
     (void)argv;
-    InitDeviceAuthService();
-    return 0;
+    // 打印启动信息
+    int32_t res = InitDeviceAuthService();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    return res;
 }
 
 /* Fuzzer entry point */
