@@ -121,20 +121,20 @@ static int32_t InitAccountLifecyclePluginCtx(void)
         return HC_ERR_INVALID_PARAMS;
     }
 #ifdef DEV_AUTH_IS_ENABLE
-    const CredManager *cmInstace = GetCredMgrInstance();
-    if (cmInstace == NULL) {
+    const CredManager *cmInstance = GetCredMgrInstance();
+    if (cmInstance == NULL) {
         LOGE("[ACCOUNT_LIFE_PLUGIN]: Cm instance is null.");
         HcFree(g_accountPluginCtx);
         g_accountPluginCtx = NULL;
         return HC_ERR_INVALID_PARAMS;
     }
-    g_accountPluginCtx->addCredential = cmInstace->addCredential;
-    g_accountPluginCtx->exportCredential = cmInstace->exportCredential;
-    g_accountPluginCtx->deleteCredential = cmInstace->deleteCredential;
-    g_accountPluginCtx->updateCredInfo = cmInstace->updateCredInfo;
+    g_accountPluginCtx->addCredential = cmInstance->addCredential;
+    g_accountPluginCtx->exportCredential = cmInstance->exportCredential;
+    g_accountPluginCtx->deleteCredential = cmInstance->deleteCredential;
+    g_accountPluginCtx->updateCredInfo = cmInstance->updateCredInfo;
     g_accountPluginCtx->queryCredInfoByCredId = QueryCredInfoByCredIdAndUid;
-    g_accountPluginCtx->queryCredentialByParams = cmInstace->queryCredentialByParams;
-    g_accountPluginCtx->destroyInfo = cmInstace->destroyInfo;
+    g_accountPluginCtx->queryCredentialByParams = cmInstance->queryCredentialByParams;
+    g_accountPluginCtx->destroyInfo = cmInstance->destroyInfo;
 #endif
     g_accountPluginCtx->createGroup = gmInstace->createGroup;
     g_accountPluginCtx->deleteGroup = gmInstace->deleteGroup;

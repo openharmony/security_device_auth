@@ -30,6 +30,8 @@ extern "C" {
 #define CB_TYPE_DEV_AUTH 1
 #define CB_TYPE_TMP_DEV_AUTH 2
 #define CB_TYPE_LISTENER 3
+#define CB_TYPE_CRED_LISTENER 4
+#define CB_TYPE_CRED_DEV_AUTH 5
 
 #ifndef IPC_DATA_BUFF_MAX_SZ
 #define IPC_DATA_BUFF_MAX_SZ 2048
@@ -42,6 +44,12 @@ typedef struct {
     uint8_t *val;
     int32_t idx;
 } IpcDataInfo;
+
+typedef enum {
+    CRED_CALLBACK_ADD,
+    CRED_CALLBACK_DELETE,
+    CRED_CALLBACK_UPDATE,
+} CredCallbackType;
 
 enum {
     CB_ID_ON_TRANS = 1,
@@ -56,11 +64,19 @@ enum {
     CB_ID_ON_DEV_UNTRUSTED,
     CB_ID_ON_LAST_GROUP_DELETED,
     CB_ID_ON_TRUST_DEV_NUM_CHANGED,
+    CB_ID_ON_CRED_ADD,
+    CB_ID_ON_CRED_DELETE,
+    CB_ID_ON_CRED_UPDATE,
     CB_ID_ON_TRANS_TMP,
     CB_ID_SESS_KEY_DONE_TMP,
     CB_ID_ON_FINISH_TMP,
     CB_ID_ON_ERROR_TMP,
     CB_ID_ON_REQUEST_TMP,
+    CB_ID_ON_TRANS_CRED,
+    CB_ID_SESS_KEY_DONE_CRED,
+    CB_ID_ON_FINISH_CRED,
+    CB_ID_ON_ERROR_CRED,
+    CB_ID_ON_REQUEST_CRED,
 };
 
 typedef int32_t (*IpcServiceCall)(const IpcDataInfo *, int32_t, uintptr_t);
@@ -121,6 +137,7 @@ void RemoveSdkCallBackByAppId(const char *appId, uint8_t cbType);
 int32_t AddSdkCallBackByRequestId(int64_t requestId, uint8_t cbType, uint8_t *val, int32_t valSize);
 void RemoveSdkCallBackByRequestId(int64_t requestId, uint8_t cbType);
 int32_t AddRequestIdByAppId(const char *appId, int64_t requestId);
+void InitDevAuthCredListenerCbCtx(CredChangeListener *ctx);
 
 #ifdef __cplusplus
 }

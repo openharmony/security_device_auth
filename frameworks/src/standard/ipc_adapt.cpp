@@ -388,34 +388,47 @@ void RegisterSdkCallBack(RegCallbackFunc regCallbackFunc, RegDataChangeListenerF
     DESTROY_HC_VECTOR(SdkIpcCallBackList, &tmpIpcCallBackList);
 }
 
-static ParamCategory GetParamCategory(int32_t type)
+static bool IsTypeExistInArray(int32_t type, const int32_t *types, int32_t len)
 {
-    if (type == PARAM_TYPE_CB_OBJECT) {
-        return PARAM_CAT_CB_OBJECT;
-    }
-    for (int32_t i = 0; i < static_cast<int32_t>(sizeof(CPY_TYPES) / sizeof(CPY_TYPES[0])); i++) {
-        if (CPY_TYPES[i] == type) {
-            return PARAM_CAT_CPY;
+    for (int32_t i = 0; i < len; i++) {
+        if (types[i] == type) {
+            return true;
         }
     }
-    if (type >= 1 && type <= PARAM_TYPE_RETURN_INFO) {
-        return PARAM_CAT_PTR;
-    }
-    return PARAM_CAT_NONE;
+    return false;
+}
+
+static bool IsTypeForCpyData(int32_t type)
+{
+    return IsTypeExistInArray(type, CPY_TYPES, sizeof(CPY_TYPES) / sizeof(CPY_TYPES[0]));
+}
+
+static bool IsTypeForSettingPtr(int32_t type)
+{
+    return IsTypeExistInArray(type, PTR_TYPES, sizeof(PTR_TYPES) / sizeof(PTR_TYPES[0]));
+}
+
+static bool IsInt32ParamType(int32_t paramType)
+{
+    return IsTypeExistInArray(paramType, INT32_TYPES, sizeof(INT32_TYPES) / sizeof(INT32_TYPES[0]));
+}
+
+static bool IsInt64ParamType(int32_t paramType)
+{
+    return IsTypeExistInArray(paramType, INT64_TYPES, sizeof(INT64_TYPES) / sizeof(INT64_TYPES[0]));
 }
 
 static int32_t GetTypeExpectSize(int32_t paramType)
 {
     if (paramType == PARAM_TYPE_DEV_AUTH_CB) {
         return static_cast<int32_t>(sizeof(DeviceAuthCallback));
-    }
-    if (paramType == PARAM_TYPE_REQID) {
+    } else if (IsInt64ParamType(paramType)) {
         return static_cast<int32_t>(sizeof(int64_t));
-    }
-    if (GetParamCategory(paramType) == PARAM_CAT_CPY) {
+    } else if (IsInt32ParamType(paramType)) {
         return static_cast<int32_t>(sizeof(int32_t));
+    } else {
+        return 0;
     }
-    return 0;
 }
 
 int32_t GetAndValSizeParam(const IpcDataInfo *ipcParams,
@@ -565,9 +578,8 @@ static void SetCbDeathRecipient(int32_t type, int32_t objIdx, int32_t cbDataIdx)
     }
 }
 
-static bool g_checkCbListReady(std::lock_guard<std::mutex> &autoLock)
+static bool IsCbListAvailable(void)
 {
-    (void)autoLock;
     if (g_ipcCallBackList.ctx == nullptr) {
         LOGE("list not inited");
         return false;
@@ -590,12 +602,11 @@ static void ResetExistingCbNodeProxy(IpcCallBackNode *node)
 void AddIpcCbObjByAppId(const char *appId, int32_t objIdx, int32_t type)
 {
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
-    if (!g_checkCbListReady(autoLock)) {
+    if (!IsCbListAvailable()) {
         return;
     }
     IpcCallBackNode *node = GetIpcCallBackByAppId(appId, type);
     if (node != nullptr) {
-        ResetExistingCbNodeProxy(node);
         node->proxyId = objIdx;
         SetCbDeathRecipient(type, objIdx, node->nodeIdx);
         LOGI("ipc object add success, appid: %" LOG_PUB "s, proxyId %" LOG_PUB "d", appId, node->proxyId);
@@ -605,7 +616,7 @@ void AddIpcCbObjByAppId(const char *appId, int32_t objIdx, int32_t type)
 int32_t AddIpcCallBackByAppId(const char *appId, int32_t type)
 {
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
-    if (!g_checkCbListReady(autoLock)) {
+    if (!IsCbListAvailable()) {
         return HC_ERROR;
     }
     IpcCallBackNode *node = GetIpcCallBackByAppId(appId, type);
@@ -620,8 +631,7 @@ int32_t AddIpcCallBackByAppId(const char *appId, int32_t type)
         return HC_ERROR;
     }
     node->cbType = type;
-    errno_t eno = memcpy_s(&(node->appId), sizeof(node->appId), appId, HcStrlen(appId) + 1);
-    if (eno != EOK) {
+    if (memcpy_s(&(node->appId), sizeof(node->appId), appId, HcStrlen(appId) + 1) != EOK) {
         ResetIpcCallBackNode(*node);
         LOGE("appid memory copy failed");
         return HC_ERROR;
@@ -682,12 +692,11 @@ int32_t AddReqIdByAppId(const char *appId, int64_t reqId)
 void AddIpcCbObjByReqId(int64_t reqId, int32_t objIdx, int32_t type)
 {
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
-    if (!g_checkCbListReady(autoLock)) {
+    if (!IsCbListAvailable()) {
         return;
     }
     IpcCallBackNode *node = GetIpcCallBackByReqId(reqId, type);
     if (node != nullptr) {
-        ResetExistingCbNodeProxy(node);
         node->proxyId = objIdx;
         LOGI("ipc object add success, request id %" LOG_PUB "lld, type %" LOG_PUB "d, proxy id %" LOG_PUB "d",
             static_cast<long long>(reqId), type, node->proxyId);
@@ -697,7 +706,7 @@ void AddIpcCbObjByReqId(int64_t reqId, int32_t objIdx, int32_t type)
 int32_t AddIpcCallBackByReqId(int64_t reqId, int32_t type)
 {
     std::lock_guard<std::mutex> autoLock(g_cbListLock);
-    if (!g_checkCbListReady(autoLock)) {
+    if (!IsCbListAvailable()) {
         return HC_ERROR;
     }
     IpcCallBackNode *node = GetIpcCallBackByReqId(reqId, type);
@@ -1262,6 +1271,17 @@ static void IpcCaCbOnFinish(int64_t requestId, int32_t operationCode, const char
     GaCbOnFinishWithType(requestId, operationCode, returnData, CB_TYPE_CRED_DEV_AUTH, CB_ID_ON_FINISH_CRED);
 }
 
+static void DoErrorCallback(int32_t type, int32_t proxyId, MessageParcel &dataParcel, MessageParcel &reply)
+{
+    if (type == CB_TYPE_DEV_AUTH) {
+        ServiceDevAuth::ActCallback(proxyId, CB_ID_ON_ERROR, false, dataParcel, reply);
+    } else if (type == CB_TYPE_TMP_DEV_AUTH) {
+        ServiceDevAuth::ActCallback(proxyId, CB_ID_ON_ERROR_TMP, false, dataParcel, reply);
+    } else if (type == CB_TYPE_CRED_DEV_AUTH) {
+        ServiceDevAuth::ActCallback(proxyId, CB_ID_ON_ERROR_CRED, false, dataParcel, reply);
+    }
+}
+
 static void GaCbOnErrorWithType(int64_t requestId, int32_t operationCode,
     int32_t errorCode, const char *errorReturn, int32_t type)
 {
@@ -1288,12 +1308,7 @@ static void GaCbOnErrorWithType(int64_t requestId, int32_t operationCode,
         LOGE("Error occurs, encode trans data failed.");
         return;
     }
-    static const int32_t ERROR_CB_IDS[] = {
-        0, CB_ID_ON_ERROR, CB_ID_ON_ERROR_TMP, 0, 0, CB_ID_ON_ERROR_CRED
-    };
-    if (type >= 1 && type <= CB_TYPE_CRED_DEV_AUTH) {
-        ServiceDevAuth::ActCallback(node->proxyId, ERROR_CB_IDS[type], false, dataParcel, reply);
-    }
+    DoErrorCallback(type, node->proxyId, dataParcel, reply);
     DelIpcCallBackByReqId(requestId, type, false);
     LOGI("process done, request id: %" LOG_PUB "lld", static_cast<long long>(requestId));
 }
@@ -1626,31 +1641,24 @@ void InitDeviceAuthCbCtx(DeviceAuthCallback *ctx, int32_t type)
     if (ctx == nullptr) {
         return;
     }
-    struct DevAuthCbEntry {
-        int32_t type;
-        bool (*onTransmit)(int64_t, const uint8_t *, uint32_t);
-        void (*onSessionKeyReturned)(int64_t, const uint8_t *, uint32_t);
-        void (*onFinish)(int64_t, int32_t, const char *);
-        void (*onError)(int64_t, int32_t, int32_t, const char *);
-        char *(*onRequest)(int64_t, int32_t, const char *);
-    };
-    static const DevAuthCbEntry cbTable[] = {
-        { CB_TYPE_DEV_AUTH, IpcGaCbOnTransmit, IpcGaCbOnSessionKeyReturned,
-            IpcGaCbOnFinish, IpcGaCbOnError, IpcGaCbOnRequest },
-        { CB_TYPE_TMP_DEV_AUTH, TmpIpcGaCbOnTransmit, TmpIpcGaCbOnSessionKeyReturned,
-            TmpIpcGaCbOnFinish, TmpIpcGaCbOnError, TmpIpcGaCbOnRequest },
-        { CB_TYPE_CRED_DEV_AUTH, IpcCaCbOnTransmit, IpcCaCbOnSessionKeyReturned,
-            IpcCaCbOnFinish, IpcCaCbOnError, IpcCaCbOnRequest },
-    };
-    for (int32_t i = 0; i < static_cast<int32_t>(sizeof(cbTable) / sizeof(cbTable[0])); i++) {
-        if (type == cbTable[i].type) {
-            ctx->onTransmit = cbTable[i].onTransmit;
-            ctx->onSessionKeyReturned = cbTable[i].onSessionKeyReturned;
-            ctx->onFinish = cbTable[i].onFinish;
-            ctx->onError = cbTable[i].onError;
-            ctx->onRequest = cbTable[i].onRequest;
-            return;
-        }
+    if (type == CB_TYPE_DEV_AUTH) {
+        ctx->onTransmit = IpcGaCbOnTransmit;
+        ctx->onSessionKeyReturned = IpcGaCbOnSessionKeyReturned;
+        ctx->onFinish = IpcGaCbOnFinish;
+        ctx->onError = IpcGaCbOnError;
+        ctx->onRequest = IpcGaCbOnRequest;
+    } else if (type == CB_TYPE_TMP_DEV_AUTH) {
+        ctx->onTransmit = TmpIpcGaCbOnTransmit;
+        ctx->onSessionKeyReturned = TmpIpcGaCbOnSessionKeyReturned;
+        ctx->onFinish = TmpIpcGaCbOnFinish;
+        ctx->onError = TmpIpcGaCbOnError;
+        ctx->onRequest = TmpIpcGaCbOnRequest;
+    } else if (type == CB_TYPE_CRED_DEV_AUTH) {
+        ctx->onTransmit = IpcCaCbOnTransmit;
+        ctx->onSessionKeyReturned = IpcCaCbOnSessionKeyReturned;
+        ctx->onFinish = IpcCaCbOnFinish;
+        ctx->onError = IpcCaCbOnError;
+        ctx->onRequest = IpcCaCbOnRequest;
     }
 }
 
@@ -1861,31 +1869,27 @@ void DecodeCallReply(uintptr_t callCtx, IpcDataInfo *replyCache, int32_t cacheNu
     }
 }
 
-static int32_t ExtractParamByCategory(const IpcDataInfo *ipcParam, ParamCategory cat,
+static int32_t ExtractParamByType(const IpcDataInfo *ipcParam, int32_t type,
     uint8_t *paramCache, int32_t *cacheLen)
 {
-    if (cat == PARAM_CAT_PTR) {
-        if (ipcParam->valSz <= 0) {
-            return HC_ERR_INVALID_PARAMS;
-        }
+    if (IsTypeForSettingPtr(type)) {
         *(reinterpret_cast<uint8_t **>(paramCache)) = ipcParam->val;
         if (cacheLen != nullptr) {
             *cacheLen = ipcParam->valSz;
         }
         return HC_SUCCESS;
     }
-    if (cat == PARAM_CAT_CPY) {
-        if ((ipcParam->val == nullptr) || (ipcParam->valSz <= 0) || (cacheLen == nullptr) || (*cacheLen <= 0)) {
+    if (IsTypeForCpyData(type)) {
+        if ((ipcParam->val == nullptr) || (ipcParam->valSz <= 0) || (cacheLen == nullptr)) {
             return HC_ERR_INVALID_PARAMS;
         }
-        errno_t eno = memcpy_s(paramCache, *cacheLen, ipcParam->val, ipcParam->valSz);
-        if (eno != EOK) {
+        if (memcpy_s(paramCache, *cacheLen, ipcParam->val, ipcParam->valSz) != EOK) {
             return HC_ERR_MEMORY_COPY;
         }
         *cacheLen = ipcParam->valSz;
         return HC_SUCCESS;
     }
-    if ((cat == PARAM_CAT_CB_OBJECT) && (cacheLen != nullptr) &&
+    if ((type == PARAM_TYPE_CB_OBJECT) && (cacheLen != nullptr) &&
         (static_cast<uint32_t>(*cacheLen) >= sizeof(ipcParam->idx))) {
         *(reinterpret_cast<int32_t *>(paramCache)) = ipcParam->idx;
     }
@@ -1895,14 +1899,11 @@ static int32_t ExtractParamByCategory(const IpcDataInfo *ipcParam, ParamCategory
 int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
     int32_t type, uint8_t *paramCache, int32_t *cacheLen)
 {
-    if (paramCache == nullptr) {
-        return HC_ERR_INVALID_PARAMS;
-    }
     for (int32_t i = 0; i < paramNum; i++) {
         if (ipcParams[i].type != type) {
             continue;
         }
-        return ExtractParamByCategory(&ipcParams[i], GetParamCategory(type), paramCache, cacheLen);
+        return ExtractParamByType(&ipcParams[i], type, paramCache, cacheLen);
     }
     return HC_ERR_IPC_BAD_MSG_TYPE;
 }

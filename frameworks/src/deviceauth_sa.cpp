@@ -129,7 +129,7 @@ static int32_t SaAddMethodMap(uintptr_t ipcInstance)
 {
     uint32_t ret = 0;
     for (uint32_t i = 0; i < sizeof(g_ipcCallMaps)/sizeof(g_ipcCallMaps[0]); i++) {
-        ret &= SaSetIpcCallMap(ipcInstance, g_ipcCallMaps[i].func, g_ipcCallMaps[i].id);
+        ret |= SaSetIpcCallMap(ipcInstance, g_ipcCallMaps[i].func, g_ipcCallMaps[i].id);
     }
     return ret;
 }

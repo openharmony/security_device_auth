@@ -33,11 +33,23 @@ if (os_level == "mini" || os_level == "small") {
       "${services_path}/sa/inc/critical_handler",
       "${services_path}/sa/inc/cache_common_event_handler",
     ]
+    if (os_level == "small") {
+      include_dirs += [ "${dev_frameworks_path}/inc/permission_adapter" ]
+    }
     sources = deviceauth_files
     sources += critical_handler_mock_files
     sources += cache_common_event_handler_mock_files
-    sources += identity_service_mock_files
+    if (os_level == "small") {
+      sources += identity_service_files
+      sources += permission_adapter_mock_files
+    } else {
+      sources += identity_service_mock_files
+    }
     defines = [ "HILOG_ENABLE" ]
+    if (os_level == "small") {
+      defines += [ "DEV_AUTH_IS_ENABLE" ]
+    }
+
     defines += deviceauth_defines
 
     sources += identity_manager_files
@@ -118,6 +130,7 @@ if (os_level == "mini" || os_level == "small") {
       ]
 
       defines = [ "HILOG_ENABLE" ]
+      defines += [ "DEV_AUTH_IS_ENABLE" ]
       if (ohos_kernel_type == "linux") {
         defines += [ "__LINUX__" ]
       }
@@ -151,11 +164,11 @@ if (os_level == "mini" || os_level == "small") {
 
       sources = deviceauth_ipc_files
       sources += [ "${frameworks_path}/src/ipc_sdk.c" ]
-      sources +=
-          [ "${frameworks_path}/src/mock/identity_service_ipc_sdk_mock.c" ]
+      sources += [ "${frameworks_path}/src/identity_service_ipc_sdk.c" ]
       sources += sdk_load_on_demand_mock_files
 
       defines = [ "HILOG_ENABLE" ]
+      defines += [ "DEV_AUTH_IS_ENABLE" ]
       if (ohos_kernel_type == "linux") {
         defines += [ "__LINUX__" ]
       }
