@@ -1,0 +1,76 @@
+# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//build/test.gni")
+import("//base/security/device_auth/deps_adapter/deviceauth_hals.gni")
+import("//base/security/device_auth/services/deviceauth.gni")
+
+mock_inner_path = "//base/security/device_auth/test/mock_inner"
+
+pseudonym_manager_test_includes = []
+pseudonym_manager_test_includes += inc_path
+pseudonym_manager_test_includes += hals_inc_path
+pseudonym_manager_test_includes += [
+  "${privacy_enhancement_path}/inc",
+  "${dev_frameworks_path}/inc/os_account_adapter",
+  "${dev_frameworks_path}/inc/security_label_adapter",
+  "${dev_frameworks_path}/inc/hiview_adapter",
+  "${mock_inner_path}",
+  "${mock_inner_path}/deps_adapter/os_adapter/impl/src/linux",
+  "${mock_inner_path}/deps_adapter/os_adapter/interfaces",
+  "${mock_inner_path}/services/frameworks/os_account_adapter",
+  "${os_adapter_path}/impl/src",
+  "${os_adapter_path}/impl/src/linux",
+]
+
+ohos_unittest("pseudonym_manager_test") {
+  module_out_path = "device_auth/device_auth"
+  sources = [
+    "pseudonym_manager_test.cpp",
+    "${mock_inner_path}/deps_adapter/os_adapter/impl/src/linux/hc_file_mock.cpp",
+    "${mock_inner_path}/deps_adapter/os_adapter/interfaces/hc_dev_info_mock.cpp",
+    "${mock_inner_path}/services/frameworks/os_account_adapter/os_account_adapter_mock.cpp",
+    "${privacy_enhancement_path}/src/pseudonym_manager.c",
+    "${common_lib_path}/impl/src/hc_string.c",
+    "${common_lib_path}/impl/src/hc_string_vector.c",
+    "${common_lib_path}/impl/src/hc_parcel.c",
+    "${common_lib_path}/impl/src/hc_mutex.c",
+    "${common_lib_path}/impl/src/hc_time.c",
+    "${common_lib_path}/impl/src/hc_types.c",
+    "${common_lib_path}/impl/src/string_util.c",
+    "${common_lib_path}/impl/src/uint8buff_utils.c",
+    "${common_lib_path}/impl/src/json_utils.c",
+    "${os_adapter_path}/impl/src/hc_log.c",
+    "${os_adapter_path}/impl/src/hc_err_trace.c",
+    "${os_adapter_path}/impl/src/linux/hc_condition.c",
+    "${os_adapter_path}/impl/src/linux/hc_thread.c",
+    "${os_adapter_path}/impl/src/linux/hc_init_protection.c",
+    "${dev_frameworks_path}/src/security_label_adapter/security_label_adapter.c",
+  ]
+  include_dirs = pseudonym_manager_test_includes
+  defines = [
+    "ENABLE_PSEUDONYM",
+    "HILOG_ENABLE",
+  ]
+  external_deps = [
+    "cJSON:cjson",
+    "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+  ]
+  subsystem_name = "security"
+  part_name = "device_auth"
+}

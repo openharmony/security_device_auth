@@ -626,6 +626,7 @@ static int32_t GetRealInfo(int32_t osAccountId, const char *pseudonymId, char **
         }
     }
     UnlockHcMutex(g_mutex);
+    LOGI("PseudonymId not found in the database!");
     return HC_SUCCESS;
 }
 
@@ -690,6 +691,31 @@ static int32_t AddPseudonymIdInfoToMemory(int32_t osAccountId, PseudonymInfo *ps
     return HC_SUCCESS;
 }
 
+static void DeletePseudonymIdInfoFromMemory(int32_t osAccountId, const char *indexKey)
+{
+    LOGI("Start to delete a pseudonymInfo from memory!");
+    (void)LockHcMutex(g_mutex);
+    OsAccountPseudonymInfo *info = GetPseudonymInfoByOsAccountId(osAccountId);
+    if (info == NULL) {
+        LOGE("Failed to get Pseudonym by os account id");
+        UnlockHcMutex(g_mutex);
+        return;
+    }
+    uint32_t index = 0;
+    while (index < HC_VECTOR_SIZE(&info->pseudonymInfoVec)) {
+        PseudonymInfo **entry = info->pseudonymInfoVec.getp(&info->pseudonymInfoVec, index);
+        if ((entry == NULL) || (*entry == NULL) || (!IsStrEqual((*entry)->indexKey, indexKey))) {
+            index++;
+            continue;
+        }
+        PseudonymInfo *deletedEntry = NULL;
+        HC_VECTOR_POPELEMENT(&info->pseudonymInfoVec, &deletedEntry, index);
+        DestroyPseudonymInfo(deletedEntry);
+        break;
+    }
+    UnlockHcMutex(g_mutex);
+}
+
 static PseudonymInfo *BuildPseudonymInfoEntry(const char *realInfo, const char *pseudonymId, const char *deviceId,
     const char *indexKey)
 {
@@ -730,7 +756,7 @@ static int32_t SavePseudonymId(int32_t osAccountId, const char *pseudonymId, con
     ret = SaveOsAccountPseudonymDb(osAccountId);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to add Save Pseudonym info to Database");
-        DestroyPseudonymInfo(pseudonymInfo);
+        DeletePseudonymIdInfoFromMemory(osAccountId, indexKey);
         return ret;
     }
     return HC_SUCCESS;

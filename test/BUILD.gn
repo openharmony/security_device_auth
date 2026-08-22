@@ -42,6 +42,7 @@ group("deviceauth_test_build") {
       "unittest/common_lib_test:common_lib_tests",
       "unittest/deps_adapter_test:deps_adapter_tests",
       "unittest/session_manager_test:session_manager_tests",
+      "unittest:unittest_tests",
       "mock_inner:mock_inner_tests",
       "mock_ext:mock_ext_tests",
     ]
