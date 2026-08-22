@@ -38,17 +38,20 @@ namespace {
 #define TEST_INDEX_KEY2 "DCBA6789"
 
 static const char *MOCK_PSEUDONYM_PATH = "/data/service/el1/public/deviceauth/pseudonym";
+static const int MOCK_FILE_OPEN_SUCCESS = 0;
+static const int MOCK_FILE_OPEN_FAIL = -1;
+static const int MOCK_FILE_WRITE_SIZE_ARG_INDEX = 2;
 
 static void ExpectDbWriteSuccess(NiceMock<MockHcFile> &mock)
 {
-    EXPECT_CALL(mock, HcFileOpen(_, MODE_FILE_WRITE, _)).WillOnce(Return(0));
-    EXPECT_CALL(mock, HcFileWrite(_, _, _)).WillOnce(ReturnArg<2>());
+    EXPECT_CALL(mock, HcFileOpen(_, MODE_FILE_WRITE, _)).WillOnce(Return(MOCK_FILE_OPEN_SUCCESS));
+    EXPECT_CALL(mock, HcFileWrite(_, _, _)).WillOnce(ReturnArg<MOCK_FILE_WRITE_SIZE_ARG_INDEX>());
     EXPECT_CALL(mock, HcFileClose(_));
 }
 
 static void ExpectDbWriteFail(NiceMock<MockHcFile> &mock)
 {
-    EXPECT_CALL(mock, HcFileOpen(_, MODE_FILE_WRITE, _)).WillOnce(Return(-1));
+    EXPECT_CALL(mock, HcFileOpen(_, MODE_FILE_WRITE, _)).WillOnce(Return(MOCK_FILE_OPEN_FAIL));
 }
 
 class PseudonymManagerTest : public testing::Test {
