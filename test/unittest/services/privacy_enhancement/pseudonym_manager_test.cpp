@@ -39,6 +39,18 @@ namespace {
 
 static const char *MOCK_PSEUDONYM_PATH = "/data/service/el1/public/deviceauth/pseudonym";
 
+static void ExpectDbWriteSuccess(NiceMock<MockHcFile> &mock)
+{
+    EXPECT_CALL(mock, HcFileOpen(_, MODE_FILE_WRITE, _)).WillOnce(Return(0));
+    EXPECT_CALL(mock, HcFileWrite(_, _, _)).WillOnce(ReturnArg<2>());
+    EXPECT_CALL(mock, HcFileClose(_));
+}
+
+static void ExpectDbWriteFail(NiceMock<MockHcFile> &mock)
+{
+    EXPECT_CALL(mock, HcFileOpen(_, MODE_FILE_WRITE, _)).WillOnce(Return(-1));
+}
+
 class PseudonymManagerTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -103,18 +115,9 @@ HWTEST_F(PseudonymManagerTest, PseudonymManager_SaveDbFailRollback001, TestSize.
     ASSERT_NE(manager, nullptr);
 
     InSequence seq;
-    EXPECT_CALL(g_mockHcFile, HcFileOpen(_, MODE_FILE_WRITE, _))
-        .WillOnce(Return(0));
-    EXPECT_CALL(g_mockHcFile, HcFileWrite(_, _, _))
-        .WillOnce(ReturnArg<2>());
-    EXPECT_CALL(g_mockHcFile, HcFileClose(_));
-    EXPECT_CALL(g_mockHcFile, HcFileOpen(_, MODE_FILE_WRITE, _))
-        .WillOnce(Return(-1));
-    EXPECT_CALL(g_mockHcFile, HcFileOpen(_, MODE_FILE_WRITE, _))
-        .WillOnce(Return(0));
-    EXPECT_CALL(g_mockHcFile, HcFileWrite(_, _, _))
-        .WillOnce(ReturnArg<2>());
-    EXPECT_CALL(g_mockHcFile, HcFileClose(_));
+    ExpectDbWriteSuccess(g_mockHcFile);
+    ExpectDbWriteFail(g_mockHcFile);
+    ExpectDbWriteSuccess(g_mockHcFile);
 
     int32_t ret = manager->savePseudonymId(
         DEFAULT_OS_ACCOUNT, TEST_PSEUDONYM_ID, TEST_REAL_INFO, TEST_DEVICE_ID, TEST_INDEX_KEY);
@@ -143,18 +146,9 @@ HWTEST_F(PseudonymManagerTest, PseudonymManager_SaveDbFailRollback002, TestSize.
     ASSERT_NE(manager, nullptr);
 
     InSequence seq;
-    EXPECT_CALL(g_mockHcFile, HcFileOpen(_, MODE_FILE_WRITE, _))
-        .WillOnce(Return(0));
-    EXPECT_CALL(g_mockHcFile, HcFileWrite(_, _, _))
-        .WillOnce(ReturnArg<2>());
-    EXPECT_CALL(g_mockHcFile, HcFileClose(_));
-    EXPECT_CALL(g_mockHcFile, HcFileOpen(_, MODE_FILE_WRITE, _))
-        .WillOnce(Return(-1));
-    EXPECT_CALL(g_mockHcFile, HcFileOpen(_, MODE_FILE_WRITE, _))
-        .WillOnce(Return(0));
-    EXPECT_CALL(g_mockHcFile, HcFileWrite(_, _, _))
-        .WillOnce(ReturnArg<2>());
-    EXPECT_CALL(g_mockHcFile, HcFileClose(_));
+    ExpectDbWriteSuccess(g_mockHcFile);
+    ExpectDbWriteFail(g_mockHcFile);
+    ExpectDbWriteSuccess(g_mockHcFile);
 
     int32_t ret = manager->savePseudonymId(
         DEFAULT_OS_ACCOUNT, TEST_PSEUDONYM_ID, TEST_REAL_INFO, TEST_DEVICE_ID, TEST_INDEX_KEY);
@@ -183,18 +177,9 @@ HWTEST_F(PseudonymManagerTest, PseudonymManager_SaveDbFailRollback003, TestSize.
     ASSERT_NE(manager, nullptr);
 
     InSequence seq;
-    EXPECT_CALL(g_mockHcFile, HcFileOpen(_, MODE_FILE_WRITE, _))
-        .WillOnce(Return(0));
-    EXPECT_CALL(g_mockHcFile, HcFileWrite(_, _, _))
-        .WillOnce(ReturnArg<2>());
-    EXPECT_CALL(g_mockHcFile, HcFileClose(_));
-    EXPECT_CALL(g_mockHcFile, HcFileOpen(_, MODE_FILE_WRITE, _))
-        .WillOnce(Return(-1));
-    EXPECT_CALL(g_mockHcFile, HcFileOpen(_, MODE_FILE_WRITE, _))
-        .WillOnce(Return(0));
-    EXPECT_CALL(g_mockHcFile, HcFileWrite(_, _, _))
-        .WillOnce(ReturnArg<2>());
-    EXPECT_CALL(g_mockHcFile, HcFileClose(_));
+    ExpectDbWriteSuccess(g_mockHcFile);
+    ExpectDbWriteFail(g_mockHcFile);
+    ExpectDbWriteSuccess(g_mockHcFile);
 
     int32_t ret = manager->savePseudonymId(
         DEFAULT_OS_ACCOUNT, TEST_PSEUDONYM_ID, TEST_REAL_INFO, TEST_DEVICE_ID, TEST_INDEX_KEY);
@@ -217,28 +202,11 @@ HWTEST_F(PseudonymManagerTest, PseudonymManager_SaveDbFailRollback004, TestSize.
     ASSERT_NE(manager, nullptr);
 
     InSequence seq;
-    EXPECT_CALL(g_mockHcFile, HcFileOpen(_, MODE_FILE_WRITE, _))
-        .WillOnce(Return(0));
-    EXPECT_CALL(g_mockHcFile, HcFileWrite(_, _, _))
-        .WillOnce(ReturnArg<2>());
-    EXPECT_CALL(g_mockHcFile, HcFileClose(_));
-    EXPECT_CALL(g_mockHcFile, HcFileOpen(_, MODE_FILE_WRITE, _))
-        .WillOnce(Return(0));
-    EXPECT_CALL(g_mockHcFile, HcFileWrite(_, _, _))
-        .WillOnce(ReturnArg<2>());
-    EXPECT_CALL(g_mockHcFile, HcFileClose(_));
-    EXPECT_CALL(g_mockHcFile, HcFileOpen(_, MODE_FILE_WRITE, _))
-        .WillOnce(Return(-1));
-    EXPECT_CALL(g_mockHcFile, HcFileOpen(_, MODE_FILE_WRITE, _))
-        .WillOnce(Return(0));
-    EXPECT_CALL(g_mockHcFile, HcFileWrite(_, _, _))
-        .WillOnce(ReturnArg<2>());
-    EXPECT_CALL(g_mockHcFile, HcFileClose(_));
-    EXPECT_CALL(g_mockHcFile, HcFileOpen(_, MODE_FILE_WRITE, _))
-        .WillOnce(Return(0));
-    EXPECT_CALL(g_mockHcFile, HcFileWrite(_, _, _))
-        .WillOnce(ReturnArg<2>());
-    EXPECT_CALL(g_mockHcFile, HcFileClose(_));
+    ExpectDbWriteSuccess(g_mockHcFile);
+    ExpectDbWriteSuccess(g_mockHcFile);
+    ExpectDbWriteFail(g_mockHcFile);
+    ExpectDbWriteSuccess(g_mockHcFile);
+    ExpectDbWriteSuccess(g_mockHcFile);
 
     int32_t ret = manager->savePseudonymId(
         DEFAULT_OS_ACCOUNT, TEST_PSEUDONYM_ID, TEST_REAL_INFO, TEST_DEVICE_ID, TEST_INDEX_KEY);
