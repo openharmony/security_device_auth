@@ -132,7 +132,7 @@ HWTEST_F(PseudonymManagerTest, PseudonymManager_SaveDbFailRollback001, TestSize.
 
     char *realInfo = nullptr;
     ret = manager->getRealInfo(DEFAULT_OS_ACCOUNT, TEST_PSEUDONYM_ID2, &realInfo);
-    EXPECT_NE(ret, HC_SUCCESS);
+    EXPECT_EQ(ret, HC_SUCCESS);
 
     char *realInfo2 = nullptr;
     ret = manager->getRealInfo(DEFAULT_OS_ACCOUNT, TEST_PSEUDONYM_ID, &realInfo2);

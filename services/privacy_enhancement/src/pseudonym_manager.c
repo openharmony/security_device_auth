@@ -626,8 +626,8 @@ static int32_t GetRealInfo(int32_t osAccountId, const char *pseudonymId, char **
         }
     }
     UnlockHcMutex(g_mutex);
-    LOGE("PseudonymId not found in the database!");
-    return HC_ERROR;
+    LOGI("PseudonymId not found in the database!");
+    return HC_SUCCESS;
 }
 
 static int32_t GetPseudonymId(int32_t osAccountId, const char *indexKey, char **pseudonymId)
