@@ -375,13 +375,16 @@ static int32_t GetTypeExpectSize(int32_t paramType)
 int32_t GetAndValSizeParam(const IpcDataInfo *ipcParams,
     int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
 {
+    if (param == NULL) {
+        return HC_ERR_IPC_BAD_PARAM;
+    }
     int32_t expectedSize = GetTypeExpectSize(paramType);
     if (expectedSize == 0) {
         LOGE("unsupported param type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, paramSize);
-    if ((*paramSize) != expectedSize || ret != HC_SUCCESS) {
+    if (ret != HC_SUCCESS || (*paramSize) != expectedSize) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
@@ -392,9 +395,12 @@ int32_t GetAndValNullParam(const IpcDataInfo *ipcParams,
     int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize)
 {
     (void)paramSize;
+    if (param == NULL) {
+        return HC_ERR_IPC_BAD_PARAM;
+    }
     int32_t size = 0;
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, &size);
-    if ((ret != HC_SUCCESS) || (param == NULL) || (size <= 0)) {
+    if ((ret != HC_SUCCESS) || (size <= 0)) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
         return HC_ERR_IPC_BAD_PARAM;
     }
@@ -1878,7 +1884,6 @@ static int32_t ExtractParamByType(const IpcDataInfo *ipcParam, int32_t type,
         if (cacheLen != NULL) {
             *cacheLen = ipcParam->valSz;
         }
-        return HC_SUCCESS;
     } else if (IsTypeForCpyData(type)) {
         if ((ipcParam->val == NULL) || (ipcParam->valSz <= 0) || (cacheLen == NULL)) {
             return HC_ERR_INVALID_PARAMS;
@@ -1887,7 +1892,6 @@ static int32_t ExtractParamByType(const IpcDataInfo *ipcParam, int32_t type,
             return HC_ERR_MEMORY_COPY;
         }
         *cacheLen = ipcParam->valSz;
-        return HC_SUCCESS;
     } else if ((type == PARAM_TYPE_CB_OBJECT) && (cacheLen != NULL) &&
         ((uint32_t)(*cacheLen) >= sizeof(ipcParam->idx))) {
         *(int32_t *)paramCache = ipcParam->idx;
@@ -1898,6 +1902,9 @@ static int32_t ExtractParamByType(const IpcDataInfo *ipcParam, int32_t type,
 int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
     int32_t type, uint8_t *paramCache, int32_t *cacheLen)
 {
+    if (paramCache == NULL) {
+        return HC_ERR_IPC_BAD_PARAM;
+    }
     for (int32_t i = 0; i < paramNum; i++) {
         if (ipcParams[i].type != type) {
             continue;
