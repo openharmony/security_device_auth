@@ -390,7 +390,6 @@ ohos_unittest("device_auth_identity_service_test") {
     "DEV_AUTH_FUNC_TEST",
     "ENABLE_PSEUDONYM",
     "DEV_AUTH_HIVIEW_ENABLE",
-    "DEV_AUTH_IS_ENABLE",
   ]
 
   sources += identity_manager_files
@@ -898,8 +897,6 @@ ohos_unittest("identity_service_ipc_test") {
     "${deps_adapter_path}:${hal_module_test_name}",
     "//base/security/device_auth/services:deviceauth_sdk",
   ]
-
-  defines = [ "DEV_AUTH_IS_ENABLE" ]
 
   cflags = [ "-DHILOG_ENABLE" ]
   external_deps = [

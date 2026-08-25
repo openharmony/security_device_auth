@@ -30,26 +30,20 @@ if (os_level == "mini" || os_level == "small") {
       "//foundation/communication/dsoftbus/interfaces/kits/transport",
       "//foundation/communication/dsoftbus/interfaces/inner_kits/transport",
       "${dev_frameworks_path}/inc/hiview_adapter",
+      "${dev_frameworks_path}/inc/permission_adapter",
       "${services_path}/sa/inc/critical_handler",
       "${services_path}/sa/inc/cache_common_event_handler",
     ]
-    if (os_level == "small") {
-      include_dirs += [ "${dev_frameworks_path}/inc/permission_adapter" ]
-    }
     sources = deviceauth_files
     sources += critical_handler_mock_files
     sources += cache_common_event_handler_mock_files
-    if (os_level == "small") {
+    sources += permission_adapter_mock_files
+    if (enable_identity_service) {
       sources += identity_service_files
-      sources += permission_adapter_mock_files
     } else {
       sources += identity_service_mock_files
     }
     defines = [ "HILOG_ENABLE" ]
-    if (os_level == "small") {
-      defines += [ "DEV_AUTH_IS_ENABLE" ]
-    }
-
     defines += deviceauth_defines
 
     sources += identity_manager_files
@@ -130,7 +124,6 @@ if (os_level == "mini" || os_level == "small") {
       ]
 
       defines = [ "HILOG_ENABLE" ]
-      defines += [ "DEV_AUTH_IS_ENABLE" ]
       if (ohos_kernel_type == "linux") {
         defines += [ "__LINUX__" ]
       }
@@ -168,7 +161,6 @@ if (os_level == "mini" || os_level == "small") {
       sources += sdk_load_on_demand_mock_files
 
       defines = [ "HILOG_ENABLE" ]
-      defines += [ "DEV_AUTH_IS_ENABLE" ]
       if (ohos_kernel_type == "linux") {
         defines += [ "__LINUX__" ]
       }
@@ -216,12 +208,15 @@ if (os_level == "mini" || os_level == "small") {
       sources += critical_handler_mock_files
     }
     sources += permission_adapter_files
-    sources += identity_service_files
+    if (enable_identity_service) {
+      sources += identity_service_files
+    } else {
+      sources += identity_service_mock_files
+    }
     sources += hiview_adapter_files
     defines = deviceauth_defines
     defines += [ "HILOG_ENABLE" ]
     defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
-    defines += [ "DEV_AUTH_IS_ENABLE" ]
     cflags = build_flags
     cflags += [
       "-DDEV_AUTH_WORK_THREAD_STACK_SIZE=${device_auth_hichain_thread_stack_size}",
@@ -318,7 +313,6 @@ if (os_level == "mini" || os_level == "small") {
       "__LINUX__",
       "HILOG_ENABLE",
     ]
-    defines += [ "DEV_AUTH_IS_ENABLE" ]
     cflags = build_flags
     cflags += [ "-fPIC" ]
     if (target_cpu == "arm") {
@@ -384,7 +378,6 @@ if (os_level == "mini" || os_level == "small") {
     defines = [ "HILOG_ENABLE" ]
     defines += [ "DEV_AUTH_HIVIEW_ENABLE" ]
     defines += [ "DEV_AUTH_SERVICE_BUILD" ]
-    defines += [ "DEV_AUTH_IS_ENABLE" ]
 
     if (use_musl) {
       if (musl_use_jemalloc && musl_use_jemalloc_dfx_intf) {
