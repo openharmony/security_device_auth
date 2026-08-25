@@ -30,6 +30,8 @@ extern "C" {
 #define CB_TYPE_DEV_AUTH 1
 #define CB_TYPE_TMP_DEV_AUTH 2
 #define CB_TYPE_LISTENER 3
+#define CB_TYPE_CRED_LISTENER 4
+#define CB_TYPE_CRED_DEV_AUTH 5
 
 #ifndef IPC_DATA_BUFF_MAX_SZ
 #define IPC_DATA_BUFF_MAX_SZ 2048
@@ -56,6 +58,9 @@ enum {
     CB_ID_ON_DEV_UNTRUSTED,
     CB_ID_ON_LAST_GROUP_DELETED,
     CB_ID_ON_TRUST_DEV_NUM_CHANGED,
+    CB_ID_ON_CRED_ADD,
+    CB_ID_ON_CRED_DELETE,
+    CB_ID_ON_CRED_UPDATE,
 };
 
 typedef int32_t (*IpcServiceCall)(const IpcDataInfo *, int32_t, uintptr_t);
@@ -114,6 +119,8 @@ int32_t GetAndValSizeCbParam(const IpcDataInfo *ipcParams,
 
 int32_t GetAndValNullParam(const IpcDataInfo *ipcParams,
     int32_t paramNum, int32_t paramType, uint8_t *param, int32_t *paramSize);
+
+void InitDevAuthCredListenerCbCtx(CredChangeListener *ctx);
 
 #ifdef __cplusplus
 }

@@ -120,7 +120,6 @@ static int32_t InitAccountLifecyclePluginCtx(void)
         g_accountPluginCtx = NULL;
         return HC_ERR_INVALID_PARAMS;
     }
-#ifdef DEV_AUTH_IS_ENABLE
     const CredManager *cmInstace = GetCredMgrInstance();
     if (cmInstace == NULL) {
         LOGE("[ACCOUNT_LIFE_PLUGIN]: Cm instance is null.");
@@ -135,7 +134,6 @@ static int32_t InitAccountLifecyclePluginCtx(void)
     g_accountPluginCtx->queryCredInfoByCredId = QueryCredInfoByCredIdAndUid;
     g_accountPluginCtx->queryCredentialByParams = cmInstace->queryCredentialByParams;
     g_accountPluginCtx->destroyInfo = cmInstace->destroyInfo;
-#endif
     g_accountPluginCtx->createGroup = gmInstace->createGroup;
     g_accountPluginCtx->deleteGroup = gmInstace->deleteGroup;
     g_accountPluginCtx->getGroupInfo = gmInstace->getGroupInfo;

@@ -55,7 +55,6 @@ ohos_fuzztest("SaLoadOnDemandFuzzTest") {
     "__LINUX__",
     "HILOG_ENABLE",
   ]
-  defines += [ "DEV_AUTH_IS_ENABLE" ]
 
   deps = [ "${deps_adapter_path}:${hal_module_name}" ]
 

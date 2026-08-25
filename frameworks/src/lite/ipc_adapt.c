@@ -47,6 +47,7 @@ typedef struct {
     union {
         DeviceAuthCallback devAuth;
         DataChangeListener listener;
+        CredChangeListener credListener;
     } cbCtx;
     int64_t requestId;
     char appId[BUFF_MAX_SZ];
@@ -693,16 +694,59 @@ static void OnTrustDevNumChangedStub(CallbackParams params)
     return;
 }
 
+static void OnCredAddStub(CallbackParams params)
+{
+    char *credId = NULL;
+    char *credInfo = NULL;
+    void (*onCredAddHook)(char *, char *) = (void (*)(char *, char *))(params.cbHook);
+
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum,
+        PARAM_TYPE_CRED_ID, (uint8_t *)(&credId), NULL);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum,
+        PARAM_TYPE_CRED_INFO, (uint8_t *)(&credInfo), NULL);
+    onCredAddHook(credId, credInfo);
+    WriteInt32(params.reply, HC_SUCCESS);
+}
+
+static void OnCredDeleteStub(CallbackParams params)
+{
+    char *credId = NULL;
+    char *credInfo = NULL;
+    void (*onCredDeleteHook)(char *, char *) = (void (*)(char *, char *))(params.cbHook);
+
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum,
+        PARAM_TYPE_CRED_ID, (uint8_t *)(&credId), NULL);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum,
+        PARAM_TYPE_CRED_INFO, (uint8_t *)(&credInfo), NULL);
+    onCredDeleteHook(credId, credInfo);
+    WriteInt32(params.reply, HC_SUCCESS);
+}
+
+static void OnCredUpdateStub(CallbackParams params)
+{
+    char *credId = NULL;
+    char *credInfo = NULL;
+    void (*onCredUpdateHook)(char *, char *) = (void (*)(char *, char *))(params.cbHook);
+
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum,
+        PARAM_TYPE_CRED_ID, (uint8_t *)(&credId), NULL);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum,
+        PARAM_TYPE_CRED_INFO, (uint8_t *)(&credInfo), NULL);
+    onCredUpdateHook(credId, credInfo);
+    WriteInt32(params.reply, HC_SUCCESS);
+}
+
 void ProcCbHook(int32_t callbackId, uintptr_t cbHook,
     const IpcDataInfo *cbDataCache, int32_t cacheNum, uintptr_t replyCtx)
 {
     CallbackStub stubTable[] = {
         OnTransmitStub, OnSessKeyStub, OnFinishStub, OnErrorStub,
         OnRequestStub, OnGroupCreatedStub, OnGroupDeletedStub, OnDevBoundStub,
-        OnDevUnboundStub, OnDevUnTrustStub, OnDelLastGroupStub, OnTrustDevNumChangedStub
+        OnDevUnboundStub, OnDevUnTrustStub, OnDelLastGroupStub, OnTrustDevNumChangedStub,
+        OnCredAddStub, OnCredDeleteStub, OnCredUpdateStub,
     };
     IpcIo *reply = (IpcIo *)(replyCtx);
-    if ((callbackId < CB_ID_ON_TRANS) || (callbackId > CB_ID_ON_TRUST_DEV_NUM_CHANGED)) {
+    if ((callbackId < CB_ID_ON_TRANS) || (callbackId > CB_ID_ON_CRED_UPDATE)) {
         LOGE("Invalid call back id");
         return;
     }
@@ -789,6 +833,11 @@ static bool TmpIpcGaCbOnTransmit(int64_t requestId, const uint8_t *data, uint32_
     return GaCbOnTransmitWithType(requestId, data, dataLen, CB_TYPE_TMP_DEV_AUTH);
 }
 
+static bool IpcCaCbOnTransmit(int64_t requestId, const uint8_t *data, uint32_t dataLen)
+{
+    return GaCbOnTransmitWithType(requestId, data, dataLen, CB_TYPE_CRED_DEV_AUTH);
+}
+
 static void GaCbOnSessionKeyRetWithType(int64_t requestId, const uint8_t *sessKey, uint32_t sessKeyLen, int32_t type)
 {
     uint32_t ret;
@@ -834,6 +883,11 @@ static void TmpIpcGaCbOnSessionKeyReturned(int64_t requestId, const uint8_t *ses
 {
     GaCbOnSessionKeyRetWithType(requestId, sessKey, sessKeyLen, CB_TYPE_TMP_DEV_AUTH);
     return;
+}
+
+static void IpcCaCbOnSessionKeyReturned(int64_t requestId, const uint8_t *sessKey, uint32_t sessKeyLen)
+{
+    GaCbOnSessionKeyRetWithType(requestId, sessKey, sessKeyLen, CB_TYPE_CRED_DEV_AUTH);
 }
 
 static void GaCbOnFinishWithType(int64_t requestId, int32_t operationCode, const char *returnData, int32_t type)
@@ -886,6 +940,11 @@ static void TmpIpcGaCbOnFinish(int64_t requestId, int32_t operationCode, const c
 {
     GaCbOnFinishWithType(requestId, operationCode, returnData, CB_TYPE_TMP_DEV_AUTH);
     return;
+}
+
+static void IpcCaCbOnFinish(int64_t requestId, int32_t operationCode, const char *returnData)
+{
+    GaCbOnFinishWithType(requestId, operationCode, returnData, CB_TYPE_CRED_DEV_AUTH);
 }
 
 static void GaCbOnErrorWithType(int64_t requestId, int32_t operationCode,
@@ -942,6 +1001,11 @@ static void TmpIpcGaCbOnError(int64_t requestId, int32_t operationCode, int32_t 
     return;
 }
 
+static void IpcCaCbOnError(int64_t requestId, int32_t operationCode, int32_t errorCode, const char *errorReturn)
+{
+    GaCbOnErrorWithType(requestId, operationCode, errorCode, errorReturn, CB_TYPE_CRED_DEV_AUTH);
+}
+
 static char *GaCbOnRequestWithType(int64_t requestId, int32_t operationCode, const char *reqParams, int32_t type)
 {
     int32_t ret;
@@ -990,17 +1054,17 @@ static char *GaCbOnRequestWithType(int64_t requestId, int32_t operationCode, con
     return (dPtr != NULL) ? strdup(dPtr) : NULL;
 }
 
-static bool CanFindCbByReqId(int64_t requestId)
+static bool CanFindCbByReqId(int64_t requestId, int32_t type)
 {
     LockCallbackList();
-    IpcCallBackNode *node = GetIpcCallBackByReqId(requestId, CB_TYPE_DEV_AUTH);
+    IpcCallBackNode *node = GetIpcCallBackByReqId(requestId, type);
     UnLockCallbackList();
     return (node != NULL) ? true : false;
 }
 
 static char *IpcGaCbOnRequest(int64_t requestId, int32_t operationCode, const char *reqParams)
 {
-    if (!CanFindCbByReqId(requestId)) {
+    if (!CanFindCbByReqId(requestId, CB_TYPE_DEV_AUTH)) {
         CJson *reqParamsJson = CreateJsonFromString(reqParams);
         if (reqParamsJson == NULL) {
             LOGE("failed to create json from string!");
@@ -1024,6 +1088,29 @@ static char *IpcGaCbOnRequest(int64_t requestId, int32_t operationCode, const ch
 static char *TmpIpcGaCbOnRequest(int64_t requestId, int32_t operationCode, const char *reqParams)
 {
     return GaCbOnRequestWithType(requestId, operationCode, reqParams, CB_TYPE_TMP_DEV_AUTH);
+}
+
+static char *IpcCaCbOnRequest(int64_t requestId, int32_t operationCode, const char *reqParams)
+{
+    if (!CanFindCbByReqId(requestId, CB_TYPE_CRED_DEV_AUTH)) {
+        CJson *reqParamsJson = CreateJsonFromString(reqParams);
+        if (reqParamsJson == NULL) {
+            LOGE("Failed to create json from string!");
+            return NULL;
+        }
+        const char *callerAppId = GetStringFromJson(reqParamsJson, FIELD_APP_ID);
+        if (callerAppId == NULL) {
+            LOGE("Failed to get appId from reqParams json!");
+            FreeJson(reqParamsJson);
+            return NULL;
+        }
+        int32_t ret = AddReqIdByAppId(callerAppId, requestId);
+        FreeJson(reqParamsJson);
+        if (ret != HC_SUCCESS) {
+            return NULL;
+        }
+    }
+    return GaCbOnRequestWithType(requestId, operationCode, reqParams, CB_TYPE_CRED_DEV_AUTH);
 }
 
 void IpcOnGroupCreated(const char *groupInfo)
@@ -1360,6 +1447,153 @@ void IpcOnTrustedDeviceNumChanged(int32_t curTrustedDeviceNum)
     return;
 }
 
+void IpcOnCredAdd(const char *credId, const char *credInfo)
+{
+    if (credId == NULL) {
+        LOGE("IpcOnCredAdd failed, params error.");
+        return;
+    }
+    IpcIo *dataParcel = NULL;
+    int32_t i;
+    CredChangeListener *listener = NULL;
+    uint32_t ret;
+
+    LockCallbackList();
+    if (g_ipcCallBackList.ctx == NULL) {
+        LOGE("IpcCallBackList un-initialized");
+        UnLockCallbackList();
+        return;
+    }
+
+    dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
+    if (dataParcel == NULL) {
+        LOGE("data parcel is NULL.");
+        UnLockCallbackList();
+        return;
+    }
+    ret = EncodeCallData(dataParcel, PARAM_TYPE_CRED_ID,
+        (const uint8_t *)(credId), HcStrlen(credId) + 1);
+    ret |= EncodeCallData(dataParcel, PARAM_TYPE_CRED_INFO,
+        (const uint8_t *)(credInfo), HcStrlen(credInfo) + 1);
+    if (ret != HC_SUCCESS) {
+        UnLockCallbackList();
+        HcFree((void *)dataParcel);
+        LOGE("IpcOnCredAdd, build trans data failed");
+        return;
+    }
+
+    for (i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
+        if (g_ipcCallBackList.ctx[i].cbType == CB_TYPE_CRED_LISTENER) {
+            listener = &(g_ipcCallBackList.ctx[i].cbCtx.credListener);
+            if (listener->onCredAdd == NULL) {
+                continue;
+            }
+            ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_CRED_ADD,
+                (uintptr_t)(listener->onCredAdd), dataParcel, NULL);
+        }
+    }
+    UnLockCallbackList();
+    HcFree((void *)dataParcel);
+}
+
+void IpcOnCredDelete(const char *credId, const char *credInfo)
+{
+    if (credId == NULL) {
+        LOGE("IpcOnCredDelete failed, params error.");
+        return;
+    }
+    IpcIo *dataParcel = NULL;
+    int32_t i;
+    CredChangeListener *listener = NULL;
+    uint32_t ret;
+
+    LockCallbackList();
+    if (g_ipcCallBackList.ctx == NULL) {
+        LOGE("IpcCallBackList un-initialized");
+        UnLockCallbackList();
+        return;
+    }
+
+    dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
+    if (dataParcel == NULL) {
+        LOGE("data parcel is NULL.");
+        UnLockCallbackList();
+        return;
+    }
+    ret = EncodeCallData(dataParcel, PARAM_TYPE_CRED_ID,
+        (const uint8_t *)(credId), HcStrlen(credId) + 1);
+    ret |= EncodeCallData(dataParcel, PARAM_TYPE_CRED_INFO,
+        (const uint8_t *)(credInfo), HcStrlen(credInfo) + 1);
+    if (ret != HC_SUCCESS) {
+        UnLockCallbackList();
+        HcFree((void *)dataParcel);
+        LOGE("IpcOnCredDelete, build trans data failed");
+        return;
+    }
+
+    for (i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
+        if (g_ipcCallBackList.ctx[i].cbType == CB_TYPE_CRED_LISTENER) {
+            listener = &(g_ipcCallBackList.ctx[i].cbCtx.credListener);
+            if (listener->onCredDelete == NULL) {
+                continue;
+            }
+            ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_CRED_DELETE,
+                (uintptr_t)(listener->onCredDelete), dataParcel, NULL);
+        }
+    }
+    UnLockCallbackList();
+    HcFree((void *)dataParcel);
+}
+
+void IpcOnCredUpdate(const char *credId, const char *credInfo)
+{
+    if (credId == NULL) {
+        LOGE("IpcOnCredUpdate failed, params error.");
+        return;
+    }
+    IpcIo *dataParcel = NULL;
+    int32_t i;
+    CredChangeListener *listener = NULL;
+    uint32_t ret;
+
+    LockCallbackList();
+    if (g_ipcCallBackList.ctx == NULL) {
+        LOGE("IpcCallBackList un-initialized");
+        UnLockCallbackList();
+        return;
+    }
+
+    dataParcel = InitIpcDataCache(IPC_DATA_BUFF_MAX_SZ);
+    if (dataParcel == NULL) {
+        LOGE("data parcel is NULL.");
+        UnLockCallbackList();
+        return;
+    }
+    ret = EncodeCallData(dataParcel, PARAM_TYPE_CRED_ID,
+        (const uint8_t *)(credId), HcStrlen(credId) + 1);
+    ret |= EncodeCallData(dataParcel, PARAM_TYPE_CRED_INFO,
+        (const uint8_t *)(credInfo), HcStrlen(credInfo) + 1);
+    if (ret != HC_SUCCESS) {
+        UnLockCallbackList();
+        HcFree((void *)dataParcel);
+        LOGE("IpcOnCredUpdate, build trans data failed");
+        return;
+    }
+
+    for (i = 0; i < IPC_CALL_BACK_MAX_NODES; i++) {
+        if (g_ipcCallBackList.ctx[i].cbType == CB_TYPE_CRED_LISTENER) {
+            listener = &(g_ipcCallBackList.ctx[i].cbCtx.credListener);
+            if (listener->onCredUpdate == NULL) {
+                continue;
+            }
+            ActCallback(g_ipcCallBackList.ctx[i].proxyId, CB_ID_ON_CRED_UPDATE,
+                (uintptr_t)(listener->onCredUpdate), dataParcel, NULL);
+        }
+    }
+    UnLockCallbackList();
+    HcFree((void *)dataParcel);
+}
+
 void InitDeviceAuthCbCtx(DeviceAuthCallback *ctx, int32_t type)
 {
     if (ctx == NULL) {
@@ -1379,6 +1613,13 @@ void InitDeviceAuthCbCtx(DeviceAuthCallback *ctx, int32_t type)
         ctx->onRequest = TmpIpcGaCbOnRequest;
         ctx->onFinish = TmpIpcGaCbOnFinish;
     }
+    if (type == CB_TYPE_CRED_DEV_AUTH) {
+        ctx->onTransmit = IpcCaCbOnTransmit;
+        ctx->onSessionKeyReturned = IpcCaCbOnSessionKeyReturned;
+        ctx->onFinish = IpcCaCbOnFinish;
+        ctx->onError = IpcCaCbOnError;
+        ctx->onRequest = IpcCaCbOnRequest;
+    }
     return;
 }
 
@@ -1396,6 +1637,16 @@ void InitDevAuthListenerCbCtx(DataChangeListener *ctx)
     ctx->onLastGroupDeleted = IpcOnLastGroupDeleted;
     ctx->onTrustedDeviceNumChanged = IpcOnTrustedDeviceNumChanged;
     return;
+}
+
+void InitDevAuthCredListenerCbCtx(CredChangeListener *ctx)
+{
+    if (ctx == NULL) {
+        return;
+    }
+    ctx->onCredAdd = IpcOnCredAdd;
+    ctx->onCredDelete = IpcOnCredDelete;
+    ctx->onCredUpdate = IpcOnCredUpdate;
 }
 
 /* ipc client process adapter */
@@ -1593,7 +1844,8 @@ static bool IsTypeForSettingPtr(int32_t type)
         PARAM_TYPE_GROUPID, PARAM_TYPE_UDID, PARAM_TYPE_ADD_PARAMS, PARAM_TYPE_DEL_PARAMS,
         PARAM_TYPE_QUERY_PARAMS, PARAM_TYPE_COMM_DATA, PARAM_TYPE_SESS_KEY,
         PARAM_TYPE_REQ_INFO, PARAM_TYPE_GROUP_INFO, PARAM_TYPE_AUTH_PARAMS, PARAM_TYPE_REQ_JSON,
-        PARAM_TYPE_PSEUDONYM_ID, PARAM_TYPE_INDEX_KEY, PARAM_TYPE_ERR_INFO
+        PARAM_TYPE_PSEUDONYM_ID, PARAM_TYPE_INDEX_KEY, PARAM_TYPE_ERR_INFO,
+        PARAM_TYPE_REQUEST_PARAMS, PARAM_TYPE_CRED_ID, PARAM_TYPE_CRED_INFO
     };
     int32_t i;
     int32_t n = sizeof(typeList) / sizeof(typeList[0]);
@@ -1647,7 +1899,10 @@ int32_t GetIpcRequestParamByType(const IpcDataInfo *ipcParams, int32_t paramNum,
 bool IsCallbackMethod(int32_t methodId)
 {
     if ((methodId == IPC_CALL_ID_REG_CB) || (methodId == IPC_CALL_ID_REG_LISTENER) ||
-        (methodId == IPC_CALL_ID_GA_PROC_DATA) || (methodId == IPC_CALL_ID_AUTH_DEVICE)) {
+        (methodId == IPC_CALL_ID_GA_PROC_DATA) || (methodId == IPC_CALL_ID_AUTH_DEVICE) ||
+        (methodId == IPC_CALL_ID_DA_AUTH_DEVICE) || (methodId == IPC_CALL_ID_DA_PROC_DATA) ||
+        (methodId == IPC_CALL_ID_CM_REG_LISTENER) || (methodId == IPC_CALL_ID_CA_AUTH_CREDENTIAL) ||
+        (methodId == IPC_CALL_ID_CA_PROCESS_CRED_DATA)) {
         return true;
     }
     return false;
