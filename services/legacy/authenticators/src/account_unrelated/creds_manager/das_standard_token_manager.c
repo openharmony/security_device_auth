@@ -300,12 +300,12 @@ static int32_t ComputeAndSavePskInner(const PakeParams *params, const Uint8Buff 
         params->isSelfFromUpgrade,
         params->baseParams.osAccountId
     };
+    uint8_t peerPubKeyVal[PAKE_ED25519_KEY_PAIR_LEN] = { 0 };
+    Uint8Buff peerPubKeyBuff = { peerPubKeyVal, PAKE_ED25519_KEY_PAIR_LEN };
     KeyBuff peerKeyBuff = { peerKeyAlias->val, peerKeyAlias->length, true };
     int32_t res;
     Algorithm alg = (params->baseParams.curveType == CURVE_256) ? P256 : ED25519;
     if (alg == ED25519) {
-        uint8_t peerPubKeyVal[PAKE_ED25519_KEY_PAIR_LEN] = { 0 };
-        Uint8Buff peerPubKeyBuff = { peerPubKeyVal, PAKE_ED25519_KEY_PAIR_LEN };
         KeyParams peerKeyParams = {
             .keyBuff = { peerKeyAlias->val, peerKeyAlias->length, true },
             .isDeStorage = params->isPeerFromUpgrade,
