@@ -118,6 +118,36 @@ static const int32_t INT64_TYPES[] = {
     PARAM_TYPE_REQID
 };
 
+static inline bool IsTypeExistInArray(int32_t type, const int32_t *types, int32_t len)
+{
+    for (int32_t i = 0; i < len; i++) {
+        if (types[i] == type) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static inline bool IsTypeForCpyData(int32_t type)
+{
+    return IsTypeExistInArray(type, CPY_TYPES, (int32_t)(sizeof(CPY_TYPES) / sizeof(CPY_TYPES[0])));
+}
+
+static inline bool IsTypeForSettingPtr(int32_t type)
+{
+    return IsTypeExistInArray(type, PTR_TYPES, (int32_t)(sizeof(PTR_TYPES) / sizeof(PTR_TYPES[0])));
+}
+
+static inline bool IsInt32ParamType(int32_t paramType)
+{
+    return IsTypeExistInArray(paramType, INT32_TYPES, (int32_t)(sizeof(INT32_TYPES) / sizeof(INT32_TYPES[0])));
+}
+
+static inline bool IsInt64ParamType(int32_t paramType)
+{
+    return IsTypeExistInArray(paramType, INT64_TYPES, (int32_t)(sizeof(INT64_TYPES) / sizeof(INT64_TYPES[0])));
+}
+
 enum {
     IPC_CALL_ID_REG_CB = 1,
     IPC_CALL_ID_UNREG_CB,
