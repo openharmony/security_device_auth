@@ -329,36 +329,6 @@ void RemoveSdkCallBackByRequestId(int64_t requestId, uint8_t cbType)
     return;
 }
 
-static bool IsTypeExistInArray(int32_t type, const int32_t *types, int32_t len)
-{
-    for (int32_t i = 0; i < len; i++) {
-        if (types[i] == type) {
-            return true;
-        }
-    }
-    return false;
-}
-
-static bool IsTypeForCpyData(int32_t type)
-{
-    return IsTypeExistInArray(type, CPY_TYPES, sizeof(CPY_TYPES) / sizeof(CPY_TYPES[0]));
-}
-
-static bool IsTypeForSettingPtr(int32_t type)
-{
-    return IsTypeExistInArray(type, PTR_TYPES, sizeof(PTR_TYPES) / sizeof(PTR_TYPES[0]));
-}
-
-static bool IsInt32ParamType(int32_t paramType)
-{
-    return IsTypeExistInArray(paramType, INT32_TYPES, sizeof(INT32_TYPES) / sizeof(INT32_TYPES[0]));
-}
-
-static bool IsInt64ParamType(int32_t paramType)
-{
-    return IsTypeExistInArray(paramType, INT64_TYPES, sizeof(INT64_TYPES) / sizeof(INT64_TYPES[0]));
-}
-
 static int32_t GetTypeExpectSize(int32_t paramType)
 {
     if (paramType == PARAM_TYPE_DEV_AUTH_CB) {
