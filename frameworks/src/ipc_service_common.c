@@ -36,11 +36,9 @@ static DeviceAuthCallback g_bindCbAdt = {NULL};
 static DeviceAuthCallback g_authCbAdt = {NULL};
 static DataChangeListener g_listenCbAdt = {NULL};
 static DeviceAuthCallback g_lightCbAdt = {NULL};
-#ifdef DEV_AUTH_IS_ENABLE
 static CredManager g_devCredMgrMethod = {NULL};
 static CredChangeListener g_credListenCbAdt = {NULL};
 static CredAuthManager g_credAuthMgrMethod = {NULL};
-#endif
 
 static int32_t BindRequestIdWithAppId(const uint8_t *data, uint32_t dataLen)
 {
@@ -1368,7 +1366,6 @@ int32_t IpcServiceDaCancelRequest(const IpcDataInfo *ipcParams, int32_t paramNum
     return ret;
 }
 
-#ifdef DEV_AUTH_IS_ENABLE
 int32_t IpcServiceCmAddCredential(const IpcDataInfo *ipcParams, int32_t paramNum, uintptr_t outCache)
 {
     int32_t callRet;
@@ -1846,7 +1843,6 @@ static int32_t ISIpcInit(void)
     }
     return HC_SUCCESS;
 }
-#endif
 
 int32_t MainRescInit(void)
 {
@@ -1880,14 +1876,12 @@ int32_t MainRescInit(void)
         LOGE("MainInit, register ipc listener failed, ret %" LOG_PUB "d", ret);
         return HC_ERROR;
     }
-#ifdef DEV_AUTH_IS_ENABLE
     ret = ISIpcInit();
     if (ret != HC_SUCCESS) {
         DeInitIpcCallBackList();
         LOGE("IS ipc init failed.");
         return ret;
     }
-#endif
     LOGI("process done");
     return HC_SUCCESS;
 }
@@ -1897,11 +1891,9 @@ void DeMainRescInit(void)
     if (g_devGroupMgrMethod.unRegDataChangeListener != NULL) {
         (void)g_devGroupMgrMethod.unRegDataChangeListener(SERVICE_APP_ID);
     }
-#ifdef DEV_AUTH_IS_ENABLE
     if (g_devCredMgrMethod.unregisterChangeListener != NULL) {
         (void)g_devCredMgrMethod.unregisterChangeListener(SERVICE_APP_ID);
     }
-#endif
     DeInitIpcCallBackList();
 }
 
