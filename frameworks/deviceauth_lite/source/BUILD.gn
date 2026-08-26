@@ -145,7 +145,8 @@ if (os_level == "small" || os_level == "mini") {
         "-Wall",
         "-fvisibility=hidden",
       ]
-      version_script = "libhichainsdk.map"
+      ldflags = [ "-Wl,--version-script=" +
+                   rebase_path("libhichainsdk.map") ]
     }
   }
 } else {
