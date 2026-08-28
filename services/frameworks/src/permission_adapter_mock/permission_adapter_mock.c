@@ -37,3 +37,8 @@ int32_t CheckRestoreCallPermission(void)
 {
     return HC_SUCCESS;
 }
+
+bool IsCallerSystemApp(void)
+{
+    return true;
+}
