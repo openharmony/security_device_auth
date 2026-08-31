@@ -26,6 +26,7 @@
 #include "account_task_manager.h"
 #include "json_utils.h"
 #include "string_util.h"
+#include "parse_os_account_int.h"
 #include "operation_data_manager.h"
 #include "hisysevent_adapter.h"
 #include "common_defs.h"
@@ -68,7 +69,11 @@ static int32_t GetOsAccountFromExtraData(const OHOS::OnDemandReasonExtraData* ex
         LOGE("extract userId failed!");
         return DEFAULT_OS_ACCOUNT;
     }
-    int32_t osAccountId = static_cast<int32_t>(StringToInt64(it->second.c_str()));
+    int32_t osAccountId = DEFAULT_OS_ACCOUNT;
+    if (!OHOS::DeviceAuth::ParseOsAccountInt32(it->second, osAccountId)) {
+        LOGE("[CacheCommonEvent]: parse userId failed, value:%" LOG_PUB "s", it->second.c_str());
+        return DEFAULT_OS_ACCOUNT;
+    }
     LOGI("[CacheCommonEvent]: OsAccountId:%" LOG_PUB "d", osAccountId);
     return osAccountId;
 }
