@@ -21,5 +21,5 @@
 
 ## 边界提醒
 
-- mk_agree 消息只在 expand 加密通道内传输（sessionKey 已协商），不要假设其独立可达；明文 PSK 传递仍要 `FreeAndCleanKey()` 配对。
-- 固定盐派生链（`PSEUDONYM_KEY_FACTOR/_LABEL`，`huks_adapter_utils.c:40-41/465-482`）风险背景见 `crypto-alg-loader-huks.md`。
+- mk_agree 消息只在 expand 加密通道内传输（sessionKey 已协商），不要假设其独立可达；临时 PSK 用毕仍要 `FreeAndCleanKey()` 配对。
+- PSK 派生一律经 `AlgLoader`（`computePseudonymPsk/computeHkdf`，见 `crypto-alg-loader-huks.md`）；禁止新增硬编码盐/因子。

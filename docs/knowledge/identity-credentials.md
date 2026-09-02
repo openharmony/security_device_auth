@@ -23,7 +23,7 @@ identity_service 凭据库安全红线在 `identity_operation.c`：`GenerateCred
 
 - `identity_group.c:966`（组）、`identity_p2p.c:433`（P2P）、`identity_cred.c:844`（凭据，含 `ISSetEcSpekeEntityForAccountUnrelated:141` 等协议实体填充——**决定 V2 握手用哪类 PSK/公钥的核心映射**）。
 - `identity_pin.c`：`AuthGeneratePskUsePin:253`（HKDF(PIN,seed)）、`GetSharedSecretForPinInIso:286`、`GetSharedSecretForPinInPake:332`、v-table `GetPinAuthIdentity:404`。
-- **PIN 明文残留是已知风险点**：`GetSharedSecretForPinInPake` 原样 memcpy PIN；`legacy/authenticators/.../pake_task_common.c:113-138 FillPskWithPin` 留存副本；`FIELD_PIN_CODE` 链路无 `ClearSensitiveStringInJson` 覆盖（详见 `crypto-alg-loader-huks.md` 风险清单）。触碰 PIN 代码必须整链路 `memset_s` 清零，且严禁日志输出。
+- **PIN 处理规范**：持有 PIN 明文的链路（pin→PSK 派生、`pake_task_common.c FillPskWithPin`、context 中的 `FIELD_PIN_CODE` 流转）用毕必须整链路 `memset_s` 清零；JSON 敏感字段删除/转发前 `ClearSensitiveStringInJson`；严禁日志输出。调用链：session v2/v1 → legacy creds_manager → `GetAuthIdentityByType(AUTH_IDENTITY_TYPE_PIN)`。
 
 ## legacy 组认证/任务机（group_auth + authenticators）
 

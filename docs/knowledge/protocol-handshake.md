@@ -29,4 +29,4 @@
 
 - 协议消息字段编解码一律经 `common_lib` 的 `CJson`/`hc_parcel`，不得私加二进制打包。
 - 修改握手报文 = 修改跨设备兼容性，先对照 Hichain 协议规范并在 PR 中注明影响版本。
-- 协议内派生/协商密钥必须经 `GetLoaderInstance()`（见 `crypto-alg-loader-huks.md`）；P256 进程内协商是已知旁路点，不得新增同类旁路。
+- 协议内派生/协商密钥必须经 `GetLoaderInstance()` 现有条目（见 `crypto-alg-loader-huks.md`），禁止新增任何进程内本地计算的协商/算钥实现。

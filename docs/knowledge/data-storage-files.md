@@ -1,13 +1,13 @@
 # 文件读写与数据存储知识
 
-本文记录持久化清单与格式约束（自原 AGENTS.md「专项排查 2」下沉），新增文件读写必读。
+本文记录持久化清单与格式约束，新增文件读写必读。
 
 ## 统一入口
 
 `HcFileOpen/Read/Write/Close/Remove`（`deps_adapter/os_adapter/interfaces/{linux,liteos}/hc_file.h:35-44/39-44`）。
 
 - linux 实现 `impl/src/linux/hc_file.c`：读 `fopen "rb"`(:65)；写路径不存在则逐级 `mkdir 0700`(S_IRWXU, :52)，`fopen "wb+"` 后 `fchmod 0640`(:66-82)；`remove`(:192)。
-- liteos/mini 实现 `impl/src/liteos/hc_file_posix.c`：读 `open O_RDONLY`(:73)，写 `O_RDWR|O_CREAT|O_TRUNC 0640`(:90)，目录 `mkdir 0600`(:57——缺 x 位，已知问题，建议 0700)；另一版 `hc_file.c` 走 `UtilsFileOpen:36`（LiteOS 私有 FS）。
+- liteos/mini 实现 `impl/src/liteos/hc_file_posix.c`：读 `open O_RDONLY`(:73)，写 `O_RDWR|O_CREAT|O_TRUNC 0640`(:90)，目录 `mkdir 0600`(:57)；另一版 `hc_file.c` 走 `UtilsFileOpen:36`（LiteOS 私有 FS）。
 - liteos `hc_dev_info.c:44` 的 CE 路径返回 NULL（mini/small 无 CE 概念）。
 - **禁止自行 `fopen`/`open` 新文件**。
 
@@ -19,10 +19,10 @@
 
 | 文件名 | 目录 | 业务流程 | 读写点 |
 |---|---|---|---|
-| `hcgroup.dat` / `hcgroup<uid>.dat` / CE `<el2>/<uid>/deviceauth/hcgroup.dat` | DE `/data/service/el1/public/deviceauth` | 组/受信设备 TLV 库（UDID/authId，明文未加密） | `group_data_manager.c`：`LoadOsAccountDb:518`/`SaveOsAccountDb:1694`/`InitDatabase:1860`/`ReadParcelFromFile:460`/`SaveParcelToFile:497`；路径三态 `GetOsAccountInfoPathCe:196`/`GetOsAccountInfoPathDe:210` 由 `IsOsAccountSupported():230` 选择；DE→CE 迁移合并 `:558-582` |
+| `hcgroup.dat` / `hcgroup<uid>.dat` / CE `<el2>/<uid>/deviceauth/hcgroup.dat` | DE `/data/service/el1/public/deviceauth` | 组/受信设备 TLV 库（仅 UDID/authId 标识与别名引用，密钥本体在 HUKS） | `group_data_manager.c`：`LoadOsAccountDb:518`/`SaveOsAccountDb:1694`/`InitDatabase:1860`/`ReadParcelFromFile:460`/`SaveParcelToFile:497`；路径三态 `GetOsAccountInfoPathCe:196`/`GetOsAccountInfoPathDe:210` 由 `IsOsAccountSupported():230` 选择；DE→CE 迁移合并 `:558-582` |
 | `hccredential.dat`/`hccredential<uid>.dat` | 同上 | 凭据元数据 TLV（算法/别名；密钥值本体在 HUKS） | `credential_data_manager.c`：`LoadOsAccountCredDb:418`/`LoadDevAuthCredDb:522`（扫 `hccredential*.dat:538-540`）/`SaveOsAccountCredDb:1353`/`InitCredDatabase:1504`；CE 路径 :159-166、DE :179-183 |
 | `hcoperation.dat` | CE 为主 | API 操作审计记录 | `operation_data_manager.c`：路径 :182-188、`SaveParcelToFile:194`、`LoadOperations:325`、`InitOperationDataManager:735` |
-| `account_data_sym%d.dat` / `account_data_asy%d.dat` | `.../deviceauth/account` | 账号配对 token（明文 JSON，仅 userId/deviceId 非密钥） | `legacy/authenticators/account_related/creds_manager/sym_token_manager.c:66-92/181/228`；`asy_token_manager.c:138-164/301/348` |
+| `account_data_sym%d.dat` / `account_data_asy%d.dat` | `.../deviceauth/account` | 账号配对 token（JSON，仅 userId/deviceId 等非密钥标识） | `legacy/authenticators/account_related/creds_manager/sym_token_manager.c:66-92/181/228`；`asy_token_manager.c:138-164/301/348` |
 | `pseudonym_data.dat`/`<n>.dat` | `.../deviceauth/pseudonym` | 匿名 ID 记录 | `privacy_enhancement/src/pseudonym_manager.c:185-208/238` |
 | `AUTH_STORAGE_PATH/hcgroup.dat`、`.../account` | mini liteos 存储分区 | lite 组数据/账号 | `frameworks/deviceauth_lite/.../hc_dev_info.c:41-56` |
 | HUKS 密钥存储 | huks 服务自管 | 密钥持久化 | mini 初始化失败时 `HcFileRemove(GetStoragePath())` 恢复：`impl/src/mini/huks_adapter_diff_impl.c:25-69` |
