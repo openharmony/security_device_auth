@@ -814,6 +814,7 @@ static void OnErrorStub(CallbackParams params)
     int32_t inOutLen = sizeof(opCode);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_OPCODE,
         reinterpret_cast<uint8_t *>(&opCode), &inOutLen);
+    inOutLen = sizeof(errCode);
     (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERRCODE,
         reinterpret_cast<uint8_t *>(&errCode), &inOutLen);
     (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERR_INFO,

@@ -838,6 +838,7 @@ static bool IsNeedRefreshPseudonymId(int32_t osAccountId, const char *indexKey)
             return false;
         }
     }
+    g_isInitial = false;
     UnlockHcMutex(g_mutex);
     return true;
 }
