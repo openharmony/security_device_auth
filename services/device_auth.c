@@ -1865,6 +1865,7 @@ static int32_t ProcessLightAccountAuthServer(int64_t requestId, int32_t osAccoun
     FreeJson(returnDataJson);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHkdfKeyServer failed!");
+        HcFree(returnKeyBuf.val);
         FreeJson(out);
         return res;
     }
