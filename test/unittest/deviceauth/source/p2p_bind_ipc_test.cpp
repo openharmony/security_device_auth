@@ -15,6 +15,7 @@
 
 #include <cinttypes>
 #include <cstring>
+#include <dlfcn.h>
 #include <unistd.h>
 #include <gtest/gtest.h>
 #include "device_auth.h"
@@ -65,6 +66,25 @@ static AsyncStatus volatile g_asyncStatus;
 static uint32_t g_transmitDataMaxLen = 2048;
 static uint8_t g_transmitData[2048] = { 0 };
 static uint32_t g_transmitDataLen = 0;
+
+#define HUKS_EXT_PLUGIN_SO "libhuks_ext.z.so"
+
+static bool IsHuksGenerateKeyAvailable()
+{
+    void *handle = dlopen(HUKS_EXT_PLUGIN_SO, RTLD_NOW);
+    if (handle == nullptr) {
+        return false;
+    }
+    (void)dlclose(handle);
+    return true;
+}
+
+#define SKIP_IF_HUKS_KEYGEN_UNAVAILABLE() \
+    do { \
+        if (!IsHuksGenerateKeyAvailable()) { \
+            GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)"; \
+        } \
+    } while (0)
 
 static void NativeTokenSet(const char *procName)
 {
@@ -355,6 +375,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest002, TestSize.Level0)
 
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest003, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     int32_t res = ProcessCredentialDemo(CRED_OP_DELETE, DEFAULT_SERVICE_TYPE);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, DEFAULT_SERVICE_TYPE);
@@ -371,6 +392,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest003, TestSize.Level0)
 
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest004, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     int32_t res = ProcessCredentialDemo(CRED_OP_CREATE, DEFAULT_SERVICE_TYPE);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, DEFAULT_SERVICE_TYPE);
@@ -383,6 +405,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest004, TestSize.Level0)
 
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest005, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     int32_t res = CreateServerKeyPair();
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemoImport(SERVICE_TYPE_IMPORT);
@@ -399,6 +422,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest005, TestSize.Level0)
 
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest006, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     int32_t res = CreateServerKeyPair();
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemoImport(SERVICE_TYPE_IMPORT);
@@ -417,6 +441,7 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest006, TestSize.Level0)
 
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest007, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     int32_t res = ProcessCredentialDemo(CRED_OP_CREATE, DEFAULT_SERVICE_TYPE);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, DEFAULT_SERVICE_TYPE);
@@ -485,6 +510,7 @@ void ApiAccessPassTest::TearDown()
 
 HWTEST_F(ApiAccessPassTest, ApiAccessPassTest001, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     int32_t res = ProcessCredentialDemo(CRED_OP_CREATE, DEFAULT_SERVICE_TYPE);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, DEFAULT_SERVICE_TYPE);
