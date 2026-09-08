@@ -16,6 +16,7 @@
 #include <cinttypes>
 #include <cstring>
 #include <unistd.h>
+#include <dlfcn.h>
 #include <gtest/gtest.h>
 #include "device_auth.h"
 #include "device_auth_defines.h"
@@ -89,6 +90,25 @@ static const char *BATCH_UPDATE_PARAMS1 =
 static const char *QUERY_PARAMS = "{\"deviceId\":\"TestDeviceId\"}";
 static const char *DEL_PARAMS = "{\"credOwner\":\"TestAppId\"}";
 static const char *DEL_PARAMS1 = "{\"credOwner\":\"TestAppId\",\"userIdHash\":\"12D2\",\"deviceIdHash\":\"12D2\"}";
+#define HUKS_EXT_PLUGIN_SO "libhuks_ext.z.so"
+
+static bool IsHuksGenerateKeyAvailable()
+{
+    void *handle = dlopen(HUKS_EXT_PLUGIN_SO, RTLD_NOW);
+    if (handle == nullptr) {
+        return false;
+    }
+    (void)dlclose(handle);
+    return true;
+}
+
+#define SKIP_IF_HUKS_KEYGEN_UNAVAILABLE() \
+    do { \
+        if (!IsHuksGenerateKeyAvailable()) { \
+            GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing)"; \
+        } \
+    } while (0)
+
 static void NativeTokenSet(const char *procName)
 {
     const char *acls[] = {
@@ -227,6 +247,7 @@ HWTEST_F(CredMgrAddCredentialTest, CredMgrAddCredentialTest003, TestSize.Level0)
 
 HWTEST_F(CredMgrAddCredentialTest, CredMgrAddCredentialTest004, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     const CredManager *cm = GetCredMgrInstance();
     ASSERT_NE(cm, nullptr);
     char *returnData = nullptr;
@@ -270,6 +291,7 @@ HWTEST_F(CredMgrExportCredentialTest, CredMgrExportCredentialTest001, TestSize.L
 
 HWTEST_F(CredMgrExportCredentialTest, CredMgrExportCredentialTest002, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     const CredManager *cm = GetCredMgrInstance();
     ASSERT_NE(cm, nullptr);
     char *credId = nullptr;
@@ -282,6 +304,7 @@ HWTEST_F(CredMgrExportCredentialTest, CredMgrExportCredentialTest002, TestSize.L
 
 HWTEST_F(CredMgrExportCredentialTest, CredMgrExportCredentialTest003, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     const CredManager *cm = GetCredMgrInstance();
     ASSERT_NE(cm, nullptr);
     char *credId = nullptr;
@@ -328,6 +351,7 @@ void CredMgrQueryCredentialByParamsTest::TearDown()
 
 HWTEST_F(CredMgrQueryCredentialByParamsTest, CredMgrQueryCredentialByParamsTest001, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     const CredManager *cm = GetCredMgrInstance();
     ASSERT_NE(cm, nullptr);
     char *returnData = nullptr;
@@ -390,6 +414,7 @@ void CredMgrQueryCredInfoByCredIdTest::TearDown()
 
 HWTEST_F(CredMgrQueryCredInfoByCredIdTest, CredMgrQueryCredInfoByCredIdTest001, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     const CredManager *cm = GetCredMgrInstance();
     ASSERT_NE(cm, nullptr);
     char *credId = nullptr;
@@ -461,6 +486,7 @@ void CredMgrDeleteCredentialTest::TearDown()
 
 HWTEST_F(CredMgrDeleteCredentialTest, CredMgrDeleteCredentialTest001, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     const CredManager *cm = GetCredMgrInstance();
     ASSERT_NE(cm, nullptr);
     char *credId = nullptr;
@@ -512,6 +538,7 @@ void CredMgrUpdateCredInfoTest::TearDown()
 
 HWTEST_F(CredMgrUpdateCredInfoTest, CredMgrUpdateCredInfoTest001, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     const CredManager *cm = GetCredMgrInstance();
     ASSERT_NE(cm, nullptr);
     char *credId = nullptr;
@@ -524,6 +551,7 @@ HWTEST_F(CredMgrUpdateCredInfoTest, CredMgrUpdateCredInfoTest001, TestSize.Level
 
 HWTEST_F(CredMgrUpdateCredInfoTest, CredMgrUpdateCredInfoTest002, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     const CredManager *cm = GetCredMgrInstance();
     ASSERT_NE(cm, nullptr);
     char *credId = nullptr;
@@ -536,6 +564,7 @@ HWTEST_F(CredMgrUpdateCredInfoTest, CredMgrUpdateCredInfoTest002, TestSize.Level
 
 HWTEST_F(CredMgrUpdateCredInfoTest, CredMgrUpdateCredInfoTest003, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     const CredManager *cm = GetCredMgrInstance();
     ASSERT_NE(cm, nullptr);
     char *credId = nullptr;
@@ -548,6 +577,7 @@ HWTEST_F(CredMgrUpdateCredInfoTest, CredMgrUpdateCredInfoTest003, TestSize.Level
 
 HWTEST_F(CredMgrUpdateCredInfoTest, CredMgrUpdateCredInfoTest004, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     const CredManager *cm = GetCredMgrInstance();
     ASSERT_NE(cm, nullptr);
     char *credId = nullptr;
@@ -694,6 +724,7 @@ void CredMgrAgreeCredentialTest::TearDown()
 
 HWTEST_F(CredMgrAgreeCredentialTest, CredMgrAgreeCredentialTest001, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     const CredManager *cm = GetCredMgrInstance();
     ASSERT_NE(cm, nullptr);
     char *selfCredId = nullptr;
@@ -831,6 +862,7 @@ void CredMgrDelCredByParamsTest::TearDown()
 
 HWTEST_F(CredMgrDelCredByParamsTest, CredMgrDelCredByParamsTest001, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     const CredManager *cm = GetCredMgrInstance();
     ASSERT_NE(cm, nullptr);
     char *credId = nullptr;
@@ -862,6 +894,7 @@ HWTEST_F(CredMgrDelCredByParamsTest, CredMgrDelCredByParamsTest003, TestSize.Lev
 
 HWTEST_F(CredMgrDelCredByParamsTest, CredMgrDelCredByParamsTest004, TestSize.Level0)
 {
+    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
     const CredManager *cm = GetCredMgrInstance();
     ASSERT_NE(cm, nullptr);
     char *credId = nullptr;
