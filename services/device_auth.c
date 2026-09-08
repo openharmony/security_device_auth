@@ -1799,7 +1799,7 @@ static int32_t ProcessLightAccountAuthClient(int64_t requestId, int32_t osAccoun
         return res;
     }
     ProcessSessionKeyCallback(requestId, (const uint8_t *)returnKeyBuf.val, returnKeyBuf.length, laCallBack);
-    memset_s(returnKeyBuf.val, returnKeyBuf.length, 0, returnKeyBuf.length);
+    (void)memset_s(returnKeyBuf.val, returnKeyBuf.length, 0, returnKeyBuf.length);
     res = LightAuthOnFinish(requestId, out, laCallBack);
     if (res != HC_SUCCESS) {
         LOGE("LightAuthOnFinish failed!");
@@ -1855,7 +1855,7 @@ static int32_t ComputeServerSessionKey(int64_t requestId, int32_t osAccountId, C
         return res;
     }
     ProcessSessionKeyCallback(requestId, (const uint8_t *)returnKeyBuf.val, returnKeyBuf.length, laCallBack);
-    memset_s(returnKeyBuf.val, returnKeyBuf.length, 0, returnKeyBuf.length);
+    (void)memset_s(returnKeyBuf.val, returnKeyBuf.length, 0, returnKeyBuf.length);
     HcFree(returnKeyBuf.val);
     return HC_SUCCESS;
 }
