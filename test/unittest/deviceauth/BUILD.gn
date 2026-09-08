@@ -716,6 +716,14 @@ ohos_unittest("device_auth_ipc_test") {
     "googletest:gtest_main",
     "hilog:libhilog",
   ]
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    integer_overflow = true
+    boundary_sanitize = true
+    ubsan = true
+    debug = false
+  }
 }
 
 ohos_unittest("light_auth_test") {
