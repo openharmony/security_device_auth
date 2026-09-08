@@ -79,13 +79,6 @@ static bool IsHuksGenerateKeyAvailable()
     return true;
 }
 
-#define SKIP_IF_HUKS_KEYGEN_UNAVAILABLE() \
-    do { \
-        if (!IsHuksGenerateKeyAvailable()) { \
-            GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)"; \
-        } \
-    } while (0)
-
 static void NativeTokenSet(const char *procName)
 {
     const char *acls[] = {"ACCESS_IDS"};
@@ -375,7 +368,9 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest002, TestSize.Level0)
 
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest003, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     int32_t res = ProcessCredentialDemo(CRED_OP_DELETE, DEFAULT_SERVICE_TYPE);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, DEFAULT_SERVICE_TYPE);
@@ -392,7 +387,9 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest003, TestSize.Level0)
 
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest004, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     int32_t res = ProcessCredentialDemo(CRED_OP_CREATE, DEFAULT_SERVICE_TYPE);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, DEFAULT_SERVICE_TYPE);
@@ -405,7 +402,9 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest004, TestSize.Level0)
 
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest005, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     int32_t res = CreateServerKeyPair();
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemoImport(SERVICE_TYPE_IMPORT);
@@ -422,7 +421,9 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest005, TestSize.Level0)
 
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest006, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     int32_t res = CreateServerKeyPair();
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemoImport(SERVICE_TYPE_IMPORT);
@@ -441,7 +442,9 @@ HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest006, TestSize.Level0)
 
 HWTEST_F(DaAuthDeviceTest, DaAuthDeviceTest007, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     int32_t res = ProcessCredentialDemo(CRED_OP_CREATE, DEFAULT_SERVICE_TYPE);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, DEFAULT_SERVICE_TYPE);
@@ -510,7 +513,9 @@ void ApiAccessPassTest::TearDown()
 
 HWTEST_F(ApiAccessPassTest, ApiAccessPassTest001, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     int32_t res = ProcessCredentialDemo(CRED_OP_CREATE, DEFAULT_SERVICE_TYPE);
     ASSERT_EQ(res, HC_SUCCESS);
     res = ProcessCredentialDemo(CRED_OP_QUERY, DEFAULT_SERVICE_TYPE);

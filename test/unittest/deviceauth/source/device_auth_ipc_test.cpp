@@ -123,13 +123,6 @@ static bool IsHuksGenerateKeyAvailable()
     return true;
 }
 
-#define SKIP_IF_HUKS_KEYGEN_UNAVAILABLE() \
-    do { \
-        if (!IsHuksGenerateKeyAvailable()) { \
-            GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)"; \
-        } \
-    } while (0)
-
 static void NativeTokenSet(const char *procName)
 {
     const char *acls[] = {"ACCESS_IDS"};
@@ -615,7 +608,9 @@ HWTEST_F(GmCreateGroupTest, GmCreateGroupTest002, TestSize.Level0)
 
 HWTEST_F(GmCreateGroupTest, GmCreateGroupTest003, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
@@ -716,7 +711,9 @@ HWTEST_F(GmCheckAccessToGroupTest, GmCheckAccessToGroupTest002, TestSize.Level0)
 
 HWTEST_F(GmCheckAccessToGroupTest, GmCheckAccessToGroupTest003, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     int32_t ret = gm->checkAccessToGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_GROUP_ID);
@@ -898,7 +895,9 @@ HWTEST_F(GmGetGroupInfoByIdTest, GmGetGroupInfoByIdTest003, TestSize.Level0)
 
 HWTEST_F(GmGetGroupInfoByIdTest, GmGetGroupInfoByIdTest004, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
@@ -1086,7 +1085,9 @@ HWTEST_F(GmGetJoinedGroupsTest, GmGetJoinedGroupsTest003, TestSize.Level0)
 
 HWTEST_F(GmGetJoinedGroupsTest, GmGetJoinedGroupsTest004, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
@@ -1183,7 +1184,9 @@ HWTEST_F(GmGetRelatedGroupsTest, GmGetRelatedGroupsTest004, TestSize.Level0)
 
 HWTEST_F(GmGetRelatedGroupsTest, GmGetRelatedGroupsTest005, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
@@ -1277,7 +1280,9 @@ HWTEST_F(GmGetDeviceInfoByIdTest, GmGetDeviceInfoByIdTest004, TestSize.Level0)
 
 HWTEST_F(GmGetDeviceInfoByIdTest, GmGetDeviceInfoByIdTest005, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
@@ -1377,7 +1382,9 @@ HWTEST_F(GmGetTrustedDevicesTest, GmGetTrustedDevicesTest004, TestSize.Level0)
 
 HWTEST_F(GmGetTrustedDevicesTest, GmGetTrustedDevicesTest005, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     char *returnData = nullptr;
@@ -1468,7 +1475,9 @@ HWTEST_F(GmIsDeviceInGroupTest, GmIsDeviceInGroupTest003, TestSize.Level0)
 
 HWTEST_F(GmIsDeviceInGroupTest, GmIsDeviceInGroupTest004, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     bool ret = gm->isDeviceInGroup(TEST_OS_ACCOUNT_ID, TEST_APP_ID, TEST_GROUP_ID, TEST_AUTH_ID);
@@ -1544,7 +1553,9 @@ HWTEST_F(GmAddMemberToGroupTest, GmAddMemberToGroupTest002, TestSize.Level0)
 
 HWTEST_F(GmAddMemberToGroupTest, GmAddMemberToGroupTest003, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
@@ -1565,7 +1576,9 @@ HWTEST_F(GmAddMemberToGroupTest, GmAddMemberToGroupTest004, TestSize.Level0)
 
 HWTEST_F(GmAddMemberToGroupTest, GmAddMemberToGroupTest005, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
@@ -2057,7 +2070,9 @@ HWTEST_F(GmDeleteGroupTest, GmDeleteGroupTest002, TestSize.Level0)
 
 HWTEST_F(GmDeleteGroupTest, GmDeleteGroupTest003, TestSize.Level0)
 {
-    SKIP_IF_HUKS_KEYGEN_UNAVAILABLE();
+    if (!IsHuksGenerateKeyAvailable()) {
+        GTEST_SKIP() << "skip: HUKS generateKeyPair unavailable (" HUKS_EXT_PLUGIN_SO " missing on emulator)";
+    }
     const DeviceGroupManager *gm = GetGmInstance();
     ASSERT_NE(gm, nullptr);
     int32_t ret = gm->regCallback(TEST_APP_ID, &g_gmCallback);
