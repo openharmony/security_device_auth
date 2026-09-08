@@ -838,7 +838,6 @@ static bool IsNeedRefreshPseudonymId(int32_t osAccountId, const char *indexKey)
             return false;
         }
     }
-    g_isInitial = false;
     UnlockHcMutex(g_mutex);
     return true;
 }
@@ -868,6 +867,7 @@ void DestroyPseudonymManager(void)
         ClearPseudonymInfoVec(&info->pseudonymInfoVec);
     }
     DESTROY_HC_VECTOR(PseudonymDb, &g_pseudonymDb);
+    g_isInitial = false;
     UnlockHcMutex(g_mutex);
     DestroyHcMutex(g_mutex);
     HcFree(g_mutex);
