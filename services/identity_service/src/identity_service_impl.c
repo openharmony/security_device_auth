@@ -652,6 +652,22 @@ static int32_t BatchUpdateCredsImplInner(int32_t osAccountId,
     return GetCurrentCredIds(osAccountId, baseInfoJson, returnData);
 }
 
+static bool IsPushEventType(const CJson *baseInfoJson)
+{
+    int32_t eventType = EVENT_TYPE_DEFAULT;
+    (void)GetIntFromJson(baseInfoJson, FIELD_EVENT_TYPE, &eventType);
+    return eventType == EVENT_TYPE_PUSH_MSG;
+}
+
+static int32_t ProcessCredSyncByPushMsg(int32_t osAccountId)
+{
+    if (!IsCallerSystemApp()) {
+        LOGE("Push cred sync requires system hap");
+        return HC_ERR_IPC_PERMISSION_DENIED;
+    }
+    return ExecuteAccountAuthCmd(osAccountId, FORCE_RELOAD_CRED_MGR_BY_PUSH, NULL, NULL);
+}
+
 int32_t BatchUpdateCredsImpl(int32_t osAccountId, const char *requestParams, char **returnData)
 {
     CJson *reqJson = CreateJsonFromString(requestParams);
@@ -659,10 +675,22 @@ int32_t BatchUpdateCredsImpl(int32_t osAccountId, const char *requestParams, cha
         LOGE("Failed to create reqJson from string!");
         return IS_ERR_JSON_CREATE;
     }
+
     CJson *baseInfoJson = GetObjFromJson(reqJson, FIELD_BASE_INFO);
+    if (baseInfoJson == NULL) {
+        LOGE("baseInfoJson is NULL");
+        FreeJson(reqJson);
+        return IS_ERR_INVALID_PARAMS;
+    }
+
+    if (IsPushEventType(baseInfoJson)) {
+        FreeJson(reqJson);
+        return ProcessCredSyncByPushMsg(osAccountId);
+    }
+
     CJson *updateInfoList = GetObjFromJson(reqJson, FIELD_UPDATE_LISTS);
-    if (baseInfoJson == NULL || updateInfoList == NULL) {
-        LOGE("baseInfoJson or updateLists is NULL");
+    if (updateInfoList == NULL) {
+        LOGE("updateLists is NULL");
         FreeJson(reqJson);
         return IS_ERR_INVALID_PARAMS;
     }

@@ -30,6 +30,7 @@
 #define FIELD_AUTHORIZED_APP_LIST "authorizedAppList"
 #define FIELD_AUTHORIZED_SCOPE "authorizedScope"
 #define FIELD_CRED_OWNER "credOwner"
+#define FIELD_EVENT_TYPE "eventType"
 #define FIELD_EXTEND_INFO "extendInfo"
 #define FIELD_CRED_ID "credId"
 #define FIELD_PROOF_TYPE "proofType"
@@ -108,6 +109,11 @@ enum {
     SCOPE_DEVICE = 1,
     SCOPE_USER = 2,
     SCOPE_APP = 3,
+};
+
+enum {
+    EVENT_TYPE_DEFAULT = 0,
+    EVENT_TYPE_PUSH_MSG = 1,
 };
 
 #ifdef __cplusplus

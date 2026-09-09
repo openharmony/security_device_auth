@@ -16,6 +16,7 @@
 #ifndef PERMISSION_ADAPTER_H
 #define PERMISSION_ADAPTER_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #define CRED_AUTH_PERMISSION "ohos.permission.ACCESS_DEVAUTH_CRED_AUTH"
@@ -30,6 +31,7 @@ int32_t CheckInterfacePermission(const char *permission);
 int32_t CheckPermission(int32_t methodId);
 int32_t GetCallingUid(void);
 int32_t CheckRestoreCallPermission(void);
+bool IsCallerSystemApp(void);
 
 #ifdef __cplusplus
 }

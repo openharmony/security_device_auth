@@ -239,3 +239,15 @@ int32_t CheckRestoreCallPermission(void)
     }
     return HC_SUCCESS;
 }
+
+bool IsCallerSystemApp(void)
+{
+    AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
+    ATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenType != TOKEN_HAP) {
+        LOGE("Caller token type is not hap!");
+        return false;
+    }
+    uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+    return AccessTokenKit::IsSystemAppByFullTokenID(fullTokenId);
+}
