@@ -16,19 +16,20 @@
 
 #include "dev_auth_dynamic_load.h"
 
-#include <los_ld_elflib.h>
+#include <dlfcn.h>
 
 void *DevAuthDlopen(const char *filePath)
 {
-    return LOS_SoLoad(filePath);
+    return dlopen(filePath, RTLD_LAZY | RTLD_LOCAL);
 }
 
 void *DevAuthDlsym(void *handle, const char *funcName)
 {
-    return LOS_FindSymByName(handle, funcName);
+    return dlsym(handle, funcName);
 }
 
 void DevAuthDlclose(void *handle)
 {
-    (void)LOS_ModuleUnload(handle);
+    (void)dlclose(handle);
 }
+
