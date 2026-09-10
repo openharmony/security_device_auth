@@ -18,9 +18,9 @@
 
 | 任务类型 | 首选位置 | 关键锚点 |
 | --- | --- | --- |
-| 新增/修改对外 API | `interfaces/inner_api/` + `services/device_auth.c` + `frameworks/src/ipc_sdk.c` + `ipc_service_common.c` + stub callMap | `device_auth.c:1084+`、`ipc_sdk.c:789`、`deviceauth_sa.cpp:54-103` |
+| 新增/修改对外 API | `interfaces/inner_api/` + `services/device_auth.c` + `frameworks/src/ipc_sdk.c` + `frameworks/src/ipc_service_common.c` + stub callMap（standard/small 各一张） | `device_auth.c:1151+`（GetGmInstance v-table 接线）、`ipc_sdk.c:789`、`deviceauth_sa.cpp:54-103`、`ipc_service_lite.c:36-81`（small callMap）、`ipc_dev_auth_stub.cpp:52-67`（IPC_CALL_ID_UN_CRITICAL 只读方法表） |
 | 认证会话流程（V2 握手/展开指令） | `services/session_manager/src/session/` | `dev_session_fwk.c:849`、`v2/dev_session_v2.c` |
-| ISO/SPAKE 握手算法 | V2：`session/v2/auth_sub_session/protocol_lib/`；共享层：`services/protocol/` | `iso_protocol.c:845`、`pake_v2_protocol_common.c` |
+| ISO/SPAKE 握手算法 | V2 会话：`session/v2/auth_sub_session/protocol_lib/`（ISO/DL-SPEKE/EC-SPEKE 三协议，仅依赖 GetLoaderInstance()）；`services/protocol/pake_protocol/` 只服务 V1 legacy 账号任务与 `key_agree_sdk`，不在 V2 会话链上 | `iso_protocol.c:845`、`dl_speke_protocol.c:1133`、`ec_speke_protocol.c:1140`；`pake_v2_protocol_common.c:143`（仅 V1/key_agree_sdk） |
 | 组管理/绑定/老认证流程 | `services/legacy/group_manager`、`group_auth`、`authenticators/` | `group_manager.c:24+`、`dev_auth_module_manager.c:184` |
 | 凭据/身份/PIN | `services/identity_service/`、`services/legacy/identity_manager/`、`legacy/creds_manager/` | `identity_operation.c:354/1173`、`identity_pin.c` |
 | MK 协商/匿名 ID | `services/mk_agree`、`privacy_enhancement` | `mk_agree_task.c:655`、`pseudonym_manager.c:855` |
@@ -34,7 +34,7 @@
 
 ## 构建和验证
 
-构建命令从 OpenHarmony 根目录（`/home/openharmony_local`）执行，不在本子目录执行：
+构建命令从 OpenHarmony 整树根目录（`build.sh` 所在目录）执行，不在本子目录执行：
 
 ```bash
 ./build.sh --product-name rk3568 --build-target deviceauth_build           # 全量
@@ -43,14 +43,14 @@
 ./build.sh --product-name rk3568 --build-target deviceauth_napi_build      # NAPI
 ./build.sh --product-name rk3568 --build-target deviceauth_test_build      # 全部测试
 # 单测：编译单个 gtest 目标后过滤执行
-out/rk3568/<...>/iso_protocol_test --gtest_filter=IsoProtocolTest.IsoInit001*
+out/rk3568/tests/unittest/device_auth/device_auth/iso_protocol_test --gtest_filter=IsoProtocolTest.IsoProtocolTest001*
 ```
 
 测试目标清单——套件：`deviceauth_llt`、`device_auth_func_test`、`deviceauth_unit_test`、`device_auth_identity_service_test`、`device_auth_interface_test`、`device_auth_ipc_test`、`light_auth_test`、`identity_service_ipc_test`、`dfx_operation_common_test`；TDD 分模块：`auth_sub_session_test`、`iso_protocol_test`、`ec_speke_protocol_test`、`dl_speke_protocol_test`、`expand_sub_session_test`、`auth_code_import_test`、`pub_key_exchange_test`、`save_trusted_info_test`、`creds_manager_test`、`perform_dumper_test`、`os_account_adapter_test`、`mini_session_manager_test`；公共库：`hc_types_test`、`json_utils_test`、`hc_string_test`、`hc_log_test`、`fuzztest`。
 
 编译器强制告警即错误（`-O2 -ftrapv -Wall -Werror -Wextra -Wshadow -fstack-protector-all -D_FORTIFY_SOURCE=2 -Wformat=2 -Wfloat-equal -Wdate-time`，见 `deviceauth_env.gni:32-46`；standard 额外 cfi/ubsan）。发现 warning 须修复，禁止抑制。
 
-本仓库提供 skill：`build-test`（后台编译+轮询+审查 out/rk3568 日志）、`run-ut`（后台跑 UT+解析 report/task_log.log，失败/crash 从 result 目录取堆栈）。
+本仓库配套本地 Agent skill（未随仓提交，执行环境需自备）：`build-test`（后台编译+轮询+审查 out/rk3568 日志）、`run-ut`（后台跑 UT+解析 report/task_log.log，失败/crash 从 result 目录取堆栈）。
 
 ### 完成标准
 
@@ -99,6 +99,7 @@ out/rk3568/<...>/iso_protocol_test --gtest_filter=IsoProtocolTest.IsoInit001*
 - **4 空格**缩进禁 Tab；单行 **120 字符**上限；函数体 **50 行**上限（超出拆子函数）。仓库无 clang-format 配置，人工遵循。
 - **K&R 混合大括号**：函数体左大括号另起一行；控制语句左大括号同行。C89 风格变量置块首；未用参数 `(void)name;`；空判条件逐一加括号 `(ptr == NULL) || (len == 0)`。
 - **禁止魔数**（G.CNS.02）：`UPPER_SNAKE_CASE` 宏/枚举/`static const`；例外：布尔 0/1、循环下标、头文件已有常量（如 `HC_SUCCESS`）。
+- **函数代替函数式宏**（G.PRE.02-CPP）：带参逻辑一律用 `inline`/`static` 函数，不写函数式宏（如 skip 门禁用 `IsHuksGenerateKeyAvailable()` 函数 + 调用处直接 `GTEST_SKIP()`，勿封装成 `SKIP_IF_...()` 宏）；例外：必须在使用处展开的框架宏（`GTEST_SKIP()`/`HWTEST_F`/`RETURN_IF_INIT_FAILED`）、需字符串化 `#` 或可变参数 `__VA_ARGS__` 者；对象式常量宏（无参，如 `HUKS_EXT_PLUGIN_SO`）不在此列。
 - C 文件：C99 + `securec.h`（只用 `memset_s/memcpy_s` 等安全函数）。C++ 文件（IPC/SA/NAPI/测试）：`OHOS` 命名空间，禁异常与 RTTI；多态经 C 函数指针 v-table，不用 C++ virtual。
 - 头文件包含顺序：系统头 → `securec.h` 靠前 → 工程头；测试代码 gtest/gmock 最先；被 C++ 引用的 C 头一律 `extern "C" { }` 包裹。
 - 命名：C 函数 `snake_case`、C++ 方法 `PascalCase`（如 `InitDeviceAuthService()`/`OnStart()`）；局部 `snake_case`、全局 `g_` 前缀（`peerUdid`/`g_groupAuthManager`）；结构体 typedef `PascalCase`、枚举/宏 `UPPER_SNAKE_CASE`（`DeviceGroupManager`/`FIELD_APP_ID`）；文件 `snake_case.c`；包含保护 `UPPER_SNAKE_CASE_H`；IPC 服务侧函数按模块前缀（`IpcServiceGm*`、`DevAuthGetReal*`）。
