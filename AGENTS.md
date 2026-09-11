@@ -22,7 +22,7 @@
 | 认证会话流程（V2 握手/展开指令） | `services/session_manager/src/session/` | `dev_session_fwk.c:849`、`v2/dev_session_v2.c` |
 | ISO/SPAKE 握手算法 | V2 会话：`session/v2/auth_sub_session/protocol_lib/`（ISO/DL-SPEKE/EC-SPEKE 三协议，仅依赖 GetLoaderInstance()）；`services/protocol/pake_protocol/` 只服务 V1 legacy 账号任务与 `key_agree_sdk`，不在 V2 会话链上 | `iso_protocol.c:845`、`dl_speke_protocol.c:1133`、`ec_speke_protocol.c:1140`；`pake_v2_protocol_common.c:143`（仅 V1/key_agree_sdk） |
 | 组管理/绑定/老认证流程 | `services/legacy/group_manager`、`group_auth`、`authenticators/` | `group_manager.c:24+`、`dev_auth_module_manager.c:184` |
-| 凭据/身份/PIN | `services/identity_service/`、`services/legacy/identity_manager/`、`legacy/creds_manager/` | `identity_operation.c:354/1173`、`identity_pin.c` |
+| 凭据/身份/PIN | PIN 与老认证身份：`services/legacy/identity_manager/`（identity_pin.c 在此）+ `legacy/creds_manager/`（无状态身份分发器）；`services/identity_service/` 是新凭据 CRUD 框架（AddCredential/Query/Update），**与 PIN 认证无关，勿先入为主** | `identity_operation.c:354/1173`、`identity_pin.c:253/286`、`creds_manager.c:39/93` |
 | MK 协商/匿名 ID | `services/mk_agree`、`privacy_enhancement` | `mk_agree_task.c:655`、`pseudonym_manager.c:855` |
 | 独立协商 SDK | `services/key_agree_sdk/` | `key_agree_sdk.h:96-104` |
 | 持久化文件 | `services/data_manager/`（TLV） | `group/credential/operation_data_manager.c` |
@@ -48,7 +48,7 @@ out/rk3568/tests/unittest/device_auth/device_auth/iso_protocol_test --gtest_filt
 
 测试目标清单——套件：`deviceauth_llt`、`device_auth_func_test`、`deviceauth_unit_test`、`device_auth_identity_service_test`、`device_auth_interface_test`、`device_auth_ipc_test`、`light_auth_test`、`identity_service_ipc_test`、`dfx_operation_common_test`；TDD 分模块：`auth_sub_session_test`、`iso_protocol_test`、`ec_speke_protocol_test`、`dl_speke_protocol_test`、`expand_sub_session_test`、`auth_code_import_test`、`pub_key_exchange_test`、`save_trusted_info_test`、`creds_manager_test`、`perform_dumper_test`、`os_account_adapter_test`、`mini_session_manager_test`；公共库：`hc_types_test`、`json_utils_test`、`hc_string_test`、`hc_log_test`、`fuzztest`。
 
-编译器强制告警即错误（`-O2 -ftrapv -Wall -Werror -Wextra -Wshadow -fstack-protector-all -D_FORTIFY_SOURCE=2 -Wformat=2 -Wfloat-equal -Wdate-time`，见 `deviceauth_env.gni:32-46`；standard 额外 cfi/ubsan）。发现 warning 须修复，禁止抑制。
+编译器强制告警即错误（`-O2 -ftrapv -Wall -Werror -Wextra -Wshadow -fstack-protector-all -D_FORTIFY_SOURCE=2 -Wformat=2 -Wfloat-equal -Wdate-time`，见 `deviceauth_env.gni:32-46`；standard 额外 cfi/ubsan）。发现 warning 须修复，禁止抑制。注意：TDD 单测目标不引用上述 build_flags，涉产品代码改动需加编 `deviceauth_service_build` 确认红线；最小验证用单 target（如 `iso_protocol_test`），host 实跑用 `x86_64_virt` 产品，详见 `docs/knowledge/verification.md`。
 
 本仓库配套本地 Agent skill（未随仓提交，执行环境需自备）：`build-test`（后台编译+轮询+审查 out/rk3568 日志）、`run-ut`（后台跑 UT+解析 report/task_log.log，失败/crash 从 result 目录取堆栈）。
 
