@@ -1852,7 +1852,6 @@ static int32_t ComputeServerSessionKey(int64_t requestId, int32_t osAccountId, C
     FreeJson(returnDataJson);
     if (res != HC_SUCCESS) {
         LOGE("ComputeHkdfKeyServer failed!");
-        HcFree(returnKeyBuf.val);
         return res;
     }
     ProcessSessionKeyCallback(requestId, (const uint8_t *)returnKeyBuf.val, returnKeyBuf.length, laCallBack);
