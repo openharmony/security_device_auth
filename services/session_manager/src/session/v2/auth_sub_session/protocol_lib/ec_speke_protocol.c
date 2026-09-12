@@ -640,7 +640,7 @@ static int32_t VerifyKcfDataPeer(EcSpekeProtocol *impl, bool isClient)
         return res;
     }
     PRINT_DEBUG_MSG(kcfDataPeer.val, kcfDataPeer.length, "kcfDataPeer");
-    if (memcmp(kcfDataPeer.val, impl->params.kcfDataPeer.val, kcfDataPeer.length) != 0) {
+    if (!IsUint8BuffEqual(&kcfDataPeer, &impl->params.kcfDataPeer)) {
         LOGE("verify kcfData fail.");
         (void)memset_s(kcfDataPeer.val, kcfDataPeer.length, 0, kcfDataPeer.length);
         return PROOF_MISMATCH;

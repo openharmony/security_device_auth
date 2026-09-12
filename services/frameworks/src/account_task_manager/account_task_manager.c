@@ -340,26 +340,26 @@ int32_t DelCredTrustRelation(int32_t osAccountId, const char *userId, const char
     return res;
 }
 
-bool IsCredReferencedByUser(int32_t osAccountId, const char *userId, const char *credId)
+int32_t IsCredReferencedByUser(int32_t osAccountId, const char *userId, const char *credId, bool *isReferenced)
 {
     if (!g_isInit) {
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
-        return false;
+        return HC_ERR_NULL_PTR;
     }
     LoadAccountAuthPlugin();
-    bool res = IsCredRelationReferencedByUser(osAccountId, userId, credId);
+    int32_t res = IsCredRelationReferencedByUser(osAccountId, userId, credId, isReferenced);
     UnloadAccountAuthPlugin();
     return res;
 }
 
-bool IsCredReferenced(int32_t osAccountId, const char *credId)
+int32_t IsCredReferenced(int32_t osAccountId, const char *credId, bool *isReferenced)
 {
     if (!g_isInit) {
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
-        return false;
+        return HC_ERR_NULL_PTR;
     }
     LoadAccountAuthPlugin();
-    bool res = IsCredRelationReferenced(osAccountId, credId);
+    int32_t res = IsCredRelationReferenced(osAccountId, credId, isReferenced);
     UnloadAccountAuthPlugin();
     return res;
 }

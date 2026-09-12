@@ -80,6 +80,17 @@ bool IsUint8BuffValid(const Uint8Buff *buff, uint32_t maxLen)
     return ((buff != NULL) && (buff->val != NULL) && (0 < buff->length) && (buff->length <= maxLen));
 }
 
+bool IsUint8BuffEqual(const Uint8Buff *buff1, const Uint8Buff *buff2)
+{
+    if (buff1 == NULL || buff2 == NULL || buff1->val == NULL || buff2->val == NULL) {
+        return false;
+    }
+    if (buff1->length != buff2->length) {
+        return false;
+    }
+    return (memcmp(buff1->val, buff2->val, buff1->length) == EOK);
+}
+
 int32_t ToLowerCase(Uint8Buff *buff)
 {
     uint32_t buffLen = buff->length;

@@ -315,7 +315,11 @@ static void CredMgrAsyncWorkReturn(napi_env env, napi_status status, void *data)
 {
     BatchUpdateCredsCtx *ctx = static_cast<BatchUpdateCredsCtx *>(data);
     napi_value result = nullptr;
-    napi_create_string_utf8(env, ctx->returnData, NAPI_AUTO_LENGTH, &result);
+    if (ctx->returnData != nullptr) {
+        napi_create_string_utf8(env, ctx->returnData, NAPI_AUTO_LENGTH, &result);
+    } else {
+        napi_get_null(env, &result);
+    }
     if (ctx->asyncType == ASYNC_CALLBACK) {
         CredMgrCallbackResult(env, ctx, result);
     } else {

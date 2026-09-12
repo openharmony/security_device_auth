@@ -552,8 +552,7 @@ static int32_t VerifyProof(PakeBaseParams *params)
         LOGE("Sha256 for proofMsg failed, res: %" LOG_PUB "x.", res);
         goto CLEAN_UP;
     }
-    if (params->kcfDataPeer.length != tmpKcfData.length ||
-        memcmp(tmpKcfData.val, params->kcfDataPeer.val, tmpKcfData.length) != EOK) {
+    if (!IsUint8BuffEqual(&tmpKcfData, &params->kcfDataPeer)) {
         LOGE("Compare kcfData failed.");
         res = PROOF_MISMATCH;
         goto CLEAN_UP;

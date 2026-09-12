@@ -639,7 +639,7 @@ static int32_t VerifyKcfDataPeer(DlSpekeProtocol *impl, bool isClient)
         LOGE("Sha256 for kcfDataPeer failed, res: %" LOG_PUB "x", res);
         return res;
     }
-    if (memcmp(kcfDataPeer.val, impl->params.kcfDataPeer.val, kcfDataPeer.length) != 0) {
+    if (!IsUint8BuffEqual(&kcfDataPeer, &impl->params.kcfDataPeer)) {
         LOGE("verify kcfData fail.");
         (void)memset_s(kcfDataPeer.val, kcfDataPeer.length, 0, kcfDataPeer.length);
         return PROOF_MISMATCH;

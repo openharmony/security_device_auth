@@ -134,7 +134,7 @@ HWTEST_F(StandardExchangeTaskTest, StandardExchangeTaskTest003, TestSize.Level0)
     exchangeParams.exInfoCipher.length = INVALID_CIPHER_LENGTH;
 
     int32_t ret = ServerResponseStandardBindExchange(&pakeParams, &exchangeParams);
-    EXPECT_EQ(ret, HC_ERR_ALLOC_MEMORY);
+    EXPECT_EQ(ret, HC_ERR_INVALID_PARAMS);
 
     exchangeParams.exInfoCipher.length = VALID_CIPHER_LENGTH;
     ret = ServerResponseStandardBindExchange(&pakeParams, &exchangeParams);

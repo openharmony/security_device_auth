@@ -1258,7 +1258,14 @@ static int32_t DelCredentialInner(int32_t osAccountId, const char *subProfileIdS
         }
     #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
         DeleteCredRelation(osAccountId, subProfileIdStr, shouldPostInactive, StringGet(&(*entry)->credId));
-        if (IsCredReferenced(osAccountId, StringGet(&(*entry)->credId))) {
+        bool isReferenced = false;
+        int32_t res = IsCredReferenced(osAccountId, StringGet(&(*entry)->credId), &isReferenced);
+        if (res != HC_SUCCESS) {
+            LOGE("Failed to check cred reference, skip delete key");
+            index++;
+            continue;
+        }
+        if (isReferenced) {
             LOGI("Cred still referenced by other users, do not delete it.");
             index++;
             continue;
@@ -1315,9 +1322,16 @@ static int32_t QueryCredentialsInner(int32_t osAccountId, bool isProfileDelete, 
             continue;
         }
     #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
-        if ((isProfileDelete || ((*entry)->credType != ACCOUNT_UNRELATED)) &&
-            !IsCredReferencedByUser(osAccountId, subProfileIdStr, StringGet(&(*entry)->credId))) {
-            continue;
+        if (isProfileDelete || ((*entry)->credType != ACCOUNT_UNRELATED)) {
+            bool isReferenced = false;
+            int32_t res = IsCredReferencedByUser(osAccountId, subProfileIdStr,
+                StringGet(&(*entry)->credId), &isReferenced);
+            if (res != HC_SUCCESS) {
+                LOGE("Failed to check cred reference by user, assume referenced for safety.");
+                continue;
+            } else if (!isReferenced) {
+                continue;
+            }
         }
     #endif
         Credential *newEntry = DeepCopyCredential(*entry);

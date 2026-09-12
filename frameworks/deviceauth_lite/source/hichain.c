@@ -303,17 +303,16 @@ DLL_API_PUBLIC int32_t delete_local_auth_info(hc_handle handle, struct hc_user_i
     (void)memset_s(&para, sizeof(para), 0, sizeof(para));
 
     hichain->cb.get_protocol_params(&hichain->identity, REMOVE_ALL_AUTHINFO, &pin, &para);
-    if (para.self_auth_id.length > 0) {
-        if (memcmp(para.self_auth_id.auth_id, user_info->auth_id.auth_id, para.self_auth_id.length) == 0) {
-            int32_t ret_base = delete_base_key(service_id, para);
-            int32_t ret_accessor = delete_public_key(handle, service_id, KEY_ALIAS_ACCESSOR_PK);
-            int32_t ret_controller = delete_public_key(handle, service_id, KEY_ALIAS_CONTROLLER_PK);
-            if ((ret_base != HC_OK) || (ret_accessor != HC_OK) || (ret_controller != HC_OK)) {
-                LOGE("delete all key failed");
-                return ERROR_CODE_FAILED;
-            }
-            return HC_OK;
+    if ((para.self_auth_id.length > 0) && (para.self_auth_id.length == user_info->auth_id.length) &&
+        (memcmp(para.self_auth_id.auth_id, user_info->auth_id.auth_id, para.self_auth_id.length) == 0)) {
+        int32_t ret_base = delete_base_key(service_id, para);
+        int32_t ret_accessor = delete_public_key(handle, service_id, KEY_ALIAS_ACCESSOR_PK);
+        int32_t ret_controller = delete_public_key(handle, service_id, KEY_ALIAS_CONTROLLER_PK);
+        if ((ret_base != HC_OK) || (ret_accessor != HC_OK) || (ret_controller != HC_OK)) {
+            LOGE("delete all key failed");
+            return ERROR_CODE_FAILED;
         }
+        return HC_OK;
     }
 
     enum huks_key_alias_type alias_type = (user_info->user_type == HC_USER_TYPE_ACCESSORY ?

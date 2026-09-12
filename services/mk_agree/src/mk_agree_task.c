@@ -464,7 +464,8 @@ static int32_t VerifyPeerKcf(PakeMkAgreeTask *pakeTask, const CJson *payload)
         HcFree(kcfDataVal);
         return res;
     }
-    if ((recoverKcfBuff.length != kcfDataLen) || memcmp(recoverKcfBuff.val, kcfDataVal, kcfDataLen) != 0) {
+    Uint8Buff kcfDataBuff = { kcfDataVal, kcfDataLen };
+    if (!IsUint8BuffEqual(&recoverKcfBuff, &kcfDataBuff)) {
         LOGE("Kcf data not equal!");
         HcFree(kcfDataVal);
         ClearFreeUint8Buff(&recoverKcfBuff);

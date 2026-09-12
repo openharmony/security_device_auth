@@ -25,8 +25,6 @@
 #define LOGW(fmt, ...) HILOG_WARN(HILOG_MODULE_SCY, fmt, ##__VA_ARGS__)
 #define LOGE(fmt, ...) HILOG_ERROR(HILOG_MODULE_SCY, fmt, ##__VA_ARGS__)
 
-#define PRINT_ERR_TRACE()
-
 #define LOG_PUB ""
 
 #define DESENSITIZATION_LEN 12

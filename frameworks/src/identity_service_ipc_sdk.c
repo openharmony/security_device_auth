@@ -25,6 +25,7 @@
 
 #include "ipc_adapt.h"
 #include "securec.h"
+#include "string_util.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,8 +56,7 @@ static void DelIpcCliCallbackCtx(const char *appId, IpcProxyCbInfo *cbCache)
         UnlockHcMutex(&g_ipcMutex);
         return;
     }
-    int32_t ret = memcmp(appId, cbCache->appId, HcStrlen(cbCache->appId) + 1);
-    if (ret == 0) {
+    if (IsStrEqual(appId, cbCache->appId)) {
         cbCache->appId[0] = 0;
     }
     UnlockHcMutex(&g_ipcMutex);
