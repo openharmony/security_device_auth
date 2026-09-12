@@ -318,6 +318,7 @@ typedef enum {
     LIGHT_ACCOUNT_AUTH_VERIFY_SIGN = 21,
     CHECK_CE_DATA = 22,
     FORCE_RELOAD_CRED_MGR = 23,
+    FORCE_RELOAD_CRED_MGR_BY_PUSH = 24,
 } CredentialCode;
 
 #endif

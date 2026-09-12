@@ -36,7 +36,7 @@ HWTEST_F(HcTypesTest, HcMallocTest001, TestSize.Level0)
     ASSERT_NE(ptr, nullptr);
     uint8_t *bytePtr = static_cast<uint8_t *>(ptr);
     for (uint32_t i = 0; i < TEST_MALLOC_SIZE; i++) {
-        EXPECT_EQ(bytePtr[i], TEST_MALLOC_VAL);
+        EXPECT_EQ(bytePtr[i], static_cast<uint8_t>(TEST_MALLOC_VAL));
     }
     HcFree(ptr);
 }

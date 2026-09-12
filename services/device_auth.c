@@ -1799,6 +1799,7 @@ static int32_t ProcessLightAccountAuthClient(int64_t requestId, int32_t osAccoun
         return res;
     }
     ProcessSessionKeyCallback(requestId, (const uint8_t *)returnKeyBuf.val, returnKeyBuf.length, laCallBack);
+    (void)memset_s(returnKeyBuf.val, returnKeyBuf.length, 0, returnKeyBuf.length);
     res = LightAuthOnFinish(requestId, out, laCallBack);
     if (res != HC_SUCCESS) {
         LOGE("LightAuthOnFinish failed!");
@@ -1832,6 +1833,34 @@ static int32_t LightAuthOnTransmit(int64_t requestId, CJson *out, const DeviceAu
     return HC_SUCCESS;
 }
 
+static int32_t ComputeServerSessionKey(int64_t requestId, int32_t osAccountId, CJson *out,
+    const DeviceAuthCallback *laCallBack, const char *returnDataStr)
+{
+    CJson *returnDataJson = CreateJsonFromString(returnDataStr);
+    if (returnDataJson == NULL) {
+        LOGE("Failed to create json from returnDataStr");
+        return HC_ERR_JSON_FAIL;
+    }
+    const char *serviceId = GetStringFromJson(returnDataJson, FIELD_APP_ID);
+    if (serviceId == NULL) {
+        LOGE("Failed to get serviceId");
+        FreeJson(returnDataJson);
+        return HC_ERR_JSON_FAIL;
+    }
+    Uint8Buff returnKeyBuf = { 0 };
+    int32_t res = ComputeHkdfKeyServer(osAccountId, out, NULL, serviceId, &returnKeyBuf);
+    FreeJson(returnDataJson);
+    if (res != HC_SUCCESS) {
+        LOGE("ComputeHkdfKeyServer failed!");
+        HcFree(returnKeyBuf.val);
+        return res;
+    }
+    ProcessSessionKeyCallback(requestId, (const uint8_t *)returnKeyBuf.val, returnKeyBuf.length, laCallBack);
+    (void)memset_s(returnKeyBuf.val, returnKeyBuf.length, 0, returnKeyBuf.length);
+    HcFree(returnKeyBuf.val);
+    return HC_SUCCESS;
+}
+
 static int32_t ProcessLightAccountAuthServer(int64_t requestId, int32_t osAccountId,
     CJson *msg, const DeviceAuthCallback *laCallBack, const char *returnDataStr)
 {
@@ -1847,30 +1876,12 @@ static int32_t ProcessLightAccountAuthServer(int64_t requestId, int32_t osAccoun
         FreeJson(out);
         return res;
     }
-    CJson *returnDataJson = CreateJsonFromString(returnDataStr);
-    if (returnDataJson == NULL) {
-        LOGE("Failed to create json from returnDataStr");
-        FreeJson(out);
-        return HC_ERR_JSON_FAIL;
-    }
-    const char *serviceId = GetStringFromJson(returnDataJson, FIELD_APP_ID);
-    if (serviceId == NULL) {
-        LOGE("Failed to get serviceId");
-        FreeJson(out);
-        FreeJson(returnDataJson);
-        return HC_ERR_JSON_FAIL;
-    }
-    Uint8Buff returnKeyBuf = { 0 };
-    res = ComputeHkdfKeyServer(osAccountId, out, NULL, serviceId, &returnKeyBuf);
-    FreeJson(returnDataJson);
+    res = ComputeServerSessionKey(requestId, osAccountId, out, laCallBack, returnDataStr);
     if (res != HC_SUCCESS) {
-        LOGE("ComputeHkdfKeyServer failed!");
-        HcFree(returnKeyBuf.val);
+        LOGE("ComputeServerSessionKey failed!");
         FreeJson(out);
         return res;
     }
-    ProcessSessionKeyCallback(requestId, (const uint8_t *)returnKeyBuf.val, returnKeyBuf.length, laCallBack);
-    HcFree(returnKeyBuf.val);
     res = LightAuthOnTransmit(requestId, out, laCallBack);
     if (res != HC_SUCCESS) {
         LOGE("LightAuthOnTransmit failed!");
@@ -1880,7 +1891,7 @@ static int32_t ProcessLightAccountAuthServer(int64_t requestId, int32_t osAccoun
     res = LightAuthOnFinish(requestId, out, laCallBack);
     FreeJson(out);
     if (res != HC_SUCCESS) {
-        LOGE("LightAuthOnTransmit failed!");
+        LOGE("LightAuthOnFinish failed!");
         return res;
     }
     return res;
