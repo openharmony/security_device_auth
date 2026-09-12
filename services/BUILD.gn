@@ -348,7 +348,7 @@ if (os_level == "mini" || os_level == "small") {
   ohos_shared_library("deviceauth_service") {
     subsystem_name = "security"
     part_name = "device_auth"
-    version_script = "device_auth.map"
+    version_script = "device_auth_service.map"
     public_configs = [ ":deviceauth_config" ]
     branch_protector_ret = "pac_ret"
 
