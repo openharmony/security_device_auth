@@ -6,8 +6,8 @@
 
 `HcFileOpen/Read/Write/Close/Remove`（`deps_adapter/os_adapter/interfaces/{linux,liteos}/hc_file.h:35-44/39-44`）。
 
-- linux 实现 `impl/src/linux/hc_file.c`：读 `fopen "rb"`(:65)；写路径不存在则逐级 `mkdir 0700`(S_IRWXU, :52)，`fopen "wb+"` 后 `fchmod 0640`(:66-82)；`remove`(:192)。
-- liteos/mini 实现 `impl/src/liteos/hc_file_posix.c`：读 `open O_RDONLY`(:73)，写 `O_RDWR|O_CREAT|O_TRUNC 0640`(:90)，目录 `mkdir 0600`(:57)；另一版 `hc_file.c` 走 `UtilsFileOpen:36`（LiteOS 私有 FS）。
+- linux 实现 `impl/src/linux/hc_file.c`：读 `fopen "rb"`(:65)；写路径不存在则逐级 `mkdir 0700`(S_IRWXU, :52)，`fopen "wb+"` 后 `fchmod 0600`(:66-82)；`remove`(:192)。
+- liteos/mini 实现 `impl/src/liteos/hc_file_posix.c`：读 `open O_RDONLY`(:73)，写 `O_RDWR|O_CREAT|O_TRUNC 0600`(:90)，目录 `mkdir 0600`(:57)；另一版 `hc_file.c` 走 `UtilsFileOpen:36`（LiteOS 私有 FS）。
 - liteos `hc_dev_info.c:44` 的 CE 路径返回 NULL（mini/small 无 CE 概念）。
 - **禁止自行 `fopen`/`open` 新文件**。
 
@@ -33,4 +33,4 @@
 
 ## 进程/权限
 
-`services/deviceauth_service.cfg`：SA 以 uid/gid `deviceauth` 运行，SELinux `u:r:deviceauth_service:s0`；`/data/service/el1/public/deviceauth{,/account,/pseudonym}` 由 init 创建 **0711 deviceauth:deviceauth**；CE `/data/service/el2/<uid>` 由账号系统隔离。目录基底常量 `impl/src/linux/hc_dev_info.c:49`(CE)/:54(DE)。
+`services/deviceauth_service.cfg`：SA 以 uid/gid `deviceauth` 运行，SELinux `u:r:deviceauth_service:s0`；`/data/service/el1/public/deviceauth{,/account,/pseudonym}` 由 init 创建 **0700 deviceauth:deviceauth**；CE `/data/service/el2/<uid>` 由账号系统隔离。目录基底常量 `impl/src/linux/hc_dev_info.c:49`(CE)/:54(DE)。

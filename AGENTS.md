@@ -116,7 +116,7 @@ out/rk3568/<...>/iso_protocol_test --gtest_filter=IsoProtocolTest.IsoInit001*
 - 直接调 `Huks*/Hks*/mbedtls` 做加密、解密、MAC、HKDF、签名、验签、密钥协商、密钥导入/生成/删除——必须经 `GetLoaderInstance()` 的 `AlgLoader`。
 - 私钥/对称密钥值落盘或出进程：长期密钥一律别名（`isAlias=true`）入 HUKS；仅公钥可传明文 blob。
 - 临时密钥 blob 用毕不释放：必须配对 `FreeAndCleanKey()`；JSON 内敏感字段（sessionKey/pinCode/authCode）删除/转发前 `ClearSensitiveStringInJson()`。
-- 自行 `fopen` 读写文件：必须走 `HcFileOpen/Read/Write/Close/Remove`，写后 `SetSecurityLabel(path, SECURITY_LABEL_S2)`，保持目录 0700/0711、文件 0640。
+- 自行 `fopen` 读写文件：必须走 `HcFileOpen/Read/Write/Close/Remove`，写后 `SetSecurityLabel(path, SECURITY_LABEL_S2)`，保持目录 0700、文件 0600。
 - 新增硬编码盐/因子/种子；协议要求固定值时注释指向 Hichain 协议规范章节（历史固定盐清单与明文旁路风险面见 `crypto-alg-loader-huks.md`，勿扩大）。
 - 日志输出 PIN、PSK、session key、verify 报文明文。
 - 在 session_manager 持锁路径（`ProcessDevSession` 全链）引入阻塞操作（死锁）。
