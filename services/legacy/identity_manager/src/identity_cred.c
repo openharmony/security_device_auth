@@ -520,7 +520,7 @@ static int32_t ComputeAuthToken(int32_t osAccountId, const char *userId, const U
     int32_t ret = GetLoaderInstance()->computeHkdf(&keyAliasParams, &userIdBuff, &challenge, authToken);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to computeHkdf from authCode to authToken!");
-        FreeBuffData(authToken);
+        ClearFreeUint8Buff(authToken);
     }
     return ret;
 }
@@ -618,19 +618,19 @@ static int32_t ISGetAccountSymSharedSecret(const CJson *in, Uint8Buff *sharedSec
     ret = GetByteFromJson(in, FIELD_SEED, seed, SEED_SIZE);
     if (ret != HC_SUCCESS) {
         LOGE("Get seed failed!");
-        FreeBuffData(&authToken);
+        ClearFreeUint8Buff(&authToken);
         return HC_ERR_JSON_GET;
     }
     sharedSecret->val = (uint8_t *)HcMalloc(ISO_PSK_LEN, 0);
     if (sharedSecret->val == NULL) {
         LOGE("HcMalloc sharedSecret memory failed!");
-        FreeBuffData(&authToken);
+        ClearFreeUint8Buff(&authToken);
         return HC_ERR_ALLOC_MEMORY;
     }
     sharedSecret->length = ISO_PSK_LEN;
     KeyParams keyParams = { { authToken.val, authToken.length, isTokenStored }, false, osAccountId };
     ret = GetLoaderInstance()->computeHmac(&keyParams, &seedBuff, sharedSecret);
-    FreeBuffData(&authToken);
+    ClearFreeUint8Buff(&authToken);
     if (ret != HC_SUCCESS) {
         LOGE("Error occurs, ComputeHmac for psk failed, ret: %" LOG_PUB "d.", ret);
         ClearFreeUint8Buff(sharedSecret);
@@ -730,7 +730,7 @@ static int32_t GetSharedSecretForP2pInPake(const CJson *in, Uint8Buff *sharedSec
     HcFree(credIdByte.val);
     if (ret != HC_SUCCESS) {
         LOGE("compute hkdf key alias failed.");
-        FreeBuffData(sharedSecret);
+        ClearFreeUint8Buff(sharedSecret);
     }
     return ret;
 }
