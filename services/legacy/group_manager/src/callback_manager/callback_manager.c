@@ -37,7 +37,10 @@ static int32_t UpdateCallbackIfExist(const char *appId, const DeviceAuthCallback
 {
     uint32_t index;
     CallbackEntry *entry = NULL;
-    (void)LockHcMutex(g_callbackMutex);
+    if (LockHcMutex(g_callbackMutex) != HC_SUCCESS) {
+        LOGE("Failed to lock callback mutex!");
+        return HC_ERROR;
+    }
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
         if (IsStrEqual(entry->appId, appId)) {
             if (memcpy_s(entry->callback, sizeof(DeviceAuthCallback),
@@ -83,7 +86,12 @@ static int32_t AddCallbackIfNotExist(const char *appId, const DeviceAuthCallback
     CallbackEntry entry;
     entry.appId = copyAppId;
     entry.callback = copyCallback;
-    (void)LockHcMutex(g_callbackMutex);
+    if (LockHcMutex(g_callbackMutex) != HC_SUCCESS) {
+        LOGE("Failed to lock callback mutex!");
+        HcFree(copyAppId);
+        HcFree(copyCallback);
+        return HC_ERROR;
+    }
     if (g_callbackVec.pushBack(&g_callbackVec, &entry) == NULL) {
         LOGE("Failed to push callback to vector!");
         HcFree(copyAppId);
@@ -162,7 +170,10 @@ const DeviceAuthCallback *GetGMCallbackByAppId(const char *appId)
 {
     uint32_t index;
     CallbackEntry *entry = NULL;
-    (void)LockHcMutex(g_callbackMutex);
+    if (LockHcMutex(g_callbackMutex) != HC_SUCCESS) {
+        LOGE("Failed to lock callback mutex!");
+        return NULL;
+    }
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
         if (IsStrEqual(entry->appId, appId)) {
             UnlockHcMutex(g_callbackMutex);
@@ -194,7 +205,10 @@ int32_t UnRegGroupManagerCallback(const char *appId)
     }
     uint32_t index;
     CallbackEntry *entry = NULL;
-    (void)LockHcMutex(g_callbackMutex);
+    if (LockHcMutex(g_callbackMutex) != HC_SUCCESS) {
+        LOGE("Failed to lock callback mutex!");
+        return HC_ERROR;
+    }
     FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
         if (IsStrEqual(entry->appId, appId)) {
             HcFree(entry->appId);
@@ -234,13 +248,16 @@ void DestroyCallbackManager(void)
 {
     uint32_t index;
     CallbackEntry *entry = NULL;
-    (void)LockHcMutex(g_callbackMutex);
-    FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
-        HcFree(entry->appId);
-        HcFree(entry->callback);
+    if (LockHcMutex(g_callbackMutex) != HC_SUCCESS) {
+        LOGE("Failed to lock callback mutex!");
+    } else {
+        FOR_EACH_HC_VECTOR(g_callbackVec, index, entry) {
+            HcFree(entry->appId);
+            HcFree(entry->callback);
+        }
+        DESTROY_HC_VECTOR(GMCallbackEntryVec, &g_callbackVec);
+        UnlockHcMutex(g_callbackMutex);
     }
-    DESTROY_HC_VECTOR(GMCallbackEntryVec, &g_callbackVec);
-    UnlockHcMutex(g_callbackMutex);
     DestroyHcMutex(g_callbackMutex);
     HcFree(g_callbackMutex);
     g_callbackMutex = NULL;

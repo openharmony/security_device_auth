@@ -154,6 +154,10 @@ static int32_t AddSessionKeyToSelfData(const CJson *authParam, const CJson *send
 {
     int32_t keyLen = DEFAULT_RETURN_KEY_LENGTH;
     (void)GetIntFromJson(authParam, FIELD_KEY_LENGTH, &keyLen);
+    if ((keyLen < MIN_KEY_LENGTH) || (keyLen > MAX_KEY_LENGTH)) {
+        LOGE("The key length is invalid!");
+        return HC_ERR_INVALID_PARAMS;
+    }
     uint8_t *sessionKey = (uint8_t *)HcMalloc(keyLen, 0);
     if (sessionKey == NULL) {
         LOGE("Failed to allocate memory for sessionKey!");

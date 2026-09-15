@@ -24,6 +24,10 @@
 
 int32_t PackageNonceAndCipherToJson(const Uint8Buff *nonce, const Uint8Buff *cipher, CJson *data, const char *key)
 {
+    if (nonce->length > UINT32_MAX - cipher->length) {
+        LOGE("invalid nonce or cipher length.");
+        return HC_ERR_INVALID_PARAMS;
+    }
     int32_t res = HC_SUCCESS;
     uint32_t exAuthInfoLen = nonce->length + cipher->length;
     uint8_t *exAuthInfoVal = (uint8_t *)HcMalloc(exAuthInfoLen, 0);
@@ -45,6 +49,9 @@ int32_t PackageNonceAndCipherToJson(const Uint8Buff *nonce, const Uint8Buff *cip
     }
     GOTO_ERR_AND_SET_RET(AddByteToJson(data, key, exAuthInfoVal, exAuthInfoLen), res);
 ERR:
+    if (exAuthInfoVal != NULL) {
+        (void)memset_s(exAuthInfoVal, exAuthInfoLen, 0, exAuthInfoLen);
+    }
     HcFree(exAuthInfoVal);
     return res;
 }
@@ -94,6 +101,9 @@ int32_t ParseNonceAndCipherFromJson(Uint8Buff *nonce, Uint8Buff *cipher, const C
         goto ERR;
     }
 ERR:
+    if (exAuthInfoVal != NULL) {
+        (void)memset_s(exAuthInfoVal, exAuthInfoLen, 0, exAuthInfoLen);
+    }
     HcFree(exAuthInfoVal);
     return res;
 }
