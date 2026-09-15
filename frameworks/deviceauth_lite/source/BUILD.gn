@@ -177,6 +177,7 @@ if (os_level == "small" || os_level == "mini") {
       "-Wall",
       "-fvisibility=hidden",
     ]
+    version_script = "libhichainsdk.map"
   }
   ohos_static_library("hichainsdk_static") {
     subsystem_name = "security"
