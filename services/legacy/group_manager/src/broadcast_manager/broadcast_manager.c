@@ -391,16 +391,19 @@ int32_t RemoveListener(const char *appId)
     }
     uint32_t index;
     ListenerEntry *entry = NULL;
+    (void)LockHcMutex(g_broadcastMutex);
     FOR_EACH_HC_VECTOR(g_listenerEntryVec, index, entry) {
         if (IsStrEqual(entry->appId, appId)) {
             HcFree(entry->appId);
             HcFree(entry->listener);
             ListenerEntry tempEntry;
             HC_VECTOR_POPELEMENT(&g_listenerEntryVec, &tempEntry, index);
+            UnlockHcMutex(g_broadcastMutex);
             LOGI("Successfully removed a listener. [AppId]: %" LOG_PUB "s", appId);
             return HC_SUCCESS;
         }
     }
+    UnlockHcMutex(g_broadcastMutex);
     LOGI("The listener does not exist! [AppId]: %" LOG_PUB "s", appId);
     return HC_SUCCESS;
 }

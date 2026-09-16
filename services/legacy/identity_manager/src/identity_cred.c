@@ -16,6 +16,7 @@
 #include "alg_defs.h"
 #include "alg_loader.h"
 #include "hc_log.h"
+#include "uint8buff_utils.h"
 #include "identity_manager.h"
 #include "asy_token_manager.h"
 #include "pseudonym_manager.h"
@@ -476,14 +477,14 @@ static int32_t ComputeHkdfKeyAlias(const CJson *in, int32_t osAccountId, Uint8Bu
     uint8_t *nonceVal = (uint8_t *)HcMalloc(PAKE_NONCE_LEN, 0);
     if (nonceVal == NULL) {
         LOGE("Failed to alloc memory for nonce!");
-        HcFree(pskVal);
+        ClearFreeUint8Buff(&pskBuff);
         return HC_ERR_ALLOC_MEMORY;
     }
     Uint8Buff nonceBuff = { nonceVal, PAKE_NONCE_LEN };
     int32_t ret = GetByteFromJson(in, FIELD_NONCE, nonceBuff.val, nonceBuff.length);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to get nonce!");
-        HcFree(pskVal);
+        ClearFreeUint8Buff(&pskBuff);
         HcFree(nonceVal);
         return HC_ERR_JSON_GET;
     }
@@ -493,12 +494,12 @@ static int32_t ComputeHkdfKeyAlias(const CJson *in, int32_t osAccountId, Uint8Bu
     HcFree(nonceVal);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to compute hkdf for psk!");
-        HcFree(pskVal);
+        ClearFreeUint8Buff(&pskBuff);
         return ret;
     }
 
     ret = ConvertPsk(&pskBuff, sharedSecret);
-    HcFree(pskVal);
+    ClearFreeUint8Buff(&pskBuff);
     if (ret != HC_SUCCESS) {
         LOGE("Error occurs, Failed to convert psk!");
     }
@@ -519,7 +520,7 @@ static int32_t ComputeAuthToken(int32_t osAccountId, const char *userId, const U
     int32_t ret = GetLoaderInstance()->computeHkdf(&keyAliasParams, &userIdBuff, &challenge, authToken);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to computeHkdf from authCode to authToken!");
-        FreeBuffData(authToken);
+        ClearFreeUint8Buff(authToken);
     }
     return ret;
 }
@@ -617,22 +618,22 @@ static int32_t ISGetAccountSymSharedSecret(const CJson *in, Uint8Buff *sharedSec
     ret = GetByteFromJson(in, FIELD_SEED, seed, SEED_SIZE);
     if (ret != HC_SUCCESS) {
         LOGE("Get seed failed!");
-        FreeBuffData(&authToken);
+        ClearFreeUint8Buff(&authToken);
         return HC_ERR_JSON_GET;
     }
     sharedSecret->val = (uint8_t *)HcMalloc(ISO_PSK_LEN, 0);
     if (sharedSecret->val == NULL) {
         LOGE("HcMalloc sharedSecret memory failed!");
-        FreeBuffData(&authToken);
+        ClearFreeUint8Buff(&authToken);
         return HC_ERR_ALLOC_MEMORY;
     }
     sharedSecret->length = ISO_PSK_LEN;
     KeyParams keyParams = { { authToken.val, authToken.length, isTokenStored }, false, osAccountId };
     ret = GetLoaderInstance()->computeHmac(&keyParams, &seedBuff, sharedSecret);
-    FreeBuffData(&authToken);
+    ClearFreeUint8Buff(&authToken);
     if (ret != HC_SUCCESS) {
         LOGE("Error occurs, ComputeHmac for psk failed, ret: %" LOG_PUB "d.", ret);
-        FreeBuffData(sharedSecret);
+        ClearFreeUint8Buff(sharedSecret);
     }
     return ret;
 }
@@ -671,22 +672,22 @@ static int32_t GetSharedSecretForP2pInIso(const CJson *in, Uint8Buff *sharedSecr
     int32_t ret = GetByteFromJson(in, FIELD_SEED, seedBuff.val, seedBuff.length);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to get seed!");
-        HcFree(seedVal);
+        ClearFreeUint8Buff(&seedBuff);
         return HC_ERR_JSON_GET;
     }
     uint8_t *pskVal = (uint8_t *)HcMalloc(ISO_PSK_LEN, 0);
     if (pskVal == NULL) {
         LOGE("HcMalloc memory for psk failed.!");
-        HcFree(seedVal);
+        ClearFreeUint8Buff(&seedBuff);
         return HC_ERR_ALLOC_MEMORY;
     }
     sharedSecret->val = pskVal;
     sharedSecret->length = ISO_PSK_LEN;
     ret = AuthGeneratePsk(in, &seedBuff, sharedSecret);
-    HcFree(seedVal);
+    ClearFreeUint8Buff(&seedBuff);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to generate psk!");
-        FreeBuffData(sharedSecret);
+        ClearFreeUint8Buff(sharedSecret);
     }
     return ret;
 }
@@ -729,7 +730,7 @@ static int32_t GetSharedSecretForP2pInPake(const CJson *in, Uint8Buff *sharedSec
     HcFree(credIdByte.val);
     if (ret != HC_SUCCESS) {
         LOGE("compute hkdf key alias failed.");
-        FreeBuffData(sharedSecret);
+        ClearFreeUint8Buff(sharedSecret);
     }
     return ret;
 }
