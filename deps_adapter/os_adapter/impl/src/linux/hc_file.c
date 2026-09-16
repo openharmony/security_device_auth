@@ -78,7 +78,7 @@ static FILE *HcFileOpenWrite(const char *path)
         LOGE("[OS]: fopen fail. [errno]: %" LOG_PUB "d", errno);
         return NULL;
     }
-    int res = fchmod(fileno(fp), S_IRUSR | S_IWUSR | S_IRGRP);
+    int res = fchmod(fileno(fp), S_IRUSR | S_IWUSR);
     if (res != 0) {
         LOGW("[OS]: fchmod fail. [Res]: %" LOG_PUB "d, [errno]: %" LOG_PUB "d", res, errno);
     }
