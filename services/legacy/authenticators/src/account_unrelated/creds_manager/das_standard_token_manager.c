@@ -70,7 +70,7 @@ static int32_t UnregisterLocalIdentityStd(const TokenManagerParams *params)
     LOGI("Key pair deleted successfully!");
 
     // try to delete upgrade keypair if exist.
-    if (memcmp(params->pkgName.val, GROUP_MANAGER_PACKAGE_NAME, HcStrlen(GROUP_MANAGER_PACKAGE_NAME)) == 0) {
+    if (IsStrEqual((const char *)params->pkgName.val, GROUP_MANAGER_PACKAGE_NAME)) {
         LOGI("Try to delete upgrade key pair.");
         TokenManagerParams tokenParams = *params;
         tokenParams.userType = KEY_ALIAS_LT_KEY_PAIR;

@@ -1588,6 +1588,22 @@ static int32_t CheckAcceptRequest(const CJson *context)
     return HC_SUCCESS;
 }
 
+static int32_t GetValidSelfCredByInput(SessionImpl *impl, const CJson *inputData, IdentityInfo **selfCred)
+{
+    int32_t res = GetSelfCredByInput(impl, inputData);
+    if (res != HC_SUCCESS) {
+        LOGE("get cred by input fail.");
+        return res;
+    }
+    CheckAllCredsValidity(impl);
+    if (HC_VECTOR_SIZE(&impl->credList) == 0) {
+        LOGE("credList is empty after validity check.");
+        return HC_ERR_NO_CANDIDATE_GROUP;
+    }
+    *selfCred = HC_VECTOR_GET(&impl->credList, 0);
+    return HC_SUCCESS;
+}
+
 static int32_t ProcHandshakeReqEventInner(SessionImpl *impl, SessionEvent *inputEvent, CJson *sessionMsg)
 {
     int32_t res = CheckAcceptRequest(impl->context);
@@ -1604,13 +1620,11 @@ static int32_t ProcHandshakeReqEventInner(SessionImpl *impl, SessionEvent *input
     if (res != HC_SUCCESS) {
         return res;
     }
-    res = GetSelfCredByInput(impl, inputEvent->data);
+    IdentityInfo *selfCred = NULL;
+    res = GetValidSelfCredByInput(impl, inputEvent->data, &selfCred);
     if (res != HC_SUCCESS) {
-        LOGE("get cred by input fail.");
         return res;
     }
-    CheckAllCredsValidity(impl);
-    IdentityInfo *selfCred = HC_VECTOR_GET(&impl->credList, 0);
     bool isDirectAuth = selfCred->IdInfoType == P2P_DIRECT_AUTH ? true : false;
     if (AddBoolToJson(impl->context, FIELD_IS_DIRECT_AUTH, isDirectAuth) != HC_SUCCESS) {
         LOGE("Failed to add isDirectAuth to context!");

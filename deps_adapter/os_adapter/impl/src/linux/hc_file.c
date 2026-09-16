@@ -161,6 +161,9 @@ int HcFileWrite(FileHandle file, const void *src, int srcSize)
         if (ferror(fp) != 0) {
             LOGE("write file error!");
         }
+        if (writeCount == 0) {
+            return total;
+        }
         total += writeCount;
     }
     LOGI("[OS]: file write quit. [WriteSize]: %" LOG_PUB "d", total);
