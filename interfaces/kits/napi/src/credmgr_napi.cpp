@@ -30,7 +30,6 @@ thread_local napi_ref NapiCredManager::classRef_ = nullptr;
 std::mutex NapiCredManager::g_instanceLock;
 
 struct BatchUpdateCredsCtx {
-    napi_value env = nullptr;
     AsyncType asyncType = ASYNC_CALLBACK;
     napi_ref callback = nullptr;
     napi_deferred deferred = nullptr;
@@ -43,7 +42,7 @@ struct BatchUpdateCredsCtx {
     char *requestParams = nullptr;
     char *returnData = nullptr;
     const char *errMsg = nullptr;
-    
+
     CredManager *credManager = nullptr;
 };
 
@@ -79,6 +78,9 @@ static void FreeBatchUpdateCredsCtx(napi_env env, BatchUpdateCredsCtx *ctx)
 
 napi_value GenerateErrorMsg(napi_env env, int32_t errorCode, const char *errMsg)
 {
+    if (errMsg == nullptr) {
+        errMsg = "unknown error";
+    }
     std::string errCodeField = "code";
     napi_value errorRes = nullptr;
     napi_value code = nullptr;
@@ -128,10 +130,18 @@ napi_value NapiCredManager::NapiGetCredMgrInstance(napi_env env, napi_callback_i
         return nullptr;
     }
 
-    napi_value instance;
+    napi_value instance = nullptr;
     napi_value constructor = nullptr;
-    napi_get_reference_value(env, classRef_, &constructor);
-    napi_new_instance(env, constructor, 0, nullptr, &instance);
+    if (napi_get_reference_value(env, classRef_, &constructor) != napi_ok || constructor == nullptr) {
+        LOGE("get constructor reference failed");
+        napi_throw(env, GenerateErrorMsg(env, IS_ERROR, "get constructor reference failed"));
+        return nullptr;
+    }
+    if (napi_new_instance(env, constructor, 0, nullptr, &instance) != napi_ok || instance == nullptr) {
+        LOGE("new instance failed");
+        napi_throw(env, GenerateErrorMsg(env, IS_ERROR, "new instance failed"));
+        return nullptr;
+    }
 
     CredManager *credManager = (CredManager *)GetCredMgrInstance();
     if (credManager == nullptr) {
@@ -164,10 +174,13 @@ static bool GetParamsFromNapiValue(napi_env env, napi_value osAccountIdVal, napi
     int32_t &osAccountId, std::string &reqParams)
 {
     size_t length = 0;
-    napi_valuetype osAccountIdType;
-    napi_valuetype reqParamsType;
-    napi_typeof(env, osAccountIdVal, &osAccountIdType);
-    napi_typeof(env, reqParamsVal, &reqParamsType);
+    napi_valuetype osAccountIdType = napi_undefined;
+    napi_valuetype reqParamsType = napi_undefined;
+    if (napi_typeof(env, osAccountIdVal, &osAccountIdType) != napi_ok ||
+        napi_typeof(env, reqParamsVal, &reqParamsType) != napi_ok) {
+        LOGE("typeof osAccountId or reqParams failed");
+        return false;
+    }
     if (osAccountIdType == napi_null || reqParamsType == napi_null) {
         LOGE("osAccountId or reqParams is null");
         return false;
@@ -214,7 +227,10 @@ static bool GetCallbackFromJsParams(napi_env env, napi_value arg, napi_ref *retu
         LOGE("wrong arg type. expect callback function. [Type]: %" LOG_PUB "d", valueType);
         return false;
     }
-    napi_create_reference(env, arg, 1, returnCb);
+    if (napi_create_reference(env, arg, 1, returnCb) != napi_ok) {
+        LOGE("create callback reference failed");
+        return false;
+    }
     return true;
 }
 
@@ -259,7 +275,10 @@ static bool BuildCtxForBatchUpdateCreds(napi_env env, napi_callback_info info, B
         return false;
     }
     if (ctx->asyncType == ASYNC_PROMISE) {
-        napi_create_promise(env, &ctx->deferred, &ctx->promise);
+        if (napi_create_promise(env, &ctx->deferred, &ctx->promise) != napi_ok) {
+            LOGE("failed to create promise");
+            return false;
+        }
         return true;
     }
     return GetCallbackFromJsParams(env, argv[expectedArgc - 1], &ctx->callback);
@@ -313,11 +332,15 @@ static void CredMgrPromiseResult(napi_env env, BatchUpdateCredsCtx *ctx, napi_va
 
 static void CredMgrAsyncWorkReturn(napi_env env, napi_status status, void *data)
 {
+    (void)status;
     BatchUpdateCredsCtx *ctx = static_cast<BatchUpdateCredsCtx *>(data);
     napi_value result = nullptr;
-    if (ctx->returnData != nullptr) {
-        napi_create_string_utf8(env, ctx->returnData, NAPI_AUTO_LENGTH, &result);
-    } else {
+    if (ctx->returnData != nullptr &&
+        napi_create_string_utf8(env, ctx->returnData, NAPI_AUTO_LENGTH, &result) != napi_ok) {
+        LOGE("create returnData string failed");
+        result = nullptr;
+    }
+    if (result == nullptr) {
         napi_get_null(env, &result);
     }
     if (ctx->asyncType == ASYNC_CALLBACK) {
@@ -328,12 +351,15 @@ static void CredMgrAsyncWorkReturn(napi_env env, napi_status status, void *data)
     FreeBatchUpdateCredsCtx(env, ctx); // only free here, normal no need free
 }
 
-static napi_value BatchUpdateCredsAsyncWork(napi_env env, BatchUpdateCredsCtx *ctx)
+static bool CreateBatchUpdateCredsAsyncWork(napi_env env, BatchUpdateCredsCtx *ctx)
 {
     napi_value resourceName = nullptr;
-    napi_create_string_utf8(env, "batchUpdateCredentials", NAPI_AUTO_LENGTH, &resourceName);
-
-    napi_create_async_work(
+    napi_status ret = napi_create_string_utf8(env, "batchUpdateCredentials", NAPI_AUTO_LENGTH, &resourceName);
+    if (ret != napi_ok || resourceName == nullptr) {
+        LOGE("create async work resource name failed");
+        return false;
+    }
+    ret = napi_create_async_work(
         env,
         nullptr,
         resourceName,
@@ -347,11 +373,15 @@ static napi_value BatchUpdateCredsAsyncWork(napi_env env, BatchUpdateCredsCtx *c
         },
         static_cast<void *>(ctx),
         &ctx->asyncWork);
-    napi_queue_async_work(env, ctx->asyncWork);
-    if (ctx->asyncType == ASYNC_PROMISE) {
-        return ctx->promise;
+    if (ret != napi_ok || ctx->asyncWork == nullptr) {
+        LOGE("create async work failed");
+        return false;
     }
-    return NapiGetNull(env);
+    if (napi_queue_async_work(env, ctx->asyncWork) != napi_ok) {
+        LOGE("queue async work failed");
+        return false;
+    }
+    return true;
 }
 
 napi_value NapiCredManager::NapiBatchUpdateCreds(napi_env env, napi_callback_info info)
@@ -369,10 +399,17 @@ napi_value NapiCredManager::NapiBatchUpdateCreds(napi_env env, napi_callback_inf
         FreeBatchUpdateCredsCtx(env, ctx);
         return nullptr;
     }
-    napi_value result = BatchUpdateCredsAsyncWork(env, ctx);
+    AsyncType asyncType = ctx->asyncType;
+    napi_value result = (asyncType == ASYNC_PROMISE) ? ctx->promise : NapiGetNull(env);
     if (result == nullptr) {
-        LOGE("BatchUpdateCredsAsyncWork failed");
-        napi_throw(env, GenerateErrorMsg(env, IS_ERR_INVALID_PARAMS, "BatchUpdateCredsAsyncWork failed"));
+        LOGE("create batchUpdateCredentials result failed");
+        napi_throw(env, GenerateErrorMsg(env, IS_ERROR, "create batchUpdateCredentials result failed"));
+        FreeBatchUpdateCredsCtx(env, ctx);
+        return nullptr;
+    }
+    if (!CreateBatchUpdateCredsAsyncWork(env, ctx)) {
+        LOGE("CreateBatchUpdateCredsAsyncWork failed");
+        napi_throw(env, GenerateErrorMsg(env, IS_ERROR, "CreateBatchUpdateCredsAsyncWork failed"));
         FreeBatchUpdateCredsCtx(env, ctx);
         return nullptr;
     }
