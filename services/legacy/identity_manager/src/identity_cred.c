@@ -25,6 +25,8 @@
 #include "cert_operation.h"
 #include "hal_error.h"
 #include "account_module_defines.h"
+#include "identity_service.h"
+#include "account_task_manager.h"
 
 static int32_t CreateUrlStr(uint8_t credType, int32_t keyType, char **urlStr)
 {
@@ -191,6 +193,56 @@ static int32_t ISSetEcSpekeEntityForAccountRelated(IdentityInfo *info, bool isNe
 #endif
 }
 
+static int32_t GetSelfPkInfoAndSignature(const Credential *credential, Uint8Buff *pkInfo,
+    Uint8Buff *pkInfoSignature)
+{
+    const char *extendInfo = StringGet(&credential->extendInfo);
+    if (extendInfo == NULL) {
+        LOGE("extendInfo is null!");
+        return HC_ERR_NULL_PTR;
+    }
+    CJson *extendInfoJson = CreateJsonFromString(extendInfo);
+    if (extendInfoJson == NULL) {
+        LOGE("Failed to create extend info json!");
+        return HC_ERR_JSON_CREATE;
+    }
+    int32_t res = GetPkInfoAndSignFromExtInfo(extendInfoJson, pkInfo, pkInfoSignature);
+    FreeJson(extendInfoJson);
+    return res;
+}
+
+static int32_t GenerateCertInfoFromCred(int32_t osAccountId, const CJson *context,
+    CertInfo *certInfo)
+{
+    const char *credId = GetStringFromJson(context, FIELD_CRED_ID);
+    if (credId == NULL) {
+        LOGE("Failed to get credId!");
+        return IS_ERR_JSON_GET;
+    }
+    Credential *credential = NULL;
+    int32_t res = GetCredentialById(osAccountId, credId, &credential);
+    if (res != IS_SUCCESS) {
+        LOGE("Failed to get credential by id!");
+        return res;
+    }
+    if (credential->credType != ACCOUNT_RELATED) {
+        LOGE("Not account related cred, not supported!");
+        DestroyCredential(credential);
+        return IS_ERR_NOT_SUPPORT;
+    }
+    Uint8Buff pkInfo = { 0 };
+    Uint8Buff pkInfoSignature = { 0 };
+    res = GetSelfPkInfoAndSignature(credential, &pkInfo, &pkInfoSignature);
+    DestroyCredential(credential);
+    if (res != IS_SUCCESS) {
+        return res;
+    }
+    res = GenerateCertInfo(&pkInfo, &pkInfoSignature, certInfo);
+    ClearFreeUint8Buff(&pkInfo);
+    FreeUint8Buff(&pkInfoSignature);
+    return res;
+}
+
 static int32_t GenerateCertInfoFromToken(int32_t osAccountId, const char *userId, const char *authId,
     CertInfo *certInfo)
 {
@@ -210,6 +262,15 @@ static int32_t GenerateCertInfoFromToken(int32_t osAccountId, const char *userId
     return res;
 }
 
+static int32_t GenerateCertInfoForNormalCred(int32_t osAccountId, const CJson *context, const char *userId,
+    const char *authId, CertInfo *certInfo)
+{
+    if (HasAccountPlugin()) {
+        return GenerateCertInfoFromToken(osAccountId, userId, authId, certInfo);
+    }
+    return GenerateCertInfoFromCred(osAccountId, context, certInfo);
+}
+
 static int32_t GenerateCertInfoFromOpenToken(int32_t osAccountId, const char *authId, CertInfo *certInfo)
 {
     OpenAccountToken *token = CreateOpenAccountToken();
@@ -226,6 +287,22 @@ static int32_t GenerateCertInfoFromOpenToken(int32_t osAccountId, const char *au
     res = GenerateCertInfo(&token->pkInfoStr, &token->pkInfoSignature, certInfo);
     DestroyOpenAccountToken(token);
     return res;
+}
+
+static bool IsNeedRefreshPseudonymId(int32_t osAccountId, const CJson *context)
+{
+#ifdef ENABLE_PSEUDONYM
+    const char *pdidIndex = GetStringFromJson(context, FIELD_CRED_ID);
+    if (pdidIndex == NULL) {
+        LOGE("Failed to get cred ID!");
+        return false;
+    }
+    return GetPseudonymInstance()->isNeedRefreshPseudonymId(osAccountId, pdidIndex);
+#else
+    (void)osAccountId;
+    (void)context;
+    return false;
+#endif
 }
 
 static int32_t ISSetCertInfoAndEntity(const CJson *context, const CJson *credAuthInfo, IdentityInfo *info)
@@ -253,7 +330,7 @@ static int32_t ISSetCertInfoAndEntity(const CJson *context, const CJson *credAut
     if (isOpenCredAuth) {
         res = GenerateCertInfoFromOpenToken(osAccountId, authId, &info->proof.certInfo);
     } else {
-        res = GenerateCertInfoFromToken(osAccountId, userId, authId, &info->proof.certInfo);
+        res = GenerateCertInfoForNormalCred(osAccountId, context, userId, authId, &info->proof.certInfo);
     }
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate cert info!");
@@ -269,12 +346,7 @@ static int32_t ISSetCertInfoAndEntity(const CJson *context, const CJson *credAut
         LOGE("unsupport algorithm type!");
         return res;
     }
-    const char *pdidIndex = GetStringFromJson(context, FIELD_CRED_ID);
-    if (pdidIndex == NULL) {
-        LOGE("Failed to get cred ID!");
-        return HC_ERR_JSON_GET;
-    }
-    bool isNeedRefreshPseudonymId = GetPseudonymInstance()->isNeedRefreshPseudonymId(osAccountId, pdidIndex);
+    bool isNeedRefreshPseudonymId = IsNeedRefreshPseudonymId(osAccountId, context);
     return ISSetEcSpekeEntityForAccountRelated(info, isNeedRefreshPseudonymId);
 }
 
