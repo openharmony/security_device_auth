@@ -148,7 +148,8 @@ bool CheckBigNumCompareParams(const Uint8Buff *a, const Uint8Buff *b, int *res);
 int32_t ConstructImportSymmetricKeyParam(struct HksParamSet **paramSet, const KeyParams *keyParams,
     uint32_t keyLen, KeyPurpose purpose, const ExtraInfo *exInfo);
 int32_t CheckImportSymmetricKeyParams(const KeyParams *keyParams, const Uint8Buff *authToken);
-
+int32_t CheckAgreeParamsP256(const KeyParams *priKeyParams, const KeyBuff *pubKeyBuff, Uint8Buff *sharedKey);
+int32_t ConstructFinishParamsP256NoStorage(struct HksParamSet **finishParamSet, const KeyParams *keyParams);
 
 #ifdef __cplusplus
 }

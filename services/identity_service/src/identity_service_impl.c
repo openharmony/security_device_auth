@@ -499,7 +499,7 @@ int32_t UpdateCredInfoImpl(int32_t osAccountId, const char *credId, const char *
         DestroyCredential(credential);
         return IS_ERR_JSON_CREATE;
     }
-    ret = UpdateInfoFromJson(credential, reqJson);
+    ret = UpdateInfoFromJson(osAccountId, credential, reqJson);
     FreeJson(reqJson);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to set update info");
