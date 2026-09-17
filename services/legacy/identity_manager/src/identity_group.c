@@ -955,16 +955,11 @@ static int32_t GetSharedSecretByPeerCert(
         LOGE("protocol type is not ec speke, not support!");
         return HC_ERR_INVALID_PARAMS;
     }
-    int32_t osAccountId = INVALID_OS_ACCOUNT;
-    if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Failed to get osAccountId!");
-        return HC_ERR_JSON_GET;
-    }
     const char *peerUserId = GetStringFromJson(in, FIELD_PEER_USER_ID);
     if (peerUserId != NULL) {
         LOGE("peerUserId exists.");
     }
-    return GetAccountAsymSharedSecret(osAccountId, peerUserId, FIELD_PEER_USER_ID, peerCertInfo, sharedSecret);
+    return GetAccountAsymSharedSecret(in, peerUserId, FIELD_PEER_USER_ID, peerCertInfo, sharedSecret);
 }
 
 static const AuthIdentity g_authIdentity = {

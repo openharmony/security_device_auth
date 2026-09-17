@@ -19,6 +19,7 @@
 #include "cred_listener.h"
 #include "credential_data_manager.h"
 #include "uint8buff_utils.h"
+#include "alg_defs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,7 +57,11 @@ int32_t SetAgreeCredInfo(int32_t osAccountId, CJson *reqJson,
 int32_t SetQueryParamsFromJson(QueryCredentialParams *queryParams, CJson *json);
 int32_t SetRequiredParamsFromJson(QueryCredentialParams *queryParams, CJson *baseInfoJson);
 int32_t SetUpdateToQueryParams(CJson *json, QueryCredentialParams *queryParams);
-int32_t UpdateInfoFromJson(Credential *credential, CJson *json);
+int32_t UpdateInfoFromJson(int32_t osAccountId, Credential *credential, CJson *json);
+int32_t GetPkInfoAndSignFromExtInfo(const CJson *extendInfoJson, Uint8Buff *pkInfo,
+    Uint8Buff *pkInfoSignature);
+int32_t GenerateServerPkAliasByExtInfo(const CJson *extendInfoJson, Uint8Buff *alias);
+Algorithm GetAlgoByCredAlgoType(uint8_t algorithmType);
 
 #ifdef __cplusplus
 }

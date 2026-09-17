@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,8 +27,12 @@
 #include "identity_common.h"
 #include "pseudonym_manager.h"
 #include "sym_token_manager.h"
+#include "identity_service.h"
+#include "identity_operation.h"
+#include "identity_service_defines.h"
 
 #define FIELD_SHARED_SECRET "sharedSecret"
+#define ECC256_SHARED_KEY_LEN 32
 
 static int32_t SetProtocolsForUidType(IdentityInfo *info)
 {
@@ -718,15 +722,153 @@ ERR:
     return res;
 }
 
-int32_t GetAccountAsymSharedSecret(int32_t osAccountId, const char *id, const char *idField,
+static int32_t VerifyPeerCertByServerPk(const Credential *credential, int32_t osAccountId,
+    const CertInfo *peerCertInfo)
+{
+    const char *extendInfo = StringGet(&credential->extendInfo);
+    if (extendInfo == NULL) {
+        LOGE("extend info is null!");
+        return HC_ERR_NULL_PTR;
+    }
+    CJson *extendInfoJson = CreateJsonFromString(extendInfo);
+    if (extendInfoJson == NULL) {
+        LOGE("Failed to create extend info json!");
+        return HC_ERR_JSON_CREATE;
+    }
+    uint8_t serverPkAliasVal[SHA256_LEN] = { 0 };
+    Uint8Buff serverPkAlias = {
+        .val = serverPkAliasVal,
+        .length = SHA256_LEN
+    };
+    int32_t res = GenerateServerPkAliasByExtInfo(extendInfoJson, &serverPkAlias);
+    FreeJson(extendInfoJson);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to generate server pk alias!");
+        return res;
+    }
+
+    KeyParams keyParams = { { serverPkAlias.val, serverPkAlias.length, true }, false, osAccountId };
+    res = GetLoaderInstance()->verify(&keyParams, &peerCertInfo->pkInfoStr,
+        GetAlgoByCredAlgoType(credential->algorithmType), &peerCertInfo->pkInfoSignature);
+    if (res != HC_SUCCESS) {
+        LOGE("Verify peer pkInfo signature failed!");
+        return HC_ERR_VERIFY_FAILED;
+    }
+    return HC_SUCCESS;
+}
+
+static int32_t GetSelfCredKeyAlias(const Credential *credential, Uint8Buff *keyAlias)
+{
+    const char *credId = StringGet(&credential->credId);
+    if (credId == NULL) {
+        LOGE("credId is null!");
+        return HC_ERR_NULL_PTR;
+    }
+    uint32_t selfAliasLen = HcStrlen(credId) / BYTE_TO_HEX_OPER_LENGTH;
+    uint8_t *selfAliasVal = (uint8_t *)HcMalloc(selfAliasLen, 0);
+    if (selfAliasVal == NULL) {
+        LOGE("Failed to alloc memory for self alias!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    if (HexStringToByte(credId, selfAliasVal, selfAliasLen) != HC_SUCCESS) {
+        LOGE("Failed to convert credId hex to byte!");
+        HcFree(selfAliasVal);
+        return HC_ERR_CONVERT_FAILED;
+    }
+    keyAlias->val = selfAliasVal;
+    keyAlias->length = selfAliasLen;
+    return HC_SUCCESS;
+}
+
+static int32_t AgreeSharedSecretByCredential(int32_t osAccountId, const Credential *credential,
+    const Uint8Buff *peerPkBuff, Uint8Buff *sharedSecret)
+{
+    Uint8Buff selfKeyAlias = { 0 };
+    int32_t res = GetSelfCredKeyAlias(credential, &selfKeyAlias);
+    if (res != HC_SUCCESS) {
+        return res;
+    }
+    KeyParams privKeyParams = { { selfKeyAlias.val, selfKeyAlias.length, true }, false, osAccountId };
+    KeyBuff pubKeyBuff = { peerPkBuff->val, peerPkBuff->length, false };
+
+    uint8_t *tmpSharedSecret = (uint8_t *)HcMalloc(ECC256_SHARED_KEY_LEN, 0);
+    if (tmpSharedSecret == NULL) {
+        LOGE("Failed to malloc for tmpSharedSecret.");
+        FreeUint8Buff(&selfKeyAlias);
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    Uint8Buff tmpSharedSecretBuff = { tmpSharedSecret, ECC256_SHARED_KEY_LEN };
+    res = GetLoaderInstance()->agreeSharedSecret(&privKeyParams, &pubKeyBuff,
+        GetAlgoByCredAlgoType(credential->algorithmType), &tmpSharedSecretBuff);
+    FreeUint8Buff(&selfKeyAlias);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to agree shared secret!");
+        HcFree(tmpSharedSecret);
+        return res;
+    }
+    sharedSecret->val = tmpSharedSecretBuff.val;
+    sharedSecret->length = tmpSharedSecretBuff.length;
+    return HC_SUCCESS;
+}
+
+static int32_t GetAccountAsymSharedSecretForCredAuth(const CJson *in, int32_t osAccountId,
     const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
 {
-    if ((peerCertInfo == NULL) || (sharedSecret == NULL)) {
+    const char *credId = GetStringFromJson(in, FIELD_CRED_ID);
+    if (credId == NULL) {
+        LOGE("Failed to get credId!");
+        return HC_ERR_JSON_GET;
+    }
+    Credential *credential = NULL;
+    int32_t res = GetCredentialById(osAccountId, credId, &credential);
+    if (res != IS_SUCCESS) {
+        LOGE("Failed to get credential by id!");
+        return res;
+    }
+    if (credential->credType != ACCOUNT_RELATED) {
+        LOGE("Not account related cred, not supported!");
+        DestroyCredential(credential);
+        return HC_ERR_NOT_SUPPORT;
+    }
+    res = VerifyPeerCertByServerPk(credential, osAccountId, peerCertInfo);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to verify peer cert!");
+        DestroyCredential(credential);
+        return res;
+    }
+    Uint8Buff peerPkBuff = { 0 };
+    res = GetPeerPubKeyFromCert(peerCertInfo, &peerPkBuff);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get peer pub key!");
+        DestroyCredential(credential);
+        return res;
+    }
+
+    res = AgreeSharedSecretByCredential(osAccountId, credential, &peerPkBuff, sharedSecret);
+    ClearFreeUint8Buff(&peerPkBuff);
+    DestroyCredential(credential);
+    return res;
+}
+
+int32_t GetAccountAsymSharedSecret(const CJson *in, const char *id, const char *idField,
+    const CertInfo *peerCertInfo, Uint8Buff *sharedSecret)
+{
+    if ((in == NULL) || (peerCertInfo == NULL) || (sharedSecret == NULL)) {
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
+    int32_t osAccountId = DEFAULT_OS_ACCOUNT;
+    if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
+        LOGE("Failed to get osAccountId!");
+        return HC_ERR_JSON_GET;
+    }
     if (HasAccountPlugin()) {
         return GetSharedSecretByPeerCertFromPlugin(osAccountId, id, idField, peerCertInfo, sharedSecret);
+    }
+    bool isCredAuth = false;
+    (void)GetBoolFromJson(in, FIELD_IS_CRED_AUTH, &isCredAuth);
+    if (isCredAuth) {
+        return GetAccountAsymSharedSecretForCredAuth(in, osAccountId, peerCertInfo, sharedSecret);
     }
     TrustedDeviceEntry *deviceEntry = CreateDeviceEntry();
     if (deviceEntry == NULL) {
