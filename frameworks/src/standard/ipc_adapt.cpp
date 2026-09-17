@@ -431,13 +431,11 @@ int32_t GetAndValNullParam(const IpcDataInfo *ipcParams,
     int32_t ret = GetIpcRequestParamByType(ipcParams, paramNum, paramType, param, &size);
     if ((ret != HC_SUCCESS) || (size <= 0)) {
         LOGE("get param error, type %" LOG_PUB "d", paramType);
-        *(reinterpret_cast<char **>(param)) = nullptr;
         return HC_ERR_IPC_BAD_PARAM;
     }
     char *str = *(reinterpret_cast<char **>(param));
     if ((str == nullptr) || (str[size - 1] != '\0')) {
         LOGE("The input parameter is not a valid string type.");
-        *(reinterpret_cast<char **>(param)) = nullptr;
         return HC_ERR_IPC_BAD_PARAM;
     }
     return HC_SUCCESS;
@@ -739,11 +737,8 @@ void DelIpcCallBackByReqId(int64_t reqId, int32_t type, bool withLock)
 static int32_t GetDevAuthCbByReqId(CallbackParams params, int64_t &requestId, DeviceAuthCallback &callback)
 {
     int32_t inOutLen = sizeof(requestId);
-    if (GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID,
-        reinterpret_cast<uint8_t *>(&requestId), &inOutLen) != HC_SUCCESS) {
-        LOGE("get requestId failed");
-        return HC_ERR_IPC_BAD_PARAM;
-    }
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID,
+        reinterpret_cast<uint8_t *>(&requestId), &inOutLen);
     int32_t ret = GetSdkCallBackByRequestId(params.callbackId, requestId,
         reinterpret_cast<uint8_t *>(&callback), sizeof(DeviceAuthCallback));
     if (ret != HC_SUCCESS) {
@@ -758,13 +753,8 @@ static void OnTransmitStub(CallbackParams params)
     uint8_t *data = nullptr;
     uint32_t dataLen = 0u;
     DeviceAuthCallback callback;
-    if (GetIpcRequestParamByType(params.cbDataCache, params.cacheNum,
-        PARAM_TYPE_COMM_DATA, reinterpret_cast<uint8_t *>(&data), reinterpret_cast<int32_t *>(&dataLen))
-        != HC_SUCCESS) {
-        LOGE("get comm data failed");
-        params.reply.WriteInt32(HC_ERR_IPC_BAD_PARAM);
-        return;
-    }
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum,
+        PARAM_TYPE_COMM_DATA, reinterpret_cast<uint8_t *>(&data), reinterpret_cast<int32_t *>(&dataLen));
     int32_t ret = GetDevAuthCbByReqId(params, requestId, callback);
     if (ret != HC_SUCCESS) {
         params.reply.WriteInt32(ret);
@@ -783,11 +773,8 @@ static void OnSessKeyStub(CallbackParams params)
     uint32_t dataLen = 0u;
     DeviceAuthCallback callback;
     (void)params.reply;
-    if (GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_SESS_KEY,
-        reinterpret_cast<uint8_t *>(&keyData), reinterpret_cast<int32_t *>(&dataLen)) != HC_SUCCESS) {
-        LOGE("get sess key failed");
-        return;
-    }
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_SESS_KEY,
+        reinterpret_cast<uint8_t *>(&keyData), reinterpret_cast<int32_t *>(&dataLen));
     if (GetDevAuthCbByReqId(params, requestId, callback) != HC_SUCCESS) {
         return;
     }
@@ -804,16 +791,10 @@ static void OnFinishStub(CallbackParams params)
     DeviceAuthCallback callback;
     (void)params.reply;
     int32_t inOutLen = sizeof(opCode);
-    if (GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_OPCODE,
-        reinterpret_cast<uint8_t *>(&opCode), &inOutLen) != HC_SUCCESS) {
-        LOGE("get opCode failed");
-        return;
-    }
-    if (GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_COMM_DATA,
-        reinterpret_cast<uint8_t *>(&data), nullptr) != HC_SUCCESS) {
-        LOGE("get comm data failed");
-        return;
-    }
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_OPCODE,
+        reinterpret_cast<uint8_t *>(&opCode), &inOutLen);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_COMM_DATA,
+        reinterpret_cast<uint8_t *>(&data), nullptr);
     if (GetDevAuthCbByReqId(params, requestId, callback) != HC_SUCCESS) {
         return;
     }
@@ -831,25 +812,13 @@ static void OnErrorStub(CallbackParams params)
     char *errInfo = nullptr;
     DeviceAuthCallback callback;
     int32_t inOutLen = sizeof(opCode);
-    if (GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_OPCODE,
-        reinterpret_cast<uint8_t *>(&opCode), &inOutLen) != HC_SUCCESS) {
-        LOGE("get opCode failed");
-        params.reply.WriteInt32(HC_ERR_IPC_BAD_PARAM);
-        return;
-    }
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_OPCODE,
+        reinterpret_cast<uint8_t *>(&opCode), &inOutLen);
     inOutLen = sizeof(errCode);
-    if (GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERRCODE,
-        reinterpret_cast<uint8_t *>(&errCode), &inOutLen) != HC_SUCCESS) {
-        LOGE("get errCode failed");
-        params.reply.WriteInt32(HC_ERR_IPC_BAD_PARAM);
-        return;
-    }
-    if (GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERR_INFO,
-        reinterpret_cast<uint8_t *>(&errInfo), nullptr) != HC_SUCCESS) {
-        LOGE("get errInfo failed");
-        params.reply.WriteInt32(HC_ERR_IPC_BAD_PARAM);
-        return;
-    }
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERRCODE,
+        reinterpret_cast<uint8_t *>(&errCode), &inOutLen);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_ERR_INFO,
+        reinterpret_cast<uint8_t *>(&errInfo), nullptr);
     int32_t ret = GetDevAuthCbByReqId(params, requestId, callback);
     if (ret != HC_SUCCESS) {
         params.reply.WriteInt32(ret);
@@ -892,25 +861,13 @@ static void OnRequestStub(CallbackParams params)
     DeviceAuthCallback callback;
 
     int32_t inOutLen = sizeof(requestId);
-    if (GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID,
-        reinterpret_cast<uint8_t *>(&requestId), &inOutLen) != HC_SUCCESS) {
-        LOGE("get requestId failed");
-        params.reply.WriteInt32(HC_ERR_IPC_BAD_PARAM);
-        return;
-    }
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQID,
+        reinterpret_cast<uint8_t *>(&requestId), &inOutLen);
     inOutLen = sizeof(opCode);
-    if (GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_OPCODE,
-        reinterpret_cast<uint8_t *>(&opCode), &inOutLen) != HC_SUCCESS) {
-        LOGE("get opCode failed");
-        params.reply.WriteInt32(HC_ERR_IPC_BAD_PARAM);
-        return;
-    }
-    if (GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQ_INFO,
-        reinterpret_cast<uint8_t *>(&reqParams), nullptr) != HC_SUCCESS) {
-        LOGE("get reqInfo failed");
-        params.reply.WriteInt32(HC_ERR_IPC_BAD_PARAM);
-        return;
-    }
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_OPCODE,
+        reinterpret_cast<uint8_t *>(&opCode), &inOutLen);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_REQ_INFO,
+        reinterpret_cast<uint8_t *>(&reqParams), nullptr);
 
     if (GetSdkCallBackByRequestId(params.callbackId, requestId, reinterpret_cast<uint8_t *>(&callback),
         sizeof(DeviceAuthCallback)) != HC_SUCCESS) {
@@ -938,11 +895,8 @@ static void OnRequestStub(CallbackParams params)
 static bool GetCbByAppIdFromParams(CallbackParams params, uint8_t cbType, uint8_t *val, int32_t valSize)
 {
     const char *appId = nullptr;
-    if (GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
-        reinterpret_cast<uint8_t *>(&appId), nullptr) != HC_SUCCESS) {
-        LOGE("get appId failed");
-        return false;
-    }
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_APPID,
+        reinterpret_cast<uint8_t *>(&appId), nullptr);
     if (GetSdkCallBackByAppId(appId, cbType, val, valSize) != HC_SUCCESS) {
         LOGE("GetSdkCallBackByAppId failed.");
         return false;
@@ -970,11 +924,8 @@ static void ListenerStrCbStub(CallbackParams params, int32_t paramType,
 {
     const char *strParam = nullptr;
     DataChangeListener callback;
-    if (GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType,
-        reinterpret_cast<uint8_t *>(&strParam), nullptr) != HC_SUCCESS) {
-        LOGE("get str param failed, type %" LOG_PUB "d", paramType);
-        return;
-    }
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType,
+        reinterpret_cast<uint8_t *>(&strParam), nullptr);
     if (!GetListenerCbFromParams(params, callback)) {
         return;
     }
@@ -989,16 +940,10 @@ static void ListenerStrStrCbStub(CallbackParams params, int32_t paramType1, int3
     const char *param1 = nullptr;
     const char *param2 = nullptr;
     DataChangeListener callback;
-    if (GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType1,
-        reinterpret_cast<uint8_t *>(&param1), nullptr) != HC_SUCCESS) {
-        LOGE("get str param1 failed, type %" LOG_PUB "d", paramType1);
-        return;
-    }
-    if (GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType2,
-        reinterpret_cast<uint8_t *>(&param2), nullptr) != HC_SUCCESS) {
-        LOGE("get str param2 failed, type %" LOG_PUB "d", paramType2);
-        return;
-    }
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType1,
+        reinterpret_cast<uint8_t *>(&param1), nullptr);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType2,
+        reinterpret_cast<uint8_t *>(&param2), nullptr);
     if (!GetListenerCbFromParams(params, callback)) {
         return;
     }
@@ -1037,17 +982,11 @@ static void OnDelLastGroupStub(CallbackParams params)
     const char *udid = nullptr;
     int32_t groupType = 0;
     DataChangeListener callback;
-    if (GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID,
-        reinterpret_cast<uint8_t *>(&udid), nullptr) != HC_SUCCESS) {
-        LOGE("get udid failed");
-        return;
-    }
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, PARAM_TYPE_UDID,
+        reinterpret_cast<uint8_t *>(&udid), nullptr);
     int32_t inOutLen = sizeof(groupType);
-    if (GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_GROUP_TYPE,
-        reinterpret_cast<uint8_t *>(&groupType), &inOutLen) != HC_SUCCESS) {
-        LOGE("get groupType failed");
-        return;
-    }
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_GROUP_TYPE,
+        reinterpret_cast<uint8_t *>(&groupType), &inOutLen);
     if (!GetListenerCbFromParams(params, callback)) {
         return;
     }
@@ -1061,11 +1000,8 @@ static void OnTrustDevNumChangedStub(CallbackParams params)
     int32_t devNum = 0;
     DataChangeListener callback;
     int32_t inOutLen = sizeof(devNum);
-    if (GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_DATA_NUM,
-        reinterpret_cast<uint8_t *>(&devNum), &inOutLen) != HC_SUCCESS) {
-        LOGE("get devNum failed");
-        return;
-    }
+    (void)GetIpcRequestParamByType(params.cbDataCache, params.cacheNum, PARAM_TYPE_DATA_NUM,
+        reinterpret_cast<uint8_t *>(&devNum), &inOutLen);
     if (!GetListenerCbFromParams(params, callback)) {
         return;
     }
@@ -1108,16 +1044,10 @@ static void CredCbStub(CallbackParams params, int32_t paramType1, int32_t paramT
     const char *param1 = nullptr;
     const char *param2 = nullptr;
     CredChangeListener callback;
-    if (GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType1,
-        reinterpret_cast<uint8_t *>(&param1), nullptr) != HC_SUCCESS) {
-        LOGE("get cred str param1 failed, type %" LOG_PUB "d", paramType1);
-        return;
-    }
-    if (GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType2,
-        reinterpret_cast<uint8_t *>(&param2), nullptr) != HC_SUCCESS) {
-        LOGE("get cred str param2 failed, type %" LOG_PUB "d", paramType2);
-        return;
-    }
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType1,
+        reinterpret_cast<uint8_t *>(&param1), nullptr);
+    (void)GetAndValNullParam(params.cbDataCache, params.cacheNum, paramType2,
+        reinterpret_cast<uint8_t *>(&param2), nullptr);
     if (!GetCredCbFromParams(params, callback)) {
         return;
     }
