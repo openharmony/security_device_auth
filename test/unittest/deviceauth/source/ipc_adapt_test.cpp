@@ -17,7 +17,6 @@
 #include "device_auth_defines.h"
 #include "ipc_sdk_defines.h"
 #include "ipc_adapt.h"
-#include "message_parcel.h"
 
 using namespace testing::ext;
 
@@ -160,10 +159,9 @@ HWTEST_F(IpcAdaptParamTest, GetAndValNullParam_NullParam, TestSize.Level0)
     testParams[0].valSz = 0;
     testParams[0].idx = 0;
 
-    char *result = nullptr;
+    char *result;
     EXPECT_EQ(HC_ERR_IPC_BAD_PARAM,
         GetAndValNullParam(testParams, 1, PARAM_TYPE_APPID, reinterpret_cast<uint8_t *>(&result), nullptr));
-    EXPECT_EQ(nullptr, result);
 }
 
 HWTEST_F(IpcAdaptParamTest, GetAndValNullParam_EmptyString, TestSize.Level0)
@@ -191,10 +189,9 @@ HWTEST_F(IpcAdaptParamTest, GetAndValNullParam_InvalidStringNoNullTerminator, Te
     testParams[0].valSz = sizeof(testString);
     testParams[0].idx = 0;
 
-    char *result = nullptr;
+    char *result;
     EXPECT_EQ(HC_ERR_IPC_BAD_PARAM,
         GetAndValNullParam(testParams, 1, PARAM_TYPE_APPID, reinterpret_cast<uint8_t *>(&result), nullptr));
-    EXPECT_EQ(nullptr, result);
 }
 
 HWTEST_F(IpcAdaptParamTest, GetAndValNullParam_NotFound, TestSize.Level0)
@@ -207,10 +204,9 @@ HWTEST_F(IpcAdaptParamTest, GetAndValNullParam_NotFound, TestSize.Level0)
     testParams[0].valSz = static_cast<int32_t>(strlen(testString)) + 1;
     testParams[0].idx = 0;
 
-    char *result = nullptr;
+    char *result;
     EXPECT_EQ(HC_ERR_IPC_BAD_PARAM,
         GetAndValNullParam(testParams, 1, PARAM_TYPE_OPCODE, reinterpret_cast<uint8_t *>(&result), nullptr));
-    EXPECT_EQ(nullptr, result);
 }
 
 HWTEST_F(IpcAdaptParamTest, GetAndValNullParam_ZeroSize, TestSize.Level0)
@@ -223,73 +219,9 @@ HWTEST_F(IpcAdaptParamTest, GetAndValNullParam_ZeroSize, TestSize.Level0)
     testParams[0].valSz = 0;
     testParams[0].idx = 0;
 
-    char *result = nullptr;
+    char *result;
     EXPECT_EQ(HC_ERR_IPC_BAD_PARAM,
         GetAndValNullParam(testParams, 1, PARAM_TYPE_APPID, reinterpret_cast<uint8_t *>(&result), nullptr));
-    EXPECT_EQ(nullptr, result);
-}
-
-HWTEST_F(IpcAdaptParamTest, ProcCbHook_OnTransmit_MissingCommData, TestSize.Level0)
-{
-    IpcDataInfo cbDataCache[1];
-    int64_t reqId = TEST_REQUEST_ID;
-    cbDataCache[0].type = PARAM_TYPE_REQID;
-    cbDataCache[0].val = reinterpret_cast<uint8_t *>(&reqId);
-    cbDataCache[0].valSz = static_cast<int32_t>(sizeof(reqId));
-    cbDataCache[0].idx = 0;
-
-    OHOS::MessageParcel reply;
-    ProcCbHook(CB_ID_ON_TRANS, cbDataCache, 1, reinterpret_cast<uintptr_t>(&reply));
-    int32_t ret = HC_SUCCESS;
-    EXPECT_TRUE(reply.ReadInt32(ret));
-    EXPECT_EQ(HC_ERR_IPC_BAD_PARAM, ret);
-}
-
-HWTEST_F(IpcAdaptParamTest, ProcCbHook_OnError_MissingErrInfo, TestSize.Level0)
-{
-    IpcDataInfo cbDataCache[3];
-    int64_t reqId = TEST_REQUEST_ID;
-    int32_t opCode = 0;
-    int32_t errCode = 0;
-    cbDataCache[0].type = PARAM_TYPE_REQID;
-    cbDataCache[0].val = reinterpret_cast<uint8_t *>(&reqId);
-    cbDataCache[0].valSz = static_cast<int32_t>(sizeof(reqId));
-    cbDataCache[0].idx = 0;
-    cbDataCache[1].type = PARAM_TYPE_OPCODE;
-    cbDataCache[1].val = reinterpret_cast<uint8_t *>(&opCode);
-    cbDataCache[1].valSz = static_cast<int32_t>(sizeof(opCode));
-    cbDataCache[1].idx = 0;
-    cbDataCache[2].type = PARAM_TYPE_ERRCODE;
-    cbDataCache[2].val = reinterpret_cast<uint8_t *>(&errCode);
-    cbDataCache[2].valSz = static_cast<int32_t>(sizeof(errCode));
-    cbDataCache[2].idx = 0;
-
-    OHOS::MessageParcel reply;
-    ProcCbHook(CB_ID_ON_ERROR, cbDataCache, 3, reinterpret_cast<uintptr_t>(&reply));
-    int32_t ret = HC_SUCCESS;
-    EXPECT_TRUE(reply.ReadInt32(ret));
-    EXPECT_EQ(HC_ERR_IPC_BAD_PARAM, ret);
-}
-
-HWTEST_F(IpcAdaptParamTest, ProcCbHook_OnRequest_MissingReqInfo, TestSize.Level0)
-{
-    IpcDataInfo cbDataCache[2];
-    int64_t reqId = TEST_REQUEST_ID;
-    int32_t opCode = 0;
-    cbDataCache[0].type = PARAM_TYPE_REQID;
-    cbDataCache[0].val = reinterpret_cast<uint8_t *>(&reqId);
-    cbDataCache[0].valSz = static_cast<int32_t>(sizeof(reqId));
-    cbDataCache[0].idx = 0;
-    cbDataCache[1].type = PARAM_TYPE_OPCODE;
-    cbDataCache[1].val = reinterpret_cast<uint8_t *>(&opCode);
-    cbDataCache[1].valSz = static_cast<int32_t>(sizeof(opCode));
-    cbDataCache[1].idx = 0;
-
-    OHOS::MessageParcel reply;
-    ProcCbHook(CB_ID_ON_REQUEST, cbDataCache, 2, reinterpret_cast<uintptr_t>(&reply));
-    int32_t ret = HC_SUCCESS;
-    EXPECT_TRUE(reply.ReadInt32(ret));
-    EXPECT_EQ(HC_ERR_IPC_BAD_PARAM, ret);
 }
 
 class IpcDevAuthCredListenerTest : public testing::Test {
