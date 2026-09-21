@@ -645,6 +645,71 @@ static int32_t AgreeSharedSecretIfKeyExist(const KeyParams *priKeyParams, const 
     return AgreeSharedSecretWithStorageP256(priKeyParams, pubKeyBuff, sharedKeyAliasBlob);
 }
 
+static int32_t AgreeSharedSecretP256Inner(const KeyParams *priKeyParams, const KeyBuff *pubKeyBuff,
+    Uint8Buff *sharedKey)
+{
+    struct HksParamSet *initParamSet = NULL;
+    struct HksParamSet *finishParamSet = NULL;
+    int32_t res = ConstructInitParamsP256(&initParamSet, priKeyParams);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+    res = ConstructFinishParamsP256NoStorage(&finishParamSet, priKeyParams);
+    if (res != HAL_SUCCESS) {
+        FreeParamSet(initParamSet);
+        return res;
+    }
+    struct HksBlob priKeyAliasBlob = { priKeyParams->keyBuff.keyLen, priKeyParams->keyBuff.key };
+    struct HksBlob pubKeyBlob = { pubKeyBuff->keyLen, pubKeyBuff->key };
+    uint8_t handle[sizeof(uint64_t)] = { 0 };
+    struct HksBlob handleBlob = { sizeof(uint64_t), handle };
+    uint8_t outDataUpdate[ECDH_COMMON_SIZE_P256] = { 0 };
+    struct HksBlob outUpdateBlob = { ECDH_COMMON_SIZE_P256, outDataUpdate };
+    struct HksBlob outFinishBlob = { sharedKey->length, sharedKey->val };
+    do {
+        int32_t ret = HksInit(&priKeyAliasBlob, initParamSet, &handleBlob, NULL);
+        if (ret != HKS_SUCCESS) {
+            LOGE("Huks agree P256 key: HksInit failed, res = %" LOG_PUB "d", ret);
+            res = HAL_ERR_HUKS;
+            break;
+        }
+        ret = HksUpdate(&handleBlob, initParamSet, &pubKeyBlob, &outUpdateBlob);
+        if (ret != HKS_SUCCESS) {
+            LOGE("Huks agree P256 key: HksUpdate failed, res = %" LOG_PUB "d", ret);
+            DoAbortHks(&handleBlob, initParamSet);
+            res = HAL_ERR_HUKS;
+            break;
+        }
+        LOGI("[HUKS]: HksFinish enter.");
+        ret = HksFinish(&handleBlob, finishParamSet, &pubKeyBlob, &outFinishBlob);
+        LOGI("[HUKS]: HksFinish quit. [Res]: %" LOG_PUB "d", ret);
+        if (ret != HKS_SUCCESS) {
+            LOGE("[HUKS]: HksFinish fail. [Res]: %" LOG_PUB "d", ret);
+            DoAbortHks(&handleBlob, finishParamSet);
+            res = HAL_ERR_HUKS;
+            break;
+        }
+    } while (0);
+    FreeParamSet(initParamSet);
+    FreeParamSet(finishParamSet);
+    return res;
+}
+
+static int32_t AgreeSharedSecretP256(const KeyParams *priKeyParams, const KeyBuff *pubKeyBuff, Uint8Buff *sharedKey)
+{
+    int32_t res = CheckAgreeParamsP256(priKeyParams, pubKeyBuff, sharedKey);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+    Uint8Buff keyAlias = { priKeyParams->keyBuff.key, priKeyParams->keyBuff.keyLen };
+    res = CheckKeyExist(&keyAlias, priKeyParams->isDeStorage, priKeyParams->osAccountId);
+    if (res != HAL_SUCCESS) {
+        LOGE("Huks key not exist, [Res]: %" LOG_PUB "d", res);
+        return res;
+    }
+    return AgreeSharedSecretP256Inner(priKeyParams, pubKeyBuff, sharedKey);
+}
+
 static int32_t AgreeSharedSecretWithStorage(const KeyParams *priKeyParams, const KeyBuff *pubKeyBuff,
     Algorithm algo, uint32_t sharedKeyLen, const Uint8Buff *sharedKeyAlias)
 {
@@ -710,6 +775,9 @@ static int32_t AgreeSharedSecret(const KeyParams *priKeyParams, const KeyBuff *p
 
     if (g_algToHksAlgorithm[algo] == HKS_ALG_ECC) {
         LOGI("Hks agree key for P256.");
+        if (priKeyParams->keyBuff.isAlias) {
+            return AgreeSharedSecretP256(priKeyParams, pubKey, sharedKey);
+        }
         KeyBuff priKey = { priKeyParams->keyBuff.key, priKeyParams->keyBuff.keyLen, priKeyParams->keyBuff.isAlias };
         return MbedtlsAgreeSharedSecret(&priKey, pubKey, sharedKey);
     }

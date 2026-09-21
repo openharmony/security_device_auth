@@ -94,8 +94,9 @@ int32_t GetCredIdsFromCredVec(int32_t osAccountId, CJson *reqJson, CredentialVec
     return IS_ERR_NOT_SUPPORT;
 }
 
-int32_t UpdateInfoFromJson(Credential *credential, CJson *json)
+int32_t UpdateInfoFromJson(int32_t osAccountId, Credential *credential, CJson *json)
 {
+    (void)osAccountId;
     (void)credential;
     (void)json;
     return IS_ERR_NOT_SUPPORT;
@@ -225,4 +226,26 @@ bool IsCredHashMatch(Credential *credential, CJson *reqJson)
     (void)credential;
     (void)reqJson;
     return false;
+}
+
+int32_t GetPkInfoAndSignFromExtInfo(const CJson *extendInfoJson, Uint8Buff *pkInfo,
+    Uint8Buff *pkInfoSignature)
+{
+    (void)extendInfoJson;
+    (void)pkInfo;
+    (void)pkInfoSignature;
+    return IS_ERR_NOT_SUPPORT;
+}
+
+int32_t GenerateServerPkAliasByExtInfo(const CJson *extendInfoJson, Uint8Buff *alias)
+{
+    (void)extendInfoJson;
+    (void)alias;
+    return IS_ERR_NOT_SUPPORT;
+}
+
+Algorithm GetAlgoByCredAlgoType(uint8_t algorithmType)
+{
+    (void)algorithmType;
+    return P256;
 }

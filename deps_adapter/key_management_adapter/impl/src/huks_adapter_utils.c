@@ -31,6 +31,7 @@
 #define BASE_DECRYPT_PARAMS_LEN 7
 #define BASE_AGREE_INIT_PARAMS_LEN 3
 #define BASE_AGREE_FINISH_PARAMS_LEN 7
+#define BASE_AGREE_FINISH_NO_STORAGE_PARAMS_LEN 6
 #define BASE_AGREE_PARAMS_LEN 3
 #define BASE_GENERATE_KEY_PAIR_PARAMS_LEN 6
 #define BASE_VERIFY_PARAMS_LEN 4
@@ -734,6 +735,36 @@ int32_t ConstructFinishParamsP256(struct HksParamSet **finishParamSet, const Key
     return res;
 }
 
+int32_t ConstructFinishParamsP256NoStorage(struct HksParamSet **finishParamSet, const KeyParams *keyParams)
+{
+    uint32_t len = GetParamLen(keyParams->isDeStorage, BASE_AGREE_FINISH_NO_STORAGE_PARAMS_LEN);
+    struct HksParam *finishParams = (struct HksParam *)HcMalloc(sizeof(struct HksParam) * len, 0);
+    if (finishParams == NULL) {
+        LOGE("Malloc for finishParams failed.");
+        return HAL_ERR_BAD_ALLOC;
+    }
+    uint32_t idx = 0;
+    finishParams[idx].tag = HKS_TAG_KEY_STORAGE_FLAG;
+    finishParams[idx++].uint32Param = HKS_STORAGE_TEMP;
+    finishParams[idx].tag = HKS_TAG_IS_KEY_ALIAS;
+    finishParams[idx++].boolParam = false;
+    finishParams[idx].tag = HKS_TAG_ALGORITHM;
+    finishParams[idx++].uint32Param = HKS_ALG_AES;
+    finishParams[idx].tag = HKS_TAG_KEY_SIZE;
+    finishParams[idx++].uint32Param = HKS_AES_KEY_SIZE_256;
+    finishParams[idx].tag = HKS_TAG_PURPOSE;
+    finishParams[idx++].uint32Param = HKS_KEY_PURPOSE_DERIVE;
+    finishParams[idx].tag = HKS_TAG_DIGEST;
+    finishParams[idx++].uint32Param = HKS_DIGEST_SHA256;
+    AddStorageExtParams(finishParams, keyParams->isDeStorage, &idx, keyParams->osAccountId);
+    int32_t res = ConstructParamSet(finishParamSet, finishParams, idx);
+    HcFree(finishParams);
+    if (res != HAL_SUCCESS) {
+        LOGE("Construct finish param set failed, res = %" LOG_PUB "d", res);
+    }
+    return res;
+}
+
 int32_t ConstructAgreeWithStorageParams(struct HksParamSet **paramSet, uint32_t keyLen, Algorithm algo,
     const KeyParams *priKeyParams, const KeyBuff *pubKeyBuff)
 {
@@ -787,6 +818,22 @@ int32_t CheckAgreeWithStorageParams(const KeyParams *priKeyParams, const KeyBuff
     CHECK_PTR_RETURN_HAL_ERROR_CODE(sharedKeyAlias->val, "sharedKeyAlias->val");
     CHECK_LEN_ZERO_RETURN_ERROR_CODE(sharedKeyAlias->length, "sharedKeyAlias->length");
     CHECK_LEN_ZERO_RETURN_ERROR_CODE(sharedKeyLen, "sharedKeyLen");
+    return HAL_SUCCESS;
+}
+
+int32_t CheckAgreeParamsP256(const KeyParams *priKeyParams, const KeyBuff *pubKeyBuff,
+    Uint8Buff *sharedKey)
+{
+    int32_t res = CheckKeyParams(priKeyParams);
+    if (res != HAL_SUCCESS) {
+        return res;
+    }
+    CHECK_PTR_RETURN_HAL_ERROR_CODE(pubKeyBuff, "pubKeyBuff");
+    CHECK_PTR_RETURN_HAL_ERROR_CODE(pubKeyBuff->key, "pubKeyBuff->key");
+    CHECK_LEN_ZERO_RETURN_ERROR_CODE(pubKeyBuff->keyLen, "pubKeyBuff->keyLen");
+    CHECK_PTR_RETURN_HAL_ERROR_CODE(sharedKey, "sharedKey");
+    CHECK_PTR_RETURN_HAL_ERROR_CODE(sharedKey->val, "sharedKey->val");
+    CHECK_LEN_ZERO_RETURN_ERROR_CODE(sharedKey->length, "sharedKey->length");
     return HAL_SUCCESS;
 }
 

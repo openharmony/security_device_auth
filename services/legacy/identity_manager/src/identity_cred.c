@@ -24,6 +24,8 @@
 #include "cert_operation.h"
 #include "hal_error.h"
 #include "account_module_defines.h"
+#include "identity_service.h"
+#include "account_task_manager.h"
 
 static int32_t CreateUrlStr(uint8_t credType, int32_t keyType, char **urlStr)
 {
@@ -137,6 +139,91 @@ static int32_t ISSetEcSpekeEntity(IdentityInfo *info, bool isNeedRefreshPseudony
 #endif
 }
 
+static int32_t GetSelfPkInfoAndSignature(const Credential *credential, Uint8Buff *pkInfo,
+    Uint8Buff *pkInfoSignature)
+{
+    const char *extendInfo = StringGet(&credential->extendInfo);
+    if (extendInfo == NULL) {
+        LOGE("extendInfo is null!");
+        return HC_ERR_NULL_PTR;
+    }
+    CJson *extendInfoJson = CreateJsonFromString(extendInfo);
+    if (extendInfoJson == NULL) {
+        LOGE("Failed to create extend info json!");
+        return HC_ERR_JSON_CREATE;
+    }
+    int32_t res = GetPkInfoAndSignFromExtInfo(extendInfoJson, pkInfo, pkInfoSignature);
+    FreeJson(extendInfoJson);
+    return res;
+}
+
+static int32_t GenerateCertInfoFromCred(int32_t osAccountId, const CJson *context,
+    CertInfo *certInfo)
+{
+    const char *credId = GetStringFromJson(context, FIELD_CRED_ID);
+    if (credId == NULL) {
+        LOGE("Failed to get credId!");
+        return IS_ERR_JSON_GET;
+    }
+    Credential *credential = NULL;
+    int32_t res = GetCredentialById(osAccountId, credId, &credential);
+    if (res != IS_SUCCESS) {
+        LOGE("Failed to get credential by id!");
+        return res;
+    }
+    if (credential->credType != ACCOUNT_RELATED) {
+        LOGE("Not account related cred, not supported!");
+        DestroyCredential(credential);
+        return IS_ERR_NOT_SUPPORT;
+    }
+    Uint8Buff pkInfo = { 0 };
+    Uint8Buff pkInfoSignature = { 0 };
+    res = GetSelfPkInfoAndSignature(credential, &pkInfo, &pkInfoSignature);
+    DestroyCredential(credential);
+    if (res != IS_SUCCESS) {
+        return res;
+    }
+    res = GenerateCertInfo(&pkInfo, &pkInfoSignature, certInfo);
+    ClearFreeUint8Buff(&pkInfo);
+    FreeUint8Buff(&pkInfoSignature);
+    return res;
+}
+
+static int32_t GenerateCertInfoFromToken(int32_t osAccountId, const char *userId, const char *authId,
+    CertInfo *certInfo)
+{
+    AccountToken *token = CreateAccountToken();
+    if (token == NULL) {
+        LOGE("Failed to create account token!");
+        return HC_ERR_ALLOC_MEMORY;
+    }
+    int32_t res = GetAccountAuthTokenManager()->getToken(osAccountId, token, userId, authId);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to get account token!");
+        DestroyAccountToken(token);
+        return res;
+    }
+    res = GenerateCertInfo(&token->pkInfoStr, &token->pkInfoSignature, certInfo);
+    DestroyAccountToken(token);
+    return res;
+}
+
+static bool IsNeedRefreshPseudonymId(int32_t osAccountId, const CJson *context)
+{
+#ifdef ENABLE_PSEUDONYM
+    const char *pdidIndex = GetStringFromJson(context, FIELD_CRED_ID);
+    if (pdidIndex == NULL) {
+        LOGE("Failed to get cred ID!");
+        return false;
+    }
+    return GetPseudonymInstance()->isNeedRefreshPseudonymId(osAccountId, pdidIndex);
+#else
+    (void)osAccountId;
+    (void)context;
+    return false;
+#endif
+}
+
 static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *context, const CJson *credAuthInfo,
     bool isPseudonym, IdentityInfo *info)
 {
@@ -145,25 +232,17 @@ static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *context,
         LOGE("Failed to get auth ID!");
         return HC_ERR_JSON_GET;
     }
-    AccountToken *token = CreateAccountToken();
-    if (token == NULL) {
-        LOGE("Failed to create account token!");
-        return HC_ERR_ALLOC_MEMORY;
-    }
     const char *userId = GetStringFromJson(context, FIELD_USER_ID);
     if (userId == NULL) {
         LOGE("Failed to get user ID!");
-        DestroyAccountToken(token);
         return HC_ERR_JSON_GET;
     }
-    int32_t res = GetAccountAuthTokenManager()->getToken(osAccountId, token, userId, authId);
-    if (res != HC_SUCCESS) {
-        LOGE("Failed to get account token!");
-        DestroyAccountToken(token);
-        return res;
+    int32_t res = HC_ERROR;
+    if (HasAccountPlugin()) {
+        res = GenerateCertInfoFromToken(osAccountId, userId, authId, &info->proof.certInfo);
+    } else {
+        res = GenerateCertInfoFromCred(osAccountId, context, &info->proof.certInfo);
     }
-    res = GenerateCertInfo(&token->pkInfoStr, &token->pkInfoSignature, &info->proof.certInfo);
-    DestroyAccountToken(token);
     if (res != HC_SUCCESS) {
         LOGE("Failed to generate cert info!");
         return res;
@@ -179,12 +258,7 @@ static int32_t ISSetCertInfoAndEntity(int32_t osAccountId, const CJson *context,
         return res;
     }
     info->proof.certInfo.isPseudonym = isPseudonym;
-    const char *pdidIndex = GetStringFromJson(context, FIELD_CRED_ID);
-    if (pdidIndex == NULL) {
-        LOGE("Failed to get cred ID!");
-        return HC_ERR_JSON_GET;
-    }
-    bool isNeedRefreshPseudonymId = GetPseudonymInstance()->isNeedRefreshPseudonymId(osAccountId, pdidIndex);
+    bool isNeedRefreshPseudonymId = IsNeedRefreshPseudonymId(osAccountId, context);
     return ISSetEcSpekeEntity(info, isNeedRefreshPseudonymId);
 }
 
@@ -733,16 +807,11 @@ static int32_t GetSharedSecretByPeerCert(
         LOGE("protocol type is not ec speke, not support!");
         return HC_ERR_INVALID_PARAMS;
     }
-    int32_t osAccountId = INVALID_OS_ACCOUNT;
-    if (GetIntFromJson(in, FIELD_OS_ACCOUNT_ID, &osAccountId) != HC_SUCCESS) {
-        LOGE("Get os account id failed!");
-        return HC_ERR_JSON_GET;
-    }
     const char *credId = GetStringFromJson(in, FIELD_ACROSS_ACCOUNT_CRED_ID);
     if (credId != NULL) {
         LOGI("across account credential Id exists.");
     }
-    return GetAccountAsymSharedSecret(osAccountId, credId, FIELD_ACROSS_ACCOUNT_CRED_ID, peerCertInfo, sharedSecret);
+    return GetAccountAsymSharedSecret(in, credId, FIELD_ACROSS_ACCOUNT_CRED_ID, peerCertInfo, sharedSecret);
 }
 
 static const AuthIdentity g_authIdentity = {

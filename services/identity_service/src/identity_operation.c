@@ -28,6 +28,7 @@
 #include "identity_service_defines.h"
 #include "permission_adapter.h"
 #include "string_util.h"
+#include "common_defs.h"
 
 int32_t GetCredentialById(int32_t osAccountId, const char *credId, Credential **returnEntry)
 {
@@ -289,7 +290,7 @@ static int32_t CheckOutMaxCredSize(int32_t osAccountId, const char *credOwner)
     return IS_SUCCESS;
 }
 
-static Algorithm GetAlgoFromCred(uint8_t algorithmType)
+Algorithm GetAlgoByCredAlgoType(uint8_t algorithmType)
 {
     switch (algorithmType) {
         case ALGO_TYPE_P256:
@@ -362,7 +363,7 @@ int32_t AddKeyValueToHuks(int32_t osAccountId, Uint8Buff *credIdByte, Credential
     int32_t authId = 0;
     Uint8Buff authIdBuff = { (uint8_t *)&authId, sizeof(int32_t) };
     ExtraInfo exInfo = { authIdBuff, DEFAULT_EX_INFO_VAL, DEFAULT_EX_INFO_VAL };
-    Algorithm algo = GetAlgoFromCred(credential->algorithmType);
+    Algorithm algo = GetAlgoByCredAlgoType(credential->algorithmType);
     switch (method) {
         case METHOD_GENERATE:
             return GenerateKeyValue(osAccountId, credential, keyParams, algo, exInfo);
@@ -947,7 +948,7 @@ static int32_t CheckCredKeyExist(int32_t osAccountId, const Credential *credenti
 {
     // ACCOUNT_SHARED type dose not need check key
     if (credential->credType == ACCOUNT_SHARED || credential->ownerUid == DEV_AUTH_UID) {
-        return HC_SUCCESS;
+        return IS_SUCCESS;
     }
     uint32_t credIdByteLen = HcStrlen(credId) / BYTE_TO_HEX_OPER_LENGTH;
     Uint8Buff credIdByte = { NULL, credIdByteLen };
@@ -1012,15 +1013,6 @@ int32_t GetCredIdsFromCredVec(int32_t osAccountId, CJson *reqJson, CredentialVec
     return IS_SUCCESS;
 }
 
-static int32_t UpdateExtendInfo(Credential *credential, const char *extendInfo)
-{
-    if (!StringSetPointer(&credential->extendInfo, extendInfo)) {
-        LOGE("Failed to update extendInfo");
-        return IS_ERR_MEMORY_COPY;
-    }
-    return IS_SUCCESS;
-}
-
 static int32_t UpdateAppList(Credential *credential, CJson *appList)
 {
     DestroyStrVector(&credential->authorizedAppList);
@@ -1033,7 +1025,254 @@ static int32_t UpdateAppList(Credential *credential, CJson *appList)
     return IS_SUCCESS;
 }
 
-int32_t UpdateInfoFromJson(Credential *credential, CJson *json)
+int32_t GenerateServerPkAliasByExtInfo(const CJson *extendInfoJson, Uint8Buff *alias)
+{
+    CJson *pkInfoJson = GetObjFromJson(extendInfoJson, FIELD_PK_INFO);
+    if (pkInfoJson == NULL) {
+        LOGE("Failed to get pkInfo json!");
+        return IS_ERR_JSON_GET;
+    }
+    const char *userId = GetStringFromJson(pkInfoJson, FIELD_USER_ID);
+    if (userId == NULL) {
+        LOGE("Failed to get userId from pkInfoJson");
+        return IS_ERR_JSON_GET;
+    }
+    const char *deviceId = GetStringFromJson(pkInfoJson, FIELD_DEVICE_ID);
+    if (deviceId == NULL) {
+        LOGE("Failed to get deviceId from pkInfoJson");
+        return IS_ERR_JSON_GET;
+    }
+    uint32_t userIdLen = HcStrlen(userId);
+    uint32_t deviceIdLen = HcStrlen(deviceId);
+    const char *serverPkTag = "serverPk";
+    uint32_t serverPkTagLen = HcStrlen(serverPkTag);
+    uint32_t aliasStrLen = userIdLen + deviceIdLen + serverPkTagLen;
+    uint8_t *aliasStr = (uint8_t *)HcMalloc(aliasStrLen, 0);
+    if (aliasStr == NULL) {
+        LOGE("Failed to malloc for aliasStr.");
+        return IS_ERR_ALLOC_MEMORY;
+    }
+    Uint8Buff aliasBuff = { aliasStr, aliasStrLen };
+    if (memcpy_s(aliasBuff.val, aliasBuff.length, userId, userIdLen) != EOK) {
+        LOGE("Failed to copy userId.");
+        HcFree(aliasStr);
+        return IS_ERR_MEMORY_COPY;
+    }
+    if (memcpy_s(aliasBuff.val + userIdLen, aliasBuff.length - userIdLen,
+        deviceId, deviceIdLen) != EOK) {
+        LOGE("Failed to copy deviceId.");
+        HcFree(aliasStr);
+        return IS_ERR_MEMORY_COPY;
+    }
+    if (memcpy_s(aliasBuff.val + userIdLen + deviceIdLen, aliasBuff.length - userIdLen - deviceIdLen,
+        serverPkTag, serverPkTagLen) != EOK) {
+        LOGE("Failed to copy serverPkTag.");
+        HcFree(aliasStr);
+        return IS_ERR_MEMORY_COPY;
+    }
+    int32_t ret = GetLoaderInstance()->sha256(&aliasBuff, alias);
+    HcFree(aliasStr);
+    return ret;
+}
+
+static int32_t GetServerPkFromExtendInfo(const CJson *extendInfoJson, Uint8Buff *serverPkBuff)
+{
+    const char *serverPkStr = GetStringFromJson(extendInfoJson, FIELD_SERVER_PK);
+    if (serverPkStr == NULL) {
+        LOGE("Failed to get serverPkStr");
+        return IS_ERR_JSON_GET;
+    }
+    uint32_t serverPkLen = HcStrlen(serverPkStr) / BYTE_TO_HEX_OPER_LENGTH;
+    uint8_t *serverPk = (uint8_t *)HcMalloc(serverPkLen, 0);
+    if (serverPk == NULL) {
+        LOGE("Failed to alloc memory for serverPk!");
+        return IS_ERR_ALLOC_MEMORY;
+    }
+    if (GetByteFromJson(extendInfoJson, FIELD_SERVER_PK, serverPk, serverPkLen) != IS_SUCCESS) {
+        LOGE("Failed to get serverPk!");
+        HcFree(serverPk);
+        return IS_ERR_JSON_GET;
+    }
+    serverPkBuff->val = serverPk;
+    serverPkBuff->length = serverPkLen;
+    return IS_SUCCESS;
+}
+
+static int32_t ImportServerPk(int32_t osAccountId, Algorithm algo, const char *extendInfo)
+{
+    CJson *extendInfoJson = CreateJsonFromString(extendInfo);
+    if (extendInfoJson == NULL) {
+        LOGE("Failed to create extend info json!");
+        return IS_ERR_JSON_CREATE;
+    }
+    uint8_t keyAliasValue[SHA256_LEN] = { 0 };
+    Uint8Buff keyAlias = {
+        .val = keyAliasValue,
+        .length = SHA256_LEN
+    };
+    int32_t res = GenerateServerPkAliasByExtInfo(extendInfoJson, &keyAlias);
+    if (res != IS_SUCCESS) {
+        LOGE("Failed to generate server pk alias!");
+        FreeJson(extendInfoJson);
+        return res;
+    }
+
+    Uint8Buff keyBuff = { 0 };
+    res = GetServerPkFromExtendInfo(extendInfoJson, &keyBuff);
+    FreeJson(extendInfoJson);
+    if (res != IS_SUCCESS) {
+        return res;
+    }
+    int32_t authId = 0;
+    Uint8Buff authIdBuff = { (uint8_t *)&authId, sizeof(int32_t) };
+    ExtraInfo extInfo = { authIdBuff, -1, -1 };
+    KeyParams keyParams = { { keyAlias.val, keyAlias.length, true }, false, osAccountId };
+    res = GetLoaderInstance()->importPublicKey(&keyParams, &keyBuff, algo, &extInfo);
+    ClearFreeUint8Buff(&keyBuff);
+    return res;
+}
+
+int32_t GetPkInfoAndSignFromExtInfo(const CJson *extendInfoJson, Uint8Buff *pkInfo,
+    Uint8Buff *pkInfoSignature)
+{
+    CJson *pkInfoJson = GetObjFromJson(extendInfoJson, FIELD_PK_INFO);
+    if (pkInfoJson == NULL) {
+        LOGE("Failed to get pkInfo json!");
+        return IS_ERR_JSON_GET;
+    }
+    char *pkInfoStr = PackJsonToString(pkInfoJson);
+    if (pkInfoStr == NULL) {
+        LOGE("Failed to convert pkInfo json to string!");
+        return IS_ERR_PACKAGE_JSON_TO_STRING_FAIL;
+    }
+    const char *pkInfoSignStr = GetStringFromJson(extendInfoJson, FIELD_PK_INFO_SIGNATURE);
+    if (pkInfoSignStr == NULL) {
+        LOGE("Failed to get pkInfoSignature string!");
+        ClearAndFreeJsonString(pkInfoStr);
+        return IS_ERR_JSON_GET;
+    }
+    uint32_t pkInfoSignLen = HcStrlen(pkInfoSignStr) / BYTE_TO_HEX_OPER_LENGTH;
+    uint8_t *pkInfoSignVal = (uint8_t *)HcMalloc(pkInfoSignLen, 0);
+    if (pkInfoSignVal == NULL) {
+        LOGE("Failed to alloc memory for pkInfo signature!");
+        ClearAndFreeJsonString(pkInfoStr);
+        return IS_ERR_ALLOC_MEMORY;
+    }
+    if (GetByteFromJson(extendInfoJson, FIELD_PK_INFO_SIGNATURE, pkInfoSignVal, pkInfoSignLen) != IS_SUCCESS) {
+        LOGE("Failed to get pkInfo signature!");
+        HcFree(pkInfoSignVal);
+        ClearAndFreeJsonString(pkInfoStr);
+        return IS_ERR_JSON_GET;
+    }
+    Uint8Buff pkInfoBuff = { (uint8_t *)pkInfoStr, HcStrlen(pkInfoStr) + 1 };
+    if (DeepCopyUint8Buff(&pkInfoBuff, pkInfo) != IS_SUCCESS) {
+        LOGE("Failed to copy pkInfo!");
+        HcFree(pkInfoSignVal);
+        ClearAndFreeJsonString(pkInfoStr);
+        return IS_ERR_MEMORY_COPY;
+    }
+    ClearAndFreeJsonString(pkInfoStr);
+    pkInfoSignature->val = pkInfoSignVal;
+    pkInfoSignature->length = pkInfoSignLen;
+    return IS_SUCCESS;
+}
+
+static int32_t VerifyPkInfoSignature(int32_t osAccountId, Algorithm algo, const char *extendInfo)
+{
+    CJson *extendInfoJson = CreateJsonFromString(extendInfo);
+    if (extendInfoJson == NULL) {
+        LOGE("Failed to create extend info json!");
+        return IS_ERR_JSON_CREATE;
+    }
+    Uint8Buff pkInfo = { 0 };
+    Uint8Buff pkInfoSignature = { 0 };
+    int32_t res = GetPkInfoAndSignFromExtInfo(extendInfoJson, &pkInfo, &pkInfoSignature);
+    if (res != IS_SUCCESS) {
+        FreeJson(extendInfoJson);
+        return res;
+    }
+    uint8_t keyAliasValue[SHA256_LEN] = { 0 };
+    Uint8Buff keyAlias = {
+        .val = keyAliasValue,
+        .length = SHA256_LEN
+    };
+    res = GenerateServerPkAliasByExtInfo(extendInfoJson, &keyAlias);
+    FreeJson(extendInfoJson);
+    if (res != IS_SUCCESS) {
+        LOGE("Failed to generate server pk alias!");
+        ClearFreeUint8Buff(&pkInfo);
+        FreeUint8Buff(&pkInfoSignature);
+        return res;
+    }
+    KeyParams keyParams = { { keyAlias.val, keyAlias.length, true }, false, osAccountId };
+    res = GetLoaderInstance()->verify(&keyParams, &pkInfo, algo, &pkInfoSignature);
+    ClearFreeUint8Buff(&pkInfo);
+    FreeUint8Buff(&pkInfoSignature);
+    return res;
+}
+
+static int32_t ImportServerPkAndVerify(int32_t osAccountId, const Credential *credential,
+    const char *extendInfo)
+{
+    Algorithm algo = GetAlgoByCredAlgoType(credential->algorithmType);
+    int32_t res = ImportServerPk(osAccountId, algo, extendInfo);
+    if (res != IS_SUCCESS) {
+        LOGE("Import sever pk failed!");
+        return res;
+    }
+    res = VerifyPkInfoSignature(osAccountId, algo, extendInfo);
+    if (res != IS_SUCCESS) {
+        LOGE("verify pkInfo signature failed!");
+        return res;
+    }
+    return IS_SUCCESS;
+}
+
+static bool IsNeedImportAndVerify(const Credential *credential, const char *extendInfo)
+{
+    if (credential->credType != ACCOUNT_RELATED) {
+        return false;
+    }
+    if (credential->ownerUid == DEV_AUTH_UID) {
+        return false;
+    }
+    CJson *extendInfoJson = CreateJsonFromString(extendInfo);
+    if (extendInfoJson == NULL) {
+        LOGE("Failed to create extend info json!");
+        return false;
+    }
+    if (GetObjFromJson(extendInfoJson, FIELD_PK_INFO) == NULL) {
+        FreeJson(extendInfoJson);
+        return false;
+    }
+    if (GetStringFromJson(extendInfoJson, FIELD_SERVER_PK) == NULL) {
+        FreeJson(extendInfoJson);
+        return false;
+    }
+    if (GetStringFromJson(extendInfoJson, FIELD_PK_INFO_SIGNATURE) == NULL) {
+        FreeJson(extendInfoJson);
+        return false;
+    }
+    FreeJson(extendInfoJson);
+    return true;
+}
+
+static int32_t UpdateExtendInfo(int32_t osAccountId, Credential *credential, const char *extendInfo)
+{
+    if (IsNeedImportAndVerify(credential, extendInfo)) {
+        int32_t ret = ImportServerPkAndVerify(osAccountId, credential, extendInfo);
+        if (ret != IS_SUCCESS) {
+            return ret;
+        }
+    }
+    if (!StringSetPointer(&credential->extendInfo, extendInfo)) {
+        LOGE("Failed to update extendInfo");
+        return IS_ERR_MEMORY_COPY;
+    }
+    return IS_SUCCESS;
+}
+
+int32_t UpdateInfoFromJson(int32_t osAccountId, Credential *credential, CJson *json)
 {
     const char *extendInfo = GetStringFromJson(json, FIELD_EXTEND_INFO);
     CJson *appList = GetObjFromJson(json, FIELD_AUTHORIZED_APP_LIST);
@@ -1043,10 +1282,9 @@ int32_t UpdateInfoFromJson(Credential *credential, CJson *json)
         return IS_ERR_INVALID_PARAMS;
     }
 
-    int32_t ret;
-
+    int32_t ret = IS_SUCCESS;
     if (extendInfo != NULL) {
-        ret = UpdateExtendInfo(credential, extendInfo);
+        ret = UpdateExtendInfo(osAccountId, credential, extendInfo);
         if (ret != IS_SUCCESS) {
             return ret;
         }
@@ -1178,7 +1416,7 @@ static int32_t ComputeAndSavePskInner(int32_t osAccountId, uint8_t credAlgo, con
         return res;
     }
     KeyBuff peerKeyBuff = { peerPubKeyBuff.val, peerPubKeyBuff.length, false };
-    Algorithm algo = GetAlgoFromCred(credAlgo);
+    Algorithm algo = GetAlgoByCredAlgoType(credAlgo);
     res = GetLoaderInstance()->agreeSharedSecretWithStorage(&selfKeyParams, &peerKeyBuff, algo,
         PSK_LEN, sharedKeyAlias);
     if (res != IS_SUCCESS) {
