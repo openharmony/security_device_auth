@@ -850,7 +850,7 @@ static int32_t GetSharedSecretForP2pInPake(const CJson *in, const char *groupId,
     }
 
     ret = ConvertPsk(&pskBuff, sharedSecret);
-    HcFree(pskVal);
+    ClearFreeUint8Buff(&pskBuff);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to convert psk!");
     }

@@ -367,8 +367,10 @@ static int32_t ServerGenTokenProcEvent(IsoProtocol *impl)
     }
     if (DeepCopyUint8Buff(&tokenS, &impl->params.tokenSelf) != HC_SUCCESS) {
         LOGE("copy tokenS fail.");
+        (void)memset_s(tokenValS, SHA256_LEN, 0, SHA256_LEN);
         return HC_ERR_ALLOC_MEMORY;
     }
+    (void)memset_s(tokenValS, SHA256_LEN, 0, SHA256_LEN);
     return HC_SUCCESS;
 }
 
@@ -449,16 +451,20 @@ static int32_t ClientGenTokenParseEvent(const CJson *inputEvent, IsoParams *para
     }
     if (DeepCopyUint8Buff(&randS, &params->randPeer) != HC_SUCCESS) {
         LOGE("copy randS fail.");
+        (void)memset_s(tokenSVal, ISO_TOKEN_LEN, 0, ISO_TOKEN_LEN);
         return HC_ERR_ALLOC_MEMORY;
     }
     if (DeepCopyUint8Buff(&authIdS, &params->authIdPeer) != HC_SUCCESS) {
         LOGE("copy authIdS fail.");
+        (void)memset_s(tokenSVal, ISO_TOKEN_LEN, 0, ISO_TOKEN_LEN);
         return HC_ERR_ALLOC_MEMORY;
     }
     if (DeepCopyUint8Buff(&tokenS, &params->tokenPeer) != HC_SUCCESS) {
         LOGE("copy tokenS fail.");
+        (void)memset_s(tokenSVal, ISO_TOKEN_LEN, 0, ISO_TOKEN_LEN);
         return HC_ERR_ALLOC_MEMORY;
     }
+    (void)memset_s(tokenSVal, ISO_TOKEN_LEN, 0, ISO_TOKEN_LEN);
     return HC_SUCCESS;
 }
 
@@ -473,6 +479,7 @@ static int32_t ClientGenTokenProcEvent(IsoProtocol *impl)
     }
     if (!IsUint8BuffEqual(&impl->params.tokenPeer, &tokenS)) {
         LOGE("The server token is inconsistent!");
+        (void)memset_s(tokenValS, SHA256_LEN, 0, SHA256_LEN);
         return PROOF_MISMATCH;
     }
     uint8_t tokenValC[SHA256_LEN] = { 0 };
@@ -480,12 +487,17 @@ static int32_t ClientGenTokenProcEvent(IsoProtocol *impl)
     res = IsoCalToken(impl, &tokenC, true);
     if (res != HC_SUCCESS) {
         LOGE("IsoCalClientToken failed, res: %" LOG_PUB "d", res);
+        (void)memset_s(tokenValS, SHA256_LEN, 0, SHA256_LEN);
         return res;
     }
     if (DeepCopyUint8Buff(&tokenC, &impl->params.tokenSelf) != HC_SUCCESS) {
         LOGE("copy tokenS fail.");
+        (void)memset_s(tokenValS, SHA256_LEN, 0, SHA256_LEN);
+        (void)memset_s(tokenValC, SHA256_LEN, 0, SHA256_LEN);
         return HC_ERR_ALLOC_MEMORY;
     }
+    (void)memset_s(tokenValS, SHA256_LEN, 0, SHA256_LEN);
+    (void)memset_s(tokenValC, SHA256_LEN, 0, SHA256_LEN);
     return HC_SUCCESS;
 }
 
@@ -533,8 +545,10 @@ static int32_t ServerGenSessKeyParseEvent(const CJson *inputEvent, IsoParams *pa
     }
     if (DeepCopyUint8Buff(&tokenC, &params->tokenPeer) != HC_SUCCESS) {
         LOGE("copy tokenC fail.");
+        (void)memset_s(tokenCVal, ISO_TOKEN_LEN, 0, ISO_TOKEN_LEN);
         return HC_ERR_ALLOC_MEMORY;
     }
+    (void)memset_s(tokenCVal, ISO_TOKEN_LEN, 0, ISO_TOKEN_LEN);
     return HC_SUCCESS;
 }
 
