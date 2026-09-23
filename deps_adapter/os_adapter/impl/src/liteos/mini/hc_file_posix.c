@@ -93,12 +93,6 @@ static FILE *HcFileOpenWrite(const char *path)
         LOGE("[OS]: file open fail. [Errno]: %" LOG_PUB "d", errno);
         return NULL;
     }
-    int res = fchmod(fileno(fp), DEFAULT_FILE_PERMISSION);
-    if (res != 0) {
-        LOGE("[OS]: fchmod fail. [Errno]: %" LOG_PUB "d", errno);
-        fclose(fp);
-        return NULL;
-    }
     return fp;
 }
 
