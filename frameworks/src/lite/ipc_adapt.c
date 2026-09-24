@@ -1855,7 +1855,8 @@ static int32_t ExtractParamByType(const IpcDataInfo *ipcParam, int32_t type,
             *cacheLen = ipcParam->valSz;
         }
     } else if (IsTypeForCpyData(type)) {
-        if ((ipcParam->val == NULL) || (ipcParam->valSz <= 0) || (cacheLen == NULL)) {
+        if ((ipcParam->val == NULL) || (ipcParam->valSz <= 0) || (cacheLen == NULL) ||
+            (ipcParam->valSz > *cacheLen)) {
             return HC_ERR_INVALID_PARAMS;
         }
         if (memcpy_s(paramCache, *cacheLen, ipcParam->val, ipcParam->valSz) != EOK) {

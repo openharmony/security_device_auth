@@ -134,6 +134,42 @@ HWTEST_F(IpcAdaptParamTest, GetAndValSizeParam_DevAuthCb_NotFound, TestSize.Leve
         GetAndValSizeParam(testParams, 1, PARAM_TYPE_OPCODE, reinterpret_cast<uint8_t *>(&result), &size));
 }
 
+// 测试 GetIpcRequestParamByType 函数 - CPY 类型 valSz 超过 cacheLen
+HWTEST_F(IpcAdaptParamTest, GetIpcRequestParamByType_CpyData_ValSzOverflow, TestSize.Level0)
+{
+    int32_t testValue = 12345;
+    IpcDataInfo testParams[1];
+    testParams[0].type = PARAM_TYPE_OPCODE;
+    testParams[0].val = reinterpret_cast<uint8_t *>(&testValue);
+    testParams[0].valSz = static_cast<int32_t>(sizeof(int64_t));
+    testParams[0].idx = 0;
+
+    int32_t result = 0;
+    int32_t size = static_cast<int32_t>(sizeof(result));
+    EXPECT_EQ(HC_ERR_INVALID_PARAMS,
+        GetIpcRequestParamByType(testParams, 1, PARAM_TYPE_OPCODE,
+            reinterpret_cast<uint8_t *>(&result), &size));
+}
+
+// 测试 GetIpcRequestParamByType 函数 - CPY 类型 valSz 等于 cacheLen
+HWTEST_F(IpcAdaptParamTest, GetIpcRequestParamByType_CpyData_ValSzEqual, TestSize.Level0)
+{
+    int32_t testValue = 12345;
+    IpcDataInfo testParams[1];
+    testParams[0].type = PARAM_TYPE_OPCODE;
+    testParams[0].val = reinterpret_cast<uint8_t *>(&testValue);
+    testParams[0].valSz = static_cast<int32_t>(sizeof(testValue));
+    testParams[0].idx = 0;
+
+    int32_t result = 0;
+    int32_t size = static_cast<int32_t>(sizeof(result));
+    EXPECT_EQ(HC_SUCCESS,
+        GetIpcRequestParamByType(testParams, 1, PARAM_TYPE_OPCODE,
+            reinterpret_cast<uint8_t *>(&result), &size));
+    EXPECT_EQ(testValue, result);
+    EXPECT_EQ(static_cast<int32_t>(sizeof(testValue)), size);
+}
+
 // 测试 GetAndValNullParam 函数
 HWTEST_F(IpcAdaptParamTest, GetAndValNullParam_ValidString, TestSize.Level0)
 {
