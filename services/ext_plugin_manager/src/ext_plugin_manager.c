@@ -97,6 +97,8 @@ int32_t AddCredPlugin(const CredPlugin *plugin)
     }
     if (isNeedReplace) {
         LOGI("[CredMgr]: Replace cred plugin. [Name]: %" LOG_PUB "d", plugin->pluginName);
+        pluginPtr = g_credPluginVec.getp(&g_credPluginVec, index);
+        (*pluginPtr)->destroy();
         HC_VECTOR_POPELEMENT(&g_credPluginVec, pluginPtr, index);
     } else {
         LOGI("[CredMgr]: Add new cred plugin. [Name]: %" LOG_PUB "d", plugin->pluginName);
