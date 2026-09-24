@@ -560,23 +560,23 @@ int32_t GetAndCheckAuthIdPeer(const CJson *in, const Uint8Buff *authIdSelf, cons
         LOGE("Malloc for authIdPeerTmp failed.");
         return HC_ERR_ALLOC_MEMORY;
     }
+    Uint8Buff authIdPeerTmpBuff = { authIdPeerTmp, authIdPeerLen };
     if (HexStringToByte(authIdStr, authIdPeerTmp, authIdPeerLen) != HC_SUCCESS) {
         LOGE("Convert peer authId from hex string to byte failed.");
-        HcFree(authIdPeerTmp);
+        ClearFreeUint8Buff(&authIdPeerTmpBuff);
         return HC_ERR_CONVERT_FAILED;
     }
     if (IsUint8BuffEqual(authIdSelf, authIdPeer)) {
         LOGE("Peer id can not be equal to self id.");
-        HcFree(authIdPeerTmp);
+        ClearFreeUint8Buff(&authIdPeerTmpBuff);
         return HC_ERR_INVALID_PARAMS;
     }
-    Uint8Buff authIdPeerTmpBuff = { authIdPeerTmp, authIdPeerLen };
     if (!IsUint8BuffEqual(authIdPeer, &authIdPeerTmpBuff)) {
         LOGE("Peer authId does not match.");
-        HcFree(authIdPeerTmp);
+        ClearFreeUint8Buff(&authIdPeerTmpBuff);
         return HC_ERR_INVALID_PARAMS;
     }
-    HcFree(authIdPeerTmp);
+    ClearFreeUint8Buff(&authIdPeerTmpBuff);
     return HC_SUCCESS;
 }
 
