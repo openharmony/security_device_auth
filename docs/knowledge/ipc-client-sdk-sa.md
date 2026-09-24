@@ -13,6 +13,17 @@
 
 SA 内 `IpcGaCbOnTransmit` 等 → Encode（`standard/ipc_adapt.cpp:1115-1160`）→ `ServiceDevAuth::ActCallback()`（`ipc_dev_auth_stub.cpp:431-445`，查 `g_cbStub[]` 远端对象，分 SYNC/ASYNC）→ `ProxyDevAuthCb::DoCallBack()`（`ipc_callback_proxy.cpp:28-53`，`DEV_AUTH_CALLBACK_REQUEST`）→ 客户端 `StubDevAuthCb::OnRemoteRequest`（`ipc_callback_stub.cpp:50-72`）→ `ProcCbHook()`（`ipc_adapt.cpp:1083`）按 `CB_ID_*` 查 stubTable 派发到用户 `DeviceAuthCallback`。断连清理 `DevAuthDeathRecipient::OnRemoteDied`（`ipc_dev_auth_stub.cpp:449`）。**新增回调 = 补 CB_ID + stubTable 项 + Encode/Decode 两端，漏一端表现为回调静默丢失。**
 
+## IPC 参数解码与校验（lite/standard 双份同名）
+
+`ExtractParamByType`（`lite/ipc_adapt.c:1849`、`standard/ipc_adapt.cpp:1849`，static，由 `GetIpcRequestParamByType:1872` 按 type 遍历匹配后调）按三型分发：
+- `IsTypeForSettingPtr`（`ipc_sdk_defines.h:136`，PTR_TYPES 含 APPID/GROUPID/UDID/COMM_DATA/SESS_KEY 等指针型）：直接把 `ipcParam->val` 指针写入 `*(uint8_t**)paramCache`，`*cacheLen = valSz`——零拷贝，调用方拿到的是 IPC 缓冲区内指针，**不可跨线程持有/释放后访问**。
+- `IsTypeForCpyData`（`ipc_sdk_defines.h:131`，CPY_TYPES = REQID/GROUP_TYPE/OPCODE/ERRCODE/OS_ACCOUNT_ID，定长整型）：`memcpy_s(paramCache, *cacheLen, val, valSz)` 拷入调用方栈/堆缓冲。
+- `PARAM_TYPE_CB_OBJECT`：写 `ipcParam->idx`（回调对象表索引，int32）。
+
+**valSz vs cacheLen 铁律（CpyData 分支）**：`memcpy_s` 前必须显式校验 `ipcParam->valSz > *cacheLen` 即返回 `HC_ERR_INVALID_PARAMS`，不得仅靠 `memcpy_s` 内部 destMax 检查兜底。理由：①越界属入参非法，应在入参层尽早拦截，错误码用 `HC_ERR_INVALID_PARAMS`(0x02) 而非 `HC_ERR_MEMORY_COPY`(0x06) 语义更准；②IPC 解码是跨进程信任边界入口，valSz 来自对端 Parcel，不可信。短路写法 `(cacheLen == NULL) || (valSz > *cacheLen)` 保证空指针不解引用。历史缺陷：修复前 lite/standard 两份均缺该校验（PR #1377 / issue #1123）。**改 lite 必须同步改 standard，两套同名实现是双轨现状，漏改一端在对应 OS 等级上静默漏校验。**
+
+上层包装有 `GetAndValSizeParam`（`:345`，按 `GetTypeExpectSize` 校验定长类型期望字节数）与 `GetAndValNullParam`（`:364`，校验字符串 null 终止）；但直接调 `GetIpcRequestParamByType` 的服务侧 handler（`ipc_service_common.c:82+` 多处）不走这两层包装，**故 ExtractParamByType 自身的 valSz≤cacheLen 校验不可省略**。
+
 ## SA 生命周期
 
 - **`device_auth_service.cpp` 不存在**。SA 生命周期在 `frameworks/src/deviceauth_sa.cpp`：`REGISTER_SYSTEM_ABILITY_BY_ID(DeviceAuthAbility, SA_ID_DEVAUTH_SERVICE, true):105`；`OnStart():162`＝限 1 工作线程(:166)→`InitDeviceAuthService()`(:168)→`MainRescInit()`(:174)→`SaAddMethodMap()`(:182，注册 `g_ipcCallMaps:54-103` 全部 `IpcService*`)→`Publish(this)`(:186)→监听内存管理 SA(:192)→`DelayUnload()`(:193)；`OnRemoteRequest:205`（token 校验、`isUnloading_` 拒载）；`OnIdle:237`（`GetCriticalCnt()>0` 拒绝 unload）；`OnStop:248` 逆序销毁。

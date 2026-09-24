@@ -86,6 +86,7 @@ out/rk3568/tests/unittest/device_auth/device_auth/iso_protocol_test --gtest_filt
 | MK 协商、pseudonym、独立协商 SDK | `mk_agree/`、`key_agree_sdk/`、`privacy_enhancement/` | `docs/knowledge/key-agreement-mk-sdk.md` |
 | OS 等级/特性开关、mock 机制、BUILD.gn 接入 | `*.gni`、`default_config/`、`test/` | `docs/knowledge/build-config-mock.md` |
 | 构建、跑测试、选择验证目标、完成判定 | 任何构建/测试相关改动 | `docs/knowledge/verification.md` |
+| 静态检查规则、codeCheck 报告判读、修复模式 | 任何 CI 静态检查相关改动 | `docs/knowledge/static-check-rules.md` |
 
 ### 开始编辑前
 
