@@ -143,7 +143,7 @@ static int32_t AddTrustedGroup(const CreateParams *params)
         DestroyGroupEntry(groupParams);
         return res;
     }
-    res = AddGroup(params->osAccountId, groupParams);
+    res = AddGroup(params->osAccountId, nullptr, groupParams);
     DestroyGroupEntry(groupParams);
     return res;
 }
@@ -159,7 +159,7 @@ static int32_t AddSelfTrustedDevice(const CreateParams *params)
         DestroyDeviceEntry(devParams);
         return res;
     }
-    res = AddTrustedDevice(params->osAccountId, devParams);
+    res = AddTrustedDevice(params->osAccountId, nullptr, devParams);
     DestroyDeviceEntry(devParams);
     return res;
 }

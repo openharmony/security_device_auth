@@ -77,7 +77,7 @@ static void GetAccountUnrelatedCandidateGroups(int32_t osAccountId, bool isDevic
         queryParams.groupVisibility = GROUP_VISIBILITY_PUBLIC;
     }
     queryParams.groupType = PEER_TO_PEER_GROUP;
-    if (QueryGroups(osAccountId, &queryParams, vec) != HC_SUCCESS) {
+    if (QueryGroups(osAccountId, NULL, &queryParams, vec) != HC_SUCCESS) {
         LOGE("Failed to query p2p groups!");
         return;
     }
@@ -107,7 +107,7 @@ static void GetGroupInfoByGroupId(int32_t osAccountId, const char *groupId,
 {
     QueryGroupParams queryParams = InitQueryGroupParams();
     queryParams.groupId = groupId;
-    if (QueryGroups(osAccountId, &queryParams, groupEntryVec) != HC_SUCCESS) {
+    if (QueryGroups(osAccountId, NULL, &queryParams, groupEntryVec) != HC_SUCCESS) {
         LOGE("Failed to query groups for groupId: %" LOG_PUB "s!", groupId);
     }
 }

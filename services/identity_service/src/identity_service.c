@@ -119,6 +119,26 @@ int32_t QueryCredInfoByCredId(int32_t osAccountId, const char *credId, char **re
     return ret;
 }
 
+int32_t QueryCredInfoByParams(int32_t osAccountId, const char *requestParams, char **returnData)
+{
+    if (requestParams == NULL || returnData == NULL) {
+        LOGE("params is null!");
+        return IS_ERR_INVALID_PARAMS;
+    }
+    if (!IsOsAccountUnlocked(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
+    CJson *reqJson = CreateJsonFromString(requestParams);
+    if (reqJson == NULL) {
+        LOGE("Failed to create request json!");
+        return IS_ERR_JSON_CREATE;
+    }
+    int32_t res = QueryCredInfoByParamsImpl(osAccountId, reqJson, returnData);
+    FreeJson(reqJson);
+    return res;
+}
+
 int32_t DeleteCredential(int32_t osAccountId, const char *credId)
 {
     SET_LOG_MODE_AND_ERR_TRACE(TRACE_MODE, true);
@@ -133,13 +153,39 @@ int32_t DeleteCredential(int32_t osAccountId, const char *credId)
         return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
 
-    int32_t ret = DeleteCredentialImpl(osAccountId, credId);
+    int32_t ret = DeleteCredentialImpl(osAccountId, NULL, credId);
     if (ret != IS_SUCCESS) {
         LOGE("Delete credential failed, ret: %" LOG_PUB "d.", ret);
         DEV_AUTH_REPORT_FAULT_EVENT_WITH_ERR_CODE(DELETE_CREDENTIAL_EVENT,
             PROCESS_DELETE_CREDENTIAL, ret);
     }
     return ret;
+}
+
+int32_t DeleteCredentialByParamsWithCredId(int32_t osAccountId, const char *requestParams)
+{
+    if (requestParams == NULL) {
+        LOGE("param is null!");
+        return IS_ERR_INVALID_PARAMS;
+    }
+    if (!IsOsAccountUnlocked(osAccountId)) {
+        LOGE("Os account is not unlocked!");
+        return IS_ERR_OS_ACCOUNT_NOT_UNLOCKED;
+    }
+    CJson *reqJson = CreateJsonFromString(requestParams);
+    if (reqJson == NULL) {
+        LOGE("Failed to create request json!");
+        return IS_ERR_JSON_CREATE;
+    }
+    const char *credId = GetStringFromJson(reqJson, FIELD_CRED_ID);
+    if (credId == NULL) {
+        LOGE("Failed to get credId!");
+        FreeJson(reqJson);
+        return IS_ERR_JSON_GET;
+    }
+    int32_t res = DeleteCredentialImpl(osAccountId, reqJson, credId);
+    FreeJson(reqJson);
+    return res;
 }
 
 int32_t DeleteCredByParams(int32_t osAccountId, const char *requestParams, char **returnData)

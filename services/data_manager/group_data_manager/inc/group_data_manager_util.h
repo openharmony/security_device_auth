@@ -24,7 +24,7 @@ extern "C" {
 
 int32_t GenerateReturnGroupInfo(const TrustedGroupEntry *groupEntry, CJson *returnJson);
 int32_t GenerateReturnDevInfo(const TrustedDeviceEntry *deviceEntry, CJson *returnJson);
-int32_t GenerateMessage(int32_t osAccountId, const char *subProfileIdStr, const TrustedGroupEntry *groupEntry,
+int32_t GenerateMessage(int32_t osAccountId, int32_t subProfileId, const TrustedGroupEntry *groupEntry,
     char **returnMessage);
 bool IsSelfDeviceEntry(const TrustedDeviceEntry *deviceEntry);
 void RecordAddTrustDeviceEvent(int32_t osAccountId, const TrustedDeviceEntry *deviceEntry);
@@ -35,7 +35,7 @@ void DumpGroupsAndDevices(int fd, int32_t osAccountId, const GroupEntryVec *grou
 
 #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
 bool IsSelfDeviceExistInGroup(int32_t osAccountId, const char *groupId);
-bool IsSelfDeviceExistInGroupForUser(int32_t osAccountId, const char *subProfileIdStr, const char *groupId);
+bool IsSelfDeviceExistInGroupForUser(int32_t osAccountId, int32_t subProfileId, const char *groupId);
 #endif
 
 #ifdef __cplusplus

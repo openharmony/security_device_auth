@@ -70,14 +70,6 @@ int32_t GetCurrentActiveOsAccountId(void)
 }
 
 #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
-int32_t GetForegroundSubProfileIdStr(int32_t osAccountId, char *subProfileIdStr, uint32_t subProfileIdStrLen)
-{
-    (void)osAccountId;
-    (void)subProfileIdStr;
-    (void)subProfileIdStrLen;
-    return HC_ERR_NOT_SUPPORT;
-}
-
 void SetProfileDeleteCallbackForGroup(ProfileDeleteCallback callback)
 {
     (void)callback;
@@ -101,5 +93,12 @@ void SetGroupRelationChangeCallback(GroupRelationChangeCallback callback)
 void SetCredRelationChangeCallback(CredRelationChangeCallback callback)
 {
     (void)callback;
+}
+
+int32_t GetSubProfileIdFromParams(int32_t osAccountId, const CJson *params, int32_t *retSubProfileId)
+{
+    (void)osAccountId;
+    (void)params;
+    (void)retSubProfileId;
 }
 #endif

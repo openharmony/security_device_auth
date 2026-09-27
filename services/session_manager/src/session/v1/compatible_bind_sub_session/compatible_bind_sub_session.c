@@ -50,10 +50,10 @@ static int32_t CheckInvitePeer(const CJson *jsonParams)
 
     uint32_t groupType = PEER_TO_PEER_GROUP;
     int32_t result;
-    if (((result = CheckGroupExist(osAccountId, groupId)) != HC_SUCCESS) ||
-        ((result = GetGroupTypeFromDb(osAccountId, groupId, &groupType)) != HC_SUCCESS) ||
+    if (((result = CheckGroupExist(osAccountId, NULL, groupId)) != HC_SUCCESS) ||
+        ((result = GetGroupTypeFromDb(osAccountId, NULL, groupId, &groupType)) != HC_SUCCESS) ||
         ((result = AssertGroupTypeMatch(groupType, PEER_TO_PEER_GROUP)) != HC_SUCCESS) ||
-        ((result = CheckPermForGroup(osAccountId, MEMBER_INVITE, appId, groupId)) != HC_SUCCESS) ||
+        ((result = CheckPermForGroup(osAccountId, NULL, MEMBER_INVITE, appId, groupId)) != HC_SUCCESS) ||
         ((result = CheckDeviceNumLimit(osAccountId, groupId, NULL)) != HC_SUCCESS)) {
         return result;
     }
@@ -187,13 +187,13 @@ static int32_t CheckServerStatusIfNotInvite(int32_t osAccountId, int operationCo
         LOGE("Failed to get peerUdid from jsonParams!");
         return HC_ERR_JSON_GET;
     }
-    int32_t result = CheckGroupExist(osAccountId, groupId);
+    int32_t result = CheckGroupExist(osAccountId, NULL, groupId);
     if (result != HC_SUCCESS) {
         return result;
     }
     if (operationCode == MEMBER_JOIN) {
         /* The client sends a join request, which is equivalent to the server performing an invitation operation. */
-        result = CheckPermForGroup(osAccountId, MEMBER_INVITE, appId, groupId);
+        result = CheckPermForGroup(osAccountId, NULL, MEMBER_INVITE, appId, groupId);
         if (result != HC_SUCCESS) {
             return result;
         }
@@ -412,7 +412,7 @@ static int32_t AddGroupToDatabase(const CompatibleBindSubSession *session)
         DestroyGroupEntry(groupParams);
         return result;
     }
-    result = AddGroup(session->osAccountId, groupParams);
+    result = AddGroup(session->osAccountId, NULL, groupParams);
     DestroyGroupEntry(groupParams);
     if (result != HC_SUCCESS) {
         LOGE("Failed to add the group to the database!");
@@ -441,7 +441,7 @@ static int32_t AddTrustDevToDatabase(int32_t osAccountId, const char *authId, co
         return HC_ERR_ALLOC_MEMORY;
     }
     GenerateDevAuthParams(authId, udid, groupId, userType, devAuthParams);
-    int32_t result = AddTrustedDevice(osAccountId, devAuthParams);
+    int32_t result = AddTrustedDevice(osAccountId, NULL, devAuthParams);
     DestroyDeviceEntry(devAuthParams);
     if (result != HC_SUCCESS) {
         LOGE("Failed to add the trusted devices to the database!");
@@ -452,7 +452,7 @@ static int32_t AddTrustDevToDatabase(int32_t osAccountId, const char *authId, co
 
 static int32_t AddGroupAndLocalDevIfNotExist(const char *groupId, const CompatibleBindSubSession *session)
 {
-    if (IsGroupExistByGroupId(session->osAccountId, groupId)) {
+    if (IsGroupExistByGroupId(session->osAccountId, NULL, groupId)) {
         return HC_SUCCESS;
     }
     char udid[INPUT_UDID_LEN] = { 0 };

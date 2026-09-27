@@ -41,6 +41,14 @@ static int32_t AddOsAccountIdInEventData(const EventFwk::CommonEventData &eventD
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGIN ||
         action == EventFwk::CommonEventSupport::COMMON_EVENT_DISTRIBUTED_ACCOUNT_LOGOUT) {
         osAccountId = eventData.GetWant().GetParams().GetIntParam("userId", DEFAULT_OS_ACCOUNT);
+    #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+        int32_t subProfileId = eventData.GetWant().GetParams().GetIntParam("subProfileId", DEFAULT_SUB_PROFILE_ID);
+        LOGI("[AccountSubscriber]: subProfileId is: %" LOG_PUB "d", subProfileId);
+        if (AddIntToJson(out, FIELD_SUB_PROFILE_ID, subProfileId) != HC_SUCCESS) {
+            LOGE("[AccountSubscriber]: failed to add subProfileId!");
+            return HC_ERR_JSON_ADD;
+        }
+    #endif
     }
     if (AddIntToJson(out, FIELD_COMMON_EVENT_CODE, osAccountId) != HC_SUCCESS) {
         LOGE("[AccountSubscriber]: Failed to add common event code to json!");
@@ -106,7 +114,7 @@ static void HandleSubProfileEvent(const OsAccountEventNotifier &notifier, const 
     } else {
         int32_t osAccountId = want.GetParams().GetIntParam("userId", DEFAULT_OS_ACCOUNT);
         int32_t subProfileId = want.GetParams().GetIntParam("subProfileId", DEFAULT_SUB_PROFILE_ID);
-        LOGI("[AccountSubscriber]: osAccountId: %" LOG_PUB "d, fromSubProfileId: %" LOG_PUB "d.",
+        LOGI("[AccountSubscriber]: osAccountId: %" LOG_PUB "d, subProfileId: %" LOG_PUB "d.",
             osAccountId, subProfileId);
         notifier.notifySubProfileDeleted(osAccountId, subProfileId);
     }

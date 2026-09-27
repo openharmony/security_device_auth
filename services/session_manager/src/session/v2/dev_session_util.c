@@ -588,7 +588,7 @@ TrustedDeviceEntry *GetDeviceEntryById(int32_t osAccountId, const char *deviceId
     } else {
         params.authId = deviceId;
     }
-    if (QueryDevices(osAccountId, &params, &deviceEntryVec) != HC_SUCCESS) {
+    if (QueryDevices(osAccountId, NULL, &params, &deviceEntryVec) != HC_SUCCESS) {
         LOGE("Failed to query trusted devices!");
         ClearDeviceEntryVec(&deviceEntryVec);
         return NULL;
@@ -735,7 +735,7 @@ int32_t GetSelfUserId(int32_t osAccountId, char *userId, uint32_t userIdLen)
     QueryGroupParams queryParams = InitQueryGroupParams();
     queryParams.groupType = IDENTICAL_ACCOUNT_GROUP;
     do {
-        if (QueryGroups(osAccountId, &queryParams, &accountVec) != HC_SUCCESS) {
+        if (QueryGroups(osAccountId, NULL, &queryParams, &accountVec) != HC_SUCCESS) {
             LOGD("No identical-account group in db, no identical-account auth!");
             break;
         }
@@ -797,7 +797,7 @@ bool IsPeerSameUserId(int32_t osAccountId, const char *peerUserId)
     GroupEntryVec groupVec = CreateGroupEntryVec();
     QueryGroupParams queryParams = InitQueryGroupParams();
     queryParams.groupType = IDENTICAL_ACCOUNT_GROUP;
-    if (QueryGroups(osAccountId, &queryParams, &groupVec) != HC_SUCCESS || groupVec.size(&groupVec) <= 0) {
+    if (QueryGroups(osAccountId, NULL, &queryParams, &groupVec) != HC_SUCCESS || groupVec.size(&groupVec) <= 0) {
         LOGE("get identical account group from db fail.");
         ClearGroupEntryVec(&groupVec);
         return false;

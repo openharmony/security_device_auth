@@ -71,9 +71,9 @@ HWTEST_F(GroupDataManagerTest, DelGroupTEST001, TestSize.Level0)
     TrustedGroupEntry *entry = generateTestGroupEntry();
     GroupEntryVec vec = CreateGroupEntryVec();
     ASSERT_NE(entry, nullptr);
-    EXPECT_EQ(AddGroup(TEST_OS_ACCOUNT_ID, entry), HC_SUCCESS);
-    EXPECT_EQ(DelGroup(TEST_OS_ACCOUNT_ID, nullptr), HC_ERR_NULL_PTR);
-    EXPECT_EQ(QueryGroups(TEST_OS_ACCOUNT_ID, &param, &vec), HC_SUCCESS);
+    EXPECT_EQ(AddGroup(TEST_OS_ACCOUNT_ID, nullptr, entry), HC_SUCCESS);
+    EXPECT_EQ(DelGroup(TEST_OS_ACCOUNT_ID, nullptr, nullptr), HC_ERR_NULL_PTR);
+    EXPECT_EQ(QueryGroups(TEST_OS_ACCOUNT_ID, nullptr, &param, &vec), HC_SUCCESS);
     EXPECT_EQ(HC_VECTOR_SIZE(&vec), 1);
     ClearGroupEntryVec(&vec);
     DestroyGroupEntry(entry);

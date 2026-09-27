@@ -326,9 +326,9 @@ bool IsSelfDeviceExistInGroup(int32_t osAccountId, const char *groupId)
     return IsDeviceExistInGroup(osAccountId, groupId, selfUdid);
 }
 
-bool IsSelfDeviceExistInGroupForUser(int32_t osAccountId, const char *subProfileIdStr, const char *groupId)
+bool IsSelfDeviceExistInGroupForUser(int32_t osAccountId, int32_t subProfileId, const char *groupId)
 {
-    if (subProfileIdStr == NULL || groupId == NULL) {
+    if (groupId == NULL) {
         return false;
     }
     char selfUdid[INPUT_UDID_LEN] = { 0 };
@@ -337,13 +337,14 @@ bool IsSelfDeviceExistInGroupForUser(int32_t osAccountId, const char *subProfile
         LOGE("Failed to get local udid! res: %" LOG_PUB "d", res);
         return false;
     }
-    return IsDeviceExistInGroupForUser(osAccountId, subProfileIdStr, groupId, selfUdid);
+    return IsDeviceExistInGroupForUser(osAccountId, subProfileId, groupId, selfUdid);
 }
 #endif
 
-static int32_t GenerateReturnGroupInfoInner(int32_t osAccountId, const char *subProfileIdStr,
+static int32_t GenerateReturnGroupInfoInner(int32_t osAccountId, int32_t subProfileId,
     const TrustedGroupEntry *groupEntry, CJson *returnJson)
 {
+    (void)subProfileId;
     int32_t res = GenerateReturnGroupInfo(groupEntry, returnJson);
     if (res != HC_SUCCESS) {
         return res;
@@ -353,20 +354,18 @@ static int32_t GenerateReturnGroupInfoInner(int32_t osAccountId, const char *sub
         return HC_ERR_JSON_ADD;
     }
 #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
-    if (AddStringToJson(returnJson, FIELD_SUB_PROFILE_ID, subProfileIdStr) != HC_SUCCESS) {
-        LOGE("Failed to add foreground uid!");
+    if (AddIntToJson(returnJson, FIELD_SUB_PROFILE_ID, subProfileId) != HC_SUCCESS) {
+        LOGE("Failed to add sub profile id!");
         return HC_ERR_JSON_ADD;
     }
-#else
-    (void)subProfileIdStr;
 #endif
     return HC_SUCCESS;
 }
 
-int32_t GenerateMessage(int32_t osAccountId, const char *subProfileIdStr, const TrustedGroupEntry *groupEntry,
+int32_t GenerateMessage(int32_t osAccountId, int32_t subProfileId, const TrustedGroupEntry *groupEntry,
     char **returnMessage)
 {
-    if (subProfileIdStr == NULL || groupEntry == NULL || returnMessage == NULL) {
+    if (groupEntry == NULL || returnMessage == NULL) {
         LOGE("Invalid input params!");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -375,7 +374,7 @@ int32_t GenerateMessage(int32_t osAccountId, const char *subProfileIdStr, const 
         LOGE("Failed to allocate message memory!");
         return HC_ERR_ALLOC_MEMORY;
     }
-    int32_t result = GenerateReturnGroupInfoInner(osAccountId, subProfileIdStr, groupEntry, message);
+    int32_t result = GenerateReturnGroupInfoInner(osAccountId, subProfileId, groupEntry, message);
     if (result != HC_SUCCESS) {
         FreeJson(message);
         return result;

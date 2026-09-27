@@ -25,23 +25,24 @@
 extern "C" {
 #endif
 
-int32_t AddCredAndSaveDb(int32_t osAccountId, Credential *credential);
+int32_t AddCredAndSaveDb(int32_t osAccountId, const CJson *reqJson, Credential *credential);
 int32_t AddKeyValueToHuks(int32_t osAccountId, Uint8Buff *credIdByte, Credential *credential, uint8_t method,
     Uint8Buff *publicKey);
 int32_t AddKeyValueToReturn(Uint8Buff keyValue, char **returnData);
 int32_t AddUpdateInfoToJson(QueryCredentialParams *queryParams, CJson *baseInfoJson);
 int32_t GetValidKeyAlias(int32_t osAccountId, const char *credId, Uint8Buff *credIdHashBuff);
 int32_t CheckOwnerUidPermission(Credential *credential);
-int32_t CheckAndDelInvalidCred(int32_t osAccountId, const char *selfCredId, Uint8Buff *selfCredIdByte);
+int32_t CheckAndDelInvalidCred(int32_t osAccountId, const CJson *reqJson, const char *selfCredId,
+    Uint8Buff *selfCredIdByte);
 int32_t ComputePskAndDelInvalidKey(int32_t osAccountId, uint8_t credAlgo,
     Uint8Buff *selfCredIdByte, Uint8Buff *peerKeyAlias, Uint8Buff *agreeCredIdByte);
-int32_t DelCredById(int32_t osAccountId, const char *credId);
+int32_t DelCredById(int32_t osAccountId, const CJson *reqJson, const char *credId);
 int32_t EraseUpdateCredIdInSelfVec(CredentialVec *updateCredVec, CredentialVec *selfCredVec);
 
-int32_t GenerateCredId(int32_t osAccountId, Credential *credential, Uint8Buff *credIdByte);
+int32_t GenerateCredId(int32_t osAccountId, const CJson *reqJson, Credential *credential, Uint8Buff *credIdByte);
 int32_t GenerateCredKeyAlias(const char *credId, const char *deviceId, Uint8Buff *alias);
 int32_t GenerateReturnEmptyArrayStr(char **returnVec);
-int32_t GetCredentialById(int32_t osAccountId, const char *credId, Credential **returnEntry);
+int32_t GetCredentialById(int32_t osAccountId, const CJson *reqJson, const char *credId, Credential **returnEntry);
 int32_t GetCredIdsFromCredVec(int32_t osAccountId, CJson *reqJson, CredentialVec *credentialVec, CJson *credIdJson);
 int32_t GetQueryJsonStr(CJson *baseInfoJson, char **queryJsonStr);
 int32_t GetUpdateCredVec(int32_t osAccountId, CJson *updateInfo,

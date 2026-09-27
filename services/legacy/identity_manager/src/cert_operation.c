@@ -140,7 +140,7 @@ static int32_t QuerySelfUserId(int32_t osAccountId, char *userId, uint32_t userI
     QueryGroupParams queryParams = InitQueryGroupParams();
     queryParams.groupType = IDENTICAL_ACCOUNT_GROUP;
     do {
-        if (QueryGroups(osAccountId, &queryParams, &accountVec) != HC_SUCCESS) {
+        if (QueryGroups(osAccountId, NULL, &queryParams, &accountVec) != HC_SUCCESS) {
             LOGD("No identical-account group in db, no identical-account auth!");
             break;
         }
@@ -833,7 +833,7 @@ static int32_t GetAccountAsymSharedSecretForCredAuth(const CJson *in, int32_t os
         return HC_ERR_JSON_GET;
     }
     Credential *credential = NULL;
-    int32_t res = GetCredentialById(osAccountId, credId, &credential);
+    int32_t res = GetCredentialById(osAccountId, NULL, credId, &credential);
     if (res != IS_SUCCESS) {
         LOGE("Failed to get credential by id!");
         return res;
@@ -1003,7 +1003,7 @@ int32_t GetAccountSymCredInfoByPeerUrl(const CJson *in, const CJson *urlJson, Id
         LOGE("Failed to get group id!");
         return HC_ERR_JSON_GET;
     }
-    int32_t ret = CheckGroupExist(osAccountId, groupId);
+    int32_t ret = CheckGroupExist(osAccountId, NULL, groupId);
     if (ret != HC_SUCCESS) {
         LOGE("group not exist!");
         return ret;

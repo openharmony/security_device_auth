@@ -130,8 +130,10 @@ static int32_t InitAccountLifecyclePluginCtx(void)
     g_accountPluginCtx->addCredential = cmInstance->addCredential;
     g_accountPluginCtx->exportCredential = cmInstance->exportCredential;
     g_accountPluginCtx->deleteCredential = cmInstance->deleteCredential;
+    g_accountPluginCtx->deleteCredentialByParams = DeleteCredentialByParamsWithCredId;
     g_accountPluginCtx->updateCredInfo = cmInstance->updateCredInfo;
     g_accountPluginCtx->queryCredInfoByCredId = QueryCredInfoByCredIdAndUid;
+    g_accountPluginCtx->queryCredInfoByParams = QueryCredInfoByParams;
     g_accountPluginCtx->queryCredentialByParams = cmInstance->queryCredentialByParams;
     g_accountPluginCtx->destroyInfo = cmInstance->destroyInfo;
     g_accountPluginCtx->createGroup = gmInstace->createGroup;

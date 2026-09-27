@@ -59,23 +59,26 @@ int32_t GenerateReturnCredInfo(const Credential *credential, CJson *returnJson)
     return IS_ERR_NOT_SUPPORT;
 }
 
-int32_t AddCredToDb(int32_t osAccountId, const Credential *entry)
+int32_t AddCredToDb(int32_t osAccountId, const CJson *in, const Credential *entry)
 {
     (void)osAccountId;
+    (void)in;
     (void)entry;
     return IS_ERR_NOT_SUPPORT;
 }
 
-int32_t DelCredential(int32_t osAccountId, const QueryCredentialParams *params)
+int32_t DelCredential(int32_t osAccountId, const CJson *in, const QueryCredentialParams *params)
 {
     (void)osAccountId;
+    (void)in;
     (void)params;
     return IS_ERR_NOT_SUPPORT;
 }
 
-int32_t QueryCredentials(int32_t osAccountId, const QueryCredentialParams *params, CredentialVec *vec)
+int32_t QueryCredentials(int32_t osAccountId, const CJson *in, const QueryCredentialParams *params, CredentialVec *vec)
 {
     (void)osAccountId;
+    (void)in;
     (void)params;
     (void)vec;
     return IS_ERR_NOT_SUPPORT;

@@ -25,17 +25,19 @@
 #include "hc_log.h"
 #include "identity_service_defines.h"
 
-int32_t GetCredentialById(int32_t osAccountId, const char *credId, Credential **returnEntry)
+int32_t GetCredentialById(int32_t osAccountId, const CJson *reqJson, const char *credId, Credential **returnEntry)
 {
     (void)osAccountId;
+    (void)reqJson;
     (void)credId;
     (void)returnEntry;
     return IS_ERR_NOT_SUPPORT;
 }
 
-int32_t GenerateCredId(int32_t osAccountId, Credential *credential, Uint8Buff *credIdByte)
+int32_t GenerateCredId(int32_t osAccountId, const CJson *reqJson, Credential *credential, Uint8Buff *credIdByte)
 {
     (void)osAccountId;
+    (void)reqJson;
     (void)credential;
     (void)credIdByte;
     return IS_ERR_NOT_SUPPORT;
@@ -60,9 +62,10 @@ int32_t GetValidKeyAlias(int32_t osAccountId, const char *credId, Uint8Buff *cre
     return IS_ERR_NOT_SUPPORT;
 }
 
-int32_t AddCredAndSaveDb(int32_t osAccountId, Credential *credential)
+int32_t AddCredAndSaveDb(int32_t osAccountId, const CJson *reqJson, Credential *credential)
 {
     (void)osAccountId;
+    (void)reqJson;
     (void)credential;
     return IS_ERR_NOT_SUPPORT;
 }
@@ -102,9 +105,10 @@ int32_t UpdateInfoFromJson(int32_t osAccountId, Credential *credential, CJson *j
     return IS_ERR_NOT_SUPPORT;
 }
 
-int32_t DelCredById(int32_t osAccountId, const char *credId)
+int32_t DelCredById(int32_t osAccountId, const CJson *reqJson, const char *credId)
 {
     (void)osAccountId;
+    (void)reqJson;
     (void)credId;
     return IS_ERR_NOT_SUPPORT;
 }
@@ -157,9 +161,11 @@ int32_t ImportAgreeKeyValue(int32_t osAccountId, Credential *agreeCredential, Ui
     return IS_ERR_NOT_SUPPORT;
 }
 
-int32_t CheckAndDelInvalidCred(int32_t osAccountId, const char *selfCredId, Uint8Buff *selfCredIdByte)
+int32_t CheckAndDelInvalidCred(int32_t osAccountId, const CJson *reqJson, const char *selfCredId,
+    Uint8Buff *selfCredIdByte)
 {
     (void)osAccountId;
+    (void)reqJson;
     (void)selfCredId;
     (void)selfCredIdByte;
     return IS_ERR_NOT_SUPPORT;

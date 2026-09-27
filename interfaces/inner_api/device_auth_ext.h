@@ -195,11 +195,15 @@ typedef struct {
     int32_t (*exportCredential)(int32_t osAccountId, const char *credId, char **returnData);
     /** This interface is used to delete credential data. */
     int32_t (*deleteCredential)(int32_t osAccountId, const char *credId);
+    /** This interface is used to delete credential data by params. */
+    int32_t (*deleteCredentialByParams)(int32_t osAccountId, const char *requestParams);
     /** This interface is used to update cred info. */
     int32_t (*updateCredInfo)(int32_t osAccountId, const char *credId, const char *requestParams);
     /** This interface is used to query credential data by cred id. */
     int32_t (*queryCredInfoByCredId)(int32_t osAccountId, int32_t uid, const char *credId, char **returnData);
-    /** This interface is used to query credential data by cred param. */
+    /** This interface is used to query credential data by params. */
+    int32_t (*queryCredInfoByParams)(int32_t osAccountId, const char *requestParams, char **returnData);
+    /** This interface is used to query credential by params. */
     int32_t (*queryCredentialByParams)(int32_t osAccountId, const char *requestParams, char **returnData);
     /** This interface is used to destroy the information returned by the internal allocated memory. */
     void (*destroyInfo)(char **returnInfo);

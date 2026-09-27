@@ -100,7 +100,7 @@ static int32_t AddCredTypeToParamsFromIdenticalGroup(int32_t osAccountId, CJson 
     QueryDeviceParams params = InitQueryDeviceParams();
     params.userId = userId;
     params.udid = localUdid;
-    if ((QueryDevices(osAccountId, &params, &deviceEntryVec) != HC_SUCCESS) ||
+    if ((QueryDevices(osAccountId, jsonParams, &params, &deviceEntryVec) != HC_SUCCESS) ||
         (deviceEntryVec.size(&deviceEntryVec) <= 0)) {
         LOGE("query trusted devices failed!");
         HcFree(userId);
@@ -189,7 +189,7 @@ static int32_t AssertIdenticalGroupExist(int32_t osAccountId, const CJson *jsonP
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
     QueryGroupParams params = InitQueryGroupParams();
     params.groupType = IDENTICAL_ACCOUNT_GROUP;
-    result = QueryGroups(osAccountId, &params, &groupEntryVec);
+    result = QueryGroups(osAccountId, jsonParams, &params, &groupEntryVec);
     if (result != HC_SUCCESS) {
         LOGE("Failed to query groups!");
         HcFree(userId);
@@ -328,8 +328,8 @@ static void DelAllPeerTokens(int32_t osAccountId, const DeviceEntryVec *vec)
 static int32_t DelGroupAndTokens(int32_t osAccountId, const char *groupId)
 {
     DeviceEntryVec deviceList = CreateDeviceEntryVec();
-    (void)GetTrustedDevices(osAccountId, groupId, &deviceList);
-    int32_t res = DelGroupFromDb(osAccountId, groupId);
+    (void)GetTrustedDevices(osAccountId, NULL, groupId, &deviceList);
+    int32_t res = DelGroupFromDb(osAccountId, NULL, groupId);
     DelAllPeerTokens(osAccountId, &deviceList);
     ClearDeviceEntryVec(&deviceList);
     return res;
@@ -344,10 +344,10 @@ static int32_t CheckChangeParams(int32_t osAccountId, const char *appId, CJson *
     }
     uint32_t groupType;
     int32_t result;
-    if (((result = CheckGroupExist(osAccountId, groupId)) != HC_SUCCESS) ||
-        ((result = GetGroupTypeFromDb(osAccountId, groupId, &groupType)) != HC_SUCCESS) ||
+    if (((result = CheckGroupExist(osAccountId, NULL, groupId)) != HC_SUCCESS) ||
+        ((result = GetGroupTypeFromDb(osAccountId, NULL, groupId, &groupType)) != HC_SUCCESS) ||
         ((result = AssertGroupTypeMatch(groupType, ACROSS_ACCOUNT_AUTHORIZE_GROUP)) != HC_SUCCESS) ||
-        ((result = CheckGroupEditAllowed(osAccountId, groupId, appId)) != HC_SUCCESS)) {
+        ((result = CheckGroupEditAllowed(osAccountId, NULL, groupId, appId)) != HC_SUCCESS)) {
         return result;
     }
     return HC_SUCCESS;
@@ -362,7 +362,7 @@ static int32_t DelDeviceById(int32_t osAccountId, const char *groupId, const cha
     } else {
         queryDeviceParams.authId = deviceId;
     }
-    return DelTrustedDevice(osAccountId, &queryDeviceParams);
+    return DelTrustedDevice(osAccountId, NULL, &queryDeviceParams);
 }
 
 static int32_t GenerateTrustedDevParams(const CJson *jsonParams, const char *groupId, TrustedDeviceEntry *devParams)
@@ -465,13 +465,13 @@ static int32_t AddGroupAndLocalDev(int32_t osAccountId, CJson *jsonParams, const
     res = AddDeviceToDatabaseByJson(osAccountId, GenerateDevParams, jsonParams, groupId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to add device to database!");
-        (void)DelGroupFromDb(osAccountId, groupId);
+        (void)DelGroupFromDb(osAccountId, NULL, groupId);
         return res;
     }
     res = SaveOsAccountDb(osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to save database!");
-        (void)DelGroupFromDb(osAccountId, groupId);
+        (void)DelGroupFromDb(osAccountId, NULL, groupId);
     }
     return res;
 }
@@ -494,7 +494,7 @@ static int32_t CheckUserIdValid(int32_t osAccountId, const CJson *jsonParams, co
     QueryGroupParams params = InitQueryGroupParams();
     params.groupId = groupId;
     params.groupType = ACROSS_ACCOUNT_AUTHORIZE_GROUP;
-    if (QueryGroups(osAccountId, &params, &groupEntryVec) != HC_SUCCESS) {
+    if (QueryGroups(osAccountId, NULL, &params, &groupEntryVec) != HC_SUCCESS) {
         LOGE("Failed to query groups!");
         ClearGroupEntryVec(&groupEntryVec);
         return HC_ERR_DB;
@@ -532,7 +532,7 @@ static int32_t CreateGroup(int32_t osAccountId, CJson *jsonParams, char **return
     int32_t result;
     if (((result = CheckCreateParams(osAccountId, jsonParams)) != HC_SUCCESS) ||
         ((result = GenerateAcrossAccountGroupId(jsonParams, &groupId)) != HC_SUCCESS) ||
-        ((result = AssertSameGroupNotExist(osAccountId, groupId)) != HC_SUCCESS) ||
+        ((result = AssertSameGroupNotExist(osAccountId, jsonParams, groupId)) != HC_SUCCESS) ||
         ((result = AddCredTypeToParamsFromIdenticalGroup(osAccountId, jsonParams)) != HC_SUCCESS) ||
         ((result = AddGroupAndLocalDev(osAccountId, jsonParams, groupId)) != HC_SUCCESS) ||
         ((result = ConvertGroupIdToJsonStr(groupId, returnJsonStr)) != HC_SUCCESS)) {
