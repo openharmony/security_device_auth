@@ -5,7 +5,7 @@
 `deviceauth_env.gni:48-57`：`ohos_lite && liteos_m → default_config/mini/config.gni`；`ohos_lite(其他) → small`；非 lite → `standard`。可用 `deviceauth_feature_config`（`deviceauth_env.gni:26`）整体替换配置目录。组件名 `@ohos/device_auth` v4.0.2（`bundle.json:2/22/4`）。
 
 - standard 全开：`default_config/standard/config.gni:14-42`（session_v2/v1、account、pseudonym、identity_service、p2p bind/auth lite+standard 协议、DL 384 位素数、`max_auth_session_count=10` 等）。
-- mini 关闭 session_v2/pseudonym/account/identity_service（`default_config/mini/config.gni:16-40`）；small 介于两者、无 pseudonym。
+- mini 关闭 session_v2/pseudonym/account/identity_service（`default_config/mini/config.gni:14-43`）；small 介于两者、无 pseudonym。
 - 强制告警即错误 flags：`deviceauth_env.gni:32-46`（-Werror/-Wall/...），standard 另有 cfi/ubsan。
 - mini 与 standard 的接口/实现整体分叉：mini 走 `frameworks/deviceauth_lite` + `interfaces/inner_api/deviceauth_lite/hichain.h` + lite HUKS 适配，**不经 IPC/SA**。
 
@@ -14,7 +14,7 @@
 GN 布尔在 `services/deviceauth.gni` 转成 C 宏并**同时切换源文件**：
 
 - `ENABLE_PSEUDONYM :360`——并控制是否编入 `privacy_enhancement/mk_agree` 源（关闭时换 mock `:364-366`）。
-- session_v2 块 `:371-405`：`ENABLE_P2P_BIND_ISO/ENABLE_P2P_BIND_DL_SPEKE(=DL_SPEKE)/ENABLE_P2P_BIND_EC_SPEKE/ENABLE_ISO :392/ENABLE_EC_SPEKE :400/ENABLE_AUTH_CODE_IMPORT/ENABLE_PUB_KEY_EXCHANGE/ENABLE_SAVE_TRUSTED_INFO`。
+- session_v2 块 `:371-405`：`ENABLE_P2P_BIND_ISO/ENABLE_P2P_BIND_DL_SPEKE(=DL_SPEKE)/ENABLE_P2P_BIND_EC_SPEKE/ENABLE_ISO :392/ENABLE_EC_SPEKE :399/ENABLE_AUTH_CODE_IMPORT/ENABLE_PUB_KEY_EXCHANGE/ENABLE_SAVE_TRUSTED_INFO`。
 - `ENABLE_ACCOUNT_AUTH_ISO` 单独在 `services/deviceauth_account.gni:17`。
 - **关键边界**：关闭特性时 `.gni` 编入的是 `services/*/src/mock/*.c` 空实现（如 `:53-58 identity_operation_mock`、`:149 os_account_adapter_mock`、`:176-180 sa_load_on_demand_mock`）。**给真实实现加新接口时，必须同步给对应 mock 加同名空实现，否则 mini/small/无特性构建直接链接失败。**
 

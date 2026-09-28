@@ -13,7 +13,7 @@
 
 ## V2 protocol_lib（会话直连）
 
-- ISO：`iso_protocol.c` — `CreateIsoProtocol:845`（v-table 装配 `:868-870`），入口 `StartIsoProtocol:744` / `ProcessIsoProtocol:757` → `IsoProtocolSwitchState:722` 事件表。
+- ISO：`iso_protocol.c` — `CreateIsoProtocol:857`（v-table 装配 `:880-882`），入口 `StartIsoProtocol:756` / `ProcessIsoProtocol:769` → `IsoProtocolSwitchState:734` 事件表。
 - EC-SPAKE：`ec_speke_protocol.c` — `CreateEcSpekeProtocol:1140`，Start `:1006`/Process `:1019`；算钥核心 `CalSalt:190`、`EcSpekeCalEskSelf:247`、`CalSharedSecret:487`。
 - DL-SPAKE：`dl_speke_protocol.c` — `CreateDlSpekeProtocol:1133`，Start `:1006`/Process `:1019`。
 - 与外部的**全部衔接面**只有 `BaseProtocol{start, process, setPsk, getSessionKey}` 四个口；`ProtocolInit/HandshakeInit/ExchangeData/GetHandshakeInfo` 这类接口在本仓库不存在。
@@ -22,8 +22,8 @@
 
 - `protocol_common.c:22 FreeAndCleanKey` — 敏感 buffer 统一清零释放。
 - `iso_protocol/iso_protocol_common.c:24 InitIsoBaseParams`。
-- PAKE 家族：`pake_protocol/pake_common.c:20 CleanPakeSensitiveKeys`；`pake_v1_protocol/` 与 `pake_v2_protocol/pake_v2_protocol_common.c`（`InitPakeV2BaseParams:143`、`ClientConfirm:587`、`ClientVerifyConfirm:614`、`ServerResponse:637`、`ServerConfirm:651`；v1 同构 `:150/:391/:420/:434/:448`）。
-- EC/DL PAKE 参数协商原语：`pake_protocol_ec_common.c:77 GenerateEcPakeParams/:113 AgreeEcSharedSecret`；`pake_protocol_dl_common.c:126/:173`。
+- PAKE 家族：`pake_protocol/pake_common.c:20 CleanPakeSensitiveKeys`；`pake_v1_protocol/` 与 `pake_v2_protocol/pake_v2_protocol_common.c`（`InitPakeV2BaseParams:143`、`ClientConfirm:586`、`ClientVerifyConfirm:613`、`ServerResponse:636`、`ServerConfirm:650`；v1 同构 `:150/:391/:420/:434/:448`）。
+- EC/DL PAKE 参数协商原语：`pake_protocol/pake_protocol_ec_common/pake_protocol_ec_common.c:77 GenerateEcPakeParams/:113 AgreeEcSharedSecret`；`pake_protocol/pake_protocol_dl_common/pake_protocol_dl_common.c:126/:173`。
 
 ## 约束
 

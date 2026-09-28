@@ -12,23 +12,23 @@
 | --- | --- | --- |
 | `GetGaInstance()` | `device_auth.c:1184` | 组认证/伪名，processData→OpenServerAuthSession，路由 session_manager |
 | `GetGmInstance()` | `device_auth.c:1151` | 组管理 CRUD，指向 `services/legacy/group_manager/` |
-| `GetCredMgrInstance()` | `device_auth.c:2001` | 凭据库，指向 `services/identity_service/` |
-| `GetCredAuthInstance()` | `device_auth.c:2024` | 凭据认证，authCredential/processCredData 路由 session_manager |
-| `GetAccountVerifierInstance()` | `device_auth.c:1978` | 账号共享密钥（无会话，HKDF 算钥） |
+| `GetCredMgrInstance()` | `device_auth.c:2012` | 凭据库，指向 `services/identity_service/` |
+| `GetCredAuthInstance()` | `device_auth.c:2035` | 凭据认证，authCredential/processCredData 路由 session_manager |
+| `GetAccountVerifierInstance()` | `device_auth.c:1989` | 账号共享密钥（无会话，HKDF 算钥） |
 | 自由函数 `StartAuthDevice` / `ProcessAuthDevice` / `ProcessCredential` | `device_auth.c:853/810/774` | 对应 client P2P / server P2P 首包 / 本地凭据 CRUD |
 
 ## 三组易混边界
 
 1. **ProcessCredential ≠ GetCredMgrInstance**：前者（`device_auth.c:774`）后端是 `services/legacy/identity_manager/src/credential_operator.c:711`，无会话的本地凭据 CRUD；后者是 identity_service 的 v-table。改凭据逻辑前先确认哪一套。
 2. **GetGaInstance 已不直接执行组认证**：processData/authDevice 全部经 `OpenDevSession` 路由 session_manager（`device_auth.c:357/395`）；真正的 legacy 组认证仅在 V1 兼容子会话中触发。
-3. **前台/锁屏门禁**：`AuthDeviceInner`（`device_auth.c:177`）与 `AuthCredentialInner`（`:569`）有 `CheckIsForegroundOsAccountId`/`IsOsAccountUnlocked` 双重校验；`ProcessAuthDevice`/`DeviceAuthCallback` 路径**没有**该校验（由 P2P channel 上下文保证），不要擅自补齐或移除。
+3. **前台/锁屏门禁**：`AuthDeviceInner`（`device_auth.c:177`）与 `AuthCredentialInner`（`:553`）有 `CheckIsForegroundOsAccountId`/`IsOsAccountUnlocked` 双重校验；`ProcessAuthDevice`/`DeviceAuthCallback` 路径**没有**该校验（由 P2P channel 上下文保证），不要擅自补齐或移除。
 
 ## 初始化/销毁顺序（高危）
 
 `InitDeviceAuthService`（`device_auth.c:1084`）内部严格按固定顺序初始化：
 `AlgLoader → CredMgr(ext_plugin) → Modules(frameworks) → CallbackMgr → OperationDataManager → GroupManager → IdentityService → DevSessionManager → GroupAuthManager → TaskManager → LightSessionMgr`。
 
-- `CleanAllModules`（`:1021`）按 type 从此表中段级联回滚。
+- `CleanAllModules`（`:1023`）按 type 从此表中段级联回滚。
 - `DestroyDeviceAuthService`（`:1123`）为逆序销毁。
 - **改任一模块的初始化时机必须同步修改 `CleanOperation` 表，否则回滚级联错位导致 UAF/双重释放。**
 

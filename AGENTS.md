@@ -20,15 +20,15 @@
 | --- | --- | --- |
 | 新增/修改对外 API | `interfaces/inner_api/` + `services/device_auth.c` + `frameworks/src/ipc_sdk.c` + `frameworks/src/ipc_service_common.c` + stub callMap（standard/small 各一张） | `device_auth.c:1151+`（GetGmInstance v-table 接线）、`ipc_sdk.c:789`、`deviceauth_sa.cpp:54-103`、`ipc_service_lite.c:36-81`（small callMap）、`ipc_dev_auth_stub.cpp:52-67`（IPC_CALL_ID_UN_CRITICAL 只读方法表） |
 | 认证会话流程（V2 握手/展开指令） | `services/session_manager/src/session/` | `dev_session_fwk.c:849`、`v2/dev_session_v2.c` |
-| ISO/SPAKE 握手算法 | V2 会话：`session/v2/auth_sub_session/protocol_lib/`（ISO/DL-SPEKE/EC-SPEKE 三协议，仅依赖 GetLoaderInstance()）；`services/protocol/pake_protocol/` 只服务 V1 legacy 账号任务与 `key_agree_sdk`，不在 V2 会话链上 | `iso_protocol.c:845`、`dl_speke_protocol.c:1133`、`ec_speke_protocol.c:1140`；`pake_v2_protocol_common.c:143`（仅 V1/key_agree_sdk） |
+| ISO/SPAKE 握手算法 | V2 会话：`session/v2/auth_sub_session/protocol_lib/`（ISO/DL-SPEKE/EC-SPEKE 三协议，仅依赖 GetLoaderInstance()）；`services/protocol/pake_protocol/` 只服务 V1 legacy 账号任务与 `key_agree_sdk`，不在 V2 会话链上 | `iso_protocol.c:857`、`dl_speke_protocol.c:1133`、`ec_speke_protocol.c:1140`；`pake_v2_protocol_common.c:143`（仅 V1/key_agree_sdk） |
 | 组管理/绑定/老认证流程 | `services/legacy/group_manager`、`group_auth`、`authenticators/` | `group_manager.c:24+`、`dev_auth_module_manager.c:184` |
-| 凭据/身份/PIN | PIN 与老认证身份：`services/legacy/identity_manager/`（identity_pin.c 在此）+ `legacy/creds_manager/`（无状态身份分发器）；`services/identity_service/` 是新凭据 CRUD 框架（AddCredential/Query/Update），**与 PIN 认证无关，勿先入为主** | `identity_operation.c:354/1173`、`identity_pin.c:253/286`、`creds_manager.c:39/93` |
-| MK 协商/匿名 ID | `services/mk_agree`、`privacy_enhancement` | `mk_agree_task.c:655`、`pseudonym_manager.c:855` |
+| 凭据/身份/PIN | PIN 与老认证身份：`services/legacy/identity_manager/`（identity_pin.c 在此）+ `legacy/creds_manager/`（无状态身份分发器）；`services/identity_service/` 是新凭据 CRUD 框架（AddCredential/Query/Update），**与 PIN 认证无关，勿先入为主** | `identity_operation.c:354/1410`、`identity_pin.c:253/286`、`creds_manager.c:39/93` |
+| MK 协商/匿名 ID | `services/mk_agree`、`privacy_enhancement` | `mk_agree_task.c:656`、`pseudonym_manager.c:855` |
 | 独立协商 SDK | `services/key_agree_sdk/` | `key_agree_sdk.h:96-104` |
-| 持久化文件 | `services/data_manager/`（TLV） | `group/credential/operation_data_manager.c` |
-| 加解密/密钥操作 | `deps_adapter/key_management_adapter/` | `alg_defs.h:151-179`、`huks_adapter.c:1102` |
+| 持久化文件 | `services/data_manager/`（TLV） | `group_data_manager/src/group_data_manager.c`、`cred_data_manager/src/credential_data_manager.c`、`operation_data_manager/src/operation_data_manager.c` |
+| 加解密/密钥操作 | `deps_adapter/key_management_adapter/` | `alg_defs.h:151-179`、`huks_adapter.c:1170` |
 | 文件 IO/OS 能力 | `deps_adapter/os_adapter/` | `hc_file.c`、`hc_dev_info.c` |
-| 回调链路/SA 拉起 | `frameworks/src/standard/`、`frameworks/sdk/` | `ipc_adapt.cpp:1083/1115`、`sa_load_on_demand.cpp:87` |
+| 回调链路/SA 拉起 | `frameworks/src/standard/`、`frameworks/sdk/` | `ipc_adapt.cpp:1084/1115`、`sa_load_on_demand.cpp:87` |
 | 特性开关/源码裁剪 | `deviceauth_env.gni`、`services/deviceauth.gni`、`default_config/*/` | `deviceauth.gni:360/371-405` |
 | NAPI(Js) 接口 | `interfaces/kits/napi/` | 对应 napi 目录 |
 

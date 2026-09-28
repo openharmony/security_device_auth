@@ -4,12 +4,12 @@
 
 ## 架构结论
 
-services 层**不直接调 HUKS**，全部经 `AlgLoader` v-table（`deps_adapter/key_management_adapter/interfaces/alg_defs.h:151-179`）。入口 `GetLoaderInstance()`（`impl/src/alg_loader.c:19`）→ `GetRealLoaderInstance()`（`impl/src/huks_adapter.c:1102`）返回静态表 `g_huksLoader`（`:1072`）。mini 另有独立实现 `frameworks/deviceauth_lite/source/huks_adapter/huks_adapter.c`（HKS TEE）。
+services 层**不直接调 HUKS**，全部经 `AlgLoader` v-table（`deps_adapter/key_management_adapter/interfaces/alg_defs.h:151-179`）。入口 `GetLoaderInstance()`（`impl/src/alg_loader.c:19`）→ `GetRealLoaderInstance()`（`impl/src/huks_adapter.c:1170`）返回静态表 `g_huksLoader`（`:1140`）。mini 另有独立实现 `frameworks/deviceauth_lite/source/huks_adapter/huks_adapter.c`（HKS TEE）。
 
 - `AlgLoader` 关键条目：`sha256/computeHmac(:155)/computeHkdf(:157)/computePseudonymPsk/importSymmetricKey(:160)/aesGcmEncrypt/aesGcmDecrypt(:163-164)/hashToPoint/agreeSharedSecretWithStorage(:166)/agreeSharedSecret(:167)/generateKeyPairWithStorage(:169)/exportPublicKey(:170)/sign/verify(:171-172)/importPublicKey(:173)/checkDl/EcPublicKey/bigNumExpMod/base64*`。注意**没有**名为 Encrypt/Decrypt/GenerateKey/AgreePsk 的条目。
 - 公共入参 `KeyParams{KeyBuff(isAlias), isDeStorage, osAccountId}`（`alg_defs.h:69-79`）；算法枚举 `Algorithm{ED25519,X25519,P256,AES}`（`:41-46`）。
 - 底层统一 legacy 风格 `Hks*` API（经 `impl/inc/huks_adapter_utils.h:20`），**无运行时新/旧 HUKS 接口切换**；平台差异靠编译期 `impl/src/{mini,small,standard}/huks_adapter_diff_impl.c`。
-- 存储位置分发：按 `isDeStorage` 构造 DE/CE 两套 ParamSet 互为 fallback（`HksKeyExist:104-113`、`HksGenerateKey:679-690` 且 DE 成功后 `MoveSharedKeyToCe`）。
+- 存储位置分发：按 `isDeStorage` 构造 DE/CE 两套 ParamSet 互为 fallback（`HksKeyExist:104-113`、`HksGenerateKey:746-748` 且 DE 成功后 `MoveSharedKeyToCe`）。
 - 持久密钥全部走别名索引（isAlias=true）：authId 密钥对、`MK_`/`PSEUDONYM_` 前缀（`key_manager.c:32-34`）、credId 哈希别名（`identity_operation.c:354-375`）。仅 `exportPublicKey`/公钥验签传明文 blob（正常）。
 - `sha256/base64/hashToPoint/公钥合法性校验` 不涉密，可本地执行（`huks_adapter.c:578/1035/1038/1098`）。
 
