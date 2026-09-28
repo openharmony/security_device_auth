@@ -6,7 +6,7 @@
 
 目的：在已认证的 expand 通道上协商主密钥 MK，衍生 pseudonym PSK，别名持久化 HUKS（`MK_`/`PSEUDONYM_` 前缀 `key_manager.c:32-34`，isAlias=true，私钥不出 HUKS）。
 
-- 入口**不是**某个 GetInstance 单例：`services/mk_agree/src/mk_agree_task.c:655 CreateMkAgreeTask(protocolType, isClient,...)` → Iso/Pake 两种 `MkAgreeTaskBase v-table{destroy, process}`（`inc/mk_agree_task.h:43-53`）；PAKE 消息处理 `StartPakeMkAgreeRequest:274/ProcessPakeMkAgreeTask:542`。
+- 入口**不是**某个 GetInstance 单例：`services/mk_agree/src/mk_agree_task.c:656 CreateMkAgreeTask(protocolType, isClient,...)` → Iso/Pake 两种 `MkAgreeTaskBase v-table{destroy, process}`（`inc/mk_agree_task.h:43-53`）；PAKE 消息处理 `StartPakeMkAgreeRequest:274/ProcessPakeMkAgreeTask:543`。
 - 密钥管理 `key_manager.c`：`GenerateDeviceKeyPair/GenerateMk/DeleteMk/GeneratePseudonymPsk/DeletePseudonymPsk/GetDevicePubKey`（声明 `inc/key_manager.h:30-37`）。
 - 调用链：`expand_process_lib/mk_agree.c:194 StartMkAgreeCmd/:104 ProcessMkAgreeTask` ← `dev_session_v2.c:209 addCmd(MK_AGREE_CMD_TYPE)`。整个子系统受 `ENABLE_PSEUDONYM` 编译开关控制，关闭时编入 mock 空实现。
 - 伪名数据管理：`services/privacy_enhancement/src/pseudonym_manager.c:855 GetPseudonymInstance`（v-table {getPseudonymId, getRealInfo, loadPseudonymData…}），供 `device_auth.c:674/688`（GetRealInfo/GetPseudonymId API）与 mk_agree 使用；落盘 `pseudonym_data.dat` 见 `data-storage-files.md`。
