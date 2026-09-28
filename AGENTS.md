@@ -22,7 +22,7 @@
 | 认证会话流程（V2 握手/展开指令） | `services/session_manager/src/session/` | `dev_session_fwk.c:849`、`v2/dev_session_v2.c` |
 | ISO/SPAKE 握手算法 | V2 会话：`session/v2/auth_sub_session/protocol_lib/`（ISO/DL-SPEKE/EC-SPEKE 三协议，仅依赖 GetLoaderInstance()）；`services/protocol/pake_protocol/` 只服务 V1 legacy 账号任务与 `key_agree_sdk`，不在 V2 会话链上 | `iso_protocol.c:857`、`dl_speke_protocol.c:1133`、`ec_speke_protocol.c:1140`；`pake_v2_protocol_common.c:143`（仅 V1/key_agree_sdk） |
 | 组管理/绑定/老认证流程 | `services/legacy/group_manager`、`group_auth`、`authenticators/` | `group_manager.c:24+`、`dev_auth_module_manager.c:184` |
-| 凭据/身份/PIN | PIN 与老认证身份：`services/legacy/identity_manager/`（identity_pin.c 在此）+ `legacy/creds_manager/`（无状态身份分发器）；`services/identity_service/` 是新凭据 CRUD 框架（AddCredential/Query/Update），**与 PIN 认证无关，勿先入为主** | `identity_operation.c:354/1410`、`identity_pin.c:253/286`、`creds_manager.c:39/93` |
+| 凭据/身份/PIN | PIN 与老鉴权身份：`services/legacy/identity_manager/`（identity_pin.c 在此）+ `legacy/creds_manager/`（无状态身份分发器）；`services/identity_service/` 是新凭据 CRUD 框架（AddCredential/Query/Update），**与 PIN 鉴权无关，勿先入为主** | `identity_operation.c:354/1410`、`identity_pin.c:253/286`、`creds_manager.c:39/93` |
 | MK 协商/匿名 ID | `services/mk_agree`、`privacy_enhancement` | `mk_agree_task.c:656`、`pseudonym_manager.c:855` |
 | 独立协商 SDK | `services/key_agree_sdk/` | `key_agree_sdk.h:96-104` |
 | 持久化文件 | `services/data_manager/`（TLV） | `group_data_manager/src/group_data_manager.c`、`cred_data_manager/src/credential_data_manager.c`、`operation_data_manager/src/operation_data_manager.c` |

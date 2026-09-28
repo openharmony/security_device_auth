@@ -28,7 +28,7 @@ identity_service 凭据库安全红线在 `identity_operation.c`：`GenerateCred
 ## legacy 组认证/任务机（group_auth + authenticators）
 
 - 组管理：`services/legacy/group_manager/src/group_manager.c:24/32/48/102`（GetGmInstance 后端）；`group_operation.c` 组 CRUD 总入口，按组类型分 `identical_account_group/`、`across_account_group/`、`peer_to_peer_group/`；**所有服务端 OnRequest 用户确认都过** `callback_manager.c:156 ProcessRequestCallback`。
-- 组认证注册表：`group_auth_manager.c:41 InitGroupAuthManager→RegisterGroupAuth`；注册口在 compatible_auth_sub_session_util、取用口 `GetGroupAuth:117`；两族 v-table `BaseGroupAuth`（`inc/base_group_auth.h:32-35`），实现 `account_unrelated_group_auth.c:37`（`OnDasFinish:466` 回传 sessionKey，**finish 前 ClearSensitiveStringInJson(FIELD_SESSION_KEY) 模式勿删**）与 `account_related_group_auth.c:48`。仅被 **V1 兼容认证子会话**调用。
+- 组鉴权注册表：`group_auth_manager.c:41 InitGroupAuthManager→RegisterGroupAuth`；注册口在 compatible_auth_sub_session_util、取用口 `GetGroupAuth:117`；两族 v-table `BaseGroupAuth`（`inc/base_group_auth.h:32-35`），实现 `account_unrelated_group_auth.c:37`（`OnDasFinish:466` 回传 sessionKey，**finish 前 ClearSensitiveStringInJson(FIELD_SESSION_KEY) 模式勿删**）与 `account_related_group_auth.c:48`。仅被 **V1 兼容鉴权子会话**调用。
 - 任务状态机真身：`authenticators/src/account_unrelated/`（`das_task_main.c:433/579`、`das_module.c:160 GetDasModule`、`iso_task|pake_task|pake_task/pake_v1_task/`）与 `authenticators/src/account_related/`（`auth/iso_auth_task`、`auth/pake_v2_auth_task`、`creds_manager/sym|asy_token_manager.c` 落 `account_data_*.dat`）。调用方统一为 `services/frameworks/src/module/dev_auth_module_manager.c:184 CreateTask/:206 ProcessTask`（按 DAS_MODULE/ACCOUNT_MODULE 路由）。
 
 ## 外部插件

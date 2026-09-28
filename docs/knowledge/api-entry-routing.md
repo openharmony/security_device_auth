@@ -13,7 +13,7 @@
 | `GetGaInstance()` | `device_auth.c:1184` | 组认证/伪名，processData→OpenServerAuthSession，路由 session_manager |
 | `GetGmInstance()` | `device_auth.c:1151` | 组管理 CRUD，指向 `services/legacy/group_manager/` |
 | `GetCredMgrInstance()` | `device_auth.c:2012` | 凭据库，指向 `services/identity_service/` |
-| `GetCredAuthInstance()` | `device_auth.c:2035` | 凭据认证，authCredential/processCredData 路由 session_manager |
+| `GetCredAuthInstance()` | `device_auth.c:2035` | 凭据鉴权，authCredential/processCredData 路由 session_manager |
 | `GetAccountVerifierInstance()` | `device_auth.c:1989` | 账号共享密钥（无会话，HKDF 算钥） |
 | 自由函数 `StartAuthDevice` / `ProcessAuthDevice` / `ProcessCredential` | `device_auth.c:853/810/774` | 对应 client P2P / server P2P 首包 / 本地凭据 CRUD |
 
