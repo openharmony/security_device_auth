@@ -83,12 +83,12 @@ int32_t InitDatabase(void);
 void DestroyDatabase(void);
 
 void ReloadOsAccountDb(int32_t osAccountId);
-int32_t AddGroup(int32_t osAccountId, const TrustedGroupEntry *groupEntry);
-int32_t DelGroup(int32_t osAccountId, const QueryGroupParams *params);
-int32_t AddTrustedDevice(int32_t osAccountId, const TrustedDeviceEntry *deviceEntry);
-int32_t DelTrustedDevice(int32_t osAccountId, const QueryDeviceParams *params);
-int32_t QueryGroups(int32_t osAccountId, const QueryGroupParams *params, GroupEntryVec *vec);
-int32_t QueryDevices(int32_t osAccountId, const QueryDeviceParams *params, DeviceEntryVec *vec);
+int32_t AddGroup(int32_t osAccountId, const CJson *in, const TrustedGroupEntry *groupEntry);
+int32_t DelGroup(int32_t osAccountId, const CJson *in, const QueryGroupParams *params);
+int32_t AddTrustedDevice(int32_t osAccountId, const CJson *in, const TrustedDeviceEntry *deviceEntry);
+int32_t DelTrustedDevice(int32_t osAccountId, const CJson *in, const QueryDeviceParams *params);
+int32_t QueryGroups(int32_t osAccountId, const CJson *in, const QueryGroupParams *params, GroupEntryVec *vec);
+int32_t QueryDevices(int32_t osAccountId, const CJson *in, const QueryDeviceParams *params, DeviceEntryVec *vec);
 int32_t SaveOsAccountDb(int32_t osAccountId);
 bool GenerateGroupEntryFromEntry(const TrustedGroupEntry *entry, TrustedGroupEntry *returnEntry);
 bool GenerateDeviceEntryFromEntry(const TrustedDeviceEntry *entry, TrustedDeviceEntry *returnEntry);

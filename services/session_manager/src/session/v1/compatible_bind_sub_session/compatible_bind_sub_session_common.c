@@ -143,7 +143,7 @@ static int32_t AddGroupInfoToSessionParams(const char *groupId, const CJson *jso
 
 static int32_t CheckAuthIdAndUserTypeValid(int32_t osAccountId, int userType, const char *groupId, const char *authId)
 {
-    if (!IsGroupExistByGroupId(osAccountId, groupId)) {
+    if (!IsGroupExistByGroupId(osAccountId, NULL, groupId)) {
         return HC_SUCCESS;
     }
     char udid[INPUT_UDID_LEN] = { 0 };
@@ -278,7 +278,7 @@ static int32_t AddGroupInfoToParams(const TrustedGroupEntry *entry, CJson *param
 
 static int32_t AddGroupInfoByDatabase(int32_t osAccountId, const char *groupId, CJson *params)
 {
-    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
+    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, NULL, groupId);
     if (entry == NULL) {
         LOGE("Failed to get groupEntry from db!");
         return HC_ERR_DB;

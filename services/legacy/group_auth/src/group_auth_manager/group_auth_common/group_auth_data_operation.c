@@ -97,7 +97,7 @@ static int32_t GetGroupEntryById(int32_t osAccountId, const char *groupId, Trust
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
     QueryGroupParams groupParams = InitQueryGroupParams();
     groupParams.groupId = groupId;
-    if (QueryGroups(osAccountId, &groupParams, &groupEntryVec) != HC_SUCCESS) {
+    if (QueryGroups(osAccountId, NULL, &groupParams, &groupEntryVec) != HC_SUCCESS) {
         LOGE("query groups failed!");
         ClearGroupEntryVec(&groupEntryVec);
         return HC_ERR_GROUP_NOT_EXIST;
@@ -157,7 +157,7 @@ int32_t GaGetTrustedDeviceEntryById(int32_t osAccountId, const char *deviceId,
     } else {
         params.authId = deviceId;
     }
-    if (QueryDevices(osAccountId, &params, &deviceEntryVec) != HC_SUCCESS) {
+    if (QueryDevices(osAccountId, NULL, &params, &deviceEntryVec) != HC_SUCCESS) {
         LOGE("query trusted devices failed!");
         ClearDeviceEntryVec(&deviceEntryVec);
         return HC_ERR_DEVICE_NOT_EXIST;

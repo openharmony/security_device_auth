@@ -85,7 +85,7 @@ static bool IsGroupFriend(const char *appId, const TrustedGroupEntry *entry)
     return false;
 }
 
-static uint32_t GetGroupNumByOwner(int32_t osAccountId, const char *ownerName)
+static uint32_t GetGroupNumByOwner(int32_t osAccountId, const CJson *jsonParams, const char *ownerName)
 {
     if (ownerName == NULL) {
         LOGE("The input ownerName is NULL!");
@@ -95,7 +95,7 @@ static uint32_t GetGroupNumByOwner(int32_t osAccountId, const char *ownerName)
     QueryGroupParams queryParams = InitQueryGroupParams();
     queryParams.ownerName = ownerName;
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
-    int32_t result = QueryGroups(osAccountId, &queryParams, &groupEntryVec);
+    int32_t result = QueryGroups(osAccountId, jsonParams, &queryParams, &groupEntryVec);
     if (result != HC_SUCCESS) {
         LOGE("Failed to query groups!");
         ClearGroupEntryVec(&groupEntryVec);
@@ -117,7 +117,7 @@ TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *d
     } else {
         params.authId = deviceId;
     }
-    if (QueryDevices(osAccountId, &params, &deviceEntryVec) != HC_SUCCESS) {
+    if (QueryDevices(osAccountId, NULL, &params, &deviceEntryVec) != HC_SUCCESS) {
         ClearDeviceEntryVec(&deviceEntryVec);
         LOGE("Query trusted devices failed!");
         return NULL;
@@ -133,7 +133,7 @@ TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const char *d
     return NULL;
 }
 
-TrustedGroupEntry *GetGroupEntryById(int32_t osAccountId, const char *groupId)
+TrustedGroupEntry *GetGroupEntryById(int32_t osAccountId, const CJson *jsonParams, const char *groupId)
 {
     if (groupId == NULL) {
         LOGE("The input groupId is NULL!");
@@ -144,7 +144,7 @@ TrustedGroupEntry *GetGroupEntryById(int32_t osAccountId, const char *groupId)
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
     QueryGroupParams params = InitQueryGroupParams();
     params.groupId = groupId;
-    if (QueryGroups(osAccountId, &params, &groupEntryVec) != HC_SUCCESS) {
+    if (QueryGroups(osAccountId, jsonParams, &params, &groupEntryVec) != HC_SUCCESS) {
         LOGE("Failed to query groups!");
         ClearGroupEntryVec(&groupEntryVec);
         return NULL;
@@ -172,11 +172,11 @@ bool IsTrustedDeviceInGroup(int32_t osAccountId, const char *groupId, const char
     return true;
 }
 
-int32_t CheckGroupNumLimit(int32_t osAccountId, int32_t groupType, const char *appId)
+int32_t CheckGroupNumLimit(int32_t osAccountId, const CJson *jsonParams, int32_t groupType, const char *appId)
 {
     /* Currently, only peer to peer group is supported. */
     (void)groupType;
-    if (GetGroupNumByOwner(osAccountId, appId) >= HC_TRUST_GROUP_ENTRY_MAX_NUM) {
+    if (GetGroupNumByOwner(osAccountId, jsonParams, appId) >= HC_TRUST_GROUP_ENTRY_MAX_NUM) {
         LOGE("The number of groups created by the service exceeds the maximum!");
         return HC_ERR_BEYOND_LIMIT;
     }
@@ -198,13 +198,13 @@ bool IsLocalDevice(const char *udid)
     return IsStrEqual(localUdid, udid);
 }
 
-bool IsGroupOwner(int32_t osAccountId, const char *groupId, const char *appId)
+bool IsGroupOwner(int32_t osAccountId, const CJson *jsonParams, const char *groupId, const char *appId)
 {
     if ((groupId == NULL) || (appId == NULL)) {
         LOGE("The input groupId or appId is NULL!");
         return false;
     }
-    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
+    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, jsonParams, groupId);
     if (entry == NULL) {
         LOGE("The group cannot be found!");
         return false;
@@ -225,13 +225,13 @@ bool IsGroupOwner(int32_t osAccountId, const char *groupId, const char *appId)
     return false;
 }
 
-bool IsGroupExistByGroupId(int32_t osAccountId, const char *groupId)
+bool IsGroupExistByGroupId(int32_t osAccountId, const CJson *jsonParams, const char *groupId)
 {
     if (groupId == NULL) {
         LOGE("The input groupId is NULL!");
         return false;
     }
-    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
+    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, jsonParams, groupId);
     if (entry == NULL) {
         return false;
     }
@@ -239,13 +239,13 @@ bool IsGroupExistByGroupId(int32_t osAccountId, const char *groupId)
     return true;
 }
 
-int32_t CheckGroupAccessible(int32_t osAccountId, const char *groupId, const char *appId)
+int32_t CheckGroupAccessible(int32_t osAccountId, const CJson *jsonParams, const char *groupId, const char *appId)
 {
     if ((groupId == NULL) || (appId == NULL)) {
         LOGE("GroupId or appId is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
+    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, jsonParams, groupId);
     if (entry == NULL) {
         LOGE("Group not exist!");
         return HC_ERR_GROUP_NOT_EXIST;
@@ -260,13 +260,13 @@ int32_t CheckGroupAccessible(int32_t osAccountId, const char *groupId, const cha
     return HC_SUCCESS;
 }
 
-int32_t CheckGroupEditAllowed(int32_t osAccountId, const char *groupId, const char *appId)
+int32_t CheckGroupEditAllowed(int32_t osAccountId, const CJson *jsonParams, const char *groupId, const char *appId)
 {
     if ((groupId == NULL) || (appId == NULL)) {
         LOGE("The input groupId or appId is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
+    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, jsonParams, groupId);
     if (entry == NULL) {
         LOGE("The group cannot be found!");
         return HC_ERR_GROUP_NOT_EXIST;
@@ -279,21 +279,22 @@ int32_t CheckGroupEditAllowed(int32_t osAccountId, const char *groupId, const ch
     return HC_SUCCESS;
 }
 
-int32_t GetGroupInfo(int32_t osAccountId, const QueryGroupParams *params, GroupEntryVec *returnGroupEntryVec)
+int32_t GetGroupInfo(int32_t osAccountId, const CJson *jsonParams, const QueryGroupParams *params,
+    GroupEntryVec *returnGroupEntryVec)
 {
     /* Fuzzy query interfaces, so some parameters can be NULL. */
     if (returnGroupEntryVec == NULL) {
         LOGE("The input returnGroupEntryVec is NULL!");
         return HC_ERR_INVALID_PARAMS;
     }
-    return QueryGroups(osAccountId, params, returnGroupEntryVec);
+    return QueryGroups(osAccountId, jsonParams, params, returnGroupEntryVec);
 }
 
 int32_t GetJoinedGroups(int32_t osAccountId, int groupType, GroupEntryVec *returnGroupEntryVec)
 {
     QueryGroupParams params = InitQueryGroupParams();
     params.groupType = (uint32_t)groupType;
-    return QueryGroups(osAccountId, &params, returnGroupEntryVec);
+    return QueryGroups(osAccountId, NULL, &params, returnGroupEntryVec);
 }
 
 int32_t GetRelatedGroups(int32_t osAccountId, const char *peerDeviceId, bool isUdid, GroupEntryVec *returnGroupEntryVec)
@@ -308,14 +309,14 @@ int32_t GetRelatedGroups(int32_t osAccountId, const char *peerDeviceId, bool isU
     } else {
         params.authId = peerDeviceId;
     }
-    int32_t result = QueryDevices(osAccountId, &params, &deviceEntryVec);
+    int32_t result = QueryDevices(osAccountId, NULL, &params, &deviceEntryVec);
     if (result != HC_SUCCESS) {
         LOGE("Failed to query trusted devices!");
         ClearDeviceEntryVec(&deviceEntryVec);
         return result;
     }
     FOR_EACH_HC_VECTOR(deviceEntryVec, index, entry) {
-        TrustedGroupEntry *groupEntry = GetGroupEntryById(osAccountId, StringGet(&(*entry)->groupId));
+        TrustedGroupEntry *groupEntry = GetGroupEntryById(osAccountId, NULL, StringGet(&(*entry)->groupId));
         if (groupEntry == NULL) {
             LOGW("Failed to get group entry by id!");
             continue;
@@ -347,11 +348,12 @@ int32_t GetTrustedDevInfoById(int32_t osAccountId, const char *deviceId, bool is
     return result;
 }
 
-int32_t GetTrustedDevices(int32_t osAccountId, const char *groupId, DeviceEntryVec *returnDeviceEntryVec)
+int32_t GetTrustedDevices(int32_t osAccountId, const CJson *jsonParams, const char *groupId,
+    DeviceEntryVec *returnDeviceEntryVec)
 {
     QueryDeviceParams params = InitQueryDeviceParams();
     params.groupId = groupId;
-    return QueryDevices(osAccountId, &params, returnDeviceEntryVec);
+    return QueryDevices(osAccountId, jsonParams, &params, returnDeviceEntryVec);
 }
 
 bool IsAccountRelatedGroup(int groupType)
@@ -411,7 +413,7 @@ uint32_t GetCurDeviceNumByGroupId(int32_t osAccountId, const char *groupId)
     QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
     queryDeviceParams.groupId = groupId;
     DeviceEntryVec deviceEntryVec = CreateDeviceEntryVec();
-    int32_t result = QueryDevices(osAccountId, &queryDeviceParams, &deviceEntryVec);
+    int32_t result = QueryDevices(osAccountId, NULL, &queryDeviceParams, &deviceEntryVec);
     if (result != HC_SUCCESS) {
         LOGE("Failed to query trusted devices!");
         ClearDeviceEntryVec(&deviceEntryVec);
@@ -721,9 +723,9 @@ int32_t AssertUserIdExist(const CJson *jsonParams)
     return HC_SUCCESS;
 }
 
-int32_t AssertSameGroupNotExist(int32_t osAccountId, const char *groupId)
+int32_t AssertSameGroupNotExist(int32_t osAccountId, const CJson *jsonParams, const char *groupId)
 {
-    if (IsGroupExistByGroupId(osAccountId, groupId)) {
+    if (IsGroupExistByGroupId(osAccountId, jsonParams, groupId)) {
         LOGE("The group has been created!");
         return HC_ERR_GROUP_DUPLICATE;
     }
@@ -749,13 +751,13 @@ int32_t AssertPeerDeviceNotSelf(const char *peerUdid)
     return HC_SUCCESS;
 }
 
-int32_t CheckGroupExist(int32_t osAccountId, const char *groupId)
+int32_t CheckGroupExist(int32_t osAccountId, const CJson *jsonParams, const char *groupId)
 {
     if (groupId == NULL) {
         LOGE("The input groupId is NULL!");
         return HC_ERR_NULL_PTR;
     }
-    if (!IsGroupExistByGroupId(osAccountId, groupId)) {
+    if (!IsGroupExistByGroupId(osAccountId, jsonParams, groupId)) {
         LOGE("The group does not exist! [GroupId]: %" LOG_PUB "s", groupId);
         return HC_ERR_GROUP_NOT_EXIST;
     }
@@ -781,7 +783,7 @@ int32_t AddGroupToDatabaseByJson(int32_t osAccountId, int32_t (*generateGroupPar
         return result;
     }
 
-    result = AddGroup(osAccountId, groupParams);
+    result = AddGroup(osAccountId, jsonParams, groupParams);
     DestroyGroupEntry(groupParams);
     if (result != HC_SUCCESS) {
         LOGE("Failed to add the group to the database!");
@@ -808,7 +810,7 @@ int32_t AddDeviceToDatabaseByJson(int32_t osAccountId, int32_t (*generateDevPara
         return result;
     }
 
-    result = AddTrustedDevice(osAccountId, devParams);
+    result = AddTrustedDevice(osAccountId, jsonParams, devParams);
     DestroyDeviceEntry(devParams);
     if (result != HC_SUCCESS) {
         LOGE("Failed to add the trust device to the database!");
@@ -816,7 +818,7 @@ int32_t AddDeviceToDatabaseByJson(int32_t osAccountId, int32_t (*generateDevPara
     return result;
 }
 
-int32_t DelGroupFromDb(int32_t osAccountId, const char *groupId)
+int32_t DelGroupFromDb(int32_t osAccountId, const CJson *jsonParams, const char *groupId)
 {
     if (groupId == NULL) {
         LOGE("The input groupId is NULL!");
@@ -827,10 +829,10 @@ int32_t DelGroupFromDb(int32_t osAccountId, const char *groupId)
     QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
     queryDeviceParams.groupId = groupId;
     int32_t result = HC_SUCCESS;
-    if (DelTrustedDevice(osAccountId, &queryDeviceParams) != HC_SUCCESS) {
+    if (DelTrustedDevice(osAccountId, jsonParams, &queryDeviceParams) != HC_SUCCESS) {
         result = HC_ERR_DEL_GROUP;
     }
-    if (DelGroup(osAccountId, &queryGroupParams) != HC_SUCCESS) {
+    if (DelGroup(osAccountId, jsonParams, &queryGroupParams) != HC_SUCCESS) {
         result = HC_ERR_DEL_GROUP;
     }
     if (SaveOsAccountDb(osAccountId) != HC_SUCCESS) {
@@ -853,7 +855,7 @@ int32_t DelDeviceFromDb(int32_t osAccountId, const char *groupId, const TrustedD
     QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
     queryDeviceParams.groupId = groupId;
     queryDeviceParams.udid = udid;
-    int32_t result = DelTrustedDevice(osAccountId, &queryDeviceParams);
+    int32_t result = DelTrustedDevice(osAccountId, NULL, &queryDeviceParams);
     if (result != HC_SUCCESS) {
         LOGW("delete device failed, result:%" LOG_PUB "d", result);
         return result;
@@ -1002,13 +1004,14 @@ int32_t ProcessKeyPair(int32_t osAccountId, int action, const CJson *jsonParams,
     return result;
 }
 
-int32_t GetGroupTypeFromDb(int32_t osAccountId, const char *groupId, uint32_t *returnGroupType)
+int32_t GetGroupTypeFromDb(int32_t osAccountId, const CJson *jsonParams, const char *groupId,
+    uint32_t *returnGroupType)
 {
     if ((groupId == NULL) || (returnGroupType == NULL)) {
         LOGE("The input parameters contains NULL value!");
         return HC_ERR_INVALID_PARAMS;
     }
-    TrustedGroupEntry *groupEntry = GetGroupEntryById(osAccountId, groupId);
+    TrustedGroupEntry *groupEntry = GetGroupEntryById(osAccountId, jsonParams, groupId);
     if (groupEntry == NULL) {
         LOGE("Failed to get groupEntry from db!");
         return HC_ERR_DB;
@@ -1083,11 +1086,14 @@ int32_t AssertGroupTypeMatch(int32_t inputType, int32_t targetType)
     return HC_SUCCESS;
 }
 
-int32_t CheckPermForGroup(int32_t osAccountId, int actionType, const char *callerPkgName, const char *groupId)
+int32_t CheckPermForGroup(int32_t osAccountId, const CJson *jsonParams, int actionType, const char *callerPkgName,
+    const char *groupId)
 {
-    if (((actionType == GROUP_DISBAND) && (IsGroupOwner(osAccountId, groupId, callerPkgName))) ||
-        ((actionType == MEMBER_INVITE) && (CheckGroupEditAllowed(osAccountId, groupId, callerPkgName) == HC_SUCCESS)) ||
-        ((actionType == MEMBER_DELETE) && (CheckGroupEditAllowed(osAccountId, groupId, callerPkgName) == HC_SUCCESS))) {
+    if (((actionType == GROUP_DISBAND) && (IsGroupOwner(osAccountId, jsonParams, groupId, callerPkgName))) ||
+        ((actionType == MEMBER_INVITE) &&
+        (CheckGroupEditAllowed(osAccountId, jsonParams, groupId, callerPkgName) == HC_SUCCESS)) ||
+        ((actionType == MEMBER_DELETE) &&
+        (CheckGroupEditAllowed(osAccountId, jsonParams, groupId, callerPkgName) == HC_SUCCESS))) {
         return HC_SUCCESS;
     }
     LOGE("You do not have the right to execute the command!");
@@ -1138,7 +1144,7 @@ int32_t AddGroupInfoToContextByDb(const char *groupId, CJson *context)
         LOGE("get osAccountId from json fail.");
         return HC_ERR_JSON_GET;
     }
-    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
+    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, NULL, groupId);
     if (entry == NULL) {
         LOGE("Failed to get groupEntry from db!");
         return HC_ERR_DB;
@@ -1299,7 +1305,7 @@ static char *GetUdidByGroup(int32_t osAccountId, const char *groupId, const char
     DeviceEntryVec deviceEntryVec = CREATE_HC_VECTOR(DeviceEntryVec);
     QueryDeviceParams params = InitQueryDeviceParams();
     params.groupId = groupId;
-    if (QueryDevices(osAccountId, &params, &deviceEntryVec) != HC_SUCCESS) {
+    if (QueryDevices(osAccountId, NULL, &params, &deviceEntryVec) != HC_SUCCESS) {
         LOGE("query trusted devices failed!");
         ClearDeviceEntryVec(&deviceEntryVec);
         return NULL;
@@ -1328,7 +1334,7 @@ static char *GetDeviceIdByUdidHash(int32_t osAccountId, const char *deviceIdHash
     }
     QueryGroupParams queryParams = InitQueryGroupParams();
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
-    int32_t ret = QueryGroups(osAccountId, &queryParams, &groupEntryVec);
+    int32_t ret = QueryGroups(osAccountId, NULL, &queryParams, &groupEntryVec);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to query groups!");
         ClearGroupEntryVec(&groupEntryVec);

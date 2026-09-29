@@ -61,19 +61,8 @@ static bool IsGroupTypeSupported(int groupType)
     return false;
 }
 
-static bool HasAccountRelatedGroup(const GroupEntryVec *groupEntryVec)
-{
-    uint32_t index;
-    TrustedGroupEntry **entry = NULL;
-    FOR_EACH_HC_VECTOR(*groupEntryVec, index, entry) {
-        if ((entry != NULL) && (*entry != NULL) && IsAccountRelatedGroup((*entry)->type)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-static void RemoveNoPermissionGroup(int32_t osAccountId, GroupEntryVec *groupEntryVec, const char *appId)
+static void RemoveNoPermissionGroup(int32_t osAccountId, const CJson *jsonParams, GroupEntryVec *groupEntryVec,
+    const char *appId)
 {
     uint32_t index = 0;
     TrustedGroupEntry **groupEntryPtr = NULL;
@@ -84,7 +73,7 @@ static void RemoveNoPermissionGroup(int32_t osAccountId, GroupEntryVec *groupEnt
             index++;
             continue;
         }
-        if (CheckGroupAccessible(osAccountId, StringGet(&(*groupEntryPtr)->id), appId) == HC_SUCCESS) {
+        if (CheckGroupAccessible(osAccountId, jsonParams, StringGet(&(*groupEntryPtr)->id), appId) == HC_SUCCESS) {
             index++;
             continue;
         }
@@ -158,15 +147,6 @@ static int32_t GenerateReturnGroupVec(GroupEntryVec *groupInfoVec, char **return
     return HC_SUCCESS;
 }
 
-static void TryRecoverAccountGroup(int groupType, GroupEntryVec *groupEntryVec)
-{
-    if ((groupType == ALL_GROUP || IsAccountRelatedGroup(groupType)) &&
-        !HasAccountRelatedGroup(groupEntryVec)) {
-        LOGI("No account related group found, try to recover.");
-        TryRecoverAccountCred();
-    }
-}
-
 static int32_t GenerateReturnDeviceVec(DeviceEntryVec *devInfoVec, char **returnDevInfoVec, uint32_t *deviceNum)
 {
     CJson *json = CreateJsonArray();
@@ -223,7 +203,7 @@ static int32_t QueryRelatedGroupsForGetPk(int32_t osAccountId, const char *udid,
     DeviceEntryVec deviceEntryVec = CreateDeviceEntryVec();
     QueryDeviceParams params = InitQueryDeviceParams();
     params.udid = udid;
-    int32_t result = QueryDevices(osAccountId, &params, &deviceEntryVec);
+    int32_t result = QueryDevices(osAccountId, NULL, &params, &deviceEntryVec);
     if (result != HC_SUCCESS) {
         LOGE("Failed to query trusted devices!");
         ClearDeviceEntryVec(&deviceEntryVec);
@@ -233,7 +213,7 @@ static int32_t QueryRelatedGroupsForGetPk(int32_t osAccountId, const char *udid,
     TrustedDeviceEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(deviceEntryVec, index, entry) {
         /* In order to improve availability, even if there is an error, it does not terminate. */
-        TrustedGroupEntry *groupEntry = GetGroupEntryById(osAccountId, StringGet(&(*entry)->groupId));
+        TrustedGroupEntry *groupEntry = GetGroupEntryById(osAccountId, NULL, StringGet(&(*entry)->groupId));
         if (groupEntry == NULL) {
             LOGW("An exception occurred! Device found, but group not found. There may be dirty data.");
             continue;
@@ -447,9 +427,9 @@ static int32_t DeleteGroup(int32_t osAccountId, CJson *jsonParams, char **return
     uint32_t groupType = PEER_TO_PEER_GROUP;
     if (((result = GetGroupIdFromJson(jsonParams, &groupId)) != HC_SUCCESS) ||
         ((result = GetAppIdFromJson(jsonParams, &appId)) != HC_SUCCESS) ||
-        ((result = CheckGroupExist(osAccountId, groupId)) != HC_SUCCESS) ||
-        ((result = GetGroupTypeFromDb(osAccountId, groupId, &groupType)) != HC_SUCCESS) ||
-        ((result = CheckPermForGroup(osAccountId, GROUP_DISBAND, appId, groupId)) != HC_SUCCESS)) {
+        ((result = CheckGroupExist(osAccountId, jsonParams, groupId)) != HC_SUCCESS) ||
+        ((result = GetGroupTypeFromDb(osAccountId, jsonParams, groupId, &groupType)) != HC_SUCCESS) ||
+        ((result = CheckPermForGroup(osAccountId, jsonParams, GROUP_DISBAND, appId, groupId)) != HC_SUCCESS)) {
         return result;
     }
     BaseGroup *instance = GetGroupInstance(groupType);
@@ -867,7 +847,7 @@ static int32_t CheckGroupVisibility(const CJson *context)
         LOGE("Failed to get appId!");
         return HC_ERR_JSON_GET;
     }
-    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
+    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, NULL, groupId);
     if (entry == NULL) {
         LOGE("Failed to get group entry!");
         return HC_ERR_GROUP_NOT_EXIST;
@@ -1577,7 +1557,7 @@ static int32_t CheckAccessToGroup(int32_t osAccountId, const char *appId, const 
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    if (CheckGroupAccessible(osAccountId, groupId, appId) != HC_SUCCESS) {
+    if (CheckGroupAccessible(osAccountId, NULL, groupId, appId) != HC_SUCCESS) {
         LOGE("You do not have the permission to query the group information!");
         return HC_ERR_ACCESS_DENIED;
     }
@@ -1596,15 +1576,15 @@ static int32_t GetAccessibleGroupInfoById(int32_t osAccountId, const char *appId
         LOGE("Os account is not unlocked! Please unlock it firstly!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    if (!IsGroupExistByGroupId(osAccountId, groupId)) {
+    if (!IsGroupExistByGroupId(osAccountId, NULL, groupId)) {
         LOGE("No group found based on the query parameters!");
         return HC_ERR_GROUP_NOT_EXIST;
     }
-    if (CheckGroupAccessible(osAccountId, groupId, appId) != HC_SUCCESS) {
+    if (CheckGroupAccessible(osAccountId, NULL, groupId, appId) != HC_SUCCESS) {
         LOGE("You do not have the permission to query the group information!");
         return HC_ERR_ACCESS_DENIED;
     }
-    TrustedGroupEntry *groupEntry = GetGroupEntryById(osAccountId, groupId);
+    TrustedGroupEntry *groupEntry = GetGroupEntryById(osAccountId, NULL, groupId);
     if (groupEntry == NULL) {
         LOGE("Failed to get groupEntry from db!");
         return HC_ERR_DB;
@@ -1669,13 +1649,14 @@ static int32_t GetAccessibleGroupInfo(int32_t osAccountId, const char *appId, co
     params.groupName = groupName;
     params.ownerName = groupOwner;
     params.groupType = (uint32_t)groupType;
-    int32_t result = GetGroupInfo(osAccountId, &params, &groupEntryVec);
-    FreeJson(queryParamsJson);
+    int32_t result = GetGroupInfo(osAccountId, queryParamsJson, &params, &groupEntryVec);
     if (result != HC_SUCCESS) {
+        FreeJson(queryParamsJson);
         ClearGroupEntryVec(&groupEntryVec);
         return result;
     }
-    RemoveNoPermissionGroup(osAccountId, &groupEntryVec, appId);
+    RemoveNoPermissionGroup(osAccountId, queryParamsJson, &groupEntryVec, appId);
+    FreeJson(queryParamsJson);
     result = GenerateReturnGroupVec(&groupEntryVec, returnGroupVec, groupNum);
     ClearGroupEntryVec(&groupEntryVec);
     return result;
@@ -1703,8 +1684,7 @@ static int32_t GetAccessibleJoinedGroups(int32_t osAccountId, const char *appId,
         ClearGroupEntryVec(&groupEntryVec);
         return result;
     }
-    TryRecoverAccountGroup(groupType, &groupEntryVec);
-    RemoveNoPermissionGroup(osAccountId, &groupEntryVec, appId);
+    RemoveNoPermissionGroup(osAccountId, NULL, &groupEntryVec, appId);
     result = GenerateReturnGroupVec(&groupEntryVec, returnGroupVec, groupNum);
     ClearGroupEntryVec(&groupEntryVec);
     return result;
@@ -1740,7 +1720,7 @@ static int32_t GetAccessibleRelatedGroups(int32_t osAccountId, const char *appId
             return result;
         }
     }
-    RemoveNoPermissionGroup(osAccountId, &groupEntryVec, appId);
+    RemoveNoPermissionGroup(osAccountId, NULL, &groupEntryVec, appId);
     result = GenerateReturnGroupVec(&groupEntryVec, returnGroupVec, groupNum);
     ClearGroupEntryVec(&groupEntryVec);
     return result;
@@ -1768,11 +1748,11 @@ static int32_t GetAccessibleDeviceInfoById(int32_t osAccountId, const char *appI
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    if (!IsGroupExistByGroupId(osAccountId, groupId)) {
+    if (!IsGroupExistByGroupId(osAccountId, NULL, groupId)) {
         LOGE("No group is found with groupId!");
         return HC_ERR_GROUP_NOT_EXIST;
     }
-    if (CheckGroupAccessible(osAccountId, groupId, appId) != HC_SUCCESS) {
+    if (CheckGroupAccessible(osAccountId, NULL, groupId, appId) != HC_SUCCESS) {
         LOGE("You do not have the permission to query the group information!");
         return HC_ERR_ACCESS_DENIED;
     }
@@ -1821,16 +1801,16 @@ static int32_t GetAccessibleTrustedDevices(int32_t osAccountId, const char *appI
         LOGE("Os account is not unlocked!");
         return HC_ERR_OS_ACCOUNT_NOT_UNLOCKED;
     }
-    if (!IsGroupExistByGroupId(osAccountId, groupId)) {
+    if (!IsGroupExistByGroupId(osAccountId, NULL, groupId)) {
         LOGE("No group is found based on the query parameters!");
         return HC_ERR_GROUP_NOT_EXIST;
     }
-    if (CheckGroupAccessible(osAccountId, groupId, appId) != HC_SUCCESS) {
+    if (CheckGroupAccessible(osAccountId, NULL, groupId, appId) != HC_SUCCESS) {
         LOGE("You do not have the permission to query the group information!");
         return HC_ERR_ACCESS_DENIED;
     }
     DeviceEntryVec deviceEntryVec = CreateDeviceEntryVec();
-    int32_t result = GetTrustedDevices(osAccountId, groupId, &deviceEntryVec);
+    int32_t result = GetTrustedDevices(osAccountId, NULL, groupId, &deviceEntryVec);
     if (result != HC_SUCCESS) {
         ClearDeviceEntryVec(&deviceEntryVec);
         return result;
@@ -1852,11 +1832,11 @@ static bool IsDeviceInAccessibleGroup(int32_t osAccountId, const char *appId, co
         LOGE("Os account is not unlocked!");
         return false;
     }
-    if (!IsGroupExistByGroupId(osAccountId, groupId)) {
+    if (!IsGroupExistByGroupId(osAccountId, NULL, groupId)) {
         LOGE("No group is found based on the query parameters!");
         return false;
     }
-    if (CheckGroupAccessible(osAccountId, groupId, appId) != HC_SUCCESS) {
+    if (CheckGroupAccessible(osAccountId, NULL, groupId, appId) != HC_SUCCESS) {
         LOGE("You do not have the permission to query the group information!");
         return false;
     }

@@ -37,26 +37,25 @@ int32_t ProcessAccountAuthSession(int32_t *sessionId, const CJson *in, CJson *ou
 int32_t DestroyAccountAuthSession(int32_t sessionId);
 
 #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
-int32_t AddDeviceTrustRelation(int32_t osAccountId, const char *userId, const char *groupId,
+int32_t AddDeviceTrustRelation(int32_t osAccountId, int32_t subProfileId, const char *groupId,
     const char *udid);
-int32_t DelDeviceTrustRelation(int32_t osAccountId, const char *userId, const char *groupId,
+int32_t DelDeviceTrustRelation(int32_t osAccountId, int32_t subProfileId, const char *groupId,
     const char *udid);
-bool IsDeviceExistInGroupForUser(int32_t osAccountId, const char *userId, const char *groupId,
+bool IsDeviceExistInGroupForUser(int32_t osAccountId, int32_t subProfileId, const char *groupId,
     const char *udid);
 bool IsDeviceExistInGroup(int32_t osAccountId, const char *groupId, const char *udid);
-bool IsDeviceExistInUser(int32_t osAccountId, const char *userId, const char *udid);
-int32_t AddCredTrustRelation(int32_t osAccountId, const char *userId, const char *credId);
-int32_t DelCredTrustRelation(int32_t osAccountId, const char *userId, const char *credId);
-int32_t IsCredReferencedByUser(int32_t osAccountId, const char *userId, const char *credId, bool *isReferenced);
+bool IsDeviceExistInUser(int32_t osAccountId, int32_t subProfileId, const char *udid);
+int32_t AddCredTrustRelation(int32_t osAccountId, int32_t subProfileId, const char *credId);
+int32_t DelCredTrustRelation(int32_t osAccountId, int32_t subProfileId, const char *credId);
+int32_t IsCredReferencedByUser(int32_t osAccountId, int32_t subProfileId, const char *credId, bool *isReferenced);
 int32_t IsCredReferenced(int32_t osAccountId, const char *credId, bool *isReferenced);
-int32_t NotifyAccountSwitch(int32_t osAccountId, const char *fromUserId, const char *toUserId,
+int32_t NotifyAccountSwitch(int32_t osAccountId, int32_t fromSubProfileId, int32_t toSubProfileId,
     AccountSwitchGroupCallback groupCallback, AccountSwitchCredCallback credCallback);
 bool HasTrustRelationDbPlugin(void);
 #endif
 
 void IncreaseLoadCount(void);
 void DecreaseLoadCount(void);
-void TryRecoverAccountCred(void);
 
 #ifdef __cplusplus
 }

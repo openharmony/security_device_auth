@@ -17,6 +17,7 @@
 #define IDENTITY_SERVICE_IMPL_H
 
 #include "cred_listener.h"
+#include "json_utils.h"
 
 int32_t AddCredentialImpl(int32_t osAccountId, const char *requestParams, char **returnData);
 
@@ -26,7 +27,9 @@ int32_t QueryCredentialByParamsImpl(int32_t osAccountId, const char *requestPara
 
 int32_t QueryCredInfoByCredIdImpl(int32_t osAccountId, int32_t uid, const char *credId, char **returnData);
 
-int32_t DeleteCredentialImpl(int32_t osAccountId, const char *credId);
+int32_t QueryCredInfoByParamsImpl(int32_t osAccountId, const CJson *reqJson, char **returnData);
+
+int32_t DeleteCredentialImpl(int32_t osAccountId, const CJson *reqJson, const char *credId);
 
 int32_t DeleteCredByParamsImpl(int32_t osAccountId, const char *requestParams, char **returnData);
 

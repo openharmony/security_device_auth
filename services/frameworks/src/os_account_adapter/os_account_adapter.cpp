@@ -30,6 +30,7 @@
 #include "sa_subscriber.h"
 #include "system_ability_definition.h"
 #include "hc_mutex.h"
+#include "hc_vector.h"
 
 #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
 #include "os_account_subprofile_client.h"
@@ -98,10 +99,25 @@ void NotifyOsAccountRemoved(int32_t osAccountId)
 }
 
 #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+static int32_t ConvertStrToSubProfileId(const char *subProfileIdStr, int32_t *subProfileId)
+{
+    if (sscanf_s(subProfileIdStr, "%d", subProfileId) != 1) {
+        return HC_ERROR;
+    }
+    return HC_SUCCESS;
+}
+
 void NotifyGroupRelationChange(AccountSwitchBroadcastType type, int32_t osAccountId, const char *subProfileIdStr,
     const char *groupId, const char *udid)
 {
     (void)LockHcMutex(&g_osAccountMutex);
+    int32_t subProfileId = DEFAULT_SUB_PROFILE_ID;
+    int32_t res = ConvertStrToSubProfileId(subProfileIdStr, &subProfileId);
+    if (res != HC_SUCCESS) {
+        LOGE("[OsAccountAdapter]: Failed to convert string to subProfileId!");
+        UnlockHcMutex(&g_osAccountMutex);
+        return;
+    }
     if (g_groupCallback == nullptr) {
         LOGE("[OsAccountAdapter]: callback is null!");
         UnlockHcMutex(&g_osAccountMutex);
@@ -109,16 +125,16 @@ void NotifyGroupRelationChange(AccountSwitchBroadcastType type, int32_t osAccoun
     }
     switch (type) {
         case ACCOUNT_SWITCH_BROADCAST_DEVICE_INACTIVE:
-            g_groupCallback(DEVICE_RELATION_INACTIVE, osAccountId, subProfileIdStr, groupId, udid);
+            g_groupCallback(DEVICE_RELATION_INACTIVE, osAccountId, subProfileId, groupId, udid);
             break;
         case ACCOUNT_SWITCH_BROADCAST_DEVICE_ACTIVE:
-            g_groupCallback(DEVICE_RELATION_ACTIVE, osAccountId, subProfileIdStr, groupId, udid);
+            g_groupCallback(DEVICE_RELATION_ACTIVE, osAccountId, subProfileId, groupId, udid);
             break;
         case ACCOUNT_SWITCH_BROADCAST_GROUP_INACTIVE:
-            g_groupCallback(GROUP_RELATION_INACTIVE, osAccountId, subProfileIdStr, groupId, udid);
+            g_groupCallback(GROUP_RELATION_INACTIVE, osAccountId, subProfileId, groupId, udid);
             break;
         case ACCOUNT_SWITCH_BROADCAST_GROUP_ACTIVE:
-            g_groupCallback(GROUP_RELATION_ACTIVE, osAccountId, subProfileIdStr, groupId, udid);
+            g_groupCallback(GROUP_RELATION_ACTIVE, osAccountId, subProfileId, groupId, udid);
             break;
         default:
             LOGE("[OsAccountAdapter]: invalid type!");
@@ -131,6 +147,13 @@ void NotifyCredRelationChange(AccountSwitchBroadcastType type, int32_t osAccount
     const char *credId)
 {
     (void)LockHcMutex(&g_osAccountMutex);
+    int32_t subProfileId = DEFAULT_SUB_PROFILE_ID;
+    int32_t res = ConvertStrToSubProfileId(subProfileIdStr, &subProfileId);
+    if (res != HC_SUCCESS) {
+        LOGE("[OsAccountAdapter]: Failed to convert string to subProfileId!");
+        UnlockHcMutex(&g_osAccountMutex);
+        return;
+    }
     if (g_credCallback == nullptr) {
         LOGE("[OsAccountAdapter]: callback is null!");
         UnlockHcMutex(&g_osAccountMutex);
@@ -138,10 +161,10 @@ void NotifyCredRelationChange(AccountSwitchBroadcastType type, int32_t osAccount
     }
     switch (type) {
         case ACCOUNT_SWITCH_BROADCAST_CREDENTIAL_INACTIVE:
-            g_credCallback(CRED_RELATION_INACTIVE, osAccountId, subProfileIdStr, credId);
+            g_credCallback(CRED_RELATION_INACTIVE, osAccountId, subProfileId, credId);
             break;
         case ACCOUNT_SWITCH_BROADCAST_CREDENTIAL_ACTIVE:
-            g_credCallback(CRED_RELATION_ACTIVE, osAccountId, subProfileIdStr, credId);
+            g_credCallback(CRED_RELATION_ACTIVE, osAccountId, subProfileId, credId);
             break;
         default:
             LOGE("[OsAccountAdapter]: invalid type!");
@@ -150,53 +173,25 @@ void NotifyCredRelationChange(AccountSwitchBroadcastType type, int32_t osAccount
     UnlockHcMutex(&g_osAccountMutex);
 }
 
-static int32_t GetSubProfileIdStr(int32_t subProfileId, char *subProfileIdStr, uint32_t subProfileIdStrLen)
-{
-    int len = snprintf_s(subProfileIdStr, subProfileIdStrLen, subProfileIdStrLen, "%d", subProfileId);
-    if (len <= 0) {
-        LOGE("[OsAccountAdapter]: convert subProfileId to string failed!");
-        return HC_ERROR;
-    }
-    return HC_SUCCESS;
-}
-
 void NotifySubProfileSwitched(int32_t osAccountId, int32_t fromSubProfileId, int32_t toSubProfileId)
 {
-    char fromSubProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1];
-    int32_t res = GetSubProfileIdStr(fromSubProfileId, fromSubProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN);
-    if (res != HC_SUCCESS) {
-        LOGE("[OsAccountAdapter]: failed to get fromSubProfileIdStr!");
-        return;
-    }
-    char toSubProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1];
-    res = GetSubProfileIdStr(toSubProfileId, toSubProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN);
-    if (res != HC_SUCCESS) {
-        LOGE("[OsAccountAdapter]: failed to get toSubProfileIdStr!");
-        return;
-    }
-    NotifyAccountSwitch(osAccountId, fromSubProfileIdStr, toSubProfileIdStr,
+    NotifyAccountSwitch(osAccountId, fromSubProfileId, toSubProfileId,
         NotifyGroupRelationChange, NotifyCredRelationChange);
     (void)LockHcMutex(&g_osAccountMutex);
     if (g_groupSwitchedCallback != nullptr) {
-        g_groupSwitchedCallback(osAccountId, toSubProfileIdStr);
+        g_groupSwitchedCallback(osAccountId, toSubProfileId);
     }
     UnlockHcMutex(&g_osAccountMutex);
 }
 
 void NotifySubProfileDeleted(int32_t osAccountId, int32_t subProfileId)
 {
-    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1];
-    int32_t res = GetSubProfileIdStr(subProfileId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN);
-    if (res != HC_SUCCESS) {
-        LOGE("[OsAccountAdapter]: failed to get subProfileIdStr!");
-        return;
-    }
     (void)LockHcMutex(&g_osAccountMutex);
     if (g_deleteGroupCallback != nullptr) {
-        g_deleteGroupCallback(osAccountId, subProfileIdStr);
+        g_deleteGroupCallback(osAccountId, subProfileId);
     }
     if (g_deleteCredCallback != nullptr) {
-        g_deleteCredCallback(osAccountId, subProfileIdStr);
+        g_deleteCredCallback(osAccountId, subProfileId);
     }
     UnlockHcMutex(&g_osAccountMutex);
 }
@@ -524,7 +519,7 @@ void RemoveOsAccountEventCallback(EventCallbackId callbackId)
 }
 
 #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
-int32_t GetForegroundSubProfileIdStr(int32_t osAccountId, char *subProfileIdStr, uint32_t subProfileIdStrLen)
+static int32_t GetForegroundSubProfileId(int32_t osAccountId, int32_t *retSubProfileId)
 {
     int32_t subProfileId = DEFAULT_SUB_PROFILE_ID;
     OHOS::AccountSA::OsAccountSubProfileClient &instance = OHOS::AccountSA::OsAccountSubProfileClient::GetInstance();
@@ -533,7 +528,8 @@ int32_t GetForegroundSubProfileIdStr(int32_t osAccountId, char *subProfileIdStr,
         LOGE("[OsAccountNativeFwk][GetOsAccountForegroundSubProfileId]: fail. [Res]: %" LOG_PUB "d", res);
         return HC_ERROR;
     }
-    return GetSubProfileIdStr(subProfileId, subProfileIdStr, subProfileIdStrLen);
+    *retSubProfileId = subProfileId;
+    return HC_SUCCESS;
 }
 
 void SetGroupRelationChangeCallback(GroupRelationChangeCallback callback)
@@ -569,6 +565,22 @@ void SetProfileSwitchedCallbackForGroup(ProfileSwitchedCallback callback)
     (void)LockHcMutex(&g_osAccountMutex);
     g_groupSwitchedCallback = callback;
     UnlockHcMutex(&g_osAccountMutex);
+}
+
+int32_t GetSubProfileIdFromParams(int32_t osAccountId, const CJson *params, int32_t *retSubProfileId)
+{
+    if (retSubProfileId == NULL) {
+        LOGE("[OsAccountAdapter]: retSubProfileId is null!");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    if ((params != NULL) && (GetIntFromJson(params, FIELD_SUB_PROFILE_ID, retSubProfileId) == HC_SUCCESS)) {
+        LOGI("[OsAccountAdapter]: input subProfileId: %" LOG_PUB "d", *retSubProfileId);
+        if (*retSubProfileId == DEFAULT_SUB_PROFILE_ID) {
+            return GetForegroundSubProfileId(osAccountId, retSubProfileId);
+        }
+        return HC_SUCCESS;
+    }
+    return GetForegroundSubProfileId(osAccountId, retSubProfileId);
 }
 #endif
 

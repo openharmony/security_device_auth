@@ -66,7 +66,7 @@ typedef bool (*CmdInterceptor)(SessionImpl *impl, CmdProcessor processor);
 
 static int32_t GetSelfUpgradeFlag(int32_t osAccountId, const char *groupId, bool *isSelfFromUpgrade)
 {
-    if (!IsGroupExistByGroupId(osAccountId, groupId)) {
+    if (!IsGroupExistByGroupId(osAccountId, NULL, groupId)) {
         LOGI("Group not exist, no need to get self upgrade flag.");
         return HC_SUCCESS;
     }
@@ -975,7 +975,7 @@ static int32_t AddAcrossAccountGroupInfoToContext(SessionImpl *impl, const Trust
 
 static int32_t AddGroupInfoToContext(SessionImpl *impl, int32_t osAccountId, const char *groupId)
 {
-    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, groupId);
+    TrustedGroupEntry *entry = GetGroupEntryById(osAccountId, NULL, groupId);
     if (entry == NULL) {
         LOGE("The group cannot be found!");
         return HC_ERR_GROUP_NOT_EXIST;
@@ -1033,7 +1033,7 @@ static int32_t AddAcrossAccountAuthInfoToContext(SessionImpl *impl, int32_t osAc
     QueryGroupParams queryParams = InitQueryGroupParams();
     queryParams.groupType = ACROSS_ACCOUNT_AUTHORIZE_GROUP;
     queryParams.sharedUserId = peerUserId;
-    if (QueryGroups(osAccountId, &queryParams, &groupVec) != HC_SUCCESS || groupVec.size(&groupVec) <= 0) {
+    if (QueryGroups(osAccountId, NULL, &queryParams, &groupVec) != HC_SUCCESS || groupVec.size(&groupVec) <= 0) {
         LOGE("get across account group from db by peerUserId fail.");
         char selfUserId[USER_ID_LEN] = { 0 };
         (void)GetSelfUserId(osAccountId, selfUserId, USER_ID_LEN);
@@ -1066,7 +1066,7 @@ static int32_t AddIdenticalAccountAuthInfoToContext(SessionImpl *impl, int32_t o
     QueryGroupParams queryParams = InitQueryGroupParams();
     queryParams.groupType = IDENTICAL_ACCOUNT_GROUP;
     queryParams.userId = peerUserId;
-    if (QueryGroups(osAccountId, &queryParams, &groupVec) != HC_SUCCESS || groupVec.size(&groupVec) <= 0) {
+    if (QueryGroups(osAccountId, NULL, &queryParams, &groupVec) != HC_SUCCESS || groupVec.size(&groupVec) <= 0) {
         LOGE("get identical account group from db by peerUserId fail.");
         ClearGroupEntryVec(&groupVec);
         return HC_ERR_GROUP_NOT_EXIST;

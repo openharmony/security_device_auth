@@ -31,7 +31,7 @@
 #include "account_task_manager.h"
 #include "common_defs.h"
 
-int32_t GetCredentialById(int32_t osAccountId, const char *credId, Credential **returnEntry)
+int32_t GetCredentialById(int32_t osAccountId, const CJson *reqJson, const char *credId, Credential **returnEntry)
 {
     if (credId == NULL) {
         LOGE("The input credId is NULL!");
@@ -41,7 +41,7 @@ int32_t GetCredentialById(int32_t osAccountId, const char *credId, Credential **
     CredentialVec credentialVec = CreateCredentialVec();
     QueryCredentialParams params = InitQueryCredentialParams();
     params.credId = credId;
-    int32_t ret = QueryCredentials(osAccountId, &params, &credentialVec);
+    int32_t ret = QueryCredentials(osAccountId, reqJson, &params, &credentialVec);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to query credentials!");
         ClearCredentialVec(&credentialVec);
@@ -190,18 +190,19 @@ static int32_t GenerateCredIdInner(const char *credentialOwner, const char *devi
     return ret;
 }
 
-static bool IsCredIdExist(int32_t osAccountId, const char *credIdStr)
+static bool IsCredIdExist(int32_t osAccountId, const CJson *reqJson, const char *credIdStr)
 {
     Credential *existedCredential = NULL;
-    int32_t ret = GetCredentialById(osAccountId, credIdStr, &existedCredential);
+    int32_t ret = GetCredentialById(osAccountId, reqJson, credIdStr, &existedCredential);
     DestroyCredential(existedCredential);
 
     return ret == IS_SUCCESS;
 }
 
-static int32_t UseImportedCredId(int32_t osAccountId, Credential *credential, Uint8Buff *credIdByte)
+static int32_t UseImportedCredId(int32_t osAccountId, const CJson *reqJson, Credential *credential,
+    Uint8Buff *credIdByte)
 {
-    if (IsCredIdExist(osAccountId, StringGet(&credential->credId))) {
+    if (IsCredIdExist(osAccountId, reqJson, StringGet(&credential->credId))) {
         LOGE("Imported credId existed");
         return IS_ERR_IMPORTED_CRED_ID_EXISTED;
     }
@@ -225,7 +226,7 @@ static int32_t UseImportedCredId(int32_t osAccountId, Credential *credential, Ui
     return IS_SUCCESS;
 }
 
-static int32_t GenerateUniqueCredId(int32_t osAccountId,
+static int32_t GenerateUniqueCredId(int32_t osAccountId, const CJson *reqJson,
     Credential *credential, Uint8Buff *credIdByte, char **credIdStr)
 {
     char *returnCredId = NULL;
@@ -235,7 +236,7 @@ static int32_t GenerateUniqueCredId(int32_t osAccountId,
     if (ret != IS_SUCCESS) {
         return ret;
     }
-    if (IsCredIdExist(osAccountId, returnCredId)) {
+    if (IsCredIdExist(osAccountId, reqJson, returnCredId)) {
         LOGW("CredId already exists, regenerate credId");
         HcFree(returnCredId);
         returnCredId = NULL;
@@ -248,14 +249,14 @@ static int32_t GenerateUniqueCredId(int32_t osAccountId,
     return IS_SUCCESS;
 }
 
-int32_t GenerateCredId(int32_t osAccountId, Credential *credential, Uint8Buff *credIdByte)
+int32_t GenerateCredId(int32_t osAccountId, const CJson *reqJson, Credential *credential, Uint8Buff *credIdByte)
 {
     if (HcStrlen(StringGet(&credential->credId)) > 0) {
-        return UseImportedCredId(osAccountId, credential, credIdByte); // credId is set by user
+        return UseImportedCredId(osAccountId, reqJson, credential, credIdByte); // credId is set by user
     }
 
     char *credIdStr = NULL;
-    int32_t ret = GenerateUniqueCredId(osAccountId, credential, credIdByte, &credIdStr);
+    int32_t ret = GenerateUniqueCredId(osAccountId, reqJson, credential, credIdByte, &credIdStr);
     if (ret != IS_SUCCESS) {
         return ret;
     }
@@ -271,12 +272,12 @@ int32_t GenerateCredId(int32_t osAccountId, Credential *credential, Uint8Buff *c
     return IS_SUCCESS;
 }
 
-static int32_t CheckOutMaxCredSize(int32_t osAccountId, const char *credOwner)
+static int32_t CheckOutMaxCredSize(int32_t osAccountId, const CJson *reqJson, const char *credOwner)
 {
     QueryCredentialParams queryParams = InitQueryCredentialParams();
     queryParams.credOwner = credOwner;
     CredentialVec credentialVec = CreateCredentialVec();
-    int32_t ret = QueryCredentials(osAccountId, &queryParams, &credentialVec);
+    int32_t ret = QueryCredentials(osAccountId, reqJson, &queryParams, &credentialVec);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to query credentials");
         ClearCredentialVec(&credentialVec);
@@ -401,9 +402,9 @@ int32_t GetValidKeyAlias(int32_t osAccountId, const char *credId, Uint8Buff *cre
     return IS_SUCCESS;
 }
 
-int32_t AddCredAndSaveDb(int32_t osAccountId, Credential *credential)
+int32_t AddCredAndSaveDb(int32_t osAccountId, const CJson *reqJson, Credential *credential)
 {
-    int32_t ret = AddCredToDb(osAccountId, credential);
+    int32_t ret = AddCredToDb(osAccountId, reqJson, credential);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to add credential to database");
         return ret;
@@ -849,7 +850,7 @@ int32_t CheckAndSetCredInfo(int32_t osAccountId,
         return ret;
     }
 
-    ret = CheckOutMaxCredSize(osAccountId, StringGet(&credential->credOwner));
+    ret = CheckOutMaxCredSize(osAccountId, json, StringGet(&credential->credOwner));
     if (ret != IS_SUCCESS) {
         HcFree(keyValue->val);
     }
@@ -945,7 +946,8 @@ bool IsCredHashMatch(Credential *credential, CJson *reqJson)
     return true;
 }
 
-static int32_t CheckCredKeyExist(int32_t osAccountId, const Credential *credential, const char *credId)
+static int32_t CheckCredKeyExist(int32_t osAccountId, const CJson *reqJson, const Credential *credential,
+    const char *credId)
 {
     // ACCOUNT_SHARED type dose not need check key
     if (credential->credType == ACCOUNT_SHARED || credential->ownerUid == DEV_AUTH_UID) {
@@ -970,7 +972,7 @@ static int32_t CheckCredKeyExist(int32_t osAccountId, const Credential *credenti
         // delete invaild credId
         case HAL_ERR_KEY_NOT_EXIST:
             LOGE("Huks key not exist!");
-            DelCredById(osAccountId, credId);
+            DelCredById(osAccountId, reqJson, credId);
             break;
         case HAL_ERR_HUKS:
             LOGE("Failed to check key exist in huks");
@@ -1034,7 +1036,7 @@ int32_t GetCredIdsFromCredVec(int32_t osAccountId, CJson *reqJson, CredentialVec
         }
         Credential *credential = (Credential *)(*ptr);
         const char *credId = StringGet(&credential->credId);
-        if (CheckCredKeyExist(osAccountId, credential, credId) != IS_SUCCESS) {
+        if (CheckCredKeyExist(osAccountId, reqJson, credential, credId) != IS_SUCCESS) {
             LOGE("CredKey not Exist!");
             continue;
         }
@@ -1338,11 +1340,11 @@ int32_t UpdateInfoFromJson(int32_t osAccountId, Credential *credential, CJson *j
     return ret;
 }
 
-int32_t DelCredById(int32_t osAccountId, const char *credId)
+int32_t DelCredById(int32_t osAccountId, const CJson *reqJson, const char *credId)
 {
     QueryCredentialParams delParams = InitQueryCredentialParams();
     delParams.credId = credId;
-    int32_t ret = DelCredential(osAccountId, &delParams);
+    int32_t ret = DelCredential(osAccountId, reqJson, &delParams);
     if (ret != IS_SUCCESS) {
         LOGE("Failed to delete credential, ret: %" LOG_PUB "d", ret);
         return ret;
@@ -1478,7 +1480,7 @@ int32_t SetAgreeCredInfo(int32_t osAccountId, CJson *reqJson,
     if (ret != IS_SUCCESS) {
         return ret;
     }
-    if ((ret = GenerateCredId(osAccountId, agreeCredential, agreeCredIdByte)) != IS_SUCCESS) {
+    if ((ret = GenerateCredId(osAccountId, reqJson, agreeCredential, agreeCredIdByte)) != IS_SUCCESS) {
         HcFree(keyValue->val);
         return ret;
     }
@@ -1502,12 +1504,13 @@ int32_t ImportAgreeKeyValue(int32_t osAccountId, Credential *agreeCredential, Ui
     return IS_SUCCESS;
 }
 
-int32_t CheckAndDelInvalidCred(int32_t osAccountId, const char *selfCredId, Uint8Buff *selfCredIdByte)
+int32_t CheckAndDelInvalidCred(int32_t osAccountId, const CJson *reqJson, const char *selfCredId,
+    Uint8Buff *selfCredIdByte)
 {
     int32_t ret = GetValidKeyAlias(osAccountId, selfCredId, selfCredIdByte);
     if (ret == HAL_ERR_KEY_NOT_EXIST) {
         LOGE("Huks key not exist!");
-        DelCredById(osAccountId, selfCredId);
+        DelCredById(osAccountId, reqJson, selfCredId);
         return IS_ERR_HUKS_KEY_NOT_EXIST;
     }
     if (ret == HAL_ERR_HUKS) {
@@ -1658,5 +1661,5 @@ int32_t GetUpdateCredVec(int32_t osAccountId, CJson *updateInfo,
         LOGE("Failed to set updateLists to query params");
         return ret;
     }
-    return QueryCredentials(osAccountId, queryParams, updateCredVec);
+    return QueryCredentials(osAccountId, NULL, queryParams, updateCredVec);
 }

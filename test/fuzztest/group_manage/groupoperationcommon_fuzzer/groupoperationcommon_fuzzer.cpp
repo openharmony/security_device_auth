@@ -57,7 +57,7 @@ static int32_t GenerateDevParams(const CJson *jsonParams, const char *groupId, T
 
 static void GroupOperationTest01(void)
 {
-    (void)GetGroupEntryById(DEFAULT_OS_ACCOUNT, nullptr);
+    (void)GetGroupEntryById(DEFAULT_OS_ACCOUNT, nullptr, nullptr);
 }
 
 static void GroupOperationTest02(void)
@@ -77,57 +77,57 @@ static void GroupOperationTest04(void)
 
 static void GroupOperationTest05(void)
 {
-    (void)IsGroupOwner(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR);
+    (void)IsGroupOwner(DEFAULT_OS_ACCOUNT, nullptr, nullptr, NORMAL_STR);
 }
 
 static void GroupOperationTest06(void)
 {
-    (void)IsGroupOwner(DEFAULT_OS_ACCOUNT, NORMAL_STR, nullptr);
+    (void)IsGroupOwner(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, nullptr);
 }
 
 static void GroupOperationTest07(void)
 {
-    (void)IsGroupOwner(DEFAULT_OS_ACCOUNT, NORMAL_STR, NORMAL_STR);
+    (void)IsGroupOwner(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, NORMAL_STR);
 }
 
 static void GroupOperationTest08(void)
 {
-    (void)IsGroupExistByGroupId(DEFAULT_OS_ACCOUNT, nullptr);
+    (void)IsGroupExistByGroupId(DEFAULT_OS_ACCOUNT, nullptr, nullptr);
 }
 
 static void GroupOperationTest09(void)
 {
-    (void)CheckGroupAccessible(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR);
+    (void)CheckGroupAccessible(DEFAULT_OS_ACCOUNT, nullptr, nullptr, NORMAL_STR);
 }
 
 static void GroupOperationTest10(void)
 {
-    (void)CheckGroupAccessible(DEFAULT_OS_ACCOUNT, NORMAL_STR, nullptr);
+    (void)CheckGroupAccessible(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, nullptr);
 }
 
 static void GroupOperationTest11(void)
 {
-    (void)CheckGroupAccessible(DEFAULT_OS_ACCOUNT, NORMAL_STR, NORMAL_STR);
+    (void)CheckGroupAccessible(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, NORMAL_STR);
 }
 
 static void GroupOperationTest12(void)
 {
-    (void)CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR);
+    (void)CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, nullptr, nullptr, NORMAL_STR);
 }
 
 static void GroupOperationTest13(void)
 {
-    (void)CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, NORMAL_STR, nullptr);
+    (void)CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, nullptr);
 }
 
 static void GroupOperationTest14(void)
 {
-    (void)CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, NORMAL_STR, NORMAL_STR);
+    (void)CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, NORMAL_STR);
 }
 
 static void GroupOperationTest15(void)
 {
-    (void)GetGroupInfo(DEFAULT_OS_ACCOUNT, &g_queryGroupParams, nullptr);
+    (void)GetGroupInfo(DEFAULT_OS_ACCOUNT, nullptr, &g_queryGroupParams, nullptr);
 }
 
 static void GroupOperationTest16(void)
@@ -190,7 +190,7 @@ static void GroupOperationTest25(void)
 
 static void GroupOperationTest26(void)
 {
-    (void)CheckGroupExist(DEFAULT_OS_ACCOUNT, nullptr);
+    (void)CheckGroupExist(DEFAULT_OS_ACCOUNT, nullptr, nullptr);
 }
 
 static void GroupOperationTest27(void)
@@ -233,13 +233,13 @@ static void GroupOperationTest32(void)
 
 static void GroupOperationTest33(void)
 {
-    (void)DelGroupFromDb(DEFAULT_OS_ACCOUNT, nullptr);
+    (void)DelGroupFromDb(DEFAULT_OS_ACCOUNT, nullptr, nullptr);
 }
 
 static void GroupOperationTest34(void)
 {
     const char *groupId = "ABCD";
-    (void)DelGroupFromDb(DEFAULT_OS_ACCOUNT, groupId);
+    (void)DelGroupFromDb(DEFAULT_OS_ACCOUNT, nullptr, groupId);
 }
 
 static void GroupOperationTest35(void)
@@ -303,18 +303,18 @@ static void GroupOperationTest44(void)
 static void GroupOperationTest45(void)
 {
     uint32_t groupType;
-    (void)GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, nullptr, &groupType);
+    (void)GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, nullptr, nullptr, &groupType);
 }
 
 static void GroupOperationTest46(void)
 {
-    (void)GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, NORMAL_STR, nullptr);
+    (void)GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, nullptr);
 }
 
 static void GroupOperationTest47(void)
 {
     uint32_t groupType;
-    (void)GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, NORMAL_STR, &groupType);
+    (void)GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, &groupType);
 }
 
 static void GroupOperationTest48(void)

@@ -37,7 +37,7 @@ static bool IsSameNameGroupExist(int32_t osAccountId, const char *ownerName, con
     queryParams.ownerName = ownerName;
     queryParams.groupName = groupName;
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
-    int32_t result = QueryGroups(osAccountId, &queryParams, &groupEntryVec);
+    int32_t result = QueryGroups(osAccountId, NULL, &queryParams, &groupEntryVec);
     if (result != HC_SUCCESS) {
         ClearGroupEntryVec(&groupEntryVec);
         return result;
@@ -127,7 +127,7 @@ static int32_t CheckCreateParams(int32_t osAccountId, const CJson *jsonParams)
         ((result = CheckUserTypeIfExist(jsonParams)) != HC_SUCCESS) ||
         ((result = CheckGroupVisibilityIfExist(jsonParams)) != HC_SUCCESS) ||
         ((result = CheckExpireTimeIfExist(jsonParams)) != HC_SUCCESS) ||
-        ((result = CheckGroupNumLimit(osAccountId, PEER_TO_PEER_GROUP, appId)) != HC_SUCCESS)) {
+        ((result = CheckGroupNumLimit(osAccountId, jsonParams, PEER_TO_PEER_GROUP, appId)) != HC_SUCCESS)) {
         return result;
     }
     return HC_SUCCESS;
@@ -236,7 +236,7 @@ static int32_t DelPeerDevAndKeyInfo(int32_t osAccountId, const char *groupId, co
     QueryDeviceParams queryDeviceParams = InitQueryDeviceParams();
     queryDeviceParams.groupId = groupId;
     queryDeviceParams.authId = peerAuthId;
-    int32_t result = DelTrustedDevice(osAccountId, &queryDeviceParams);
+    int32_t result = DelTrustedDevice(osAccountId, NULL, &queryDeviceParams);
     if (result != HC_SUCCESS) {
         LOGE("Failed to delete peer device from database!");
         return result;
@@ -285,7 +285,7 @@ static int32_t DelAllPeerDevAndKeyInfo(int32_t osAccountId, const char *groupId)
     QueryDeviceParams queryParams = InitQueryDeviceParams();
     queryParams.groupId = groupId;
     DeviceEntryVec deviceEntryVec = CreateDeviceEntryVec();
-    int32_t result = QueryDevices(osAccountId, &queryParams, &deviceEntryVec);
+    int32_t result = QueryDevices(osAccountId, NULL, &queryParams, &deviceEntryVec);
     if (result != HC_SUCCESS) {
         ClearDeviceEntryVec(&deviceEntryVec);
         return result;
@@ -345,7 +345,7 @@ static int32_t AddAuthIdAndUserTypeToParams(int32_t osAccountId, const char *gro
 
 static int32_t DelGroupAndSelfKeyInfo(int32_t osAccountId, const char *groupId, CJson *jsonParams)
 {
-    int32_t result = DelGroupFromDb(osAccountId, groupId);
+    int32_t result = DelGroupFromDb(osAccountId, NULL, groupId);
     if (result != HC_SUCCESS) {
         return result;
     }
@@ -458,10 +458,10 @@ static int32_t CheckDeletePeerStatus(const CJson *jsonParams)
 
     uint32_t groupType = PEER_TO_PEER_GROUP;
     int32_t result;
-    if (((result = CheckGroupExist(osAccountId, groupId)) != HC_SUCCESS) ||
-        ((result = GetGroupTypeFromDb(osAccountId, groupId, &groupType)) != HC_SUCCESS) ||
+    if (((result = CheckGroupExist(osAccountId, NULL, groupId)) != HC_SUCCESS) ||
+        ((result = GetGroupTypeFromDb(osAccountId, NULL, groupId, &groupType)) != HC_SUCCESS) ||
         ((result = AssertGroupTypeMatch(groupType, PEER_TO_PEER_GROUP)) != HC_SUCCESS) ||
-        ((result = CheckPermForGroup(osAccountId, MEMBER_DELETE, appId, groupId)) != HC_SUCCESS) ||
+        ((result = CheckPermForGroup(osAccountId, NULL, MEMBER_DELETE, appId, groupId)) != HC_SUCCESS) ||
         ((result = CheckPeerDeviceStatus(osAccountId, groupId, jsonParams)) != HC_SUCCESS)) {
         return result;
     }

@@ -19,7 +19,6 @@
 #include "device_auth_defines.h"
 #include "hc_log.h"
 #include "hc_mutex.h"
-#include "os_account_adapter.h"
 #include "hc_vector.h"
 #include "plugin_adapter.h"
 #include "account_auth_plugin_proxy.h"
@@ -29,6 +28,7 @@
 #endif
 
 #define UNLOAD_DELAY_TIME 3
+
 typedef struct {
     int32_t sessionId;
 } AuthSessionRecord;
@@ -253,41 +253,66 @@ bool HasTrustRelationDbPlugin(void)
     return g_hasTrustDatabasePlugin;
 }
 
-int32_t AddDeviceTrustRelation(int32_t osAccountId, const char *userId, const char *groupId,
+static int32_t ConvertSubProfileIdToStr(int32_t subProfileId, char *subProfileIdStr, uint32_t subProfileIdStrLen)
+{
+    if (snprintf_s(subProfileIdStr, subProfileIdStrLen, subProfileIdStrLen - 1, "%d", subProfileId) <= 0) {
+        return HC_ERROR;
+    }
+    return HC_SUCCESS;
+}
+
+int32_t AddDeviceTrustRelation(int32_t osAccountId, int32_t subProfileId, const char *groupId,
     const char *udid)
 {
     if (!g_isInit) {
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return HC_ERROR;
     }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1];
+    int32_t res = ConvertSubProfileIdToStr(subProfileId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN + 1);
+    if (res != HC_SUCCESS) {
+        LOGE("[ACCOUNT_TASK_MGR]: failed to convert subProfileId to string!");
+        return res;
+    }
     LoadAccountAuthPlugin();
-    int32_t res = InsertDeviceTrustRelation(osAccountId, userId, groupId, udid);
+    res = InsertDeviceTrustRelation(osAccountId, subProfileIdStr, groupId, udid);
     UnloadAccountAuthPlugin();
     return res;
 }
 
-int32_t DelDeviceTrustRelation(int32_t osAccountId, const char *userId, const char *groupId,
+int32_t DelDeviceTrustRelation(int32_t osAccountId, int32_t subProfileId, const char *groupId,
     const char *udid)
 {
     if (!g_isInit) {
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return HC_ERROR;
     }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1];
+    int32_t res = ConvertSubProfileIdToStr(subProfileId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN + 1);
+    if (res != HC_SUCCESS) {
+        LOGE("[ACCOUNT_TASK_MGR]: failed to convert subProfileId to string!");
+        return res;
+    }
     LoadAccountAuthPlugin();
-    int32_t res = DeleteDeviceTrustRelation(osAccountId, userId, groupId, udid);
+    res = DeleteDeviceTrustRelation(osAccountId, subProfileIdStr, groupId, udid);
     UnloadAccountAuthPlugin();
     return res;
 }
 
-bool IsDeviceExistInGroupForUser(int32_t osAccountId, const char *userId, const char *groupId,
+bool IsDeviceExistInGroupForUser(int32_t osAccountId, int32_t subProfileId, const char *groupId,
     const char *udid)
 {
     if (!g_isInit) {
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return false;
     }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1];
+    if (ConvertSubProfileIdToStr(subProfileId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN + 1) != HC_SUCCESS) {
+        LOGE("[ACCOUNT_TASK_MGR]: failed to convert subProfileId to string!");
+        return false;
+    }
     LoadAccountAuthPlugin();
-    bool res = IsDeviceReferencedByGroupAndUser(osAccountId, userId, groupId, udid);
+    bool res = IsDeviceReferencedByGroupAndUser(osAccountId, subProfileIdStr, groupId, udid);
     UnloadAccountAuthPlugin();
     return res;
 }
@@ -304,50 +329,73 @@ bool IsDeviceExistInGroup(int32_t osAccountId, const char *groupId, const char *
     return res;
 }
 
-bool IsDeviceExistInUser(int32_t osAccountId, const char *userId, const char *udid)
+bool IsDeviceExistInUser(int32_t osAccountId, int32_t subProfileId, const char *udid)
 {
     if (!g_isInit) {
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return false;
     }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1];
+    if (ConvertSubProfileIdToStr(subProfileId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN + 1) != HC_SUCCESS) {
+        LOGE("[ACCOUNT_TASK_MGR]: failed to convert subProfileId to string!");
+        return false;
+    }
     LoadAccountAuthPlugin();
-    bool res = IsDeviceReferencedByUser(osAccountId, userId, udid);
+    bool res = IsDeviceReferencedByUser(osAccountId, subProfileIdStr, udid);
     UnloadAccountAuthPlugin();
     return res;
 }
 
-int32_t AddCredTrustRelation(int32_t osAccountId, const char *userId, const char *credId)
+int32_t AddCredTrustRelation(int32_t osAccountId, int32_t subProfileId, const char *credId)
 {
     if (!g_isInit) {
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return HC_ERROR;
     }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1];
+    int32_t res = ConvertSubProfileIdToStr(subProfileId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN + 1);
+    if (res != HC_SUCCESS) {
+        LOGE("[ACCOUNT_TASK_MGR]: failed to convert subProfileId to string!");
+        return res;
+    }
     LoadAccountAuthPlugin();
-    int32_t res = InsertCredTrustRelation(osAccountId, userId, credId);
+    res = InsertCredTrustRelation(osAccountId, subProfileIdStr, credId);
     UnloadAccountAuthPlugin();
     return res;
 }
 
-int32_t DelCredTrustRelation(int32_t osAccountId, const char *userId, const char *credId)
+int32_t DelCredTrustRelation(int32_t osAccountId, int32_t subProfileId, const char *credId)
 {
     if (!g_isInit) {
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return HC_ERROR;
     }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1];
+    int32_t res = ConvertSubProfileIdToStr(subProfileId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN + 1);
+    if (res != HC_SUCCESS) {
+        LOGE("[ACCOUNT_TASK_MGR]: failed to convert subProfileId to string!");
+        return res;
+    }
     LoadAccountAuthPlugin();
-    int32_t res = DeleteCredTrustRelation(osAccountId, userId, credId);
+    res = DeleteCredTrustRelation(osAccountId, subProfileIdStr, credId);
     UnloadAccountAuthPlugin();
     return res;
 }
 
-int32_t IsCredReferencedByUser(int32_t osAccountId, const char *userId, const char *credId, bool *isReferenced)
+int32_t IsCredReferencedByUser(int32_t osAccountId, int32_t subProfileId, const char *credId, bool *isReferenced)
 {
     if (!g_isInit) {
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return HC_ERR_NULL_PTR;
     }
+    char subProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1];
+    int32_t res = ConvertSubProfileIdToStr(subProfileId, subProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN + 1);
+    if (res != HC_SUCCESS) {
+        LOGE("[ACCOUNT_TASK_MGR]: failed to convert subProfileId to string!");
+        return res;
+    }
     LoadAccountAuthPlugin();
-    int32_t res = IsCredRelationReferencedByUser(osAccountId, userId, credId, isReferenced);
+    res = IsCredRelationReferencedByUser(osAccountId, subProfileIdStr, credId, isReferenced);
     UnloadAccountAuthPlugin();
     return res;
 }
@@ -364,15 +412,27 @@ int32_t IsCredReferenced(int32_t osAccountId, const char *credId, bool *isRefere
     return res;
 }
 
-int32_t NotifyAccountSwitch(int32_t osAccountId, const char *fromUserId, const char *toUserId,
+int32_t NotifyAccountSwitch(int32_t osAccountId, int32_t fromSubProfileId, int32_t toSubProfileId,
     AccountSwitchGroupCallback groupCallback, AccountSwitchCredCallback credCallback)
 {
     if (!g_isInit) {
         LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
         return HC_ERROR;
     }
+    char fromSubProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1];
+    int32_t res = ConvertSubProfileIdToStr(fromSubProfileId, fromSubProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN + 1);
+    if (res != HC_SUCCESS) {
+        LOGE("[ACCOUNT_TASK_MGR]: failed to convert fromSubProfileId to string!");
+        return res;
+    }
+    char toSubProfileIdStr[SUB_PROFILE_ID_CHAR_MAX_LEN + 1];
+    res = ConvertSubProfileIdToStr(toSubProfileId, toSubProfileIdStr, SUB_PROFILE_ID_CHAR_MAX_LEN + 1);
+    if (res != HC_SUCCESS) {
+        LOGE("[ACCOUNT_TASK_MGR]: failed to convert toSubProfileId to string!");
+        return res;
+    }
     LoadAccountAuthPlugin();
-    int32_t res = OnAccountSwitch(osAccountId, fromUserId, toUserId, groupCallback, credCallback);
+    res = OnAccountSwitch(osAccountId, fromSubProfileIdStr, toSubProfileIdStr, groupCallback, credCallback);
     UnloadAccountAuthPlugin();
     return res;
 }
@@ -394,18 +454,4 @@ void DecreaseLoadCount(void)
         return;
     }
     UnloadAccountAuthPlugin();
-}
-
-void TryRecoverAccountCred(void)
-{
-    if (!g_isInit) {
-        LOGE("[ACCOUNT_TASK_MGR]: has not been initialized!");
-        return;
-    }
-    if (!g_hasAccountAuthPlugin) {
-        LOGI("[ACCOUNT_TASK_MGR]: no account auth plugin, skip recover.");
-        return;
-    }
-    LOGI("[ACCOUNT_TASK_MGR]: try to recover account cred");
-    (void)ExecuteAccountAuthCmd(DEFAULT_OS_ACCOUNT, RELOAD_CRED_MGR, NULL, NULL);
 }

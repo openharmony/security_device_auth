@@ -83,7 +83,7 @@ void GroupOperationTest::TearDown() {}
 
 HWTEST_F(GroupOperationTest, GroupOperationTest001, TestSize.Level0)
 {
-    TrustedGroupEntry *entry = GetGroupEntryById(DEFAULT_OS_ACCOUNT, nullptr);
+    TrustedGroupEntry *entry = GetGroupEntryById(DEFAULT_OS_ACCOUNT, nullptr, nullptr);
     ASSERT_EQ(entry, nullptr);
 }
 
@@ -107,67 +107,67 @@ HWTEST_F(GroupOperationTest, GroupOperationTest004, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest005, TestSize.Level0)
 {
-    bool ret = IsGroupOwner(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR);
+    bool ret = IsGroupOwner(DEFAULT_OS_ACCOUNT, nullptr, nullptr, NORMAL_STR);
     ASSERT_EQ(ret, false);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest006, TestSize.Level0)
 {
-    bool ret = IsGroupOwner(DEFAULT_OS_ACCOUNT, NORMAL_STR, nullptr);
+    bool ret = IsGroupOwner(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, nullptr);
     ASSERT_EQ(ret, false);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest007, TestSize.Level0)
 {
-    bool ret = IsGroupOwner(DEFAULT_OS_ACCOUNT, NORMAL_STR, NORMAL_STR);
+    bool ret = IsGroupOwner(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, NORMAL_STR);
     ASSERT_EQ(ret, false);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest008, TestSize.Level0)
 {
-    bool ret = IsGroupExistByGroupId(DEFAULT_OS_ACCOUNT, nullptr);
+    bool ret = IsGroupExistByGroupId(DEFAULT_OS_ACCOUNT, nullptr, nullptr);
     ASSERT_EQ(ret, false);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest009, TestSize.Level0)
 {
-    int32_t ret = CheckGroupAccessible(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR);
+    int32_t ret = CheckGroupAccessible(DEFAULT_OS_ACCOUNT, nullptr, nullptr, NORMAL_STR);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest010, TestSize.Level0)
 {
-    int32_t ret = CheckGroupAccessible(DEFAULT_OS_ACCOUNT, NORMAL_STR, nullptr);
+    int32_t ret = CheckGroupAccessible(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest011, TestSize.Level0)
 {
-    int32_t ret = CheckGroupAccessible(DEFAULT_OS_ACCOUNT, NORMAL_STR, NORMAL_STR);
+    int32_t ret = CheckGroupAccessible(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, NORMAL_STR);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest012, TestSize.Level0)
 {
-    int32_t ret = CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR);
+    int32_t ret = CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, nullptr, nullptr, NORMAL_STR);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest013, TestSize.Level0)
 {
-    int32_t ret = CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, NORMAL_STR, nullptr);
+    int32_t ret = CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest014, TestSize.Level0)
 {
-    int32_t ret = CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, NORMAL_STR, NORMAL_STR);
+    int32_t ret = CheckGroupEditAllowed(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, NORMAL_STR);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest015, TestSize.Level0)
 {
-    int32_t ret = GetGroupInfo(DEFAULT_OS_ACCOUNT, &g_queryGroupParams, nullptr);
+    int32_t ret = GetGroupInfo(DEFAULT_OS_ACCOUNT, nullptr, &g_queryGroupParams, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
@@ -241,7 +241,7 @@ HWTEST_F(GroupOperationTest, GroupOperationTest025, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest026, TestSize.Level0)
 {
-    int32_t ret = CheckGroupExist(DEFAULT_OS_ACCOUNT, nullptr);
+    int32_t ret = CheckGroupExist(DEFAULT_OS_ACCOUNT, nullptr, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
@@ -291,14 +291,14 @@ HWTEST_F(GroupOperationTest, GroupOperationTest032, TestSize.Level0)
 
 HWTEST_F(GroupOperationTest, GroupOperationTest033, TestSize.Level0)
 {
-    int32_t ret = DelGroupFromDb(DEFAULT_OS_ACCOUNT, nullptr);
+    int32_t ret = DelGroupFromDb(DEFAULT_OS_ACCOUNT, nullptr, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest034, TestSize.Level0)
 {
     const char *groupId = "ABCD";
-    int32_t ret = DelGroupFromDb(DEFAULT_OS_ACCOUNT, groupId);
+    int32_t ret = DelGroupFromDb(DEFAULT_OS_ACCOUNT, nullptr, groupId);
     ASSERT_EQ(ret, HC_SUCCESS);
 }
 
@@ -373,20 +373,20 @@ HWTEST_F(GroupOperationTest, GroupOperationTest044, TestSize.Level0)
 HWTEST_F(GroupOperationTest, GroupOperationTest045, TestSize.Level0)
 {
     uint32_t groupType;
-    int32_t ret = GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, nullptr, &groupType);
+    int32_t ret = GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, nullptr, nullptr, &groupType);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest046, TestSize.Level0)
 {
-    int32_t ret = GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, NORMAL_STR, nullptr);
+    int32_t ret = GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, nullptr);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 
 HWTEST_F(GroupOperationTest, GroupOperationTest047, TestSize.Level0)
 {
     uint32_t groupType;
-    int32_t ret = GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, NORMAL_STR, &groupType);
+    int32_t ret = GetGroupTypeFromDb(DEFAULT_OS_ACCOUNT, nullptr, NORMAL_STR, &groupType);
     ASSERT_NE(ret, HC_SUCCESS);
 }
 

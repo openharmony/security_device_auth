@@ -1239,7 +1239,7 @@ static void IdentityServiceTestCase060()
 
     (void)StringSetPointer(&credential->credId, returnData);
     Uint8Buff agreeCredIdByte = { NULL, 0 };
-    (void)GenerateCredId(DEFAULT_OS_ACCOUNT, credential, &agreeCredIdByte);
+    (void)GenerateCredId(DEFAULT_OS_ACCOUNT, nullptr, credential, &agreeCredIdByte);
     cm->destroyInfo(&returnData);
     DestroyCredential(credential);
 }
@@ -1290,7 +1290,7 @@ static void IdentityServiceTestCase064()
 static void IdentityServiceTestCase065()
 {
     Uint8Buff selfCredIdByte = { NULL, 0 };
-    (void)CheckAndDelInvalidCred(DEFAULT_OS_ACCOUNT, TEST_CRED_ID, &selfCredIdByte);
+    (void)CheckAndDelInvalidCred(DEFAULT_OS_ACCOUNT, nullptr, TEST_CRED_ID, &selfCredIdByte);
 }
 
 static void IdentityServiceTestCase066()

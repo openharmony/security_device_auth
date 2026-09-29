@@ -101,7 +101,7 @@ static TrustedGroupEntry *GetGroupEntryById(int32_t osAccountId, const char *gro
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
     QueryGroupParams params = InitQueryGroupParams();
     params.groupId = groupId;
-    if (QueryGroups(osAccountId, &params, &groupEntryVec) != HC_SUCCESS) {
+    if (QueryGroups(osAccountId, NULL, &params, &groupEntryVec) != HC_SUCCESS) {
         LOGE("Failed to query groups!");
         ClearGroupEntryVec(&groupEntryVec);
         return NULL;
@@ -355,7 +355,7 @@ static int32_t AddTrustedGroup(const CmdParams *params)
         DestroyGroupEntry(groupParams);
         return res;
     }
-    res = AddGroup(params->osAccountId, groupParams);
+    res = AddGroup(params->osAccountId, NULL, groupParams);
     DestroyGroupEntry(groupParams);
     if (res != HC_SUCCESS) {
         LOGE("Failed to add the group to the database!");
@@ -391,7 +391,7 @@ static int32_t AddPeerTrustedDevice(const CmdParams *params)
         DestroyDeviceEntry(devParams);
         return res;
     }
-    res = AddTrustedDevice(params->osAccountId, devParams);
+    res = AddTrustedDevice(params->osAccountId, NULL, devParams);
     DestroyDeviceEntry(devParams);
     if (res != HC_SUCCESS) {
         LOGE("Failed to add the peer trust device to the database!");
@@ -416,7 +416,7 @@ static int32_t AddSelfTrustedDevice(const CmdParams *params)
         DestroyDeviceEntry(devParams);
         return res;
     }
-    res = AddTrustedDevice(params->osAccountId, devParams);
+    res = AddTrustedDevice(params->osAccountId, NULL, devParams);
     DestroyDeviceEntry(devParams);
     if (res != HC_SUCCESS) {
         LOGE("Failed to add the self trust device to the database!");
@@ -439,7 +439,7 @@ static TrustedDeviceEntry *GetTrustedDeviceEntryById(int32_t osAccountId, const 
     QueryDeviceParams params = InitQueryDeviceParams();
     params.groupId = groupId;
     params.udid = udid;
-    if (QueryDevices(osAccountId, &params, &deviceEntryVec) != HC_SUCCESS) {
+    if (QueryDevices(osAccountId, NULL, &params, &deviceEntryVec) != HC_SUCCESS) {
         LOGE("Error occurs, query trusted devices failed!");
         ClearDeviceEntryVec(&deviceEntryVec);
         return NULL;

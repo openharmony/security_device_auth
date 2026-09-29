@@ -124,7 +124,7 @@ static int32_t CheckCreateParams(int32_t osAccountId, const CJson *jsonParams)
         ((result = CheckUserTypeIfExist(jsonParams)) != HC_SUCCESS) ||
         ((result = CheckGroupVisibilityIfExist(jsonParams)) != HC_SUCCESS) ||
         ((result = CheckExpireTimeIfExist(jsonParams)) != HC_SUCCESS) ||
-        ((result = CheckGroupNumLimit(osAccountId, IDENTICAL_ACCOUNT_GROUP, appId)) != HC_SUCCESS)) {
+        ((result = CheckGroupNumLimit(osAccountId, jsonParams, IDENTICAL_ACCOUNT_GROUP, appId)) != HC_SUCCESS)) {
         return result;
     }
     return HC_SUCCESS;
@@ -139,8 +139,21 @@ static int32_t DelDeviceById(int32_t osAccountId, const char *groupId, const cha
     } else {
         queryDeviceParams.authId = deviceId;
     }
-    return DelTrustedDevice(osAccountId, &queryDeviceParams);
+    return DelTrustedDevice(osAccountId, NULL, &queryDeviceParams);
 }
+
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+static int32_t AddSubProfileIdToParams(int32_t osAccountId, const CJson *jsonParams, CJson *outParams)
+{
+    int32_t subProfileId = DEFAULT_SUB_PROFILE_ID;
+    (void)GetIntFromJson(jsonParams, FIELD_SUB_PROFILE_ID, &subProfileId);
+    if (AddIntToJson(outParams, FIELD_SUB_PROFILE_ID, subProfileId) != HC_SUCCESS) {
+        LOGE("Failed to add subProfileId!");
+        return HC_ERR_JSON_ADD;
+    }
+    return HC_SUCCESS;
+}
+#endif
 
 static int32_t ImportSelfToken(int32_t osAccountId, CJson *jsonParams)
 {
@@ -173,6 +186,13 @@ static int32_t ImportSelfToken(int32_t osAccountId, CJson *jsonParams)
         LOGE("Failed to add deviceId to json!");
         return HC_ERR_JSON_ADD;
     }
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    int32_t res = AddSubProfileIdToParams(osAccountId, jsonParams, credJson);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to add sub profile id to params!");
+        return res;
+    }
+#endif
     return ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId, IMPORT_SELF_CREDENTIAL, credJson, NULL);
 }
 
@@ -183,6 +203,13 @@ static int32_t DelSelfToken(int32_t osAccountId, CJson *jsonParams)
         LOGE("Failed to get credential from json!");
         return HC_ERR_JSON_GET;
     }
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    int32_t res = AddSubProfileIdToParams(osAccountId, jsonParams, credJson);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to add sub profile id to params!");
+        return res;
+    }
+#endif
     return ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId, DELETE_SELF_CREDENTIAL, credJson, NULL);
 }
 
@@ -226,8 +253,10 @@ static int32_t GenerateDelTokenParams(const TrustedDeviceEntry *entry, CJson *de
     return HC_SUCCESS;
 }
 
-static int32_t DelDeviceToken(int32_t osAccountId, const TrustedDeviceEntry *entry, bool isLocalDev)
+static int32_t DelDeviceToken(int32_t osAccountId, const CJson *jsonParams, const TrustedDeviceEntry *entry,
+    bool isLocalDev)
 {
+    (void)jsonParams;
     CJson *delParams = CreateJson();
     if (delParams == NULL) {
         LOGE("Failed to allocate del params memory.");
@@ -238,22 +267,30 @@ static int32_t DelDeviceToken(int32_t osAccountId, const TrustedDeviceEntry *ent
         FreeJson(delParams);
         return res;
     }
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+    res = AddSubProfileIdToParams(osAccountId, jsonParams, delParams);
+    if (res != HC_SUCCESS) {
+        LOGE("Failed to add sub profile id to params!");
+        FreeJson(delParams);
+        return res;
+    }
+#endif
     res = ProcCred(ACCOUNT_RELATED_PLUGIN, osAccountId,
         (isLocalDev ? DELETE_SELF_CREDENTIAL : DELETE_TRUSTED_CREDENTIALS), delParams, NULL);
     FreeJson(delParams);
     return res;
 }
 
-static void DelAllTokens(int32_t osAccountId, const DeviceEntryVec *vec)
+static void DelAllTokens(int32_t osAccountId, const CJson *jsonParams, const DeviceEntryVec *vec)
 {
     int32_t res;
     uint32_t index;
     TrustedDeviceEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(*vec, index, entry) {
         if (IsLocalDevice(StringGet(&(*entry)->udid))) {
-            res = DelDeviceToken(osAccountId, *entry, true);
+            res = DelDeviceToken(osAccountId, jsonParams, *entry, true);
         } else {
-            res = DelDeviceToken(osAccountId, *entry, false);
+            res = DelDeviceToken(osAccountId, jsonParams, *entry, false);
         }
         if (res != HC_SUCCESS) {
             LOGE("Failed to delete token! res: %" LOG_PUB "d", res);
@@ -261,7 +298,7 @@ static void DelAllTokens(int32_t osAccountId, const DeviceEntryVec *vec)
     }
 }
 
-static void DelAllPeerTokens(int32_t osAccountId, const DeviceEntryVec *vec)
+static void DelAllPeerTokens(int32_t osAccountId, const CJson *jsonParams, const DeviceEntryVec *vec)
 {
     uint32_t index;
     int32_t res;
@@ -270,26 +307,27 @@ static void DelAllPeerTokens(int32_t osAccountId, const DeviceEntryVec *vec)
         if (IsLocalDevice(StringGet(&(*entry)->udid))) {
             continue;
         }
-        res = DelDeviceToken(osAccountId, *entry, false);
+        res = DelDeviceToken(osAccountId, jsonParams, *entry, false);
         if (res != HC_SUCCESS) {
             LOGE("Failed to del peer device token! res: %" LOG_PUB "d", res);
         }
     }
 }
 
-static int32_t DelAcrossAccountGroupAndTokens(int32_t osAccountId, const char *groupId)
+static int32_t DelAcrossAccountGroupAndTokens(int32_t osAccountId, const CJson *jsonParams, const char *groupId)
 {
     DeviceEntryVec deviceList = CreateDeviceEntryVec();
-    (void)GetTrustedDevices(osAccountId, groupId, &deviceList);
-    int32_t res = DelGroupFromDb(osAccountId, groupId);
-    DelAllPeerTokens(osAccountId, &deviceList);
+    (void)GetTrustedDevices(osAccountId, jsonParams, groupId, &deviceList);
+    int32_t res = DelGroupFromDb(osAccountId, jsonParams, groupId);
+    DelAllPeerTokens(osAccountId, jsonParams, &deviceList);
     ClearDeviceEntryVec(&deviceList);
     return res;
 }
 
-static int32_t GetRelatedAcrossAccountGroups(int32_t osAccountId, const char *groupId, GroupEntryVec *vec)
+static int32_t GetRelatedAcrossAccountGroups(int32_t osAccountId, const CJson *jsonParams, const char *groupId,
+    GroupEntryVec *vec)
 {
-    TrustedGroupEntry *groupEntry = GetGroupEntryById(osAccountId, groupId);
+    TrustedGroupEntry *groupEntry = GetGroupEntryById(osAccountId, jsonParams, groupId);
     if (groupEntry == NULL) {
         LOGE("Failed to get groupEntry from db!");
         return HC_ERR_DB;
@@ -297,20 +335,20 @@ static int32_t GetRelatedAcrossAccountGroups(int32_t osAccountId, const char *gr
     QueryGroupParams groupParams = InitQueryGroupParams();
     groupParams.userId = StringGet(&groupEntry->userId);
     groupParams.groupType = ACROSS_ACCOUNT_AUTHORIZE_GROUP;
-    int32_t res = QueryGroups(osAccountId, &groupParams, vec);
+    int32_t res = QueryGroups(osAccountId, jsonParams, &groupParams, vec);
     DestroyGroupEntry(groupEntry);
     return res;
 }
 
-static int32_t DelRelatedAcrossAccountGroups(int32_t osAccountId, const char *groupId)
+static int32_t DelRelatedAcrossAccountGroups(int32_t osAccountId, const CJson *jsonParams, const char *groupId)
 {
     GroupEntryVec groupEntryVec = CreateGroupEntryVec();
-    (void)GetRelatedAcrossAccountGroups(osAccountId, groupId, &groupEntryVec);
+    (void)GetRelatedAcrossAccountGroups(osAccountId, jsonParams, groupId, &groupEntryVec);
     int32_t res = HC_SUCCESS;
     uint32_t index;
     TrustedGroupEntry **entry = NULL;
     FOR_EACH_HC_VECTOR(groupEntryVec, index, entry) {
-        if (DelAcrossAccountGroupAndTokens(osAccountId, StringGet(&(*entry)->id)) != HC_SUCCESS) {
+        if (DelAcrossAccountGroupAndTokens(osAccountId, jsonParams, StringGet(&(*entry)->id)) != HC_SUCCESS) {
             res = HC_ERR_DEL_GROUP;
         }
     }
@@ -318,18 +356,18 @@ static int32_t DelRelatedAcrossAccountGroups(int32_t osAccountId, const char *gr
     return res;
 }
 
-static int32_t DelGroupAndTokens(int32_t osAccountId, const char *groupId)
+static int32_t DelGroupAndTokens(int32_t osAccountId, const CJson *jsonParams, const char *groupId)
 {
     int32_t res = HC_SUCCESS;
-    if (DelRelatedAcrossAccountGroups(osAccountId, groupId) != HC_SUCCESS) {
+    if (DelRelatedAcrossAccountGroups(osAccountId, jsonParams, groupId) != HC_SUCCESS) {
         res = HC_ERR_DEL_GROUP;
     }
     DeviceEntryVec deviceList = CreateDeviceEntryVec();
-    (void)GetTrustedDevices(osAccountId, groupId, &deviceList);
-    if (DelGroupFromDb(osAccountId, groupId) != HC_SUCCESS) {
+    (void)GetTrustedDevices(osAccountId, jsonParams, groupId, &deviceList);
+    if (DelGroupFromDb(osAccountId, jsonParams, groupId) != HC_SUCCESS) {
         res = HC_ERR_DEL_GROUP;
     }
-    DelAllTokens(osAccountId, &deviceList);
+    DelAllTokens(osAccountId, jsonParams, &deviceList);
     ClearDeviceEntryVec(&deviceList);
     return res;
 }
@@ -417,7 +455,7 @@ static int32_t DelPeerDevice(int32_t osAccountId, CJson *jsonParams, CJson *devi
         return res;
     }
     if (needDeleteToken) {
-        res = DelDeviceToken(osAccountId, entry, false);
+        res = DelDeviceToken(osAccountId, NULL, entry, false);
     }
     DestroyDeviceEntry(entry);
     if (res != HC_SUCCESS) {
@@ -440,10 +478,10 @@ static int32_t CheckChangeParams(int32_t osAccountId, const char *appId, CJson *
     }
     uint32_t groupType;
     int32_t result;
-    if (((result = CheckGroupExist(osAccountId, groupId)) != HC_SUCCESS) ||
-        ((result = GetGroupTypeFromDb(osAccountId, groupId, &groupType)) != HC_SUCCESS) ||
+    if (((result = CheckGroupExist(osAccountId, jsonParams, groupId)) != HC_SUCCESS) ||
+        ((result = GetGroupTypeFromDb(osAccountId, jsonParams, groupId, &groupType)) != HC_SUCCESS) ||
         ((result = AssertGroupTypeMatch(groupType, IDENTICAL_ACCOUNT_GROUP)) != HC_SUCCESS) ||
-        ((result = CheckGroupEditAllowed(osAccountId, groupId, appId)) != HC_SUCCESS)) {
+        ((result = CheckGroupEditAllowed(osAccountId, jsonParams, groupId, appId)) != HC_SUCCESS)) {
         return result;
     }
     return HC_SUCCESS;
@@ -465,14 +503,14 @@ static int32_t AddGroupAndToken(int32_t osAccountId, CJson *jsonParams, const ch
     res = AddDeviceToDatabaseByJson(osAccountId, GenerateDevParams, jsonParams, groupId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to add device to database!");
-        (void)DelGroupFromDb(osAccountId, groupId);
+        (void)DelGroupFromDb(osAccountId, jsonParams, groupId);
         (void)DelSelfToken(osAccountId, jsonParams);
         return res;
     }
     res = SaveOsAccountDb(osAccountId);
     if (res != HC_SUCCESS) {
         LOGE("Failed to save database!");
-        (void)DelGroupFromDb(osAccountId, groupId);
+        (void)DelGroupFromDb(osAccountId, jsonParams, groupId);
         (void)DelSelfToken(osAccountId, jsonParams);
     }
     return res;
@@ -496,7 +534,7 @@ static int32_t CheckUserIdValid(int32_t osAccountId, const CJson *jsonParams, co
     QueryGroupParams params = InitQueryGroupParams();
     params.groupId = groupId;
     params.groupType = IDENTICAL_ACCOUNT_GROUP;
-    if (QueryGroups(osAccountId, &params, &groupEntryVec) != HC_SUCCESS) {
+    if (QueryGroups(osAccountId, jsonParams, &params, &groupEntryVec) != HC_SUCCESS) {
         LOGE("Failed to query groups!");
         ClearGroupEntryVec(&groupEntryVec);
         return HC_ERR_DB;
@@ -534,7 +572,7 @@ static int32_t CreateGroup(int32_t osAccountId, CJson *jsonParams, char **return
     int32_t result;
     if (((result = CheckCreateParams(osAccountId, jsonParams)) != HC_SUCCESS) ||
         ((result = GenerateIdenticalGroupId(jsonParams, &groupId)) != HC_SUCCESS) ||
-        ((result = AssertSameGroupNotExist(osAccountId, groupId)) != HC_SUCCESS) ||
+        ((result = AssertSameGroupNotExist(osAccountId, jsonParams, groupId)) != HC_SUCCESS) ||
         ((result = AddGroupAndToken(osAccountId, jsonParams, groupId)) != HC_SUCCESS) ||
         ((result = ConvertGroupIdToJsonStr(groupId, returnJsonStr)) != HC_SUCCESS)) {
         HcFree(groupId);
@@ -555,7 +593,7 @@ static int32_t DeleteGroup(int32_t osAccountId, CJson *jsonParams, char **return
     int32_t result;
     const char *groupId = NULL;
     if (((result = GetGroupIdFromJson(jsonParams, &groupId)) != HC_SUCCESS) ||
-        ((result = DelGroupAndTokens(osAccountId, groupId)) != HC_SUCCESS) ||
+        ((result = DelGroupAndTokens(osAccountId, jsonParams, groupId)) != HC_SUCCESS) ||
         ((result = ConvertGroupIdToJsonStr(groupId, returnJsonStr)) != HC_SUCCESS)) {
         return result;
     }

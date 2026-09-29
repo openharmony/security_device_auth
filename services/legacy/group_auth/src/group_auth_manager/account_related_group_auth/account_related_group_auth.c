@@ -181,7 +181,7 @@ static bool IsPeerInIdenticalGroup(int32_t osAccountId, const char *peerUserId)
     QueryGroupParams queryParams = InitQueryGroupParams();
     queryParams.groupType = IDENTICAL_ACCOUNT_GROUP;
     do {
-        if (QueryGroups(osAccountId, &queryParams, &accountVec) != HC_SUCCESS) {
+        if (QueryGroups(osAccountId, NULL, &queryParams, &accountVec) != HC_SUCCESS) {
             LOGD("No identical-account group in dataBase, no identical-account auth!");
             break;
         }
@@ -209,7 +209,7 @@ static void GaGetAccountGroup(int32_t osAccountId, GroupType type, const char *p
 {
     LOGI("Try to get account group info, groupType: %" LOG_PUB "d.", type);
     queryParams->groupType = type;
-    if (QueryGroups(osAccountId, queryParams, vec) != HC_SUCCESS) {
+    if (QueryGroups(osAccountId, NULL, queryParams, vec) != HC_SUCCESS) {
         LOGD("Database don't have local device's across-account group info!");
         return;
     }
@@ -381,7 +381,7 @@ static int32_t QueryAuthGroupForServer(int32_t osAccountId, GroupEntryVec *accou
     } else {
         queryParams.sharedUserId = peerUserId;
     }
-    int32_t res = QueryGroups(osAccountId, &queryParams, accountVec);
+    int32_t res = QueryGroups(osAccountId, NULL, &queryParams, accountVec);
     if (res != HC_SUCCESS) {
         LOGE("Failed to query local device's account group info for server!");
         return res;
@@ -498,7 +498,7 @@ static int32_t QueryGroupForAccountPlugin(int32_t osAccountId, GroupEntryVec *ac
         } else {
             queryParams.sharedUserId = peerUserId;
         }
-        res = QueryGroups(osAccountId, &queryParams, accountVec);
+        res = QueryGroups(osAccountId, NULL, &queryParams, accountVec);
     } while (0);
     HcFree(peerUserId);
     return res;
@@ -773,7 +773,7 @@ static int32_t AddTrustedDeviceForAccount(const CJson *authParam, const CJson *o
             LOGE("Failed to prepare trust device params!");
             break;
         }
-        res = AddTrustedDevice(osAccountId, devEntry);
+        res = AddTrustedDevice(osAccountId, NULL, devEntry);
         if (res != HC_SUCCESS) {
             LOGE("Failed to add trusted devices for account to database!");
             break;

@@ -72,9 +72,9 @@ extern "C" {
 int32_t InitCredDatabase(void);
 void DestroyCredDatabase(void);
 
-int32_t AddCredToDb(int32_t osAccountId, const Credential *credential);
-int32_t DelCredential(int32_t osAccountId, const QueryCredentialParams *delParams);
-int32_t QueryCredentials(int32_t osAccountId, const QueryCredentialParams *queryParams,
+int32_t AddCredToDb(int32_t osAccountId, const CJson *in, const Credential *credential);
+int32_t DelCredential(int32_t osAccountId, const CJson *in, const QueryCredentialParams *delParams);
+int32_t QueryCredentials(int32_t osAccountId, const CJson *in, const QueryCredentialParams *queryParams,
     CredentialVec *vec);
 int32_t SaveOsAccountCredDb(int32_t osAccountId);
 

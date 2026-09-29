@@ -220,7 +220,7 @@ static int32_t GenerateCertInfoFromCred(int32_t osAccountId, const CJson *contex
         return IS_ERR_JSON_GET;
     }
     Credential *credential = NULL;
-    int32_t res = GetCredentialById(osAccountId, credId, &credential);
+    int32_t res = GetCredentialById(osAccountId, NULL, credId, &credential);
     if (res != IS_SUCCESS) {
         LOGE("Failed to get credential by id!");
         return res;
@@ -602,7 +602,7 @@ static int32_t CheckKeyAliasIsValid(int32_t osAccountId, const char *credId, Uin
     int32_t ret = GetValidKeyAlias(osAccountId, credId, keyAlias);
     if (ret == HAL_ERR_KEY_NOT_EXIST) {
         LOGE("Huks key not exist!");
-        DelCredById(osAccountId, credId);
+        DelCredById(osAccountId, NULL, credId);
         return IS_ERR_HUKS_KEY_NOT_EXIST;
     }
     if (ret == HAL_ERR_HUKS) {

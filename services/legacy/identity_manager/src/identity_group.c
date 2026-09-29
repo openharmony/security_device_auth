@@ -63,14 +63,14 @@ static int32_t GetAccountUnrelatedCandidateGroups(int32_t osAccountId, bool isDe
     if (!isDeviceLevel) {
         queryParams.groupVisibility = GROUP_VISIBILITY_PUBLIC;
     }
-    return QueryGroups(osAccountId, &queryParams, vec);
+    return QueryGroups(osAccountId, NULL, &queryParams, vec);
 }
 
 static void GetGroupInfoByGroupId(int32_t osAccountId, const char *groupId, GroupEntryVec *groupEntryVec)
 {
     QueryGroupParams queryParams = InitQueryGroupParams();
     queryParams.groupId = groupId;
-    int32_t ret = QueryGroups(osAccountId, &queryParams, groupEntryVec);
+    int32_t ret = QueryGroups(osAccountId, NULL, &queryParams, groupEntryVec);
     if (ret != HC_SUCCESS) {
         LOGE("Failed to query groups for groupId: %" LOG_PUB "s!", groupId);
     }
@@ -398,7 +398,7 @@ static int32_t CheckAndGetP2pCredInfo(const CJson *in, const CJson *urlJson, Ide
         LOGE("Failed to get groupId from url json!");
         return HC_ERR_JSON_GET;
     }
-    int32_t ret = CheckGroupExist(osAccountId, groupId);
+    int32_t ret = CheckGroupExist(osAccountId, NULL, groupId);
     if (ret != HC_SUCCESS) {
         LOGE("Group not exist!");
         return ret;
@@ -671,7 +671,7 @@ static int32_t CheckSelfKeyAlias(const Uint8Buff *selfKeyAlias, bool isSelfFromU
     int32_t ret = GetLoaderInstance()->checkKeyExist(selfKeyAlias, isSelfFromUpgrade, osAccountId);
     if (ret != HC_SUCCESS) {
         LOGE("self auth keyPair not exist, need to delete group and devices!");
-        if (DelGroupFromDb(osAccountId, groupId) != HC_SUCCESS) {
+        if (DelGroupFromDb(osAccountId, NULL, groupId) != HC_SUCCESS) {
             LOGW("delete group from db failed!");
             return ret;
         }

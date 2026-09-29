@@ -1390,7 +1390,7 @@ void IdentityOperationTest::TearDown()
 
 HWTEST_F(IdentityOperationTest, IdentityOperationTest001, TestSize.Level0)
 {
-    int32_t ret = GetCredentialById(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+    int32_t ret = GetCredentialById(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr, nullptr);
     EXPECT_NE(ret, IS_SUCCESS);
 }
 
@@ -1458,7 +1458,7 @@ HWTEST_F(IdentityOperationTest, IdentityOperationTest007, TestSize.Level0)
 
 HWTEST_F(IdentityOperationTest, IdentityOperationTest008, TestSize.Level0)
 {
-    int32_t ret = GetCredentialById(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
+    int32_t ret = GetCredentialById(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr, nullptr);
     EXPECT_NE(ret, IS_SUCCESS);
 }
 
@@ -1531,7 +1531,7 @@ HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest004, TestSize.Level0)
 
 HWTEST_F(IdentityServiceImplTest, IdentityServiceImplTest005, TestSize.Level0)
 {
-    int32_t ret = DeleteCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr);
+    int32_t ret = DeleteCredentialImpl(DEFAULT_OS_ACCOUNT_ID, nullptr, nullptr);
     EXPECT_NE(ret, IS_SUCCESS);
 }
 

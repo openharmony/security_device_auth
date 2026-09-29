@@ -17,7 +17,11 @@
 #define OS_ACCOUNT_ADAPTER_H
 
 #include <stdint.h>
-#include "hc_vector.h"
+#include <stdbool.h>
+
+#ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
+#include "json_utils.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,14 +51,14 @@ typedef enum {
 } CredRelationChangeType;
 
 typedef void (*GroupRelationChangeCallback)(GroupRelationChangeType type, int32_t osAccountId,
-    const char *subProfileIdStr, const char *groupId, const char *udid);
+    int32_t subProfileId, const char *groupId, const char *udid);
 
 typedef void (*CredRelationChangeCallback)(CredRelationChangeType type, int32_t osAccountId,
-    const char *subProfileIdStr, const char *credId);
+    int32_t subProfileId, const char *credId);
 
-typedef void (*ProfileDeleteCallback)(int32_t osAccountId, const char *subProfileIdStr);
+typedef void (*ProfileDeleteCallback)(int32_t osAccountId, int32_t subProfileId);
 
-typedef void (*ProfileSwitchedCallback)(int32_t osAccountId, const char *subProfileIdStr);
+typedef void (*ProfileSwitchedCallback)(int32_t osAccountId, int32_t subProfileId);
 #endif
 
 void NotifyOsAccountUnlocked(int32_t osAccountId);
@@ -72,12 +76,12 @@ bool IsOsAccountSupported(void);
 int32_t GetCurrentActiveOsAccountId(void);
 
 #ifdef DEVAUTH_ENABLE_OS_ACCOUNT_MULTI_PROFILE
-int32_t GetForegroundSubProfileIdStr(int32_t osAccountId, char *subProfileIdStr, uint32_t subProfileIdStrLen);
 void SetProfileDeleteCallbackForGroup(ProfileDeleteCallback callback);
 void SetProfileDeleteCallbackForCred(ProfileDeleteCallback callback);
 void SetProfileSwitchedCallbackForGroup(ProfileSwitchedCallback callback);
 void SetGroupRelationChangeCallback(GroupRelationChangeCallback callback);
 void SetCredRelationChangeCallback(CredRelationChangeCallback callback);
+int32_t GetSubProfileIdFromParams(int32_t osAccountId, const CJson *params, int32_t *retSubProfileId);
 #endif
 
 #ifdef __cplusplus
