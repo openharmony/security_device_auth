@@ -29,6 +29,7 @@
 #include "device_auth.h"
 
 #define TAG_LEN 16
+#define MAX_EXPAND_MSG_LEN (64 * 1024)
 
 #define EXPAND_SUB_SESSION_AAD "expand_sub_session_add"
 #define EXPAND_SUB_SESSION_AAD_LEN 22
@@ -95,6 +96,14 @@ static const CmdComponent *GetCmdComponent(int32_t type)
 
 static int32_t EncryptMsg(ExpandSubSessionImpl *impl, Uint8Buff *rawData, Uint8Buff *returnEncData)
 {
+    if ((impl == NULL) || (rawData == NULL) || (returnEncData == NULL)) {
+        LOGE("invalid params.");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    if ((rawData->length == 0) || (rawData->length > MAX_EXPAND_MSG_LEN)) {
+        LOGE("rawData length is invalid.");
+        return HC_ERR_INVALID_PARAMS;
+    }
     uint32_t encDataLen = rawData->length + TAG_LEN;
     uint8_t *encDataVal = (uint8_t *)HcMalloc(encDataLen, 0);
     if (encDataVal == NULL) {
@@ -118,7 +127,11 @@ static int32_t EncryptMsg(ExpandSubSessionImpl *impl, Uint8Buff *rawData, Uint8B
 
 static int32_t DecryptMsg(ExpandSubSessionImpl *impl, Uint8Buff *encData, Uint8Buff *returnRawData)
 {
-    if (encData->length <= TAG_LEN) {
+    if ((impl == NULL) || (encData == NULL) || (returnRawData == NULL)) {
+        LOGE("invalid params.");
+        return HC_ERR_INVALID_PARAMS;
+    }
+    if ((encData->length <= TAG_LEN) || (encData->length - TAG_LEN > MAX_EXPAND_MSG_LEN)) {
         LOGE("encData length is invalid.");
         return HC_ERR_INVALID_PARAMS;
     }
@@ -170,12 +183,12 @@ static int32_t GetRecvEncData(const CJson *receviedMsg, Uint8Buff *recvEncData)
 
 static int32_t GetRecvCmdList(ExpandSubSessionImpl *impl, const CJson *receviedMsg, CJson **cmdList)
 {
-    Uint8Buff recvEncData;
+    Uint8Buff recvEncData = { NULL, 0 };
     int32_t res = GetRecvEncData(receviedMsg, &recvEncData);
     if (res != HC_SUCCESS) {
         return res;
     }
-    Uint8Buff recvRawData;
+    Uint8Buff recvRawData = { NULL, 0 };
     res = DecryptMsg(impl, &recvEncData, &recvRawData);
     FreeUint8Buff(&recvEncData);
     if (res != HC_SUCCESS) {
@@ -282,7 +295,13 @@ static int32_t ProcAllRecvCmds(ExpandSubSessionImpl *impl, const CJson *recevied
     }
     int32_t cmdNum = GetItemNum(recvCmdList);
     for (int32_t i = 0; i < cmdNum; i++) {
-        res = ProcRecvCmd(impl, GetItemFromArray(recvCmdList, i), sendCmdList);
+        CJson *recvCmd = GetItemFromArray(recvCmdList, i);
+        if (recvCmd == NULL) {
+            LOGE("get recvCmd from array fail.");
+            FreeJson(recvCmdList);
+            return HC_ERR_JSON_GET;
+        }
+        res = ProcRecvCmd(impl, recvCmd, sendCmdList);
         if (res != HC_SUCCESS) {
             FreeJson(recvCmdList);
             return res;
