@@ -20,6 +20,9 @@
 
 HcBool ParseTlvHead(TlvBase *tlv, HcParcel *parcel)
 {
+    if (tlv == NULL || parcel == NULL) {
+        return HC_FALSE;
+    }
 #ifdef IS_BIG_ENDIAN
     if (!ParcelReadUint16Revert(parcel, &tlv->tag)) {
         return HC_FALSE;
@@ -50,6 +53,9 @@ HcBool ParseTlvHead(TlvBase *tlv, HcParcel *parcel)
 
 int32_t ParseTlvNode(TlvBase *tlv, HcParcel *parcel, HcBool strict)
 {
+    if (tlv == NULL || parcel == NULL) {
+        return TLV_FAIL;
+    }
     if (!ParseTlvHead(tlv, parcel)) {
         return TLV_FAIL;
     } else {
@@ -91,6 +97,9 @@ void DeinitTlvNode(TlvBase *tlv)
 
 int32_t EncodeTlvNode(TlvBase *tlv, HcParcel *parcel, HcBool isRoot)
 {
+    if (tlv == NULL || parcel == NULL) {
+        return TLV_FAIL;
+    }
     int32_t bodyLen = tlv->getlen(tlv);
     if (bodyLen < 0 || bodyLen > MAX_TLV_LENGTH) {
         return TLV_FAIL;
@@ -197,6 +206,9 @@ int32_t ParseAndSkipTlvUnknownNode(HcParcel *parcel)
 
 int32_t ParseTlvStruct(TlvBase *tlv, HcParcel *parcel, HcBool strict)
 {
+    if (tlv == NULL || parcel == NULL) {
+        return TLV_FAIL;
+    }
     int32_t childTotalLength = 0;
     do {
         uint16_t tag = 0;
@@ -243,6 +255,9 @@ int32_t ParseTlvStruct(TlvBase *tlv, HcParcel *parcel, HcBool strict)
 
 int32_t EncodeTlvStruct(TlvBase *tlv, HcParcel *parcel)
 {
+    if (tlv == NULL || parcel == NULL) {
+        return TLV_FAIL;
+    }
     unsigned int index;
     unsigned int memberCount = *(unsigned int *)((char *)tlv + offsetof(TlvOffsetExample, offsetCount));
     unsigned int *offset = (unsigned int *)((char *)tlv + offsetof(TlvOffsetExample, offset));
@@ -266,6 +281,9 @@ int32_t EncodeTlvStruct(TlvBase *tlv, HcParcel *parcel)
 
 int32_t GetLenTlvStruct(TlvBase *tlv)
 {
+    if (tlv == NULL) {
+        return TLV_FAIL;
+    }
     unsigned int index;
     unsigned int memberCount = *(unsigned int *)((char *)tlv + offsetof(TlvOffsetExample, offsetCount));
     unsigned int *offset = (unsigned int *)((char *)tlv + offsetof(TlvOffsetExample, offset));
@@ -289,6 +307,9 @@ int32_t GetLenTlvStruct(TlvBase *tlv)
 
 void DeinitTlvStruct(TlvBase *tlv)
 {
+    if (tlv == NULL) {
+        return;
+    }
     unsigned int index;
     unsigned int memberCount = *(unsigned int *)((char *)tlv + offsetof(TlvOffsetExample, offsetCount));
     unsigned int *offset = (unsigned int *)((char *)tlv + offsetof(TlvOffsetExample, offset));
@@ -336,6 +357,9 @@ HcBool EncodeTlvMessage(TlvBase *msg, HcParcel *parcel)
 
 int32_t ParseTlvBuffer(TlvBase *tlv, HcParcel *parcel, HcBool strict)
 {
+    if (tlv == NULL || parcel == NULL) {
+        return TLV_FAIL;
+    }
     (void)strict;
     TlvBuffer *realTlv = (TlvBuffer *)(tlv);
     if (tlv->length == 0 || ParcelReadParcel(parcel, &realTlv->data, tlv->length, HC_FALSE)) {
@@ -347,12 +371,18 @@ int32_t ParseTlvBuffer(TlvBase *tlv, HcParcel *parcel, HcBool strict)
 
 int32_t GetlenTlvBuffer(TlvBase *tlv)
 {
+    if (tlv == NULL) {
+        return TLV_FAIL;
+    }
     TlvBuffer *realTlv = (TlvBuffer *)(tlv);
     return (int32_t)GetParcelDataSize(&realTlv->data);
 }
 
 int32_t EncodeTlvBuffer(TlvBase *tlv, HcParcel *parcel)
 {
+    if (tlv == NULL || parcel == NULL) {
+        return TLV_FAIL;
+    }
     TlvBuffer *realTlv = (TlvBuffer *)(tlv);
     int32_t len = GetlenTlvBuffer(tlv);
     if (len <= 0 || len > MAX_TLV_LENGTH) {
@@ -368,11 +398,17 @@ int32_t EncodeTlvBuffer(TlvBase *tlv, HcParcel *parcel)
 
 void DeinitTlvBuffer(TlvBase *tlv)
 {
+    if (tlv == NULL) {
+        return;
+    }
     DeleteParcel(&((TlvBuffer *)tlv)->data);
 }
 
 void InitTlvBuffer(TlvBuffer *tlv, unsigned short checkTag)
 {
+    if (tlv == NULL) {
+        return;
+    }
     (void)memset_s(&tlv->base, sizeof(tlv->base), 0, sizeof(tlv->base));
     tlv->base.parse = ParseTlvBuffer;
     tlv->base.getlen = GetlenTlvBuffer;
@@ -384,6 +420,9 @@ void InitTlvBuffer(TlvBuffer *tlv, unsigned short checkTag)
 
 int32_t ParseTlvString(TlvBase *tlv, HcParcel *parcel, HcBool strict)
 {
+    if (tlv == NULL || parcel == NULL) {
+        return TLV_FAIL;
+    }
     (void)strict;
     TlvString *realTlv = (TlvString *)(tlv);
     ClearParcel(&realTlv->data.parcel);
@@ -396,12 +435,18 @@ int32_t ParseTlvString(TlvBase *tlv, HcParcel *parcel, HcBool strict)
 
 int32_t GetlenTlvString(TlvBase *tlv)
 {
+    if (tlv == NULL) {
+        return TLV_FAIL;
+    }
     TlvString *realTlv = (TlvString *)(tlv);
     return (int32_t)GetParcelDataSize(&realTlv->data.parcel);
 }
 
 int32_t EncodeTlvString(TlvBase *tlv, HcParcel *parcel)
 {
+    if (tlv == NULL || parcel == NULL) {
+        return TLV_FAIL;
+    }
     TlvString *realTlv = (TlvString *)(tlv);
     int32_t len = GetlenTlvString(tlv);
     if (len <= 0 || len > MAX_TLV_LENGTH) {
@@ -417,11 +462,17 @@ int32_t EncodeTlvString(TlvBase *tlv, HcParcel *parcel)
 
 void DeinitTlvString(TlvBase *tlv)
 {
+    if (tlv == NULL) {
+        return;
+    }
     DeleteString(&((TlvString*)tlv)->data);
 }
 
 void InitTlvString(TlvString *tlv, unsigned short checkTag)
 {
+    if (tlv == NULL) {
+        return;
+    }
     (void)memset_s(&tlv->base, sizeof(tlv->base), 0, sizeof(tlv->base));
     tlv->base.parse = ParseTlvString;
     tlv->base.getlen = GetlenTlvString;
