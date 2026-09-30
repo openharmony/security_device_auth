@@ -293,6 +293,7 @@ typedef enum {
     IDENTICAL_ACCOUNT_AUTH = 1,
     ACROSS_ACCOUNT_AUTH = 2,
     OPEN_CRED_AUTH = 3,
+    APP_AUTH = 4,
 } AuthType;
 
 typedef enum {
