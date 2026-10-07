@@ -688,6 +688,23 @@ static int32_t GetAuthTypeByCredType(uint8_t credType)
     return authType;
 }
 
+static bool IsAppAuthType(const CJson *credDataJson)
+{
+    int32_t credType = 0;
+    if (GetIntFromJson(credDataJson, FIELD_CRED_TYPE, &credType) != HC_SUCCESS) {
+        return false;
+    }
+    int32_t issuer = 0;
+    if (GetIntFromJson(credDataJson, FIELD_ISSUER, &issuer) != HC_SUCCESS) {
+        return false;
+    }
+    int32_t proofType = 0;
+    if (GetIntFromJson(credDataJson, FIELD_PROOF_TYPE, &proofType) != HC_SUCCESS) {
+        return false;
+    }
+    return credType == ACCOUNT_RELATED && issuer == APP_ACCOUNT && proofType == PROOF_TYPE_PKI;
+}
+
 static int32_t GetAuthTypeForSession(const SessionImpl *impl)
 {
     bool isOpenCredAuth = false;
@@ -699,6 +716,9 @@ static int32_t GetAuthTypeForSession(const SessionImpl *impl)
         if (credDataJson == NULL) {
             LOGW("credDataJson is null!");
             return P2P_AUTH;
+        }
+        if (IsAppAuthType(credDataJson)) {
+            return APP_AUTH;
         }
         uint8_t credType = ACCOUNT_UNRELATED;
         if (GetUint8FromJson(credDataJson, FIELD_CRED_TYPE, &credType) != HC_SUCCESS) {
